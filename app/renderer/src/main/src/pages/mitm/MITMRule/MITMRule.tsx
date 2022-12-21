@@ -236,7 +236,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         Result={i.Result}
                         disabled={i.Disabled}
                         checked={i.NoReplace}
-                        onChange={(val) => onEdit({...i, NoReplace: val}, "NoReplace")}
+                        // onChange={(val) => onEdit({...i, NoReplace: val}, "NoReplace")}
+                        onChange={(val) => onEdit({Index: i.Index, NoReplace: val}, "NoReplace")}
                     />
                 )
             },
@@ -247,7 +248,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        onChange={(e) => onEdit({...record, EnableForRequest: e.target.checked}, "EnableForRequest")}
+                        // onChange={(e) => onEdit({...record, EnableForRequest: e.target.checked}, "EnableForRequest")}
+                        onChange={(e) =>
+                            onEdit({Index: record.Index, EnableForRequest: e.target.checked}, "EnableForRequest")
+                        }
                     />
                 )
             },
@@ -258,20 +262,28 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        onChange={(e) => onEdit({...record, EnableForResponse: e.target.checked}, "EnableForResponse")}
+                        // onChange={(e) => onEdit({...record, EnableForResponse: e.target.checked}, "EnableForResponse")}
+                        onChange={(e) =>
+                            onEdit({Index: record.Index, EnableForResponse: e.target.checked}, "EnableForResponse")
+                        }
                     />
                 )
             },
             {
                 title: "Header",
                 dataKey: "EnableForHeader",
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) => onEdit({...record, EnableForHeader: e.target.checked}, "EnableForHeader")}
-                    />
-                )
+                render: (checked, record: MITMContentReplacerRule) => {
+                    return (
+                        <YakitCheckboxMemo
+                            checked={checked}
+                            disabled={record.Disabled}
+                            // onChange={(e) => onEdit({...record, EnableForHeader: e.target.checked}, "EnableForHeader")}
+                            onChange={(e) =>
+                                onEdit({Index: record.Index, EnableForHeader: e.target.checked}, "EnableForHeader")
+                            }
+                        />
+                    )
+                }
             },
             {
                 title: "Body",
@@ -280,7 +292,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        onChange={(e) => onEdit({...record, EnableForBody: e.target.checked}, "EnableForBody")}
+                        // onChange={(e) => onEdit({...record, EnableForBody: e.target.checked}, "EnableForBody")}
+                        onChange={(e) =>
+                            onEdit({Index: record.Index, EnableForBody: e.target.checked}, "EnableForBody")
+                        }
                     />
                 )
             },
@@ -292,7 +307,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitSelectMemo
                         value={text}
                         disabled={record.Disabled}
-                        onSelect={(val) => onEdit({...record, Color: val}, "Color")}
+                        // onSelect={(val) => onEdit({...record, Color: val}, "Color")}
+                        onSelect={(val) => onEdit({Index: record.Index, Color: val}, "Color")}
                     />
                 )
             },
@@ -330,21 +346,21 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         ]
     }, [])
-    const onEdit = useMemoizedFn((record: MITMContentReplacerRule, text: string) => {
+    const onEdit = useMemoizedFn((record, text: string) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
             if (item.Index === record.Index) {
-                item = record
+                item[text] = record[text]
             }
-            return item
+            return {...item}
         })
         setRules(newRules)
     })
     const onMenuSelect = useMemoizedFn((key: string) => {
         if (key === "ban") {
-            onBatchNoReplaceOrBan(false, "NoReplace")
+            onBatchNoReplaceOrBan(true, "Disabled")
         }
-        if (key === "no-replace ") {
-            onBatchNoReplaceOrBan(false, "Disabled")
+        if (key === "no-replace") {
+            onBatchNoReplaceOrBan(false, "NoReplace")
         }
         if (key === "remove") {
             onBatchRemove()
@@ -424,12 +440,13 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
             return item
         })
-        setRules({...newRules})
+        setRules([...newRules])
         setSelectedRowKeys([])
         setTimeout(() => {
             setLoading(false)
         }, 200)
     })
+
     const onBatchRemove = useMemoizedFn(() => {
         if (selectedRowKeys.length === 0) return
         setLoading(true)
@@ -439,17 +456,21 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 newRules.push(item)
             }
         })
-        setRules({...newRules})
+        setRules([...newRules])
         setSelectedRowKeys([])
+        setIsAllSelect(false)
+        setIsRefresh(!isRefresh)
         setTimeout(() => {
             setLoading(false)
         }, 200)
     })
+
     const onAllBan = useMemoizedFn((checked: boolean) => {
         setIsAllBan(checked)
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, Disabled: checked}))
         setRules(newRules)
+        setSelectedRowKeys([])
         setTimeout(() => {
             setLoading(false)
         }, 200)
@@ -466,6 +487,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         })
         setRules(newRules)
+        setSelectedRowKeys([])
         setTimeout(() => {
             setLoading(false)
         }, 200)
@@ -581,7 +603,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                         disabled={selectedRowKeys.length === 0}
                                         className={classNames(styles["button-batch-remove"])}
                                     >
-                                        批量删除
+                                        批量操作
                                         <ChevronDownIcon />
                                     </YakitButton>
                                 </YakitPopover>

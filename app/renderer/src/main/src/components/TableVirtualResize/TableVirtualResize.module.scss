@@ -297,6 +297,10 @@
                     border-left: 1px solid #91d5ff;
                 }
 
+                .virtual-table-row-cell-move {
+                    cursor: move;
+                }
+
                 .virtual-table-row-ellipsis {
                     white-space: nowrap;
                     text-overflow: ellipsis;

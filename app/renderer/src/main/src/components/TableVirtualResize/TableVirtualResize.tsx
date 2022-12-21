@@ -986,7 +986,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                     <div className='virtual-col-title' style={{maxWidth: "90%"}}>
                         <div className={style["ellipsis-1"]}>
                             {cIndex === 0 && rowSelection && (
-                                <span className={classNames(style["check"],style["check-title"])}>
+                                <span className={classNames(style["check"], style["check-title"])}>
                                     {rowSelection.type !== "radio" && (
                                         <YakitCheckbox
                                             onChange={(e) => {
@@ -1166,7 +1166,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             key={`${item.data[renderKey]}-${colIndex}` || number}
                             item={item}
                             columnsItem={columnsItem}
-                            number={number}
+                            number={item.index}
                             isLastItem={isLastItem}
                             onRowClick={() => onRowClick(item.data)}
                             onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
@@ -1188,7 +1188,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             key={`${item.data[renderKey]}-${colIndex}` || number}
                             item={item}
                             columnsItem={columnsItem}
-                            number={number}
+                            number={item.index}
                             isLastItem={isLastItem}
                             onRowClick={() => onRowClick(item.data)}
                             onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
@@ -1399,9 +1399,6 @@ const CellRenderDrop = React.memo(
                 isDragging: monitor.isDragging()
             })
         })
-        // if (enableDragSort) {
-        //     drag(drop(dragRef))
-        // }
         drag(drop(dragRef))
 
         const styleDrag =
@@ -1420,7 +1417,8 @@ const CellRenderDrop = React.memo(
                     [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [style["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
                     [style["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
-                    [style["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
+                    [style["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"],
+                    [style["virtual-table-row-cell-move"]]: enableDragSort && colIndex === 0
                 })}
                 onClick={(e) => {
                     // @ts-ignore
@@ -1443,7 +1441,10 @@ const CellRenderDrop = React.memo(
                     <div style={{height: 28, left: 0, position: "absolute", ...styleDrag}} />
                 )}
                 {enableDragSort && colIndex === 0 && (
-                    <DragSortIcon className={style["drag-sort-icon"]} style={{color: isSelect ? "#1890ff" : ""}} />
+                    <DragSortIcon
+                        className={style["drag-sort-icon"]}
+                        style={{color: isSelect || isDragging ? "#1890ff" : ""}}
+                    />
                 )}
                 {colIndex === 0 && rowSelection && (
                     <span className={classNames(style["check"])}>
