@@ -35,6 +35,7 @@ import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from 
 import ITextModel = editor.ITextModel
 import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor";
 import {saveABSFileToOpen} from "@/utils/openWebsite";
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -790,7 +791,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         run: (e) => {
                                             try {
                                                 if (props.readOnly && props.originValue) {
-                                                    console.info(Uint8ArrayToString(props.originValue))
                                                     ipcRenderer.invoke("GetHTTPPacketBody", {PacketRaw: props.originValue}).then((bytes: { Raw: Uint8Array }) => {
                                                         saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                     }).catch(e => {
@@ -812,6 +812,28 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 })
                                             } catch (e) {
                                                 failed("editor exec download body failed")
+                                            }
+                                        }
+                                    },
+                                    {
+                                        label: "浏览器中打开",
+                                        contextMenuGroupId: "auto-suggestion",
+                                        id: "open-in-browser",
+                                        run: (e) => {
+                                            try {
+                                                if (props.readOnly && props.originValue) {
+                                                    showResponseViaResponseRaw(props.originValue)
+                                                    return
+                                                }
+                                                // @ts-ignore
+                                                const text = e.getModel()?.getValue()
+                                                if (!text) {
+                                                    failed("无法获取数据包内容")
+                                                    return
+                                                }
+                                                showResponseViaResponseRaw(props.originValue)
+                                            } catch (e) {
+                                                failed("editor exec show in browser failed")
                                             }
                                         }
                                     },
