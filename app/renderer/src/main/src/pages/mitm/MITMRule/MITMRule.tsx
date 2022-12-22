@@ -131,7 +131,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [modalVisible, setModalVisible] = useState<boolean>(false)
     const [exportVisible, setExportVisible] = useState<boolean>(false)
     const [importVisible, setImportVisible] = useState<boolean>(false)
-    const [tipVisible, setTipVisible] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
@@ -140,21 +139,32 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
     const [currentIndex, setCurrentIndex] = useState<number>()
-
+    useEffect(() => {
+        ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+            const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+            console.log(666)
+            setOriginalRules(newRules)
+        })
+    }, [visible])
     useEffect(() => {
         if (importVisible) return
         setLoading(true)
         ipcRenderer
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                setRules(rsp.Rules)
-                setOriginalRules(rsp.Rules)
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setRules(newRules)
+                // if (visible) {
+                //     console.log(666)
+                //     setOriginalRules(newRules)
+                // }
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible, importVisible])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-            setRules(data?.replacers || [])
+            const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
+            setRules(newRules)
             return
         })
         return () => {
@@ -243,7 +253,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         Result={i.Result}
                         disabled={i.Disabled}
                         checked={i.NoReplace}
-                        onChange={(val) => onEdit({Index: i.Index, NoReplace: val}, "NoReplace")}
+                        onChange={(val) => {
+                            onEdit({Index: i.Index, NoReplace: val}, "NoReplace")
+                        }}
                     />
                 )
             },
@@ -351,6 +363,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         ]
     }, [])
+
     const onEdit = useMemoizedFn((record, text: string) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
             if (item.Index === record.Index) {
@@ -373,13 +386,15 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
         if (b) {
+            const index = rules.length + 1
             const defRowDate: MITMContentReplacerRule = {
                 Color: "",
                 EnableForRequest: false,
                 EnableForResponse: true,
                 EnableForBody: true,
                 EnableForHeader: true,
-                Index: rules.length + 1,
+                Index: index,
+                Id: index,
                 NoReplace: false,
                 Result: "",
                 Rule: "",
@@ -417,7 +432,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 .invoke("SetCurrentRules", {Rules: newRules})
                 .then((e) => {
                     setVisible(false)
-                    setTipVisible(false)
                     success("保存成功")
                 })
                 .catch((e) => {
@@ -431,7 +445,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 })
                 .then((val) => {
                     setVisible(false)
-                    setTipVisible(false)
                     success("保存成功")
                 })
                 .catch((e) => {
@@ -523,6 +536,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
 
     const onClose = useMemoizedFn(() => {
+        console.log("originalRules,rules", originalRules, rules)
         if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
             Modal.confirm({
                 title: "温馨提示",
@@ -650,7 +664,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 </YakitButton>
                             </div>
                         }
-                        renderKey='Index'
+                        renderKey='Id'
                         data={rules}
                         rowSelection={{
                             isAll: isAllSelect,
@@ -748,12 +762,12 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
             node = (
                 <div>
                     {props.ExtraHeaders.length > 0 && (
-                        <YakitTag size='small' color='purple'>
+                        <YakitTag size='small' color='purple' disable={props.disabled}>
                             HTTP Header: {props.ExtraHeaders.length}
                         </YakitTag>
                     )}
                     {props.ExtraCookies.length > 0 && (
-                        <YakitTag size='small' color='success'>
+                        <YakitTag size='small' color='success' disable={props.disabled}>
                             HTTP Cookie: {props.ExtraCookies.length}
                         </YakitTag>
                     )}

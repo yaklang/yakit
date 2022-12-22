@@ -395,6 +395,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         })
         if(columnsAllWidth>width){
             columnsAllWidth=0
+            total=0
         }
         let w = (width - columnsAllWidth) / (cLength - total)
         const cw = w - scrollBarWidth / (cLength - total) + 32

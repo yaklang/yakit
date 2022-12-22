@@ -3,6 +3,7 @@ import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperato
 
 export interface MITMContentReplacerRule {
     // 文本字符串，正则/Re2/字符串硬匹配
+    Id:number
     Index: number
     Rule: string
     NoReplace: boolean
