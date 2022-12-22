@@ -383,18 +383,30 @@
     background: var(--button-background);
     color: var(--button-color);
     border-color: var(--button-border-color);
+
+    svg {
+        color: var(--button-color) !important;
+    }
 }
 
 .yakit-button-type:hover {
     background: var(--button-hover-background);
     color: var(--button-hover-color);
     border-color: var(--button-hover-border-color);
+
+    svg {
+        color: var(--button-hover-color) !important;
+    }
 }
 
 .yakit-button-type[disabled] {
     color: var(--button-disable-color) !important;
     border-color: var(--button-disable-border-color) !important;
     background: var(--button-disable-background) !important;
+
+    svg {
+        color: var(--button-disable-color) !important;
+    }
 }
 
 // [ant-click-animating-without-extra-node="true"]::after {
@@ -407,6 +419,10 @@
     background: var(--button-press-background) !important;
     color: var(--button-press-color) !important;
     border-color: var(--button-press-border-color) !important;
+
+    svg {
+        color: var(--button-press-color) !important;
+    }
 }
 
 // @keyframes fadeEffect {

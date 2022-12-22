@@ -216,7 +216,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         导入协作资源
                     </YakitButton>
                     <YakitButton
-                        type='outline1'
+                        type="secondary2"
                         className={style["heard-menu-grey"]}
                         onClick={() => onRouteMenuSelect(Route.PayloadManager)}
                         icon={<MenuPayloadIcon />}
@@ -224,7 +224,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         Payload
                     </YakitButton>
                     <YakitButton
-                        type='outline1'
+                        type="secondary2"
                         className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
                             [style["margin-right-0"]]: isExpand
                         })}
