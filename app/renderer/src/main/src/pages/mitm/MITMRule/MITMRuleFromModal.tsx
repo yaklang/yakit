@@ -55,7 +55,13 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const onOk = useMemoizedFn(() => {
         form.validateFields()
             .then((values: MITMContentReplacerRule) => {
-                onSave({...currentItem, ...values})
+                const newValues = {...currentItem, ...values}
+                if (newValues.ExtraCookies.length > 0 || newValues.ExtraHeaders.length > 0 || !!newValues.Result) {
+                    newValues.NoReplace = true
+                } else {
+                    newValues.NoReplace = false
+                }
+                onSave(newValues)
             })
             .catch((errorInfo) => {})
     })
@@ -99,7 +105,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 width={720}
                 zIndex={1001}
                 onOk={() => onOk()}
-                className='old-theme-html'
+                wrapClassName='old-theme-html'
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
                     {/* <Form.Item
@@ -210,6 +216,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                     zIndex={1002}
                     footer={null}
                     closable={true}
+                    wrapClassName='old-theme-html'
                 >
                     <ExtractRegular onSave={getRule} />
                 </YakitModal>
@@ -381,7 +388,7 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             zIndex={1002}
             footer={null}
             closable={true}
-            className='old-theme-html'
+            wrapClassName='old-theme-html'
         >
             <Form
                 labelCol={{span: 5}}
@@ -396,6 +403,7 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             >
                 <Form.Item label='HTTP Header' name='Header' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitAutoComplete
+                        dropdownClassName='old-theme-html'
                         options={[
                             "Authorization",
                             "Accept",
@@ -474,7 +482,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             footer={null}
             closable={true}
             width={600}
-            className='old-theme-html'
+            wrapClassName='old-theme-html'
         >
             <Form
                 labelCol={{span: 5}}
@@ -489,6 +497,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             >
                 <Form.Item label='Cookie Key' name='Key' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitAutoComplete
+                        dropdownClassName="old-theme-html"
                         options={["JSESSION", "PHPSESSION", "SESSION", "admin", "test", "debug"].map((ele) => ({
                             value: ele,
                             label: ele

@@ -6,6 +6,7 @@ import classNames from "classnames"
 import {BaseOptionType, DefaultOptionType, SelectProps} from "antd/lib/select"
 import {BaseSelectRef, OptGroup} from "rc-select"
 import {YakitTag} from "../YakitTag/YakitTag"
+import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
 
 const {Option} = Select
 
@@ -66,6 +67,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                         </YakitTag>
                     )
                 }}
+                suffixIcon={show ? <ChevronUpIcon className={styles['yakit-select-icon']}/> : <ChevronDownIcon className={styles['yakit-select-icon']}/>}
             >
                 {props.children}
             </Select>

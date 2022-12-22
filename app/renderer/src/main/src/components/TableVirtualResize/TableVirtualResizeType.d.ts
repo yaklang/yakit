@@ -29,6 +29,7 @@ import {SelectProps} from "antd"
  * @event (record: T) => void onSetCurrentRow:设置选中
  * @event (dragIndex: number, hoverIndex: number) => void onMoveRow:拖拽
  * @property {boolean} enableDragSort 是否拖拽排序
+ * @event   onMoveRowEnd 拖拽结束
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
@@ -58,11 +59,9 @@ export interface TableVirtualResizeProps<T> {
     disableSorting?: boolean //禁用排序
     query?: object
     onSetCurrentRow?: (record: T) => void
-    /**
-     * @private 组件自用
-     */
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?:boolean
+    onMoveRowEnd?:()=>void
 }
 
 export interface SortProps {
