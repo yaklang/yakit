@@ -154,10 +154,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
                 setRules(newRules)
-                // if (visible) {
-                //     console.log(666)
-                //     setOriginalRules(newRules)
-                // }
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible, importVisible])
