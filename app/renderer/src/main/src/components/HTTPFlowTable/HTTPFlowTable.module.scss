@@ -182,18 +182,19 @@
                     }
                 }
             }
+
             .filter-small-icon-active {
 
                 svg {
                     color: #1890ff;
                 }
-    
+
                 :global {
                     .ant-btn {
                         border-color: #1890ff;
                     }
                 }
-    
+
             }
         }
 
@@ -692,3 +693,4 @@
 .color-select-footer {
     position: relative !important;
 }
+

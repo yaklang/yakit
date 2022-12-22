@@ -1,0 +1,18 @@
+.modal-footer-extra {
+    display: flex;
+    align-items: center;
+
+    .modal-footer-extra-text {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: #31343F;
+        margin-right: 1px;
+    }
+}
+
+.modal-subTitle {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+}

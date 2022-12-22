@@ -1,8 +1,9 @@
-.heard-menu-body{
+.heard-menu-body {
     background-color: #fafafa;
     border-top: 1px solid #EAECF3;
     border-bottom: 1px solid #EAECF3;
 }
+
 .heard-menu {
     display: flex;
     font-size: 12px;
@@ -119,48 +120,14 @@
         z-index: 4;
 
         .heard-menu-theme {
-            color: #1890ff;
-            font-size: 12px;
             font-weight: 500;
-            padding: 4px 8px;
-            height: 24px;
             width: 108px;
-            border-radius: 4px;
             margin-right: 8px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-
-            &:hover {
-                color: #40a9ff;
-
-                svg {
-                    color: #40a9ff;
-                }
-            }
         }
 
         .heard-menu-grey {
-            font-size: 12px;
-            padding: 4px 8px;
-            border: 1px solid #adc6ff;
-            border-radius: 4px;
-            height: 24px;
             margin-right: 8px;
             width: 82px;
-            display: flex;
-            align-items: center;
-            color: #1890ff;
-            background: #f0f5ff;
-            cursor: pointer;
-
-            &:hover {
-                color: #40a9ff;
-
-                svg {
-                    color: #40a9ff;
-                }
-            }
         }
 
         .heard-menu-yak-run {

@@ -13,8 +13,6 @@ import {
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useMemoizedFn} from "ahooks"
-import {YakitMenu, YakitMenuItemProps} from "../YakitMenu/YakitMenu"
-import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Tabs, Tooltip} from "antd"
 import {
@@ -26,6 +24,9 @@ import {
     MenuPayloadIcon,
     MenuYakRunnerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
+import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
@@ -134,10 +135,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         const afterRoute: MenuDataProps[] = []
         const beforeRoute: MenuDataProps[] = []
         routeMenu.forEach((ele, index) => {
-            if (index < n) {
-                beforeRoute.push(ele)
-            } else {
-                afterRoute.push(ele)
+            if (ele.subMenuData && ele.subMenuData.length > 0) {
+                if (index < n) {
+                    beforeRoute.push(ele)
+                } else {
+                    afterRoute.push(ele)
+                }
             }
         })
         setRouteMenuDataAfter(afterRoute)
@@ -205,25 +208,32 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    <div className={style["heard-menu-theme"]}>
-                        <SaveIcon />
-                        <span className={style["heard-menu-label"]} onClick={() => onImportShare()}>
-                            导入协作资源
-                        </span>
-                    </div>
-                    <div className={style["heard-menu-grey"]} onClick={() => onRouteMenuSelect(Route.PayloadManager)}>
-                        <MenuPayloadIcon />
-                        <span className={style["heard-menu-label"]}>Payload</span>
-                    </div>
-                    <div
+                    <YakitButton
+                        type='text'
+                        className={style["heard-menu-theme"]}
+                        onClick={() => onImportShare()}
+                        icon={<SaveIcon />}
+                    >
+                        导入协作资源
+                    </YakitButton>
+                    <YakitButton
+                        type='outline1'
+                        className={style["heard-menu-grey"]}
+                        onClick={() => onRouteMenuSelect(Route.PayloadManager)}
+                        icon={<MenuPayloadIcon />}
+                    >
+                        Payload
+                    </YakitButton>
+                    <YakitButton
+                        type='outline1'
                         className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
                             [style["margin-right-0"]]: isExpand
                         })}
                         onClick={() => onRouteMenuSelect(Route.YakScript)}
+                        icon={<MenuYakRunnerIcon />}
                     >
-                        <MenuYakRunnerIcon />
-                        <span className={style["heard-menu-label"]}>Yak Runner</span>
-                    </div>
+                        Yak Runner
+                    </YakitButton>
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}
@@ -353,7 +363,13 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
             })) || []
     }))
     const menu = (
-        <YakitMenu data={newMenuData} selectedKeys={[]} width={136} onSelect={({key}) => onMenuSelect(key)}></YakitMenu>
+        <YakitMenu
+            type='secondary'
+            data={newMenuData}
+            selectedKeys={[]}
+            width={136}
+            onSelect={({key}) => onMenuSelect(key)}
+        ></YakitMenu>
     )
 
     return (

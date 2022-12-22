@@ -1,0 +1,161 @@
+.yakit-menu-div-wrapper {
+    display: inline-block;
+
+    :global {
+        .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
+            background-color: unset;
+        }
+    }
+}
+
+.yakit-menu-primary {
+    // 新UI
+    // --yakit-menu-background: #f28b44;
+    // --yakit-menu-color: #ffffff;
+
+    // 旧UI
+    --yakit-menu-background: #1890ff;
+    --yakit-menu-color: #ffffff;
+}
+
+.yakit-menu-secondary {
+    // 新UI
+    // --yakit-menu-background: #ff7d230f;
+    // --yakit-menu-color: #f28b44;
+
+    // 旧UI
+    --yakit-menu-background: #e6f7ff;
+    --yakit-menu-color: #1890ff;
+}
+
+.yakit-menu-wrapper {
+    border-right: 0px;
+    color: #31343f;
+
+    :global {
+        .ant-menu-item .icon-style {
+            color: #85899e;
+        }
+
+        .ant-menu-submenu .icon-style {
+            color: #85899e;
+        }
+
+        .ant-menu-item-active {
+            background-color: var(--yakit-menu-background) !important;
+            color: var(--yakit-menu-color) !important;
+            border-radius: 4px;
+        }
+
+        .ant-menu-item-selected {
+            color: var(--yakit-menu-background);
+        }
+
+        .ant-menu-submenu-active {
+            background-color: var(--yakit-menu-background) !important;
+            color: var(--yakit-menu-color) !important;
+            border-radius: 4px;
+
+            span.anticon {
+                color: var(--yakit-menu-color);
+            }
+        }
+
+        .ant-menu-submenu-selected {
+            color: #31343f;
+        }
+
+        .ant-menu-submenu {
+            .ant-menu-submenu-title {
+                height: 100%;
+                padding: 0;
+                margin: 0;
+            }
+
+            .ant-menu-submenu-title:hover {
+                color: var(--yakit-menu-color);
+
+                span.anticon {
+                    color: var(--yakit-menu-color);
+                }
+            }
+
+            .ant-menu-submenu-arrow {
+                display: none;
+            }
+        }
+
+        .ant-menu-item {
+            height: 100%;
+            padding: 0;
+            margin: 0 !important;
+        }
+    }
+}
+
+// 暂时css效果只考虑两层结构菜单，多层结构菜单暂未考虑
+.yakit-menu-submenu {
+    :global {
+        .ant-menu {
+            padding: 6px 4px 8px 4px;
+            border: 1px solid #eaecf3;
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+            color: #31343f;
+
+            .ant-menu-item-selected {
+                background-color: unset;
+                color: var(--yakit-menu-background);
+            }
+
+            .ant-menu-item-selected:hover {
+                color: var(--yakit-menu-color);
+            }
+        }
+
+        .ant-menu-item-active {
+            background-color: var(--yakit-menu-background) !important;
+            color: var(--yakit-menu-color) !important;
+            border-radius: 4px;
+        }
+
+        .ant-menu-vertical.ant-menu-sub {
+            min-width: 128px;
+        }
+
+        .ant-menu-item {
+            height: 100%;
+            padding: 0;
+            margin: 0 !important;
+        }
+    }
+}
+
+.yakit-menu-item {
+    height: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 4px;
+
+    .yakit-submenu-item-content {
+        display: flex;
+        align-items: center;
+        height: 16px;
+        max-width: calc(100% - 16px);
+    }
+
+    .yakit-menu-item-content {
+        display: flex;
+        align-items: center;
+        height: 16px;
+        max-width: 100%;
+    }
+
+    .yakit-menu-item-title {
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+}

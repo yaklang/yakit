@@ -27,6 +27,8 @@ import {SelectProps} from "antd"
  * @property {boolean} disableSorting：禁用排序
  * @property {object} query：查询条件
  * @event (record: T) => void onSetCurrentRow:设置选中
+ * @event (dragIndex: number, hoverIndex: number) => void onMoveRow:拖拽
+ * @property {boolean} enableDragSort 是否拖拽排序
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
@@ -56,6 +58,11 @@ export interface TableVirtualResizeProps<T> {
     disableSorting?: boolean //禁用排序
     query?: object
     onSetCurrentRow?: (record: T) => void
+    /**
+     * @private 组件自用
+     */
+    onMoveRow?: (dragIndex: number, hoverIndex: number) => void
+    enableDragSort?:boolean
 }
 
 export interface SortProps {
@@ -80,6 +87,8 @@ export interface SortProps {
  * @property {FilterProps} filterProps：筛选表格配置  
  * @property {SorterProps} sorterProps：表格排序配置 
  * @property {boolean} enableDrag：表格排序配置 
+ * @property {string} tip :提示 
+ * @property {ReactNode} extra :右边 
  */
 export interface ColumnsTypeProps {
     title: string
@@ -97,6 +106,8 @@ export interface ColumnsTypeProps {
     filterProps?: FilterProps
     sorterProps?: SorterProps
     enableDrag?: boolean
+    tip?: string
+    extra?: ReactNode
 }
 
 interface FilterSearchInputProps extends SearchProps {

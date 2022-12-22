@@ -1,0 +1,163 @@
+.modal-from {
+    padding: 24px 16px;
+
+    .icon-adjustments {
+        cursor: pointer;
+
+        &:hover {
+            color: #1890ff;
+        }
+    }
+}
+
+.yakit-extract-regular-editor {
+    padding: 24px 16px;
+    min-height: 448px;
+
+    .yakit-editor {
+        height: 368px;
+    }
+
+    .yakit-editor-regexp {
+        margin-top: 8px;
+
+        .yakit-editor-regexp-tag {
+            width: fit-content;
+            padding: 4px 6px 4px 8px;
+            margin-right: 0;
+            display: flex;
+            background: #F8F8F8;
+            border: 1px solid #EAECF3;
+            border-radius: 4px;
+            font-size: 12px;
+            align-items: center;
+
+            .yakit-editor-regexp-value {
+                word-break: break-all;
+                color: #31343F;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+            }
+
+            .yakit-editor-icon {
+                margin-left: 8px;
+                user-select: none;
+                display: inline-flex;
+                height: 22px;
+                padding-top: 4px;
+                color: #1890ff;
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+
+                    &:hover {
+                        color: #40a9ff;
+                    }
+
+                    &:active {
+                        color: #096dd9;
+                    }
+                }
+            }
+
+        }
+
+
+        .yakit-editor-text-area {
+            display: flex;
+
+            :global {
+                .ant-input {
+                    border-radius: 4px;
+                    min-height: 24px !important;
+                    max-height: 72px !important;
+                    padding: 0px 8px;
+                    word-break: break-all;
+                }
+            }
+
+            .yakit-editor-btn {
+                margin-left: 8px;
+                display: flex;
+                font-weight: 400;
+                font-size: 12px;
+                color: #31343F;
+                align-items: center;
+                height: 24px;
+                user-select: none;
+
+                .cancel-btn {
+                    width: 24px;
+                    cursor: pointer;
+
+                    &:hover {
+                        color: #40a9ff;
+                    }
+
+                    &:active {
+                        color: #096dd9;
+                    }
+                }
+
+                .save-btn {
+                    color: #1890ff;
+                    width: 24px;
+                    cursor: pointer;
+
+                    &:hover {
+                        color: #40a9ff;
+                    }
+
+                    &:active {
+                        color: #096dd9;
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+.yakit-extra-http-select {
+    .yakit-extra-http-select-heard {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+
+        :global {
+            .anticon {
+                height: 16px;
+            }
+        }
+
+        .extra-tip {
+            color: #B4BBCA;
+            font-weight: 400;
+
+            .number {
+                color: #1890ff;
+                margin: 0 4px;
+            }
+        }
+    }
+
+    .http-tags {
+        border: 1px solid #EAECF3;
+        border-radius: 4px;
+        padding: 4px;
+        padding-bottom: 0;
+
+        .tag-item {
+            margin-bottom: 4px;
+        }
+    }
+}
+
+.http-heard-form {
+    padding: 24px 16px;
+}

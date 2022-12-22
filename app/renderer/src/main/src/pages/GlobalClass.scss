@@ -11,6 +11,7 @@
     justify-content: space-between;
 }
 
+// ========================== monaco ==========================
 .monaco-editor,
 .monaco-editor-background,
 .monaco-editor .inputarea.ime-input {
@@ -21,7 +22,7 @@
     background-color: #e8e9e8 !important;
 }
 
-
+// ========================== ant ==========================
 .ant-dropdown {
     box-shadow: 0 3px 6px -4px rgb(0 0 0 / 12%), 0 6px 16px 0 rgb(0 0 0 / 8%), 0 9px 28px 8px rgb(0 0 0 / 5%);
     background: #fff;
@@ -50,7 +51,48 @@
     align-items: center;
 }
 
-.ant-tooltip-arrow{
+.ant-tooltip-arrow {
     width: 16px;
     height: 16px;
+}
+
+.ant-form-item-with-help {
+    margin-bottom: 16px;
+}
+
+.ant-form-item {
+    margin-bottom: 16px;
+}
+
+// ========================== color ==========================
+.bg-color-red-opacity {
+    background-color: #F4736B;
+}
+
+.bg-color-green-opacity {
+    background-color: #56C991;
+}
+
+.bg-color-blue-opacity {
+    background-color: #4A94F8;
+}
+
+.bg-color-yellow-opacity {
+    background-color: #FFD583;
+}
+
+.bg-color-orange-opacity {
+    background-color: #FFB660;
+}
+
+.bg-color-purple-opacity {
+    background-color: #8863F7;
+}
+
+.bg-color-cyan-opacity {
+    background-color: #35D8EE;
+}
+
+.bg-color-grey-opacity {
+    background-color: #B4BBCA;
 }

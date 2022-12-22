@@ -7,6 +7,10 @@
             height: 100%;
         }
 
+        .ant-spin-container {
+            height: 100%;
+        }
+
         ::-webkit-scrollbar {
             /*滚动条整体样式*/
             width: 8px;
@@ -37,6 +41,7 @@
     .virtual-table-heard-right {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         padding-left: 8px;
 
         .virtual-table-heard-right-item {
@@ -98,6 +103,18 @@
 
                 &:last-child {
                     border-right: 0;
+                }
+
+                .virtual-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    width: 100%;
+                    flex: 1;
+
+                    .icon-question {
+                        color: #B4BBCA;
+                    }
                 }
 
                 .virtual-table-title-left {
@@ -251,6 +268,21 @@
                     &:hover {
                         background: #F8F8F8;
                     }
+
+                    .drag-sort-icon {
+                        cursor: move;
+                        color: #CCD2DE;
+                        margin-right: 8px;
+
+                        &:hover {
+                            color: #1890ff;
+                        }
+                    }
+                }
+
+                .virtual-table-row-cell-disabled {
+                    color: #CCD2DE;
+                    background-color: #F8F8F8;
                 }
 
                 .virtual-table-row-cell-border-right-0 {
@@ -265,11 +297,22 @@
                     border-left: 1px solid #91d5ff;
                 }
 
+                .virtual-table-row-cell-move {
+                    cursor: move;
+                }
+
                 .virtual-table-row-ellipsis {
                     white-space: nowrap;
                     text-overflow: ellipsis;
                     overflow: hidden;
                     word-break: break-all;
+                    width: 100%;
+                    line-height: 100%;
+                }
+
+                .virtual-table-row-no-ellipsis {
+                    display: flex;
+                    align-items: center;
                     width: 100%;
                 }
 
@@ -292,6 +335,11 @@
                     left: 0;
                     z-index: 1;
                     box-shadow: 4px 0px 6px rgba(133, 137, 158, 0.1);
+
+                    &:first-child {
+                        z-index: 2;
+                        box-shadow: none;
+                    }
                 }
 
                 .virtual-table-row-fixed-left-box-show-none {
@@ -399,18 +447,13 @@
             margin-right: 4px;
             height: 16px;
             width: 16px;
+            line-height: 16px;
+        }
 
+        .check-title {
             :global {
-                .ant-checkbox-inner {
-                    border-radius: 4px;
-                }
-
-                .ant-checkbox-checked::after {
-                    border-radius: 4px;
-                }
-
-                .ant-checkbox-wrapper {
-                    height: 16px;
+                .ant-checkbox {
+                    top: 2px;
                 }
             }
         }

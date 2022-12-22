@@ -1,0 +1,118 @@
+// // ========================== 新UI ==========================
+// .yakit-auto-complete-wrapper-newUI {
+//     --yakit-box-shadow-color: #FBE7D9;
+//     --yakit-border-color: #f69c5d;
+//     --yakit-font-color: #F28B44;
+// }
+
+// // ========================== 老UI ==========================
+// .yakit-auto-complete-wrapper-oldUI {
+//     --yakit-box-shadow-color: #e6f7ff;
+//     --yakit-border-color: #40a9ff;
+//     --yakit-font-color: #1890ff;
+// }
+
+// ========================== disabled ==========================
+.yakit-auto-complete-disabled {
+    :global {
+        .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            background-color: #F0F1F3;
+            border: 1px solid #EAECF3;
+        }
+    }
+}
+
+// ========================== middle ==========================
+.yakit-auto-complete-wrapper {
+
+    --yakit-box-shadow-color: var(--yakit-primary-color-focus);
+    --yakit-border-color: var(--yakit-primary-color-hover);
+    --yakit-font-color: var(--yakit-primary-color);
+
+    display: inline-flex;
+    width: 100%;
+
+    :global {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            height: 28px;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 26px;
+            font-size: 12px;
+        }
+
+        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+            border-color: var(--yakit-border-color);
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+        }
+
+        // .ant-select-focused:not(.ant-select-disabled) .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+        //     border-color: var(--yakit-border-color);
+        //     box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+        // }
+        .ant-select-focused .ant-select-selector {
+            border-color: var(--yakit-border-color) !important;
+            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color) !important;
+        }
+    }
+}
+
+// ========================== small ==========================
+.yakit-auto-complete-wrapper-small {
+    :global {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            height: 24px;
+            padding: 4px 8px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 22px;
+            font-size: 12px;
+        }
+    }
+}
+
+
+// ========================== large ==========================
+.yakit-auto-complete-wrapper-large {
+    :global {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            height: 32px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 30px;
+            font-size: 14px;
+        }
+    }
+}
+
+
+// ========================== popup ==========================
+.yakit-auto-complete-popup {
+    --auto-complete-font-color: var(--yakit-primary-color);
+    --auto-complete-background-color: var(--yakit-select-background-color);
+
+    padding: 6px 4px;
+    border-radius: 4px;
+
+    :global {
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+            color: var(--auto-complete-font-color);
+            background-color: var(--auto-complete-background-color);
+        }
+
+        .ant-select-item {
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+    }
+}
+
+.yakit-auto-complete-popup-y {
+    transform: translateY(-2px);
+}

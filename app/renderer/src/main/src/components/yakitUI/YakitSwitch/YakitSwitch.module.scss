@@ -1,0 +1,230 @@
+// ========================== switch ==========================
+.yakit-switch-wrapper-item {
+
+    --switch-box-shadow-color: var(--yakit-primary-color-focus);
+    --switch-border-color: var(--yakit-primary-border-color);
+    --switch-border-close-color: var(--yakit-border-color); // switch关闭的时候
+
+    --switch-background-color: var(--yakit-primary-color);
+    --switch-background-close-color: var(--yakit-disable-text-color); // switch关闭的时候的背景色
+    --switch-background-disable-color: var(--yakit-background-color);
+
+    --switch-inner-circular-background-color: var(--yakit-neutral10-color); // 里面的圆圈
+
+    padding: 3px;
+
+    :global {
+
+        [ant-click-animating-without-extra-node='true']::after,
+        .ant-click-animating-node {
+            box-shadow: none;
+            opacity: 1;
+            animation: yakitFadeEffectSwitch 1s cubic-bezier(0.08, 0.82, 0.17, 1), yakitWaveEffectSwitch 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+        }
+
+        .ant-switch {
+            background: var(--switch-background-close-color);
+            border: 1px solid transparent;
+        }
+
+
+        .ant-switch-checked:focus {
+            box-shadow: 0 0 0 2px var(--switch-box-shadow-color);
+        }
+
+        .ant-switch-checked {
+            // border: 1px solid var(--switch-border-color);
+            background: var(--switch-background-color);
+        }
+
+        .ant-switch:focus:hover {
+            box-shadow: none;
+        }
+
+        .ant-switch-disabled {
+            background: var(--switch-background-disable-color);
+            border: 1px solid var(--switch-border-close-color);
+            opacity: 1;
+        }
+
+        .ant-switch-handle {
+            top: auto;
+        }
+    }
+}
+
+
+.yakit-switch-item {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 10px;
+    padding: 2px;
+
+    :global {
+        .ant-switch-checked {
+            .ant-switch-inner {
+                margin: 0 0 0 2px;
+            }
+        }
+    }
+}
+
+
+
+// ========================== max-large ==========================
+.yakit-switch-wrapper-max-large {
+    display: inline-flex;
+
+    :global {
+        .ant-switch-checked {
+            .ant-switch-handle {
+                left: calc(100% - 18px - 2px);
+            }
+
+            .ant-switch-inner {
+                margin: 0 4px 0 5px;
+            }
+        }
+    }
+}
+
+.yakit-switch-max-large {
+    width: 44px;
+    height: 22px;
+    min-width: 44px;
+
+    :global {
+        .ant-switch-handle {
+            height: 18px;
+            width: 18px;
+        }
+    }
+}
+
+// ========================== large ==========================
+.yakit-switch-wrapper-large {
+    display: inline-flex;
+
+    :global {
+        .ant-switch-checked {
+            .ant-switch-handle {
+                left: calc(100% - 16px - 2px);
+            }
+
+            .ant-switch-inner {
+                margin: 0 4px 0 3px;
+            }
+        }
+    }
+}
+
+.yakit-switch-large {
+    width: 36px;
+    height: 20px;
+    min-width: 36px;
+
+    :global {
+        .ant-switch-handle {
+            height: 16px;
+            width: 16px;
+        }
+
+        .ant-switch-inner {
+            font-weight: 500;
+            font-size: 11px;
+            color: var(--switch-inner-circular-background-color);
+            height: 14px;
+            line-height: 14px;
+            margin: 0 0 0 18px;
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+.yakit-switch-large-icon {
+    svg {
+        stroke-width: 1.5px;
+        height: 12px;
+        width: 12px;
+    }
+}
+
+// ========================== middle ==========================
+.yakit-switch-wrapper-middle {
+    display: inline-flex;
+
+    :global {
+        .ant-switch-checked {
+            .ant-switch-handle {
+                left: calc(100% - 12px - 2px);
+            }
+
+            .ant-switch-inner {
+                margin: 0 4px 0 1px;
+            }
+        }
+    }
+}
+
+.yakit-switch-middle {
+    width: 28px;
+    height: 16px;
+    min-width: 28px;
+
+    :global {
+        .ant-switch-handle {
+            height: 12px;
+            width: 12px;
+        }
+
+        .ant-switch-inner {
+            font-weight: 500;
+            font-size: 10px;
+            color: var(--switch-inner-circular-background-color);
+            height: 12px;
+            line-height: 12px;
+            margin: 0 0 0 13px;
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+.yakit-switch-middle-icon {
+    svg {
+        stroke-width: 1.5px;
+        height: 10px;
+        width: 10px;
+    }
+}
+
+// ========================== small ==========================
+.yakit-switch-wrapper-small {
+    display: inline-flex;
+
+    :global {
+        .ant-switch-checked {
+            .ant-switch-handle {
+                left: calc(100% - 8px - 2px);
+            }
+
+            .ant-switch-inner {
+                margin: 0 4px 0 1px;
+            }
+        }
+    }
+}
+
+.yakit-switch-small {
+    width: 20px;
+    height: 12px;
+    min-width: 20px;
+
+    :global {
+        .ant-switch-handle {
+            width: 8px;
+            height: 8px;
+        }
+    }
+}

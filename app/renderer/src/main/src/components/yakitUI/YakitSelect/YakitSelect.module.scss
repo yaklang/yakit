@@ -1,0 +1,221 @@
+// ========================== select ==========================
+.yakit-select {
+    --select-box-shadow-color: var(--yakit-primary-color-focus);
+    --select-border-primary-color: var(--yakit-primary-border-color);
+    --select-border-color: var(--yakit-border-color);
+
+    --select-primary-font-color: var(--yakit-primary-background-color);
+    --select-font-color: var(--yakit-header-color);
+    --select-font-disabled-color: var(--yakit-helper-text-color);
+
+    --select-background-color: var(--yakit-primary-color-focus);
+    --select-background-disabled-color: var(--yakit-background-color);
+    --select-background-white: var(--yakit-neutral10-color);
+
+
+    font-weight: 400;
+    font-size: 12px;
+
+    :global {
+        .ant-select {
+            display: flex;
+            font-size: 12px;
+        }
+
+        .ant-select-selector {
+            display: flex;
+            align-items: center;
+        }
+
+        .ant-select-single .ant-select-selector .ant-select-selection-item,
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            display: flex;
+            font-size: 12px;
+            line-height: normal;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--select-border-color);
+            width: 100%;
+        }
+
+        .ant-select-single.ant-select-open .ant-select-selection-item {
+            color: var(--select-font-color)
+        }
+
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 16px;
+        }
+
+        .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border: 1px solid var(--select-border-primary-color);
+            box-shadow: 0 0 0 2px var(--select-box-shadow-color);
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector:hover {
+            border: 1px solid var(--select-border-primary-color);
+        }
+
+        .ant-select-multiple .ant-select-selector::after {
+            line-height: 20px;
+        }
+
+        // ========================== disabled ==========================
+        .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            background: var(--select-background-disabled-color);
+            color: var(--select-font-disabled-color);
+            border-color: transparent !important;
+        }
+    }
+}
+
+// ========================== popup ==========================
+.yakit-select-popup {
+    --select-background-color: var(--yakit-select-background-color);
+
+    padding: 6px 4px;
+    border-radius: 4px;
+
+    :global {
+        .ant-select-item-option-content:hover {
+            color: var(--select-primary-font-color);
+        }
+
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+            font-weight: 400;
+            background-color: var(--select-background-color);
+        }
+
+        .ant-select-item {
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+    }
+}
+
+.yakit-select-popup-y {
+    transform: translateY(-2px);
+}
+
+// ========================== large ==========================
+.yakit-select-large {
+    height: 32px;
+    font-size: 14px;
+
+    :global {
+        .ant-select {
+            font-size: 14px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 32px;
+        }
+
+        .ant-select-single .ant-select-selector .ant-select-selection-item,
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            font-size: 14px;
+            height: 20px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            min-height: 32px;
+        }
+
+        .ant-select-selection-overflow {
+            min-height: 24px;
+        }
+
+        .ant-select-selection-overflow-item {
+            height: 24px;
+        }
+    }
+}
+
+// ========================== middle ==========================
+.yakit-select-middle {
+    height: 28px;
+
+    :global {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 28px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            min-height: 28px;
+        }
+
+        .ant-select-selection-overflow {
+            min-height: 20px;
+        }
+
+        .ant-select-selection-overflow-item {
+            height: 20px;
+        }
+    }
+}
+
+// ========================== small ==========================
+.yakit-select-small {
+    height: 24px;
+
+    :global {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 24px;
+            padding: 4px 8px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            min-height: 24px !important;
+        }
+
+        .ant-select-selection-overflow {
+            min-height: 16px;
+        }
+
+        .ant-select-selection-overflow-item {
+            height: 16px;
+        }
+
+        .ant-select-multiple .ant-select-selector::after {
+            line-height: 16px;
+        }
+    }
+}
+
+
+// ========================== mode tags ==========================
+.yakit-select-wrapper-tags {
+    :global {
+
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+            color: var(--select-primary-font-color);
+            background: var(--select-background-white);
+        }
+
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+            background: var(--select-background-color);
+            color: var(--select-primary-font-color);
+            font-weight: 400
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 0 4px;
+            height: auto;
+            min-height: 28px;
+        }
+
+        .ant-select-selection-overflow {
+            margin-bottom: 3px;
+            // margin-top: 3px;
+            // margin: 2px 0;
+        }
+
+        .ant-select-selection-overflow-item {
+            margin-top: 3px;
+            display: inline-flex;
+            align-items: center;
+        }
+    }
+}

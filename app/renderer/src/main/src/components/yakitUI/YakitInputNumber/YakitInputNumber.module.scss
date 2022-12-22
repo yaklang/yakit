@@ -1,0 +1,268 @@
+// ========================== wrapper ==========================
+.yakit-input-number-wrapper {
+
+    --input-number-box-shadow-color: var(--yakit-primary-color-focus);
+    --input-number-box-shadow-error-color: var(--yakit-danger-color-focus);
+
+    --input-number-border-hover-color: var(--yakit-primary-color-hover);
+    --input-number-border-focus-color: var(--yakit-primary-color);
+    --input-number-border-error-color: var(--yakit-danger-color);
+    --input-number-border-color: var(--yakit-border-color);
+    --input-number-border-disabled-color: var(--yakit-border-color);
+
+    --input-number-icon-hover-color: var(--yakit-primary-color-hover);
+    --input-number-icon-error-color: var(--yakit-danger-color);
+    --input-number-icon-disabled-color: var(--yakit-helper-text-color);
+
+    --input-number-hover-color: var(--yakit-primary-color-hover);
+    --input-number-hover-error-color: var(--yakit-danger-color);
+
+    --input-number-background-disabled-color: var(--yakit-background-color);
+
+
+    :global {
+        .ant-input-number:hover {
+            border-color: var(--input-number-border-hover-color)
+        }
+
+        .ant-input-number-focused {
+            border-color: var(--input-number-border-focus-color)
+        }
+
+        .ant-input-number-handler:hover .ant-input-number-handler-up-inner,
+        .ant-input-number-handler:hover .ant-input-number-handler-down-inner {
+            color: var(--input-number-hover-color);
+        }
+
+        .ant-input-number:focus,
+        .ant-input-number-focused {
+            box-shadow: 0 0 0 2px var(--input-number-box-shadow-color)
+        }
+
+        .ant-input-number-disabled:hover {
+            border-color: var(--input-number-border-disabled-color);
+        }
+    }
+}
+
+// ========================== midden ==========================
+.yakit-input-number {
+    height: 28px;
+    border-radius: 4px;
+    line-height: 28px;
+    max-width: 88px;
+    display: inline-flex;
+    align-items: center;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 28px;
+        }
+
+        .ant-input-number-input {
+            padding: 0 12px;
+        }
+
+    }
+}
+
+// ========================== max-large ==========================
+.yakit-input-number-max-large {
+    height: 40px;
+    line-height: 40px;
+    max-width: 96px;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 40px;
+        }
+
+    }
+}
+
+// ========================== large ==========================
+.yakit-input-number-large {
+    height: 32px;
+    line-height: 32px;
+    max-width: 88px;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 32px;
+        }
+    }
+}
+
+// ========================== small ==========================
+.yakit-input-number-small {
+    height: 24px;
+    line-height: 24px;
+    max-width: 80px;
+
+    :global {
+
+        .ant-input-number-input {
+            height: 24px;
+        }
+    }
+}
+
+// ========================== disabled ==========================
+.yakit-input-number-disabled {
+    background: var(--input-number-background-disabled-color);
+    cursor: not-allowed;
+    border-color: var(--input-number-border-disabled-color);
+
+    svg {
+        color: var(--input-number-icon-disabled-color);
+    }
+}
+
+// ========================== horizontal ==========================
+
+.yakit-input-number-horizontal {
+    display: inline-flex;
+    border: 1px solid;
+    border-color: var(--input-number-border-color);
+    border-radius: 4px;
+    align-items: center;
+    user-select: none;
+    transition: border 0.24s linear 0.14s;
+
+    :global {
+
+        .ant-input-number:focus,
+        .ant-input-number-focused {
+            box-shadow: none
+        }
+    }
+
+    &:hover {
+        border-color: var(--input-number-border-hover-color);
+    }
+
+    &:focus {
+        box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
+    }
+
+    .icon-left {
+        border-right: 1px solid var(--input-number-border-color);
+        ;
+        border-radius: 4px 0px 0px 4px;
+        cursor: pointer;
+
+        &:hover {
+            color: var(--input-number-hover-color);
+        }
+    }
+
+    .icon-right {
+        border-left: 1px solid var(--input-number-border-color);
+        ;
+        border-radius: 0px 4px 4px 0px;
+        cursor: pointer;
+
+        &:hover {
+            color: var(--input-number-hover-color);
+        }
+    }
+
+
+    .icon-midden {
+        background: #FFFFFF;
+        width: 24px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+
+        &:active {
+            background-color: #f4f4f4;
+        }
+
+
+    }
+
+
+    .icon-large {
+        width: 24px;
+        height: 32px;
+        line-height: 32px;
+    }
+
+    .icon-small {
+        width: 20px;
+        height: 24px;
+        line-height: 24px;
+    }
+
+    .yakit-input-number-wrapper {
+        width: 64px;
+        border-radius: 0;
+
+        :global {
+            .ant-input-number-handler-wrap {
+                width: 0;
+            }
+        }
+    }
+
+    // ========================== horizontal  disabled ==========================
+    .yakit-input-number-wrapper-disabled {
+        background: var(--input-number-background-disabled-color);
+        cursor: not-allowed;
+    }
+
+    .icon-disabled {
+        background: var(--input-number-background-disabled-color);
+        cursor: not-allowed;
+
+        svg {
+            color: var(--input-number-icon-disabled-color);
+        }
+    }
+}
+
+.yakit-input-number-horizontal-focus {
+    box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
+    border-color: var(--input-number-border-focus-color);
+}
+
+.yakit-input-number-horizontal-disabled {
+    &:hover {
+        border-color: #d9d9d9;
+    }
+}
+
+:global {
+    .ant-form-item-has-error {
+        .yakit-input-number-horizontal-error {
+            border-color: var(--input-number-border-error-color);
+
+            &:hover {
+                border-color: var(--input-number-border-error-color);
+            }
+
+            &:focus {
+                border-color: var(--input-number-border-error-color);
+                box-shadow: 0 0 0 2px var(--input-number-box-shadow-error-color);
+            }
+
+            .icon-error svg {
+                color: var(--input-number-icon-error-color);
+
+                &:hover {
+                    color: var(--input-number-hover-color);
+                }
+            }
+        }
+
+        .yakit-input-number-horizontal-focus-error {
+            border-color: var(--input-number-border-error-color);
+            box-shadow: 0 0 0 2px var(--input-number-box-shadow-error-color);
+        }
+    }
+
+}

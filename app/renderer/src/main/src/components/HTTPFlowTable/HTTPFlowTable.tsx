@@ -114,7 +114,7 @@ export interface HTTPFlow {
     cellClassName?: string
 
     /*
-    * */
+     * */
     InvalidForUTF8Request?: boolean
     InvalidForUTF8Response?: boolean
     RawRequestBodyBase64?: string
@@ -483,97 +483,97 @@ const TableRowColor = (key: string) => {
 const availableColors = [
     {
         color: "RED",
-        title: "红色[#fcf1f0]",
+        title: "红色[#F4736B]",
         className: TableRowColor("RED"),
         searchWord: "YAKIT_COLOR_RED",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 红色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-red"])}></div>
+                <div className={classNames(style["tag-color-display"],"bg-color-red-opacity")}></div>
             </div>
         )
     },
     {
         color: "GREEN",
-        title: "绿色[#f0f9f4]",
+        title: "绿色[#56C991]",
         className: TableRowColor("GREEN"),
         searchWord: "YAKIT_COLOR_GREEN",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 绿色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-green"])}></div>
+                <div className={classNames(style["tag-color-display"], 'bg-color-green-opacity')}></div>
             </div>
         )
     },
     {
         color: "BLUE",
-        title: "蓝色[#eff4fe]",
+        title: "蓝色[#4A94F8]",
         className: TableRowColor("BLUE"),
         searchWord: "YAKIT_COLOR_BLUE",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 蓝色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-blue"])}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-blue-opacity")}></div>
             </div>
         )
     },
     {
         color: "YELLOW",
-        title: "黄色[#fffbf2]",
+        title: "黄色[#FFD583]",
         searchWord: "YAKIT_COLOR_YELLOW",
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 黄色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-yellow"])}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-yellow-opacity")}></div>
             </div>
         )
     },
     {
         color: "ORANGE",
-        title: "橙色[#fff8ef]",
+        title: "橙色[#FFB660]",
         searchWord: "YAKIT_COLOR_ORANGE",
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 橙色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-orange"])}></div>
+                <div className={classNames(style["tag-color-display"],"bg-color-orange-opacity")}></div>
             </div>
         )
     },
     {
         color: "PURPLE",
-        title: "紫色[#f3effe]",
+        title: "紫色[#8863F7]",
         searchWord: "YAKIT_COLOR_PURPLE",
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 紫色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-purple"])}></div>
+                <div className={classNames(style["tag-color-display"],"bg-color-purple-opacity")}></div>
             </div>
         )
     },
     {
         color: "CYAN",
-        title: "天蓝色[#B5F5EC]",
+        title: "天蓝色[#35D8EE]",
         searchWord: "YAKIT_COLOR_CYAN",
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 天蓝色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-cyan"])}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-cyan-opacity")}></div>
             </div>
         )
     },
     {
         color: "GREY",
-        title: "灰色[#f7f8fa]",
+        title: "灰色[#B4BBCA]",
         searchWord: "YAKIT_COLOR_GREY",
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 灰色
-                <div className={classNames(style["tag-color-display"], style["row-bg-color-grey"])}></div>
+                <div className={classNames(style["tag-color-display"],"bg-color-grey-opacity")}></div>
             </div>
         )
     }
@@ -1178,7 +1178,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     placeholder='Maximum'
                                     min={getAfterBodyLength()}
                                     value={getBeforeBodyLength()}
-                                    onChange={(v) => {setBeforeBodyLength(v as number)}}
+                                    onChange={(v) => {
+                                        setBeforeBodyLength(v as number)
+                                    }}
                                     size='small'
                                 />
                                 <Select
@@ -2276,7 +2278,7 @@ const ColorSearch = React.memo((props: ColorSearchProps) => {
         }
     })
     return (
-        <div onMouseLeave={() => onMouseLeave()}>
+        <div>
             {availableColors.map((ele) => {
                 const checked = color.findIndex((c) => c === ele.searchWord) !== -1
                 return (
