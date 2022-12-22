@@ -375,6 +375,13 @@ service Yak {
 
   // 注册一个 Facades HTTP 响应
   rpc RegisterFacadesHTTP(RegisterFacadesHTTPRequest) returns (RegisterFacadesHTTPResponse);
+
+  // 重置到恢复出厂设置
+  rpc ResetAndInvalidUserData(ResetAndInvalidUserDataRequest) returns (Empty);
+}
+
+message ResetAndInvalidUserDataRequest {
+  
 }
 
 message RegisterFacadesHTTPRequest {
