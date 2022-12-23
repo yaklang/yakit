@@ -383,10 +383,6 @@
     background: var(--button-background);
     color: var(--button-color);
     border-color: var(--button-border-color);
-
-    svg {
-        color: var(--button-color) !important;
-    }
 }
 
 .yakit-button-type:hover {
@@ -409,11 +405,11 @@
     }
 }
 
-// [ant-click-animating-without-extra-node="true"]::after {
-//     box-shadow: none;
-//     opacity: 1;
-//     animation: fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1), waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
-// }
+[ant-click-animating-without-extra-node="true"]::after {
+    box-shadow: none;
+    opacity: 1;
+    animation: fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1), waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+}
 
 .yakit-button-press {
     background: var(--button-press-background) !important;
@@ -425,14 +421,14 @@
     }
 }
 
-// @keyframes fadeEffect {
-//     100% {
-//         opacity: 0;
-//     }
-// }
+@keyframes fadeEffect {
+    100% {
+        opacity: 0;
+    }
+}
 
-// @keyframes waveEffect {
-//     100% {
-//         box-shadow: 0 0 0 4px var(--button-wave-shadow-color);
-//     }
-// }
+@keyframes waveEffect {
+    100% {
+        box-shadow: 0 0 0 4px var(--button-wave-shadow-color);
+    }
+}
