@@ -43,6 +43,7 @@ import {showDevTool} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
+import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -283,7 +284,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "settingMenu":
                 showConfigMenuItems()
                 return
-
+            case "invalidCache":
+                invalidCacheAndUserData()
+                return
             default:
                 return
         }
@@ -333,6 +336,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "settingMenu",
                     label: "配置菜单栏"
+                },
+                {
+                    key: "invalidCache",
+                    label: "删除缓存数据",
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
