@@ -68,6 +68,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                         </YakitTag>
                     )
                 }}
+<<<<<<< HEAD
                 suffixIcon={
                     show ? (
                         <ChevronUpIcon className={styles["yakit-select-icon"]} />
@@ -75,6 +76,9 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                         <ChevronDownIcon className={styles["yakit-select-icon"]} />
                     )
                 }
+=======
+                suffixIcon={show ? <ChevronUpIcon className={styles['yakit-select-icon']}/> : <ChevronDownIcon className={styles['yakit-select-icon']}/>}
+>>>>>>> 4de4ae3a (Luoluo/feature/optimization mitm rule (#564))
             >
                 {props.children}
             </Select>
