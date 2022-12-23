@@ -75,7 +75,6 @@ function testClient(port, callback) {
     const yak = new Yak(`localhost:${port}`, grpc.credentials.createInsecure(), options)
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
-
 /**
  * @name 测试远程连接引擎是否成功
  * @param {Object} params

@@ -43,7 +43,6 @@ function generateWindowsSudoCommand(file, args) {
     const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
     return `powershell.exe start-process -verb runas -WindowStyle hidden -filepath ${cmds}`
 }
-
 /** @name 以管理员权限执行命令 */
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
