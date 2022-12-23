@@ -191,6 +191,12 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             </Form.Item>
                         </>
                     )}
+                    <Row>
+                        <Col span={5}>&nbsp;</Col>
+                        <Col span={16}>
+                            <Divider dashed style={{marginTop: 0}} />
+                        </Col>
+                    </Row>
                     <Form.Item label='命中颜色' name='Color'>
                         <YakitSelect size='middle' wrapperStyle={{width: "100%"}} dropdownClassName='old-theme-html'>
                             {colorSelectNode}

@@ -1154,6 +1154,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
         enableDragSort,
         moveRowEnd
     } = props
+
     return (
         <div
             className={classNames(style["virtual-table-row-content"], {
@@ -1412,7 +1413,7 @@ const CellRenderDrop = React.memo(
                     item.index = hoverIndex
                 }
             },
-            [item.data[renderKey]]
+            [number]
         )
         const [{isDragging}, drag] = useDrag(
             {
@@ -1424,12 +1425,12 @@ const CellRenderDrop = React.memo(
                     isDragging: monitor.isDragging()
                 })
             },
-            [item.data[renderKey]]
+            [number]
         )
         useUpdateEffect(() => {
             if (isDragging) return
             if (moveRowEnd) moveRowEnd()
-        }, [isDragging, item.data[renderKey]])
+        }, [isDragging, number])
         drag(drop(dragRef))
 
         const styleDrag =
