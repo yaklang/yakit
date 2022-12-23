@@ -101,6 +101,8 @@ export interface ColumnsTypeProps {
     left?: number // 外面不需要传，不接收，紧作为固定列使用
     /** @access private */
     right?: number // 外面不需要传，不接收，紧作为固定列使用
+    /** @access private 是否有默认宽度*/
+    isDefWidth?:boolean
     render?: (text, record, index) => ReactNode
     filterProps?: FilterProps
     sorterProps?: SorterProps

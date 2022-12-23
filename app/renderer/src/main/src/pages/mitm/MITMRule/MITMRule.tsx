@@ -306,9 +306,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        onChange={(e) =>
-                            onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")
-                        }
+                        onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
                     />
                 )
             },
@@ -531,7 +529,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
 
     const onClose = useMemoizedFn(() => {
-        console.log("originalRules,rules", originalRules, rules)
         if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
             Modal.confirm({
                 title: "温馨提示",

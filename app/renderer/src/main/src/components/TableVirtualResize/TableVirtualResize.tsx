@@ -50,7 +50,7 @@ import {
     DragSortIcon
 } from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
-import moment, {Moment} from "moment"
+import moment, {ISO_8601, Moment} from "moment"
 import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {useDrag, useDrop, DndProvider} from "react-dnd"
@@ -136,6 +136,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
+    const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
     const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
     const [hoverLine, setHoverLine] = useState<boolean>(false) // 拖拽线 鼠标移上去的状态显示
@@ -241,7 +242,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
             const inViewport =
                 currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
-            // console.log("currentPosition.top", currentPosition, containerRefPosition.current)
 
             if (!inViewport) scrollTo(index)
         },
@@ -322,8 +322,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [pagination.page])
 
     useDeepCompareEffect(() => {
-        // getTableWidthAndColWidth(0)
         setColumns([...props.columns])
+        setDefColumns([...props.columns])
     }, [props.columns])
     useDeepCompareEffect(() => {
         getLeftOrRightFixedWidth()
@@ -386,24 +386,33 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
         let total: number = 0
-        let columnsAllWidth=0;
-        getColumns().forEach(item=>{
-            if(item.width||item.minWidth){
-                columnsAllWidth+=(item.width||item.minWidth||0)
-                total+=1
+        let columnsAllWidth = 0
+        defColumns.forEach((item) => {
+            if (item.width || item.minWidth) {
+                columnsAllWidth += item.width || item.minWidth || 0
+                total += 1
             }
         })
-        if(columnsAllWidth>width){
-            columnsAllWidth=0
-            total=0
+        if (columnsAllWidth > width) {
+            columnsAllWidth = 0
+            total = 0
         }
         let w = (width - columnsAllWidth) / (cLength - total)
         const cw = w - scrollBarWidth / (cLength - total) + 32
-        const newColumns = getColumns().map((ele) => ({
-            ...ele,
-            width: ele.width || cw
-        }))
-        
+        const newColumns = getColumns().map((ele) => {
+            if (ele.isDefWidth) {
+                return {
+                    ...ele,
+                    width: cw
+                }
+            }
+            return {
+                ...ele,
+                isDefWidth: !ele.width,
+                width: ele.width || cw
+            }
+        })
+
         setColWidth(cw)
         setColumns([...newColumns])
         // }
@@ -1420,7 +1429,7 @@ const CellRenderDrop = React.memo(
         useUpdateEffect(() => {
             if (isDragging) return
             if (moveRowEnd) moveRowEnd()
-        }, [isDragging,item.data[renderKey]])
+        }, [isDragging, item.data[renderKey]])
         drag(drop(dragRef))
 
         const styleDrag =
@@ -1458,6 +1467,9 @@ const CellRenderDrop = React.memo(
                     setMouseLeave()
                 }}
                 ref={enableDragSort ? dragRef : null}
+                onDragStart={() => {
+                    onRowClick()
+                }}
             >
                 {enableDragSort && isDragging && (
                     <div style={{height: 28, left: 0, position: "absolute", ...styleDrag}} />
