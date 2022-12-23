@@ -330,7 +330,8 @@ function App() {
             }}
             closable={false}
             cancelText={"关闭 / Closed"}
-            okButtonProps={{disabled: readingSeconds > 0}}
+            // okButtonProps={{disabled: readingSeconds > 0}}
+            okButtonProps={{disabled: false}}
             onOk={() => {
                 ipcRenderer.invoke("set-value", UserProtocolAgreed, true)
                 setAgreed(true)
