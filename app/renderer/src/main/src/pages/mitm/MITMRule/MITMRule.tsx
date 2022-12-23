@@ -142,7 +142,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     useEffect(() => {
         ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
             const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-            console.log(666)
             setOriginalRules(newRules)
         })
     }, [visible])
@@ -196,7 +195,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         {wait: 200}
     ).run
     const onRemove = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-        setRules(rules.filter((t) => t.Index !== rowDate.Index))
+        setRules(rules.filter((t) => t.Id !== rowDate.Id))
     })
 
     const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
@@ -206,7 +205,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
-            if (item.Index === rowDate.Index) {
+            if (item.Id === rowDate.Id) {
                 item = {
                     ...rowDate,
                     Disabled: !rowDate.Disabled
@@ -250,7 +249,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         disabled={i.Disabled}
                         checked={i.NoReplace}
                         onChange={(val) => {
-                            onEdit({Index: i.Index, NoReplace: val}, "NoReplace")
+                            onEdit({Id: i.Id, NoReplace: val}, "NoReplace")
                         }}
                     />
                 )
@@ -264,7 +263,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         checked={checked}
                         disabled={record.Disabled}
                         onChange={(e) =>
-                            onEdit({Index: record.Index, EnableForRequest: e.target.checked}, "EnableForRequest")
+                            onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
                         }
                     />
                 )
@@ -278,7 +277,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         checked={checked}
                         disabled={record.Disabled}
                         onChange={(e) =>
-                            onEdit({Index: record.Index, EnableForResponse: e.target.checked}, "EnableForResponse")
+                            onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
                         }
                     />
                 )
@@ -293,7 +292,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             checked={checked}
                             disabled={record.Disabled}
                             onChange={(e) =>
-                                onEdit({Index: record.Index, EnableForHeader: e.target.checked}, "EnableForHeader")
+                                onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
                             }
                         />
                     )
@@ -308,7 +307,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         checked={checked}
                         disabled={record.Disabled}
                         onChange={(e) =>
-                            onEdit({Index: record.Index, EnableForBody: e.target.checked}, "EnableForBody")
+                            onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")
                         }
                     />
                 )
@@ -321,7 +320,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitSelectMemo
                         value={text}
                         disabled={record.Disabled}
-                        onSelect={(val) => onEdit({Index: record.Index, Color: val}, "Color")}
+                        onSelect={(val) => onEdit({Id: record.Id, Color: val}, "Color")}
                     />
                 )
             },
@@ -362,7 +361,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
 
     const onEdit = useMemoizedFn((record, text: string) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (item.Index === record.Index) {
+            if (item.Id === record.Id) {
                 item[text] = record[text]
             }
             return {...item}
@@ -409,7 +408,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
 
     const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
         if (isEdit) {
-            const index = rules.findIndex((item) => item.Index === val.Index)
+            const index = rules.findIndex((item) => item.Id === val.Id)
             if (index === -1) return
             rules[index] = {...val}
             setRules([...rules])
@@ -452,7 +451,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         if (selectedRowKeys.length === 0) return
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (selectedRowKeys.findIndex((ele) => ele == `${item.Index}`) !== -1) {
+            if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) !== -1) {
                 item[text] = checked
             }
             return item
@@ -469,7 +468,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = []
         rules.forEach((item) => {
-            if (selectedRowKeys.findIndex((ele) => ele == `${item.Index}`) === -1) {
+            if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) === -1) {
                 newRules.push(item)
             }
         })
