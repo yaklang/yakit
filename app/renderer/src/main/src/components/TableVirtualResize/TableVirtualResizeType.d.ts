@@ -29,6 +29,7 @@ import {SelectProps} from "antd"
  * @event (record: T) => void onSetCurrentRow:设置选中
  * @event (dragIndex: number, hoverIndex: number) => void onMoveRow:拖拽
  * @property {boolean} enableDragSort 是否拖拽排序
+ * @event   onMoveRowEnd 拖拽结束
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
@@ -58,11 +59,9 @@ export interface TableVirtualResizeProps<T> {
     disableSorting?: boolean //禁用排序
     query?: object
     onSetCurrentRow?: (record: T) => void
-    /**
-     * @private 组件自用
-     */
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?:boolean
+    onMoveRowEnd?:()=>void
 }
 
 export interface SortProps {
@@ -102,6 +101,8 @@ export interface ColumnsTypeProps {
     left?: number // 外面不需要传，不接收，紧作为固定列使用
     /** @access private */
     right?: number // 外面不需要传，不接收，紧作为固定列使用
+    /** @access private 是否有默认宽度*/
+    isDefWidth?:boolean
     render?: (text, record, index) => ReactNode
     filterProps?: FilterProps
     sorterProps?: SorterProps

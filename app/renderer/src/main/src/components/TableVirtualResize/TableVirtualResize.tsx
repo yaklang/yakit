@@ -50,7 +50,7 @@ import {
     DragSortIcon
 } from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
-import moment, {Moment} from "moment"
+import moment, {ISO_8601, Moment} from "moment"
 import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {useDrag, useDrop, DndProvider} from "react-dnd"
@@ -129,12 +129,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         query,
         onSetCurrentRow,
         onMoveRow,
-        enableDragSort
+        enableDragSort,
+        onMoveRowEnd
     } = props
 
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
+    const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
     const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
     const [hoverLine, setHoverLine] = useState<boolean>(false) // 拖拽线 鼠标移上去的状态显示
@@ -240,7 +242,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
             const inViewport =
                 currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
-            // console.log("currentPosition.top", currentPosition, containerRefPosition.current)
 
             if (!inViewport) scrollTo(index)
         },
@@ -321,8 +322,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [pagination.page])
 
     useDeepCompareEffect(() => {
-        // getTableWidthAndColWidth(0)
         setColumns([...props.columns])
+        setDefColumns([...props.columns])
     }, [props.columns])
     useDeepCompareEffect(() => {
         getLeftOrRightFixedWidth()
@@ -384,23 +385,34 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
         const cLength = props.columns.length
         if (!width || cLength <= 0) return
-
-        let widthAll: number = 0
         let total: number = 0
-        // if (colWidth === 0) {
-        // getColumns().forEach((c) => {
-        //     const widthC = c.width || c.minWidth
-        //     if (widthC) {
-        //         widthAll += widthC
-        //         total += 1
-        //     }
-        // })
-        let w = (width - widthAll) / (cLength - total)
+        let columnsAllWidth = 0
+        defColumns.forEach((item) => {
+            if (item.width || item.minWidth) {
+                columnsAllWidth += item.width || item.minWidth || 0
+                total += 1
+            }
+        })
+        if (columnsAllWidth > width) {
+            columnsAllWidth = 0
+            total = 0
+        }
+        let w = (width - columnsAllWidth) / (cLength - total)
         const cw = w - scrollBarWidth / (cLength - total) + 32
-        const newColumns = getColumns().map((ele) => ({
-            ...ele,
-            width: ele.width || cw
-        }))
+        const newColumns = getColumns().map((ele) => {
+            if (ele.isDefWidth) {
+                return {
+                    ...ele,
+                    width: cw
+                }
+            }
+            return {
+                ...ele,
+                isDefWidth: !ele.width,
+                width: ele.width || cw
+            }
+        })
+
         setColWidth(cw)
         setColumns([...newColumns])
         // }
@@ -738,6 +750,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const moveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
         if (onMoveRow) onMoveRow(dragIndex, hoverIndex)
     })
+    const moveRowEnd = useMemoizedFn(() => {
+        if (onMoveRowEnd) onMoveRowEnd()
+    })
     return (
         <div className={classNames(style["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
@@ -869,6 +884,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             moveRow={moveRow}
                                             width={width}
                                             enableDragSort={enableDragSort}
+                                            moveRowEnd={moveRowEnd}
                                         />
                                     ))}
                                 </div>
@@ -1114,6 +1130,7 @@ interface ColRenderProps {
     moveRow?: (dragIndex: number, hoverIndex: number) => void
     width: number
     enableDragSort?: boolean
+    moveRowEnd?: () => void
 }
 const ColRender = React.memo((props: ColRenderProps) => {
     const {
@@ -1134,8 +1151,10 @@ const ColRender = React.memo((props: ColRenderProps) => {
         mouseCellId,
         moveRow,
         width,
-        enableDragSort
+        enableDragSort,
+        moveRowEnd
     } = props
+
     return (
         <div
             className={classNames(style["virtual-table-row-content"], {
@@ -1181,6 +1200,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             moveRow={moveRow}
                             width={width}
                             enableDragSort={enableDragSort}
+                            moveRowEnd={moveRowEnd}
                         />
                     )) || (
                         <CellRender
@@ -1226,6 +1246,7 @@ interface CellRenderProps {
     moveRow?: (dragIndex: number, hoverIndex: number) => void
     width?: number
     enableDragSort?: boolean
+    moveRowEnd?: () => void
 }
 const CellRender = React.memo(
     (props: CellRenderProps) => {
@@ -1342,63 +1363,74 @@ const CellRenderDrop = React.memo(
             mouseCellId,
             moveRow,
             width,
-            enableDragSort
+            enableDragSort,
+            moveRowEnd
         } = props
         const dragRef = useRef<any>()
 
-        const [{handlerId}, drop] = useDrop<DragItem, void, {handlerId: Identifier | null}>({
-            accept: "row",
-            collect(monitor) {
-                return {
-                    handlerId: monitor.getHandlerId()
+        const [{handlerId}, drop] = useDrop<DragItem, void, {handlerId: Identifier | null}>(
+            {
+                accept: "row",
+                collect(monitor) {
+                    return {
+                        handlerId: monitor.getHandlerId()
+                    }
+                },
+                hover(item: DragItem, monitor) {
+                    if (!dragRef.current) {
+                        return
+                    }
+                    const dragIndex = item.index
+                    const hoverIndex = number || 0
+
+                    // Don't replace items with themselves
+                    if (dragIndex === hoverIndex) {
+                        return
+                    }
+
+                    // Determine rectangle on screen
+                    const hoverBoundingRect = dragRef.current?.getBoundingClientRect()
+
+                    // Get vertical middle
+                    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
+
+                    // Determine mouse position
+                    const clientOffset = monitor.getClientOffset()
+
+                    // Get pixels to the top
+                    const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
+
+                    // Dragging downwards
+                    if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                        return
+                    }
+
+                    // Dragging upwards
+                    if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                        return
+                    }
+                    if (moveRow) moveRow(dragIndex, hoverIndex)
+                    item.index = hoverIndex
                 }
             },
-            hover(item: DragItem, monitor) {
-                if (!dragRef.current) {
-                    return
-                }
-                const dragIndex = item.index
-                const hoverIndex = number || 0
-
-                // Don't replace items with themselves
-                if (dragIndex === hoverIndex) {
-                    return
-                }
-
-                // Determine rectangle on screen
-                const hoverBoundingRect = dragRef.current?.getBoundingClientRect()
-
-                // Get vertical middle
-                const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-
-                // Determine mouse position
-                const clientOffset = monitor.getClientOffset()
-
-                // Get pixels to the top
-                const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
-
-                // Dragging downwards
-                if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-                    return
-                }
-
-                // Dragging upwards
-                if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-                    return
-                }
-                if (moveRow) moveRow(dragIndex, hoverIndex)
-                item.index = hoverIndex
-            }
-        })
-        const [{isDragging}, drag] = useDrag({
-            type: "row",
-            item: () => {
-                return {id: item.data[renderKey], index: number}
+            [number]
+        )
+        const [{isDragging}, drag] = useDrag(
+            {
+                type: "row",
+                item: () => {
+                    return {id: item.data[renderKey], index: number}
+                },
+                collect: (monitor: any) => ({
+                    isDragging: monitor.isDragging()
+                })
             },
-            collect: (monitor: any) => ({
-                isDragging: monitor.isDragging()
-            })
-        })
+            [number]
+        )
+        useUpdateEffect(() => {
+            if (isDragging) return
+            if (moveRowEnd) moveRowEnd()
+        }, [isDragging, number])
         drag(drop(dragRef))
 
         const styleDrag =
@@ -1436,6 +1468,9 @@ const CellRenderDrop = React.memo(
                     setMouseLeave()
                 }}
                 ref={enableDragSort ? dragRef : null}
+                onDragStart={() => {
+                    onRowClick()
+                }}
             >
                 {enableDragSort && isDragging && (
                     <div style={{height: 28, left: 0, position: "absolute", ...styleDrag}} />

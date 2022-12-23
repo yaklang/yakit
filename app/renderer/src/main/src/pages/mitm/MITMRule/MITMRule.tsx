@@ -42,7 +42,6 @@ import {MITMResponse} from "../MITMPage"
 import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
@@ -132,7 +131,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [modalVisible, setModalVisible] = useState<boolean>(false)
     const [exportVisible, setExportVisible] = useState<boolean>(false)
     const [importVisible, setImportVisible] = useState<boolean>(false)
-    const [tipVisible, setTipVisible] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
@@ -141,21 +139,27 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
     const [currentIndex, setCurrentIndex] = useState<number>()
-
+    useEffect(() => {
+        ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+            const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+            setOriginalRules(newRules)
+        })
+    }, [visible])
     useEffect(() => {
         if (importVisible) return
         setLoading(true)
         ipcRenderer
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                setRules(rsp.Rules)
-                setOriginalRules(rsp.Rules)
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setRules(newRules)
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible, importVisible])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-            setRules(data?.replacers || [])
+            const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
+            setRules(newRules)
             return
         })
         return () => {
@@ -191,7 +195,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         {wait: 200}
     ).run
     const onRemove = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-        setRules(rules.filter((t) => t.Index !== rowDate.Index))
+        setRules(rules.filter((t) => t.Id !== rowDate.Id))
     })
 
     const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
@@ -201,7 +205,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
-            if (item.Index === rowDate.Index) {
+            if (item.Id === rowDate.Id) {
                 item = {
                     ...rowDate,
                     Disabled: !rowDate.Disabled
@@ -236,7 +240,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 dataKey: "NoReplace",
                 width: 350,
                 tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                extra: <div className={styles["table-result-extra"]}>不替换</div>,
+                extra: <div className={styles["table-result-extra"]}>开/关</div>,
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitSwitchMemo
                         ExtraCookies={i.ExtraCookies}
@@ -244,21 +248,22 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         Result={i.Result}
                         disabled={i.Disabled}
                         checked={i.NoReplace}
-                        // onChange={(val) => onEdit({...i, NoReplace: val}, "NoReplace")}
-                        onChange={(val) => onEdit({Index: i.Index, NoReplace: val}, "NoReplace")}
+                        onChange={(val) => {
+                            onEdit({Id: i.Id, NoReplace: val}, "NoReplace")
+                        }}
                     />
                 )
             },
             {
                 title: "请求",
                 dataKey: "EnableForRequest",
+                width: 80,
                 render: (checked, record: MITMContentReplacerRule) => (
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        // onChange={(e) => onEdit({...record, EnableForRequest: e.target.checked}, "EnableForRequest")}
                         onChange={(e) =>
-                            onEdit({Index: record.Index, EnableForRequest: e.target.checked}, "EnableForRequest")
+                            onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
                         }
                     />
                 )
@@ -266,13 +271,13 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {
                 title: "响应",
                 dataKey: "EnableForResponse",
+                width: 80,
                 render: (checked, record: MITMContentReplacerRule) => (
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        // onChange={(e) => onEdit({...record, EnableForResponse: e.target.checked}, "EnableForResponse")}
                         onChange={(e) =>
-                            onEdit({Index: record.Index, EnableForResponse: e.target.checked}, "EnableForResponse")
+                            onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
                         }
                     />
                 )
@@ -280,14 +285,14 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {
                 title: "Header",
                 dataKey: "EnableForHeader",
+                width: 80,
                 render: (checked, record: MITMContentReplacerRule) => {
                     return (
                         <YakitCheckboxMemo
                             checked={checked}
                             disabled={record.Disabled}
-                            // onChange={(e) => onEdit({...record, EnableForHeader: e.target.checked}, "EnableForHeader")}
                             onChange={(e) =>
-                                onEdit({Index: record.Index, EnableForHeader: e.target.checked}, "EnableForHeader")
+                                onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
                             }
                         />
                     )
@@ -296,14 +301,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {
                 title: "Body",
                 dataKey: "EnableForBody",
+                width: 80,
                 render: (checked, record: MITMContentReplacerRule) => (
                     <YakitCheckboxMemo
                         checked={checked}
                         disabled={record.Disabled}
-                        // onChange={(e) => onEdit({...record, EnableForBody: e.target.checked}, "EnableForBody")}
-                        onChange={(e) =>
-                            onEdit({Index: record.Index, EnableForBody: e.target.checked}, "EnableForBody")
-                        }
+                        onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
                     />
                 )
             },
@@ -315,8 +318,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     <YakitSelectMemo
                         value={text}
                         disabled={record.Disabled}
-                        // onSelect={(val) => onEdit({...record, Color: val}, "Color")}
-                        onSelect={(val) => onEdit({Index: record.Index, Color: val}, "Color")}
+                        onSelect={(val) => onEdit({Id: record.Id, Color: val}, "Color")}
                     />
                 )
             },
@@ -354,9 +356,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         ]
     }, [])
+
     const onEdit = useMemoizedFn((record, text: string) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (item.Index === record.Index) {
+            if (item.Id === record.Id) {
                 item[text] = record[text]
             }
             return {...item}
@@ -376,13 +379,15 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
         if (b) {
+            const index = rules.length + 1
             const defRowDate: MITMContentReplacerRule = {
                 Color: "",
                 EnableForRequest: false,
                 EnableForResponse: true,
                 EnableForBody: true,
                 EnableForHeader: true,
-                Index: rules.length + 1,
+                Index: index,
+                Id: index,
                 NoReplace: false,
                 Result: "",
                 Rule: "",
@@ -401,7 +406,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
 
     const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
         if (isEdit) {
-            const index = rules.findIndex((item) => item.Index === val.Index)
+            const index = rules.findIndex((item) => item.Id === val.Id)
             if (index === -1) return
             rules[index] = {...val}
             setRules([...rules])
@@ -412,7 +417,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         }
         onOpenOrCloseModal(false)
     })
-
     const onSaveToDataBase = useMemoizedFn(() => {
         const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({...item, Index: index + 1}))
         if (status === "idle") {
@@ -421,7 +425,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 .invoke("SetCurrentRules", {Rules: newRules})
                 .then((e) => {
                     setVisible(false)
-                    setTipVisible(false)
                     success("保存成功")
                 })
                 .catch((e) => {
@@ -435,7 +438,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 })
                 .then((val) => {
                     setVisible(false)
-                    setTipVisible(false)
                     success("保存成功")
                 })
                 .catch((e) => {
@@ -447,7 +449,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         if (selectedRowKeys.length === 0) return
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (selectedRowKeys.findIndex((ele) => ele == `${item.Index}`) !== -1) {
+            if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) !== -1) {
                 item[text] = checked
             }
             return item
@@ -464,7 +466,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setLoading(true)
         const newRules: MITMContentReplacerRule[] = []
         rules.forEach((item) => {
-            if (selectedRowKeys.findIndex((ele) => ele == `${item.Index}`) === -1) {
+            if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) === -1) {
                 newRules.push(item)
             }
         })
@@ -495,7 +497,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             if (item.Disabled) {
                 newRules.push(item)
             } else {
-                newRules.push({...item, NoReplace: checked})
+                newRules.push({...item, NoReplace: !checked})
             }
         })
         setRules(newRules)
@@ -504,7 +506,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setLoading(false)
         }, 200)
     })
-    const onMoveRow = useCallback((dragIndex: number, hoverIndex: number) => {
+    const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
         setRules((prevRules: MITMContentReplacerRule[]) =>
             update(prevRules, {
                 $splice: [
@@ -513,7 +515,13 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 ]
             })
         )
-    }, [])
+    })
+    const onMoveRowEnd = useMemoizedFn(() => {
+        setRules((prevRules: MITMContentReplacerRule[]) => {
+            const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
+            return [...newRules]
+        })
+    })
 
     const onOkImport = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
@@ -526,10 +534,25 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "温馨提示",
                 icon: <ExclamationCircleOutlined />,
                 content: "请问是否要保存规则内容并关闭弹框？",
-                okText: "确定",
-                cancelText: "取消",
+                okText: "保存",
+                cancelText: "不保存",
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className={styles["remove-icon"]}
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
                 onOk: () => {
                     onSaveToDataBase()
+                },
+                onCancel: () => {
+                    setVisible(false)
                 },
                 cancelButtonProps: {size: "small", style: {borderRadius: 4}},
                 okButtonProps: {size: "small", style: {borderRadius: 4, backgroundColor: "#1890ff"}}
@@ -549,7 +572,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 getContainer={getContainer}
                 mask={false}
                 style={(visible && styleDrawer) || {}}
-                // className={styles["mitm-rule-drawer"]}
                 className={classNames(styles["mitm-rule-drawer"], "old-theme-html")}
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={<div className={styles["heard-title"]}>内容规则配置</div>}
@@ -649,7 +671,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 </YakitButton>
                             </div>
                         }
-                        renderKey='Index'
+                        renderKey='Id'
                         data={rules}
                         rowSelection={{
                             isAll: isAllSelect,
@@ -669,6 +691,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         onSetCurrentRow={onSetCurrentRow}
                         onMoveRow={onMoveRow}
                         enableDragSort={true}
+                        onMoveRowEnd={onMoveRowEnd}
                     />
                 </div>
             </YakitDrawer>
@@ -686,20 +709,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {importVisible && (
                 <MITMRuleImport visible={importVisible} setVisible={setImportVisible} onOk={onOkImport} />
             )}
-            {/* {tipVisible && (
-                <CloseTipModal
-                    visible={tipVisible}
-                    onOK={() => onSaveToDataBase()}
-                    onCancel={() => setTipVisible(false)}
-                />
-            )} */}
         </>
     )
 }
-
-// const CloseTipModal = React.memo<CloseTipModalProps>((props) => {
-//     return <YakitModal title="提示"></YakitModal>
-// })
 
 const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
     (props) => {
@@ -757,12 +769,12 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
             node = (
                 <div>
                     {props.ExtraHeaders.length > 0 && (
-                        <YakitTag size='small' color='purple'>
+                        <YakitTag size='small' color='purple' disable={props.disabled}>
                             HTTP Header: {props.ExtraHeaders.length}
                         </YakitTag>
                     )}
                     {props.ExtraCookies.length > 0 && (
-                        <YakitTag size='small' color='success'>
+                        <YakitTag size='small' color='success' disable={props.disabled}>
                             HTTP Cookie: {props.ExtraCookies.length}
                         </YakitTag>
                     )}
@@ -783,6 +795,15 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
             return false
         }
         if (preProps.disabled !== nextProps.disabled) {
+            return false
+        }
+        if (preProps.Result !== nextProps.Result) {
+            return false
+        }
+        if (JSON.stringify(preProps.ExtraCookies) !== JSON.stringify(nextProps.ExtraCookies)) {
+            return false
+        }
+        if (JSON.stringify(preProps.ExtraHeaders) !== JSON.stringify(nextProps.ExtraHeaders)) {
             return false
         }
         return true
