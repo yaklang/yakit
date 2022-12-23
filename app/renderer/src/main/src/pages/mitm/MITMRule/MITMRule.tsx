@@ -233,7 +233,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {
                 title: "规则内容",
                 dataKey: "Rule",
-                width: 240
+                // width: 240
             },
             {
                 title: "替换结果",
