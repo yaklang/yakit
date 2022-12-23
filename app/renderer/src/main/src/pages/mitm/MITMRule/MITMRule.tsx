@@ -240,7 +240,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 dataKey: "NoReplace",
                 width: 350,
                 tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                extra: <div className={styles["table-result-extra"]}>启用</div>,
+                extra: <div className={styles["table-result-extra"]}>开/关</div>,
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitSwitchMemo
                         ExtraCookies={i.ExtraCookies}
@@ -762,7 +762,7 @@ const YakitCheckboxMemo = React.memo<YakitCheckboxProps>(
 const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
     (props) => {
         let node: ReactNode = (
-            <Tooltip title={props.Result} >
+            <Tooltip title={props.Result}>
                 <div className={styles["table-result-text"]}>{props.Result}</div>
             </Tooltip>
         )
