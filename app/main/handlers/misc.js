@@ -344,4 +344,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("RegisterFacadesHTTP", async (e, params) => {
         return await asyncRegisterFacadesHTTP(params)
     })
+
+    // asyncResetAndInvalidUserData wrapper
+    const asyncResetAndInvalidUserData = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ResetAndInvalidUserData(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ResetAndInvalidUserData", async (e, params) => {
+        return await asyncResetAndInvalidUserData(params)
+    })
 }

@@ -89,6 +89,7 @@ import {API} from "@/services/swagger/resposeType"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
+import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData";
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
@@ -225,10 +226,10 @@ export interface SetUserInfoProp {
 const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg} />
+        <Avatar size={38} style={{cursor: "pointer"}} src={companyHeadImg}/>
     ) : (
         <Avatar size={38} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
-            {companyName&&companyName.slice(0, 1)}
+            {companyName && companyName.slice(0, 1)}
         </Avatar>
     )
 }
@@ -257,7 +258,8 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             .catch((err) => {
                 failed("头像更换失败：" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     })
 
     // 修改头像
@@ -287,12 +289,14 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                     .catch((err) => {
                         failed("头像更换失败：" + err)
                     })
-                    .finally(() => {})
+                    .finally(() => {
+                    })
             })
             .catch((err) => {
                 failed("头像上传失败")
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     })
     return (
         <div className='dropdown-menu-user-info'>
@@ -314,7 +318,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             >
                 <div className='img-box'>
                     <div className='img-box-mask'>{judgeAvatar(userInfo)}</div>
-                    <CameraOutlined className='hover-icon' />
+                    <CameraOutlined className='hover-icon'/>
                 </div>
             </Upload.Dragger>
 
@@ -335,7 +339,7 @@ const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 
 const Main: React.FC<MainProp> = forwardRef((props) => {
     const [engineStatus, setEngineStatus] = useState<"ok" | "error">("ok")
-    const [status, setStatus] = useState<{addr: string; isTLS: boolean}>()
+    const [status, setStatus] = useState<{ addr: string; isTLS: boolean }>()
 
     const [loading, setLoading] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])
@@ -387,7 +391,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         // Fetch User Defined Plugins
         ipcRenderer
             .invoke("GetAllMenuItem", {})
-            .then((data: {Groups: MenuItemGroup[]}) => {
+            .then((data: { Groups: MenuItemGroup[] }) => {
                 setMenuItems(data.Groups)
             })
             .catch((e: any) => failed("Update Menu Item Failed"))
@@ -685,12 +689,12 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         return () => ipcRenderer.removeAllListeners("fetch-signin-token")
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         // 企业版初始进入页面（已登录）已获取用户信息 因此刷新
-        if(IsEnterprise){
+        if (IsEnterprise) {
             ipcRenderer.send("company-refresh-in")
         }
-    },[])
+    }, [])
 
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
@@ -698,8 +702,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
             if (IsEnterprise) {
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
-            }
-            else{
+            } else {
                 removePage(Route.LicenseAdminPage, false)
                 removePage(Route.TrustListPage, false)
             }
@@ -714,7 +717,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     ])
 
     useEffect(() => {
-        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
+        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo}/>
         // 非企业管理员登录
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
@@ -726,15 +729,15 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
-                {key: "license-admin",title:"License管理"},
+                {key: "license-admin", title: "License管理"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
         }
         // 非企业license管理员
-        else if(userInfo.role === "licenseAdmin" && userInfo.platform !== "company"){
+        else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
             setUserMenu([
-                {key: "license-admin",title:"License管理"},
+                {key: "license-admin", title: "License管理"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -852,7 +855,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
@@ -865,7 +868,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         })
 
         //
-        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: {Suggestions: MethodSuggestion[]}) => {
+        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: { Suggestions: MethodSuggestion[] }) => {
             try {
                 if (!data) {
                     return
@@ -898,7 +901,8 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                 .catch((e: any) => {
                     setEngineStatus("error")
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }
         let id = setInterval(updateEngineStatus, 3000)
         return () => {
@@ -928,7 +932,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e} />
+                                                <MDEditor.Markdown source={e}/>
                                             </>
                                         )
                                     })
@@ -979,7 +983,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
         addTabPage(Route.WebsocketFuzzer, {
             hideAdd: false,
             isRecord: false,
@@ -1062,7 +1066,8 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
@@ -1227,11 +1232,11 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                         <Col span={8}>
                             <Space>
                                 <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} />
+                                    <Image src={YakLogoBanner} preview={false} width={130}/>
                                 </div>
-                                <Divider type={"vertical"} />
-                                <YakVersion />
-                                <YakitVersion />
+                                <Divider type={"vertical"}/>
+                                <YakVersion/>
+                                <YakitVersion/>
                                 <Button
                                     style={{marginLeft: 4, color: "#207ee8"}}
                                     type={"ghost"}
@@ -1239,18 +1244,18 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                     onClick={(e) => {
                                         updateMenuItems()
                                     }}
-                                    icon={<ReloadOutlined />}
+                                    icon={<ReloadOutlined/>}
                                 />
                             </Space>
                         </Col>
                         <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <PerformanceDisplay />
-                            <RiskStatsTag professionalMode={true} />
+                            <PerformanceDisplay/>
+                            <RiskStatsTag professionalMode={true}/>
                             <Space>
                                 {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus />
+                                <ReversePlatformStatus/>
                                 <Dropdown
                                     overlayClassName='setting-menu'
                                     forceRender={true}
@@ -1284,7 +1289,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                         width: 800,
                                                         content: (
                                                             <div style={{width: 800}}>
-                                                                <ConfigGlobalReverse />
+                                                                <ConfigGlobalReverse/>
                                                             </div>
                                                         )
                                                     })
@@ -1325,18 +1330,26 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                 onClick={() => {
                                                     const m = showModal({
                                                         title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
+                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()}/>
                                                     })
                                                     return m
                                                 }}
                                             >
                                                 <Button type={"link"}>配置私有域</Button>
                                             </Menu.Item>
+                                            <Menu.Item
+                                                key={"invalid-cache"}
+                                                onClick={() => {
+                                                    invalidCacheAndUserData()
+                                                }}
+                                            >
+                                                <Button type={"link"} danger={true}>删除用户数据与缓存</Button>
+                                            </Menu.Item>
                                         </Menu>
                                     }
                                     trigger={["click"]}
                                 >
-                                    <Button icon={<SettingOutlined />}>配置</Button>
+                                    <Button icon={<SettingOutlined/>}>配置</Button>
                                 </Dropdown>
                                 {userInfo.isLogin ? (
                                     <div>
@@ -1367,7 +1380,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                     const key = Route.AccountAdminPage
                                                     goRouterPage(key)
                                                 }
-                                                if(key === "license-admin"){
+                                                if (key === "license-admin") {
                                                     const key = Route.LicenseAdminPage
                                                     goRouterPage(key)
                                                 }
@@ -1400,7 +1413,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                 <Button
                                     type={"link"}
                                     danger={true}
-                                    icon={<PoweroffOutlined />}
+                                    icon={<PoweroffOutlined/>}
                                     onClick={() => {
                                         if (winCloseFlag) {
                                             setWinCloseShow(true)
@@ -1460,7 +1473,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                 }
                                                 return (
                                                     <Menu.SubMenu
-                                                        icon={<EllipsisOutlined />}
+                                                        icon={<EllipsisOutlined/>}
                                                         key={i.Group}
                                                         title={i.Group}
                                                     >
@@ -1468,7 +1481,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                             if (item.YakScriptId > 0) {
                                                                 return (
                                                                     <MenuItem
-                                                                        icon={<EllipsisOutlined />}
+                                                                        icon={<EllipsisOutlined/>}
                                                                         key={`plugin:${item.Group}:${item.YakScriptId}`}
                                                                     >
                                                                         <Text ellipsis={{tooltip: true}}>
@@ -1479,7 +1492,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                             }
                                                             return (
                                                                 <MenuItem
-                                                                    icon={<EllipsisOutlined />}
+                                                                    icon={<EllipsisOutlined/>}
                                                                     key={`batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`}
                                                                 >
                                                                     <Text ellipsis={{tooltip: true}}>
@@ -1604,7 +1617,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                                                                     </>
                                                                 }
                                                             >
-                                                                <EditOutlined className='main-container-cion' />
+                                                                <EditOutlined className='main-container-cion'/>
                                                             </Popover>
                                                             <CloseOutlined
                                                                 className='main-container-cion'
@@ -1679,7 +1692,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                 ]}
             >
                 <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
+                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
                     <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
                 <p style={{fontSize: 15, marginLeft: 37}}>
@@ -1733,12 +1746,12 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                             setBugTestValue(
                                 value
                                     ? [
-                                          {
-                                              filter: record?.filter,
-                                              key: record?.key,
-                                              title: record?.title
-                                          }
-                                      ]
+                                        {
+                                            filter: record?.filter,
+                                            key: record?.key,
+                                            title: record?.title
+                                        }
+                                    ]
                                     : []
                             )
                         }
@@ -1756,7 +1769,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                 onCancel={() => setPasswordShow(false)}
                 footer={null}
             >
-                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo}/>
             </Modal>
         </Layout>
     )
