@@ -240,7 +240,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 dataKey: "NoReplace",
                 width: 350,
                 tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                extra: <div className={styles["table-result-extra"]}>开关</div>,
+                extra: <div className={styles["table-result-extra"]}>开/关</div>,
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitSwitchMemo
                         ExtraCookies={i.ExtraCookies}
@@ -534,10 +534,25 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "温馨提示",
                 icon: <ExclamationCircleOutlined />,
                 content: "请问是否要保存规则内容并关闭弹框？",
-                okText: "确定",
-                cancelText: "取消",
+                okText: "保存",
+                cancelText: "不保存",
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className={styles["remove-icon"]}
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
                 onOk: () => {
                     onSaveToDataBase()
+                },
+                onCancel: () => {
+                    setVisible(false)
                 },
                 cancelButtonProps: {size: "small", style: {borderRadius: 4}},
                 okButtonProps: {size: "small", style: {borderRadius: 4, backgroundColor: "#1890ff"}}

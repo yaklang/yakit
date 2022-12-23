@@ -325,7 +325,7 @@ const ExtractRegular: React.FC<ExtractRegularProps> = (props) => {
                         <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
                             取消
                         </div>
-                        <Divider type='vertical' style={{margin: "0 8px"}} />
+                        <Divider type='vertical' style={{margin: "0 8px", top: 2}} />
                         <div
                             className={styles["save-btn"]}
                             onClick={() => {
@@ -497,7 +497,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             >
                 <Form.Item label='Cookie Key' name='Key' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitAutoComplete
-                        dropdownClassName="old-theme-html"
+                        dropdownClassName='old-theme-html'
                         options={["JSESSION", "PHPSESSION", "SESSION", "admin", "test", "debug"].map((ele) => ({
                             value: ele,
                             label: ele
