@@ -440,6 +440,7 @@ module.exports = {
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
+                    if (e.message.indexOf("operation not permitted") > -1) reject("operation not permitted")
                 }
 
 

@@ -44,6 +44,7 @@
         "react-dnd": "^16.0.1",
         "react-dnd-html5-backend": "^16.0.1",
         "react-dom": "^17.0.2",
+        "react-dragger": "^1.3.0",
         "react-error-boundary": "^3.1.4",
         "react-error-overlay": "6.0.9",
         "react-hex-editor": "^0.3.0",
@@ -70,13 +71,12 @@
         "zustand": "^4.0.0-rc.1"
     },
     "scripts": {
-        "electron-render": "cross-env BROWSER=none react-app-rewired start",
-        "electron-render-enterprise": "env-cmd -f .env.enterprise cross-env BROWSER=none react-app-rewired start",
-        "electron-render-newUI": "env-cmd -f .env.name cross-env BROWSER=none react-app-rewired start",
+        "electron-render": "env-cmd -e noBrouser,devTool -f ./.env-cmdrc react-app-rewired start",
+        "electron-render-enterprise": "env-cmd -e noBrouser,devTool,enterprise -f ./.env-cmdrc react-app-rewired start",
         "start": "react-app-rewired start",
-        "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
-        "build-enterprise": "env-cmd -f .env.enterprise cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
-        "build-newUI": "env-cmd -f .env.name cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build": "env-cmd -e devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-enterprise": "env-cmd -e enterprise -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-test-enterprise": "env-cmd -e enterprise,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject"
     },

@@ -431,7 +431,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             handleCancel={() => setIsEdit(false)}
                         />
                     </Suspense>
-                    <Tabs activeKey={tabKey} onChange={(e) => setTabKey(e)}>
+                    <Tabs className="no-theme-tabs" activeKey={tabKey} onChange={(e) => setTabKey(e)}>
                         <TabPane tab='源码' key='1'>
                             <YakEditor type={"yak"} value={plugin.content} readOnly={true} />
                         </TabPane>

@@ -176,10 +176,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 />
                 <div className={classNames(style["heard-menu-left"])} ref={menuLeftRef}>
                     <div className={classNames(style["heard-menu-left-inner"])} ref={menuLeftInnerRef}>
-                        {routeMenu.map((menuItem, index) => {
-                            return (
-                                menuItem.subMenuData &&
-                                menuItem.subMenuData.length > 0 && (
+                        {routeMenu
+                            .filter((ele) => ele.subMenuData && ele.subMenuData?.length > 0)
+                            .map((menuItem, index) => {
+                                return (
                                     <RouteMenuDataItem
                                         key={`menuItem-${menuItem.id}`}
                                         menuItem={menuItem}
@@ -193,8 +193,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         activeMenuId={menuId}
                                     />
                                 )
-                            )
-                        })}
+                            })}
                     </div>
                     {number > 0 && routeMenuDataAfter.length > 0 && (
                         <>
@@ -217,7 +216,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         导入协作资源
                     </YakitButton>
                     <YakitButton
-                        type='outline1'
+                        type="secondary2"
                         className={style["heard-menu-grey"]}
                         onClick={() => onRouteMenuSelect(Route.PayloadManager)}
                         icon={<MenuPayloadIcon />}
@@ -225,7 +224,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         Payload
                     </YakitButton>
                     <YakitButton
-                        type='outline1'
+                        type="secondary2"
                         className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
                             [style["margin-right-0"]]: isExpand
                         })}

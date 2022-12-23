@@ -48,7 +48,8 @@ module.exports = (win, getClient) => {
                 return
             }
             console.info("配置全局反连失败")
-            console.info(error)
+            /** 关闭或意外关闭都会触发此监听事件 */
+            // console.info(error)
             win.webContents.send(`global-reverse-error`, error && error.details)
         })
         globalConfigServer.on("end", () => {

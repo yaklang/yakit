@@ -1,12 +1,19 @@
-const {app, BrowserWindow, dialog, nativeImage, ipcMain, session} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, ipcMain} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
-const {extrakvpairs, getExtraKVPair, setExtraKVPair} = require("./handlers/upgradeUtil")
 const {registerIPC, clearing} = require("./ipc")
-const {service, httpApi} = require("./httpServer")
+const {httpApi} = require("./httpServer")
 const {USER_INFO, HttpSetting} = require("./state")
-
 const process = require("process")
+const {getExtraLocalCache, extraKVCache, setExtraLocalCache, getLocalCache} = require("./localCache")
+
+/** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
+const UICloseFlag = "windows-close-flag"
+
+/** 主进程窗口对象 */
+let win
+// 是否展示关闭二次确认弹窗的标志位
+let closeFlag = true
 
 process.on("uncaughtException", (error) => {
     console.info(error)
@@ -14,12 +21,12 @@ process.on("uncaughtException", (error) => {
 
 // 性能优化：https://juejin.cn/post/6844904029231775758
 
-let flag = true // 是否展示关闭二次确认弹窗的标志位
-let win
 const createWindow = () => {
-    getExtraKVPair((err) => {
-        if (!err)
-            flag = extrakvpairs.get("windows-close-flag") === undefined ? true : extrakvpairs.get("windows-close-flag")
+    /** 获取缓存数据并储存于软件内 */
+    getLocalCache()
+    /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
+    getExtraLocalCache((err) => {
+        if (!err) closeFlag = extraKVCache.get(UICloseFlag) === undefined ? true : extraKVCache.get(UICloseFlag)
     })
 
     win = new BrowserWindow({
@@ -33,10 +40,11 @@ const createWindow = () => {
             nodeIntegration: true,
             contextIsolation: false,
             sandbox: true
-        }
+        },
+        frame: false,
+        titleBarStyle: "hidden"
     })
 
-    // win.loadFile(path.resolve(__dirname, "../renderer/pages/main/index.html"))
     if (isDev) {
         win.loadURL("http://127.0.0.1:3000")
     } else {
@@ -48,10 +56,14 @@ const createWindow = () => {
         win.webContents.openDevTools({mode: "detach"})
     }
 
+    win.setMenu(null)
+    win.setMenuBarVisibility(false)
+    if (process.platform === "darwin") win.setWindowButtonVisibility(false)
+
     win.on("close", (e) => {
         e.preventDefault()
 
-        if (flag) {
+        if (closeFlag) {
             dialog
                 .showMessageBox(win, {
                     icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
@@ -66,7 +78,7 @@ const createWindow = () => {
                     noLink: true
                 })
                 .then((res) => {
-                    setExtraKVPair("windows-close-flag", !res.checkboxChecked)
+                    setExtraLocalCache(UICloseFlag, !res.checkboxChecked)
                     if (res.response === 0) {
                         e.preventDefault()
                         win.minimize()

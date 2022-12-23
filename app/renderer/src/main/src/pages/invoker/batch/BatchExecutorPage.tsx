@@ -900,7 +900,7 @@ export const BatchExecutorResultUI: React.FC<BatchExecutorResultUIProp> = (props
     return (
         <div style={{height: "100%", overflow: "auto"}}>
             <Tabs
-                className='exec-result-body'
+                className='exec-result-body no-theme-tabs'
                 onChange={setActiveKey}
                 activeKey={activeKey}
                 tabBarExtraContent={{

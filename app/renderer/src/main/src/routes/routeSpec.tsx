@@ -1,17 +1,6 @@
 import React, {Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
-import {
-    AimOutlined,
-    AppstoreOutlined,
-    AuditOutlined,
-    BugOutlined,
-    CodeOutlined,
-    EllipsisOutlined,
-    FireOutlined,
-    FunctionOutlined,
-    OneToOneOutlined,
-    RocketOutlined
-} from "@ant-design/icons"
+import {AuditOutlined, CodeOutlined} from "@ant-design/icons"
 // import {HTTPHacker} from "../pages/hacker/httpHacker";
 // import {CodecPage} from "../pages/codec/CodecPage";
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
@@ -54,9 +43,9 @@ import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/enterpriseAdminPage/AccountAdminPage"
-import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage";
-import LicenseAdminPage from "@/pages/enterpriseAdminPage/LicenseAdminPage";
-import {TrustListPage} from "@/pages/enterpriseAdminPage/TrustListPage";
+import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage"
+import LicenseAdminPage from "@/pages/enterpriseAdminPage/LicenseAdminPage"
+import {TrustListPage} from "@/pages/enterpriseAdminPage/TrustListPage"
 
 import {
     MenuDomainAssetsIcon,
@@ -162,7 +151,7 @@ export enum Route {
     AccountAdminPage = "account-admin-page", // 用户管理
     RoleAdminPage = "role-admin-page", // 角色管理
     LicenseAdminPage = "license-admin-page", // license管理
-    TrustListPage = "trust-list-admin-page", // 信任用户管理
+    TrustListPage = "trust-list-admin-page" // 信任用户管理
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -374,7 +363,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <AccountAdminPage />
         case Route.RoleAdminPage:
             return <RoleAdminPage />
-        case Route.LicenseAdminPage: 
+        case Route.LicenseAdminPage:
             return <LicenseAdminPage />
         case Route.TrustListPage:
             return <TrustListPage />

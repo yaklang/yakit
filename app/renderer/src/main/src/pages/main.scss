@@ -1,23 +1,9 @@
-.main-content-tabs .ant-tabs-content.ant-tabs-content-top {
-    height: 100%;
-}
-
 .main-content-tabs {
     width: 100%;
     height: 100%;
 }
-
-.httphacker-tabs .ant-tabs-content.ant-tabs-content-top {
+.main-content-tabs .ant-tabs-content.ant-tabs-content-top {
     height: 100%;
-}
-
-.httphacker-tabs {
-    height: 100%;
-}
-
-.httphacker-tabs.ant-tabs-card>.ant-tabs-nav .ant-tabs-tab {
-    padding: 6px 10px;
-    font-size: 13px;
 }
 
 .flex-card {
@@ -25,7 +11,6 @@
     display: flex;
     flex-direction: column;
 }
-
 .flex-card .ant-card-body {
     flex: 1;
     display: flex;
@@ -33,66 +18,102 @@
 }
 
 .main-container-cion:hover {
-    color: #1890ff;
+    color: var(--yakit-primary-color-hover);
 }
 
-.yakit-layout-tabs.ant-tabs-top>.ant-tabs-nav {
-    margin: 0 0 4px 0 !important;
+// 首页Tabs组件相关样式
+.yakit-layout-tabs.ant-tabs {
+    .ant-tabs-nav {
+        margin: 0;
+        background: #f8f8f8;
+    }
+    .ant-tabs-tab-btn {
+        color: var(--yakit-body-text-color);
+        font-size: 11px;
+        line-height: 16px;
+    }
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: var(--yakit-header-color);
+    }
+    .ant-tabs-tab-remove {
+        padding: 0 6px;
+        margin-left: 10px;
+        height: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+    }
 }
-
-.yakit-layout-tabs.ant-tabs-card>.ant-tabs-nav .ant-tabs-tab {
-    padding: 6px 10px;
-    font-size: 13px;
+.yakit-layout-tabs.ant-tabs-card.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
+    padding: 4px 8px;
+    border-width: 0;
+    border-right: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+.yakit-layout-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
+    border-top: 2px solid var(--yakit-primary-color);
+    border-bottom: 0;
+    background: var(--yakit-neutral10-color);
+}
+.yakit-layout-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    padding: 0 16px;
+}
+.yakit-layout-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
+    margin-left: 0;
+}
+.yakit-layout-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    transition: none;
+    background: var(--yakit-card-background-color);
 }
 
 /* MainOperator页样式 */
 .yakit-main-layout {
     width: 100%;
-    height: 100vh;
+    height: 100%;
 }
 
-.dropdown-menu-user-info{
+.dropdown-menu-user-info {
     display: flex;
-    .author-upload-dragger{
+    .author-upload-dragger {
         border: transparent;
         background-color: transparent;
-        .ant-upload{
+        .ant-upload {
             padding: 0px;
         }
     }
-    .img-box{
+    .img-box {
         margin: auto;
         position: relative;
-        .hover-icon{
+        .hover-icon {
             position: absolute;
             left: 50%;
             top: 50%;
             transform: translateX(-50%) translateY(-50%);
-            color:white;
+            color: white;
             z-index: 2;
             display: none;
         }
     }
-    .img-box:hover{
-        .hover-icon{
+    .img-box:hover {
+        .hover-icon {
             display: inline-block;
         }
         .img-box-mask::before {
-         content: "";
-         position: absolute;
-         border-radius: 50%;
-         left: 0;
-         right: 0;
-         bottom: 0;
-         top: 0;
-         background-color: rgba(0, 0, 0, .3);
-         z-index: 1;
-     } 
-     }
-    .content-box{
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+    }
+    .content-box {
         min-width: 80px;
         margin-left: 12px;
-        .permission-show{
+        .permission-show {
             font-size: 12px;
             color: gray;
         }
@@ -116,7 +137,6 @@
 
     .ant-dropdown-menu-item:hover,
     .ant-dropdown-menu-submenu-title:hover {
-
         background-color: #1890ff;
 
         .ant-btn-link {
@@ -127,4 +147,113 @@
     .ant-btn-link:hover {
         color: #fff;
     }
+}
+
+// MITM页面相关样式
+.httphacker-tabs {
+    height: 100%;
+}
+.httphacker-tabs .ant-tabs-content.ant-tabs-content-top {
+    height: 100%;
+}
+.httphacker-tabs.ant-tabs {
+    .ant-tabs-nav {
+        margin: 0;
+        background: var(--yakit-neutral10-color);
+    }
+    .ant-tabs-tab-btn {
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: var(--yakit-primary-color);
+    }
+    .ant-tabs-tab-remove {
+        padding: 0 6px;
+        margin-left: 10px;
+        height: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .ant-tabs-tabpane {
+        padding: 8px 16px 13px 16px;
+    }
+}
+.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    padding: 8px 12px;
+    border-width: 0;
+    background-color: var(--yakit-neutral10-color);
+    border-right: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+.httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
+    border-bottom: 2px solid var(--yakit-primary-color);
+    background: rgba(242, 139, 68, 0.06);
+}
+.httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    padding: 0 16px;
+}
+.httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
+    margin-left: 0;
+}
+.httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-add {
+    margin-left: 0;
+    border-left-width: 0;
+}
+.httphacker-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    transition: none;
+}
+
+.yakit-layout-tabs .no-theme-tabs.ant-tabs {
+    .ant-tabs-nav {
+        margin: 0;
+        background: var(--yakit-neutral10-color);
+    }
+    .ant-tabs-tab-btn {
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: #1890ff;
+    }
+    .ant-tabs-tab-remove {
+        padding: 0 6px;
+        margin-left: 10px;
+        height: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .ant-tabs-tabpane {
+        padding: 0;
+    }
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
+    padding: 8px 8px;
+    border-width: 0;
+    background-color: var(--yakit-neutral10-color);
+    border-right: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
+    border-bottom: 2px solid var(--yakit-primary-color);
+    background: rgba(242, 139, 68, 0.06);
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    padding: 0 16px;
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
+    margin-left: 0;
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-add {
+    margin-left: 0;
+    border-left-width: 0;
+}
+.yakit-layout-tabs .no-theme-tabs.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    transition: none;
 }

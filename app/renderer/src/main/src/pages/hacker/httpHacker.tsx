@@ -1,22 +1,17 @@
 import React, {useState, useEffect} from "react"
 import {Tabs} from "antd"
 import {MITMPage} from "../mitm/MITMPage"
-import {PlusOutlined} from "@ant-design/icons"
 import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {HTTPHistory} from "../../components/HTTPHistory"
-import {useMemoizedFn} from "ahooks"
 import {showDrawer} from "../../utils/showModal"
 import {HackerPlugin} from "./HackerPlugin"
 import ReactDOM from "react-dom"
+import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
 
-import "../main.scss"
-import {useHotkeys} from "react-hotkeys-hook";
-import {info} from "../../utils/notification";
-import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory";
+// import "../main.scss"
 
-export interface HTTPHackerProp {
-}
+export interface HTTPHackerProp {}
 
 const defaultHTTPPacket = `GET / HTTP/1.1
 Host: www.example.com
@@ -51,7 +46,6 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 activeKey={activeTab}
                 onChange={setActiveTag}
                 type={"editable-card"}
-                tabBarGutter={2}
                 hideAdd={true}
                 onTabClick={(key, e) => {
                     const divExisted = document.getElementById("yakit-cursor-menu")
@@ -66,12 +60,12 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             >
                 <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
                     <div style={{height: "100%", overflow: "auto"}}>
-                        <MITMPage/>
+                        <MITMPage />
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={false}>
                     <div style={{height: "100%"}}>
-                        <HTTPHistory/>
+                        <HTTPHistory />
                     </div>
                 </Tabs.TabPane>
                 {/*<Tabs.TabPane tab={"Websocket History"} key={"wshistory"} closable={false} forceRender={false}>*/}
@@ -80,11 +74,11 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 {/*    </div>*/}
                 {/*</Tabs.TabPane>*/}
                 <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
-                    <YakScriptExecResultTable/>
+                    <YakScriptExecResultTable />
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <div style={{height: "100%"}}>
-                        <WebsiteTreeViewer/>
+                        <WebsiteTreeViewer />
                     </div>
                 </Tabs.TabPane>
             </Tabs>

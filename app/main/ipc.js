@@ -66,7 +66,52 @@ function getClient(createNew) {
     return getClient()
 }
 
+/**
+ * @name 测试本地缓存端口是否已启动yaklang引擎
+ * @param {String} port 端口号
+ */
+function testClient(port, callback) {
+    const yak = new Yak(`localhost:${port}`, grpc.credentials.createInsecure(), options)
+    yak.Echo({text: "hello yak? are u ok?"}, callback)
+}
+/**
+ * @name 测试远程连接引擎是否成功
+ * @param {Object} params
+ * @param {String} params.host 域名
+ * @param {String} params.port 端口
+ * @param {String} params.caPem 证书
+ * @param {String} params.password 密钥
+ */
+function testRemoteClient(params, callback) {
+    const {host, port, caPem, password} = params
+
+    const md = new grpc.Metadata()
+    md.set("authorization", `bearer ${password}`)
+    const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
+        return callback(null, md)
+    })
+    const yak = !caPem
+        ? new Yak(`${host}:${port}`, grpc.credentials.createInsecure(), options)
+        : new Yak(
+              `${host}:${port}`,
+              // grpc.credentials.createInsecure(),
+              grpc.credentials.combineChannelCredentials(
+                  grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
+                      checkServerIdentity: (hostname, cert) => {
+                          return undefined
+                      }
+                  }),
+                  creds
+              ),
+              options
+          )
+
+    yak.Echo({text: "hello yak? are u ok?"}, callback)
+}
+
 module.exports = {
+    testClient,
+    testRemoteClient,
     clearing: () => {
         require("./handlers/yakLocal").clearing()
     },
@@ -86,6 +131,31 @@ module.exports = {
             )
             return text
         })
+        /** 获取 yaklang引擎 配置参数 */
+        ipcMain.handle("fetch-yaklang-engine-addr", () => {
+            return {
+                addr: global.defaultYakGRPCAddr,
+                isTLS: !!global.caPem
+            }
+        })
+        /** 注册本地缓存数据查改通信 */
+        require("./localCache").register(win, getClient)
+        /** 启动、连接引擎 */
+        require("./handlers/engineStatus")(
+            win,
+            (addr, pem, password) => {
+                // 清空老数据
+                if (_client) _client.close()
+                _client = null
+
+                // 设置新引擎参数
+                global.defaultYakGRPCAddr = addr
+                global.caPem = pem
+                global.password = password
+            },
+            getClient
+        )
+
         require("./handlers/execYak")(win, getClient)
         require("./handlers/listenPort")(win, getClient)
         require("./handlers/mitm")(win, getClient)
@@ -108,7 +178,6 @@ module.exports = {
         require("./handlers/queryHTTPFlow")(win, getClient)
         require("./handlers/httpFuzzer")(win, getClient)
         require("./handlers/httpAnalyzer")(win, getClient)
-        require("./handlers/engineStatus")(win, getClient)
         require("./handlers/codec")(win, getClient)
         require("./handlers/yakLocal").register(win, getClient)
         require("./handlers/openWebsiteByChrome")(win, getClient)
@@ -177,6 +246,12 @@ module.exports = {
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach((item) => {
             require(path.join(__dirname, `./api/${item}`))(win, getClient)
+        })
+
+        // 各类UI层面用户操作
+        const uiOp = fs.readdirSync(path.join(__dirname, "./uiOperate"))
+        uiOp.forEach((item) => {
+            require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
         })
 
         // start chrome manager

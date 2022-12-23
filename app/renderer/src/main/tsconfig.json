@@ -26,5 +26,8 @@
   "include": [
     "src"
   ],
+  "exclude": [
+    "./env-cmdrc"
+  ],
   "extends": "./paths.json"
 }

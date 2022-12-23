@@ -1,0 +1,696 @@
+.ui-layout-wrapper {
+    width: 100%;
+    height: 100vh;
+    min-height: 100%;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    .ui-layout-header {
+        width: 100%;
+        height: 37px;
+        background-color: var(--yakit-neutral10-color);
+        -webkit-user-select: none;
+        user-select: none;
+
+        .short-divider-wrapper {
+            width: 1px;
+            height: 100%;
+            padding: 10px 0;
+            .divider-style {
+                height: 100%;
+                border-left: 1px solid var(--yakit-border-color);
+            }
+        }
+        .divider-wrapper {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid var(--yakit-border-color);
+        }
+
+        .header-body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--yakit-border-color);
+            position: relative;
+
+            .header-border-yakit-mask {
+                position: absolute;
+                bottom: -1px;
+                width: 45px;
+                height: 1px;
+                background: var(--yakit-card-background-color);
+            }
+
+            .yakit-header-title {
+                width: 60px;
+                height: 36px;
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translate(-30px, 0);
+                line-height: 36px;
+                font-weight: 600;
+                color: var(--yakit-header-color);
+                text-align: center;
+                -webkit-app-region: drag;
+            }
+
+            .header-left {
+                height: 100%;
+                display: flex;
+            }
+            .header-title {
+                flex: 1;
+                height: 100%;
+                -webkit-app-region: drag;
+            }
+            .header-right {
+                height: 100%;
+                display: flex;
+            }
+            .yakit-mode-icon {
+                box-sizing: border-box;
+                padding: 8px 12px;
+                border-left: 1px solid var(--yakit-border-color);
+            }
+            .yakit-mode-selected {
+                background: var(--yakit-card-background-color);
+            }
+        }
+    }
+
+    .ui-layout-body {
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+
+        .ui-layout-body-mask {
+            z-index: 50;
+            width: 100%;
+            height: calc(100% - 36px);
+            position: absolute;
+            top: 36px;
+            left: 0;
+            overflow: hidden;
+        }
+    }
+    .ui-layout-mask {
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        background: var(--yakit-primary-color-focus);
+    }
+}
+
+/** 弹窗是否置顶 **/
+.modal-top-wrapper {
+    z-index: 999;
+}
+
+/** 未安装引擎的提示弹窗样式 **/
+.engine-hint-modal-wrapper {
+    position: absolute;
+    top: 35%;
+    left: calc(50% - 224px);
+}
+.engine-hint-modal-hidden-wrapper {
+    display: none;
+}
+.modal-yaklang-engine-hint {
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .yaklang-engine-hint-wrapper {
+        width: 100%;
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        position: relative;
+
+        .hint-draggle-body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 24px;
+        }
+
+        .hint-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            .hint-icon {
+                width: 32px;
+                height: 32px;
+            }
+            .qs-icon {
+                width: 20px;
+                height: 20px;
+                color: var(--yakit-body-text-color);
+                cursor: pointer;
+            }
+            .qs-icon:hover {
+                color: var(--yakit-primary-color);
+            }
+        }
+
+        .hint-right-wrapper {
+            flex: 1;
+            .hint-right-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+            .hint-right-content {
+                margin-top: 8px;
+                font-size: 14px;
+                line-height: 20px;
+                color: var(--yakit-body-text-color);
+            }
+            .hint-right-macarm {
+                margin-top: 8px;
+                box-sizing: border-box;
+                padding: 12px;
+                background: var(--yakit-neutral10-color);
+                border: 1px solid var(--yakit-border-color);
+                border-radius: 4px;
+                .mac-arm-hint {
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--yakit-header-color);
+                }
+                .mac-arm-command {
+                    margin-top: 8px;
+                    display: flex;
+                    align-items: center;
+                    height: 20px;
+                    padding: 4px 6px;
+                    background: var(--yakit-primary-background-color);
+                    border: 1px solid var(--yakit-primary-border-color);
+                    border-radius: 4px;
+
+                    font-size: 11px;
+                    color: var(--yakit-primary-color);
+                    .copy-icon {
+                        width: 12px;
+                        height: 12px;
+                        display: flex;
+                        margin-left: 8px;
+                        cursor: pointer;
+                    }
+                }
+            }
+            .hint-right-agreement {
+                margin-top: 8px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12px;
+                color: var(--yakit-header-color);
+                .agreement-checkbox {
+                    :global {
+                        .ant-checkbox-inner {
+                            border: 1px solid var(--yakit-helper-text-color);
+                            border-radius: 4px;
+                        }
+                        .ant-checkbox-checked .ant-checkbox-inner {
+                            background-color: var(--yakit-primary-color);
+                            border-color: var(--yakit-primary-color);
+                        }
+                        .ant-checkbox-checked::after {
+                            border: 0px;
+                        }
+                    }
+                }
+                .agreement-danger-checkbox {
+                    :global {
+                        .ant-checkbox-inner {
+                            border: 1px solid var(--yakit-danger-color);
+                            border-radius: 4px;
+                        }
+                        .ant-checkbox-checked::after {
+                            border: 0px;
+                        }
+                    }
+                }
+
+                .agreement-style {
+                    color: var(--yakit-primary-color);
+                    cursor: pointer;
+                }
+            }
+            .hint-right-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: space-between;
+
+                .btn-group-wrapper {
+                    display: flex;
+                    gap: 8px;
+                }
+            }
+
+            .hint-right-download {
+                .download-progress {
+                    :global {
+                        .ant-progress-text {
+                            display: block;
+                            margin-left: 0;
+                            margin-top: 2px;
+                        }
+                    }
+                }
+                .download-info-wrapper {
+                    margin-top: 16px;
+                    display: flex;
+                    height: 16px;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--yakit-helper-text-color);
+                    .divider-wrapper {
+                        margin: 0 8px;
+                        width: 1px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        .divider-style {
+                            width: 100%;
+                            height: 12px;
+                            border: 1px solid var(--yakit-border-color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+/** 用户协议和常见问题弹窗样式 **/
+.agr-and-qs-modal-wrapper {
+    z-index: 99;
+    position: absolute;
+    top: 30%;
+    left: calc(50% - 312px);
+}
+.agr-and-qs-modal-hidden-wrapper {
+    display: none;
+}
+
+.yakit-agr-and-qs-modal {
+    width: 100%;
+    background: var(--yakit-neutral10-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .modal-header {
+        box-sizing: border-box;
+        height: 36px;
+        display: flex;
+        align-items: center;
+
+        background: var(--yakit-card-background-color);
+        border-bottom: 1px solid var(--yakit-border-color);
+        border-radius: 4px 4px 0px 0px;
+
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--yakit-header-color);
+    }
+    .mac-header {
+        gap: 12px;
+        .close-wrapper {
+            width: 36px;
+            height: 36px;
+            padding: 10px;
+            display: flex;
+            cursor: pointer;
+            .close-btn {
+                padding: 2px;
+                .btn-icon {
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background-color: var(--yakit-danger-color);
+                }
+            }
+        }
+    }
+    .win-header {
+        justify-content: space-between;
+        .header-title {
+            margin-left: 12px;
+        }
+        .close-wrapper {
+            width: 36px;
+            height: 36px;
+            padding: 8px;
+            .icon-style {
+                color: var(--yakit-helper-text-color);
+            }
+        }
+        .close-wrapper:hover {
+            .icon-style {
+                color: var(--yakit-primary-color);
+            }
+        }
+    }
+
+    .agreement-content-modal-wrapper {
+        .modal-body {
+            padding: 16px 24px 24px 24px;
+            .body-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+            .body-content {
+                margin-top: 8px;
+                font-size: 14px;
+                line-height: 24px;
+                text-align: justify;
+                color: var(--yakit-body-text-color);
+                .sign-content {
+                    color: var(--yakit-danger-color);
+                }
+                .underline-content {
+                    color: var(--yakit-danger-color);
+                    text-decoration: underline;
+                }
+                .sign-bold-content {
+                    color: var(--yakit-danger-color);
+                    font-weight: 500;
+                }
+            }
+        }
+    }
+
+    .question-modal-wrapper {
+        .modal-body {
+            padding: 16px 24px 24px 24px;
+            .body-hint {
+                font-size: 14px;
+                line-height: 24px;
+                text-align: justify;
+                color: var(--yakit-body-text-color);
+                .hint-sign {
+                    color: var(--yakit-danger-color);
+                }
+            }
+            .body-link {
+                margin-top: 8px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+                gap: 12px;
+                border: 1px solid var(--yakit-border-color);
+                border-radius: 4px;
+                .link-opt {
+                    display: flex;
+                    align-items: center;
+                    .link-title {
+                        font-size: 12px;
+                        text-align: justify;
+                        text-align-last: justify;
+                        color: var(--yakit-header-color);
+                    }
+
+                    .link-style {
+                        margin-left: 8px;
+                        flex: 1;
+                        padding: 4px 6px;
+                        background: var(--yakit-card-background-color);
+                        border: 1px solid var(--yakit-border-color);
+                        border-radius: 4px;
+                        font-size: 11px;
+                        line-height: 12px;
+                        color: var(--yakit-body-text-color);
+                        word-break: break-all;
+                        .copy-icon {
+                            margin-left: 8px;
+                            display: inline-block;
+                            cursor: pointer;
+                        }
+                    }
+                }
+            }
+
+            .yakit-update-hint {
+                height: 24px;
+                font-size: 14px;
+                line-height: 24px;
+                text-align: justify;
+                color: var(--yakit-danger-color);
+            }
+            .yakit-update-link {
+                margin-top: 8px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .link-wrapper {
+                    height: 20px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    padding: 2px 6px;
+                    gap: 8px;
+                    background: var(--yakit-card-background-color);
+                    border: 1px solid var(--yakit-border-color);
+                    border-radius: 4px;
+                    font-size: 11px;
+                    color: var(--yakit-body-text-color);
+                    .copy-icon {
+                        cursor: pointer;
+                        height: 16px;
+                        padding: 2px;
+                        display: flex;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 各类系统信息弹窗的宽度
+.yakit-agr-modal {
+    width: 624px;
+}
+.yaklang-update-modal {
+    width: 448px;
+}
+.yaklang-qs-modal {
+    width: 657px;
+}
+.yakit-update-modal {
+    width: 448px;
+}
+.yakit-qs-modal {
+    width: 448px;
+}
+
+/** 远程连接UI **/
+.remote-yaklang-engine-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden auto;
+    padding: 56px 16.7% 0;
+    background: var(--yakit-card-background-color);
+
+    :global {
+        .ant-spin-dot-item {
+            background-color: var(--yakit-primary-color);
+        }
+    }
+
+    .remote-yaklang-engine-body {
+        overflow: auto;
+        .remote-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            .title-style {
+                margin-top: 24px;
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+            .remote-history {
+                margin-top: 16px;
+                display: flex;
+                .select-title {
+                    box-sizing: border-box;
+                    width: 80px;
+                    height: 32px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    background: var(--yakit-card-background-color);
+                    border-width: 1px 0px 1px 1px;
+                    border-style: solid;
+                    border-color: var(--yakit-border-color);
+                    border-radius: 4px 0px 0px 4px;
+
+                    font-size: 14px;
+                    color: var(--yakit-header-color);
+                }
+                .select-style {
+                    width: 320px;
+                    height: 32px;
+                    box-sizing: border-box;
+                    background: var(--yakit-neutral10-color);
+                    border: 1px solid var(--yakit-border-color);
+                    border-radius: 0px 4px 4px 0px;
+                    :global {
+                        .ant-select-selector {
+                            background-color: unset;
+                            border: 0;
+                            border-radius: 0;
+                        }
+                    }
+                }
+                :global {
+                    .ant-select-focused {
+                        .ant-select-selector {
+                            height: 30px;
+                            box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
+                        }
+                    }
+                }
+            }
+        }
+        .rmeote-divider {
+            width: 100%;
+            margin: 24px 0;
+            border-top: 1px solid var(--yakit-background-color);
+        }
+        .remote-info {
+            :global {
+                .ant-form-item-no-colon {
+                    color: var(--yakit-header-color);
+                }
+
+                --antd-wave-shadow-color: var(--yakit-primary-color);
+                .ant-switch-checked {
+                    background: var(--yakit-primary-color);
+                }
+            }
+
+            .error-border {
+                border: 1px solid var(--yakit-danger-color) !important;
+            }
+
+            .input-style {
+                width: 400px;
+                background: var(--yakit-neutral10-color);
+                border: 1px solid var(--yakit-border-color);
+                border-radius: 4px;
+            }
+            .input-style:focus {
+                box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
+            }
+
+            .pem-title {
+                display: flex;
+                align-items: center;
+                .icon-style {
+                    margin: 0 4px;
+                    font-size: 16px;
+                    color: var(--yakit-body-text-color);
+                }
+                .icon-show-style {
+                    margin: 0 4px;
+                    font-size: 16px;
+                    color: var(--yakit-primary-color);
+                }
+            }
+            .pem-content {
+                width: 400px;
+                height: 254px;
+            }
+        }
+    }
+}
+
+.pem-example-popover {
+    :global {
+        .ant-popover-inner {
+            border: 1px solid var(--yakit-border-color);
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+        }
+    }
+    .pem-wrapper {
+        width: 460px;
+
+        line-height: 20px;
+        font-size: 11px;
+        color: var(--yakit-header-color);
+        .title-style {
+            font-size: 14px;
+            line-height: 24px;
+        }
+        .content-code {
+            display: inline-block;
+            padding: 0 4px;
+            border: 1px solid var(--yakit-border-color);
+            background-color: var(--yakit-card-background-color);
+            border-radius: 4px;
+        }
+        .code-pem {
+            width: 460px;
+            height: 280px;
+        }
+        .path-wrapper {
+            margin-top: 6px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .link-wrapper {
+                width: 280px;
+                height: 20px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 2px 6px;
+                gap: 8px;
+                background: var(--yakit-card-background-color);
+                border: 1px solid var(--yakit-border-color);
+                border-radius: 4px;
+                font-size: 11px;
+                color: var(--yakit-body-text-color);
+                .copy-icon {
+                    cursor: pointer;
+                    height: 16px;
+                    padding: 2px;
+                    display: flex;
+                }
+            }
+            .link-open {
+                height: 20px;
+                line-height: 20px;
+                color: var(--yakit-primary-color);
+                cursor: pointer;
+            }
+        }
+    }
+}

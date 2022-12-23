@@ -42,8 +42,13 @@ module.exports = (win, getClient) => {
         win.webContents.send("fetch-close-tab", params)
     })
 
-     // tab 新建插件后，刷新插件仓库的本地插件列表
-     ipcMain.handle("send-local-script-list", async (e, params) => {
-      win.webContents.send("ref-local-script-list", params)
-  })
+    // tab 新建插件后，刷新插件仓库的本地插件列表
+    ipcMain.handle("send-local-script-list", async (e, params) => {
+        win.webContents.send("ref-local-script-list", params)
+    })
+
+    /** 账户菜单页面的打开通信 */
+    ipcMain.handle("open-user-manage", (e, params) => {
+        win.webContents.send("callback-open-user-manage", params)
+    })
 }
