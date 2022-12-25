@@ -125,7 +125,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                         }
                                     }}
                                     onResize={(r) => {
-                                        xtermFit(xtermRef, 50, 18)
+                                        xtermFit(xtermRef, 120, 18)
                                     }}
                                 />
                             </div>

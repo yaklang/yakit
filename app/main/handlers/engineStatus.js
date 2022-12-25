@@ -259,7 +259,7 @@ module.exports = (win, callback, getClient) => {
                                 toLog(`多次尝试启动引擎失败，请检查数据库权限或端口被占用`)
                                 reject("多次尝试启动引擎失败，请清理端口后在重新启动 yakit")
                             } else {
-                                toLog(`启动引擎失败，当前端口为 ${port} 重试次数为：${engineCount}`)
+                                toLog(`启动引擎失败，重试次数为：${engineCount}`)
                                 console.info("启动失败，尝试重试，当前次数", engineCount)
                                 setTimeout(async () => {
                                     const result = await asyncStartLocalYakEngineServer(win, {sudo: false})
