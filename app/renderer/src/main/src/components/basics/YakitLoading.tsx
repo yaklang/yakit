@@ -1,7 +1,9 @@
-import React, {useMemo} from "react"
+import React, {useEffect, useMemo, useRef} from "react"
 
 import styles from "./yakitLoading.module.scss"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
+import {XTerm} from "xterm-for-react";
+import {xtermFit} from "@/utils/xtermUtils";
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -27,10 +29,39 @@ export interface YakitLoadingProp {
     title?: string
 }
 
+const {ipcRenderer} = window.require("electron");
+
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
-    const {loading, title} = props
+    const {loading, title} = props;
+    const xtermRef = useRef<any>(null);
 
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
+
+    const writeToConsole = (i: string) => {
+        if (!xtermRef) {
+            return
+        }
+        xtermRef.current.terminal.write(i)
+    }
+
+    useEffect(() => {
+        if (!xtermRef) {
+            return
+        }
+
+        writeToConsole(`Waiting for Yakit Starting!`)
+
+        ipcRenderer.on("live-engine-stdio", (e, stdout) => {
+            writeToConsole(stdout)
+        })
+        ipcRenderer.on("live-engine-log", (e, stdout) => {
+            writeToConsole(`[INFO] Yakit-Electron-Log: ${stdout}`)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("live-engine-stdio")
+            ipcRenderer.removeAllListeners("live-engine-log")
+        }
+    }, [xtermRef])
 
     return (
         <div className={styles["yakit-loading-wrapper"]}>
@@ -43,15 +74,25 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["theme-icon-wrapper"]}>
                         <div className={styles["theme-icon"]}>
-                            <YakitThemeLoadingSvgIcon />
+                            <YakitThemeLoadingSvgIcon/>
                         </div>
                     </div>
                     <div className={styles["white-icon"]}>
-                        <YakitLoadingSvgIcon />
+                        <YakitLoadingSvgIcon/>
                     </div>
                 </div>
 
                 <div className={styles["yakit-loading-content"]}>{title || "正在加载中..."}</div>
+
+                <div>
+                    <XTerm
+                        ref={xtermRef}
+                        options={{convertEol: true, rows: 8}}
+                        onResize={(r) => {
+                            xtermFit(xtermRef, 50, 18)
+                        }}
+                    />
+                </div>
             </div>
         </div>
     )

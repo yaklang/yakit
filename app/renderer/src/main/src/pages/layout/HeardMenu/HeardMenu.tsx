@@ -12,7 +12,7 @@ import {
     SortDescendingIcon
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Tabs, Tooltip} from "antd"
 import {
@@ -31,15 +31,15 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 export const getScriptIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
-            return <MenuBasicCrawlerIcon />
+            return <MenuBasicCrawlerIcon/>
         case "空间引擎: Hunter": //中文
-            return <MenuSpaceEngineHunterIcon />
+            return <MenuSpaceEngineHunterIcon/>
         case "子域名收集":
-            return <MenuSubDomainCollectionIcon />
+            return <MenuSubDomainCollectionIcon/>
         case "综合目录扫描与爆破":
-            return <MenuComprehensiveCatalogScanningAndBlastingIcon />
+            return <MenuComprehensiveCatalogScanningAndBlastingIcon/>
         default:
-            return <MenuDefaultPluginIcon />
+            return <MenuDefaultPluginIcon/>
     }
 }
 
@@ -62,9 +62,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [width, setWidth] = useState<number>(0)
     const [number, setNumber] = useState<number>(-1)
     const [moreLeft, setMoreLeft] = useState<number>(0) // 更多文字的left
-    const [isExpand, setIsExpand] = useState<boolean>(false)
+    const [isExpand, setIsExpand] = useState<boolean>(true)
     const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
-    const [menuId, setMenuId] = useState<string>("")
+    const [menuId, setMenuId, getMenuId] = useGetState<string>("")
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
@@ -90,13 +90,17 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
         const route = newMenuItemGroup.concat(routeMenuData)
         setRouteMenu(route)
-        if (menuId) {
-            let currentMenu = route.find((ele) => ele.id === menuId)
+        if (getMenuId()) {
+            let currentMenu = route.find((ele) => ele.id === getMenuId())
             if (!currentMenu) {
                 setSubMenuData((route[0] && route[0].subMenuData) || [])
                 setMenuId((route[0] && routeMenu[0].id) || "")
             } else {
                 setSubMenuData(currentMenu.subMenuData || [])
+            }
+        } else {
+            if (route.length >= 0) {
+                setSubMenuData((route[0] && route[0].subMenuData) || [])
             }
         }
     }, [routeMenuData, menuItemGroup])
@@ -211,7 +215,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         type='text'
                         className={style["heard-menu-theme"]}
                         onClick={() => onImportShare()}
-                        icon={<SaveIcon />}
+                        icon={<SaveIcon/>}
                     >
                         导入协作资源
                     </YakitButton>
@@ -219,7 +223,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         type="secondary2"
                         className={style["heard-menu-grey"]}
                         onClick={() => onRouteMenuSelect(Route.PayloadManager)}
-                        icon={<MenuPayloadIcon />}
+                        icon={<MenuPayloadIcon/>}
                     >
                         Payload
                     </YakitButton>
@@ -229,13 +233,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             [style["margin-right-0"]]: isExpand
                         })}
                         onClick={() => onRouteMenuSelect(Route.YakScript)}
-                        icon={<MenuYakRunnerIcon />}
+                        icon={<MenuYakRunnerIcon/>}
                     >
                         Yak Runner
                     </YakitButton>
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
-                            {!isExpand && <SortDescendingIcon />}
+                            {!isExpand && <SortDescendingIcon/>}
                         </div>
                     )}
                 </div>
@@ -245,12 +249,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <Tabs
                         tabBarExtraContent={
                             <div className={style["heard-menu-sort"]} onClick={() => setIsExpand(false)}>
-                                <SortAscendingIcon />
+                                <SortAscendingIcon/>
                             </div>
                         }
                         onTabClick={onTabClick}
                         popupClassName={style["heard-sub-menu-popup"]}
-                        moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
+                        moreIcon={<DotsHorizontalIcon className={style["dots-icon"]}/>}
                     >
                         {subMenuData.map((item, index) => (
                             <Tabs.TabPane
@@ -273,7 +277,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             </Tooltip>
                                         </div>
                                         {index !== subMenuData.length - 1 && (
-                                            <div className={style["sub-menu-expand-item-line"]} />
+                                            <div className={style["sub-menu-expand-item-line"]}/>
                                         )}
                                     </div>
                                 }
@@ -314,7 +318,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
         (isExpand && popoverContent) || (
             <YakitPopover
                 placement='bottomLeft'
-                content={<SubMenu subMenuData={menuItem.subMenuData || []} onSelect={onSelect} />}
+                content={<SubMenu subMenuData={menuItem.subMenuData || []} onSelect={onSelect}/>}
                 trigger='hover'
                 overlayClassName={classNames(style["popover"], {
                     [style["popover-content"]]: menuItem.subMenuData && menuItem.subMenuData.length <= 1
@@ -338,7 +342,7 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                     key={`subMenuItem-${subMenuItem.key}`}
                     onClick={() => onSelect(subMenuItem)}
                 >
-                    {subMenuItem.icon || <MenuDefaultPluginIcon />}
+                    {subMenuItem.icon || <MenuDefaultPluginIcon/>}
                     <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                 </div>
             ))}
@@ -389,7 +393,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                     })}
                 >
                     更多
-                    {(show && <ChevronUpIcon />) || <ChevronDownIcon />}
+                    {(show && <ChevronUpIcon/>) || <ChevronDownIcon/>}
                 </div>
             </YakitPopover>
         </div>

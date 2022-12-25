@@ -42,10 +42,16 @@ const probeEngineProcess = (win, port, sudo) => {
             } else {
                 GLOBAL_YAK_SETTING.sudo = false
                 GLOBAL_YAK_SETTING.defaultYakGRPCAddr = `127.0.0.1:8087`
+                console.info("check local yaklang engine port failed!")
+                console.info(err)
                 win.webContents.send("local-yaklang-engine-end", err)
             }
         })
-    } catch (e) {}
+    } catch (e) {
+        console.info(`check whether existed port:${port} open failed: `)
+        console.info(e)
+    } finally {
+    }
 }
 
 /** 探测 远程引擎 是否存活的定时器 */
@@ -76,7 +82,8 @@ const probeRemoteEngineProcess = (win, params) => {
                 }
             }
         })
-    } catch (e) {}
+    } catch (e) {
+    }
 }
 
 const isWindows = process.platform === "win32"
@@ -86,6 +93,7 @@ function generateWindowsSudoCommand(file, args) {
     const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
     return `powershell.exe start-process -verb runas -WindowStyle hidden -filepath ${cmds}`
 }
+
 /** @name 以管理员权限执行命令 */
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
@@ -97,7 +105,23 @@ function sudoExec(cmd, opt, callback) {
     }
 }
 
+const engineStdioOutputFactory = (win) => (buf) => {
+    if (win) {
+        win.webContents.send("live-engine-stdio", buf.toString("utf-8"))
+    }
+}
+
+const engineLogOutputFactory = (win) => (message) => {
+    if (win) {
+        console.info(message)
+        win.webContents.send("live-engine-log", message)
+    }
+}
+
 module.exports = (win, callback, getClient) => {
+    const toStdout = engineStdioOutputFactory(win);
+    const toLog = engineLogOutputFactory(win);
+
     /** 获取本地引擎版本号 */
     ipcMain.handle("fetch-yak-version", () => {
         try {
@@ -205,7 +229,14 @@ module.exports = (win, callback, getClient) => {
                     probeSurvivalTime = setInterval(() => probeEngineProcess(win, randPort, false), 2000)
 
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${randPort}`], {
-                        stdio: ["ignore", "ignore", "ignore"]
+                        // stdio: ["ignore", "ignore", "ignore"]
+                        stdio: "pipe",
+                    })
+                    subprocess.stdout.on("data", stdout => {
+                        toStdout(stdout)
+                    })
+                    subprocess.stderr.on("data", stdout => {
+                        toStdout(stdout)
                     })
                     subprocess.on("error", (err) => {
                         if (err) {
@@ -222,15 +253,20 @@ module.exports = (win, callback, getClient) => {
                             if (callbackTime) clearTimeout(callbackTime)
                             callbackTime = null
 
-                            if (engineCount === 5) {
+                            if (engineCount > 5) {
                                 if (probeSurvivalTime) clearInterval(probeSurvivalTime)
                                 probeSurvivalTime = null
-                                reject("多次尝试启动引擎失败，请清理端口后在重新启动yakit")
+                                toLog(`多次尝试启动引擎失败，请检查数据库权限或端口被占用`)
+                                reject("多次尝试启动引擎失败，请清理端口后在重新启动 yakit")
+                            } else {
+                                toLog(`启动引擎失败，当前端口为 ${port} 重试次数为：${engineCount}`)
+                                console.info("启动失败，尝试重试，当前次数", engineCount)
+                                setTimeout(async () => {
+                                    const result = await asyncStartLocalYakEngineServer(win, {sudo: false})
+                                    if (!result) resolve()
+                                    else reject(result)
+                                }, 1000)
                             }
-
-                            const result = await asyncStartLocalYakEngineServer(win, {sudo: false})
-                            if (!result) resolve()
-                            else reject(result)
                         }
                     })
 
@@ -268,6 +304,8 @@ module.exports = (win, callback, getClient) => {
     }
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
+        console.info("Start to call `start-lcoal-yaklang-engine` from client end!")
+
         /** 断开远程引擎探测定时器 */
         if (probeSurvivalRemoteTime) clearInterval(probeSurvivalRemoteTime)
         probeSurvivalRemoteTime = null

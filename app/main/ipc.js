@@ -25,7 +25,8 @@ let _client
 
 const options = {
     "grpc.max_receive_message_length": 1024 * 1024 * 1000,
-    "grpc.max_send_message_length": 1024 * 1024 * 1000
+    "grpc.max_send_message_length": 1024 * 1024 * 1000,
+    "grpc.enable_http_proxy": 0,
 }
 
 function newClient() {
@@ -74,6 +75,7 @@ function testClient(port, callback) {
     const yak = new Yak(`localhost:${port}`, grpc.credentials.createInsecure(), options)
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
+
 /**
  * @name 测试远程连接引擎是否成功
  * @param {Object} params
@@ -93,18 +95,18 @@ function testRemoteClient(params, callback) {
     const yak = !caPem
         ? new Yak(`${host}:${port}`, grpc.credentials.createInsecure(), options)
         : new Yak(
-              `${host}:${port}`,
-              // grpc.credentials.createInsecure(),
-              grpc.credentials.combineChannelCredentials(
-                  grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
-                      checkServerIdentity: (hostname, cert) => {
-                          return undefined
-                      }
-                  }),
-                  creds
-              ),
-              options
-          )
+            `${host}:${port}`,
+            // grpc.credentials.createInsecure(),
+            grpc.credentials.combineChannelCredentials(
+                grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
+                    checkServerIdentity: (hostname, cert) => {
+                        return undefined
+                    }
+                }),
+                creds
+            ),
+            options
+        )
 
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
@@ -127,7 +129,8 @@ module.exports = {
                 {
                     text: text
                 },
-                (err, rsp) => {}
+                (err, rsp) => {
+                }
             )
             return text
         })
