@@ -4,6 +4,7 @@ import styles from "./yakitLoading.module.scss"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {XTerm} from "xterm-for-react";
 import {xtermFit} from "@/utils/xtermUtils";
+import {Col, Row} from "antd";
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -84,14 +85,52 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
                 <div className={styles["yakit-loading-content"]}>{title || "正在加载中..."}</div>
 
-                <div>
-                    <XTerm
-                        ref={xtermRef}
-                        options={{convertEol: true, rows: 8}}
-                        onResize={(r) => {
-                            xtermFit(xtermRef, 50, 18)
-                        }}
-                    />
+                <div className={styles["yakit-loading-live-output"]}>
+                    <Row>
+                        <Col span={3}/>
+                        <Col span={18}>
+                            <div>
+                                <XTerm
+                                    ref={xtermRef}
+                                    options={{
+                                        convertEol: true, rows: 12,
+                                        theme: {
+                                            foreground: "#536870",
+                                            background: "#E8E9E8",
+                                            cursor: "#536870",
+
+                                            black: "#002831",
+                                            brightBlack: "#001e27",
+
+                                            red: "#d11c24",
+                                            brightRed: "#bd3613",
+
+                                            green: "#738a05",
+                                            brightGreen: "#475b62",
+
+                                            yellow: "#a57706",
+                                            brightYellow: "#536870",
+
+                                            blue: "#2176c7",
+                                            brightBlue: "#708284",
+
+                                            magenta: "#c61c6f",
+                                            brightMagenta: "#5956ba",
+
+                                            cyan: "#259286",
+                                            brightCyan: "#819090",
+
+                                            white: "#eae3cb",
+                                            brightWhite: "#fcf4dc"
+                                        }
+                                    }}
+                                    onResize={(r) => {
+                                        xtermFit(xtermRef, 50, 18)
+                                    }}
+                                />
+                            </div>
+                        </Col>
+                    </Row>
                 </div>
             </div>
         </div>

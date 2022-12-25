@@ -114,7 +114,7 @@ const engineStdioOutputFactory = (win) => (buf) => {
 const engineLogOutputFactory = (win) => (message) => {
     if (win) {
         console.info(message)
-        win.webContents.send("live-engine-log", message)
+        win.webContents.send("live-engine-log", message + "\n")
     }
 }
 
@@ -292,6 +292,7 @@ module.exports = (win, callback, getClient) => {
                         probeSurvivalTime = setInterval(() => probeEngineProcess(win, port, sudo), 2000)
                         resolve()
                     } else {
+                        toLog(`端口(${port})未开启或无法链接，尝试重新启动引擎进程`)
                         const err = await asyncStartLocalYakEngineServer(win, params)
                         if (!!err) reject(err)
                         else resolve()
@@ -311,8 +312,10 @@ module.exports = (win, callback, getClient) => {
         probeSurvivalRemoteTime = null
 
         if (params.port) {
+            toLog(`检查当前引擎是否已经开启，缓存端口为:${params.port}`)
             return await judgeEngineStarted(win, params)
         } else {
+            toLog(`尝试启动核心引擎: ${params["port"]}`)
             return await asyncStartLocalYakEngineServer(win, params)
         }
     })

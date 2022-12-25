@@ -10,7 +10,7 @@
         background: #fbe7d9;
 
         .yakit-loading-title {
-            margin-top: 20vh;
+            margin-top: 16vh;
             width: 100%;
             .title-style {
                 width: 100%;
@@ -69,6 +69,14 @@
 
         .yakit-loading-content {
             margin-top: 16px;
+            text-align: center;
+            font-size: 16px;
+            color: #f28b44;
+            line-height: 24px;
+        }
+
+        .yakit-loading-live-output {
+            margin-top: 24px;
             text-align: center;
             font-size: 16px;
             color: #f28b44;
