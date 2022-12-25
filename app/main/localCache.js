@@ -8,59 +8,64 @@ const kvCache = new Map()
 const extraKVCache = new Map()
 /** 通过KEY值获取缓存数据 */
 const getLocalCache = (callback) => {
+    if (kvCache.size > 0) {
+        callback(null)
+        return
+    }
+
     kvCache.clear()
-
     try {
-        if (!fs.existsSync(localCachePath)) return
-        fs.readFile(localCachePath, (err, data) => {
-            if (!!err) {
-                callback(err)
-                return
+        const data = fs.readFileSync(localCachePath)
+        JSON.parse(data.toString()).forEach((i) => {
+            if (i["key"]) {
+                kvCache.set(i["key"], i["value"])
             }
-
-            JSON.parse(data.toString()).forEach((i) => {
-                if (i["key"]) {
-                    kvCache.set(i["key"], i["value"])
-                }
-            })
-
-            if (callback) callback(null)
         })
+        if (callback) {
+            callback(null)
+        }
     } catch (e) {
         console.info("读取本地缓存数据错误", e)
+        if (callback) {
+            callback(e)
+        }
     }
 }
 /** 通过KEY值获取扩展缓存数据 */
 const getExtraLocalCache = (callback) => {
+    if (extraKVCache.size > 0) {
+        callback(null)
+        return
+    }
+
     extraKVCache.clear()
-
     try {
-        if (!fs.existsSync(extraLocalCachePath)) return
-        fs.readFile(extraLocalCachePath, (err, data) => {
-            if (!!err) {
-                callback(err)
-                return
+        const data = fs.readFileSync(extraLocalCachePath)
+        JSON.parse(data.toString()).forEach((i) => {
+            if (i["key"]) {
+                extraKVCache.set(i["key"], i["value"])
             }
-
-            JSON.parse(data.toString()).forEach((i) => {
-                if (i["key"]) {
-                    extraKVCache.set(i["key"], i["value"])
-                }
-            })
-
-            if (callback) callback(null)
         })
+        if (callback) {
+            callback(null)
+        }
     } catch (e) {
-        console.info("读取本地扩展缓存数据错误", e)
+        console.info("读取本地缓存数据错误", e)
+        if (callback) {
+            callback(e)
+        }
     }
 }
+
 /** 通过KEY值设置缓存数据 */
 const setLocalCache = (k, v) => {
     kvCache.set(`${k}`, v)
 
     try {
         fs.unlinkSync(localCachePath)
-    } catch (e) {}
+    } catch (e) {
+        console.info(`unlinkSync local cache failed: ${e}`, e)
+    }
 
     const pairs = []
     kvCache.forEach((v, k) => {
@@ -75,7 +80,9 @@ const setExtraLocalCache = (k, v) => {
 
     try {
         fs.unlinkSync(extraLocalCachePath)
-    } catch (e) {}
+    } catch (e) {
+        console.info(`unlinkSync extra local cache failed: ${e}`, e)
+    }
 
     const pairs = []
     extraKVCache.forEach((v, k) => {
