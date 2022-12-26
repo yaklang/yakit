@@ -4,17 +4,21 @@ import style from "./HeardMenu.module.scss"
 import {MenuDataProps, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
+    AcademicCapIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    CursorClickIcon,
     DotsHorizontalIcon,
+    PencilAltIcon,
     SaveIcon,
     SortAscendingIcon,
-    SortDescendingIcon
+    SortDescendingIcon,
+    UserIcon
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
-import {Tabs, Tooltip} from "antd"
+import {Dropdown, Tabs, Tooltip} from "antd"
 import {
     MenuBasicCrawlerIcon,
     MenuComprehensiveCatalogScanningAndBlastingIcon,
@@ -27,6 +31,8 @@ import {
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+
+const {ipcRenderer} = window.require("electron")
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
@@ -65,6 +71,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
     const [menuId, setMenuId, getMenuId] = useGetState<string>("")
+    const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
@@ -162,6 +169,31 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         const newKey = key.substring(0, index)
         onRouteMenuSelect(newKey as Route)
     })
+    const onCustomizeMenuClick = useMemoizedFn((key: string) => {
+        console.log("key", key)
+    })
+    const onGoCustomize = useMemoizedFn(() => {
+        ipcRenderer.invoke("open-customize-menu")
+    })
+    const CustomizeMenuData = [
+        {
+            key: "new",
+            label: "新手模式",
+            itemIcon: <UserIcon />
+        },
+        {
+            key: "expert",
+            label: "专家模式",
+            itemIcon: <AcademicCapIcon />
+        },
+        {
+            key: "customize",
+            label: "自定义",
+            itemIcon: <CursorClickIcon />,
+            rightIcon: <PencilAltIcon />,
+            rightIconClick: () => onGoCustomize()
+        }
+    ]
     return (
         <div className={style["heard-menu-body"]}>
             <div
@@ -240,6 +272,53 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     >
                         Yak Runner
                     </YakitButton>
+                    <Dropdown
+                        overlayClassName={style["customize-drop-menu"]}
+                        overlay={
+                            <>
+                                {CustomizeMenuData.map((item) => (
+                                    <div
+                                        key={item.key}
+                                        className={style["customize-item"]}
+                                        onClick={() => onCustomizeMenuClick(item.key)}
+                                    >
+                                        <div className={style["customize-item-left"]}>
+                                            {item.itemIcon}
+                                            <span className={style["customize-item-label"]}>{item.label}</span>
+                                        </div>
+                                        {item.rightIcon && (
+                                            <div
+                                                className={style["customize-item-right"]}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    item.rightIconClick()
+                                                }}
+                                            >
+                                                {item.rightIcon}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </>
+                        }
+                        onVisibleChange={(e) => {
+                            setCustomizeVisible(e)
+                        }}
+                    >
+                        <YakitButton
+                            type='secondary2'
+                            className={classNames(style["heard-menu-grey"], style["heard-menu-customize"], {
+                                [style["margin-right-0"]]: isExpand,
+                                [style["heard-menu-customize-menu"]]: customizeVisible
+                            })}
+                            onClick={() => onRouteMenuSelect(Route.YakScript)}
+                            icon={<CursorClickIcon />}
+                        >
+                            <div className={style["heard-menu-customize-content"]}>
+                                自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
+                            </div>
+                        </YakitButton>
+                    </Dropdown>
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}

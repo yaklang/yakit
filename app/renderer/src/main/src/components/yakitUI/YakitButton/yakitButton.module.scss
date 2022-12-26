@@ -9,42 +9,42 @@
 
 .yakit-button-primary {
     // 新ui主题色
-    // --button-wave-shadow-color: var(--yakit-primary-color-focus);
-
-    // --button-background: var(--yakit-primary-color);
-    // --button-color: var(--yakit-neutral10-color);
-    // --button-border-color: transparent;
-
-    // --button-hover-background: var(--yakit-primary-color-hover);
-    // --button-hover-color: var(--yakit-neutral10-color);
-    // --button-hover-border-color: transparent;
-
-    // --button-disable-background: var(--yakit-background-color);
-    // --button-disable-color: var(--yakit-disable-text-color);
-    // --button-disable-border-color: transparent;
-
-    // --button-press-background: var(--yakit-primary-color-press);
-    // --button-press-color: var(--yakit-neutral10-color);
-    // --button-press-border-color: transparent;
-
-    // 老ui主题色
-    --button-wave-shadow-color: var(--yakit-primary-color);
+    --button-wave-shadow-color: var(--yakit-primary-color-focus);
 
     --button-background: var(--yakit-primary-color);
     --button-color: var(--yakit-neutral10-color);
-    --button-border-color: var(--yakit-primary-color);
+    --button-border-color: transparent;
 
     --button-hover-background: var(--yakit-primary-color-hover);
     --button-hover-color: var(--yakit-neutral10-color);
-    --button-hover-border-color: var(--yakit-primary-color-hover);
+    --button-hover-border-color: transparent;
 
-    --button-disable-background: var(--yakit-card-background-color);
+    --button-disable-background: var(--yakit-background-color);
     --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: var(--yakit-border-color);
+    --button-disable-border-color: transparent;
 
-    --button-press-background: #096dd9;
+    --button-press-background: var(--yakit-primary-color-press);
     --button-press-color: var(--yakit-neutral10-color);
-    --button-press-border-color: #096dd9;
+    --button-press-border-color: transparent;
+
+    // 老ui主题色
+    // --button-wave-shadow-color: var(--yakit-primary-color);
+
+    // --button-background: var(--yakit-primary-color);
+    // --button-color: var(--yakit-neutral10-color);
+    // --button-border-color: var(--yakit-primary-color);
+
+    // --button-hover-background: var(--yakit-primary-color-hover);
+    // --button-hover-color: var(--yakit-neutral10-color);
+    // --button-hover-border-color: var(--yakit-primary-color-hover);
+
+    // --button-disable-background: var(--yakit-card-background-color);
+    // --button-disable-color: var(--yakit-disable-text-color);
+    // --button-disable-border-color: var(--yakit-border-color);
+
+    // --button-press-background: #096dd9;
+    // --button-press-color: var(--yakit-neutral10-color);
+    // --button-press-border-color: #096dd9;
 }
 
 .yakit-button-outline-1 {
@@ -70,26 +70,7 @@
 
 .yakit-button-text {
     // 新ui主题色
-    // --button-wave-shadow-color: transparent;
-
-    // --button-background: transparent;
-    // --button-color: var(--yakit-primary-color);
-    // --button-border-color: transparent;
-
-    // --button-hover-background: transparent;
-    // --button-hover-color: var(--yakit-primary-color-hover);
-    // --button-hover-border-color: transparent;
-
-    // --button-disable-background: transparent;
-    // --button-disable-color: var(--yakit-disable-text-color);
-    // --button-disable-border-color: transparent;
-
-    // --button-press-background: transparent;
-    // --button-press-color: var(--yakit-primary-color-press);
-    // --button-press-border-color: transparent;
-
-    // 老ui主题色
-    --button-wave-shadow-color: var(--yakit-neutral10-color);
+    --button-wave-shadow-color: transparent;
 
     --button-background: transparent;
     --button-color: var(--yakit-primary-color);
@@ -104,7 +85,7 @@
     --button-disable-border-color: transparent;
 
     --button-press-background: transparent;
-    --button-press-color: var(--yakit-primary-color);
+    --button-press-color: var(--yakit-primary-color-press);
     --button-press-border-color: transparent;
 
     // 老ui主题色
@@ -160,26 +141,7 @@
 
 .yakit-button-outline-2 {
     // 新ui主题色
-    // --button-wave-shadow-color: var(--yakit-primary-color-focus);
-
-    // --button-background: var(--yakit-neutral10-color);
-    // --button-color: var(--yakit-header-color);
-    // --button-border-color: var(--yakit-border-color);
-
-    // --button-hover-background: var(--yakit-neutral10-color);
-    // --button-hover-color: var(--yakit-primary-color-hover);
-    // --button-hover-border-color: var(--yakit-primary-color-hover);
-
-    // --button-disable-background: var(--yakit-neutral10-color);
-    // --button-disable-color: var(--yakit-disable-text-color);
-    // --button-disable-border-color: var(--yakit-border-color);
-
-    // --button-press-background: var(--yakit-neutral10-color);
-    // --button-press-color: var(--yakit-primary-color-press);
-    // --button-press-border-color: var(--yakit-primary-color-press);
-
-    // 老ui主题色
-    --button-wave-shadow-color: var(--yakit-primary-color);
+    --button-wave-shadow-color: var(--yakit-primary-color-focus);
 
     --button-background: var(--yakit-neutral10-color);
     --button-color: var(--yakit-header-color);
@@ -187,15 +149,34 @@
 
     --button-hover-background: var(--yakit-neutral10-color);
     --button-hover-color: var(--yakit-primary-color-hover);
-    --button-hover-border-color: var(--yakit-primary-border-color);
+    --button-hover-border-color: var(--yakit-primary-color-hover);
 
     --button-disable-background: var(--yakit-neutral10-color);
     --button-disable-color: var(--yakit-disable-text-color);
     --button-disable-border-color: var(--yakit-border-color);
 
     --button-press-background: var(--yakit-neutral10-color);
-    --button-press-color: var(--yakit-primary-color);
-    --button-press-border-color: var(--yakit-primary-border-color);
+    --button-press-color: var(--yakit-primary-color-press);
+    --button-press-border-color: var(--yakit-primary-color-press);
+
+    // 老ui主题色
+    // --button-wave-shadow-color: var(--yakit-primary-color);
+
+    // --button-background: var(--yakit-neutral10-color);
+    // --button-color: var(--yakit-header-color);
+    // --button-border-color: var(--yakit-border-color);
+
+    // --button-hover-background: var(--yakit-neutral10-color);
+    // --button-hover-color: var(--yakit-primary-color-hover);
+    // --button-hover-border-color: var(--yakit-primary-border-color);
+
+    // --button-disable-background: var(--yakit-neutral10-color);
+    // --button-disable-color: var(--yakit-disable-text-color);
+    // --button-disable-border-color: var(--yakit-border-color);
+
+    // --button-press-background: var(--yakit-neutral10-color);
+    // --button-press-color: var(--yakit-primary-color);
+    // --button-press-border-color: var(--yakit-primary-border-color);
 }
 
 .yakit-button-secondary-1 {

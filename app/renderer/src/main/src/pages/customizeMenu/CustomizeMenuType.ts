@@ -1,6 +1,8 @@
 import {MenuDataProps} from "@/routes/routeSpec"
 
-export interface CustomizeMenuProps {}
+export interface CustomizeMenuProps {
+    onClose:()=>void
+}
 
 /**
  * @description: 一级菜单项

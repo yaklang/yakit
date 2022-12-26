@@ -51,4 +51,9 @@ module.exports = (win, getClient) => {
     ipcMain.handle("open-user-manage", (e, params) => {
         win.webContents.send("callback-open-user-manage", params)
     })
+
+    // 打开自定义菜单
+    ipcMain.handle("open-customize-menu", (e, params) => {
+        win.webContents.send("fetch-open-customize-menu", params)
+    })
 }
