@@ -7,13 +7,24 @@ import {
     SecondMenuProps
 } from "./CustomizeMenuType"
 import style from "./CustomizeMenu.module.scss"
-import {ChevronLeftIcon, BanIcon, RemoveIcon, DragSortIcon, PhotographIcon, PlusIcon, TrashIcon} from "@/assets/newIcon"
+import {
+    ChevronLeftIcon,
+    BanIcon,
+    RemoveIcon,
+    DragSortIcon,
+    PhotographIcon,
+    PlusIcon,
+    TrashIcon,
+    ArrowLeftIcon
+} from "@/assets/newIcon"
 import {MenuDataProps, DefaultRouteMenuData} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {Button, Input, Radio} from "antd"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {MenuDefaultPluginIcon} from "./icon/menuIcon"
 
 const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) => {
     const result = Array.from(list)
@@ -23,6 +34,7 @@ const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) =>
 }
 
 const CustomizeMenu: React.FC<CustomizeMenuProps> = (props) => {
+    const {onClose} = props
     const [menuData, setMenuData] = useState<MenuDataProps[]>(DefaultRouteMenuData)
     const [currentFirstMenu, setCurrentFirstMenu] = useState<MenuDataProps>()
     const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
@@ -70,7 +82,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = (props) => {
             <div className={style["left"]}>
                 <div className={style["left-heard"]}>
                     <div className={style["display-flex"]}>
-                        <ChevronLeftIcon className={style["content-icon"]} />
+                        <ArrowLeftIcon className={style["content-icon"]} onClick={() => onClose()} />
                         <div className={style["left-title"]}>自定义菜单</div>
                         <div className={style["left-number"]}>6/50</div>
                     </div>
@@ -87,9 +99,9 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = (props) => {
                     />
                 </div>
                 <div className={style["left-footer"]}>
-                    <button className={style["button-done"]}>完成</button>
-                    <button className={style["button-export"]}>导出 JSON</button>
-                    <button className={style["button-cancel"]}>取消</button>
+                    <YakitButton type='primary'>完成</YakitButton>
+                    <YakitButton type='outline1'>导出 JSON</YakitButton>
+                    <YakitButton>取消</YakitButton>
                 </div>
             </div>
             <div className={style["middle"]}>
@@ -322,7 +334,7 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
                         [style["content-icon-active"]]: isDragging
                     })}
                 />
-                {/* <DefaultPluginIcon /> */}
+                {menuItem.icon || <MenuDefaultPluginIcon />}
                 <div>
                     <div className={style["second-menu-label"]}>{menuItem.label}</div>
                     <div className={style["second-menu-describe"]}>
