@@ -33,7 +33,7 @@ const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) =>
     return result
 }
 
-const CustomizeMenu: React.FC<CustomizeMenuProps> = (props) => {
+const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     const {onClose} = props
     const [menuData, setMenuData] = useState<MenuDataProps[]>(DefaultRouteMenuData)
     const [currentFirstMenu, setCurrentFirstMenu] = useState<MenuDataProps>()
@@ -123,7 +123,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = (props) => {
             </div>
         </div>
     )
-}
+})
 
 export default CustomizeMenu
 
@@ -131,7 +131,7 @@ const getItemStyle = (isDragging, draggableStyle) => ({
     ...draggableStyle
 })
 
-const FirstMenu: React.FC<FirstMenuProps> = (props) => {
+const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
     const {menuData, setMenuData, currentFirstMenu, onSelect} = props
 
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable1")
@@ -196,7 +196,7 @@ const FirstMenu: React.FC<FirstMenuProps> = (props) => {
             </DragDropContext>
         </div>
     )
-}
+})
 
 const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
     const {menuItem, currentMenuItem, isDragging, onSelect, destinationDrag} = props
@@ -228,7 +228,7 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
     )
 })
 
-const SecondMenu: React.FC<SecondMenuProps> = (props) => {
+const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
     const {currentFirstMenu, subMenuData, setSubMenuData, editCurrentFirstMenu, onRemoveFirstMenu} = props
     /**
      * @description: 拖拽结束后的计算
@@ -318,7 +318,7 @@ const SecondMenu: React.FC<SecondMenuProps> = (props) => {
             </DragDropContext>
         </div>
     )
-}
+})
 
 const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
     const {menuItem, isDragging} = props
