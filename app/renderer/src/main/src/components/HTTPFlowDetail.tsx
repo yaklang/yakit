@@ -38,6 +38,8 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic";
+import {AutoCard} from "@/components/AutoCard";
+import {SelectOne} from "@/utils/inputUtil";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -429,9 +431,14 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     )
 }
 
+type HTTPFlowInfoType = "domains" | "root-domains" | "json";
+
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
+    const [infoType, setInfoType] = useState<HTTPFlowInfoType>();
+    const [infoTypeLoading, setInfoTypeLoading] = useState(false);
+    const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([]);
 
     useEffect(() => {
         if (!props.id) {
@@ -445,6 +452,23 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .invoke("GetHTTPFlowById", {Id: props.id})
             .then((i: HTTPFlow) => {
                 setFlow(i)
+                const existedExtraInfos: HTTPFlowInfoType[] = [];
+                if ((i.Domains || []).length > 0) {
+                    existedExtraInfos.push("domains")
+                }
+
+                if ((i.RootDomains || []).length > 0) {
+                    existedExtraInfos.push("root-domains")
+                }
+
+                if ((i.Domains || []).length > 0) {
+                    existedExtraInfos.push("json")
+                }
+
+                if (existedExtraInfos.length > 0) {
+                    setInfoType(existedExtraInfos[0])
+                    setExistedInfoType([...existedExtraInfos])
+                }
             })
             .catch((e: any) => {
                 failed(`Query HTTPFlow failed: ${e}`)
@@ -452,92 +476,148 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
+        return () => {
+            setExistedInfoType([]);
+        };
     }, [props.id])
 
-    // if (!flow) {
-    //     return <>
-    //         <AutoSpin tip={"选中 HTTP History Record 查看详情"} indicator={<PlusCircleOutlined/>}>
-    //             <Col span={12} style={{padding: 20}}>
-    //                 <Skeleton/>
-    //             </Col>
-    //         </AutoSpin>
-    //     </>
-    // }
+    useEffect(() => {
+        if (!infoType) {
+            return
+        }
+        setInfoTypeLoading(true)
+        setTimeout(() => setInfoTypeLoading(false), 300)
+    }, [infoType])
+
     const spinning = !flow || loading
 
     return (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
-            <ResizeBox
-                firstNode={() => {
-                    if (flow === undefined) {
-                        return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
-                    }
-                    if (flow?.IsWebsocket) {
-                        return <HTTPFlowForWebsocketViewer flow={flow}/>
-                    }
-                    return (
-                        <HTTPPacketEditor
-                            originValue={flow?.Request || new Uint8Array()}
-                            readOnly={true}
-                            sendToWebFuzzer={props.sendToWebFuzzer}
-                            defaultHeight={props.defaultHeight}
-                            loading={loading}
-                            defaultHttps={props.defaultHttps}
-                            hideSearch={true}
-                            noHex={true}
-                            actions={flow?.RawRequestBodyBase64 ? [
-                                {
-                                    contextMenuGroupId: "auto-suggestion",
-                                    label: "复制请求Body (Base64)",
-                                    id: "copy-request-base64-body",
-                                    run: ()=>{
-                                        callCopyToClipboard(flow?.RawRequestBodyBase64||"")
-                                    }
-                                }
-                            ] : undefined}
-                            // 这个为了解决不可见字符的问题
-                            defaultPacket={(!!flow?.SafeHTTPRequest) ? flow.SafeHTTPRequest : undefined}
-                            extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>
-                                含二进制流
-                            </Tag> : undefined}
-                            defaultSearchKeyword={props.search}
-                        />
-                    )
-                }}
-                firstMinSize={300}
-                secondNode={() => {
-                    if (flow === undefined) {
-                        return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
-                    }
-                    if (flow?.IsWebsocket) {
-                        return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""}/>
-                    }
-                    return (
-                        <HTTPPacketEditor
-                            actions={flow?.RawResponseBodyBody64 ? [
-                                {
-                                    contextMenuGroupId: "auto-suggestion",
-                                    label: "复制响应Body (Base64)",
-                                    id: "copy-response-base64-body",
-                                    run: ()=>{
-                                        callCopyToClipboard(flow?.RawResponseBodyBody64||"")
-                                    }
-                                }
-                            ] : undefined}
-                            isResponse={true}
-                            noHex={true}
-                            loading={loading}
-                            originValue={flow?.Response || new Uint8Array()}
-                            readOnly={true}
-                            defaultHeight={props.defaultHeight}
-                            hideSearch={true}
-                            defaultSearchKeyword={props.search}
-                            defaultHttps={props.defaultHttps}
-                        />
-                    )
-                }}
-                secondMinSize={300}
-            />
+            <Row style={{height: "100%"}} gutter={8}>
+                <Col span={existedInfoType.length > 0 ? 19 : 24}>
+                    <ResizeBox
+                        firstNode={() => {
+                            if (flow === undefined) {
+                                return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
+                            }
+                            if (flow?.IsWebsocket) {
+                                return <HTTPFlowForWebsocketViewer flow={flow}/>
+                            }
+                            return (
+                                <HTTPPacketEditor
+                                    originValue={flow?.Request || new Uint8Array()}
+                                    readOnly={true}
+                                    noLineNumber={true}
+                                    sendToWebFuzzer={props.sendToWebFuzzer}
+                                    defaultHeight={props.defaultHeight}
+                                    loading={loading}
+                                    defaultHttps={props.defaultHttps}
+                                    hideSearch={true}
+                                    noHex={true}
+                                    noMinimap={true}
+                                    actions={flow?.RawRequestBodyBase64 ? [
+                                        {
+                                            contextMenuGroupId: "auto-suggestion",
+                                            label: "复制请求Body (Base64)",
+                                            id: "copy-request-base64-body",
+                                            run: () => {
+                                                callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
+                                            }
+                                        }
+                                    ] : undefined}
+                                    // 这个为了解决不可见字符的问题
+                                    defaultPacket={(!!flow?.SafeHTTPRequest) ? flow.SafeHTTPRequest : undefined}
+                                    extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>
+                                        含二进制流
+                                    </Tag> : undefined}
+                                    defaultSearchKeyword={props.search}
+                                />
+                            )
+                        }}
+                        firstMinSize={300}
+                        secondNode={() => {
+                            if (flow === undefined) {
+                                return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
+                            }
+                            if (flow?.IsWebsocket) {
+                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""}/>
+                            }
+                            return (
+                                <HTTPPacketEditor
+                                    actions={flow?.RawResponseBodyBody64 ? [
+                                        {
+                                            contextMenuGroupId: "auto-suggestion",
+                                            label: "复制响应Body (Base64)",
+                                            id: "copy-response-base64-body",
+                                            run: () => {
+                                                callCopyToClipboard(flow?.RawResponseBodyBody64 || "")
+                                            }
+                                        }
+                                    ] : undefined}
+                                    isResponse={true}
+                                    noHex={true}
+                                    noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
+                                    loading={loading}
+                                    originValue={flow?.Response || new Uint8Array()}
+                                    readOnly={true}
+                                    defaultHeight={props.defaultHeight}
+                                    hideSearch={true}
+                                    defaultSearchKeyword={props.search}
+                                    defaultHttps={props.defaultHttps}
+                                />
+                            )
+                        }}
+                        secondMinSize={300}
+                    />
+                </Col>
+                {existedInfoType.length > 0 && <Col span={5}>
+                    <HTTPPacketEditor
+                        title={<Button.Group size={"small"}>
+                            {existedInfoType.map(i => {
+                                return <Button
+                                    type={infoType === i ? "primary" : "default"}
+                                    onClick={() => {
+                                        setInfoType(i)
+                                    }}
+                                >
+                                    {infoTypeVerbose(i)}
+                                </Button>
+                            })}
+                        </Button.Group>}
+                        readOnly={true}
+                        noLineNumber={true}
+                        noMinimap={true}
+                        noHex={true} hideSearch={true}
+                        refreshTrigger={infoType}
+                        loading={infoTypeLoading}
+                        originValue={(() => {
+                            switch (infoType) {
+                                case "domains":
+                                    return StringToUint8Array((flow?.Domains || []).join("\r\n"))
+                                case "json":
+                                    return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                case "root-domains":
+                                    return StringToUint8Array((flow?.RootDomains || []).join("\r\n"))
+                                default:
+                                    return new Uint8Array();
+                            }
+                        })()}
+                    />
+                </Col>}
+            </Row>
         </AutoSpin>
     )
+}
+
+function infoTypeVerbose(i: HTTPFlowInfoType) {
+    switch (i) {
+        case "domains":
+            return "域名 "
+        case "root-domains":
+            return "根域 "
+        case "json":
+            return "对象 "
+        default:
+            return "-"
+    }
 }
