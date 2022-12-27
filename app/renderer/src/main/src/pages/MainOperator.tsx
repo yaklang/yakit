@@ -333,7 +333,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = forwardRef((props) => {
+const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [loading, setLoading] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])

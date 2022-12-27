@@ -25,6 +25,8 @@ const setYakitCache = (type, value) => {
         console.info(`unlinkSync${type === "extraCache" ? " extra" : ""} local cache failed: ${e}`, e)
     }
 
+    if (type === "cache") referKVCache = value
+    if (type === "extraCache") referExtraKVCache = value
     fs.writeFileSync(filePath, new Buffer(value, "utf8"))
 }
 
@@ -41,7 +43,7 @@ const writeTimer = (type) => {
         value.push({key: k, value: v})
     })
     value = JSON.stringify(value)
-    if (value === referCache) setYakitCache(type, value)
+    if (value !== referCache) setYakitCache(type, value)
 }
 
 /** 获取缓存数据 */
@@ -67,7 +69,7 @@ const getLocalCache = (callback) => {
         kvCache.forEach((v, k) => {
             pairs.push({key: k, value: v})
         })
-        referCache = JSON.stringify(pairs)
+        referKVCache = JSON.stringify(pairs)
 
         if (callback) callback()
     } catch (e) {
