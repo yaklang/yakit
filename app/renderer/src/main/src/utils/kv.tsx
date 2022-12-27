@@ -1,14 +1,11 @@
-import React from "react";
-
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const saveValue = (k: string, value: any) => {
-    ipcRenderer.invoke("set-value", k, value).then(() => {
-    });
+    ipcRenderer.invoke("set-local-cache", k, value).then(() => {})
 }
 
 export const getValue = (k: string) => {
-    return ipcRenderer.invoke("get-value", k)
+    return ipcRenderer.invoke("fetch-local-cache", k)
 }
 
 // 这是从引擎内获取存储

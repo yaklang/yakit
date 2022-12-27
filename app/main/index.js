@@ -5,7 +5,7 @@ const {registerIPC, clearing} = require("./ipc")
 const {httpApi} = require("./httpServer")
 const {USER_INFO, HttpSetting} = require("./state")
 const process = require("process")
-const {getExtraLocalCache, extraKVCache, setExtraLocalCache, getLocalCache} = require("./localCache")
+const {getExtraLocalCache, extraKVCache, getLocalCache} = require("./localCache")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -25,8 +25,8 @@ const createWindow = () => {
     /** 获取缓存数据并储存于软件内 */
     getLocalCache()
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
-    getExtraLocalCache((err) => {
-        if (!err) closeFlag = extraKVCache.get(UICloseFlag) === undefined ? true : extraKVCache.get(UICloseFlag)
+    getExtraLocalCache(() => {
+        closeFlag = extraKVCache.get(UICloseFlag) === undefined ? true : extraKVCache.get(UICloseFlag)
     })
 
     win = new BrowserWindow({
@@ -78,7 +78,7 @@ const createWindow = () => {
                     noLink: true
                 })
                 .then((res) => {
-                    setExtraLocalCache(UICloseFlag, !res.checkboxChecked)
+                    extraKVCache.set(UICloseFlag, !res.checkboxChecked)
                     if (res.response === 0) {
                         e.preventDefault()
                         win.minimize()
@@ -277,7 +277,7 @@ ipcMain.on("company-refresh-in", (event) => {
 
 ipcMain.handle("get-login-user-info", async (e) => {
     return await new Promise((resolve, reject) => {
-            resolve(USER_INFO)
+        resolve(USER_INFO)
     })
 })
 

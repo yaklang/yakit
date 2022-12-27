@@ -4,122 +4,154 @@ const {localCachePath, extraLocalCachePath} = require("./filePath")
 
 /** 缓存数据存放变量 */
 const kvCache = new Map()
+/** 写操作时的对比参照数据(决定是否进行写操作 ) */
+let referKVCache = ""
 /** 扩展缓存数据存放变量 */
 const extraKVCache = new Map()
-/** 通过KEY值获取缓存数据 */
+/** 写操作时的对比参照扩展数据(决定是否进行写操作 ) */
+let referExtraKVCache = ""
+
+/**
+ * 将缓存数据写入本地文件系统内
+ * @param {"cache"|"extraCache"} type 缓存数据类型
+ * @param {string} value 缓存数据
+ */
+const setYakitCache = (type, value) => {
+    const filePath = type === "cache" ? localCachePath : extraLocalCachePath
+
+    try {
+        fs.unlinkSync(filePath)
+    } catch (e) {
+        console.info(`unlinkSync${type === "extraCache" ? " extra" : ""} local cache failed: ${e}`, e)
+    }
+
+    fs.writeFileSync(filePath, new Buffer(value, "utf8"))
+}
+
+/**
+ * 写操作定时器
+ * @param {"cache"|"extraCache"} type
+ */
+const writeTimer = (type) => {
+    const cache = type === "cache" ? kvCache : extraKVCache
+    const referCache = type === "cache" ? referKVCache : referExtraKVCache
+
+    let value = []
+    cache.forEach((v, k) => {
+        value.push({key: k, value: v})
+    })
+    value = JSON.stringify(value)
+    if (value === referCache) setYakitCache(type, value)
+}
+
+/** 获取缓存数据 */
 const getLocalCache = (callback) => {
-    if (kvCache.size > 0) {
-        callback(null)
-        return
-    }
-
     kvCache.clear()
+    kvCache.set("*description*", "该文件内缓存数据如需手动修改，请在关闭 Yakit 之后进行操作")
+
     try {
-        const data = fs.readFileSync(localCachePath)
-        JSON.parse(data.toString()).forEach((i) => {
-            if (i["key"]) {
-                kvCache.set(i["key"], i["value"])
-            }
-        })
-        if (callback) {
-            callback(null)
+        /** 处理文件不存在的情况 */
+        if (fs.existsSync(localCachePath)) {
+            const data = fs.readFileSync(localCachePath)
+
+            /** 预防用户直接删除文件内的数据，从而导致的JSON处理异常 */
+            const cache = data.toString() ? data.toString() : `[]`
+            JSON.parse(cache).forEach((i) => {
+                if (i["key"]) {
+                    kvCache.set(i["key"], i["value"])
+                }
+            })
         }
+
+        let pairs = []
+        kvCache.forEach((v, k) => {
+            pairs.push({key: k, value: v})
+        })
+        referCache = JSON.stringify(pairs)
+
+        if (callback) callback()
     } catch (e) {
         console.info("读取本地缓存数据错误", e)
-        if (callback) {
-            callback(e)
-        }
+    } finally {
+        setInterval(() => writeTimer("cache"), 5000)
     }
 }
-/** 通过KEY值获取扩展缓存数据 */
+/** 获取扩展缓存数据 */
 const getExtraLocalCache = (callback) => {
-    if (extraKVCache.size > 0) {
-        callback(null)
-        return
-    }
-
     extraKVCache.clear()
+    kvCache.set("*description*", "该文件内缓存数据如需手动修改，请在关闭 Yakit 之后进行操作")
+
     try {
-        const data = fs.readFileSync(extraLocalCachePath)
-        JSON.parse(data.toString()).forEach((i) => {
-            if (i["key"]) {
-                extraKVCache.set(i["key"], i["value"])
-            }
+        if (fs.existsSync(extraLocalCachePath)) {
+            const data = fs.readFileSync(extraLocalCachePath)
+
+            /** 预防用户直接删除文件内的数据，从而导致的JSON处理异常 */
+            const cache = data.toString() ? data.toString() : `[]`
+            JSON.parse(cache).forEach((i) => {
+                if (i["key"]) {
+                    extraKVCache.set(i["key"], i["value"])
+                }
+            })
+        }
+
+        let pairs = []
+        extraKVCache.forEach((v, k) => {
+            pairs.push({key: k, value: v})
         })
-        if (callback) {
-            callback(null)
-        }
+        referExtraKVCache = JSON.stringify(pairs)
+
+        if (callback) callback()
     } catch (e) {
-        console.info("读取本地缓存数据错误", e)
-        if (callback) {
-            callback(e)
-        }
+        console.info("读取本地扩展缓存数据错误", e)
+    } finally {
+        setInterval(() => writeTimer("extraCache"), 5000)
     }
 }
 
-/** 通过KEY值设置缓存数据 */
-const setLocalCache = (k, v) => {
-    kvCache.set(`${k}`, v)
+/**
+ * 强制进行写操作
+ * @param {"cache"|"extraCache"} type 缓存数据类型
+ */
+const manualWriteFile = (type) => {
+    const cache = type === "cache" ? kvCache : extraKVCache
 
-    try {
-        fs.unlinkSync(localCachePath)
-    } catch (e) {
-        console.info(`unlinkSync local cache failed: ${e}`, e)
-    }
-
-    const pairs = []
-    kvCache.forEach((v, k) => {
-        pairs.push({key: k, value: v})
+    let value = []
+    cache.forEach((v, k) => {
+        value.push({key: k, value: v})
     })
-    pairs.sort((a, b) => a.key.localeCompare(b.key))
-    fs.writeFileSync(localCachePath, new Buffer(JSON.stringify(pairs), "utf8"))
-}
-/** 通过KEY值设置扩展缓存数据 */
-const setExtraLocalCache = (k, v) => {
-    extraKVCache.set(`${k}`, v)
+    value = JSON.stringify(value)
 
-    try {
-        fs.unlinkSync(extraLocalCachePath)
-    } catch (e) {
-        console.info(`unlinkSync extra local cache failed: ${e}`, e)
-    }
-
-    const pairs = []
-    extraKVCache.forEach((v, k) => {
-        pairs.push({key: k, value: v})
-    })
-    pairs.sort((a, b) => a.key.localeCompare(b.key))
-    fs.writeFileSync(extraLocalCachePath, new Buffer(JSON.stringify(pairs), "utf8"))
+    setYakitCache(type, value)
 }
 
 module.exports = {
     kvCache,
     getLocalCache,
-    setLocalCache,
     extraKVCache,
     getExtraLocalCache,
-    setExtraLocalCache,
     register: (win, getClient) => {
-        const asyncFetchLocalCache = (key) => {
-            return new Promise((resolve, reject) => {
-                getLocalCache((err) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(kvCache.get(key))
-                    }
-                })
-            })
-        }
+        /** 手动触发写操作 */
+        ipcMain.handle("manual-write-file", async (e, type) => {
+            manualWriteFile(type)
+            return
+        })
         /** 获取本地缓存数据 */
         ipcMain.handle("fetch-local-cache", async (e, key) => {
-            return await asyncFetchLocalCache(key)
+            return kvCache.get(key)
         })
         /** 设置本地缓存数据 */
         ipcMain.handle("set-local-cache", (e, key, value) => {
-            setLocalCache(key, value)
+            kvCache.set(key, value)
+            return
         })
         /** 获取本地拓展缓存数据 */
+        ipcMain.handle("fetch-extra-cache", async (e, key) => {
+            return extraKVCache.get(key)
+        })
         /** 设置本地拓展缓存数据 */
+        ipcMain.handle("set-extra-cache", (e, key, value) => {
+            extraKVCache.set(key, value)
+            return
+        })
     }
 }
