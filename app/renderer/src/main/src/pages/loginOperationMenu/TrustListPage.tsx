@@ -136,6 +136,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                             data: userList.data || [],
                             optValue: "name",
                             optText: "appid",
+                            optKey:"appid",
                             placeholder: "请输入完整的用户名",
                             optionLabelProp: "name",
                             value: currentUser,

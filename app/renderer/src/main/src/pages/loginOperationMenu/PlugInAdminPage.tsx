@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, TreeSelect} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, TreeSelect, Checkbox} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -14,8 +14,180 @@ import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 import {GithubOutlined, QqOutlined, WechatOutlined, UserOutlined} from "@ant-design/icons"
 import debounce from "lodash/debounce"
 import {UserQuery} from "./TrustListPage"
-const {TreeNode} = TreeSelect
-const {ipcRenderer} = window.require("electron")
+import type {TreeSelectProps} from "antd"
+import type {DefaultOptionType} from "antd/es/select"
+import {FormInstance} from "antd/es/form/Form"
+
+export interface PluglnTreeSelectProps {
+    form: FormInstance<any>
+}
+
+export interface PluginGroupProps {
+    is_private?: boolean
+    keyword?: string
+    type?: string
+}
+
+export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => {
+    const {form} = props
+    const [treeLoadedKeys, setTreeLoadedKeys] = useState<any>([])
+    const [selectedAll, setSelectedAll] = useState<boolean>(false)
+    // 受控模式控制浮层
+    const [open, setOpen] = useState(false)
+    const PluginType = {
+        yak: "YAK 插件",
+        mitm: "MITM 插件",
+        "packet-hack": "数据包扫描",
+        "port-scan": "端口扫描插件",
+        codec: "CODEC插件",
+        nuclei: "YAML POC"
+    }
+    const PluginTypeKeyArr: string[] = Object.keys(PluginType)
+    const TreePluginType = [
+        ...PluginTypeKeyArr.map((key) => {
+            return {
+                id: key,
+                value: key,
+                title: PluginType[key],
+                isLeaf: false
+            }
+        })
+    ]
+    const NoTreePluginType = [
+        ...PluginTypeKeyArr.map((key) => {
+            return {
+                id: key,
+                value: key,
+                title: PluginType[key],
+                isLeaf: true
+            }
+        })
+    ]
+    const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>([])
+    const [serachValue, setSerachValue] = useState<string>("")
+
+    useEffect(() => {
+        getPluginGroup()
+    }, [serachValue])
+
+    const getPluginGroup = () => {
+        let params: any = {
+            is_private: true
+        }
+        if (serachValue && serachValue.length > 0) params.keyword = serachValue
+        NetWorkApi<PluginGroupProps, API.PluginGroupListResponse>({
+            method: "get",
+            url: "plugin/group",
+            params
+        })
+            .then((res: API.PluginGroupListResponse) => {
+                // console.log("加载getPluginGroup数据", res.data, params)
+                if (Array.isArray(res.data)) {
+                    const newArr = res.data.map((item) => {
+                        return {
+                            key: item.type,
+                            value: item.type,
+                            title: PluginType[item.type],
+                            isLeaf: item.typeList ? false : true,
+                            children: item.typeList
+                                ? item.typeList
+                                      .filter((itemIn) => itemIn.script_name.length > 0)
+                                      .map((itemIn) => ({
+                                          key: itemIn.id,
+                                          value: itemIn.id,
+                                          title: itemIn.script_name
+                                      }))
+                                : null
+                        }
+                    })
+                    setTreeData(newArr)
+                } else {
+                    setTreeData([])
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
+    const onChange = (newValue: string[]) => {
+        if (
+            newValue.length === PluginTypeKeyArr.length &&
+            newValue.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
+        ) {
+            setSelectedAll(true)
+            const treeSelect = PluginTypeKeyArr.map((key) => key)
+            form.setFieldsValue({
+                treeSelect
+            })
+        } else {
+            setSelectedAll(false)
+        }
+    }
+
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <>
+                <Input
+                    style={{marginBottom: 10}}
+                    placeholder='请输入搜索内容'
+                    size='small'
+                    onChange={(e) => setSerachValue(e.target.value)}
+                />
+                {serachValue.length === 0 && (
+                    <Checkbox
+                        checked={selectedAll}
+                        style={{padding: "0 0px 4px 24px", width: "100%"}}
+                        onChange={(e) => {
+                            const {checked} = e.target
+                            setSelectedAll(checked)
+                            if (checked) {
+                                const treeSelect = PluginTypeKeyArr.map((key) => key)
+                                form.setFieldsValue({
+                                    treeSelect
+                                })
+                            } else {
+                                form.setFieldsValue({
+                                    treeSelect: []
+                                })
+                            }
+                        }}
+                    >
+                        全部
+                    </Checkbox>
+                )}
+                {originNode}
+            </>
+        )
+    })
+
+    return (
+        <Form.Item name='treeSelect' label='插件权限' rules={[{required: true, message: "该项为必填"}]}>
+            <TreeSelect
+                showSearch={false}
+                style={{width: "100%"}}
+                dropdownStyle={{maxHeight: 400, overflow: "auto"}}
+                placeholder='请选择插件权限'
+                treeCheckable={true}
+                onChange={onChange}
+                treeData={treeData}
+                allowClear
+                showCheckedStrategy='SHOW_PARENT'
+                maxTagCount={selectedAll ? 0 : 10}
+                maxTagPlaceholder={selectedAll ? "全部" : null}
+                dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                open={open}
+                onDropdownVisibleChange={(visible) => setOpen(visible)}
+                treeLoadedKeys={treeLoadedKeys}
+                treeExpandedKeys={treeLoadedKeys}
+                onTreeExpand={(expandedKeys) => {
+                    setTreeLoadedKeys(expandedKeys)
+                }}
+            />
+        </Form.Item>
+    )
+}
 
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
@@ -42,14 +214,15 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     const [userList, setUserList] = useState<API.UserOrdinaryResponse>({
         data: []
     })
-    const [appid, setAppid] = useState<string>("")
-    const [currentUser, setCurrentUser] = useState<string>()
+    const [appid, setAppid] = useState<string[]>([])
+    const [currentUser, setCurrentUser] = useState<string[]>([])
     const onFinish = useMemoizedFn((values) => {
-        if (!appid) {
+        if (appid.length===0) {
             info("请先选择用户")
             return
         }
-        console.log("values", values)
+        console.log("values",values)
+        return
         const {user_name} = values
         NetWorkApi<CreateProps, API.NewUrmResponse>({
             method: "post",
@@ -59,7 +232,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             }
         })
             .then((res: API.NewUrmResponse) => {
-                console.log("返回结果：", res)
                 const {user_name, password} = res
                 onCancel()
                 refresh()
@@ -78,8 +250,8 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
         setUserList({
             data: []
         })
-        setAppid("")
-        setCurrentUser("")
+        setAppid([])
+        setCurrentUser([])
     })
 
     const getUserList = debounce(
@@ -109,35 +281,16 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     )
 
     const onSelectUser = useMemoizedFn((option: any) => {
-        setAppid(option.title)
-        setCurrentUser(option.value)
+        const title = option.map((item)=>item.title)
+        const value = option.map((item)=>item.value)
+        setAppid(title)
+        setCurrentUser(value)
     })
-
-    const treeData = [
-        {
-            title: "Node1",
-            value: "0-0",
-            children: [
-                {
-                    title: "Child Node1",
-                    value: "0-0-1"
-                },
-                {
-                    title: "Child Node2",
-                    value: "0-0-2"
-                }
-            ]
-        },
-        {
-            title: "Node2",
-            value: "0-1"
-        }
-    ]
 
     return (
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item name='name' label='用户名'>
                     {/* <Input placeholder='请输入账号用户名' allowClear /> */}
                     <ItemSelects
                         isItem={false}
@@ -148,10 +301,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                             data: userList.data || [],
                             optValue: "name",
                             optText: "appid",
+                            optKey:"appid",
                             placeholder: "请输入完整的用户名",
                             optionLabelProp: "name",
                             value: currentUser,
-                            onSelect: (_, option: any) => {
+                            mode:"multiple",
+                            onChange:(_, option: any)=>{
+                                console.log("option",option)
                                 onSelectUser(option)
                             },
                             onSearch: getUserList,
@@ -161,18 +317,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         }}
                     />
                 </Form.Item>
-                <Form.Item name='user_name1' label='插件权限' rules={[{required: true, message: "该项为必填"}]}>
-                    <TreeSelect
-                        showSearch
-                        style={{width: "100%"}}
-                        treeData={treeData}
-                        dropdownStyle={{maxHeight: 400, overflow: "auto"}}
-                        placeholder='请选择插件权限'
-                        allowClear
-                        multiple
-                        treeDefaultExpandAll
-                    />
-                </Form.Item>
+                <PluglnTreeSelectItem form={form} />
                 <div style={{textAlign: "center"}}>
                     <Button type='primary' htmlType='submit' loading={loading}>
                         添加
@@ -230,7 +375,6 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
         })
             .then((res) => {
                 const newData = res.data.map((item) => ({...item}))
-                console.log("数据源：", newData)
                 setData(newData)
                 setPagination({...pagination, Limit: res.pagemeta.limit})
                 setTotal(res.pagemeta.total)
@@ -257,7 +401,6 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     }
 
     const onRemove = (uid: string[]) => {
-        console.log(uid, "uid")
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
             method: "delete",
             url: "urm",
@@ -266,7 +409,6 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
                 success("删除用户成功")
                 update()
             })

@@ -217,6 +217,17 @@
     id: number;
     script_name: string;
   }
+  export interface PluginGroupListResponse {
+    data: PluginGroupList[];
+  }
+  export interface PluginGroupList {
+    type: string;
+    typeList?: PluginGroup[];
+  }
+  export interface PluginGroup {
+    id: number;
+    script_name: string;
+  }
   export interface PluginDownloads {
     type: string;
     script_name: string;

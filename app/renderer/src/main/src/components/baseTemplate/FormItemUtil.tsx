@@ -30,6 +30,7 @@ interface ItemSelectProps<T> extends SelectProps<T> {
     data?: T[]
     optText?: string
     optValue?: string
+    optKey?: string
     optDisabled?: string
     renderOpt?: (info: T) => ReactNode
 }
@@ -240,6 +241,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
             data = [],
             optText = "text",
             optValue = "value",
+            optKey,
             optDisabled = "disabled",
             renderOpt,
             ...restSelect
@@ -260,10 +262,10 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                     const flag = Object.prototype.toString.call(item) === "[object Object]"
                     const value = flag ? item[optValue] : item
                     const title = flag ? item[optText] : item
-
+                    const key = optKey?item[optText] : null
                     return (
                         <Option
-                            key={value || index}
+                            key={key || value || index}
                             value={value}
                             title={title}
                             disabled={item[optDisabled]}
