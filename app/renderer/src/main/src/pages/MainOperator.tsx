@@ -733,7 +733,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
-                {key: "license-admin", title: "License管理"},
+                {key: "license-admin",title:"License管理"},
+                {key:"plugIn-admin",title:"插件权限"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -767,7 +768,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         } else {
             setUserMenu([
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key:"plugIn-admin",title:"插件权限"},
                 {key: "sign-out", title: "退出登录"}
             ])
         }
