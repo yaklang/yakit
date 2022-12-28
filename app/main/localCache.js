@@ -32,6 +32,7 @@ const localCacheState = {
     extraCacheChanged: false,
     cacheInitialized: false,
     extraCacheInitialized: false,
+    writingFile: false,
 };
 function getLocalCacheValue(key) {
     return kvCache.get(key)
@@ -62,14 +63,7 @@ const writeTimer = (type) => {
             localCacheState.extraCacheChanged = false
         }
     }
-    const cache = type === "cache" ? kvCache : extraKVCache
-
-    let value = []
-    cache.forEach((v, k) => {
-        value.push({key: k, value: v})
-    })
-    value.sort((a, b) => a.key.localeCompare(b.key))
-    syncLocalCacheFile(type, JSON.stringify(value))
+    syncCacheToFile(type)
 }
 
 /** 获取缓存数据 */
@@ -139,16 +133,22 @@ const initExtraLocalCache = (callback) => {
  * 强制进行写操作
  * @param {"cache"|"extraCache"} type 缓存数据类型
  */
-const manualWriteFile = (type) => {
-    const cache = type === "cache" ? kvCache : extraKVCache
+const syncCacheToFile = (type) => {
+    try {
+        localCacheState.writingFile = true
+        const cache = type === "cache" ? kvCache : extraKVCache
 
-    let value = []
-    cache.forEach((v, k) => {
-        value.push({key: k, value: v})
-    })
-    value = JSON.stringify(value)
-
-    syncLocalCacheFile(type, value)
+        let value = []
+        cache.forEach((v, k) => {
+            value.push({key: k, value: v})
+        })
+        value.sort((a,b)=>`${a.key}`.localeCompare(`${b.key}`))
+        syncLocalCacheFile(type, JSON.stringify(value))
+    }catch (e) {
+        console.info(e)
+    }finally {
+        localCacheState.writingFile = false
+    }
 }
 
 module.exports = {
@@ -161,8 +161,7 @@ module.exports = {
     register: (win, getClient) => {
         /** 手动触发写操作 */
         ipcMain.handle("manual-write-file", async (e, type) => {
-            manualWriteFile(type)
-            return
+            syncCacheToFile(type)
         })
         /** 获取本地缓存数据 */
         ipcMain.handle("fetch-local-cache", async (e, key) => {
