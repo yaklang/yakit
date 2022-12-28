@@ -137,7 +137,7 @@ function App() {
     useEffect(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("get-value", UserProtocolAgreed)
+            .invoke("fetch-local-cache", UserProtocolAgreed)
             .then((value: any) => {
                 setAgreed(!!value)
             })
@@ -333,7 +333,7 @@ function App() {
             // okButtonProps={{disabled: readingSeconds > 0}}
             okButtonProps={{disabled: false}}
             onOk={() => {
-                ipcRenderer.invoke("set-value", UserProtocolAgreed, true)
+                ipcRenderer.invoke("set-local-cache", UserProtocolAgreed, true)
                 setAgreed(true)
             }}
             okText={readingSeconds > 0 ? `我已认真阅读本协议(${readingSeconds}s)` : "我已认真阅读本协议，认同协议内容"}

@@ -368,6 +368,8 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     title?: React.ReactNode
     noHex?: boolean
     noMinimap?: boolean
+    noLineNumber?: boolean
+    lineNumbersMinChars?: number
 
     extraEditorProps?: EditorProps | any
 
@@ -715,6 +717,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     {empty && props.emptyOr}
                     {mode === "text" && !empty && (
                         <YakEditor
+                            noLineNumber={props.noLineNumber} lineNumbersMinChars={props.lineNumbersMinChars}
                             noMiniMap={props.noMinimap}
                             loading={props.loading}
                             // type={"html"}

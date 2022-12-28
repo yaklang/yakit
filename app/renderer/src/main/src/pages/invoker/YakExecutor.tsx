@@ -155,7 +155,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         let files = cloneDeep(fileList).reverse()
         files.splice(14)
         files = files.reverse()
-        ipcRenderer.invoke("set-value", RecentFileList, files)
+        ipcRenderer.invoke("set-local-cache", RecentFileList, files)
     })
 
     // 获取和保存近期打开文件信息，同时展示打开默认内容
@@ -164,7 +164,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         let timer: any = null
         setLoading(true)
         ipcRenderer
-            .invoke("get-value", RecentFileList)
+            .invoke("fetch-local-cache", RecentFileList)
             .then((value: any) => {
                 if ((value || []).length !== 0) {
                     setFileList(value)

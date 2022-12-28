@@ -57,9 +57,9 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
             .then((values: MITMContentReplacerRule) => {
                 const newValues = {...currentItem, ...values}
                 if (newValues.ExtraCookies.length > 0 || newValues.ExtraHeaders.length > 0 || !!newValues.Result) {
-                    newValues.NoReplace = true
-                } else {
                     newValues.NoReplace = false
+                } else {
+                    newValues.NoReplace = true
                 }
                 onSave(newValues)
             })

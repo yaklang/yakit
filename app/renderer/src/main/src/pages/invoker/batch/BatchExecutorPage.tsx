@@ -139,7 +139,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
     useEffect(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("get-value", ExecuteTaskHistory)
+            .invoke("fetch-local-cache", ExecuteTaskHistory)
             .then((res: any) => {
                 setTaskHistory(res ? JSON.parse(res) : [])
             })
@@ -227,7 +227,7 @@ export const BatchExecutorPage: React.FC<BatchExecutorPageProp> = (props) => {
         if (taskHistory.length === 10) arr.pop()
         arr.unshift(obj)
         setTaskHistory(arr)
-        ipcRenderer.invoke("set-value", ExecuteTaskHistory, JSON.stringify(arr))
+        ipcRenderer.invoke("set-local-cache", ExecuteTaskHistory, JSON.stringify(arr))
 
         const tokens = randomString(40)
         setToken(tokens)

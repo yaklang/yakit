@@ -5,7 +5,7 @@ const path = require("path")
 const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
 const {GLOBAL_YAK_SETTING} = require("../state")
-const {setLocalCache, kvCache} = require("../localCache")
+const {kvCache} = require("../localCache")
 const {testClient, testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine} = require("../filePath")
 
@@ -28,10 +28,10 @@ const probeEngineProcess = (win, port, sudo) => {
         testClient(port, async (err, result) => {
             if (!err) {
                 if (kvCache.get(YaklangEnginePort) !== setting) {
-                    setLocalCache(YaklangEnginePort, setting)
+                    kvCache.set(YaklangEnginePort, setting)
                 }
                 if (kvCache.get(YaklangEngineSudo) !== mode) {
-                    setLocalCache(YaklangEngineSudo, mode)
+                    kvCache.set(YaklangEngineSudo, mode)
                 }
                 if (GLOBAL_YAK_SETTING.defaultYakGRPCAddr !== `localhost:${port}`) {
                     GLOBAL_YAK_SETTING.sudo = !!sudo
@@ -75,15 +75,14 @@ const probeRemoteEngineProcess = (win, params) => {
                 win.webContents.send("local-yaklang-engine-end", err)
             } else {
                 if (kvCache.get(YaklangEnginePort) !== setting) {
-                    setLocalCache(YaklangEnginePort, setting)
+                    kvCache.set(YaklangEnginePort, setting)
                 }
                 if (kvCache.get(YaklangEngineSudo) !== "remote") {
-                    setLocalCache(YaklangEngineSudo, "remote")
+                    kvCache.set(YaklangEngineSudo, "remote")
                 }
             }
         })
-    } catch (e) {
-    }
+    } catch (e) {}
 }
 
 const isWindows = process.platform === "win32"
@@ -119,8 +118,8 @@ const engineLogOutputFactory = (win) => (message) => {
 }
 
 module.exports = (win, callback, getClient) => {
-    const toStdout = engineStdioOutputFactory(win);
-    const toLog = engineLogOutputFactory(win);
+    const toStdout = engineStdioOutputFactory(win)
+    const toLog = engineLogOutputFactory(win)
 
     /** 获取本地引擎版本号 */
     ipcMain.handle("fetch-yak-version", () => {
@@ -230,12 +229,12 @@ module.exports = (win, callback, getClient) => {
 
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${randPort}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
-                        stdio: "pipe",
+                        stdio: "pipe"
                     })
-                    subprocess.stdout.on("data", stdout => {
+                    subprocess.stdout.on("data", (stdout) => {
                         toStdout(stdout)
                     })
-                    subprocess.stderr.on("data", stdout => {
+                    subprocess.stderr.on("data", (stdout) => {
                         toStdout(stdout)
                     })
                     subprocess.on("error", (err) => {

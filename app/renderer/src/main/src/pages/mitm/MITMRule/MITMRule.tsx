@@ -1,4 +1,4 @@
-import {Button, Checkbox, Divider, Drawer, Modal, Select, Switch, Tag} from "antd"
+import {Button, Checkbox, Divider, Drawer, Modal, Select, Switch, Tag, Tooltip} from "antd"
 import React, {ReactNode, useCallback, useEffect, useMemo, useState} from "react"
 import {
     ButtonTextProps,
@@ -240,16 +240,16 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 dataKey: "NoReplace",
                 width: 350,
                 tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                extra: <div className={styles["table-result-extra"]}>开/关</div>,
+                extra: <div className={styles["table-result-extra"]}>启用</div>,
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitSwitchMemo
                         ExtraCookies={i.ExtraCookies}
                         ExtraHeaders={i.ExtraHeaders}
                         Result={i.Result}
                         disabled={i.Disabled}
-                        checked={i.NoReplace}
+                        checked={!i.NoReplace}
                         onChange={(val) => {
-                            onEdit({Id: i.Id, NoReplace: val}, "NoReplace")
+                            onEdit({Id: i.Id, NoReplace: !val}, "NoReplace")
                         }}
                     />
                 )
@@ -761,7 +761,11 @@ const YakitCheckboxMemo = React.memo<YakitCheckboxProps>(
 
 const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
     (props) => {
-        let node: ReactNode = <div>{props.Result}</div>
+        let node: ReactNode = (
+            <Tooltip title={props.Result}>
+                <div className={styles["table-result-text"]}>{props.Result}</div>
+            </Tooltip>
+        )
         if (
             (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
             (props.ExtraCookies && props.ExtraCookies.length > 0)
