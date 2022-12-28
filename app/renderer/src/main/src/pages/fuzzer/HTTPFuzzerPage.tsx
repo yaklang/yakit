@@ -53,7 +53,7 @@ import {failed, info, success} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {getRemoteValue, getValue, saveValue, setRemoteValue, setRemoteValueTTL} from "../../utils/kv"
+import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue, setRemoteValueTTL} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
@@ -336,7 +336,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.shareContent])
 
     useEffect(() => {
-        getValue(WEB_FUZZ_HOTPATCH_CODE).then((data: any) => {
+        getLocalValue(WEB_FUZZ_HOTPATCH_CODE).then((data: any) => {
             if (!data) {
                 getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
                     if (!remoteData) {
@@ -397,7 +397,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     useEffect(() => {
         // 缓存全局参数
-        getValue(WEB_FUZZ_PROXY).then((e) => {
+        getLocalValue(WEB_FUZZ_PROXY).then((e) => {
             if (!e) {
                 return
             }
@@ -818,7 +818,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         }}
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
-                            saveValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                            setLocalValue(WEB_FUZZ_HOTPATCH_CODE, code)
                             setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {

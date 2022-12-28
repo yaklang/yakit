@@ -58,7 +58,7 @@ import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
 import {AutoCard} from "../../components/AutoCard"
 import {UserInfoProps, useStore} from "@/store"
 import "./YakitStorePage.scss"
-import {getValue, saveValue} from "../../utils/kv"
+import {getLocalValue, setLocalValue} from "../../utils/kv"
 import {
     useCreation,
     useDebounceFn,
@@ -2467,7 +2467,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
     const [localId, setLocalId] = useState<string>("")
 
     useEffect(() => {
-        getValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then((e) => {
+        getLocalValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH).then((e) => {
             if (e) {
                 setLocalPath(e)
             }
@@ -2475,7 +2475,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
     }, [])
 
     useEffect(() => {
-        getValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH).then((e) => {
+        getLocalValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH).then((e) => {
             if (e) {
                 setLocalNucleiPath(e)
             }
@@ -2490,7 +2490,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
     }, [loadMode])
 
     useEffect(() => {
-        getValue(YAKIT_DEFAULT_LOAD_GIT_PROXY).then((e) => {
+        getLocalValue(YAKIT_DEFAULT_LOAD_GIT_PROXY).then((e) => {
             if (e) {
                 setProxy(`${e}`)
             }
@@ -2508,15 +2508,15 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             onSubmitCapture={(e) => {
                 e.preventDefault()
                 if (proxy !== "") {
-                    saveValue(YAKIT_DEFAULT_LOAD_GIT_PROXY, proxy)
+                    setLocalValue(YAKIT_DEFAULT_LOAD_GIT_PROXY, proxy)
                 }
 
                 if (localPath !== "") {
-                    saveValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH, localPath)
+                    setLocalValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH, localPath)
                 }
 
                 if (localNucleiPath !== "") {
-                    saveValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH, localNucleiPath)
+                    setLocalValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH, localNucleiPath)
                 }
                 if (["official", "giturl"].includes(loadMode)) {
                     const params: YakExecutorParam[] = [

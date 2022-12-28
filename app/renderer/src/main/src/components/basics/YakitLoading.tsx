@@ -50,13 +50,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             return
         }
 
-        writeToConsole(`Waiting for Yakit Starting!`)
+        writeToConsole(`欢迎使用 Yakit!\n`)
 
         ipcRenderer.on("live-engine-stdio", (e, stdout) => {
             writeToConsole(stdout)
         })
         ipcRenderer.on("live-engine-log", (e, stdout) => {
-            writeToConsole(`[INFO] Yakit-Electron-Log: ${stdout}`)
+            writeToConsole(`[INFO] Yakit-Verbose-Log: ${stdout}`)
         })
         return () => {
             ipcRenderer.removeAllListeners("live-engine-stdio")

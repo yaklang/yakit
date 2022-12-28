@@ -5,7 +5,7 @@ const path = require("path")
 const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
 const {GLOBAL_YAK_SETTING} = require("../state")
-const {getLocalCacheValue, setLocalCache} = require("../localCache")
+const {setLocalCache} = require("../localCache")
 const {testClient, testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine} = require("../filePath")
 
@@ -17,13 +17,11 @@ const YaklangEnginePort = "yaklang-engine-port"
 /** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
 let engineCount = 0
 
-/** 探测yaklang引擎进程是否存活的定时器 */
-let probeSurvivalTime = null
 /** 探测指定端口的本地yaklang引擎是否启动 */
 const probeEngineProcess = (win, port, sudo) => {
     const mode = sudo ? "admin" : "local"
     const setting = JSON.stringify({port: port})
-    console.log('probeEngine',mode,port);
+    console.log('probeEngine', mode, port);
 
     try {
         testClient(port, (err, result) => {
@@ -52,8 +50,6 @@ const probeEngineProcess = (win, port, sudo) => {
     }
 }
 
-/** 探测 远程引擎 是否存活的定时器 */
-let probeSurvivalRemoteTime = null
 /** 探测 远程引擎 是否启动 */
 const probeRemoteEngineProcess = (win, params) => {
     const setting = JSON.stringify({
@@ -76,7 +72,8 @@ const probeRemoteEngineProcess = (win, params) => {
                 setLocalCache(YaklangEngineSudo, "remote")
             }
         })
-    } catch (e) {}
+    } catch (e) {
+    }
 }
 
 const isWindows = process.platform === "win32"
@@ -111,9 +108,25 @@ const engineLogOutputFactory = (win) => (message) => {
     }
 }
 
+const ECHO_TEST_MSG = "Hello Yakit!"
+
 module.exports = (win, callback, getClient) => {
+    // 输出到欢迎页面的 output 中
     const toStdout = engineStdioOutputFactory(win)
+    // 输出到日志中
     const toLog = engineLogOutputFactory(win)
+    // 异步执行 Echo
+    const asyncEcho = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().Echo(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
 
     /** 获取本地引擎版本号 */
     ipcMain.handle("fetch-yak-version", () => {
@@ -145,6 +158,16 @@ module.exports = (win, callback, getClient) => {
         }
     })
 
+    // asyncGetRandomPort wrapper
+    const asyncGetRandomPort = () => {
+        return new Promise((resolve, reject) => {
+            resolve(40000 + Math.floor(Math.random() * 9999))
+        })
+    }
+    ipcMain.handle("get-random-local-engine-port", async (e) => {
+        return await asyncGetRandomPort()
+    })
+
     /**
      * @name 手动启动yaklang引擎进程
      * @param {Object} params
@@ -157,19 +180,10 @@ module.exports = (win, callback, getClient) => {
         const {sudo, port} = params
         let randPort = port || 40000 + Math.floor(Math.random() * 9999)
 
-        /** 防止因 回调函数机制 导致的无返回的ipc报错，从而设置了一个计时器，到时自己发送返回值 */
-        let callbackTime = null
-
-        console.log("start", sudo, port)
-
         return new Promise((resolve, reject) => {
             try {
                 // 考虑如果管理员权限启动未成功该通过什么方式自启普通权限引擎进程
                 if (sudo) {
-                    if (probeSurvivalTime) clearInterval(probeSurvivalTime)
-                    probeSurvivalTime = null
-                    probeSurvivalTime = setInterval(() => probeEngineProcess(win, randPort, true), 2000)
-
                     if (isWindows) {
                         const subprocess = childProcess.exec(
                             generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${randPort}`),
@@ -177,22 +191,12 @@ module.exports = (win, callback, getClient) => {
                         )
 
                         subprocess.on("error", (err) => {
-                            if (callbackTime) clearTimeout(callbackTime)
-                            callbackTime = null
-
                             if (err) reject(err)
                         })
 
                         subprocess.on("close", async (e) => {
-                            if (callbackTime) clearTimeout(callbackTime)
-                            callbackTime = null
-
                             if (e) reject(e)
                         })
-
-                        if (callbackTime) clearTimeout(callbackTime)
-                        callbackTime = null
-                        callbackTime = setTimeout(() => resolve(), 3000)
                     } else {
                         const cmd = `${getLocalYaklangEngine()} grpc --port ${randPort}`
                         sudoExec(
@@ -204,9 +208,6 @@ module.exports = (win, callback, getClient) => {
                                 if (!!error && error?.code === 137) return
 
                                 if (error || stderr) {
-                                    if (callbackTime) clearTimeout(callbackTime)
-                                    callbackTime = null
-
                                     if (error.message.indexOf("User did not grant permission") > -1) {
                                         asyncStartLocalYakEngineServer(win, {sudo: false, port: randPort})
                                     }
@@ -214,15 +215,9 @@ module.exports = (win, callback, getClient) => {
                                 }
                             }
                         )
-                        if (callbackTime) clearTimeout(callbackTime)
-                        callbackTime = null
-                        callbackTime = setTimeout(() => resolve(), 3000)
                     }
                 } else {
-                    if (probeSurvivalTime) clearInterval(probeSurvivalTime)
-                    probeSurvivalTime = null
-                    probeSurvivalTime = setInterval(() => probeEngineProcess(win, randPort, false), 2000)
-
+                    toLog("已启动本地引擎进程")
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${randPort}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
                         stdio: "pipe"
@@ -234,93 +229,26 @@ module.exports = (win, callback, getClient) => {
                         toStdout(stdout)
                     })
                     subprocess.on("error", (err) => {
-                        if (err) {
-                            if (callbackTime) clearTimeout(callbackTime)
-                            callbackTime = null
-
-                            fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
-                            reject(err)
-                        }
+                        toLog(`本地引擎遭遇错误，错误原因为：${err}`)
+                        reject(err)
                     })
                     subprocess.on("close", async (e) => {
-                        console.log("main-engineStatus-nosudo-close", e)
-                        if (e === 0) {
-                            if (callbackTime) clearTimeout(callbackTime)
-                            callbackTime = null
-
-                            if (engineCount > 5) {
-                                if (probeSurvivalTime) clearInterval(probeSurvivalTime)
-                                probeSurvivalTime = null
-                                toLog(`多次尝试启动引擎失败，请检查数据库权限或端口被占用`)
-                                reject("多次尝试启动引擎失败，请清理端口后在重新启动 yakit")
-                            } else {
-                                toLog(`启动引擎失败，重试次数为：${engineCount}`)
-                                console.info("启动失败，尝试重试，当前次数", engineCount)
-                                setTimeout(async () => {
-                                    const result = await asyncStartLocalYakEngineServer(win, {sudo: false})
-                                    if (!result) resolve()
-                                    else reject(result)
-                                }, 1000)
-                            }
-                        }
+                        toLog(`本地引擎退出，退出码为：${e}`)
                     })
-
-                    if (callbackTime) clearTimeout(callbackTime)
-                    callbackTime = null
-                    callbackTime = setTimeout(() => resolve(), 3000)
+                    resolve()
                 }
             } catch (e) {
                 reject(e)
             }
         })
     }
-    /** 判断缓存端口是否已开启引擎 */
-    const judgeEngineStarted = (win, params) => {
-        const {sudo, port} = params
 
-        console.log("judege", sudo, port)
-
-        return new Promise((resolve, reject) => {
-            try {
-                testClient(port, async (err, result) => {
-                    if (!err) {
-                        const mode = sudo ? "admin" : "local"
-                        const setting = JSON.stringify({port: port})
-                        console.log("noerr judege")
-                        if (probeSurvivalTime) clearInterval(probeSurvivalTime)
-                        probeSurvivalTime = null
-                        probeSurvivalTime = setInterval(() => probeEngineProcess(win, port, sudo), 2000)
-                        resolve()
-                    } else {
-                        toLog(`端口(${port})未开启或无法链接，尝试重新启动引擎进程`)
-                        const err = await asyncStartLocalYakEngineServer(win, params)
-                        if (!!err) reject(err)
-                        else resolve()
-                    }
-                })
-            } catch (e) {
-                console.log("judege咋了")
-                reject(e)
-            }
-        })
-    }
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
-        console.info("Start to call `start-lcoal-yaklang-engine` from client end!")
-
-        console.log("params", JSON.stringify(params))
-
-        /** 断开远程引擎探测定时器 */
-        if (probeSurvivalRemoteTime) clearInterval(probeSurvivalRemoteTime)
-        probeSurvivalRemoteTime = null
-
-        if (params.port) {
-            toLog(`检查当前引擎是否已经开启，缓存端口为:${params.port}`)
-            return await judgeEngineStarted(win, params)
-        } else {
-            toLog(`尝试启动核心引擎: ${params["port"]}`)
-            return await asyncStartLocalYakEngineServer(win, params)
+        if (!params["port"]) {
+            throw Error("启动本地引擎必须指定端口")
         }
+        return await asyncStartLocalYakEngineServer(win, params)
     })
 
     /** 判断远程缓存端口是否已开启引擎 */
@@ -334,9 +262,6 @@ module.exports = (win, callback, getClient) => {
                         GLOBAL_YAK_SETTING.password = params.password
                         GLOBAL_YAK_SETTING.sudo = false
                         win.webContents.send("start-yaklang-engine-success", "remote")
-                        if (probeSurvivalRemoteTime) clearInterval(probeSurvivalRemoteTime)
-                        probeSurvivalRemoteTime = null
-                        probeSurvivalRemoteTime = setInterval(() => probeRemoteEngineProcess(win, params), 2000)
                         resolve()
                     } else reject(err)
                 })
@@ -347,26 +272,56 @@ module.exports = (win, callback, getClient) => {
     }
     /** 远程连接引擎 */
     ipcMain.handle("start-remote-yaklang-engine", async (e, params) => {
-        /** 断开本地引擎探测定时器 */
-        if (probeSurvivalTime) clearInterval(probeSurvivalTime)
-        probeSurvivalTime = null
-
         return await judgeRemoteEngineStarted(win, params)
     })
 
     /** 连接引擎 */
-    ipcMain.handle("connect-yaklang-engine", (e, isRemote) => {
-        console.log('info',JSON.stringify(GLOBAL_YAK_SETTING));
+    ipcMain.handle("connect-yaklang-engine", async (e, params) => {
+        console.log('info', JSON.stringify(GLOBAL_YAK_SETTING));
+        /**
+         * connect yaklang engine 实际上是为了设置参数，实际上他是不知道远程还是本地
+         * params 中的参数应该有如下：
+         *  @Host: 主机名，可能携带端口
+         *  @Port: 端口
+         *  @Sudo: 是否是管理员权限
+         *  @IsTLS?: 是否是 TLS 加密的
+         *  @PemBytes?: Uint8Array 是 CaPem
+         *  @Password?: 登陆密码
+         */
+        const hostRaw = `${params["Host"] || "127.0.0.1"}`;
+        let portFromRaw = `${params["Port"] || 8087}`
+        let hostFormatted = hostRaw;
+        if (hostRaw.lastIndexOf(":") >= 0) {
+            portFromRaw = `${parseInt(hostRaw.substr(hostRaw.lastIndexOf(":") + 1))}`
+            hostFormatted = `${hostRaw.substr(0, hostRaw.lastIndexOf(":"))}`
+        }
+        const addr = `${hostFormatted}:${portFromRaw}`;
+        toLog(`原始参数为: ${JSON.stringify(params)}`)
+        toLog(`开始连接引擎地址为：${addr} Host: ${hostRaw} Port: ${portFromRaw}`)
+        GLOBAL_YAK_SETTING.defaultYakGRPCAddr = addr
+
         callback(
             GLOBAL_YAK_SETTING.defaultYakGRPCAddr,
-            isRemote ? GLOBAL_YAK_SETTING.caPem : "",
-            isRemote ? GLOBAL_YAK_SETTING.password : ""
+            Buffer.from(params["PemBytes"] === undefined ? "" : params["PemBytes"]).toString("utf-8"),
+            params["Password"] || "",
         )
-        win.webContents.send("local-yaklang-engine-start")
+        return (await asyncEcho({text: ECHO_TEST_MSG})).then(res => {
+            if (res["result"] === ECHO_TEST_MSG) {
+                return true
+            } else {
+                throw Error(`连接 Yaklang 引擎失败`)
+            }
+        })
     })
 
     /** 断开引擎(暂未使用) */
     ipcMain.handle("break-yaklalng-engine", () => {
-        win.webContents.send("local-yaklang-engine-end")
     })
+
+    /** 输出到欢迎界面的日志中 */
+    ipcMain.handle("output-log-to-welcome-console", (e, msg) => {
+        toLog(`${msg}`)
+    })
+
+
 }
