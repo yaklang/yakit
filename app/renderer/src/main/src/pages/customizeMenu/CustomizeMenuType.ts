@@ -1,7 +1,7 @@
 import {MenuDataProps} from "@/routes/routeSpec"
 
 export interface CustomizeMenuProps {
-    onClose:()=>void
+    onClose: () => void
 }
 
 /**
@@ -52,4 +52,21 @@ export interface SecondMenuProps {
 export interface SecondMenuItemProps {
     menuItem: MenuDataProps
     isDragging: boolean
+}
+
+/**
+ * @description: 右边的系统功能和插件模块
+ */
+export interface FeaturesAndPluginProps {}
+
+/**
+ * @description: 系统功能模块列表
+ */
+export interface SystemFunctionListProps {}
+
+/**
+ * @description: 系统功能小组件
+ */
+export interface SystemRouteMenuDataItemProps {
+    item: MenuDataProps
 }

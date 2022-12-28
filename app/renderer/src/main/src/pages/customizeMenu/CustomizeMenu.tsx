@@ -1,10 +1,13 @@
 import React, {useState} from "react"
 import {
     CustomizeMenuProps,
+    FeaturesAndPluginProps,
     FirstMenuItemProps,
     FirstMenuProps,
     SecondMenuItemProps,
-    SecondMenuProps
+    SecondMenuProps,
+    SystemFunctionListProps,
+    SystemRouteMenuDataItemProps
 } from "./CustomizeMenuType"
 import style from "./CustomizeMenu.module.scss"
 import {
@@ -17,7 +20,7 @@ import {
     TrashIcon,
     ArrowLeftIcon
 } from "@/assets/newIcon"
-import {MenuDataProps, DefaultRouteMenuData} from "@/routes/routeSpec"
+import {MenuDataProps, DefaultRouteMenuData, SystemRouteMenuData} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {Button, Input, Radio} from "antd"
@@ -25,6 +28,8 @@ import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {MenuDefaultPluginIcon} from "./icon/menuIcon"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) => {
     const result = Array.from(list)
@@ -114,12 +119,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 />
             </div>
             <div className={style["right"]}>
-                <div>
-                    <Radio.Group defaultValue='a' buttonStyle='solid'>
-                        <Radio.Button value='a'>系统功能</Radio.Button>
-                        <Radio.Button value='b'>插件</Radio.Button>
-                    </Radio.Group>
-                </div>
+                <FeaturesAndPlugin />
             </div>
         </div>
     )
@@ -345,6 +345,64 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
             <div className={style["close-icon"]}>
                 <RemoveIcon />
             </div>
+        </div>
+    )
+})
+
+const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo(() => {
+    const [type, setType] = useState<"system" | "plugin">("system")
+    const [keywords, setKeyWords] = useState<string>()
+    return (
+        <>
+            <div className={style["right-heard"]}>
+                <YakitRadioButtons
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    buttonStyle='solid'
+                    options={[
+                        {
+                            value: "system",
+                            label: "系统功能"
+                        },
+                        {
+                            value: "plugin",
+                            label: "插件"
+                        }
+                    ]}
+                />
+                <YakitInput.Search
+                    placeholder='请输入关键词搜索'
+                    value={keywords}
+                    onChange={(e) => setKeyWords(e.target.value)}
+                    style={{width: 200}}
+                />
+            </div>
+            <div className={style["right-help"]}>可通过拖拽或点击添加按钮，将功能添加至左侧菜单内</div>
+            {type === "system" && <SystemFunctionList />}
+            {/* {type === "plugin" && <PluginList />} */}
+        </>
+    )
+})
+
+const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props) => {
+    return (
+        <div className={style["system-function-list"]}>
+            {SystemRouteMenuData.map((item) => (
+                <SystemRouteMenuDataItem key={item.id} item={item} />
+            ))}
+        </div>
+    )
+})
+
+const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.memo((props) => {
+    const {item} = props
+    return (
+        <div className={style["system-function-item"]}>
+            <div className={style["display-flex"]}>
+                <span className={style["menu-icon"]}>{item.icon}</span>
+                <span className={style["menu-label"]}>{item.label}</span>
+            </div>
+            <YakitButton type='text'>添加</YakitButton>
         </div>
     )
 })

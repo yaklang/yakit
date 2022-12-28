@@ -2,6 +2,31 @@
     display: flex;
     height: 100%;
 
+    ::-webkit-scrollbar {
+        /*滚动条整体样式*/
+        width: 8px;
+        /*高宽分别对应横竖滚动条的尺寸*/
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        /*滚动条里面小方块*/
+        border-radius: 10px;
+        box-shadow: none;
+        background-clip: padding-box;
+        border: 1px solid transparent;
+    }
+
+    ::-webkit-scrollbar-track {
+        border-radius: 0;
+        box-shadow: none;
+        background: none;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        border-color: #c1c1c1;
+    }
+
     .content-icon {
         color: var(--yakit-body-text-color);
         margin-right: 4px;
@@ -106,6 +131,23 @@
         width: 430px;
         border-left: 1px solid var(--yakit-border-color);
         background-color: #fff;
+
+        .right-heard {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            padding-bottom: 0;
+        }
+
+        .right-help {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            margin-top: 16px;
+            margin-bottom: 8px;
+            height: 16px;
+            padding: 0 12px;
+        }
     }
 }
 
@@ -119,7 +161,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        width: 100%; 
+        width: 100%;
         height: 40px;
         border-bottom: 1px solid var(--yakit-border-color);
         color: var(--yakit-header-color);
@@ -308,4 +350,36 @@
 .display-flex {
     display: flex;
     align-items: center;
+}
+
+.system-function-list {
+    padding: 0 12px;
+    height: calc(100% - 76px);
+
+    .system-function-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 44px;
+        border-top: 1px solid var(--yakit-border-color);
+        padding: 10px 0px;
+
+
+
+        .menu-icon {
+            margin-right: 8px;
+            height: 24px;
+            width: 24px;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        .menu-label {
+            font-size: 12px;
+            color: var(--yakit-header-color);
+        }
+    }
 }
