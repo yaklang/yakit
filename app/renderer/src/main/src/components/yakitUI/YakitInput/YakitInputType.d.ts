@@ -1,5 +1,7 @@
 import {InputProps} from "antd"
 import {SizeType} from "antd/lib/config-provider/SizeContext"
+import { SearchProps } from "antd/lib/input"
+import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
  * @description YakitInputNumberProps 的属性
@@ -8,6 +10,11 @@ import {SizeType} from "antd/lib/config-provider/SizeContext"
  * @param {string} wrapperClassName  
  */
 export interface YakitInputProps extends Omit<InputProps, "size"> {
+    size?: YakitSizeType
+    wrapperClassName?: string
+}
+
+export interface YakitInputSearchProps extends Omit<SearchProps,"size">{
     size?: YakitSizeType
     wrapperClassName?: string
 }

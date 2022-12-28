@@ -1,18 +1,3 @@
-// // ========================== 新UI ==========================
-// .yakit-input-wrapper-item-newUI {
-//     --input-box-shadow-color: #fbe7d9;
-//     --input-border-color: #EAECF3;
-//     --input-hover-border-color: #f69c5d;
-// }
-
-// // ========================== 老UI ==========================
-// .yakit-input-wrapper-item-oldUI {
-//     --input-box-shadow-color: rgb(24 144 255 / 20%);
-//     --input-border-color: #EAECF3;
-//     --input-hover-border-color: #40a9ff;
-// }
-
-
 // ========================== input ==========================
 .yakit-input-wrapper {
 
@@ -121,6 +106,12 @@
 
 .yakit-input-small {
     height: 24px;
+
+    :gllobal {
+        .ant-input {
+            height: 24px;
+        }
+    }
 }
 
 // ========================== large ==========================
@@ -135,6 +126,171 @@
     :global {
         .ant-input {
             font-size: 14px;
+        }
+    }
+}
+
+// ========================== search ==========================
+.yakit-search-wrapper {
+    --search-box-shadow-color: var(--yakit-primary-color-focus);
+
+    --search-background-color: var(--yakit-primary-color);
+    --search-background-hover-color: var(--yakit-primary-color-hover);
+    --search-background-focus-color: var(--yakit-primary-color-focus);
+
+    --search-border-color: var(--yakit-border-color);
+    --search-border-hover-color: var(--yakit-primary-color-hover);
+    --search-border-focus-color: var(--yakit-primary-color-focus);
+
+    border-radius: 4px;
+    height: 24px;
+
+    :global {
+        .ant-input {
+            // border-width: 0;
+            border-right-width: 0;
+            border-radius: 4px;
+        }
+
+        .ant-btn-primary {
+            border-color: var(--search-border-color);
+            background-color: var(--search-background-color);
+            background: var(--search-background-color);
+        }
+
+        .ant-input-search .ant-input:hover,
+        .ant-input-search .ant-input:focus {
+            border-color: var(--search-border-hover-color);
+        }
+
+        .ant-input:focus,
+        .ant-input-focused {
+            box-shadow: none;
+        }
+
+        .ant-input-search>.ant-input-group>.ant-input-group-addon:last-child {
+            left: 0;
+        }
+
+        .ant-input-group .ant-input:hover {
+            border-right-width: 0
+        }
+
+        .ant-input-search>.ant-input-group>.ant-input-group-addon:last-child .ant-input-search-button {
+            border-radius: 0 4px 4px 0;
+            border: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ant-input-group-addon {
+            border-radius: 4px;
+        }
+
+        .ant-btn-primary {
+            padding: 0;
+            text-shadow: none;
+            box-shadow: none;
+        }
+
+    }
+}
+
+.yakit-search-wrapper-focus {
+    border-color: var(--search-border-focus-color);
+    box-shadow: 0 0 0 2px var(--search-box-shadow-color);
+}
+
+// ========================== search-middle ==========================
+.yakit-search-middle {
+    :global {
+        .ant-input {
+            height: 24px;
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 24px;
+            height: 24px;
+        }
+
+        .ant-btn-primary {
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 24px;
+            line-height: 20px;
+        }
+    }
+}
+
+// ========================== search-small ==========================
+.yakit-search-wrapper-small {
+    height: 20px;
+}
+
+.yakit-search-small {
+    :global {
+        .ant-input {
+            height: 20px;
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 20px;
+            height: 20px;
+        }
+
+        .anticon-search {
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 20px;
+            line-height: 20px;
+        }
+    }
+}
+
+// ========================== search-large ==========================
+.yakit-search-wrapper-large {
+    height: 28px;
+}
+
+.yakit-search-large {
+    :global {
+        .ant-input {
+            height: 28px;
+            padding: 7px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 28px;
+            height: 28px;
+        }
+
+        .anticon-search {
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 28px;
+            line-height: 28px;
         }
     }
 }
