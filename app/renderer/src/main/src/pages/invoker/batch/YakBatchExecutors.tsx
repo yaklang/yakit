@@ -255,12 +255,12 @@ export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     })
 
     const saveExtendList = useMemoizedFn((arr) => {
-        ipcRenderer.invoke("set-value", CustomBugList, JSON.stringify(arr))
+        ipcRenderer.invoke("set-local-cache", CustomBugList, JSON.stringify(arr))
     })
     useEffect(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("get-value", CustomBugList)
+            .invoke("fetch-local-cache", CustomBugList)
             .then((res: any) => {
                 setExtendList(res ? JSON.parse(res) : [])
             })

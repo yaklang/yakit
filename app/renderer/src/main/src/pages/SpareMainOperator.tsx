@@ -377,7 +377,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
     const [winCloseShow, setWinCloseShow] = useState<boolean>(false)
     useEffect(() => {
         ipcRenderer
-            .invoke("get-value", WindowsCloseFlag)
+            .invoke("fetch-local-cache", WindowsCloseFlag)
             .then((flag: any) => setWinCloseFlag(flag === undefined ? true : flag))
     }, [])
 
@@ -790,13 +790,13 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
-        ipcRenderer.invoke("set-value", FuzzerCache, JSON.stringify(filters.slice(-5)))
+        ipcRenderer.invoke("set-local-cache", FuzzerCache, JSON.stringify(filters.slice(-5)))
     }, 500)
     const fetchFuzzerList = useMemoizedFn(() => {
         setLoading(true)
         fuzzerList.current.clear()
         ipcRenderer
-            .invoke("get-value", FuzzerCache)
+            .invoke("fetch-local-cache", FuzzerCache)
             .then((res: any) => {
                 const cache = JSON.parse(res || "[]")
 
@@ -1056,7 +1056,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
         if (type === 1 && URL) {
             setBugUrl(URL)
             ipcRenderer
-                .invoke("get-value", CustomBugList)
+                .invoke("fetch-local-cache", CustomBugList)
                 .then((res: any) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
@@ -1687,7 +1687,7 @@ const Main: React.FC<MainProp> = forwardRef((props) => {
                         value={!winCloseFlag}
                         onChange={() => {
                             setWinCloseFlag(!winCloseFlag)
-                            ipcRenderer.invoke("set-value", WindowsCloseFlag, false)
+                            ipcRenderer.invoke("set-local-cache", WindowsCloseFlag, false)
                         }}
                     ></Checkbox>
                     <span style={{marginLeft: 8}}>不再出现该提示信息</span>

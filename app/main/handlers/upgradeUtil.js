@@ -34,7 +34,6 @@ const initMkbaseDir = async () => {
 }
 
 const kvpairs = new Map();
-const extrakvpairs = new Map();
 
 const getKVPair = (callback) => {
     kvpairs.clear()
@@ -61,31 +60,6 @@ const getKVPair = (callback) => {
     }
 }
 
-const getExtraKVPair = (callback) => {
-    extrakvpairs.clear()
-
-    try {
-        fs.readFile(extraKvPath, (err, data) => {
-            if (!!err) {
-                callback(err)
-                return
-            }
-
-            JSON.parse(data.toString()).forEach(i => {
-                if (i["key"]) {
-                    extrakvpairs.set(i["key"], i["value"])
-                }
-            })
-
-            if (callback) {
-                callback(null)
-            }
-        })
-    } catch (e) {
-        console.info(e)
-    }
-}
-
 const setKVPair = (k, v) => {
     kvpairs.set(`${k}`, v)
 
@@ -100,22 +74,6 @@ const setKVPair = (k, v) => {
     })
     pairs.sort((a, b) => a.key.localeCompare(b.key))
     fs.writeFileSync(basicKvPath, new Buffer(JSON.stringify(pairs), "utf8"))
-}
-
-const setExtraKVPair = (k, v) => {
-    extrakvpairs.set(`${k}`, v)
-
-    try {
-        fs.unlinkSync(extraKvPath)
-    } catch (e) {
-    }
-
-    const pairs = []
-    extrakvpairs.forEach((v, k) => {
-        pairs.push({key: k, value: v})
-    })
-    pairs.sort((a, b) => a.key.localeCompare(b.key))
-    fs.writeFileSync(extraKvPath, new Buffer(JSON.stringify(pairs), "utf8"))
 }
 
 const loadSecrets = () => {
@@ -228,9 +186,6 @@ module.exports = {
     initial: async () => {
         return await initMkbaseDir();
     },
-    extrakvpairs,
-    getExtraKVPair,
-    setExtraKVPair,
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;

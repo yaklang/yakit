@@ -114,7 +114,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     useEffect(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("get-value", ScanPortTemplate)
+            .invoke("fetch-local-cache", ScanPortTemplate)
             .then((value: any) => {
                 if (value) {
                     setTemplatePort(value || "")
@@ -318,7 +318,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                             return
                                                         }
                                                         ipcRenderer
-                                                            .invoke("set-value", ScanPortTemplate, params.Ports)
+                                                            .invoke("set-local-cache", ScanPortTemplate, params.Ports)
                                                             .then(() => {
                                                                 setTemplatePort(params.Ports)
                                                                 success("保存成功")

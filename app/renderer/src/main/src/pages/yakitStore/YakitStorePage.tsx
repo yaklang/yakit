@@ -202,13 +202,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const {userInfo} = useStore()
     useEffect(() => {
         ipcRenderer
-            .invoke("get-value", userInitUse)
+            .invoke("fetch-local-cache", userInitUse)
             .then((value: boolean) => {
                 if (value) {
                     setPlugSource("local")
                 } else {
                     setPlugSource("online")
-                    ipcRenderer.invoke("set-value", userInitUse, true)
+                    ipcRenderer.invoke("set-local-cache", userInitUse, true)
                 }
             })
             .catch(() => {})
