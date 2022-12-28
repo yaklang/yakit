@@ -426,38 +426,38 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 icon: <MenuBlastingAndUnauthorizedTestingIcon />,
                 describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
             },
-            // {
-            //     id: "2-2",
-            //     key: undefined,
-            //     label: "基础爬虫",
-            //     icon: <MenuBasicCrawlerIcon />,
-            //     describe: "通过爬虫可快速了解网站的整体架构"
-            // },
-            // {
-            //     id: "2-3",
-            //     key: undefined,
-            //     label: "空间引擎: Hunter",
-            //     icon: <MenuSpaceEngineHunterIcon />
-            // },
+            {
+                id: "2-2",
+                key: undefined,
+                label: "基础爬虫",
+                icon: <MenuBasicCrawlerIcon />,
+                describe: "通过爬虫可快速了解网站的整体架构"
+            },
+            {
+                id: "2-3",
+                key: undefined,
+                label: "空间引擎: Hunter",
+                icon: <MenuSpaceEngineHunterIcon />
+            },
             {
                 id: "2-4",
                 key: Route.Mod_ScanPort,
                 label: "端口/指纹扫描",
                 icon: <MenuPortScanningIcon />,
                 describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+            },
+            {
+                id: "2-5",
+                key: undefined,
+                label: "子域名收集",
+                icon: <MenuSubDomainCollectionIcon />
+            },
+            {
+                id: "2-6",
+                key: undefined,
+                label: "综合目录扫描与爆破",
+                icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />
             }
-            // {
-            //     id: "2-5",
-            //     key: undefined,
-            //     label: "子域名收集",
-            //     icon: <MenuSubDomainCollectionIcon />
-            // },
-            // {
-            //     id: "2-6",
-            //     key: undefined,
-            //     label: "综合目录扫描与爆破",
-            //     icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />
-            // }
         ]
     },
     {
@@ -552,5 +552,183 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
         label: "插件权限",
         disabled: true,
         hidden: true
+    }
+]
+
+export const SystemRouteMenuData: MenuDataProps[] = [
+    {
+        id: "1",
+        key: Route.Mod_ScanPort,
+        label: "端口/指纹扫描",
+        icon: <MenuPortScanningIcon />,
+        describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+    },
+    {
+        id: "2",
+        key: undefined,
+        label: "基础爬虫",
+        icon: <MenuBasicCrawlerIcon />,
+        describe: "通过爬虫可快速了解网站的整体架构"
+    },
+    {
+        id: "3",
+        key: undefined,
+        label: "综合目录扫描与爆破",
+        icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />,
+        describe: "带有内置字典的综合目录扫描与爆破"
+    },
+    {
+        id: "4",
+        key: Route.PoC,
+        label: "专项漏洞检测",
+        icon: <MenuSpecialVulnerabilityDetectionIcon />,
+        describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"
+    },
+    {
+        id: "5",
+        key: Route.ModManager,
+        label: "插件仓库",
+        icon: <MenuPluginWarehouseIcon />,
+        describe: "目前插件为 6 大类型，可根据需要灵活编写插件，支持从 GitHub 加载插件"
+    },
+    {
+        id: "6",
+        key: Route.HTTPHacker,
+        label: "MITM 交互式劫持",
+        icon: <MenuMITMInteractiveHijackingIcon />,
+        describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+    },
+    {
+        id: "7",
+        key: Route.HTTPFuzzer,
+        label: "Web Fuzzer",
+        icon: <MenuWebFuzzerIcon />,
+        describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
+    },
+    {
+        id: "8",
+        key: Route.Mod_Brute,
+        label: "爆破与未授权检测",
+        icon: <MenuBlastingAndUnauthorizedTestingIcon />,
+        describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
+    },
+    {
+        id: "9",
+        key: Route.Codec,
+        label: "Codec",
+        icon: <MenuCodecIcon />,
+        describe: "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法"
+    },
+    {
+        id: "10",
+        key: Route.DataCompare,
+        label: "数据对比",
+        icon: <MenuDataComparisonIcon />,
+        describe: "将数据进行对比，快速识别不同处"
+    },
+    {
+        id: "11",
+        key: Route.ShellReceiver,
+        label: "端口监听器",
+        icon: <MenuPortListenerIcon />,
+        describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
+    },
+    {
+        id: "12",
+        key: Route.ReverseServer_New,
+        label: "反连服务器",
+        icon: <MenuReverseConnectionServerIcon />,
+        describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连"
+    },
+    {
+        id: "13",
+        key: Route.DNSLog,
+        label: "DNSLog",
+        icon: <MenuDNSLogIcon />,
+        describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"
+    },
+    {
+        id: "14",
+        key: Route.ICMPSizeLog,
+        label: "ICMP-SizeLog",
+        icon: <MenuICMPSizeLogIcon />,
+        describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"
+    },
+    {
+        id: "15",
+        key: Route.TCPPortLog,
+        label: "TCP-PortLog",
+        icon: <MenuTCPPortLogIcon />,
+        describe: "使用未开放的随机端口来判定 TCP 反连"
+    },
+    {
+        id: "16",
+        key: Route.PayloadGenerater_New,
+        label: "Yso-Java Hack",
+        icon: <MenuYsoJavaHackIcon />,
+        describe: "配置序列化 Payload 或恶意类"
+    },
+    {
+        id: "17",
+        key: Route.BatchExecutorPage,
+        label: "插件批量执行",
+        icon: <MenuPluginBatchExecutionIcon />,
+        describe: "自由选择需要的 POC 进行批量漏洞检测"
+    },
+    {
+        id: "18",
+        key: Route.DB_HTTPHistory,
+        label: "HTTP History",
+        icon: <MenuHTTPHistoryIcon />,
+        describe: ""
+    },
+    {
+        id: "18",
+        key: Route.WebsocketFuzzer,
+        label: "Websocket Fuzzer",
+        icon: <MenuWebsocketFuzzerIcon />,
+        describe: ""
+    },
+    {
+        id: "19",
+        key: Route.DB_Domain,
+        label: "域名资产",
+        icon: <MenuDomainAssetsIcon />,
+        describe: ""
+    },
+    {
+        id: "20",
+        key: undefined,
+        label: "子域名收集",
+        icon: <MenuSubDomainCollectionIcon />,
+        describe: ""
+    },
+    {
+        id: "21",
+        key: Route.DB_Report,
+        label: "报告",
+        icon: <MenuReportIcon />,
+        describe: ""
+    },
+    {
+        id: "22",
+        key: Route.DB_ExecResults,
+        label: "插件执行结果",
+        icon: <MenuPlugExecutionResultsIcon />,
+        describe: ""
+    },
+    {
+        id: "23",
+        key: Route.DB_Risk,
+        label: "漏洞与风险",
+        icon: <MenuVulnerabilityRiskIcon />,
+        describe: ""
+    },
+    {
+        id: "24",
+        key: Route.DB_Ports,
+        label: "端口资产",
+        icon: <MenuPortAssetsIcon />,
+        describe: ""
     }
 ]
