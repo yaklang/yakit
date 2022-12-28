@@ -196,7 +196,7 @@
             align-items: center;
 
             .table-result-text {
-                width: 80%;
+                max-width: 80%;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
