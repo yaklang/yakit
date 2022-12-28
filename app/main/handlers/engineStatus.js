@@ -23,9 +23,10 @@ let probeSurvivalTime = null
 const probeEngineProcess = (win, port, sudo) => {
     const mode = sudo ? "admin" : "local"
     const setting = JSON.stringify({port: port})
+    console.log('probeEngine',mode,port);
 
     try {
-        testClient(port, async (err, result) => {
+        testClient(port, (err, result) => {
             if (!err) {
                 if (kvCache.get(YaklangEnginePort) !== setting) {
                     kvCache.set(YaklangEnginePort, setting)
@@ -66,7 +67,7 @@ const probeRemoteEngineProcess = (win, params) => {
     })
 
     try {
-        testRemoteClient(params, async (err, result) => {
+        testRemoteClient(params, (err, result) => {
             if (!!err) {
                 GLOBAL_YAK_SETTING.sudo = false
                 GLOBAL_YAK_SETTING.defaultYakGRPCAddr = `127.0.0.1:8087`
@@ -165,6 +166,8 @@ module.exports = (win, callback, getClient) => {
 
         /** 防止因 回调函数机制 导致的无返回的ipc报错，从而设置了一个计时器，到时自己发送返回值 */
         let callbackTime = null
+
+        console.log("start", sudo, port)
 
         return new Promise((resolve, reject) => {
             try {
@@ -282,10 +285,15 @@ module.exports = (win, callback, getClient) => {
     const judgeEngineStarted = (win, params) => {
         const {sudo, port} = params
 
+        console.log("judege", sudo, port)
+
         return new Promise((resolve, reject) => {
             try {
                 testClient(port, async (err, result) => {
                     if (!err) {
+                        const mode = sudo ? "admin" : "local"
+                        const setting = JSON.stringify({port: port})
+                        console.log("noerr judege")
                         if (probeSurvivalTime) clearInterval(probeSurvivalTime)
                         probeSurvivalTime = null
                         probeSurvivalTime = setInterval(() => probeEngineProcess(win, port, sudo), 2000)
@@ -298,6 +306,7 @@ module.exports = (win, callback, getClient) => {
                     }
                 })
             } catch (e) {
+                console.log("judege咋了")
                 reject(e)
             }
         })
@@ -305,6 +314,8 @@ module.exports = (win, callback, getClient) => {
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
         console.info("Start to call `start-lcoal-yaklang-engine` from client end!")
+
+        console.log("params", JSON.stringify(params))
 
         /** 断开远程引擎探测定时器 */
         if (probeSurvivalRemoteTime) clearInterval(probeSurvivalRemoteTime)
@@ -319,7 +330,7 @@ module.exports = (win, callback, getClient) => {
         }
     })
 
-    /** 判断缓存端口是否已开启引擎 */
+    /** 判断远程缓存端口是否已开启引擎 */
     const judgeRemoteEngineStarted = (win, params) => {
         return new Promise((resolve, reject) => {
             try {
@@ -352,6 +363,7 @@ module.exports = (win, callback, getClient) => {
 
     /** 连接引擎 */
     ipcMain.handle("connect-yaklang-engine", (e, isRemote) => {
+        console.log('info',JSON.stringify(GLOBAL_YAK_SETTING));
         callback(
             GLOBAL_YAK_SETTING.defaultYakGRPCAddr,
             isRemote ? GLOBAL_YAK_SETTING.caPem : "",
