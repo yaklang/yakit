@@ -1651,45 +1651,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </Layout>
                 </Content>
             </AutoSpin>
-
-            {/* <Modal
-                visible={winCloseShow}
-                onCancel={() => setWinCloseShow(false)}
-                footer={[
-                    <Button key='link' onClick={() => setWinCloseShow(false)}>
-                        取消
-                    </Button>,
-                    <Button
-                        key='back'
-                        type='primary'
-                        onClick={() => {
-                            success("退出当前 Yak 服务器成功")
-                            setEngineStatus("error")
-                        }}
-                    >
-                        退出
-                    </Button>
-                ]}
-            >
-                <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
-                    <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
-                </div>
-                <p style={{fontSize: 15, marginLeft: 37}}>
-                    是否要退出yakit操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁
-                </p>
-                <div style={{marginLeft: 37}}>
-                    <Checkbox
-                        defaultChecked={!winCloseFlag}
-                        value={!winCloseFlag}
-                        onChange={() => {
-                            setWinCloseFlag(!winCloseFlag)
-                            ipcRenderer.invoke("set-local-cache", LocalGV.WindowsCloseFlag, false)
-                        }}
-                    ></Checkbox>
-                    <span style={{marginLeft: 8}}>不再出现该提示信息</span>
-                </div>
-            </Modal> */}
             <Modal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
