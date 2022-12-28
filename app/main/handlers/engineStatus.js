@@ -5,7 +5,7 @@ const path = require("path")
 const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
 const {GLOBAL_YAK_SETTING} = require("../state")
-const {kvCache} = require("../localCache")
+const {getLocalCacheValue, setLocalCache} = require("../localCache")
 const {testClient, testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine} = require("../filePath")
 
@@ -28,12 +28,9 @@ const probeEngineProcess = (win, port, sudo) => {
     try {
         testClient(port, (err, result) => {
             if (!err) {
-                if (kvCache.get(YaklangEnginePort) !== setting) {
-                    kvCache.set(YaklangEnginePort, setting)
-                }
-                if (kvCache.get(YaklangEngineSudo) !== mode) {
-                    kvCache.set(YaklangEngineSudo, mode)
-                }
+                setLocalCache(YaklangEnginePort, setting)
+                setLocalCache(YaklangEngineSudo, mode)
+
                 if (GLOBAL_YAK_SETTING.defaultYakGRPCAddr !== `localhost:${port}`) {
                     GLOBAL_YAK_SETTING.sudo = !!sudo
                     GLOBAL_YAK_SETTING.defaultYakGRPCAddr = `localhost:${port}`
@@ -75,12 +72,8 @@ const probeRemoteEngineProcess = (win, params) => {
                 GLOBAL_YAK_SETTING.password = ""
                 win.webContents.send("local-yaklang-engine-end", err)
             } else {
-                if (kvCache.get(YaklangEnginePort) !== setting) {
-                    kvCache.set(YaklangEnginePort, setting)
-                }
-                if (kvCache.get(YaklangEngineSudo) !== "remote") {
-                    kvCache.set(YaklangEngineSudo, "remote")
-                }
+                setLocalCache(YaklangEnginePort, setting)
+                setLocalCache(YaklangEngineSudo, "remote")
             }
         })
     } catch (e) {}

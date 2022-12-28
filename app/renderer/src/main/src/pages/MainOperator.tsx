@@ -362,6 +362,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
+
     useEffect(() => {
         ipcRenderer.on("refresh-token", (e, res: any) => {
             refreshToken(userInfo)
@@ -680,7 +681,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 ? setRemoteValue("token-online-enterprise", res.token)
                 : setRemoteValue("token-online", res.token)
         })
-        return () => ipcRenderer.removeAllListeners("fetch-signin-token")
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-signin-token")
+        }
     }, [])
 
     useEffect(() => {
@@ -702,7 +705,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             }
             IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
-        return () => ipcRenderer.removeAllListeners("login-out")
+        return () => {
+            ipcRenderer.removeAllListeners("login-out")
+        }
     }, [])
 
     const [userMenu, setUserMenu] = useState<MenuItemType[]>([

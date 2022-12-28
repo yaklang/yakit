@@ -5,7 +5,12 @@ const {registerIPC, clearing} = require("./ipc")
 const {httpApi} = require("./httpServer")
 const {USER_INFO, HttpSetting} = require("./state")
 const process = require("process")
-const {getExtraLocalCache, extraKVCache, getLocalCache} = require("./localCache")
+const {
+    initExtraLocalCache,
+    getExtraLocalCacheValue,
+    initLocalCache,
+    setExtraLocalCache,
+} = require("./localCache")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -23,10 +28,11 @@ process.on("uncaughtException", (error) => {
 
 const createWindow = () => {
     /** 获取缓存数据并储存于软件内 */
-    getLocalCache()
+    initLocalCache()
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
-    getExtraLocalCache(() => {
-        closeFlag = extraKVCache.get(UICloseFlag) === undefined ? true : extraKVCache.get(UICloseFlag)
+    initExtraLocalCache(() => {
+        const cacheFlag = getExtraLocalCacheValue(UICloseFlag);
+        closeFlag = cacheFlag === undefined ? true : cacheFlag;
     })
 
     win = new BrowserWindow({
@@ -78,7 +84,7 @@ const createWindow = () => {
                     noLink: true
                 })
                 .then((res) => {
-                    extraKVCache.set(UICloseFlag, !res.checkboxChecked)
+                    setExtraLocalCache(UICloseFlag, !res.checkboxChecked)
                     if (res.response === 0) {
                         e.preventDefault()
                         win.minimize()
@@ -114,7 +120,8 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
-    } catch (e) {}
+    } catch (e) {
+    }
 
     //
     // // autoUpdater.autoDownload = false
