@@ -64,7 +64,7 @@ import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
-import {setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 // import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 // import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 // import {onImportShare} from "./fuzzer/components/ShareImport"
@@ -221,7 +221,7 @@ export interface SetUserInfoProp {
 export const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
+        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg}/>
     ) : (
         <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
@@ -362,6 +362,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
+
     useEffect(() => {
         ipcRenderer.on("refresh-token", (e, res: any) => {
             refreshToken(userInfo)
@@ -680,7 +681,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 ? setRemoteValue("token-online-enterprise", res.token)
                 : setRemoteValue("token-online", res.token)
         })
-        return () => ipcRenderer.removeAllListeners("fetch-signin-token")
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-signin-token")
+        }
     }, [])
 
     useEffect(() => {
@@ -702,7 +705,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             }
             IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
-        return () => ipcRenderer.removeAllListeners("login-out")
+        return () => {
+            ipcRenderer.removeAllListeners("login-out")
+        }
     }, [])
 
     const [userMenu, setUserMenu] = useState<MenuItemType[]>([
@@ -788,34 +793,33 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
-        ipcRenderer.invoke("set-local-cache", FuzzerCache, JSON.stringify(filters.slice(-5)))
+        setRemoteValue(FuzzerCache, JSON.stringify(filters))
     }, 500)
     const fetchFuzzerList = useMemoizedFn(() => {
         setLoading(true)
         fuzzerList.current.clear()
-        ipcRenderer
-            .invoke("fetch-local-cache", FuzzerCache)
-            .then((res: any) => {
-                const cache = JSON.parse(res || "[]")
 
-                for (let item of cache) {
-                    const time = new Date().getTime().toString()
-                    fuzzerList.current.set(time, {...item, time: time})
-                    addTabPage(Route.HTTPFuzzer, {
-                        time: time,
-                        node: ContentByRoute(Route.HTTPFuzzer, undefined, {
-                            isHttps: item.isHttps || false,
-                            request: item.request || "",
-                            fuzzerParams: item,
-                            system: system,
-                            order: time
-                        })
+        getRemoteValue(FuzzerCache).then((res: any) => {
+            const cache = JSON.parse(res || "[]")
+            for (let item of cache) {
+                const time = new Date().getTime().toString()
+                fuzzerList.current.set(time, {...item, time: time})
+                addTabPage(Route.HTTPFuzzer, {
+                    time: time,
+                    node: ContentByRoute(Route.HTTPFuzzer, undefined, {
+                        isHttps: item.isHttps || false,
+                        request: item.request || "",
+                        fuzzerParams: item,
+                        system: system,
+                        order: time
                     })
-                }
-            })
-            .catch((e) => console.info(e))
-            .finally(() => setTimeout(() => setLoading(false), 300))
+                })
+            }
+        }).catch(e => {
+            console.info(e)
+        }).finally(() => setTimeout(() => setLoading(false), 300))
     })
+
     const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
         fuzzerList.current.set(key, {request, isHttps, time: key})
     }
@@ -839,8 +843,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => updateFuzzerList(res.key, JSON.parse(res.param)))
         // 开发环境不展示fuzzer缓存
         ipcRenderer.invoke("is-dev").then((flag) => {
-            if (!flag) fetchFuzzerList()
-            // fetchFuzzerList()
+
+        }).finally(() => {
+            fetchFuzzerList()
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
@@ -1509,7 +1514,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                     </Space>
                                 </Spin>
                         </Sider> */}
-                        
+
                         <Content
                             style={{
                                 overflow: "hidden",
@@ -1646,45 +1651,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </Layout>
                 </Content>
             </AutoSpin>
-
-            {/* <Modal
-                visible={winCloseShow}
-                onCancel={() => setWinCloseShow(false)}
-                footer={[
-                    <Button key='link' onClick={() => setWinCloseShow(false)}>
-                        取消
-                    </Button>,
-                    <Button
-                        key='back'
-                        type='primary'
-                        onClick={() => {
-                            success("退出当前 Yak 服务器成功")
-                            setEngineStatus("error")
-                        }}
-                    >
-                        退出
-                    </Button>
-                ]}
-            >
-                <div style={{height: 40}}>
-                    <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}}/>
-                    <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
-                </div>
-                <p style={{fontSize: 15, marginLeft: 37}}>
-                    是否要退出yakit操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁
-                </p>
-                <div style={{marginLeft: 37}}>
-                    <Checkbox
-                        defaultChecked={!winCloseFlag}
-                        value={!winCloseFlag}
-                        onChange={() => {
-                            setWinCloseFlag(!winCloseFlag)
-                            ipcRenderer.invoke("set-local-cache", LocalGV.WindowsCloseFlag, false)
-                        }}
-                    ></Checkbox>
-                    <span style={{marginLeft: 8}}>不再出现该提示信息</span>
-                </div>
-            </Modal> */}
             <Modal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
