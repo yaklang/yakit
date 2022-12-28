@@ -48,3 +48,6 @@
 .Website-tree-card .ant-card-body .ant-tree-list-holder div:first-child{
     overflow: initial !important;
 }
+.Website-tree-card .ant-card-head{
+    min-width: auto;
+}
