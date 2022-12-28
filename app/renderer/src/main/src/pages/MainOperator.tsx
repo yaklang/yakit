@@ -64,7 +64,7 @@ import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
-import {setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 // import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 // import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 // import {onImportShare} from "./fuzzer/components/ShareImport"
@@ -221,7 +221,7 @@ export interface SetUserInfoProp {
 export const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
+        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg}/>
     ) : (
         <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
@@ -793,34 +793,33 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
-        ipcRenderer.invoke("set-local-cache", FuzzerCache, JSON.stringify(filters.slice(-5)))
+        setRemoteValue(FuzzerCache, JSON.stringify(filters))
     }, 500)
     const fetchFuzzerList = useMemoizedFn(() => {
         setLoading(true)
         fuzzerList.current.clear()
-        ipcRenderer
-            .invoke("fetch-local-cache", FuzzerCache)
-            .then((res: any) => {
-                const cache = JSON.parse(res || "[]")
 
-                for (let item of cache) {
-                    const time = new Date().getTime().toString()
-                    fuzzerList.current.set(time, {...item, time: time})
-                    addTabPage(Route.HTTPFuzzer, {
-                        time: time,
-                        node: ContentByRoute(Route.HTTPFuzzer, undefined, {
-                            isHttps: item.isHttps || false,
-                            request: item.request || "",
-                            fuzzerParams: item,
-                            system: system,
-                            order: time
-                        })
+        getRemoteValue(FuzzerCache).then((res: any) => {
+            const cache = JSON.parse(res || "[]")
+            for (let item of cache) {
+                const time = new Date().getTime().toString()
+                fuzzerList.current.set(time, {...item, time: time})
+                addTabPage(Route.HTTPFuzzer, {
+                    time: time,
+                    node: ContentByRoute(Route.HTTPFuzzer, undefined, {
+                        isHttps: item.isHttps || false,
+                        request: item.request || "",
+                        fuzzerParams: item,
+                        system: system,
+                        order: time
                     })
-                }
-            })
-            .catch((e) => console.info(e))
-            .finally(() => setTimeout(() => setLoading(false), 300))
+                })
+            }
+        }).catch(e => {
+            console.info(e)
+        }).finally(() => setTimeout(() => setLoading(false), 300))
     })
+
     const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
         fuzzerList.current.set(key, {request, isHttps, time: key})
     }
@@ -844,8 +843,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => updateFuzzerList(res.key, JSON.parse(res.param)))
         // 开发环境不展示fuzzer缓存
         ipcRenderer.invoke("is-dev").then((flag) => {
-            if (!flag) fetchFuzzerList()
-            // fetchFuzzerList()
+
+        }).finally(() => {
+            fetchFuzzerList()
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
@@ -1514,7 +1514,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                     </Space>
                                 </Spin>
                         </Sider> */}
-                        
+
                         <Content
                             style={{
                                 overflow: "hidden",
