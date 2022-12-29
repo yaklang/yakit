@@ -3743,6 +3743,7 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 // @ts-ignore
                                 <OfficialYakitLogoIcon className='text-icon-style' />
                             )}
+                            {!bind_me&& <>{(info.is_private === true && <LockOutlined style={{paddingLeft:5}}/>)}</>}
                             {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
                     </div>
