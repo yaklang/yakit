@@ -63,7 +63,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [keepalive, setKeepalive] = useState<boolean>(false);
 
     /** 引擎未安装时的modal组件是否展示 */
-    const [engineShow, setEngineShow] = useState<boolean>(false)
+    const [engineShow, setEngineShow] = useState<boolean>(true)
 
     /**
      * 认证信息
