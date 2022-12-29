@@ -39,7 +39,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
     const [reconnectTrigger, setReconnectTrigger] = useState(false);
 
-    useEffect(()=>{
+    useEffect(() => {
         if (reconnectTrigger === props.reconnectTrigger) {
             return
         }
@@ -118,7 +118,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         setKeepalive(true)
         ipcRenderer.invoke("start-local-yaklang-engine", {
             port: props.credential.Port,
-            sudo: props.credential.Sudo,
+            sudo: props.mode === "admin",
         }).then(() => {
             outputToWelcomeConsole("引擎启动成功！")
         }).catch(e => {
@@ -146,7 +146,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
             }).catch(e => {
                 failedCount++
-                outputToWelcomeConsole(`引擎未完全启动，无法连接，尝试次数：${count}`)
+                if (failedCount > 5) {
+                    setKeepalive(false)
+                }
+                outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
                 if (props.onFailed) {
                     props.onFailed(failedCount)
                 }

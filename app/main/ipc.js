@@ -163,7 +163,8 @@ module.exports = {
                 global.caPem = pem
                 global.password = password
             },
-            getClient
+            getClient,
+            newClient,
         )
 
         require("./handlers/execYak")(win, getClient)

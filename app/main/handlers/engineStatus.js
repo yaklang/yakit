@@ -110,7 +110,7 @@ const engineLogOutputFactory = (win) => (message) => {
 
 const ECHO_TEST_MSG = "Hello Yakit!"
 
-module.exports = (win, callback, getClient) => {
+module.exports = (win, callback, getClient, newClient) => {
     // 输出到欢迎页面的 output 中
     const toStdout = engineStdioOutputFactory(win)
     // 输出到日志中
@@ -305,13 +305,19 @@ module.exports = (win, callback, getClient) => {
             Buffer.from(params["PemBytes"] === undefined ? "" : params["PemBytes"]).toString("utf-8"),
             params["Password"] || "",
         )
-        return (await asyncEcho({text: ECHO_TEST_MSG})).then(res => {
-            if (res["result"] === ECHO_TEST_MSG) {
-                return true
-            } else {
-                throw Error(`连接 Yaklang 引擎失败`)
-            }
-        })
+        return (await (new Promise((resolve, reject) => {
+            newClient().Echo({text: ECHO_TEST_MSG}, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                if (data["result"] === ECHO_TEST_MSG) {
+                    resolve(data)
+                } else {
+                    reject(Error(`ECHO ${ECHO_TEST_MSG} ERROR`))
+                }
+            })
+        })))
     })
 
     /** 断开引擎(暂未使用) */
