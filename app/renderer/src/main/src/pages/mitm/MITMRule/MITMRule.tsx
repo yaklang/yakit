@@ -762,7 +762,7 @@ const YakitCheckboxMemo = React.memo<YakitCheckboxProps>(
 const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
     (props) => {
         let node: ReactNode = (
-            <Tooltip title={props.Result}>
+            <Tooltip title={props.Result} >
                 <div className={styles["table-result-text"]}>{props.Result}</div>
             </Tooltip>
         )
