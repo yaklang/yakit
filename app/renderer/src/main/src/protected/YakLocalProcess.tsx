@@ -157,8 +157,8 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
             <Form.Item label={" "} colon={false}>
                 <div style={{width: "100%"}}>
                     <Row>
-                        <Col span={5}/>
-                        <Col span={14}>
+                        <Col span={2}/>
+                        <Col span={20}>
                             <Card
                                 title={
                                     <Space>
@@ -334,7 +334,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                 )}
                             </Card>
                         </Col>
-                        <Col span={5}/>
+                        <Col span={2}/>
                     </Row>
                 </div>
             </Form.Item>

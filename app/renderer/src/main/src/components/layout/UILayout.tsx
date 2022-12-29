@@ -35,6 +35,8 @@ import {getLocalValue, setLocalValue} from "@/utils/kv";
 import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog";
 import {StringToUint8Array} from "@/utils/str";
+import {showModal} from "@/utils/showModal";
+import {YakUpgrade} from "@/components/YakUpgrade";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,6 +84,21 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const isRemoteEngine = engineMode === "remote"
     const [remoteConnectLoading, setRemoteConnectLoading] = useState(false);
 
+
+    useEffect(()=>{
+        const id = setInterval(()=>{
+            if (getIsYakInstalled()) {
+                return
+            }
+
+            ipcRenderer.invoke("is-yaklang-engine-installed").then((flag: boolean) => {
+                setIsYakInstalled(flag)
+            })
+        }, 3000)
+        return ()=>{
+            clearInterval(id)
+        }
+    }, [])
 
     /**
      * 1.获取操作系统信息
@@ -504,6 +521,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         loading={remoteConnectLoading}
                         onSubmit={connectRemoteEngine}
                         onEngineModeChange={changeEngineMode}
+                        engineNotInstalled={!getIsYakInstalled()}
                     /> : <YaklangEngineHint
                         system={system}
                         visible={engineShow}
@@ -1096,6 +1114,7 @@ interface RemoteYaklangEngineProps {
     loading: boolean
     onSubmit: (info: RemoteLinkInfo) => any
     onEngineModeChange: (mode: YaklangEngineMode) => any
+    engineNotInstalled?: boolean
 }
 
 /** @name 远程连接配置参数 */
@@ -1324,18 +1343,40 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                 <YakitButton size='max' onClick={submit}>
                                     启动连接
                                 </YakitButton>
-                                <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={() => {
-                                    changeEngineMode("local")
+                                {(!props.engineNotInstalled) ? (
+                                    <>
+                                        <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={() => {
+                                            changeEngineMode("local")
+                                        }}>
+                                            {EngineModeVerbose("local")}
+                                        </YakitButton>
+                                        <Popconfirm title={"启动管理员模式将需要用户额外认证"} onConfirm={() => {
+                                            changeEngineMode("admin")
+                                        }}>
+                                            <YakitButton style={{marginLeft: 8}} size='max' type='outline2'>
+                                                {EngineModeVerbose("admin")}
+                                            </YakitButton>
+                                        </Popconfirm>
+                                    </>
+                                ) : <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={() => {
+                                    let m = showModal({
+                                        keyboard: false,
+                                        title: "引擎升级管理页面",
+                                        width: "50%",
+                                        content: (
+                                            <>
+                                                <YakUpgrade
+                                                    onFinished={() => {
+                                                        m.destroy()
+                                                    }}
+                                                    existed={[]}
+                                                />
+                                            </>
+                                        )
+                                    })
                                 }}>
-                                    {EngineModeVerbose("local")}
-                                </YakitButton>
-                                <Popconfirm title={"启动管理员模式将需要用户额外认证"} onConfirm={() => {
-                                    changeEngineMode("admin")
-                                }}>
-                                    <YakitButton style={{marginLeft: 8}} size='max' type='outline2'>
-                                        {EngineModeVerbose("admin")}
-                                    </YakitButton>
-                                </Popconfirm>
+                                    安装引擎
+                                </YakitButton>}
                             </Form.Item>
                         </Form>
                     </div>
