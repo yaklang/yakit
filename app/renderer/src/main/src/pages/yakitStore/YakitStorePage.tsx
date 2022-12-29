@@ -143,7 +143,7 @@ interface PluginSearchStatisticsRequest {
 const typeOnline = "yak,mitm,packet-hack,port-scan,codec,nuclei"
 export const defQueryOnline: SearchPluginOnlineRequest = {
     keywords: "",
-    order_by: "stars",
+    order_by: "created_at",
     order: "desc",
     plugin_type: typeOnline,
     page: 1,
@@ -216,17 +216,19 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     }, [])
     useEffect(() => {
         if (!isEdit) {
-            onRefList()
+            onRefList(false)
         }
     }, [userInfo.isLogin])
-    const onRefList = useMemoizedFn(() => {
-        setPublicKeyword("")
+    const onRefList = useMemoizedFn((clearFilter = true) => {
+        if(clearFilter){
+           setPublicKeyword("") 
+           onResetQuery()
+        }
         onResetPluginDetails()
         setScriptIdOnlineId(undefined)
         setScriptUUIdOnlineUUId(undefined)
         onResetNumber()
         getStatistics(width)
-        onResetQuery()
         setFullScreen(false)
         setSearchType("keyword")
         setTimeout(() => {
@@ -698,7 +700,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         <Button
                                             type='link'
                                             onClick={() => {
-                                                onRefList()
+                                                onRefList(false)
                                             }}
                                         >
                                             返回
@@ -763,19 +765,19 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                     <div className='opt-header'>排序顺序</div>
                                     <div
                                         className={`opt-list-item ${
-                                            statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
-                                        }`}
-                                        onClick={() => onSearch("order_by", "stars")}
-                                    >
-                                        <span className='item-name content-ellipsis'>按热度</span>
-                                    </div>
-                                    <div
-                                        className={`opt-list-item ${
                                             statisticsQueryOnline.order_by === "created_at" && "opt-list-item-selected"
                                         }`}
                                         onClick={() => onSearch("order_by", "created_at")}
                                     >
                                         <span className='item-name content-ellipsis'>按时间</span>
+                                    </div>
+                                    <div
+                                        className={`opt-list-item ${
+                                            statisticsQueryOnline.order_by === "stars" && "opt-list-item-selected"
+                                        }`}
+                                        onClick={() => onSearch("order_by", "stars")}
+                                    >
+                                        <span className='item-name content-ellipsis'>按热度</span>
                                     </div>
                                 </div>
                             )}
@@ -2968,7 +2970,7 @@ export const YakModuleUser: React.FC<YakModuleUserProps> = (props) => {
     useEffect(() => {
         if (
             !queryUser.is_private &&
-            queryUser.order_by === "stars" &&
+            queryUser.order_by === "created_at" &&
             queryUser.order === "desc" &&
             queryUser.plugin_type === typeOnline &&
             !queryUser.status &&
@@ -3203,7 +3205,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     useEffect(() => {
         if (
             !queryOnline.is_private &&
-            queryOnline.order_by === "stars" &&
+            queryOnline.order_by === "created_at" &&
             queryOnline.order === "desc" &&
             queryOnline.plugin_type === typeOnline &&
             !queryOnline.status &&
@@ -3864,13 +3866,13 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
     const onReset = () => {
         setQueryOnline({
             ...queryOnline,
-            order_by: "stars",
+            order_by: "created_at",
             plugin_type: defQueryOnline.plugin_type,
             status: "",
             is_private: ""
         })
         form.setFieldsValue({
-            order_by: "stars",
+            order_by: "created_at",
             plugin_type: defQueryOnline.plugin_type,
             status: "all",
             is_private: ""
@@ -3894,8 +3896,8 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                 {!user && (
                     <Form.Item name='order_by' label='排序顺序'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
-                            <Option value='stars'>按热度</Option>
                             <Option value='created_at'>按时间</Option>
+                            <Option value='stars'>按热度</Option>
                         </Select>
                     </Form.Item>
                 )}
