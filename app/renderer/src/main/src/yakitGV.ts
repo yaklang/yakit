@@ -6,8 +6,9 @@ export enum LocalGV {
     YaklangEngineMode = "yaklang-engine-mode",
     /** @name 获取缓存数据里引擎启动配置 */
     YaklangEnginePort = "yaklang-engine-port",
+    YaklangEngineAdminPort = "yaklang-engine-admin-port",
     /** @name 关闭窗口的二次确认 */
-    WindowsCloseFlag = "windows-close-flag"
+    WindowsCloseFlag = "windows-close-flag",
 }
 
 /** 引擎数据库缓存数据-键值变量 */

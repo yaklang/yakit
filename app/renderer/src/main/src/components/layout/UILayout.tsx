@@ -31,7 +31,7 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
-import {getLocalValue} from "@/utils/kv";
+import {getLocalValue, setLocalValue} from "@/utils/kv";
 import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog";
 import {StringToUint8Array} from "@/utils/str";
@@ -53,12 +53,11 @@ interface yakProcess {
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
     const [system, setSystem] = useState<YakitSystem>("Darwin")
-    const [__isYakInstalled, setIsYakInstalled, getIsYakInstalled] = useGetState<boolean>(false)
+    const [__isYakInstalled, setIsYakInstalled, getIsYakInstalled] = useGetState<boolean>(false);
 
-    const [reconnectTrigger, setReconnectTrigger] = useState(false);
-    const reconnect = useMemoizedFn(() => {
-        setReconnectTrigger(!reconnectTrigger)
-    })
+    const [localPort, setLocalPort] = useState<number>(0);
+    const [adminPort, setAdminPort] = useState<number>(0);
+    const [keepalive, setKeepalive] = useState<boolean>(false);
 
     /** 引擎未安装时的modal组件是否展示 */
     const [engineShow, setEngineShow] = useState<boolean>(false)
@@ -129,7 +128,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
             })
         })
-    }, [])
+
+        getLocalValue(LocalGV.YaklangEnginePort).then(portRaw => {
+            const port = parseInt(portRaw);
+            if (!port) {
+                getRandomLocalEnginePort(p => setLocalPort(p))
+            } else {
+                setLocalPort(port)
+            }
+        }).catch(() => {
+            getRandomLocalEnginePort(p => setLocalPort(p))
+        })
+
+        getLocalValue(LocalGV.YaklangEngineAdminPort).then(portRaw => {
+            const port = parseInt(portRaw);
+            if (!port) {
+                getRandomLocalEnginePort(p => setAdminPort(p))
+            } else {
+                setAdminPort(port)
+            }
+        }).catch(() => {
+            getRandomLocalEnginePort(p => setAdminPort(p))
+        })
+    }, []);
+
+    // 防止两个端口重复
+    useEffect(() => {
+        if (adminPort === 0) {
+            return
+        }
+        if (adminPort === localPort) {
+            getRandomLocalEnginePort(p => setAdminPort(p))
+        }
+    }, [adminPort, localPort])
 
     /**
      * 根据引擎状态处理不同的方式
@@ -137,45 +168,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 由保持组件来设置状态
      * */
     useEffect(() => {
-        if (engineMode === undefined) {
+        if (engineMode === undefined || localPort <= 0 || adminPort <= 0) {
             return
         }
         outputToWelcomeConsole(`当前引擎模式为 ${engineMode}`)
         switch (engineMode) {
             case "local":
-                outputToWelcomeConsole("本地普通权限引擎模式，开始启动本地引擎")
-                getLocalValue(LocalGV.YaklangEnginePort).then(port => {
-                    let localPort: number = 0;
-                    try {
-                        localPort = parseInt(port)
-                    } catch (e) {
-                        localPort = 0
-                    }
-                    if (!localPort) {
-                        getRandomLocalEnginePort(port => {
-                            setCredential({...getCredential(), Port: port})
-                        })
-                        outputToWelcomeConsole("第一次使用 Yakit 将会在本地随机生成一个端口以启动引擎")
-                        return
-                    } else {
-                        outputToWelcomeConsole(`本地使用 ${localPort} 作为本地引擎端口`)
-                        setCredential({...getCredential(), Port: localPort})
-                    }
-                }).catch(e => {
-                    getRandomLocalEnginePort(port => {
-                        setCredential({...getCredential(), Port: port})
-                    })
-                })
+                outputToWelcomeConsole(`本地普通权限引擎模式，开始启动本地引擎: ${localPort}`)
+                setCredential({...getCredential(), Port: localPort, Sudo: false})
                 return
             case "remote":
                 outputToWelcomeConsole("远程模式或调试模式")
                 return
             case "admin":
-                outputToWelcomeConsole("管理员模式")
+                outputToWelcomeConsole(`管理员模式，启动本地引擎: ${adminPort}`)
+                setCredential({...getCredential(), Port: adminPort, Sudo: false})
                 return
             default:
         }
-    }, [engineMode])
+    }, [engineMode, localPort, adminPort])
 
     /** 已启动引擎的pid信息 */
     const [process, setProcess] = useState<yakProcess[]>([])
@@ -226,9 +237,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     /** yaklang引擎切换启动模式 */
-    const changeEngineMode = useMemoizedFn((type: string) => {
+    const changeEngineMode = useMemoizedFn((type: YaklangEngineMode) => {
         // killEnginePid()
-        setEngineLink(false)
+        setEngineLink(false);
+        setKeepalive(false);
 
         /** 未安装引擎下的模式切换取消 */
         if (!getIsYakInstalled()) {
@@ -240,15 +252,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (type) {
             case "admin":
                 setEngineMode("admin")
+                setLocalValue(LocalGV.YaklangEngineMode, type)
                 return
             case "local":
                 setEngineMode("local")
+                setLocalValue(LocalGV.YaklangEngineMode, type)
                 return
             case "remote":
                 setEngineMode("remote")
+                setLocalValue(LocalGV.YaklangEngineMode, type)
                 return
         }
-        reconnect()
+    })
+
+    const connectRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
+        setCredential({
+            Host: info.host,
+            IsTLS: info.caPem !== "",
+            Password: info.password,
+            PemBytes: StringToUint8Array(info.caPem || ""),
+            Port: parseInt(info.port),
+            Sudo: false
+        })
+        setKeepalive(true)
     })
 
     useEffect(() => {
@@ -298,16 +324,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <YaklangEngineWatchDog
-                credential={credential} mode={engineMode}
+                credential={credential}
+                mode={engineMode}
+
+                /* keepalive 开启智慧才会触发 Ready 和 Failed */
+                keepalive={keepalive}
+                onKeepaliveShouldChange={setKeepalive}
                 onReady={() => {
                     setEngineLink(true)
+                    // 连接成功，保存一下端口缓存
+                    switch (engineMode) {
+                        case "local":
+                            setLocalValue(LocalGV.YaklangEnginePort, credential.Port)
+                            return
+                        case "admin":
+                            setLocalValue(LocalGV.YaklangEngineAdminPort, credential.Port)
+                            return
+                    }
                 }}
                 onFailed={count => {
                     if (count > 3) {
                         setEngineLink(false)
                     }
                 }}
-                reconnectTrigger={reconnectTrigger}
             />
             <div className={styles["ui-layout-header"]}>
                 {system === "Darwin" ? (
@@ -471,16 +510,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     {isRemoteEngine && (
                         <RemoteYaklangEngine
                             loading={false}
-                            onSubmit={(info) => {
-                                setCredential({
-                                    Host: info.host,
-                                    IsTLS: info.caPem !== "",
-                                    Password: info.password,
-                                    PemBytes: StringToUint8Array(info.caPem || ""),
-                                    Port: parseInt(info.port),
-                                    Sudo: false
-                                })
-                            }}
+                            onSubmit={connectRemoteEngine}
                             onCancel={() => {
                                 changeEngineMode("local")
                             }}
@@ -510,9 +540,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     {isRemoteEngine ? (
                         <RemoteYaklangEngine
                             loading={false}
-                            onSubmit={() => {
-                                alert("连接远程引擎")
-                            }}
+                            onSubmit={connectRemoteEngine}
                             onCancel={() => {
                                 changeEngineMode("local")
                             }}
