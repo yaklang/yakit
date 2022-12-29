@@ -25,6 +25,8 @@ export interface YaklangEngineWatchDogProps {
     credential: YaklangEngineWatchDogCredential,
     mode?: YaklangEngineMode
 
+    reconnectTrigger: boolean
+
     onReady?: () => any
     onFailed?: (failedCount: number) => any
 }
@@ -35,8 +37,23 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     const [autoStartProgress, setAutoStartProgress] = useState(false);
     const [keepalive, setKeepalive] = useState(false);
 
+    const [reconnectTrigger, setReconnectTrigger] = useState(false);
+
+    useEffect(()=>{
+        if (reconnectTrigger === props.reconnectTrigger) {
+            return
+        }
+        setReconnectTrigger(props.reconnectTrigger)
+
+        setKeepalive(false)
+        setAutoStartProgress(false)
+    }, [props.reconnectTrigger])
 
     useEffect(() => {
+        // 重置状态
+        setAutoStartProgress(false)
+        setKeepalive(false)
+
         if (!props.mode) {
             return
         }
@@ -49,6 +66,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
          * 认证要小心做，拿到准确的信息之后，尝试连接一次，确定连接成功之后才可以开始后续步骤
          * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
          */
+        if (props.mode !== "local") {
+            return
+        }
         outputToWelcomeConsole("开始尝试连接 Yaklang 核心引擎")
         ipcRenderer.invoke("connect-yaklang-engine", props.credential).then(() => {
             outputToWelcomeConsole(`连接核心引擎成功！`)
@@ -73,6 +93,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
     // 这个 hook
     useEffect(() => {
+        // 启动启动进程只有 local 和 admin 有关
+        setKeepalive(false)
+
         if (!props.mode) {
             return
         }
@@ -86,6 +109,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             return
         }
 
+        outputToWelcomeConsole(`切换 Props 模式为: ${props.mode}`)
         if (props.credential.Sudo) {
             outputToWelcomeConsole(`开始以管理员权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
         } else {
@@ -112,6 +136,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         const connect = () => {
             count++
             isEngineConnectionAlive().then(() => {
+                if (!keepalive) {
+                    return
+                }
                 outputToWelcomeConsole("引擎已准备好，可以进行连接")
                 failedCount = 0
                 if (props.onReady) {

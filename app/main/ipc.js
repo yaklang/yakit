@@ -55,7 +55,6 @@ function newClient() {
 }
 
 function getClient(createNew) {
-    console.log("getclient",JSON.stringify(global));
     if (!!createNew) {
         return newClient()
     }

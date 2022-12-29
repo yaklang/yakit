@@ -54,6 +54,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [system, setSystem] = useState<YakitSystem>("Darwin")
     const [__isYakInstalled, setIsYakInstalled, getIsYakInstalled] = useGetState<boolean>(false)
 
+    const [reconnectTrigger, setReconnectTrigger] = useState(false);
+    const reconnect = useMemoizedFn(() => {
+        setReconnectTrigger(!reconnectTrigger)
+    })
+
     /** 引擎未安装时的modal组件是否展示 */
     const [engineShow, setEngineShow] = useState<boolean>(false)
 
@@ -69,14 +74,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         Sudo: false
     })
 
-    /** 是否启动远程连接引擎 */
-    const [isRemoteEngine, setIsRemoteEngine] = useState<boolean>(false)
-
     /** 当前引擎连接状态 */
     const [engineLink, setEngineLink, getEngineLink] = useGetState<boolean>(false)
 
     /** 当前引擎模式 */
     const [engineMode, setEngineMode, getEngineMode] = useGetState<YaklangEngineMode>()
+    const isRemoteEngine = engineMode === "remote"
 
     /** 是否为正常启动引擎并连接 */
     const isNormalStart = useRef<boolean>(false)
@@ -84,38 +87,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [restartEngine, setRestartEngine] = useState<boolean>(false)
 
     const [databaseError, setDatabaseError, getDatabaseError] = useGetState<boolean>(false)
-
-    /** 软件初始化时引擎启动过程 */
-    const initEngine = useMemoizedFn((isInstall: boolean, mode: YaklangEngineMode | undefined, setting: string) => {
-        const objSetting = !setting ? {} : JSON.parse(setting)
-
-        if (isInstall) {
-            /** 获取数据库是否有权限操作 */
-            ipcRenderer
-                .invoke("check-local-database")
-                .then((e) => {
-                    setDatabaseError(e === "not allow to write")
-                })
-                .finally(() => {
-                    if (!getDatabaseError()) {
-                        if (mode === "admin" && setting) startEngine(true, objSetting.port)
-                        if (mode === "local" && setting) startEngine(false, objSetting.port)
-                        if (mode === "remote" && setting) onSubmitRemoteLink(objSetting)
-                        if (!mode) startEngine(false)
-                    }
-                })
-        } else {
-            if (mode && mode === "remote" && !!setting) {
-                ipcRenderer
-                    .invoke("start-remote-yaklang-engine", objSetting)
-                    .then(() => {
-                    })
-                    .catch((e: Error) => failed(`${e.message}`))
-            } else {
-                setEngineShow(!isInstall)
-            }
-        }
-    })
 
     /**
      * 1.获取操作系统信息
@@ -205,20 +176,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineMode])
 
-    /** 启动本地引擎 */
-    const startEngine = useMemoizedFn((sudo: boolean, port?: number) => {
-        setEngineShow(false)
-        ipcRenderer
-            .invoke("start-local-yaklang-engine", {sudo, port})
-            .then(() => {
-            })
-            .catch((e: Error) => {
-                if ((e.message || "").indexOf("reply was never sent") === -1) {
-                    failed(`${e.message}`)
-                }
-            })
-    })
-
     /** 已启动引擎的pid信息 */
     const [process, setProcess] = useState<yakProcess[]>([])
     /** ps搜索引擎pid的状态 */
@@ -268,8 +225,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     /** yaklang引擎切换启动模式 */
-    const startEngineMode = useMemoizedFn((type: string) => {
-        killEnginePid()
+    const changeEngineMode = useMemoizedFn((type: string) => {
+        // killEnginePid()
+        setEngineLink(false)
 
         /** 未安装引擎下的模式切换取消 */
         if (!getIsYakInstalled()) {
@@ -277,51 +235,28 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             return
         }
 
-        setTimeout(() => {
-            switch (type) {
-                case "admin":
-                    startEngine(true)
-                    return
-                case "local":
-                    startEngine(false)
-                    return
-                case "remote":
-                    setIsRemoteEngine(true)
-                    return
-            }
-        }, 500)
+        // 修改状态，重连引擎
+        switch (type) {
+            case "admin":
+                setEngineMode("admin")
+                return
+            case "local":
+                setEngineMode("local")
+                return
+            case "remote":
+                setEngineMode("remote")
+                return
+        }
+        reconnect()
     })
 
-    /** 更新引擎后重启连接引擎 */
-    const updateReconnect = useMemoizedFn((skipKill?: boolean) => {
-        if (!skipKill) killEnginePid()
-
-        setTimeout(() => {
-            ipcRenderer
-                .invoke("fetch-local-cache", LocalGV.YaklangEnginePort)
-                .then((setting: string) => {
-                    if (!setting) {
-                        startEngine(false)
-                        return
-                    }
-                    ipcRenderer
-                        .invoke("fetch-local-cache", LocalGV.YaklangEngineMode)
-                        .then((mode: YaklangEngineMode | undefined) => {
-                            if (!mode) startEngine(false)
-                            else startEngine(mode === "admin" ? true : false, JSON.parse(setting).port)
-                        })
-                        .catch(() => startEngine(false))
-                })
-                .catch(() => startEngine(false))
-        }, 1000)
-    })
     useEffect(() => {
         ipcRenderer.on("update-yaklang-reconnect-callback", (e: any, version: string) => {
             ipcRenderer
                 .invoke("install-yak-engine", version)
                 .then(() => {
                     success("安装成功，如未生效，重启 Yakit 即可")
-                    updateReconnect()
+                    // updateReconnect()
                 })
                 .catch((err: any) => failed(`安装失败: ${err}`))
                 .finally(() => setTimeout(() => setYaklangDownload(false), 500))
@@ -349,40 +284,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
-    const [remoteLoading, setRemoteLoading] = useState<boolean>(false)
-    /** 远程连接 yaklang 引擎 */
-    const onSubmitRemoteLink = useMemoizedFn((info: RemoteLinkInfo) => {
-        setRemoteLoading(true)
-        ipcRenderer
-            .invoke("start-remote-yaklang-engine", info)
-            .then(() => {
-                setTimeout(() => setIsRemoteEngine(false), 1000)
-                if (info.allowSave) {
-                    const setting = {
-                        host: info.host,
-                        port: info.port,
-                        caPem: info.caPem || "",
-                        password: info.password || "",
-                        tls: info.tls,
-                        name: info.linkName
-                    }
-                    ipcRenderer
-                        .invoke("save-yakit-remote-auth", setting)
-                        .then(() => {
-                        })
-                        .catch(() => {
-                        })
-                }
-            })
-            .catch((e: Error) => failed(`${e.message}`))
-            .finally(() => setTimeout(() => setRemoteLoading(false), 500))
-    })
-    /** 取消远程连接 yaklang 引擎 */
-    const onCancelRemoteLink = useMemoizedFn((isInstall: boolean) => {
-        setIsRemoteEngine(false)
-        if (isInstall) updateReconnect(true)
-    })
-
     const [yakitMode, setYakitMode] = useState<"soft" | "store">("soft")
     const changeYakitMode = useMemoizedFn((type: "soft" | "store") => {
         setYakitMode(type)
@@ -405,6 +306,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         setEngineLink(false)
                     }
                 }}
+                reconnectTrigger={reconnectTrigger}
             />
             <div className={styles["ui-layout-header"]}>
                 {system === "Darwin" ? (
@@ -466,7 +368,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     isEngineLink={engineLink}
                                     engineMode={engineMode || "remote"}
                                     isRemoteMode={engineMode === "remote"}
-                                    startEngineMode={startEngineMode}
+                                    startEngineMode={changeEngineMode}
                                 />
                                 <div className={styles["divider-wrapper"]}></div>
                                 <GlobalReverseState isEngineLink={engineLink}/>
@@ -519,7 +421,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         isReverse={true}
                                         engineMode={engineMode || "remote"}
                                         isRemoteMode={engineMode === "remote"}
-                                        startEngineMode={startEngineMode}
+                                        startEngineMode={changeEngineMode}
                                     />
                                 </div>
                             </div>
@@ -557,7 +459,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 system={system}
                                 visible={yaklangDownload}
                                 setVisible={setYaklangDownload}
-                                updateReconnect={updateReconnect}
+                                updateReconnect={() => {
+                                    // updateReconnect
+                                }}
                                 killEnginePid={killEnginePid}
                             />
                             <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload}/>
@@ -565,23 +469,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     )}
                     {isRemoteEngine && (
                         <RemoteYaklangEngine
-                            loading={remoteLoading}
-                            onSubmit={onSubmitRemoteLink}
-                            onCancel={() => onCancelRemoteLink(true)}
+                            loading={false}
+                            onSubmit={() => {
+                            }}
+                            onCancel={() => {
+                                changeEngineMode("local")
+                            }}
                         />
                     )}
                     {!engineLink && restartEngine && (
                         <HintRestartEngine
                             visible={restartEngine}
                             setVisible={setRestartEngine}
-                            startEngine={() => startEngine(false)}
+                            startEngine={() => {
+                                // startEngine(false)
+                            }}
                         />
                     )}
                     {!engineLink && databaseError && getIsYakInstalled() && system !== "Windows_NT" && (
                         <DatabaseErrorHint
                             visible={databaseError}
                             setVisible={setDatabaseError}
-                            startEngine={() => startEngine(false)}
+                            startEngine={() => {
+                                // startEngine(false)
+                            }}
                         />
                     )}
                 </div>
@@ -589,18 +500,24 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 <div className={styles["ui-layout-mask"]}>
                     {isRemoteEngine ? (
                         <RemoteYaklangEngine
-                            loading={remoteLoading}
-                            onSubmit={onSubmitRemoteLink}
-                            onCancel={() => onCancelRemoteLink(false)}
+                            loading={false}
+                            onSubmit={() => {
+                                alert("连接远程引擎")
+                            }}
+                            onCancel={() => {
+                                changeEngineMode("local")
+                            }}
                         />
                     ) : (
                         <YaklangEngineHint
                             system={system}
                             visible={engineShow}
-                            setIsRemoteEngine={setIsRemoteEngine}
+                            setIsRemoteEngine={() => {
+                                setEngineMode("remote")
+                            }}
                             startEngine={() => {
                                 setIsYakInstalled(true)
-                                startEngine(false)
+                                // startEngine(false)
                             }}
                         />
                     )}
