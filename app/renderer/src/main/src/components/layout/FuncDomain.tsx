@@ -52,11 +52,11 @@ export interface FuncDomainProp {
     isReverse?: Boolean
     engineMode: YaklangEngineMode
     isRemoteMode: boolean
-    startEngineMode: (type: string) => any
+    onEngineModeChange: (type: string) => any
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
-    const {isEngineLink, isReverse = false, engineMode, isRemoteMode, startEngineMode} = props
+    const {isEngineLink, isReverse = false, engineMode, isRemoteMode, onEngineModeChange} = props
 
     /** 登录用户信息 */
     const {userInfo, setStoreUserInfo} = useStore()
@@ -148,7 +148,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 <div className={styles["state-setting-wrapper"]}>
                     <UIOpRisk isEngineLink={isEngineLink} />
                     <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} />
-                    <UIOpSetting engineMode={engineMode} startEngineMode={startEngineMode} />
+                    <UIOpSetting engineMode={engineMode} onEngineModeChange={onEngineModeChange} />
                 </div>
                 <div className={styles["divider-wrapper"]}></div>
                 <div className={styles["user-wrapper"]}>
@@ -226,10 +226,10 @@ interface UIOpSettingProp {
     /** 当前引擎模式 */
     engineMode: YaklangEngineMode
     /** yaklang引擎切换启动模式 */
-    startEngineMode: (type: string) => any
+    onEngineModeChange: (type: string) => any
 }
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-    const {engineMode, startEngineMode} = props
+    const {engineMode, onEngineModeChange} = props
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -275,8 +275,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "local":
             case "remote":
             case "admin":
-                if (type === engineMode && type !== "remote") return
-                startEngineMode(type)
+                if (type === engineMode) {
+                    return
+                }
+                onEngineModeChange(type)
                 return
             case "refreshMenu":
                 ipcRenderer.invoke("change-main-menu")
@@ -343,7 +345,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
-        ></YakitMenu>
+        />
     )
 
     return (

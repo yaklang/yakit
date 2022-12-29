@@ -55,6 +55,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [system, setSystem] = useState<YakitSystem>("Darwin")
     const [__isYakInstalled, setIsYakInstalled, getIsYakInstalled] = useGetState<boolean>(false);
 
+    /*  */
     const [localPort, setLocalPort] = useState<number>(0);
     const [adminPort, setAdminPort] = useState<number>(0);
     const [keepalive, setKeepalive] = useState<boolean>(false);
@@ -81,12 +82,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [engineMode, setEngineMode, getEngineMode] = useGetState<YaklangEngineMode>()
     const isRemoteEngine = engineMode === "remote"
 
-    /** 是否为正常启动引擎并连接 */
-    const isNormalStart = useRef<boolean>(false)
     /** 是否提示用户重新启动本地引擎 */
     const [restartEngine, setRestartEngine] = useState<boolean>(false)
 
-    const [databaseError, setDatabaseError, getDatabaseError] = useGetState<boolean>(false)
 
     /**
      * 1.获取操作系统信息
@@ -111,8 +109,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
                 return
             }
-            getLocalValue(LocalGV.YaklangEngineMode).then((val: any) => {
-                switch (`${val}`.toLowerCase()) {
+            getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
+                info(`加载上次引擎模式：${val}`)
+                switch (val) {
                     case "remote":
                         setEngineMode("remote")
                         return
@@ -188,59 +187,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineMode, localPort, adminPort])
 
-    /** 已启动引擎的pid信息 */
-    const [process, setProcess] = useState<yakProcess[]>([])
-    /** ps搜索引擎pid的状态 */
-    const isPSing = useRef<boolean>(false)
-    /** 定时查询引擎pid计时器 */
-    const pidTimeRef = useRef<any>(null)
-
-    /** 查询当前已启动引擎pid */
-    const fetchCurrentEnginePid = useMemoizedFn(() => {
-        if (isPSing.current) return
-        isPSing.current = true
-        ipcRenderer
-            .invoke("ps-yak-grpc")
-            .then((i: yakProcess[]) => {
-                setProcess(
-                    i.map((element: yakProcess) => {
-                        return {
-                            port: element.port,
-                            pid: element.pid,
-                            cmd: element.cmd,
-                            origin: element.origin
-                        }
-                    })
-                )
-            })
-            .catch(() => {
-            })
-            .finally(() => (isPSing.current = false))
-    })
-
-    /** kill启动的引擎 */
-    const killEnginePid = useMemoizedFn(() => {
-        isNormalStart.current = false
-        let pids = process || []
-
-        ipcRenderer.invoke("cancel-global-reverse-server-status").finally(() => {
-            for (let i of pids) {
-                ipcRenderer.invoke("kill-yak-grpc", i.pid)
-            }
-            setProcess([])
-            if (pidTimeRef.current) {
-                clearInterval(pidTimeRef.current)
-                pidTimeRef.current = null
-            }
-            setTimeout(() => setEngineLink(false), 500)
-        })
-    })
-
     /** yaklang引擎切换启动模式 */
     const changeEngineMode = useMemoizedFn((type: YaklangEngineMode) => {
-        // killEnginePid()
-        setEngineLink(false);
+        info(`引擎状态切换为: ${type}`)
+
         setKeepalive(false);
+        setEngineLink(false);
 
         /** 未安装引擎下的模式切换取消 */
         if (!getIsYakInstalled()) {
@@ -249,22 +201,23 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
 
         // 修改状态，重连引擎
+        setLocalValue(LocalGV.YaklangEngineMode, type)
         switch (type) {
             case "admin":
                 setEngineMode("admin")
-                setLocalValue(LocalGV.YaklangEngineMode, type)
                 return
             case "local":
                 setEngineMode("local")
-                setLocalValue(LocalGV.YaklangEngineMode, type)
                 return
             case "remote":
                 setEngineMode("remote")
-                setLocalValue(LocalGV.YaklangEngineMode, type)
                 return
         }
     })
 
+    /*
+    * 连接远程模式引擎的内容
+    * */
     const connectRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
         setCredential({
             Host: info.host,
@@ -318,7 +271,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** MACOS 上双击放大窗口(不是最大化) */
     const maxScreen = () => {
-        ipcRenderer.invoke("UIOperate", "max")
+        ipcRenderer.invoke("UIOperate", "max").then(() => {
+
+        })
     }
 
     return (
@@ -408,7 +363,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     isEngineLink={engineLink}
                                     engineMode={engineMode || "remote"}
                                     isRemoteMode={engineMode === "remote"}
-                                    startEngineMode={changeEngineMode}
+                                    onEngineModeChange={changeEngineMode}
                                 />
                                 <div className={styles["divider-wrapper"]}></div>
                                 <GlobalReverseState isEngineLink={engineLink}/>
@@ -461,7 +416,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         isReverse={true}
                                         engineMode={engineMode || "remote"}
                                         isRemoteMode={engineMode === "remote"}
-                                        startEngineMode={changeEngineMode}
+                                        onEngineModeChange={changeEngineMode}
                                     />
                                 </div>
                             </div>
@@ -489,10 +444,37 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     </div>
                 )}
             </div>
-            {engineLink || getIsYakInstalled() ? (
+            {getIsYakInstalled() ? (
                 <div className={styles["ui-layout-body"]}>
-                    {engineLink && props.children}
+                    {
+                        engineLink ?
+                            // 如果已经已经连接，那么应该直接渲染整个组件
+                            props.children :
+                            (
+                                <>
+                                    {isRemoteEngine && <RemoteYaklangEngine
+                                        loading={false}
+                                        onSubmit={connectRemoteEngine}
+                                        onCancel={() => {
+                                            changeEngineMode("local")
+                                        }}
+                                    />}
+                                    {/* 重启引擎的时候，一般是没有连接状态的 */}
+                                    {/*{restartEngine && (*/}
+                                    {/*    <HintRestartEngine*/}
+                                    {/*        visible={restartEngine}*/}
+                                    {/*        setVisible={setRestartEngine}*/}
+                                    {/*        startEngine={() => {*/}
+                                    {/*            // startEngine(false)*/}
+                                    {/*        }}*/}
+                                    {/*    />*/}
+                                    {/*)}*/}
+                                </>
+                            )
+                    }
                     {!engineLink && !isRemoteEngine && <YakitLoading loading={false}/>}
+
+                    {/* 升级步骤是独立的操作，和连接不连接没有太大关系 */}
                     {(yaklangDownload || yakitDownload) && (
                         <div className={styles["ui-layout-body-mask"]}>
                             <DownloadYaklang
@@ -502,62 +484,33 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 updateReconnect={() => {
                                     // updateReconnect
                                 }}
-                                killEnginePid={killEnginePid}
+                                killEnginePid={() => {
+                                    alert("清除旧的进程")
+                                }}
                             />
                             <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload}/>
                         </div>
                     )}
-                    {isRemoteEngine && (
-                        <RemoteYaklangEngine
-                            loading={false}
-                            onSubmit={connectRemoteEngine}
-                            onCancel={() => {
-                                changeEngineMode("local")
-                            }}
-                        />
-                    )}
-                    {!engineLink && restartEngine && (
-                        <HintRestartEngine
-                            visible={restartEngine}
-                            setVisible={setRestartEngine}
-                            startEngine={() => {
-                                // startEngine(false)
-                            }}
-                        />
-                    )}
-                    {!engineLink && databaseError && getIsYakInstalled() && system !== "Windows_NT" && (
-                        <DatabaseErrorHint
-                            visible={databaseError}
-                            setVisible={setDatabaseError}
-                            startEngine={() => {
-                                // startEngine(false)
-                            }}
-                        />
-                    )}
                 </div>
             ) : (
                 <div className={styles["ui-layout-mask"]}>
-                    {isRemoteEngine ? (
-                        <RemoteYaklangEngine
-                            loading={false}
-                            onSubmit={connectRemoteEngine}
-                            onCancel={() => {
-                                changeEngineMode("local")
-                            }}
-                        />
-                    ) : (
-                        <YaklangEngineHint
-                            system={system}
-                            visible={engineShow}
-                            setIsRemoteEngine={() => {
-                                setEngineMode("remote")
-                            }}
-                            startEngine={() => {
-                                setIsYakInstalled(true)
-                                // startEngine(false)
-                            }}
-                        />
-                    )}
+                    {isRemoteEngine ? <RemoteYaklangEngine
+                        loading={false}
+                        onSubmit={connectRemoteEngine}
+                        onCancel={() => {
+                            changeEngineMode("local")
+                        }}
+                    /> : <YaklangEngineHint
+                        system={system}
+                        visible={engineShow}
+                        setIsRemoteEngine={() => {
+                            setEngineMode("remote")
+                        }}
+                        startEngine={() => {
+                            setIsYakInstalled(true)
+                            // startEngine(false)
+                        }}
+                    />}
                 </div>
             )}
         </div>
