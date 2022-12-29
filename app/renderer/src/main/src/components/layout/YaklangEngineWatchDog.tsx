@@ -123,7 +123,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 outputToWelcomeConsole("引擎启动成功！")
             }).catch(e => {
                 console.info(e)
-            }).finally(()=>{
+            }).finally(() => {
                 setIsStartingUp(false)
             })
         }).catch(e => {
@@ -161,12 +161,13 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
             }).catch(e => {
                 failedCount++
-                if (failedCount > 20) {
-                    if (props.onKeepaliveShouldChange) {
-                        props.onKeepaliveShouldChange(false)
-                    }
+                if (failedCount < 5 ||
+                    (failedCount < 50 && failedCount % 10 === 0) ||
+                    (failedCount < 1000 && failedCount % 30)
+                ) {
+                    outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
                 }
-                outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
+
                 if (props.onFailed) {
                     props.onFailed(failedCount)
                 }

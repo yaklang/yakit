@@ -1,5 +1,7 @@
 import React from "react";
 import {randomString} from "@/utils/randomUtil";
+import {showModal} from "@/utils/showModal";
+import {YakLocalProcess} from "@/protected/YakLocalProcess";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -25,5 +27,14 @@ export const isEngineConnectionAlive = () => {
             throw Error(`Engine dead`)
         }
         return true
+    })
+}
+
+export const manageYakLocalProcess = () => {
+    showModal({
+        width: "80%",
+        content: (
+            <YakLocalProcess justClose={true}/>
+        )
     })
 }
