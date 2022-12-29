@@ -119,6 +119,23 @@
      */
     showStatusSearch?: boolean;
   }
+  export interface UserAuthorityRequest {
+    userIds: number[];
+    pluginIds?: string;
+  }
+  export interface UserAuthorityListResponse extends Paging {
+    data: UserAuthorityList[];
+  }
+  export interface UserAuthorityList {
+    user_id?: number;
+    created_at?: number;
+    user_name?: string;
+    from_platform?: string;
+    appid: string;
+    head_img?: string;
+    pluginIds?: string;
+    plugin?: PluginTypeList[];
+  }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[];
   }

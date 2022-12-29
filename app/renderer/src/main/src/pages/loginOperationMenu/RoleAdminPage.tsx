@@ -312,7 +312,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         allowClear
                         showCheckedStrategy='SHOW_PARENT'
                         maxTagCount={selectedAll ? 0 : 10}
-                        maxTagPlaceholder={selectedAll ? "全部" : null}
+                        maxTagPlaceholder={(omittedValues)=>selectedAll ? "全部" : <>+ {omittedValues.length} ...</>}
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                         open={open}
                         onDropdownVisibleChange={(visible) => setOpen(visible)}

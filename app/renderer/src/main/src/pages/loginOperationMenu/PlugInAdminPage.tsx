@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, TreeSelect, Checkbox} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar, TreeSelect, Checkbox, Tooltip} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -20,6 +20,7 @@ import {FormInstance} from "antd/es/form/Form"
 
 export interface PluglnTreeSelectProps {
     form: FormInstance<any>
+    itemInfo:API.UserAuthorityList|undefined
 }
 
 export interface PluginGroupProps {
@@ -29,7 +30,7 @@ export interface PluginGroupProps {
 }
 
 export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => {
-    const {form} = props
+    const {form,itemInfo} = props
     const [treeLoadedKeys, setTreeLoadedKeys] = useState<any>([])
     const [selectedAll, setSelectedAll] = useState<boolean>(false)
     // 受控模式控制浮层
@@ -42,47 +43,26 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
         codec: "CODEC插件",
         nuclei: "YAML POC"
     }
-    const PluginTypeKeyArr: string[] = Object.keys(PluginType)
-    const TreePluginType = [
-        ...PluginTypeKeyArr.map((key) => {
-            return {
-                id: key,
-                value: key,
-                title: PluginType[key],
-                isLeaf: false
-            }
-        })
-    ]
-    const NoTreePluginType = [
-        ...PluginTypeKeyArr.map((key) => {
-            return {
-                id: key,
-                value: key,
-                title: PluginType[key],
-                isLeaf: true
-            }
-        })
-    ]
     const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>([])
-    const [serachValue, setSerachValue] = useState<string>("")
+    const [checkAllId, setCheckAllId, getCheckAllId] = useGetState<number[]>([])
+    const [isShowCheckAll, setIsShowCheckAll] = useState<boolean>(true)
 
     useEffect(() => {
         getPluginGroup()
-    }, [serachValue])
+    }, [])
 
     const getPluginGroup = () => {
         let params: any = {
             is_private: true
         }
-        if (serachValue && serachValue.length > 0) params.keyword = serachValue
         NetWorkApi<PluginGroupProps, API.PluginGroupListResponse>({
             method: "get",
             url: "plugin/group",
             params
         })
             .then((res: API.PluginGroupListResponse) => {
-                // console.log("加载getPluginGroup数据", res.data, params)
                 if (Array.isArray(res.data)) {
+                    let checkAllIdArr: number[] = []
                     const newArr = res.data.map((item) => {
                         return {
                             key: item.type,
@@ -92,17 +72,31 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
                             children: item.typeList
                                 ? item.typeList
                                       .filter((itemIn) => itemIn.script_name.length > 0)
-                                      .map((itemIn) => ({
-                                          key: itemIn.id,
-                                          value: itemIn.id,
-                                          title: itemIn.script_name
-                                      }))
+                                      .map((itemIn) => {
+                                          checkAllIdArr.push(itemIn.id)
+                                          return {
+                                              key: itemIn.id,
+                                              value: itemIn.id,
+                                              title: itemIn.script_name
+                                          }
+                                      })
                                 : null
                         }
                     })
+
+                    if(itemInfo){
+                        const treeSelect = itemInfo.plugin?itemInfo.plugin.map((item)=>({label:item.script_name,value:item.id})):[]
+                        treeSelect.length===checkAllIdArr.length&&setSelectedAll(true)
+                        form.setFieldsValue({
+                            treeSelect
+                        })
+                    }
+
+                    setCheckAllId(checkAllIdArr)
                     setTreeData(newArr)
                 } else {
                     setTreeData([])
+                    setCheckAllId([])
                 }
             })
             .catch((err) => {
@@ -111,16 +105,9 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
             .finally(() => {})
     }
 
-    const onChange = (newValue: string[]) => {
-        if (
-            newValue.length === PluginTypeKeyArr.length &&
-            newValue.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
-        ) {
+    const onChange = (newValue: number[], label, extra) => {
+        if (newValue.length === getCheckAllId().length) {
             setSelectedAll(true)
-            const treeSelect = PluginTypeKeyArr.map((key) => key)
-            form.setFieldsValue({
-                treeSelect
-            })
         } else {
             setSelectedAll(false)
         }
@@ -129,13 +116,7 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <>
-                <Input
-                    style={{marginBottom: 10}}
-                    placeholder='请输入搜索内容'
-                    size='small'
-                    onChange={(e) => setSerachValue(e.target.value)}
-                />
-                {serachValue.length === 0 && (
+                {isShowCheckAll && (
                     <Checkbox
                         checked={selectedAll}
                         style={{padding: "0 0px 4px 24px", width: "100%"}}
@@ -143,9 +124,8 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
                             const {checked} = e.target
                             setSelectedAll(checked)
                             if (checked) {
-                                const treeSelect = PluginTypeKeyArr.map((key) => key)
                                 form.setFieldsValue({
-                                    treeSelect
+                                    treeSelect: checkAllId
                                 })
                             } else {
                                 form.setFieldsValue({
@@ -165,7 +145,14 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
     return (
         <Form.Item name='treeSelect' label='插件权限' rules={[{required: true, message: "该项为必填"}]}>
             <TreeSelect
-                showSearch={false}
+                onSearch={(value) => {
+                    value.length > 0 && setIsShowCheckAll(false)
+                }}
+                onSelect={() => {
+                    setIsShowCheckAll(true)
+                }}
+                showSearch={true}
+                treeNodeFilterProp='title'
                 style={{width: "100%"}}
                 dropdownStyle={{maxHeight: 400, overflow: "auto"}}
                 placeholder='请选择插件权限'
@@ -173,9 +160,8 @@ export const PluglnTreeSelectItem: React.FC<PluglnTreeSelectProps> = (props) => 
                 onChange={onChange}
                 treeData={treeData}
                 allowClear
-                showCheckedStrategy='SHOW_PARENT'
                 maxTagCount={selectedAll ? 0 : 10}
-                maxTagPlaceholder={selectedAll ? "全部" : null}
+                maxTagPlaceholder={(omittedValues)=>selectedAll ? "全部" : <>+ {omittedValues.length} ...</>}
                 dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                 open={open}
                 onDropdownVisibleChange={(visible) => setOpen(visible)}
@@ -194,6 +180,9 @@ export interface ShowUserInfoProps extends API.NewUrmResponse {
 }
 
 export interface CreateUserFormProps {
+    // 是否是编辑
+    isEdit:boolean
+    itemInfo:API.UserAuthorityList|undefined
     onCancel: () => void
     refresh: () => void
 }
@@ -208,31 +197,41 @@ export interface CreateProps {
 }
 
 const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
-    const {onCancel, refresh} = props
+    const {isEdit,itemInfo,onCancel, refresh} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [userList, setUserList] = useState<API.UserOrdinaryResponse>({
         data: []
     })
-    const [appid, setAppid] = useState<string[]>([])
+    const [appid, setAppid] = useState<number[]>([])
     const [currentUser, setCurrentUser] = useState<string[]>([])
+
+    useEffect(()=>{
+        if(isEdit&&itemInfo){
+            const user_name = itemInfo?.user_name?[itemInfo?.user_name]:[]
+            setCurrentUser(user_name)
+            const user_id = itemInfo?.user_id?[itemInfo?.user_id]:[]
+            setAppid(user_id)
+        }
+    },[])
+
     const onFinish = useMemoizedFn((values) => {
-        if (appid.length===0) {
+        if (appid.length === 0) {
             info("请先选择用户")
             return
         }
-        console.log("values",values)
-        return
-        const {user_name} = values
-        NetWorkApi<CreateProps, API.NewUrmResponse>({
+        const {treeSelect} = values
+        const pluginIds: string = treeSelect.join(",")
+
+        NetWorkApi<API.UserAuthorityRequest, API.NewUrmResponse>({
             method: "post",
-            url: "urm",
-            params: {
-                user_name
+            url: "user/authority",
+            data: {
+                userIds: appid,
+                pluginIds
             }
         })
             .then((res: API.NewUrmResponse) => {
-                const {user_name, password} = res
                 onCancel()
                 refresh()
             })
@@ -281,8 +280,8 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
     )
 
     const onSelectUser = useMemoizedFn((option: any) => {
-        const title = option.map((item)=>item.title)
-        const value = option.map((item)=>item.value)
+        const title = option.map((item) => item.record.id)
+        const value = option.map((item) => item.value)
         setAppid(title)
         setCurrentUser(value)
     })
@@ -301,23 +300,23 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                             data: userList.data || [],
                             optValue: "name",
                             optText: "appid",
-                            optKey:"appid",
+                            optKey: "appid",
                             placeholder: "请输入完整的用户名",
                             optionLabelProp: "name",
                             value: currentUser,
-                            mode:"multiple",
-                            onChange:(_, option: any)=>{
-                                console.log("option",option)
+                            mode: "multiple",
+                            onChange: (_, option: any) => {
                                 onSelectUser(option)
                             },
                             onSearch: getUserList,
                             renderOpt: (info: API.UserList) => {
                                 return <OnlineUserItem info={info} />
-                            }
+                            },
+                            disabled:isEdit
                         }}
                     />
                 </Form.Item>
-                <PluglnTreeSelectItem form={form} />
+                <PluglnTreeSelectItem form={form} itemInfo={itemInfo}/>
                 <div style={{textAlign: "center"}}>
                     <Button type='primary' htmlType='submit' loading={loading}>
                         添加
@@ -336,7 +335,7 @@ export interface QueryExecResultsParams {
 
 interface QueryProps {}
 interface RemoveProps {
-    uid: string[]
+    userIds: number[]
 }
 interface ResetProps {
     user_name: string
@@ -348,15 +347,17 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
         keywords: ""
     })
-    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: 20,
         Order: "desc",
         OrderBy: "updated_at",
         Page: 1
     })
-    const [data, setData] = useState<API.UrmUserList[]>([])
+    const [data, setData] = useState<API.UserAuthorityList[]>([])
     const [total, setTotal] = useState<number>(0)
+    const [isEditModal,setIsEditModal] = useState<boolean>(false)
+    const [itemInfo,setItemInfo] = useState<API.UserAuthorityList>()
 
     const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
         setLoading(true)
@@ -365,17 +366,16 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             limit: limit || pagination.Limit
         }
 
-        NetWorkApi<QueryProps, API.UrmUserListResponse>({
+        NetWorkApi<QueryProps, API.UserAuthorityListResponse>({
             method: "get",
-            url: "urm",
+            url: "user/authority",
             params: {
                 ...params,
                 ...paginationProps
             }
         })
             .then((res) => {
-                const newData = res.data.map((item) => ({...item}))
-                setData(newData)
+                setData(res.data || [])
                 setPagination({...pagination, Limit: res.pagemeta.limit})
                 setTotal(res.pagemeta.total)
             })
@@ -394,18 +394,18 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
     }, [])
 
     const rowSelection = {
-        onChange: (selectedRowKeys, selectedRows: API.UrmUserList[]) => {
-            // let newArr = selectedRowKeys.map((item)=>parseInt(item))
-            setSelectedRowKeys(selectedRowKeys)
+        onChange: (selectedRowKeys, selectedRows: API.UserAuthorityList[]) => {
+            let newArr = selectedRows.map((item) => item.user_id || 0)
+            setSelectedRowKeys(newArr)
         }
     }
 
-    const onRemove = (uid: string[]) => {
+    const onRemove = (userIds: number[]) => {
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
             method: "delete",
-            url: "urm",
+            url: "user/authority",
             data: {
-                uid
+                userIds
             }
         })
             .then((res) => {
@@ -413,7 +413,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                 update()
             })
             .catch((err) => {
-                failed("删除账号失败：" + err)
+                failed("删除失败：" + err)
             })
             .finally(() => {})
     }
@@ -444,7 +444,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
         }
     }
 
-    const columns: ColumnsType<API.UrmUserList> = [
+    const columns: ColumnsType<API.UserAuthorityList> = [
         {
             title: "用户名",
             dataIndex: "user_name",
@@ -461,7 +461,26 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             )
         },
         {
-            title: "插件权限"
+            title: "插件权限",
+            dataIndex: "plugin",
+            render: (text) => {
+                const content: string = Array.isArray(text) ? text.map((item) => item.script_name).join("，") : ""
+                return (
+                    <Button
+                        size={"small"}
+                        type='link'
+                        onClick={() => {
+                            const m = showModal({
+                                title: "插件权限",
+                                content: <div style={{maxHeight: 520, overflow: "auto"}}>{content}</div>
+                            })
+                            return m
+                        }}
+                    >
+                        {text && text.length}
+                    </Button>
+                )
+            }
         },
         {
             title: "创建时间",
@@ -472,16 +491,24 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             title: "操作",
             render: (i) => (
                 <Space>
-                    <Button size={"small"} type='link'>
+                    <Button size={"small"} type='link' onClick={()=>{
+                        setIsEditModal(false)
+                        setItemInfo(i)
+                        setCreateUserShow(!createUserShow)
+                    }}>
                         复制
                     </Button>
-                    <Button size='small' type='link'>
+                    <Button size='small' type='link' onClick={()=>{
+                        setIsEditModal(true)
+                        setItemInfo(i)
+                        setCreateUserShow(!createUserShow)
+                    }}>
                         编辑
                     </Button>
                     <Popconfirm
                         title={"确定删除该用户吗？"}
                         onConfirm={() => {
-                            onRemove([i.uid])
+                            onRemove([i.user_id])
                         }}
                     >
                         <Button size={"small"} danger={true} type='link'>
@@ -489,7 +516,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                         </Button>
                     </Popconfirm>
                 </Space>
-            )
+            ),width:160
         }
     ]
     return (
@@ -507,7 +534,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                         update(page, limit)
                     }
                 }}
-                rowKey={(row) => row.uid}
+                rowKey={(row) => row.appid}
                 title={(e) => {
                     return (
                         <div className={styles["table-title"]}>
@@ -548,7 +575,11 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                                         type='primary'
                                         htmlType='submit'
                                         size='small'
-                                        onClick={() => setCreateUserShow(!createUserShow)}
+                                        onClick={() => {
+                                            setIsEditModal(false)
+                                            setCreateUserShow(!createUserShow)
+                                            setItemInfo(undefined)
+                                        }}
                                     >
                                         添加插件
                                     </Button>
@@ -568,7 +599,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             />
             <Modal
                 visible={createUserShow}
-                title={"创建账号"}
+                title={isEditModal?"编辑插件":"添加插件"}
                 destroyOnClose={true}
                 maskClosable={false}
                 bodyStyle={{padding: "10px 24px 24px 24px"}}
@@ -576,7 +607,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                 onCancel={() => setCreateUserShow(false)}
                 footer={null}
             >
-                <CreateUserForm onCancel={() => setCreateUserShow(false)} refresh={() => update()} />
+                <CreateUserForm isEdit={isEditModal} itemInfo={itemInfo} onCancel={() => setCreateUserShow(false)} refresh={() => update()} />
             </Modal>
         </div>
     )
