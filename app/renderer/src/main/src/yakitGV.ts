@@ -9,6 +9,9 @@ export enum LocalGV {
     YaklangEngineAdminPort = "yaklang-engine-admin-port",
     /** @name 关闭窗口的二次确认 */
     WindowsCloseFlag = "windows-close-flag",
+
+    /** @name 远程引擎的认证信息本地缓存 */
+    YaklangRemoteEngineCredential = "yaklang-remote-engine-credential",
 }
 
 /** 引擎数据库缓存数据-键值变量 */

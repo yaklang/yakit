@@ -1,6 +1,6 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react"
 import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Checkbox, Form, Input, Progress, Select, Spin} from "antd"
+import {Checkbox, Form, Input, Popconfirm, Progress, Select, Spin} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -457,9 +457,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     {isRemoteEngine && <RemoteYaklangEngine
                                         loading={remoteConnectLoading}
                                         onSubmit={connectRemoteEngine}
-                                        onCancel={() => {
-                                            changeEngineMode("local")
-                                        }}
+                                        onEngineModeChange={changeEngineMode}
                                     />}
                                     {/* 重启引擎的时候，一般是没有连接状态的 */}
                                     {/*{restartEngine && (*/}
@@ -505,9 +503,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     {isRemoteEngine ? <RemoteYaklangEngine
                         loading={remoteConnectLoading}
                         onSubmit={connectRemoteEngine}
-                        onCancel={() => {
-                            changeEngineMode("local")
-                        }}
+                        onEngineModeChange={changeEngineMode}
                     /> : <YaklangEngineHint
                         system={system}
                         visible={engineShow}
@@ -1099,7 +1095,7 @@ const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
 interface RemoteYaklangEngineProps {
     loading: boolean
     onSubmit: (info: RemoteLinkInfo) => any
-    onCancel: () => any
+    onEngineModeChange: (mode: YaklangEngineMode) => any
 }
 
 /** @name 远程连接配置参数 */
@@ -1138,7 +1134,7 @@ interface YakitAuthInfo {
 
 /** @name 远程连接UI */
 const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((props) => {
-    const {loading, onSubmit, onCancel} = props
+    const {loading, onSubmit, onEngineModeChange} = props
 
     /** 远程主机参数 */
     const [remote, setRemote] = useState<RemoteLinkInfo>({...DefaultRemoteLink})
@@ -1163,7 +1159,15 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             })
             .catch(() => {
             })
+
+        getLocalValue(LocalGV.YaklangRemoteEngineCredential).then((result: RemoteLinkInfo) => {
+            if (result.host === "") {
+                return
+            }
+            setRemote({...result})
+        })
     }, [])
+
 
     const submit = useMemoizedFn(() => {
         setIsCheck(true)
@@ -1172,12 +1176,15 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
         if (remote.tls && !remote.caPem) return
         if (remote.allowSave && !remote.linkName) return
 
+        setLocalValue(LocalGV.YaklangRemoteEngineCredential, {...remote})
         onSubmit({...remote})
     })
-    const cancel = useMemoizedFn(() => {
+    const changeEngineMode = useMemoizedFn((mode: YaklangEngineMode) => {
         setRemote({...DefaultRemoteLink})
         setIsCheck(false)
-        onCancel()
+        if (onEngineModeChange) {
+            onEngineModeChange(mode)
+        }
     })
 
     return (
@@ -1317,9 +1324,18 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                 <YakitButton size='max' onClick={submit}>
                                     启动连接
                                 </YakitButton>
-                                <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={cancel}>
-                                    本地引擎
+                                <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={() => {
+                                    changeEngineMode("local")
+                                }}>
+                                    {EngineModeVerbose("local")}
                                 </YakitButton>
+                                <Popconfirm title={"启动管理员模式将需要用户额外认证"} onConfirm={() => {
+                                    changeEngineMode("admin")
+                                }}>
+                                    <YakitButton style={{marginLeft: 8}} size='max' type='outline2'>
+                                        {EngineModeVerbose("admin")}
+                                    </YakitButton>
+                                </Popconfirm>
                             </Form.Item>
                         </Form>
                     </div>
