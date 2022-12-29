@@ -41,6 +41,9 @@ function getExtraLocalCacheValue(key) {
     return extraKVCache.get(key)
 }
 function setLocalCache(key, value) {
+    if (value === kvCache.get(key)) {
+        return
+    }
     kvCache.set(key, value);
     localCacheState.cacheChanged = true
 }

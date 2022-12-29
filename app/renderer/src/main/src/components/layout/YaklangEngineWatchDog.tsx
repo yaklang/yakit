@@ -72,6 +72,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         outputToWelcomeConsole("开始尝试连接 Yaklang 核心引擎")
         ipcRenderer.invoke("connect-yaklang-engine", props.credential).then(() => {
             outputToWelcomeConsole(`连接核心引擎成功！`)
+            setAutoStartProgress(true)
             setLocalValue(LocalGV.YaklangEnginePort, `${props.credential.Port}`)
         }).catch((e) => {
             outputToWelcomeConsole("未连接到引擎，尝试启动引擎进程")
