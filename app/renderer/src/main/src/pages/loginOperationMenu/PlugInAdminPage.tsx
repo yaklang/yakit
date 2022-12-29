@@ -221,8 +221,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             return
         }
         const {treeSelect} = values
-        const pluginIds: string = treeSelect.join(",")
-
+        const pluginIds: string = treeSelect.map((item)=>typeof item==="number"?item:item.value).join(",")
         NetWorkApi<API.UserAuthorityRequest, API.NewUrmResponse>({
             method: "post",
             url: "user/authority",
