@@ -34,6 +34,7 @@ import styles from "./uiLayout.module.scss"
 import {getLocalValue} from "@/utils/kv";
 import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog";
+import {StringToUint8Array} from "@/utils/str";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -470,7 +471,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     {isRemoteEngine && (
                         <RemoteYaklangEngine
                             loading={false}
-                            onSubmit={() => {
+                            onSubmit={(info) => {
+                                setCredential({
+                                    Host: info.host,
+                                    IsTLS: info.caPem !== "",
+                                    Password: info.password,
+                                    PemBytes: StringToUint8Array(info.caPem || ""),
+                                    Port: parseInt(info.port),
+                                    Sudo: false
+                                })
                             }}
                             onCancel={() => {
                                 changeEngineMode("local")
