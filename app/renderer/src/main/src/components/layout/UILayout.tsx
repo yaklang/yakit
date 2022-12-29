@@ -63,7 +63,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [keepalive, setKeepalive] = useState<boolean>(false);
 
     /** 引擎未安装时的modal组件是否展示 */
-    const [engineShow, setEngineShow] = useState<boolean>(false)
+    const [engineShow, setEngineShow] = useState<boolean>(true)
 
     /**
      * 认证信息
@@ -84,6 +84,27 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const isRemoteEngine = engineMode === "remote"
     const [remoteConnectLoading, setRemoteConnectLoading] = useState(false);
 
+    const [databaseError, setDatabaseError, getDatabaseError] = useGetState<boolean>(false)
+
+    const getCacheEngineMode = useMemoizedFn(() => {
+        getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
+            info(`加载上次引擎模式：${val}`)
+            switch (val) {
+                case "remote":
+                    setEngineMode("remote")
+                    return
+                case "local":
+                    setEngineMode("local")
+                    return
+                case "admin":
+                    setEngineMode("admin")
+                    return
+                default:
+                    setEngineMode("local")
+                    return
+            }
+        })
+    })
 
     useEffect(()=>{
         const id = setInterval(()=>{
@@ -119,9 +140,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setIsYakInstalled(flag)
         }).finally(() => {
             if (!getIsYakInstalled()) {
-                setEngineMode("remote")
+                /** 未安装引擎时，应该优先展示安装提示框 */
+                setEngineMode(undefined)
                 outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
                 return
+            }else{
+                outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
+                /** 引擎已安装的情况下，优先检查数据库权限 */
+                ipcRenderer
+                    .invoke("check-local-database")
+                    .then((e) => {
+                        if(e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
+                        setDatabaseError(e === "not allow to write")
+                    })
+                    .finally(() => {
+                        if(!getDatabaseError()) getCacheEngineMode()
+                    })
             }
             getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
                 info(`加载历史引擎模式：${EngineModeVerbose(val as YaklangEngineMode)}`)
@@ -514,6 +548,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload}/>
                         </div>
                     )}
+                    
+                    {!engineLink && databaseError && system !== "Windows_NT" && (
+                        <DatabaseErrorHint
+                            visible={databaseError}
+                            setVisible={setDatabaseError}
+                            startEngine={() => getCacheEngineMode()}
+                        />
+                    )}
                 </div>
             ) : (
                 <div className={styles["ui-layout-mask"]}>
@@ -530,6 +572,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         }}
                         startEngine={() => {
                             setIsYakInstalled(true)
+                            setEngineMode("local")
                             // startEngine(false)
                         }}
                     />}
