@@ -24,7 +24,7 @@ import {DownloadingState, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {CodeGV, LocalGV} from "@/yakitGV"
-import {YakitLoading} from "../basics/YakitLoading"
+import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
@@ -71,8 +71,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         IsTLS: false,
         Password: "",
         PemBytes: undefined,
-        Port: 0,
-        Sudo: false
+        Port: 0, Mode: undefined,
     })
 
     /** 当前引擎连接状态 */
@@ -108,7 +107,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
             }
             getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-                info(`加载上次引擎模式：${val}`)
+                info(`加载历史引擎模式：${EngineModeVerbose(val as YaklangEngineMode)}`)
                 switch (val) {
                     case "remote":
                         setEngineMode("remote")
@@ -172,14 +171,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (engineMode) {
             case "local":
                 outputToWelcomeConsole(`本地普通权限引擎模式，开始启动本地引擎: ${localPort}`)
-                setCredential({...getCredential(), Port: localPort, Sudo: false})
+                setCredential({...getCredential(), Port: localPort, Mode: "local"})
                 return
             case "remote":
-                outputToWelcomeConsole("远程模式或调试模式")
+                outputToWelcomeConsole("远程模式或调试模式，需要用户手动启动引擎")
                 return
             case "admin":
                 outputToWelcomeConsole(`管理员模式，启动本地引擎: ${adminPort}`)
-                setCredential({...getCredential(), Port: adminPort, Sudo: false})
+                setCredential({...getCredential(), Port: adminPort, Mode: "admin"})
                 return
             default:
         }
@@ -187,7 +186,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** yaklang引擎切换启动模式 */
     const changeEngineMode = useMemoizedFn((type: YaklangEngineMode) => {
-        info(`引擎状态切换为: ${type}`)
+        info(`引擎状态切换为: ${EngineModeVerbose(type as YaklangEngineMode)}`)
 
         setKeepalive(false);
         setEngineLink(false);
@@ -208,6 +207,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setEngineMode("local")
                 return
             case "remote":
+                setCredential({Host: "", IsTLS: false, Password: "", PemBytes: undefined, Port: 0, Mode: undefined})
                 setEngineMode("remote")
                 return
         }
@@ -223,12 +223,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             Password: info.password,
             PemBytes: StringToUint8Array(info.caPem || ""),
             Port: parseInt(info.port),
-            Sudo: false
+            Mode: "remote",
         })
         setRemoteConnectLoading(true)
-        setTimeout(()=>{
+        setTimeout(() => {
             setRemoteConnectLoading(false)
-            setKeepalive(true)
         }, 300)
     })
 
@@ -282,7 +281,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         <div className={styles["ui-layout-wrapper"]}>
             <YaklangEngineWatchDog
                 credential={credential}
-                mode={engineMode}
 
                 /* keepalive 开启智慧才会触发 Ready 和 Failed */
                 keepalive={keepalive}
@@ -300,7 +298,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     }
                 }}
                 onFailed={count => {
-                    if (count > 3) {
+                    if (count > 1) {
                         setEngineLink(false)
                     }
                 }}
@@ -314,7 +312,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         ></div> */}
 
                         <div className={styles["yakit-header-title"]} onDoubleClick={maxScreen}>
-                            Yakit
+                            Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                         </div>
 
                         <div className={styles["header-left"]}>
@@ -382,7 +380,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         ></div> */}
 
                         <div className={styles["yakit-header-title"]} onDoubleClick={maxScreen}>
-                            Yakit
+                            Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                         </div>
 
                         {engineLink ? (
@@ -426,7 +424,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             <div></div>
                         )}
 
-                        <div className={styles["header-title"]} onDoubleClick={maxScreen}></div>
+                        <div className={styles["header-title"]} onDoubleClick={maxScreen}>
+                            Hello
+                        </div>
 
                         <div className={styles["header-right"]}>
                             <div className={styles["left-cpu"]}>
@@ -475,7 +475,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             )
                     }
                     {!engineLink && !isRemoteEngine && <YakitLoading
-                        engineMode={engineMode}
+                        engineMode={engineMode || "local"}
                         onEngineModeChange={changeEngineMode}
                         loading={false}
                         adminPort={adminPort}
@@ -1318,7 +1318,7 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                     启动连接
                                 </YakitButton>
                                 <YakitButton style={{marginLeft: 8}} size='max' type='outline2' onClick={cancel}>
-                                    取消
+                                    本地引擎
                                 </YakitButton>
                             </Form.Item>
                         </Form>

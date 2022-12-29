@@ -52,7 +52,7 @@ export interface FuncDomainProp {
     isReverse?: Boolean
     engineMode: YaklangEngineMode
     isRemoteMode: boolean
-    onEngineModeChange: (type: string) => any
+    onEngineModeChange: (type: YaklangEngineMode) => any
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -226,7 +226,7 @@ interface UIOpSettingProp {
     /** 当前引擎模式 */
     engineMode: YaklangEngineMode
     /** yaklang引擎切换启动模式 */
-    onEngineModeChange: (type: string) => any
+    onEngineModeChange: (type: YaklangEngineMode) => any
 }
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const {engineMode, onEngineModeChange} = props
@@ -272,8 +272,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "engineVar":
                 showConfigYaklangEnvironment()
                 return
-            case "local":
             case "remote":
+                onEngineModeChange(type)
+                return
+            case "local":
             case "admin":
                 if (type === engineMode) {
                     return

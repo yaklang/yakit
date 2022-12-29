@@ -1,15 +1,13 @@
 import React, {useEffect, useState} from "react";
-import {useGetState} from "ahooks";
+import {useDebounceEffect, useGetState} from "ahooks";
 import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
 import {YaklangEngineMode} from "@/yakitGVDefine";
-import {setLocalValue} from "@/utils/kv";
-import {LocalGV} from "@/yakitGV";
-import {randomString} from "@/utils/randomUtil";
+import {EngineModeVerbose} from "@/components/basics/YakitLoading";
 
 export interface YaklangEngineWatchDogCredential {
+    Mode?: YaklangEngineMode
     Host: string
     Port: number
-    Sudo: boolean
 
     /**
      * 高级登陆验证信息
@@ -23,7 +21,6 @@ const {ipcRenderer} = window.require("electron");
 
 export interface YaklangEngineWatchDogProps {
     credential: YaklangEngineWatchDogCredential,
-    mode?: YaklangEngineMode
     keepalive: boolean
 
     onReady?: () => any
@@ -33,15 +30,14 @@ export interface YaklangEngineWatchDogProps {
 
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo((props: YaklangEngineWatchDogProps) => {
-    const [__c, setCredential, getCredential] = useGetState<YaklangEngineWatchDogCredential>(props.credential);
     const [autoStartProgress, setAutoStartProgress] = useState(false);
+    const [__startingUp, setIsStartingUp, getIsStartingUp] = useGetState(false);
 
     useEffect(() => {
-        console.info(props)
         // 重置状态
         setAutoStartProgress(false)
-
-        if (!props.mode) {
+        const mode = props.credential.Mode;
+        if (!mode) {
             return
         }
 
@@ -54,10 +50,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
          * 认证要小心做，拿到准确的信息之后，尝试连接一次，确定连接成功之后才可以开始后续步骤
          * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
          */
-        if (props.mode === "remote") {
-            outputToWelcomeConsole("远程模式")
-            return
-        }
         outputToWelcomeConsole("开始尝试连接 Yaklang 核心引擎")
         ipcRenderer.invoke("connect-yaklang-engine", props.credential).then(() => {
             outputToWelcomeConsole(`连接核心引擎成功！`)
@@ -66,7 +58,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             }
         }).catch((e) => {
             outputToWelcomeConsole("未连接到引擎，尝试启动引擎进程")
-            switch (props.mode) {
+            switch (mode) {
                 case "admin":
                     outputToWelcomeConsole("尝试启动管理员进程")
                     setAutoStartProgress(true)
@@ -82,15 +74,16 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         }).finally(() => {
             outputToWelcomeConsole("连接引擎完成")
         })
-    }, [props.mode, props.credential])
+    }, [props.credential])
 
     // 这个 hook
-    useEffect(() => {
-        if (!props.mode) {
+    useDebounceEffect(() => {
+        const mode = props.credential.Mode;
+        if (!mode) {
             return
         }
 
-        if (props.mode === "remote") {
+        if (mode === "remote") {
             return
         }
 
@@ -104,8 +97,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         }
 
         // 只有普通模式和管理员模式才涉及到引擎启动的流程
-        outputToWelcomeConsole(`切换 Props 模式为: ${props.mode}`)
-        const isAdmin = props.credential.Sudo || props.mode === "admin";
+        outputToWelcomeConsole(`切换模式为: ${mode}`)
+        const isAdmin = mode === "admin";
         if (isAdmin) {
             outputToWelcomeConsole(`开始以管理员权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
         } else {
@@ -118,19 +111,34 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             }
         }, 600)
 
-        ipcRenderer.invoke("start-local-yaklang-engine", {
-            port: props.credential.Port,
-            sudo: isAdmin,
-        }).then(() => {
-            outputToWelcomeConsole("引擎启动成功！")
+        ipcRenderer.invoke("is-port-available", props.credential.Port).then(() => {
+            if (getIsStartingUp()) {
+                return
+            }
+            setIsStartingUp(true)
+            ipcRenderer.invoke("start-local-yaklang-engine", {
+                port: props.credential.Port,
+                sudo: isAdmin,
+            }).then(() => {
+                outputToWelcomeConsole("引擎启动成功！")
+            }).catch(e => {
+                console.info(e)
+            }).finally(()=>{
+                setIsStartingUp(false)
+            })
         }).catch(e => {
-            console.info(e)
+            outputToWelcomeConsole(`端口被占用，无法启动本地引擎（${EngineModeVerbose(mode as YaklangEngineMode)}）`)
+            outputToWelcomeConsole(`错误原因为: ${e}`)
         })
-    }, [autoStartProgress, props])
+
+    }, [autoStartProgress, props], {leading: false, wait: 1000})
 
     useEffect(() => {
         const keepalive = props.keepalive;
         if (!keepalive) {
+            if (props.onFailed) {
+                props.onFailed(10)
+            }
             return
         }
 
@@ -153,7 +161,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
             }).catch(e => {
                 failedCount++
-                if (failedCount > 5) {
+                if (failedCount > 20) {
                     if (props.onKeepaliveShouldChange) {
                         props.onKeepaliveShouldChange(false)
                     }

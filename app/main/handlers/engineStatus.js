@@ -1,79 +1,39 @@
 const {ipcMain} = require("electron")
-const fs = require("fs")
 const childProcess = require("child_process")
 const path = require("path")
 const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
 const {GLOBAL_YAK_SETTING} = require("../state")
-const {setLocalCache} = require("../localCache")
-const {testClient, testRemoteClient} = require("../ipc")
+const {testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine} = require("../filePath")
-
-/**  获取缓存数据里本地引擎是否以管理员权限启动 */
-const YaklangEngineSudo = "yaklang-engine-mode"
-/**  获取缓存数据里本地引擎启动的端口号 */
-const YaklangEnginePort = "yaklang-engine-port"
+const net = require("net");
 
 /** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
 let engineCount = 0
 
-/** 探测指定端口的本地yaklang引擎是否启动 */
-const probeEngineProcess = (win, port, sudo) => {
-    const mode = sudo ? "admin" : "local"
-    const setting = JSON.stringify({port: port})
-    console.log('probeEngine', mode, port);
-
-    try {
-        testClient(port, (err, result) => {
-            if (!err) {
-                setLocalCache(YaklangEnginePort, setting)
-                setLocalCache(YaklangEngineSudo, mode)
-
-                if (GLOBAL_YAK_SETTING.defaultYakGRPCAddr !== `localhost:${port}`) {
-                    GLOBAL_YAK_SETTING.sudo = !!sudo
-                    GLOBAL_YAK_SETTING.defaultYakGRPCAddr = `localhost:${port}`
+function isPortAvailable(port) {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer({});
+        server.on("listening", () => {
+            server.close((err) => {
+                if (err === undefined) {
+                    resolve()
+                } else {
+                    reject(err)
                 }
-                win.webContents.send("start-yaklang-engine-success", sudo ? "admin" : "local")
-                engineCount = 0
-            } else {
-                GLOBAL_YAK_SETTING.sudo = false
-                GLOBAL_YAK_SETTING.defaultYakGRPCAddr = `127.0.0.1:8087`
-                console.info("check local yaklang engine port failed!")
-                console.info(err)
-                win.webContents.send("local-yaklang-engine-end", err)
-            }
+            })
         })
-    } catch (e) {
-        console.info(`check whether existed port:${port} open failed: `)
-        console.info(e)
-    } finally {
-    }
+        server.on("error", (err) => {
+            reject(err)
+        })
+        server.listen(port, () => {
+
+        })
+    })
 }
 
-/** 探测 远程引擎 是否启动 */
-const probeRemoteEngineProcess = (win, params) => {
-    const setting = JSON.stringify({
-        host: params.host,
-        port: params.port,
-        caPem: params.caPem,
-        password: params.password
-    })
+function isPortOpen(port) {
 
-    try {
-        testRemoteClient(params, (err, result) => {
-            if (!!err) {
-                GLOBAL_YAK_SETTING.sudo = false
-                GLOBAL_YAK_SETTING.defaultYakGRPCAddr = `127.0.0.1:8087`
-                GLOBAL_YAK_SETTING.caPem = ""
-                GLOBAL_YAK_SETTING.password = ""
-                win.webContents.send("local-yaklang-engine-end", err)
-            } else {
-                setLocalCache(YaklangEnginePort, setting)
-                setLocalCache(YaklangEngineSudo, "remote")
-            }
-        })
-    } catch (e) {
-    }
 }
 
 const isWindows = process.platform === "win32"
@@ -161,11 +121,27 @@ module.exports = (win, callback, getClient, newClient) => {
     // asyncGetRandomPort wrapper
     const asyncGetRandomPort = () => {
         return new Promise((resolve, reject) => {
-            resolve(40000 + Math.floor(Math.random() * 9999))
+            const port = 40000 + Math.floor(Math.random() * 9999)
+            isPortAvailable(port).then(() => {
+                resolve()
+            }).catch((err) => {
+                reject(err)
+            })
         })
     }
     ipcMain.handle("get-random-local-engine-port", async (e) => {
         return await asyncGetRandomPort()
+    })
+
+    // asyncIsPortAvailable wrapper
+    const asyncIsPortAvailable = (params) => {
+        return isPortAvailable(params)
+    }
+    ipcMain.handle("is-port-available", async (e, port) => {
+        /**
+         * @port: 判断端口是否是可以被监听的
+         */
+        return await asyncIsPortAvailable(port)
     })
 
     /**
@@ -178,18 +154,20 @@ module.exports = (win, callback, getClient, newClient) => {
         engineCount += 1
 
         const {sudo, port} = params
-        let randPort = port || 40000 + Math.floor(Math.random() * 9999)
-
         return new Promise((resolve, reject) => {
             try {
                 // 考虑如果管理员权限启动未成功该通过什么方式自启普通权限引擎进程
                 if (sudo) {
                     if (isWindows) {
                         const subprocess = childProcess.exec(
-                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${randPort}`),
-                            {maxBuffer: 1000 * 1000 * 1000}
+                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}`),
+                            {
+                                maxBuffer: 1000 * 1000 * 1000,
+                                stdio: "pipe",
+                            }
                         )
-
+                        subprocess.stdout.on("data", toStdout)
+                        subprocess.stderr.on("data", toStdout)
                         subprocess.on("error", (err) => {
                             if (err) reject(err)
                         })
@@ -198,19 +176,15 @@ module.exports = (win, callback, getClient, newClient) => {
                             if (e) reject(e)
                         })
                     } else {
-                        const cmd = `${getLocalYaklangEngine()} grpc --port ${randPort}`
+                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}`
                         sudoExec(
                             cmd,
                             {
-                                name: `yak grpc port ${randPort}`
+                                name: `yak grpc port ${port}`
                             },
                             function (error, stdout, stderr) {
                                 if (!!error && error?.code === 137) return
-
                                 if (error || stderr) {
-                                    if (error.message.indexOf("User did not grant permission") > -1) {
-                                        asyncStartLocalYakEngineServer(win, {sudo: false, port: randPort})
-                                    }
                                     reject(error || stderr)
                                 }
                             }
@@ -218,7 +192,7 @@ module.exports = (win, callback, getClient, newClient) => {
                     }
                 } else {
                     toLog("已启动本地引擎进程")
-                    const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${randPort}`], {
+                    const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${port}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
                         stdio: "pipe"
                     })

@@ -96,7 +96,7 @@ const initLocalCache = (callback) => {
     } catch (e) {
         console.info("读取本地缓存数据错误", e)
     } finally {
-        setInterval(() => writeTimer("cache"), 5000)
+        setInterval(() => writeTimer("cache"), 3000)
     }
 }
 /** 获取扩展缓存数据 */
@@ -128,7 +128,7 @@ const initExtraLocalCache = (callback) => {
     } catch (e) {
         console.info("读取本地扩展缓存数据错误", e)
     } finally {
-        setInterval(() => writeTimer("extraCache"), 5000)
+        setInterval(() => writeTimer("extraCache"), 3000)
     }
 }
 

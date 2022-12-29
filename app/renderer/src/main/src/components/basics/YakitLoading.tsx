@@ -4,8 +4,9 @@ import styles from "./yakitLoading.module.scss"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {XTerm} from "xterm-for-react";
 import {xtermFit} from "@/utils/xtermUtils";
-import {Button, Col, Row, Space} from "antd";
+import {Button, Col, Popconfirm, Row, Space} from "antd";
 import {YaklangEngineMode} from "@/yakitGVDefine";
+import {outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -112,7 +113,28 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             if (props.onEngineModeChange) {
                                 props.onEngineModeChange("remote")
                             }
-                        }}> 切换为远程模式 </Button>
+                        }}> 远程模式 </Button>
+                        <Popconfirm
+                            title={"当引擎无法自动启动时，点此手动启动进程"}
+                            onConfirm={() => {
+                                const isAdmin = props.engineMode === "admin";
+                                ipcRenderer.invoke("start-local-yaklang-engine", {
+                                    port: isAdmin ? props.adminPort : props.localPort,
+                                    sudo: isAdmin,
+                                }).then(() => {
+                                    outputToWelcomeConsole("手动引擎启动成功！")
+                                    if (props.onEngineModeChange) {
+                                        props.onEngineModeChange(props.engineMode)
+                                    }
+                                }).catch(e => {
+                                    outputToWelcomeConsole("手动引擎启动失败！")
+                                    outputToWelcomeConsole(`失败原因:${e}`)
+                                })
+                            }}
+                        >
+                            <Button type={"link"}
+                                    size={"small"}> 手动启动引擎({EngineModeVerbose(props.engineMode)}) </Button>
+                        </Popconfirm>
                     </Space>
                 </div>
 
