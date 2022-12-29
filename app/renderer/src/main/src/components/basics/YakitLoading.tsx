@@ -4,7 +4,8 @@ import styles from "./yakitLoading.module.scss"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {XTerm} from "xterm-for-react";
 import {xtermFit} from "@/utils/xtermUtils";
-import {Col, Row} from "antd";
+import {Button, Col, Row, Space} from "antd";
+import {YaklangEngineMode} from "@/yakitGVDefine";
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -23,11 +24,29 @@ const LoadingTitle: string[] = [
     "再不用Yakit，卷王就是别人的了",
     "来用Yakit啦？安全圈还是你最成功",
     "这届网安人，人手一个Yakit，香惨了！"
-]
+];
+
+
+export const EngineModeVerbose = (m: YaklangEngineMode) => {
+    switch (m) {
+        case "admin":
+            return "管理权限"
+        case "local":
+            return "普通权限"
+        case "remote":
+            return "远程连接"
+        default:
+            return "未知模式"
+    }
+}
 
 export interface YakitLoadingProp {
     loading: boolean
     title?: string
+    engineMode: YaklangEngineMode
+    localPort: number
+    adminPort: number
+    onEngineModeChange: (mode: YaklangEngineMode) => any
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -83,7 +102,19 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     </div>
                 </div>
 
-                <div className={styles["yakit-loading-content"]}>{title || "正在加载中..."}</div>
+                <div className={styles["yakit-loading-content"]}>
+                    <Space>
+                        {`启动模式: ${EngineModeVerbose(props.engineMode)}`}
+                        <div>
+                            {title || "正在加载中..."}
+                        </div>
+                        <Button type={"link"} size={"small"} onClick={() => {
+                            if (props.onEngineModeChange) {
+                                props.onEngineModeChange("remote")
+                            }
+                        }}> 切换为远程模式 </Button>
+                    </Space>
+                </div>
 
                 <div className={styles["yakit-loading-live-output"]}>
                     <Row>

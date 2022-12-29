@@ -81,9 +81,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** 当前引擎模式 */
     const [engineMode, setEngineMode, getEngineMode] = useGetState<YaklangEngineMode>()
     const isRemoteEngine = engineMode === "remote"
-
-    /** 是否提示用户重新启动本地引擎 */
-    const [restartEngine, setRestartEngine] = useState<boolean>(false)
+    const [remoteConnectLoading, setRemoteConnectLoading] = useState(false);
 
 
     /**
@@ -227,7 +225,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             Port: parseInt(info.port),
             Sudo: false
         })
-        setKeepalive(true)
+        setRemoteConnectLoading(true)
+        setTimeout(()=>{
+            setRemoteConnectLoading(false)
+            setKeepalive(true)
+        }, 300)
     })
 
     useEffect(() => {
@@ -453,7 +455,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             (
                                 <>
                                     {isRemoteEngine && <RemoteYaklangEngine
-                                        loading={false}
+                                        loading={remoteConnectLoading}
                                         onSubmit={connectRemoteEngine}
                                         onCancel={() => {
                                             changeEngineMode("local")
@@ -472,7 +474,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 </>
                             )
                     }
-                    {!engineLink && !isRemoteEngine && <YakitLoading loading={false}/>}
+                    {!engineLink && !isRemoteEngine && <YakitLoading
+                        engineMode={engineMode}
+                        onEngineModeChange={changeEngineMode}
+                        loading={false}
+                        adminPort={adminPort}
+                        localPort={localPort}
+                    />}
 
                     {/* 升级步骤是独立的操作，和连接不连接没有太大关系 */}
                     {(yaklangDownload || yakitDownload) && (
@@ -495,7 +503,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             ) : (
                 <div className={styles["ui-layout-mask"]}>
                     {isRemoteEngine ? <RemoteYaklangEngine
-                        loading={false}
+                        loading={remoteConnectLoading}
                         onSubmit={connectRemoteEngine}
                         onCancel={() => {
                             changeEngineMode("local")

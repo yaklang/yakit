@@ -111,9 +111,12 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         } else {
             outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
         }
-        if (props.onKeepaliveShouldChange) {
-            props.onKeepaliveShouldChange(true)
-        }
+
+        setTimeout(() => {
+            if (props.onKeepaliveShouldChange) {
+                props.onKeepaliveShouldChange(true)
+            }
+        }, 600)
 
         ipcRenderer.invoke("start-local-yaklang-engine", {
             port: props.credential.Port,
@@ -166,7 +169,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         return () => {
             clearInterval(id)
         }
-    }, [props.keepalive])
+    }, [props])
 
     return <></>
 });
