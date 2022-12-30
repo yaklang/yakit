@@ -121,6 +121,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
+    useEffect(() => {
+        /** 连接成功，获取token进行登录 */
+        if(engineLink && props.linkSuccess) props.linkSuccess()
+    }, [engineLink])
+
     /**
      * 1.获取操作系统信息
      * 2.获取yaklang引擎是否安装的状态
@@ -312,7 +317,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
     }
 
-    outputToWelcomeConsole("UILayout 刷新")
+    // outputToWelcomeConsole("UILayout 刷新")
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <YaklangEngineWatchDog
@@ -322,9 +327,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 keepalive={keepalive}
                 onKeepaliveShouldChange={setKeepalive}
                 onReady={() => {
-                    setEngineLink(true)
-                    /** 连接成功，获取token进行登录 */
-                    if(props.linkSuccess) props.linkSuccess()
+                    if(!getEngineLink()) setEngineLink(true)
+                    
                     // 连接成功，保存一下端口缓存
                     switch (engineMode) {
                         case "local":
