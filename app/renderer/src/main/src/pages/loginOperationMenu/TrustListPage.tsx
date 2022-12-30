@@ -358,6 +358,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                         onConfirm={() => {
                             onRemove([i.appid])
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type="link">
                             移除

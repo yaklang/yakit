@@ -462,6 +462,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                         onConfirm={() => {
                             onRemove([i.id])
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type="link">
                             删除

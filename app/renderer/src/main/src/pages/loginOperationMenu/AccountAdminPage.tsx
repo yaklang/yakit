@@ -1263,6 +1263,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                         onConfirm={() => {
                             onRemove([i.uid], i.department_id)
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type="link">
                             删除

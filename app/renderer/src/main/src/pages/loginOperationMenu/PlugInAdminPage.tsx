@@ -509,6 +509,7 @@ const PlugInAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                         onConfirm={() => {
                             onRemove([i.user_id])
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type='link'>
                             删除
