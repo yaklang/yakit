@@ -137,20 +137,6 @@ export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.me
     const run = useMemoizedFn((t: TargetRequest) => {
         setPercent(0)
 
-        //@ts-ignore
-        // const time = Date.parse(new Date().toString()) / 1000
-        // const obj: NewTaskHistoryProps = {
-        //     target: t,
-        //     simpleQuery: props.simpleQuery,
-        //     isAll: props.isAll,
-        //     time: formatTimestamp(time)
-        // }
-        // const arr = [...taskHistory]
-        // if (taskHistory.length === 10) arr.pop()
-        // arr.unshift(obj)
-        // setTaskHistory(arr)
-        // ipcRenderer.invoke("set-local-cache", ExecuteTaskHistory, JSON.stringify(arr))
-
         const tokens = randomString(40)
         setToken(tokens)
         StartExecBatchYakScriptWithFilter(

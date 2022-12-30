@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {AutoComplete, Button, Checkbox, Divider, Form, Input, InputNumber, Popconfirm, Space, Tag} from "antd"
 import {SimplePluginList} from "@/components/SimplePluginList"
-import {getRemoteValue, saveValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MITMResponse} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {SwitchItem} from "@/utils/inputUtil"
@@ -126,7 +126,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         const newHostHistoryList = [host, ...hostHistoryList].filter((_, index) => index < 10)
                         setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
                     }
-                    saveValue(WEB_FUZZ_PROXY, downstreamProxy)
+                    setLocalValue(WEB_FUZZ_PROXY, downstreamProxy)
                     setRemoteValue(MITMConsts.MITMDefaultServer, host)
                     setRemoteValue(MITMConsts.MITMDefaultPort, `${port}`)
                     setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, downstreamProxy)

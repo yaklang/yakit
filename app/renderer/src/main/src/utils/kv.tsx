@@ -1,10 +1,10 @@
 const {ipcRenderer} = window.require("electron")
 
-export const saveValue = (k: string, value: any) => {
+export const setLocalValue = (k: string, value: any) => {
     ipcRenderer.invoke("set-local-cache", k, value).then(() => {})
 }
 
-export const getValue = (k: string) => {
+export const getLocalValue = (k: string) => {
     return ipcRenderer.invoke("fetch-local-cache", k)
 }
 

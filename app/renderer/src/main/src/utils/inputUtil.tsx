@@ -27,7 +27,7 @@ import {randomColor} from "./randomUtil";
 import {LiteralUnion} from "antd/lib/_util/type";
 import {FormItemProps} from "@ant-design/compatible/lib/form";
 import {useThrottleFn} from "ahooks";
-import {saveValue} from "./kv";
+import {setLocalValue} from "./kv";
 import {callCopyToClipboard} from "./basic";
 
 export interface OneLineProp {

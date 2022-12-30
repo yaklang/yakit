@@ -124,16 +124,23 @@ module.exports = {
                 isTLS: !!global.caPem
             }
         })
-        ipcMain.handle("echo", async (e, text) => {
-            getClient().Echo(
-                {
-                    text: text
-                },
-                (err, rsp) => {
-                }
-            )
-            return text
+
+        // asyncEcho wrapper
+        const asyncEcho = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().Echo(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("Echo", async (e, params) => {
+            return await asyncEcho(params)
         })
+        
         /** 获取 yaklang引擎 配置参数 */
         ipcMain.handle("fetch-yaklang-engine-addr", () => {
             return {
@@ -156,7 +163,8 @@ module.exports = {
                 global.caPem = pem
                 global.password = password
             },
-            getClient
+            getClient,
+            newClient,
         )
 
         require("./handlers/execYak")(win, getClient)
