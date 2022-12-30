@@ -1213,7 +1213,7 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
 
         getLocalValue(LocalGV.YaklangRemoteEngineCredential).then((result: RemoteLinkInfo) => {
             try{
-                if (result.host === "") {
+                if (result?.host === "") {
                     return
                 }
                 setRemote({...result})
