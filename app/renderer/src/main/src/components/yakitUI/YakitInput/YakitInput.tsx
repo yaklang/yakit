@@ -1,6 +1,6 @@
 import {Input, InputRef} from "antd"
 import React, {useState} from "react"
-import {YakitInputSearchProps, YakitInputProps} from "./YakitInputType"
+import {YakitInputSearchProps, YakitInputProps, InternalTextAreaProps} from "./YakitInputType"
 import styles from "./YakitInput.module.scss"
 import classNames from "classnames"
 import {YakitButton} from "../YakitButton/YakitButton"
@@ -11,6 +11,7 @@ import {useMemoizedFn} from "ahooks"
  * 1.增加环境变量加载主题色
  * 2.增加颜色变量
  * 3.增加搜索组件，两种样式中的一种，另外一种未完成
+ * 4.增加文本域
  */
 
 
@@ -101,10 +102,28 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
     )
 }
 
+const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
+    const {wrapperClassName, style, ...restProps} = props
+    return (
+        <div
+            className={classNames(
+                styles["yakit-textArea-wrapper"],
+                {
+                    [styles["yakit-textArea-disabled"]]: !!props.disabled
+                },
+                wrapperClassName
+            )}
+            style={style}
+        >
+            <Input.TextArea {...restProps} />
+        </div>
+    )
+}
+
 type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & React.RefAttributes<InputRef>> & {
     Group: typeof Input.Group
     Search: typeof InternalSearch
-    TextArea: typeof Input.TextArea
+    TextArea: typeof InternalTextArea
     Password: typeof Input.Password
 }
 
@@ -116,5 +135,5 @@ export const YakitInput = InternalInput as CompoundedComponent
 
 YakitInput.Group = Input.Group
 YakitInput.Search = InternalSearch
-YakitInput.TextArea = Input.TextArea
+YakitInput.TextArea = InternalTextArea
 YakitInput.Password = Input.Password

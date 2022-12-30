@@ -294,3 +294,38 @@
         }
     }
 }
+
+// ========================== textArea ==========================
+.yakit-textArea-wrapper {
+    width: 100%;
+
+    :global {
+        .ant-input:hover {
+            border-color: var(--yakit-primary-color-hover)
+        }
+
+        .ant-input:focus,
+        .ant-input-focused {
+            border-color: var(--yakit-primary-color-hover);
+            box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
+        }
+
+        .ant-input-textarea-show-count::after {
+            font-size: 14px;
+            color: var(--yakit-helper-text-color);
+        }
+    }
+}
+
+// ========================== textArea disabled ==========================
+.yakit-textArea-disabled {
+    :global {
+        .ant-input[disabled]:hover {
+            border-color: var(--yakit-border-color)
+        }
+
+        .ant-input[disabled] {
+            background-color: var(--yakit-background-color);
+        }
+    }
+}
