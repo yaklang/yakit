@@ -312,6 +312,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
     }
 
+    outputToWelcomeConsole("UILayout 刷新")
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <YaklangEngineWatchDog

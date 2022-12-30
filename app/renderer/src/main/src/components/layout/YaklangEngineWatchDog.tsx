@@ -142,6 +142,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             return
         }
 
+        outputToWelcomeConsole("刷新 keepalive 状态")
+
         let count = 0
         let failedCount = 0;
         let notified = false;
@@ -178,7 +180,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         return () => {
             clearInterval(id)
         }
-    }, [props])
-
+    }, [props.keepalive, props.onReady, props.onFailed])
+    outputToWelcomeConsole("刷新状态")
     return <></>
 });
