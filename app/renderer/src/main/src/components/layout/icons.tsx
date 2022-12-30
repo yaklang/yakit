@@ -116,8 +116,8 @@ const YakitStoreThemeSvg = () => (
                 y2='10.0006'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#FA931D' />
-                <stop offset='1' stop-color='#EF5B27' />
+                <stop stopColor='#FA931D' />
+                <stop offset='1' stopColor='#EF5B27' />
             </linearGradient>
         </defs>
     </svg>

@@ -225,7 +225,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                         </div>
                     )}
                     {!loading && !hasMore && (page || 0) > 0 && (
-                        <div className='grid-block text-center'>暂无更多数据</div>
+                        <div className='grid-block text-center no-more-text'>暂无更多数据</div>
                     )}
                 </div>
             </div>
