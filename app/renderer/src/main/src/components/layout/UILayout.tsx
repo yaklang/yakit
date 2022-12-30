@@ -322,6 +322,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 onKeepaliveShouldChange={setKeepalive}
                 onReady={() => {
                     setEngineLink(true)
+                    /** 连接成功，获取token进行登录 */
+                    if(props.linkSuccess) props.linkSuccess()
                     // 连接成功，保存一下端口缓存
                     switch (engineMode) {
                         case "local":
