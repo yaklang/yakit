@@ -3730,7 +3730,7 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                     </div>
                     <div className='icon-body'>
                         <div className='text-icon'>
-                            {isShowAdmin && (
+                            {isShowAdmin && !info.is_private && (
                                 <div
                                     className={`text-icon-admin ${
                                         TagColor[["not", "success", "failed"][status]].split("|")[0]
@@ -3743,8 +3743,8 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 // @ts-ignore
                                 <OfficialYakitLogoIcon className='text-icon-style' />
                             )}
-                            {!bind_me&& <>{(info.is_private === true && <LockOutlined style={{paddingLeft:5}}/>)}</>}
-                            {bind_me && <>{(info.is_private === true && <LockOutlined />) || <OnlineCloudIcon />}</>}
+                            {!bind_me&& <>{(info.is_private && <LockOutlined style={{paddingLeft:5}}/>)}</>}
+                            {bind_me && <>{(info.is_private && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
                     </div>
                 </div>
