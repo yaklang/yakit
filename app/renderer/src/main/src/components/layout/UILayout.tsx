@@ -157,23 +157,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         if(!getDatabaseError()) getCacheEngineMode()
                     })
             }
-            getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-                info(`加载历史引擎模式：${EngineModeVerbose(val as YaklangEngineMode)}`)
-                switch (val) {
-                    case "remote":
-                        setEngineMode("remote")
-                        return
-                    case "local":
-                        setEngineMode("local")
-                        return
-                    case "admin":
-                        setEngineMode("admin")
-                        return
-                    default:
-                        setEngineMode("local")
-                        return
-                }
-            })
         })
 
         getLocalValue(LocalGV.YaklangEnginePort).then(portRaw => {
@@ -1223,7 +1206,7 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             })
 
         getLocalValue(LocalGV.YaklangRemoteEngineCredential).then((result: RemoteLinkInfo) => {
-            if (result.host === "") {
+            if (result?.host === "") {
                 return
             }
             setRemote({...result})
