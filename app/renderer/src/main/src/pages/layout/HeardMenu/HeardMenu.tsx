@@ -1,12 +1,14 @@
 import React, {useEffect, useRef, useState} from "react"
 import {HeardMenuProps, RouteMenuDataItemProps, SubMenuProps, CollapseMenuProp} from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {MenuDataProps, Route} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
+    CheckIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    CubeIcon,
     CursorClickIcon,
     DotsHorizontalIcon,
     PencilAltIcon,
@@ -18,7 +20,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
-import {Dropdown, Tabs, Tooltip} from "antd"
+import {Divider, Dropdown, Tabs, Tooltip} from "antd"
 import {
     MenuBasicCrawlerIcon,
     MenuComprehensiveCatalogScanningAndBlastingIcon,
@@ -31,6 +33,7 @@ import {
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -170,29 +173,52 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         onRouteMenuSelect(newKey as Route)
     })
     const onCustomizeMenuClick = useMemoizedFn((key: string) => {
-        console.log("key", key)
+        setRemoteValue("PatternMenu", key)
+        setPatternMenu(key as "expert" | "new")
     })
     const onGoCustomize = useMemoizedFn(() => {
         ipcRenderer.invoke("open-customize-menu")
     })
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    useEffect(() => {
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            setPatternMenu(patternMenu || "expert")
+        })
+    }, [])
+    /**
+     * @description: 复原新手
+     */
+    const onRestoreNew = useMemoizedFn(() => {
+        console.log(
+            "新手",
+            DefaultRouteMenuData.filter((item) => item.isNovice)
+        )
+    })
+    /**
+     * @description: 复原专家
+     */
+    const onRestoreExpert = useMemoizedFn(() => {})
     const CustomizeMenuData = [
         {
             key: "new",
             label: "新手模式",
-            itemIcon: <UserIcon />
+            itemIcon: <UserIcon />,
+            tip: "复原新手模式",
+            onRestoreMenu: () => onRestoreNew()
         },
         {
             key: "expert",
             label: "专家模式",
-            itemIcon: <AcademicCapIcon />
-        },
-        {
-            key: "customize",
-            label: "自定义",
-            itemIcon: <CursorClickIcon />,
-            rightIcon: <PencilAltIcon />,
-            rightIconClick: () => onGoCustomize()
+            itemIcon: <AcademicCapIcon />,
+            tip: "复原专家模式",
+            onRestoreMenu: () => onRestoreExpert()
         }
+        // {
+        //     key: "default",
+        //     label: "默认模式",
+        //     itemIcon: <CubeIcon />,
+        //     tip: "复原默认模式"
+        // }
     ]
     return (
         <div className={style["heard-menu-body"]}>
@@ -279,26 +305,36 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 {CustomizeMenuData.map((item) => (
                                     <div
                                         key={item.key}
-                                        className={style["customize-item"]}
+                                        className={classNames(style["customize-item"], {
+                                            [style["customize-item-select"]]: patternMenu === item.key
+                                        })}
                                         onClick={() => onCustomizeMenuClick(item.key)}
                                     >
                                         <div className={style["customize-item-left"]}>
                                             {item.itemIcon}
                                             <span className={style["customize-item-label"]}>{item.label}</span>
                                         </div>
-                                        {item.rightIcon && (
-                                            <div
-                                                className={style["customize-item-right"]}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    item.rightIconClick()
-                                                }}
-                                            >
-                                                {item.rightIcon}
-                                            </div>
-                                        )}
+                                        {patternMenu === item.key && <CheckIcon />}
                                     </div>
                                 ))}
+                                <Divider style={{margin: "6px 0"}} />
+                                <div>
+                                    <div
+                                        className={classNames(style["customize-item"])}
+                                        onClick={() =>
+                                            CustomizeMenuData.find((ele) => patternMenu === ele.key)?.onRestoreMenu()
+                                        }
+                                    >
+                                        {CustomizeMenuData.find((ele) => patternMenu === ele.key)?.tip}
+                                    </div>
+                                    <div
+                                        className={classNames(style["customize-item"])}
+                                        onClick={() => onGoCustomize()}
+                                    >
+                                        编辑菜单
+                                    </div>
+                                    <div className={classNames(style["customize-item"])}>导入 JSON 配置</div>
+                                </div>
                             </>
                         }
                         onVisibleChange={(e) => {
