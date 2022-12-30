@@ -1180,10 +1180,14 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             })
 
         getLocalValue(LocalGV.YaklangRemoteEngineCredential).then((result: RemoteLinkInfo) => {
-            if (result.host === "") {
-                return
+            try{
+                if (result.host === "") {
+                    return
+                }
+                setRemote({...result})
+            }catch (e) {
+
             }
-            setRemote({...result})
         })
     }, [])
 
