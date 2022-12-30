@@ -123,7 +123,7 @@ module.exports = (win, callback, getClient, newClient) => {
         return new Promise((resolve, reject) => {
             const port = 40000 + Math.floor(Math.random() * 9999)
             isPortAvailable(port).then(() => {
-                resolve()
+                resolve(port)
             }).catch((err) => {
                 reject(err)
             })

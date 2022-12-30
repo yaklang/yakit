@@ -467,7 +467,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         )}
 
                         <div className={styles["header-title"]} onDoubleClick={maxScreen}>
-                            Hello
                         </div>
 
                         <div className={styles["header-right"]}>
