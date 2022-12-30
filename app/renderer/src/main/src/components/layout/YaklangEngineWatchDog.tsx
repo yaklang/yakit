@@ -22,6 +22,7 @@ const {ipcRenderer} = window.require("electron");
 export interface YaklangEngineWatchDogProps {
     credential: YaklangEngineWatchDogCredential,
     keepalive: boolean
+    engineLink: boolean
 
     onReady?: () => any
     onFailed?: (failedCount: number) => any
@@ -134,6 +135,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     }, [autoStartProgress, props], {leading: false, wait: 1000})
 
     useEffect(() => {
+        const time = props.engineLink ? 5000 : 1000
         const keepalive = props.keepalive;
         if (!keepalive) {
             if (props.onFailed) {
@@ -176,11 +178,11 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             })
         };
         connect()
-        const id = setInterval(connect, 3000)
+        const id = setInterval(connect, time)
         return () => {
             clearInterval(id)
         }
-    }, [props.keepalive, props.onReady, props.onFailed])
+    }, [props.keepalive, props.engineLink, props.onReady, props.onFailed])
     // outputToWelcomeConsole("刷新状态")
     return <></>
 });
