@@ -63,7 +63,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [keepalive, setKeepalive] = useState<boolean>(false);
 
     /** 引擎未安装时的modal组件是否展示 */
-    const [engineShow, setEngineShow] = useState<boolean>(true)
+    const [engineShow, setEngineShow] = useState<boolean>(false)
 
     /**
      * 认证信息
@@ -142,6 +142,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             if (!getIsYakInstalled()) {
                 /** 未安装引擎时，应该优先展示安装提示框 */
                 setEngineMode(undefined)
+                setEngineShow(true)
                 outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
                 return
             }else{
@@ -552,10 +553,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         visible={engineShow}
                         setIsRemoteEngine={() => {
                             setEngineMode("remote")
+                            setEngineShow(false)
                         }}
                         startEngine={() => {
                             setIsYakInstalled(true)
                             setEngineMode("local")
+                            setEngineShow(false)
                             // startEngine(false)
                         }}
                     />}
