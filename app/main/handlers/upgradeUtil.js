@@ -11,19 +11,15 @@ const request = require("request");
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
 
-const basicDir = path.join(homeDir, "base");
 const yakEngineDir = path.join(homeDir, "yak-engine")
 const codeDir = path.join(homeDir, "code");
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
-const basicKvPath = path.join(basicDir, "yakit-local.json")
-const extraKvPath = path.join(basicDir, "yakit-extra-local.json")
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
         try {
             fs.mkdirSync(secretDir, {recursive: true})
-            fs.mkdirSync(basicDir, {recursive: true})
             fs.mkdirSync(yakEngineDir, {recursive: true})
             fs.mkdirSync(codeDir, {recursive: true})
             resolve()
@@ -31,49 +27,6 @@ const initMkbaseDir = async () => {
             reject(e)
         }
     })
-}
-
-const kvpairs = new Map();
-
-const getKVPair = (callback) => {
-    kvpairs.clear()
-
-    try {
-        fs.readFile(basicKvPath, (err, data) => {
-            if (!!err) {
-                callback(err)
-                return
-            }
-
-            JSON.parse(data.toString()).forEach(i => {
-                if (i["key"]) {
-                    kvpairs.set(i["key"], i["value"])
-                }
-            })
-
-            if (callback) {
-                callback(null)
-            }
-        })
-    } catch (e) {
-        console.info(e)
-    }
-}
-
-const setKVPair = (k, v) => {
-    kvpairs.set(`${k}`, v)
-
-    try {
-        fs.unlinkSync(basicKvPath)
-    } catch (e) {
-    }
-
-    const pairs = []
-    kvpairs.forEach((v, k) => {
-        pairs.push({key: k, value: v})
-    })
-    pairs.sort((a, b) => a.key.localeCompare(b.key))
-    fs.writeFileSync(basicKvPath, new Buffer(JSON.stringify(pairs), "utf8"))
 }
 
 const loadSecrets = () => {
@@ -149,8 +102,8 @@ const getLatestYakLocalEngine = () => {
     }
 }
 
-const getYakitDownloadUrl = (version,isEnterprise=false) => {
-    if(isEnterprise){
+const getYakitDownloadUrl = (version, isEnterprise = false) => {
+    if (isEnterprise) {
         switch (process.platform) {
             case "darwin":
                 if (process.arch === "arm64") {
@@ -162,23 +115,22 @@ const getYakitDownloadUrl = (version,isEnterprise=false) => {
                 return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-windows-amd64.exe`
             case "linux":
                 return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-linux-amd64.AppImage`
-            }
-    }
-    else{
+        }
+    } else {
         switch (process.platform) {
-        case "darwin":
-            if (process.arch === "arm64") {
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-arm64.dmg`
-            } else {
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-x64.dmg`
-            }
-        case "win32":
-            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-windows-amd64.exe`
-        case "linux":
-            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
+            case "darwin":
+                if (process.arch === "arm64") {
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-arm64.dmg`
+                } else {
+                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-x64.dmg`
+                }
+            case "win32":
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-windows-amd64.exe`
+            case "linux":
+                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
+        }
     }
-    }
-    
+
 }
 
 module.exports = {
@@ -328,12 +280,12 @@ module.exports = {
         })
 
         // asyncDownloadLatestYakit wrapper
-        const asyncDownloadLatestYakit = (version,isEnterprise) => {
+        const asyncDownloadLatestYakit = (version, isEnterprise) => {
             return new Promise((resolve, reject) => {
                 if (version.startsWith("v")) {
                     version = version.substr(1)
                 }
-                const downloadUrl = getYakitDownloadUrl(version,isEnterprise);
+                const downloadUrl = getYakitDownloadUrl(version, isEnterprise);
                 const dest = path.join(yakEngineDir, path.basename(downloadUrl));
                 try {
                     fs.unlinkSync(dest)
@@ -358,8 +310,8 @@ module.exports = {
                     }).pipe(fs.createWriteStream(dest));
             })
         }
-        ipcMain.handle("download-latest-yakit", async (e, version,isEnterprise) => {
-            return await asyncDownloadLatestYakit(version,isEnterprise)
+        ipcMain.handle("download-latest-yakit", async (e, version, isEnterprise) => {
+            return await asyncDownloadLatestYakit(version, isEnterprise)
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
@@ -425,26 +377,6 @@ module.exports = {
 
         ipcMain.handle("install-yakit", async (e, params) => {
             return shell.openPath(yakEngineDir)
-        })
-
-
-        ipcMain.handle("set-value", (e, key, value) => {
-            setKVPair(key, value)
-        })
-
-        const asyncGetValueByKey = (key) => {
-            return new Promise((resolve, reject) => {
-                getKVPair((err) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(kvpairs.get(key))
-                    }
-                })
-            })
-        }
-        ipcMain.handle("get-value", async (e, key) => {
-            return await asyncGetValueByKey(key)
         })
 
         // 获取yak code文件根目录路径

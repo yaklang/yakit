@@ -2,6 +2,9 @@ import React, {useState, useEffect, useRef} from "react"
 import {Sparklines, SparklinesCurve} from "react-sparklines"
 
 import styles from "./performanceDisplay.module.scss"
+import {Button} from "antd";
+import {RocketOutlined} from "@ant-design/icons";
+import {manageYakLocalProcess} from "@/components/layout/WelcomeConsoleUtil";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -55,10 +58,15 @@ export const PerformanceDisplay: React.FC = React.memo(() => {
             {showLine && (
                 <div className={styles["cpu-spark"]}>
                     <Sparklines data={cpu} width={96} height={10} max={96}>
-                        <SparklinesCurve color='#85899E' />
+                        <SparklinesCurve color='#85899E'/>
                     </Sparklines>
                 </div>
             )}
+            <Button className={styles["cpu-title"]}
+                    style={{marginLeft: 0, paddingLeft: 0}}
+                    type={"link"} onClick={() => {
+                manageYakLocalProcess()
+            }} size={"small"}>进程</Button>
         </div>
     )
 })
