@@ -325,6 +325,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                 /* keepalive 开启智慧才会触发 Ready 和 Failed */
                 keepalive={keepalive}
+                engineLink={engineLink}
                 onKeepaliveShouldChange={setKeepalive}
                 onReady={() => {
                     if(!getEngineLink()) setEngineLink(true)
@@ -467,7 +468,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         )}
 
                         <div className={styles["header-title"]} onDoubleClick={maxScreen}>
-                            Hello
                         </div>
 
                         <div className={styles["header-right"]}>
