@@ -13,6 +13,7 @@ const secretDir = path.join(homeDir, "auth");
 
 const yakEngineDir = path.join(homeDir, "yak-engine")
 const codeDir = path.join(homeDir, "code");
+const cacheDir = path.join(homeDir, "base");
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 
@@ -20,6 +21,7 @@ const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
         try {
             fs.mkdirSync(secretDir, {recursive: true})
+            fs.mkdirSync(cacheDir, {recursive: true})
             fs.mkdirSync(yakEngineDir, {recursive: true})
             fs.mkdirSync(codeDir, {recursive: true})
             resolve()

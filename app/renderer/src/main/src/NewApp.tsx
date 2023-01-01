@@ -228,7 +228,9 @@ function NewApp() {
                     width='75%'
                     cancelText={"关闭 / Closed"}
                     onCancel={() => ipcRenderer.invoke("UIOperate", "close")}
-                    okButtonProps={{disabled: readingSeconds > 0}}
+                    okButtonProps={{
+                        // disabled: readingSeconds > 0,
+                    }}
                     onOk={() => {
                         ipcRenderer.invoke("set-local-cache", LocalGV.UserProtocolAgreed, true)
                         setReadingSeconds(3)
