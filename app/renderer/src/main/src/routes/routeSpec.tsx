@@ -75,6 +75,7 @@ import {
     MenuVulnerabilityRiskIcon,
     MenuWebsocketFuzzerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
+import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -151,7 +152,10 @@ export enum Route {
     AccountAdminPage = "account-admin-page", // 用户管理
     RoleAdminPage = "role-admin-page", // 角色管理
     LicenseAdminPage = "license-admin-page", // license管理
-    TrustListPage = "trust-list-admin-page" // 信任用户管理
+    TrustListPage = "trust-list-admin-page", // 信任用户管理
+
+    // 获取标准输出流
+    AttachEngineCombinedOutput = "attach-engine-combined-output",
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -367,6 +371,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <LicenseAdminPage />
         case Route.TrustListPage:
             return <TrustListPage />
+        case Route.AttachEngineCombinedOutput:
+            return <EngineConsole/>
         default:
             return <div />
     }
@@ -493,7 +499,8 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "9-3", key: Route.DB_Ports, label: "端口资产", icon: <MenuPortAssetsIcon />},
             {id: "9-4", key: Route.DB_Risk, label: "漏洞与风险", icon: <MenuVulnerabilityRiskIcon />},
             {id: "9-5", key: Route.DB_Domain, label: "域名资产", icon: <MenuDomainAssetsIcon />},
-            {id: "9-6", key: Route.DB_HTTPHistory, label: "HTTP History", icon: <MenuHTTPHistoryIcon />}
+            {id: "9-6", key: Route.DB_HTTPHistory, label: "HTTP History", icon: <MenuHTTPHistoryIcon />},
+            {id: "9-7", key: Route.AttachEngineCombinedOutput, label: "引擎 Console", icon: <MenuHTTPHistoryIcon />},
         ]
     },
     {
