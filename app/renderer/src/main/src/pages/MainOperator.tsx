@@ -119,7 +119,9 @@ const singletonRoute: Route[] = [
     // License管理
     Route.LicenseAdminPage,
     // 信任用户管理
-    Route.TrustListPage
+    Route.TrustListPage,
+    // 获取引擎输出
+    Route.AttachEngineCombinedOutput,
 ]
 /** 不需要首页组件安全边距的页面 */
 const noPaddingPage = [

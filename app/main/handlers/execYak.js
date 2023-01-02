@@ -183,4 +183,13 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetYakScriptTags", async (e, params) => {
         return await asyncGetYakScriptTags(params)
     })
+
+
+    /* 追加查看引擎输出的接口 */
+    const streamAttachCombinedOutputMap = new Map();
+    ipcMain.handle("cancel-AttachCombinedOutput", handlerHelper.cancelHandler(streamAttachCombinedOutputMap));
+    ipcMain.handle("AttachCombinedOutput", (e, params, token) => {
+        let stream = getClient().AttachCombinedOutput(params);
+        handlerHelper.registerHandler(win, stream, streamAttachCombinedOutputMap, token)
+    })
 }

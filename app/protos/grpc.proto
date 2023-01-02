@@ -378,10 +378,35 @@ service Yak {
 
   // 重置到恢复出厂设置
   rpc ResetAndInvalidUserData(ResetAndInvalidUserDataRequest) returns (Empty);
+
+  // Yaklang Shell
+  // 创建一个交互式 Shell
+  rpc CreateYaklangShell(stream YaklangShellRequest) returns (stream YaklangShellResponse);
+  rpc AttachCombinedOutput(AttachCombinedOutputRequest) returns (stream ExecResult);
+}
+
+message AttachCombinedOutputRequest {
+  
+}
+
+message YaklangShellRequest {
+  string Input = 1;
+}
+
+message YaklangShellKVPair {
+  string Key = 1;
+  bytes Value = 2;
+  string ValueVerbose = 3;
+  int64 SymbolId = 4;
+}
+
+message YaklangShellResponse {
+  ExecResult RawResult = 1;
+  repeated YaklangShellKVPair Scope = 2;
 }
 
 message ResetAndInvalidUserDataRequest {
-  
+
 }
 
 message RegisterFacadesHTTPRequest {
