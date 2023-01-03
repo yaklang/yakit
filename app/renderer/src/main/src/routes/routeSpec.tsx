@@ -154,7 +154,7 @@ export enum Route {
     RoleAdminPage = "role-admin-page", // 角色管理
     LicenseAdminPage = "license-admin-page", // license管理
     TrustListPage = "trust-list-admin-page", // 信任用户管理
-    PlugInAdminPage = "plug-in-admin-page" // 插件权限管理
+    PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output",
 }
