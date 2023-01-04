@@ -256,84 +256,80 @@
     --button-press-color: var(--yakit-primary-color-press);
     --button-press-border-color: transparent;
 }
+.yakit-button-success {
+    --button-wave-shadow-color: var(--yakit-success-2);
 
-.yakit-button-secondary-1 {
-    --button-wave-shadow-color: var(--yakit-primary-color-focus);
-
-    --button-background: var(--yakit-primary-background-color);
-    --button-color: var(--yakit-primary-color);
+    --button-background: var(--yakit-success-5);
+    --button-color: var(--yakit-neutral10-color);
     --button-border-color: transparent;
 
-    --button-hover-background: var(--yakit-primary-background-color);
-    --button-hover-color: var(--yakit-primary-color-hover);
+    --button-hover-background: var(--yakit-success-4);
+    --button-hover-color: var(--yakit-neutral10-color);
     --button-hover-border-color: transparent;
 
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-background: var(--yakit-disable-text-color);
+    --button-disable-color: var(--yakit-neutral10-color);
     --button-disable-border-color: transparent;
 
-    --button-press-background: var(--yakit-primary-background-color);
-    --button-press-color: var(--yakit-primary-color-press);
+    --button-press-background: var(--yakit-success-6);
+    --button-press-color: var(--yakit-neutral10-color);
     --button-press-border-color: transparent;
 }
+.yakit-button-warning {
+    --button-wave-shadow-color: var(--yakit-warning-2);
 
-.yakit-button-secondary-2 {
-    --button-wave-shadow-color: var(--yakit-primary-color-focus);
-
-    --button-background: var(--yakit-background-color);
-    --button-color: var(--yakit-header-color);
+    --button-background: var(--yakit-warning-5);
+    --button-color: var(--yakit-neutral10-color);
     --button-border-color: transparent;
 
-    --button-hover-background: var(--yakit-primary-background-color);
-    --button-hover-color: var(--yakit-primary-color-hover);
+    --button-hover-background: var(--yakit-warning-4);
+    --button-hover-color: var(--yakit-neutral10-color);
     --button-hover-border-color: transparent;
 
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-background: var(--yakit-disable-text-color);
+    --button-disable-color: var(--yakit-neutral10-color);
     --button-disable-border-color: transparent;
 
-    --button-press-background: var(--yakit-primary-background-color);
-    --button-press-color: var(--yakit-primary-color-press);
+    --button-press-background: var(--yakit-warning-6);
+    --button-press-color: var(--yakit-neutral10-color);
     --button-press-border-color: transparent;
 }
+.yakit-button-danger {
+    --button-wave-shadow-color: var(--yakit-danger-2);
 
-.yakit-button-secondary-1 {
-    --button-wave-shadow-color: var(--yakit-primary-color-focus);
-
-    --button-background: var(--yakit-primary-background-color);
-    --button-color: var(--yakit-primary-color);
+    --button-background: var(--yakit-danger-5);
+    --button-color: var(--yakit-neutral10-color);
     --button-border-color: transparent;
 
-    --button-hover-background: var(--yakit-primary-background-color);
-    --button-hover-color: var(--yakit-primary-color-hover);
+    --button-hover-background: var(--yakit-danger-4);
+    --button-hover-color: var(--yakit-neutral10-color);
     --button-hover-border-color: transparent;
 
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-background: var(--yakit-disable-text-color);
+    --button-disable-color: var(--yakit-neutral10-color);
     --button-disable-border-color: transparent;
 
-    --button-press-background: var(--yakit-primary-background-color);
-    --button-press-color: var(--yakit-primary-color-press);
+    --button-press-background: var(--yakit-danger-6);
+    --button-press-color: var(--yakit-neutral10-color);
     --button-press-border-color: transparent;
 }
+.yakit-button-serious {
+    --button-wave-shadow-color: var(--yakit-serious-2);
 
-.yakit-button-secondary-2 {
-    --button-wave-shadow-color: var(--yakit-primary-color-focus);
-
-    --button-background: var(--yakit-background-color);
-    --button-color: var(--yakit-header-color);
+    --button-background: var(--yakit-serious-5);
+    --button-color: var(--yakit-neutral10-color);
     --button-border-color: transparent;
 
-    --button-hover-background: var(--yakit-primary-background-color);
-    --button-hover-color: var(--yakit-primary-color-hover);
+    --button-hover-background: var(--yakit-serious-4);
+    --button-hover-color: var(--yakit-neutral10-color);
     --button-hover-border-color: transparent;
 
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-background: var(--yakit-disable-text-color);
+    --button-disable-color: var(--yakit-neutral10-color);
     --button-disable-border-color: transparent;
 
-    --button-press-background: var(--yakit-primary-background-color);
-    --button-press-color: var(--yakit-primary-color-press);
+    --button-press-background: var(--yakit-serious-6);
+    --button-press-color: var(--yakit-neutral10-color);
     --button-press-border-color: transparent;
 }
 
