@@ -12,6 +12,16 @@ export interface CVXtermProps extends IProps {
     maxHeight?: number
 }
 
+export const TERMINAL_INPUT_KEY = {
+    BACK: 8, // 退格删除键
+    ENTER: 13, // 回车键
+    UP: 38, // 方向盘上键
+    DOWN: 40, // 方向盘键
+    LEFT: 37, // 方向盘左键
+    RIGHT: 39, // 方向盘右键
+    CHAR_C: 67 // 字符C
+}
+
 export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     const {isWrite = false, write: rewrite, maxHeight = 400, ...rest} = props
 
@@ -47,15 +57,19 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
             />
             <XTerm
                 ref={xtermRef}
-                onKey={({key, domEvent}) => {
+                onKey={e => {
                     if (!loading) {
-                        const code = key.charCodeAt(0)
-                        if (code === 127 && xtermRef?.current) {
+                        const {key} = e
+                        const {keyCode} = e.domEvent
+                        if (keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current) {
                             //Backspace
-                            if (isWrite) xtermRef.current.terminal.write("\x1b[D \x1b[D")
+                            if (isWrite) {
+                                xtermRef.current.terminal.write('\x1b[D \x1b[D');
+                            } else {
+                                xtermRef.current.terminal.write(' \x1b[D');
+                            }
                         }
-
-                        if (isWrite) rewrite ? rewrite(key) : write(key)
+                        rewrite ? rewrite(key) : write(key)
                     }
                 }}
                 customKeyEventHandler={(e) => {
