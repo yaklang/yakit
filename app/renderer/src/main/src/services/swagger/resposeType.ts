@@ -119,6 +119,23 @@
      */
     showStatusSearch?: boolean;
   }
+  export interface UserAuthorityRequest {
+    userIds: number[];
+    pluginIds?: string;
+  }
+  export interface UserAuthorityListResponse extends Paging {
+    data: UserAuthorityList[];
+  }
+  export interface UserAuthorityList {
+    user_id?: number;
+    created_at?: number;
+    user_name?: string;
+    from_platform?: string;
+    appid: string;
+    head_img?: string;
+    pluginIds?: string;
+    plugin?: PluginTypeList[];
+  }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[];
   }
@@ -214,6 +231,17 @@
     data: PluginTypeList[];
   }
   export interface PluginTypeList {
+    id: number;
+    script_name: string;
+  }
+  export interface PluginGroupListResponse {
+    data: PluginGroupList[];
+  }
+  export interface PluginGroupList {
+    type: string;
+    typeList?: PluginGroup[];
+  }
+  export interface PluginGroup {
     id: number;
     script_name: string;
   }

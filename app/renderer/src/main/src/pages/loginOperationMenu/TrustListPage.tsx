@@ -136,6 +136,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                             data: userList.data || [],
                             optValue: "name",
                             optText: "appid",
+                            optKey:"appid",
                             placeholder: "请输入完整的用户名",
                             optionLabelProp: "name",
                             value: currentUser,
@@ -357,6 +358,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                         onConfirm={() => {
                             onRemove([i.appid])
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type="link">
                             移除

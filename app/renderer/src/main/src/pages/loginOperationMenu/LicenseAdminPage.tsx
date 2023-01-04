@@ -21,7 +21,7 @@ import {useGetState, useMemoizedFn, useDebounceFn} from "ahooks"
 import moment from "moment"
 import "./LicenseAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
-import {PaginationSchema} from "../../pages/invoker/schema"
+import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
@@ -532,6 +532,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                         onConfirm={() => {
                             onRemove(i.id)
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type="link">
                             删除

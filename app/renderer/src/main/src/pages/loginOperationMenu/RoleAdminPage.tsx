@@ -7,7 +7,7 @@ import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
 import moment from "moment"
 import {failed, success, warn} from "@/utils/notification"
-import {PaginationSchema} from "../../pages/invoker/schema"
+import {PaginationSchema} from "../invoker/schema"
 import type {ColumnsType} from "antd/es/table"
 import type {TreeSelectProps} from "antd"
 import type {DefaultOptionType} from "antd/es/select"
@@ -87,7 +87,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }
             })
                 .then((res: API.NewRoleRequest) => {
-                    // console.log("返回结果：", res)
                     let {
                         checkPlugin, 
                         // deletePlugin, 
@@ -101,7 +100,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         treeSelect: [...pluginTypeArr, ...pluginArr]
                         // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
-                    console.log("value", value)
                     if(checkPlugin)setTreeData(NoTreePluginType)
                     if (
                         pluginTypeArr.length === PluginTypeKeyArr.length &&
@@ -144,7 +142,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         if (editInfo) {
             params.id = editInfo.id
         }
-        console.log("params", params)
         NetWorkApi<API.NewRoleRequest, API.ActionSucceeded>({
             method: "post",
             url: "roles",
@@ -178,7 +175,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }
             })
                 .then((res: API.PluginTypeListResponse) => {
-                    console.log("异步加载数据", res.data)
                     if (Array.isArray(res.data)) {
                         const AddTreeData = res.data.map((item) => ({
                             id: item.id,
@@ -304,6 +300,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                     // }
                 >
                     <TreeSelect
+                        showSearch={false}
                         treeDataSimpleMode
                         style={{width: "100%"}}
                         dropdownStyle={{maxHeight: 400, overflow: "auto"}}
@@ -315,7 +312,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         allowClear
                         showCheckedStrategy='SHOW_PARENT'
                         maxTagCount={selectedAll ? 0 : 10}
-                        maxTagPlaceholder={selectedAll ? "全部" : null}
+                        maxTagPlaceholder={(omittedValues)=>selectedAll ? "全部" : <>+ {omittedValues.length} ...</>}
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                         open={open}
                         onDropdownVisibleChange={(visible) => setOpen(visible)}
@@ -377,7 +374,6 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
             }
         })
             .then((res) => {
-                console.log("数据源：", res)
                 if (Array.isArray(res.data)) {
                     const newData = res.data.map((item) => ({...item}))
                     setData(newData)
@@ -406,7 +402,6 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
     }
 
     const onRemove = (rid: number[]) => {
-        console.log(rid, "rid")
         NetWorkApi<RemoveProps, API.NewUrmResponse>({
             method: "delete",
             url: "roles",
@@ -415,7 +410,6 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
             }
         })
             .then((res) => {
-                console.log("返回结果：", res)
                 success("删除角色成功")
                 update()
             })
@@ -468,6 +462,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                         onConfirm={() => {
                             onRemove([i.id])
                         }}
+                        placement="right"
                     >
                         <Button size={"small"} danger={true} type="link">
                             删除

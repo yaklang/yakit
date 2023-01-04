@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popconfirm, Popover,Checkbox} from "antd"
+import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popconfirm, Popover, Checkbox} from "antd"
 import {AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest} from "../../../components/WebsiteTree"
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "../../invoker/schema"
@@ -39,7 +39,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [downLoadUrlArr, setDownLoadUrlArr] = useState<string[]>([])
     const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(100)
     const [checkedAll, setCheckedAll] = useState<boolean>(false)
-    const [selectedKeys,setSelectedKeys] = useState<string[]>([])
+    const [selectedKeys, setSelectedKeys] = useState<string[]>([])
     const TreeBoxRef = useRef<any>()
 
     useEffect(() => {
@@ -48,9 +48,9 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
 
     useEffect(() => {
         if (checkedAll) {
-            let pathArr:string[] = []
-            let delUrlArr:string[] = []
-            treeData.map((node)=>{
+            let pathArr: string[] = []
+            let delUrlArr: string[] = []
+            treeData.map((node) => {
                 const delUrlStr = fetchDelUrl(node, "")
                 pathArr.push(delUrlStr)
                 const pathStr: string = node.title
@@ -58,7 +58,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
             })
             setDownLoadUrlArr(pathArr)
             setDelUrlArr(delUrlArr)
-            setSelectedKeys(treeData.map(ele=>ele.key))
+            setSelectedKeys(treeData.map((ele) => ele.key))
         }
     }, [checkedAll])
 
@@ -208,23 +208,39 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             className='Website-tree-card'
                             title={
                                 <>
-                                <Space direction="vertical" style={{width:"100%"}}>
-                                    <div>
-                                        <Space>
-                                            业务结构
-                                            <Button
-                                                type={"link"}
-                                                size={"small"}
-                                                icon={<ReloadOutlined />}
-                                                onClick={() => {
-                                                    refresh()
-                                                }}
-                                            />
-                                        </Space>
-                                    </div>
+                                    <Space direction='vertical' style={{width: "100%"}}>
+                                        <div style={{display:"flex",justifyContent:"space-between"}}>
+                                            <Space>
+                                                业务结构
+                                                <Button
+                                                    type={"link"}
+                                                    size={"small"}
+                                                    icon={<ReloadOutlined />}
+                                                    onClick={() => {
+                                                        refresh()
+                                                    }}
+                                                />
+                                            </Space>
+                                            {props.targets && (
+                                                <Space>
+                                                    <Form
+                                                        onSubmitCapture={(e) => {
+                                                            e.preventDefault()
+                                                        }}
+                                                        size={"small"}
+                                                    >
+                                                        <SwitchItem
+                                                            label={"自动刷新"}
+                                                            formItemStyle={{marginBottom: 0}}
+                                                            value={autoRefresh}
+                                                            setValue={setAutoRefresh}
+                                                        />
+                                                    </Form>
+                                                </Space>
+                                            )}
+                                        </div>
 
-                                    {!props.targets ? (
-                                     
+                                        {!props.targets && (
                                             <Form
                                                 size={"small"}
                                                 onSubmitCapture={(e) => {
@@ -233,7 +249,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     refresh()
                                                 }}
                                                 layout={"inline"}
-                                                style={{justifyContent:"space-between"}}
+                                                style={{justifyContent: "space-between"}}
                                             >
                                                 <InputItem
                                                     label={"URL关键字"}
@@ -250,97 +266,79 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     />
                                                 </Form.Item>
                                             </Form>
-                                  
-                                    ) : (
-                                        <Space>
-                                            <Form
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-                                                }}
-                                                size={"small"}
-                                            >
-                                                <SwitchItem
-                                                    label={"自动刷新"}
-                                                    formItemStyle={{marginBottom: 0}}
-                                                    value={autoRefresh}
-                                                    setValue={setAutoRefresh}
-                                                />
-                                            </Form>
-                                        </Space>
-                                    )}
-                                     <div style={{display:"flex",justifyContent:"space-between"}}>
-                                     <Checkbox
-                                    checked={checkedAll}
-                                    onChange={(e) => {
-                                        if (!e.target.checked) {
-                                            setDownLoadUrlArr([])
-                                            setDelUrlArr([])
-                                            setSelectedKeys([])
-                                        }
-                                        setCheckedAll(e.target.checked)
-                                    }}
-                                    
-                                >
-                                    全选
-                                </Checkbox>
-                                    {delUrlArr.length === 0 ? (
-                                        <Button
-                                            size='small'
-                                            disabled={true}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            批量操作
-                                            <ChevronDownIcon style={{color: "#85899E"}} />
-                                        </Button>
-                                    ) : (
-                                        <Popover
-                                            overlayClassName={style["http-history-table-drop-down-popover"]}
-                                            content={
-                                                <Menu className={style["http-history-table-drop-down-batch"]}>
-                                                    <Menu.Item>
-                                                        <Popconfirm
-                                                            title={"确定删除选择的URL吗？不可恢复"}
-                                                            onConfirm={() => {
-                                                                delManyReord()
-                                                            }}
-                                                        >
-                                                            批量删除
-                                                        </Popconfirm>
-                                                    </Menu.Item>
-                                                    <Menu.Item>
-                                                        <ExportExcel
-                                                            fileName='网站树视角'
-                                                            pageSize={downLoadUrlPageSize}
-                                                            text='批量导出'
-                                                            showButton={false}
-                                                            getData={getData}
-                                                            btnProps={{size: "small"}}
-                                                        />
-                                                    </Menu.Item>
-                                                </Menu>
-                                            }
-                                            trigger='click'
-                                            placement='bottomLeft'
-                                        >
-                                            <Button
-                                                size='small'
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
+                                        )}
+                                        <div style={{display: "flex", justifyContent: "space-between"}}>
+                                            <Checkbox
+                                                checked={checkedAll}
+                                                onChange={(e) => {
+                                                    if (!e.target.checked) {
+                                                        setDownLoadUrlArr([])
+                                                        setDelUrlArr([])
+                                                        setSelectedKeys([])
+                                                    }
+                                                    setCheckedAll(e.target.checked)
                                                 }}
                                             >
-                                                批量操作
-                                                <ChevronDownIcon style={{color: "#85899E"}} />
-                                            </Button>
-                                        </Popover>
-                                    )}
-                                </div>
-                                </Space>
+                                                全选
+                                            </Checkbox>
+                                            {delUrlArr.length === 0 ? (
+                                                <Button
+                                                    size='small'
+                                                    disabled={true}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    批量操作
+                                                    <ChevronDownIcon style={{color: "#85899E"}} />
+                                                </Button>
+                                            ) : (
+                                                <Popover
+                                                    overlayClassName={style["http-history-table-drop-down-popover"]}
+                                                    content={
+                                                        <Menu className={style["http-history-table-drop-down-batch"]}>
+                                                            <Menu.Item>
+                                                                <Popconfirm
+                                                                    title={"确定删除选择的URL吗？不可恢复"}
+                                                                    onConfirm={() => {
+                                                                        delManyReord()
+                                                                    }}
+                                                                >
+                                                                    批量删除
+                                                                </Popconfirm>
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                <ExportExcel
+                                                                    fileName='网站树视角'
+                                                                    pageSize={downLoadUrlPageSize}
+                                                                    text='批量导出'
+                                                                    showButton={false}
+                                                                    getData={getData}
+                                                                    btnProps={{size: "small"}}
+                                                                />
+                                                            </Menu.Item>
+                                                        </Menu>
+                                                    }
+                                                    trigger='click'
+                                                    placement='bottomLeft'
+                                                >
+                                                    <Button
+                                                        size='small'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                        }}
+                                                    >
+                                                        批量操作
+                                                        <ChevronDownIcon style={{color: "#85899E"}} />
+                                                    </Button>
+                                                </Popover>
+                                            )}
+                                        </div>
+                                    </Space>
                                 </>
                             }
                             size={"small"}
-                            extra={null} 
+                            extra={null}
                         >
                             <div ref={TreeBoxRef} style={{height: "100%", maxHeight: props.maxHeight}}>
                                 <Tree
@@ -364,7 +362,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                         // @ts-ignore
                                         const pathStr: string = title
                                         if (info.checked) {
-                                            if(Array.isArray(checkedKeys)&&checkedKeys.length===treeData.length){
+                                            if (Array.isArray(checkedKeys) && checkedKeys.length === treeData.length) {
                                                 setCheckedAll(true)
                                             }
                                             setDownLoadUrlArr((item) => Array.from(new Set([...item, pathStr])))
@@ -381,7 +379,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     selectable={true}
                                     showLine={true}
                                     treeData={treeData}
-                                    
                                     titleRender={(nodeData: any) => {
                                         return (
                                             <div style={{display: "flex", width: "100%"}}>

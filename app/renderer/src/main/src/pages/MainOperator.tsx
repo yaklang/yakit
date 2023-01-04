@@ -120,6 +120,8 @@ const singletonRoute: Route[] = [
     Route.LicenseAdminPage,
     // 信任用户管理
     Route.TrustListPage,
+    // 插件权限
+    Route.PlugInAdminPage,
     // 获取引擎输出
     Route.AttachEngineCombinedOutput,
 ]
@@ -704,6 +706,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             } else {
                 removePage(Route.LicenseAdminPage, false)
                 removePage(Route.TrustListPage, false)
+                removePage(Route.PlugInAdminPage,false)
             }
             IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
@@ -730,7 +733,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
-                {key: "license-admin", title: "License管理"},
+                {key: "license-admin",title:"License管理"},
+                {key:"plugIn-admin",title:"插件权限"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])

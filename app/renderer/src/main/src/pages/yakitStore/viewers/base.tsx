@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {YakScript} from "../../invoker/schema"
-import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip} from "antd"
+import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip,Pagination} from "antd"
 import {LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
@@ -111,7 +111,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0")
     const xtermRef = useRef(null)
     const timer = useRef<any>(null)
-
+    const [pageCode,setPageCode] = useState<number>(1)
     useEffect(() => {
         if (!xtermRef) {
             return
@@ -331,9 +331,12 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <Tabs.TabPane tab={`漏洞与风险[${props.risks.length}]`} key={"risk"}>
                     <AutoCard bodyStyle={{overflowY: "auto"}}>
                         <Space direction={"vertical"} style={{width: "100%"}} size={12}>
-                            {props.risks.map(i => {
+                            {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
                                 return <RiskDetails info={i} shrink={true}/>
                             })}
+                            {props.risks.length>10&&<div style={{textAlign:"right"}}>
+                                <Pagination simple current={pageCode} onChange={(page)=>setPageCode(page)} total={props.risks.length} />  
+                            </div>}
                         </Space>
                     </AutoCard>
                 </Tabs.TabPane>}

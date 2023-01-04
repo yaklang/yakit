@@ -42,10 +42,11 @@ import {YakitPluginJournalDetails} from "@/pages/yakitStore/YakitPluginOnlineJou
 import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
-import AccountAdminPage from "@/pages/enterpriseAdminPage/AccountAdminPage"
-import RoleAdminPage from "@/pages/enterpriseAdminPage/RoleAdminPage"
-import LicenseAdminPage from "@/pages/enterpriseAdminPage/LicenseAdminPage"
-import {TrustListPage} from "@/pages/enterpriseAdminPage/TrustListPage"
+import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
+import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
+import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
+import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
+import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 
 import {
     MenuDomainAssetsIcon,
@@ -153,7 +154,7 @@ export enum Route {
     RoleAdminPage = "role-admin-page", // 角色管理
     LicenseAdminPage = "license-admin-page", // license管理
     TrustListPage = "trust-list-admin-page", // 信任用户管理
-
+    PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output",
 }
@@ -371,6 +372,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <LicenseAdminPage />
         case Route.TrustListPage:
             return <TrustListPage />
+        case Route.PlugInAdminPage:
+            return <PlugInAdminPage />
         case Route.AttachEngineCombinedOutput:
             return <EngineConsole/>
         default:
@@ -535,6 +538,13 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
         id: "14",
         key: Route.TrustListPage,
         label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "15",
+        key: Route.PlugInAdminPage,
+        label: "插件权限",
         disabled: true,
         hidden: true
     }

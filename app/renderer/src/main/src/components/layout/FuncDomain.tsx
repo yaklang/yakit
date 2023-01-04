@@ -86,6 +86,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
                 {key: "license-admin", title: "License管理"},
+                {key:"plugIn-admin",title:"插件权限"},
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -185,6 +186,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                     }
                                     if (key === "license-admin") {
                                         const key = Route.LicenseAdminPage
+                                        openMenu(key)
+                                    }
+                                    if(key === "plugIn-admin"){
+                                        const key = Route.PlugInAdminPage
                                         openMenu(key)
                                     }
                                 }}

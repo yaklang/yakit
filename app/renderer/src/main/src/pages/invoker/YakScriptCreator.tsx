@@ -534,9 +534,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             </>
                             ||
                             <>
+                            {/* 判断本地插件是否是私有的 若为私有插件则不显示 复制至云端 按钮 */}
+                            {!params.OnlineIsPrivate&&
+                            <>
                                 <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
-                                {/* 判断本地插件是否是私有的 若为私有插件则不显示 复制至云端 按钮 */}
-                                {!params.OnlineIsPrivate&&
                                 <SyncCopyCloudButton
                                 params={params}
                                 setParams={(newSrcipt) => {
@@ -547,7 +548,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                 >
                                 <Button>复制至云端</Button>
                                 </SyncCopyCloudButton>
-                                }
+                                </>}
                             </>
                         }
                         </>}
