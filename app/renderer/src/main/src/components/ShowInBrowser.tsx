@@ -41,7 +41,7 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string) => {
             title: "确认在浏览器中打开",
             width: "50%",
             content: (
-                <Space direction={"vertical"}>
+                <Space direction={"vertical"} style={{maxWidth:"100%"}}>
                     <Alert type={"info"} message={"本操作会启用本地架设的高位端口的服务器，设置 Response 来查看页面渲染效果，无需设置代理；"}/>
                     <CopyableField text={res.FacadesUrl} mark={true} />
                     <Button onClick={() => {
