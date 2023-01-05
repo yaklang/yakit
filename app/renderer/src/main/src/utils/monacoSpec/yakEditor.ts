@@ -59,7 +59,7 @@ monaco.languages.setMonarchTokensProvider(YaklangMonacoSpec, {
         "for", "go", "if", "range", "return", "select", "switch",
         "chan", "func", "fn", "def", "var", "nil", "undefined",
         "map", "class", "include", "type", "bool", "true", "false",
-        "string",
+        "string", "try", "catch", "finally",
     ],
     operators: [
         '+',
