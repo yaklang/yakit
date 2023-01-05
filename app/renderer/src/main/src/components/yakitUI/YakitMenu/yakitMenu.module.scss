@@ -90,6 +90,30 @@
             padding: 0;
             margin: 0 !important;
         }
+
+        // 兼容dropdown组件菜单样式(只考虑了单层结构，没有考虑双层结构)
+        .ant-dropdown-menu-item .icon-style {
+            color: #85899e;
+        }
+
+        .ant-dropdown-menu-submenu .icon-style {
+            color: #85899e;
+        }
+
+        .ant-dropdown-menu-item-active {
+            background-color: var(--yakit-menu-background) !important;
+            color: var(--yakit-menu-color) !important;
+            border-radius: 4px;
+        }
+
+        .ant-dropdown-menu-item-selected {
+            color: var(--yakit-menu-background);
+        }
+        .ant-dropdown-menu-item {
+            height: 100%;
+            padding: 0;
+            margin: 0 !important;
+        }
     }
 }
 

@@ -1,12 +1,15 @@
 import React, {useEffect, useMemo, useRef} from "react"
-
-import styles from "./yakitLoading.module.scss"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
-import {XTerm} from "xterm-for-react";
-import {xtermFit} from "@/utils/xtermUtils";
-import {Button, Col, Popconfirm, Row, Space} from "antd";
-import {YaklangEngineMode} from "@/yakitGVDefine";
-import {outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
+import {Dropdown} from "antd"
+import {YaklangEngineMode} from "@/yakitGVDefine"
+import {outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
+import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
+import {useGetState, useMemoizedFn} from "ahooks"
+import {ArrowRightSvgIcon, ChevronDownSvgIcon} from "../layout/icons"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+
+import classnames from "classnames"
+import styles from "./yakitLoading.module.scss"
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -25,8 +28,7 @@ const LoadingTitle: string[] = [
     "再不用Yakit，卷王就是别人的了",
     "来用Yakit啦？安全圈还是你最成功",
     "这届网安人，人手一个Yakit，香惨了！"
-];
-
+]
 
 export const EngineModeVerbose = (m: YaklangEngineMode) => {
     switch (m) {
@@ -43,46 +45,87 @@ export const EngineModeVerbose = (m: YaklangEngineMode) => {
 
 export interface YakitLoadingProp {
     loading: boolean
-    title?: string
     engineMode: YaklangEngineMode
     localPort: number
     adminPort: number
     onEngineModeChange: (mode: YaklangEngineMode) => any
+    showEngineLog: boolean
+    setShowEngineLog: (flag: boolean) => any
 }
 
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
-    const {loading, title} = props;
-    const xtermRef = useRef<any>(null);
+    const {loading, showEngineLog, setShowEngineLog} = props
+
+    const [__showLog, setShowLog, getShowLog] = useGetState<number>(0)
+    const loadingTime = useRef<any>(null)
 
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
 
-    const writeToConsole = (i: string) => {
-        if (!xtermRef) {
-            return
-        }
-        xtermRef.current.terminal.write(i)
-    }
-
     useEffect(() => {
-        if (!xtermRef) {
-            return
+        if (loading) {
+            if (loadingTime.current) {
+                clearInterval(loadingTime.current)
+                loadingTime.current = null
+                setShowLog(0)
+            }
+        } else {
+            if (!loadingTime.current) {
+                setShowLog(0)
+                loadingTime.current = setInterval(() => {
+                    setShowLog(getShowLog() + 1)
+                    if (getShowLog() >= 5) {
+                        clearInterval(loadingTime.current)
+                    }
+                }, 1000)
+            }
         }
+    }, [loading])
 
-        writeToConsole(`欢迎使用 Yakit!\n`)
-
-        ipcRenderer.on("live-engine-stdio", (e, stdout) => {
-            writeToConsole(stdout)
-        })
-        ipcRenderer.on("live-engine-log", (e, stdout) => {
-            writeToConsole(`[INFO] Yakit-Verbose-Log: ${stdout}`)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("live-engine-stdio")
-            ipcRenderer.removeAllListeners("live-engine-log")
+    const selectEngineMode = useMemoizedFn((key: string) => {
+        if (key === "remote" && props.onEngineModeChange) {
+            props.onEngineModeChange("remote")
         }
-    }, [xtermRef])
+        if (key === "local") {
+            const isAdmin = props.engineMode === "admin"
+            ipcRenderer
+                .invoke("start-local-yaklang-engine", {
+                    port: isAdmin ? props.adminPort : props.localPort,
+                    sudo: isAdmin
+                })
+                .then(() => {
+                    outputToWelcomeConsole("手动引擎启动成功！")
+                    if (props.onEngineModeChange) {
+                        props.onEngineModeChange(props.engineMode)
+                    }
+                })
+                .catch((e) => {
+                    outputToWelcomeConsole("手动引擎启动失败！")
+                    outputToWelcomeConsole(`失败原因:${e}`)
+                })
+        }
+    })
+
+    const menu = useMemo(() => {
+        return (
+            <YakitMenu
+                width={170}
+                selectedKeys={[]}
+                data={[
+                    {
+                        key: "remote",
+                        label: "远程模式"
+                    },
+                    {
+                        key: "local",
+                        label: `手动启动引擎(${EngineModeVerbose(props.engineMode)})`
+                    }
+                ]}
+                onClick={({key}) => selectEngineMode(key)}
+            ></YakitMenu>
+        )
+    }, [props.engineMode])
 
     return (
         <div className={styles["yakit-loading-wrapper"]}>
@@ -95,95 +138,37 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["theme-icon-wrapper"]}>
                         <div className={styles["theme-icon"]}>
-                            <YakitThemeLoadingSvgIcon/>
+                            <YakitThemeLoadingSvgIcon />
                         </div>
                     </div>
                     <div className={styles["white-icon"]}>
-                        <YakitLoadingSvgIcon/>
+                        <YakitLoadingSvgIcon />
                     </div>
                 </div>
 
                 <div className={styles["yakit-loading-content"]}>
-                    <Space>
-                        {`启动模式: ${EngineModeVerbose(props.engineMode)}`}
-                        <div>
-                            {title || "正在加载中..."}
-                        </div>
-                        <Button type={"link"} size={"small"} onClick={() => {
-                            if (props.onEngineModeChange) {
-                                props.onEngineModeChange("remote")
-                            }
-                        }}> 远程模式 </Button>
-                        <Popconfirm
-                            title={"当引擎无法自动启动时，点此手动启动进程"}
-                            onConfirm={() => {
-                                const isAdmin = props.engineMode === "admin";
-                                ipcRenderer.invoke("start-local-yaklang-engine", {
-                                    port: isAdmin ? props.adminPort : props.localPort,
-                                    sudo: isAdmin,
-                                }).then(() => {
-                                    outputToWelcomeConsole("手动引擎启动成功！")
-                                    if (props.onEngineModeChange) {
-                                        props.onEngineModeChange(props.engineMode)
-                                    }
-                                }).catch(e => {
-                                    outputToWelcomeConsole("手动引擎启动失败！")
-                                    outputToWelcomeConsole(`失败原因:${e}`)
-                                })
-                            }}
+                    <div className={classnames({[styles["time-out-title"]]: getShowLog() >= 5})}>
+                        {getShowLog() >= 5 ? "连接超时..." : `正在加载中 (${EngineModeVerbose(props.engineMode)}) ...`}
+                    </div>
+                    {!showEngineLog && getShowLog() >= 5 && (
+                        <YakitButton
+                            className={styles["engine-log-btn"]}
+                            type='danger'
+                            size='max'
+                            onClick={() => setShowEngineLog(true)}
                         >
-                            <Button type={"link"}
-                                    size={"small"}> 手动启动引擎({EngineModeVerbose(props.engineMode)}) </Button>
-                        </Popconfirm>
-                    </Space>
-                </div>
-
-                <div className={styles["yakit-loading-live-output"]}>
-                    <Row>
-                        <Col span={3}/>
-                        <Col span={18}>
-                            <div>
-                                <XTerm
-                                    ref={xtermRef}
-                                    options={{
-                                        convertEol: true, rows: 12,
-                                        theme: {
-                                            foreground: "#536870",
-                                            background: "#E8E9E8",
-                                            cursor: "#536870",
-
-                                            black: "#002831",
-                                            brightBlack: "#001e27",
-
-                                            red: "#d11c24",
-                                            brightRed: "#bd3613",
-
-                                            green: "#738a05",
-                                            brightGreen: "#475b62",
-
-                                            yellow: "#a57706",
-                                            brightYellow: "#536870",
-
-                                            blue: "#2176c7",
-                                            brightBlue: "#708284",
-
-                                            magenta: "#c61c6f",
-                                            brightMagenta: "#5956ba",
-
-                                            cyan: "#259286",
-                                            brightCyan: "#819090",
-
-                                            white: "#eae3cb",
-                                            brightWhite: "#fcf4dc"
-                                        }
-                                    }}
-                                    onResize={(r) => {
-                                        xtermFit(xtermRef, 120, 18)
-                                    }}
-                                />
+                            查看日志
+                            <ArrowRightSvgIcon />
+                        </YakitButton>
+                    )}
+                    <div className={styles["switch-engine-mode"]}>
+                        <Dropdown placement='bottom' overlay={menu} overlayClassName={styles["switch-mode-overlay"]}>
+                            <div style={{cursor: "pointer"}}>
+                                其他连接模式
+                                <ChevronDownSvgIcon style={{marginLeft: 4}} />
                             </div>
-                        </Col>
-                    </Row>
+                        </Dropdown>
+                    </div>
                 </div>
             </div>
         </div>

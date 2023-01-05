@@ -17,7 +17,7 @@
                 text-align: center;
                 font-size: 24px;
                 line-height: 56px;
-                color: #f28b44;
+                color: var(--yakit-header-color);
                 font-weight: 600;
             }
             .subtitle-stlye {
@@ -25,7 +25,7 @@
                 text-align: center;
                 font-size: 16px;
                 line-height: 24px;
-                color: #f28b44;
+                color: var(--yakit-body-text-color);
             }
         }
 
@@ -73,16 +73,27 @@
             font-size: 16px;
             color: #f28b44;
             line-height: 24px;
-        }
 
-        .yakit-loading-live-output {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 16px;
-            color: #f28b44;
-            line-height: 24px;
+            .time-out-title {
+                color: var(--yakit-danger-5);
+            }
+
+            .engine-log-btn {
+                margin-top: 8px;
+            }
+
+            .switch-engine-mode {
+                margin-top: 32px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 4px 0px;
+            }
         }
     }
+}
+.switch-mode-overlay {
+    border-radius: 4px;
 }
 
 @-webkit-keyframes building-blocks {

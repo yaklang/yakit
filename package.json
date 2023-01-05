@@ -9,6 +9,7 @@
     "start-render": "cd app/renderer/src/main && yarn electron-render",
     "start-render-enterprise": "cd app/renderer/src/main && yarn electron-render-enterprise",
     "build-render": "cd app/renderer/src/main && yarn build",
+    "build-test-render": "cd app/renderer/src/main && yarn build-test",
     "build-render-enterprise": "cd app/renderer/src/main && yarn build-enterprise",
     "build-render-test-enterprise": "cd app/renderer/src/main && yarn build-test-enterprise",
     "dev": "concurrently -k \"yarn start-render\" \"wait-on tcp:3000 && yarn start-electron \" ",

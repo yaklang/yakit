@@ -4,107 +4,134 @@
     min-height: 100%;
     margin: 0;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     position: relative;
 
-    .ui-layout-header {
-        width: 100%;
-        height: 37px;
-        background-color: var(--yakit-neutral10-color);
-        -webkit-user-select: none;
-        user-select: none;
+    display: flex;
 
-        .short-divider-wrapper {
-            width: 1px;
-            height: 100%;
-            padding: 10px 0;
-            .divider-style {
-                height: 100%;
-                border-left: 1px solid var(--yakit-border-color);
-            }
-        }
-        .divider-wrapper {
-            width: 1px;
-            height: 100%;
-            border-left: 1px solid var(--yakit-border-color);
-        }
+    .ui-layout-container {
+        flex: 1;
+        height: 100%;
 
-        .header-body {
+        .container-wrapper {
             width: 100%;
             height: 100%;
             display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--yakit-border-color);
-            position: relative;
+            flex-direction: column;
+        }
 
-            .header-border-yakit-mask {
-                position: absolute;
-                bottom: -1px;
-                width: 45px;
-                height: 1px;
-                background: var(--yakit-card-background-color);
-            }
+        // display: flex;
+        .ui-layout-header {
+            width: 100%;
+            height: 37px;
+            background-color: var(--yakit-neutral10-color);
+            -webkit-user-select: none;
+            user-select: none;
 
-            .yakit-header-title {
-                width: 100px;
-                height: 36px;
-                position: absolute;
-                top: 0;
-                left: 50%;
-                transform: translate(-30px, 0);
-                line-height: 36px;
-                font-weight: 600;
-                color: var(--yakit-header-color);
-                text-align: center;
-                -webkit-app-region: drag;
-            }
-
-            .header-left {
+            .short-divider-wrapper {
+                width: 1px;
                 height: 100%;
-                display: flex;
+                padding: 10px 0;
+                .divider-style {
+                    height: 100%;
+                    border-left: 1px solid var(--yakit-border-color);
+                }
             }
-            .header-title {
-                flex: 1;
+            .divider-wrapper {
+                width: 1px;
                 height: 100%;
-                -webkit-app-region: drag;
-            }
-            .header-right {
-                height: 100%;
-                display: flex;
-            }
-            .yakit-mode-icon {
-                box-sizing: border-box;
-                padding: 8px 12px;
                 border-left: 1px solid var(--yakit-border-color);
             }
-            .yakit-mode-selected {
-                background: var(--yakit-card-background-color);
+
+            .header-body {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid var(--yakit-border-color);
+                position: relative;
+
+                .header-border-yakit-mask {
+                    position: absolute;
+                    bottom: -1px;
+                    width: 45px;
+                    height: 1px;
+                    background: var(--yakit-card-background-color);
+                }
+
+                .yakit-header-title {
+                    width: 100px;
+                    height: 36px;
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    transform: translate(-30px, 0);
+                    line-height: 36px;
+                    font-weight: 600;
+                    color: var(--yakit-header-color);
+                    text-align: center;
+                    -webkit-app-region: drag;
+                }
+
+                .header-left {
+                    height: 100%;
+                    display: flex;
+                }
+                .header-title {
+                    flex: 1;
+                    height: 100%;
+                    -webkit-app-region: drag;
+                }
+                .header-right {
+                    height: 100%;
+                    display: flex;
+                }
+                .yakit-mode-icon {
+                    box-sizing: border-box;
+                    padding: 8px 12px;
+                    border-left: 1px solid var(--yakit-border-color);
+                }
+                .yakit-mode-selected {
+                    background: var(--yakit-card-background-color);
+                }
             }
         }
-    }
 
-    .ui-layout-body {
-        width: 100%;
-        flex: 1;
-        overflow: hidden;
-
-        .ui-layout-body-mask {
-            z-index: 50;
+        .ui-layout-body {
             width: 100%;
-            height: calc(100% - 36px);
-            position: absolute;
-            top: 36px;
-            left: 0;
+            flex: 1;
             overflow: hidden;
+
+            .ui-layout-body-mask {
+                z-index: 50;
+                width: 100%;
+                height: calc(100% - 36px);
+                position: absolute;
+                top: 36px;
+                left: 0;
+                overflow: hidden;
+            }
+        }
+        .ui-layout-mask {
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: var(--yakit-primary-2);
         }
     }
-    .ui-layout-mask {
-        width: 100%;
-        flex: 1;
+
+    .uilayout-log {
+        width: 40%;
+        height: 100%;
         overflow: hidden;
-        position: relative;
-        background: var(--yakit-primary-color-focus);
+    }
+    .uilayout-hidden-log {
+        width: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+    .uilayout-noshow-log {
+        display: none;
     }
 }
 

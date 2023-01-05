@@ -1,0 +1,42 @@
+.engine-log-wrapper {
+    width: 100%;
+    height: 100%;
+    background-color: #292520;
+    display: flex;
+    flex-direction: column;
+
+    .engine-log-header {
+        box-sizing: border-box;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        height: 37px;
+        border-bottom: 1px solid #35312c;
+
+        .header-title {
+            height: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            display: flex;
+            align-items: center;
+            color: #ffffff;
+        }
+        .header-close {
+            width: 20px;
+            height: 20px;
+            display: flex;
+        }
+    }
+
+    .engine-log-body {
+        width: 100%;
+        flex: 1;
+        padding: 12px 0 0 12px;
+        .engine-log-container {
+            width: 100%;
+            height: 100%;
+        }
+    }
+}
