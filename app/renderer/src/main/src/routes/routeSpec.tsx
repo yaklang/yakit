@@ -48,6 +48,7 @@ import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 
+
 import {
     MenuDomainAssetsIcon,
     MenuHTTPHistoryIcon,
@@ -190,6 +191,7 @@ export enum Route {
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
+
 
 export function RouteNameToVerboseName(r: string) {
     switch (r) {

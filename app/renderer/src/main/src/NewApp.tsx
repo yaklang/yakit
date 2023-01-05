@@ -1,4 +1,4 @@
-import {useRef, useEffect, useState, Suspense, lazy} from "react"
+import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
 import {failed} from "./utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -15,8 +15,10 @@ import UILayout from "./components/layout/UILayout"
 import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
-
 import styles from "./app.module.scss"
+import { PageCache } from "@/pages/MainOperator";
+import {Route} from "@/routes/routeSpec"
+const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 /** 快捷键目录 */
@@ -67,6 +69,12 @@ function NewApp() {
     /** 展示用户协议计时时间 */
     const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
     const agrTimeRef = useRef<any>(null)
+    /** 是否展示首页导航栏 */
+    const [isShowHome, setShowHome] = useState<boolean>(true)
+    /** 导航栏选择首页加载 */
+    const [firstOpenPage,setFirstOpenPage,getFirstOpenPage] = useGetState<PageCache>()
+    /** 添加或选择页面 */
+    const [selectItemPage,setSelectItemPage] = useState<Route>()
 
     /** 是否展示用户协议 */
     useEffect(() => {
@@ -216,6 +224,32 @@ function NewApp() {
         }
     }, [])
 
+    /**
+     * 控制首页展示
+     */
+    useEffect(() => {
+        ipcRenderer.on("go-home-page-status", (e, res) => {
+            if(res){
+                setShowHome(res.isShow)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("go-home-page-status")
+        }
+    }, [])
+
+    const setOpenPage = (v:PageCache) => {
+        // 是否已经有初始打开页
+        // if(getFirstOpenPage()){
+        //     console.log("页面添加")
+        //     setSelectItemPage(v.route)
+        // }
+        // else{
+            setFirstOpenPage(v)
+            setShowHome(false)
+        // }
+    }
+
     if (!agreed) {
         return (
             <>
@@ -228,9 +262,11 @@ function NewApp() {
                     width='75%'
                     cancelText={"关闭 / Closed"}
                     onCancel={() => ipcRenderer.invoke("UIOperate", "close")}
-                    okButtonProps={{
-                        // disabled: readingSeconds > 0,
-                    }}
+                    okButtonProps={
+                        {
+                            // disabled: readingSeconds > 0,
+                        }
+                    }
                     onOk={() => {
                         ipcRenderer.invoke("set-local-cache", LocalGV.UserProtocolAgreed, true)
                         setReadingSeconds(3)
@@ -281,7 +317,9 @@ function NewApp() {
                 {isJudgeLicense ? (
                     <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
-                    <Main onErrorConfirmed={() => {}} />
+                    <>
+                    {isShowHome ? <NewHome setOpenPage={setOpenPage}/>:<Main onErrorConfirmed={() => {}} firstOpenPage={getFirstOpenPage()} selectItemPage={selectItemPage}/>} 
+                    </>
                 )}
             </Suspense>
         </UILayout>
