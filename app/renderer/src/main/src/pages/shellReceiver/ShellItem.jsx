@@ -1,9 +1,8 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Button, PageHeader, Popconfirm, Space, Spin, Switch, Tag} from "antd";
-import {XTerm} from "xterm-for-react";
 import {useGetState, useMemoizedFn} from "ahooks";
-import { AutoSpin } from "../../components/AutoSpin";
-import { CVXterm } from "../../components/CVXterm";
+import {AutoSpin} from "../../components/AutoSpin";
+import {CVXterm, TERMINAL_INPUT_KEY} from "../../components/CVXterm";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -21,7 +20,7 @@ export const ShellItem = (props) => {
         if (!xtermRef || !xtermRef.current) {
             return
         }
-        const str = s.charCodeAt(0) === 13 ? String.fromCharCode(10) : s
+        const str = s.charCodeAt(0) === TERMINAL_INPUT_KEY.ENTER ? String.fromCharCode(10) : s
         if (getEchoBack()) {
             xtermRef.current.terminal.write(str)
         }
@@ -74,7 +73,7 @@ export const ShellItem = (props) => {
                 extra={
                     <Space>
                         <span>
-                        回显:
+                        客户端回显:
                         <Switch size={"small"} checked={echoBack} onChange={setEchoBack}/>
                     </span>
                         <Popconfirm

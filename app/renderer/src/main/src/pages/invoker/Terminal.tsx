@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
-import {XTerm} from "xterm-for-react";
 import {FitAddon} from "xterm-addon-fit";
 import {SearchAddon} from "xterm-addon-search";
 import {SearchBarAddon} from 'xterm-addon-search-bar';
