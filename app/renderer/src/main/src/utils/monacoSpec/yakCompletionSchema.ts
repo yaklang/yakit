@@ -40,6 +40,45 @@ let maxLibLength = 1;
 export const extraSuggestions: languages.CompletionItem[] = [
         {
             kind: languages.CompletionItemKind.Snippet,
+            label: "fn closure",
+            insertText: "fn{\n" +
+                "    defer fn{\n" +
+                "        err := recover()\n" +
+                "        if err != nil {\n" +
+                "            log.error(`recover from panic: %v`, err)\n" +
+                "        }\n" +
+                "    }\n" +
+                "    ${1}\n" +
+                "}",
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Snippets For Try-Catch-Finally"
+        } as languages.CompletionItem,
+        {
+            kind: languages.CompletionItemKind.Snippet,
+            label: "try-catch-finally",
+            insertText: "try {\n" +
+                "    ${1}\n" +
+                "} catch err {\n" +
+                "    ${2}\n" +
+                "} finally {\n" +
+                "    ${3}\n" +
+                "}",
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Snippets For Try-Catch-Finally"
+        } as languages.CompletionItem,
+        {
+            kind: languages.CompletionItemKind.Snippet,
+            label: "try-catch",
+            insertText: "try {\n" +
+                "    ${1}\n" +
+                "} catch err {\n" +
+                "    ${2}\n" +
+                "}${3}",
+            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Snippets For Try-Catch"
+        } as languages.CompletionItem,
+        {
+            kind: languages.CompletionItemKind.Snippet,
             label: "err",
             insertText: "if ${1:err} != nil { die(${1:err}) }",
             insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
