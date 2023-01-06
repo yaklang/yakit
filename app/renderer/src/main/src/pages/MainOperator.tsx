@@ -143,8 +143,8 @@ export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
     onErrorConfirmed?: () => any
-    firstOpenPage?:PageCache
     selectItemPage?:Route
+    isShowHome?:boolean
 }
 
 export interface MenuItem {
@@ -330,16 +330,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(firstOpenPage?[
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
         // {
         //     verbose: "MITM",
         //     route: Route.HTTPHacker,
         //     singleNode: ContentByRoute(Route.HTTPHacker),
         //     multipleNode: []
         // }
-        firstOpenPage
-    ]:[])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(firstOpenPage?firstOpenPage.route:Route.HTTPHacker)
+    ])
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.HTTPHacker)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -1235,7 +1234,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         menuAddPage(key as Route)
     })
     return (
-        <Layout className='yakit-main-layout'>
+        <Layout className='yakit-main-layout' style={isShowHome?{display:"none"}:{}}>
             <AutoSpin spinning={loading}>
                 {isShowCustomizeMenu && (
                     <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />

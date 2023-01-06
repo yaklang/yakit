@@ -71,8 +71,6 @@ function NewApp() {
     const agrTimeRef = useRef<any>(null)
     /** 是否展示首页导航栏 */
     const [isShowHome, setShowHome] = useState<boolean>(true)
-    /** 导航栏选择首页加载 */
-    const [firstOpenPage,setFirstOpenPage,getFirstOpenPage] = useGetState<PageCache>()
     /** 添加或选择页面 */
     const [selectItemPage,setSelectItemPage] = useState<Route>()
 
@@ -239,15 +237,8 @@ function NewApp() {
     }, [])
 
     const setOpenPage = (v:PageCache) => {
-        // 是否已经有初始打开页
-        // if(getFirstOpenPage()){
-        //     console.log("页面添加")
-        //     setSelectItemPage(v.route)
-        // }
-        // else{
-            setFirstOpenPage(v)
-            setShowHome(false)
-        // }
+        setSelectItemPage(v.route)
+        setShowHome(false)
     }
 
     if (!agreed) {
@@ -318,7 +309,8 @@ function NewApp() {
                     <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
                     <>
-                    {isShowHome ? <NewHome setOpenPage={setOpenPage}/>:<Main onErrorConfirmed={() => {}} firstOpenPage={getFirstOpenPage()} selectItemPage={selectItemPage}/>} 
+                    <NewHome setOpenPage={setOpenPage} isShowHome={isShowHome}/>
+                    <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} isShowHome={isShowHome}/>
                     </>
                 )}
             </Suspense>

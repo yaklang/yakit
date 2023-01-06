@@ -1,10 +1,11 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {Row, Col} from "antd"
 import {ArrowRightOutlined} from "@ant-design/icons"
-import style from "./newHome.module.scss"
+import styles from "./newHome.module.scss"
 import classNames from "classnames"
 import {Route,ContentByRoute} from "@/routes/routeSpec"
 import {AuditOutlined, CodeOutlined} from "@ant-design/icons"
+import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -33,7 +34,7 @@ interface RouteTitleProp {
 
 const RouteTitle: React.FC<RouteTitleProp> = (props) => {
     const {title} = props
-    return <div className={style["home-page-title"]}>{title}</div>
+    return <div className={styles["home-page-title"]}>{title}</div>
 }
 
 interface RouteItemProp {
@@ -55,13 +56,13 @@ const RouteItem: React.FC<RouteItemProp> = (props) => {
         )
     }
     return (
-        <div className={style["route-item"]} onClick={goRoute}>
-            <div className={style["icon-box"]}>
-                <div className={style["menu-icon"]}>{dataSource.icon}</div>
-                <ArrowRightOutlined className={style["right-arrow"]}/>
+        <div className={styles["route-item"]} onClick={goRoute}>
+            <div className={styles["icon-box"]}>
+                <div className={styles["menu-icon"]}>{dataSource.icon}</div>
+                <ArrowRightOutlined className={styles["right-arrow"]}/>
             </div>
-            <div className={style["item-label"]}>{dataSource.label}</div>
-            <div className={style["item-describe"]}>{dataSource.describe}</div>
+            <div className={styles["item-label"]}>{dataSource.label}</div>
+            <div className={styles["item-describe"]}>{dataSource.describe}</div>
         </div>
     )
 }
@@ -90,11 +91,11 @@ const RouteList: React.FC<RouteListProp> = (props) => {
     const [span, setSpan] = useState(24 / colLimit)
     const rowCount = Math.ceil(data.subMenuData.length/colLimit)
     return (
-        <div style={{height:"100%"}} className={style["list-box"]}>
+        <div style={{height:"100%"}} className={styles["list-box"]}>
             <RouteTitle title={data.label} />
-            <Row className={style["list-content"]}>
+            <Row className={styles["list-content"]}>
                 {data.subMenuData.map((item) => (
-                    <Col span={span} key={item.id} flex={1} className={classNames(style[`list-content-col${rowCount}`])}>
+                    <Col span={span} key={item.id} flex={1} className={classNames(styles[`list-content-col${rowCount}`])}>
                         <RouteItem dataSource={item} setOpenPage={setOpenPage}/>
                     </Col>
                 ))}
@@ -271,35 +272,47 @@ export const newHomeList: newHomeListData[] =[
 
 export interface NewHomeProp {
     setOpenPage:(v:any)=>void
+    isShowHome:boolean
 }
 const NewHome: React.FC<NewHomeProp> = (props) => {
-    const {setOpenPage} = props
+    // useEffect(()=>{
+    //     ipcRenderer
+    //         .invoke("QueryYakScript", {
+    //             Pagination: genDefaultPagination(1000),
+    //             IsGeneralModule: true,
+    //             Type: "yak"
+    //         } as QueryYakScriptRequest)
+    //         .then((data: QueryYakScriptsResponse) => {
+    //             console.log("菜单栏",data)
+    //         })
+    // },[])
+    const {setOpenPage,isShowHome} = props
     return (
-        <div className={style["new-home-page"]}>
-            <div className={classNames(style["home-top-block"], style["border-bottom-box"])}>
-                <div className={classNames(style["top-small-block"], style["border-right-box"])}>
+        <div className={classNames(styles["new-home-page"],{[styles["no-show-home"]]:!isShowHome})}>
+            <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
+                <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
                     <RouteList data={newHomeList[0]} setOpenPage={setOpenPage}/>
                 </div>
-                <div className={classNames(style["top-big-block"], style["border-right-box"])}>
-                    <div className={classNames(style["top-in"], style["border-bottom-box"])}>
+                <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
+                    <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
                         <RouteList data={newHomeList[1]} colLimit={2} setOpenPage={setOpenPage} />
                     </div>
-                    <div className={style["bottom-in"]}>
+                    <div className={styles["bottom-in"]}>
                         <RouteList data={newHomeList[2]} colLimit={2} setOpenPage={setOpenPage} />
                     </div>
                 </div>
-                <div className={classNames(style["top-small-block"], style["border-right-box"])}>
+                <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
                     <RouteList data={newHomeList[3]} setOpenPage={setOpenPage} />
                 </div>
-                <div className={style["top-small-block"]}>
+                <div className={styles["top-small-block"]}>
                     <RouteList data={newHomeList[4]} setOpenPage={setOpenPage} />
                 </div>
             </div>
-            <div className={style["home-bottom-block"]}>
-                <div className={classNames(style["bottom-big-block"], style["border-right-box"])}>
+            <div className={styles["home-bottom-block"]}>
+                <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
                     <RouteList data={newHomeList[5]} colLimit={3} setOpenPage={setOpenPage}/>
                 </div>
-                <div className={style["bottom-small-block"]}>
+                <div className={styles["bottom-small-block"]}>
                     <RouteTitle title='插件商店' />
                 </div>
             </div>
