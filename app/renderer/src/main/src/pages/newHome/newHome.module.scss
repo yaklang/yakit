@@ -3,7 +3,7 @@
     flex-direction: column;
     height: 100%;
 }
-.no-show-home{
+.no-show-home {
     display: none;
 }
 .home-top-block {
@@ -68,10 +68,10 @@
     border-radius: 4px;
     height: 100%;
 }
-.route-item:hover{
+.route-item:hover {
     background: rgba(242, 139, 68, 0.06);
-    .right-arrow{
-        color: #F28B44;
+    .right-arrow {
+        color: #f28b44;
     }
 }
 .right-arrow {
@@ -108,10 +108,10 @@
     position: relative;
 }
 
-.list-content-col2{
+.list-content-col2 {
     height: 50%;
 }
-.list-content-col3{
+.list-content-col3 {
     height: 33.33%;
 }
 .menu-icon::after {
@@ -125,4 +125,81 @@
     height: 28px;
     background: rgba(255, 182, 96, 0.2);
     backdrop-filter: blur(2px);
+}
+.plug-in-main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.plug-in-shop {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0 16px;
+}
+.show-top-box {
+    flex: 2;
+    display: flex;
+    flex-direction: row;
+    border-bottom: 1px solid rgb(234, 236, 243);
+}
+.add-count-box {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+.week-add-count {
+    padding-left: 15px;
+    border-left: 2px solid rgb(180, 187, 220);
+    border-radius: 2px;
+}
+.day-add-count {
+    padding-left: 15px;
+    border-left: 2px solid #f4736b;
+    border-radius: 2px;
+}
+.add-title {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #31343f;
+}
+.add-content {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 32px;
+    color: #31343f;
+}
+.chart-box {
+    flex: 5;
+    text-align: center;
+}
+.show-bottom-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+.label-item {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 8px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #85899e;
+    background: #f8f8f8;
+    border: 1px solid #eaecf3;
+    border-radius: 4px;
+}
+.bottom-box-title {
+    margin-top: 16px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #31343f;
+}
+.label-box {
+    flex: 1;
 }

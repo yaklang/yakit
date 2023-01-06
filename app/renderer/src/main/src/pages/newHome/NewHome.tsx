@@ -5,7 +5,7 @@ import styles from "./newHome.module.scss"
 import classNames from "classnames"
 import {MenuDataProps, Route, ContentByRoute} from "@/routes/routeSpec"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {AuditOutlined, CodeOutlined} from "@ant-design/icons"
+import {DonutChart, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend} from "bizcharts"
 import {useGetState} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
@@ -29,25 +29,27 @@ import {
     MenuICMPSizeLogDeepIcon,
     MenuTCPPortLogDeepIcon,
     MenuYsoJavaHackDeepIcon,
-    MenuBaseReptileDeepIcon
+    MenuBaseReptileDeepIcon,
+    AddDayCountIcon,
+    AddWeekCountIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
 const {ipcRenderer} = window.require("electron")
 
-interface RouteTitleProp {
+interface RouteTitleProps {
     title: string
 }
 
-const RouteTitle: React.FC<RouteTitleProp> = (props) => {
+const RouteTitle: React.FC<RouteTitleProps> = (props) => {
     const {title} = props
     return <div className={styles["home-page-title"]}>{title}</div>
 }
 
-interface RouteItemProp {
+interface RouteItemProps {
     dataSource: DataItem
     setOpenPage: (v: any) => void
 }
 
-const RouteItem: React.FC<RouteItemProp> = (props) => {
+const RouteItem: React.FC<RouteItemProps> = (props) => {
     const {dataSource, setOpenPage} = props
     const goRoute = () => {
         setOpenPage({
@@ -82,13 +84,13 @@ interface newHomeListData {
     subMenuData: DataItem[]
 }
 
-interface RouteListProp {
+interface RouteListProps {
     colLimit?: 1 | 2 | 3
     data: newHomeListData
     setOpenPage: (v: any) => void
 }
 
-const RouteList: React.FC<RouteListProp> = (props) => {
+const RouteList: React.FC<RouteListProps> = (props) => {
     const {colLimit = 1, data, setOpenPage} = props
     const [span, setSpan] = useState(24 / colLimit)
     const rowCount = Math.ceil(data.subMenuData.length / colLimit)
@@ -110,6 +112,177 @@ const RouteList: React.FC<RouteListProp> = (props) => {
         </div>
     )
 }
+interface PieChartProps {
+    
+}
+const PieChart: React.FC<PieChartProps> = (props) => {
+    // 数据源
+    const chartList = [
+        {
+            type: "分类一",
+            value: 27
+        },
+        {
+            type: "分类二",
+            value: 25
+        },
+        {
+            type: "分类三",
+            value: 18
+        },
+        {
+            type: "分类四",
+            value: 15
+        },
+        {
+            type: "分类五",
+            value: 10
+        },
+        {
+            type: "其它",
+            value: 5
+        }
+    ]
+    const g2Ref = useRef<any>()
+    return (
+        <Chart
+            padding={[0, 150, 0, 0]}
+            data={chartList || []}
+            autoFit
+            radius={0.8}
+            angleField='value'
+            colorField='type'
+            color={["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]}
+            label={{visible: false}}
+            onClick={(ev) => {
+                console.log("g2", g2Ref.current)
+                const data = ev.data
+                console.log("data", data)
+            }}
+            onGetG2Instance={(g2chart) => {
+                g2Ref.current = g2chart
+            }}
+        >
+            <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
+            <Tooltip showTitle={false} />
+            <Axis visible={false} />
+            <Legend
+                position='right'
+                visible={true}
+                offsetX={-70}
+                itemHeight={18}
+                itemName={{
+                    formatter: (text: string) => `${text}`,
+                    style: {
+                        fill: "#85899E",
+                        width:60,
+                    }
+                }}
+                itemValue={{
+                    formatter: (_text: string, _item: any, index: number) => {
+                        return `        ${chartList[index].value}`
+                    },
+                    style: {
+                        fill: "#31343F",
+                        fontWeight: 500
+                    }
+                }}
+            />
+            <Annotation.Text
+                position={["50%", "46%"]}
+                content={chartList.map((item) => item.value).reduce((a, b) => a + b, 0)}
+                style={{
+                    lineHeight: 40,
+                    fontSize: 20,
+                    fontWeight: 600,
+                    fill: "#31343F",
+                    textAlign: "center"
+                }}
+            />
+            <Annotation.Text
+                position={["50%", "57%"]}
+                content='插件总数'
+                style={{
+                    lineHeight: 20,
+                    fontSize: 12,
+                    fill: "#85899E",
+                    textAlign: "center"
+                }}
+            />
+            <Interval
+                position='value'
+                adjust='stack'
+                color='type'
+                style={{
+                    lineWidth: 1,
+                    stroke: "#fff"
+                }}
+            />
+        </Chart>
+    )
+}
+
+interface PlugInShopProps {}
+const PlugInShop: React.FC<PlugInShopProps> = (props) => {
+    const listHeightRef = useRef<any>()
+
+    return (
+        <div className={styles["plug-in-shop"]}>
+            <div className={styles["show-top-box"]}>
+                <div className={styles["add-count-box"]}>
+                    <div className={styles["day-add-count"]}>
+                        <div className={styles["add-title"]}>今日新增数</div>
+                        <div className={styles["add-content"]}>12<AddDayCountIcon style={{paddingLeft:4}}/></div>
+                    </div>
+                    <div className={styles["week-add-count"]}>
+                    <div className={styles["add-title"]}>本周新增数</div>
+                    <div className={styles["add-content"]}>256<AddWeekCountIcon style={{paddingLeft:4}}/></div>
+                    </div>
+                </div>
+                <div className={styles["chart-box"]} ref={listHeightRef}>
+                    {/* <DonutChart
+                        data={chartList || []}
+                        autoFit
+                        radius={0.8}
+                        padding='auto'
+                        angleField='value'
+                        colorField='type'
+                        color={['#FFB660','#4A94F8','#5F69DD','#56C991','#8863F7','#35D8EE']}
+                        label={{visible:false}}
+                        legend={{
+                            visible:true,
+                            offsetX:-40,
+                            itemHeight:18,
+                            itemName:{
+                                formatter: (text: string) => `${text}`,
+                                style: {
+                                    fill: '#85899E',
+                                },
+                            },
+                            itemValue:{
+                                formatter: (_text: string, _item: any, index: number) => {
+                                    return `    ${chartList[index].value}`;
+                                  },
+                                  style: {
+                                    fill: '#31343F',
+                                  },
+                            }
+                        }}
+                        forceFit={false}
+                        // pieStyle={{stroke: "white", lineWidth: 5}}
+                    /> */}
+                    <PieChart />
+                </div>
+            </div>
+            <div className={styles["show-bottom-box"]}>
+                <div className={styles["bottom-box-title"]}>热搜词</div>
+                <div className={styles["label-box"]}>
+                    <div className={styles["label-item"]}>POC</div>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export const newHomeList: newHomeListData[] = [
     {
@@ -123,13 +296,6 @@ export const newHomeList: newHomeListData[] = [
                 icon: <MenuPortScanningDeepIcon />,
                 describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
             }
-            // {
-            //     id: "1-2",
-            //     key: undefined,
-            //     label: "综合目录扫描与爆破",
-            //     icon: <MenuComprehensiveCatalogScanningAndBlastingDeepIcon />,
-            //     describe: "带有内置字典的综合目录扫描与爆破"
-            // }
         ]
     },
     {
@@ -286,12 +452,12 @@ export const getScriptIcon = (name: string) => {
             return <MenuBaseReptileDeepIcon />
     }
 }
-export interface NewHomeProp {
+export interface NewHomeProps {
     setOpenPage: (v: any) => void
     isShowHome: boolean
 }
-const NewHome: React.FC<NewHomeProp> = (props) => {
-    const [newHomeData,setNewHomeData,getNewHomeData] = useGetState(newHomeList)
+const NewHome: React.FC<NewHomeProps> = (props) => {
+    const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     useEffect(() => {
         getCustomizeMenus()
     }, [])
@@ -299,33 +465,33 @@ const NewHome: React.FC<NewHomeProp> = (props) => {
     // 获取自定义菜单
     const getCustomizeMenus = () => {
         ipcRenderer
-        .invoke("GetAllMenuItem", {})
-        .then((data: {Groups: MenuItemGroup[]}) => {
-            const newCustomMenu: DataItem[] = []
-            data.Groups.forEach((menuGroupItem, index) => {
-                menuGroupItem.Items.map((item) => {
-                    const key =
-                        item.YakScriptId > 0
-                            ? `plugin:${item.Group}:${item.YakScriptId}`
-                            : `batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`
-                    newCustomMenu.push({
-                        id: key,
-                        label: item.Verbose,
-                        key: key as Route,
-                        icon:getScriptIcon(item.Verbose),
-                        describe: "通过爬虫可快速了解网站的整体架构",
+            .invoke("GetAllMenuItem", {})
+            .then((data: {Groups: MenuItemGroup[]}) => {
+                const newCustomMenu: DataItem[] = []
+                data.Groups.forEach((menuGroupItem, index) => {
+                    menuGroupItem.Items.map((item) => {
+                        const key =
+                            item.YakScriptId > 0
+                                ? `plugin:${item.Group}:${item.YakScriptId}`
+                                : `batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`
+                        newCustomMenu.push({
+                            id: key,
+                            label: item.Verbose,
+                            key: key as Route,
+                            icon: getScriptIcon(item.Verbose),
+                            describe: "通过爬虫可快速了解网站的整体架构"
+                        })
                     })
                 })
+                let itemArr = newCustomMenu.filter((item) => item.label === "基础爬虫")
+                if (itemArr.length > 0) {
+                    const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
+                    deepList[0].subMenuData.push(itemArr[0])
+                    setNewHomeData(deepList)
+                }
             })
-            let itemArr = newCustomMenu.filter((item) => item.label === "基础爬虫")
-            if (itemArr.length > 0) {
-                const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
-                deepList[0].subMenuData.push(itemArr[0])
-                setNewHomeData(deepList)
-            }
-        })
-        .catch((e: any) => failed("Update Menu Item Failed"))
-        .finally(() => setTimeout(() => {}, 300))
+            .catch((e: any) => failed("Update Menu Item Failed"))
+            .finally(() => setTimeout(() => {}, 300))
 
         ipcRenderer
             .invoke("QueryYakScript", {
@@ -340,8 +506,8 @@ const NewHome: React.FC<NewHomeProp> = (props) => {
                         icon: getScriptIcon(i.ScriptName),
                         key: `plugin:${i.Id}` as Route,
                         label: i.ScriptName,
-                        describe: "带有内置字典的综合目录扫描与爆破",
-                    } 
+                        describe: "带有内置字典的综合目录扫描与爆破"
+                    }
                 }).filter((item) => item.label === "综合目录扫描与爆破")
                 if (itemArr.length > 0) {
                     const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
@@ -376,8 +542,9 @@ const NewHome: React.FC<NewHomeProp> = (props) => {
                 <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
                     <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
                 </div>
-                <div className={styles["bottom-small-block"]}>
+                <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
                     <RouteTitle title='插件商店' />
+                    <PlugInShop />
                 </div>
             </div>
         </div>
