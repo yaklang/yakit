@@ -16,7 +16,8 @@ const {Option} = Select
  * 2.增加width 100%
  * 3.mode为tags和multiple样式问题
  * 4.更换颜色变量
- */
+ * 5.优化下拉后，Icon行为
+ * */
 
 /**
  * @description: 下拉选择

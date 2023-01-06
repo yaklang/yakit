@@ -103,6 +103,7 @@ export const GlobalReverseState: React.FC<GlobalReverseStateProp> = React.memo((
 
             return () => {
                 clearInterval(timeRef.current)
+                timeRef.current = null
             }
         } else {
             if (timeRef.current) clearInterval(timeRef.current)

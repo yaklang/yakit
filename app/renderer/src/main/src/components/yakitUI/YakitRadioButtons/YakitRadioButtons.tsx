@@ -12,6 +12,7 @@ import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
  * 1.增加环境变量加载主题色
  * 2.优化solid风格的样式
  * 4.更换颜色变量
+ * 5.修改边框的颜色
  */
 
 /**

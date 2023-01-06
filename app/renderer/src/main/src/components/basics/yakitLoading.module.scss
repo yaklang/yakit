@@ -17,7 +17,7 @@
                 text-align: center;
                 font-size: 24px;
                 line-height: 56px;
-                color: #f28b44;
+                color: var(--yakit-header-color);
                 font-weight: 600;
             }
             .subtitle-stlye {
@@ -25,7 +25,7 @@
                 text-align: center;
                 font-size: 16px;
                 line-height: 24px;
-                color: #f28b44;
+                color: var(--yakit-body-text-color);
             }
         }
 
@@ -73,14 +73,41 @@
             font-size: 16px;
             color: #f28b44;
             line-height: 24px;
-        }
 
-        .yakit-loading-live-output {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 16px;
-            color: #f28b44;
-            line-height: 24px;
+            .time-out-title {
+                color: var(--yakit-danger-5);
+            }
+
+            .engine-log-btn {
+                margin-top: 8px;
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .switch-engine-mode {
+                margin-top: 32px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 4px 0px;
+                font-weight: 500;
+                font-size: 14px;
+            }
+        }
+    }
+}
+.switch-mode-overlay {
+    background: #f8f8f8;
+    border-radius: 4px;
+    box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
+
+    :global {
+        .ant-dropdown-menu {
+            border-radius: 4px;
+            padding: 8px 4px;
+            box-shadow: unset;
+            background-color: #f8f8f8;
         }
     }
 }
@@ -99,5 +126,95 @@
     }
     to {
         height: 0px;
+    }
+}
+
+.yaklang-update-modal {
+    width: 448px;
+    z-index: 999;
+}
+.engine-hint-modal-wrapper {
+    position: absolute;
+    top: 35%;
+    left: calc(50% - 224px);
+}
+.engine-hint-modal-hidden-wrapper {
+    display: none;
+}
+.modal-yaklang-engine-hint {
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .yaklang-engine-hint-wrapper {
+        width: 100%;
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        position: relative;
+
+        .hint-draggle-body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 24px;
+        }
+
+        .hint-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            .hint-icon {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        .hint-right-wrapper {
+            flex: 1;
+            .hint-right-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+
+            .hint-right-download {
+                .download-progress {
+                    :global {
+                        .ant-progress-text {
+                            display: block;
+                            margin-left: 0;
+                            margin-top: 2px;
+                        }
+                    }
+                }
+                .download-info-wrapper {
+                    margin-top: 16px;
+                    display: flex;
+                    height: 16px;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--yakit-helper-text-color);
+                    .divider-wrapper {
+                        margin: 0 8px;
+                        width: 1px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        .divider-style {
+                            width: 100%;
+                            height: 12px;
+                            border: 1px solid var(--yakit-border-color);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

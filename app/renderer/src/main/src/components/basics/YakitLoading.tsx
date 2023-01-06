@@ -1,12 +1,19 @@
-import React, {useEffect, useMemo, useRef} from "react"
-
-import styles from "./yakitLoading.module.scss"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
-import {XTerm} from "xterm-for-react";
-import {xtermFit} from "@/utils/xtermUtils";
-import {Button, Col, Popconfirm, Row, Space} from "antd";
-import {YaklangEngineMode} from "@/yakitGVDefine";
-import {outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
+import {Dropdown, Popconfirm, Progress} from "antd"
+import {DownloadingState, YaklangEngineMode} from "@/yakitGVDefine"
+import {outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
+import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
+import {useGetState, useMemoizedFn} from "ahooks"
+import {ArrowRightSvgIcon, ChevronDownSvgIcon, YaklangInstallHintSvgIcon} from "../layout/icons"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {yakProcess} from "../layout/FuncDomain"
+import Draggable from "react-draggable"
+import type {DraggableEvent, DraggableData} from "react-draggable"
+import {failed, info, success} from "@/utils/notification"
+
+import classnames from "classnames"
+import styles from "./yakitLoading.module.scss"
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -25,8 +32,7 @@ const LoadingTitle: string[] = [
     "再不用Yakit，卷王就是别人的了",
     "来用Yakit啦？安全圈还是你最成功",
     "这届网安人，人手一个Yakit，香惨了！"
-];
-
+]
 
 export const EngineModeVerbose = (m: YaklangEngineMode) => {
     switch (m) {
@@ -43,46 +49,110 @@ export const EngineModeVerbose = (m: YaklangEngineMode) => {
 
 export interface YakitLoadingProp {
     loading: boolean
-    title?: string
     engineMode: YaklangEngineMode
     localPort: number
     adminPort: number
-    onEngineModeChange: (mode: YaklangEngineMode) => any
+    onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
+    showEngineLog: boolean
+    setShowEngineLog: (flag: boolean) => any
 }
 
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
-    const {loading, title} = props;
-    const xtermRef = useRef<any>(null);
+    const {loading, showEngineLog, setShowEngineLog} = props
+
+    const [__showLog, setShowLog, getShowLog] = useGetState<number>(0)
+    const loadingTime = useRef<any>(null)
+
+    const [download, setDownload] = useState<boolean>(false)
+
+    const killAllEngine = useMemoizedFn(() => {
+        setUpdateLoading(true)
+        ipcRenderer
+            .invoke("ps-yak-grpc")
+            .then((i: yakProcess[]) => {
+                ;(i || []).forEach((i) => {
+                    ipcRenderer.invoke("kill-yak-grpc", i.pid).then(() => {
+                        info(`KILL yak PROCESS: ${i.pid}`)
+                    })
+                })
+            })
+            .catch((e) => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setDownload(true)
+                }, 2000)
+            })
+    })
+
+    const [updateLoading, setUpdateLoading] = useState<boolean>(false)
 
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
 
-    const writeToConsole = (i: string) => {
-        if (!xtermRef) {
-            return
-        }
-        xtermRef.current.terminal.write(i)
-    }
-
     useEffect(() => {
-        if (!xtermRef) {
-            return
+        if (loading) {
+            if (loadingTime.current) {
+                clearInterval(loadingTime.current)
+                loadingTime.current = null
+                setShowLog(0)
+            }
+        } else {
+            if (!loadingTime.current) {
+                setShowLog(0)
+                loadingTime.current = setInterval(() => {
+                    setShowLog(getShowLog() + 1)
+                    if (getShowLog() >= 5) {
+                        clearInterval(loadingTime.current)
+                    }
+                }, 1000)
+            }
         }
+    }, [loading])
 
-        writeToConsole(`欢迎使用 Yakit!\n`)
-
-        ipcRenderer.on("live-engine-stdio", (e, stdout) => {
-            writeToConsole(stdout)
-        })
-        ipcRenderer.on("live-engine-log", (e, stdout) => {
-            writeToConsole(`[INFO] Yakit-Verbose-Log: ${stdout}`)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("live-engine-stdio")
-            ipcRenderer.removeAllListeners("live-engine-log")
+    const selectEngineMode = useMemoizedFn((key: string) => {
+        if (key === "remote" && props.onEngineModeChange) {
+            props.onEngineModeChange("remote")
         }
-    }, [xtermRef])
+        if (key === "local") {
+            const isAdmin = props.engineMode === "admin"
+            ipcRenderer
+                .invoke("start-local-yaklang-engine", {
+                    port: isAdmin ? props.adminPort : props.localPort,
+                    sudo: isAdmin
+                })
+                .then(() => {
+                    outputToWelcomeConsole("手动引擎启动成功！")
+                    if (props.onEngineModeChange) {
+                        props.onEngineModeChange(props.engineMode, true)
+                    }
+                })
+                .catch((e) => {
+                    outputToWelcomeConsole("手动引擎启动失败！")
+                    outputToWelcomeConsole(`失败原因:${e}`)
+                })
+        }
+    })
+
+    const menu = useMemo(() => {
+        return (
+            <YakitMenu
+                width={170}
+                selectedKeys={[]}
+                data={[
+                    {
+                        key: "remote",
+                        label: "远程模式"
+                    },
+                    {
+                        key: "local",
+                        label: `手动启动引擎(${EngineModeVerbose(props.engineMode)})`
+                    }
+                ]}
+                onClick={({key}) => selectEngineMode(key)}
+            ></YakitMenu>
+        )
+    }, [props.engineMode])
 
     return (
         <div className={styles["yakit-loading-wrapper"]}>
@@ -95,97 +165,218 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["theme-icon-wrapper"]}>
                         <div className={styles["theme-icon"]}>
-                            <YakitThemeLoadingSvgIcon/>
+                            <YakitThemeLoadingSvgIcon />
                         </div>
                     </div>
                     <div className={styles["white-icon"]}>
-                        <YakitLoadingSvgIcon/>
+                        <YakitLoadingSvgIcon />
                     </div>
                 </div>
 
                 <div className={styles["yakit-loading-content"]}>
-                    <Space>
-                        {`启动模式: ${EngineModeVerbose(props.engineMode)}`}
-                        <div>
-                            {title || "正在加载中..."}
-                        </div>
-                        <Button type={"link"} size={"small"} onClick={() => {
-                            if (props.onEngineModeChange) {
-                                props.onEngineModeChange("remote")
-                            }
-                        }}> 远程模式 </Button>
+                    <div className={classnames({[styles["time-out-title"]]: getShowLog() >= 5})}>
+                        {getShowLog() >= 5 ? "连接超时..." : `正在加载中 (${EngineModeVerbose(props.engineMode)}) ...`}
+                    </div>
+                    <div className={styles["engine-log-btn"]}>
+                        {!showEngineLog && getShowLog() >= 5 && (
+                            <YakitButton type='danger' size='max' onClick={() => setShowEngineLog(true)}>
+                                查看日志
+                                <ArrowRightSvgIcon />
+                            </YakitButton>
+                        )}
                         <Popconfirm
-                            title={"当引擎无法自动启动时，点此手动启动进程"}
-                            onConfirm={() => {
-                                const isAdmin = props.engineMode === "admin";
-                                ipcRenderer.invoke("start-local-yaklang-engine", {
-                                    port: isAdmin ? props.adminPort : props.localPort,
-                                    sudo: isAdmin,
-                                }).then(() => {
-                                    outputToWelcomeConsole("手动引擎启动成功！")
-                                    if (props.onEngineModeChange) {
-                                        props.onEngineModeChange(props.engineMode)
-                                    }
-                                }).catch(e => {
-                                    outputToWelcomeConsole("手动引擎启动失败！")
-                                    outputToWelcomeConsole(`失败原因:${e}`)
-                                })
-                            }}
+                            title={
+                                <>
+                                    将关闭所有本地引擎进程, 如未完全关闭所有引擎进程,
+                                    <br />
+                                    更新引擎可能会失败
+                                </>
+                            }
+                            onConfirm={() => killAllEngine()}
                         >
-                            <Button type={"link"}
-                                    size={"small"}> 手动启动引擎({EngineModeVerbose(props.engineMode)}) </Button>
+                            <YakitButton loading={updateLoading} size='max' type="secondary1">
+                                更新引擎
+                            </YakitButton>
                         </Popconfirm>
-                    </Space>
-                </div>
-
-                <div className={styles["yakit-loading-live-output"]}>
-                    <Row>
-                        <Col span={3}/>
-                        <Col span={18}>
-                            <div>
-                                <XTerm
-                                    ref={xtermRef}
-                                    options={{
-                                        convertEol: true, rows: 12,
-                                        theme: {
-                                            foreground: "#536870",
-                                            background: "#E8E9E8",
-                                            cursor: "#536870",
-
-                                            black: "#002831",
-                                            brightBlack: "#001e27",
-
-                                            red: "#d11c24",
-                                            brightRed: "#bd3613",
-
-                                            green: "#738a05",
-                                            brightGreen: "#475b62",
-
-                                            yellow: "#a57706",
-                                            brightYellow: "#536870",
-
-                                            blue: "#2176c7",
-                                            brightBlue: "#708284",
-
-                                            magenta: "#c61c6f",
-                                            brightMagenta: "#5956ba",
-
-                                            cyan: "#259286",
-                                            brightCyan: "#819090",
-
-                                            white: "#eae3cb",
-                                            brightWhite: "#fcf4dc"
-                                        }
-                                    }}
-                                    onResize={(r) => {
-                                        xtermFit(xtermRef, 120, 18)
-                                    }}
-                                />
+                    </div>
+                    <div className={styles["switch-engine-mode"]}>
+                        <Dropdown placement='bottom' overlay={menu} overlayClassName={styles["switch-mode-overlay"]}>
+                            <div style={{cursor: "pointer"}}>
+                                其他连接模式
+                                <ChevronDownSvgIcon style={{marginLeft: 4}} />
                             </div>
-                        </Col>
-                    </Row>
+                        </Dropdown>
+                    </div>
                 </div>
             </div>
+            <DownloadYaklang visible={download} setVisible={setDownload} updateFinal={() => setUpdateLoading(false)} />
         </div>
     )
 }
+
+interface DownloadYaklangProps {
+    visible: boolean
+    setVisible: (flag: boolean) => any
+    updateFinal: () => any
+}
+
+/** @name Yaklang引擎更新下载弹窗 */
+const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
+    const {visible, setVisible, updateFinal} = props
+
+    const [disabled, setDisabled] = useState(true)
+    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
+    const draggleRef = useRef<HTMLDivElement>(null)
+
+    /** 远端最新yaklang引擎版本 */
+    const [latestVersion, setLatestVersion] = useState("")
+    /** 下载进度条数据 */
+    const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
+
+    /**
+     * 1. 获取最新引擎版本号(版本号内带有'v'字符)，并下载
+     * 2. 监听本地下载引擎进度数据
+     * @returns 删除监听事件2
+     */
+    useEffect(() => {
+        if (visible) {
+            ipcRenderer
+                .invoke("fetch-latest-yaklang-version")
+                .then((data: string) => {
+                    setLatestVersion(data)
+
+                    ipcRenderer
+                        .invoke("download-latest-yak", data)
+                        .then(() => {
+                            success("下载完毕")
+                            if (!getDownloadProgress()?.size) return
+                            setDownloadProgress({
+                                time: {
+                                    elapsed: downloadProgress?.time.elapsed || 0,
+                                    remaining: 0
+                                },
+                                speed: 0,
+                                percent: 100,
+                                // @ts-ignore
+                                size: getDownloadProgress().size
+                            })
+                            onUpdate()
+                        })
+                        .catch((e: any) => {
+                            failed(`下载失败: ${e}`)
+                            setVisible(false)
+                        })
+                })
+                .catch((e: any) => {
+                    failed(`${e}`)
+                    updateFinal()
+                    setVisible(false)
+                })
+
+            ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
+                setDownloadProgress(state)
+            })
+
+            return () => {
+                ipcRenderer.removeAllListeners("download-yak-engine-progress")
+            }
+        }
+    }, [visible])
+
+    /** 立即更新 */
+    const onUpdate = useMemoizedFn(() => {
+        setTimeout(() => setVisible(false), 500)
+        setTimeout(() => {
+            ipcRenderer
+                .invoke("install-yak-engine", latestVersion)
+                .then(() => {
+                    success("安装成功，需用户手动启动引擎，点击'其他连接模式-手动启动引擎'")
+                })
+                .catch((err: any) => {
+                    failed(
+                        `安装失败: ${err.message.indexOf("operation not permitted") > -1 ? "请关闭引擎后重试" : err}`
+                    )
+                    onInstallClose()
+                })
+                .finally(() => updateFinal())
+        }, 1000)
+    })
+
+    /** 弹窗拖拽移动触发事件 */
+    const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
+        const {clientWidth, clientHeight} = window.document.documentElement
+        const targetRect = draggleRef.current?.getBoundingClientRect()
+        if (!targetRect) return
+
+        setBounds({
+            left: -targetRect.left + uiData.x,
+            right: clientWidth - (targetRect.right - uiData.x),
+            top: -targetRect.top + uiData.y + 36,
+            bottom: clientHeight - (targetRect.bottom - uiData.y)
+        })
+    })
+
+    /** 取消下载事件 */
+    const onInstallClose = useMemoizedFn(() => {
+        setVisible(false)
+        setDownloadProgress(undefined)
+    })
+
+    return (
+        <>
+            <Draggable
+                defaultClassName={classnames(
+                    styles["yaklang-update-modal"],
+                    visible ? styles["engine-hint-modal-wrapper"] : styles["engine-hint-modal-hidden-wrapper"]
+                )}
+                disabled={disabled}
+                bounds={bounds}
+                onStart={(event, uiData) => onStart(event, uiData)}
+            >
+                <div ref={draggleRef}>
+                    <div className={styles["modal-yaklang-engine-hint"]}>
+                        <div className={styles["yaklang-engine-hint-wrapper"]}>
+                            <div
+                                className={styles["hint-draggle-body"]}
+                                onMouseEnter={() => {
+                                    if (disabled) setDisabled(false)
+                                }}
+                                onMouseLeave={() => setDisabled(true)}
+                            ></div>
+
+                            <div className={styles["hint-left-wrapper"]}>
+                                <div className={styles["hint-icon"]}>
+                                    <YaklangInstallHintSvgIcon />
+                                </div>
+                            </div>
+
+                            <div className={styles["hint-right-wrapper"]}>
+                                <div className={styles["hint-right-download"]}>
+                                    <div className={styles["hint-right-title"]}>Yaklang 引擎下载中...</div>
+                                    <div className={styles["download-progress"]}>
+                                        <Progress
+                                            strokeColor='#F28B44'
+                                            trailColor='#F0F2F5'
+                                            percent={Math.floor((downloadProgress?.percent || 0) * 100)}
+                                        />
+                                    </div>
+                                    <div className={styles["download-info-wrapper"]}>
+                                        <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                        <div>耗时 : {(downloadProgress?.time.elapsed || 0).toFixed(2)}s</div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                        <div>下载速度 : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Draggable>
+        </>
+    )
+})
