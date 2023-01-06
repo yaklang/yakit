@@ -249,7 +249,7 @@
             }
         }
 
-        .ant-tabs-tab + .ant-tabs-tab {
+        .ant-tabs-tab+.ant-tabs-tab {
             margin: 0;
         }
 
@@ -275,17 +275,17 @@
             height: 0 !important;
         }
 
-        .ant-tabs-top > .ant-tabs-nav,
-        .ant-tabs-bottom > .ant-tabs-nav,
-        .ant-tabs-top > div > .ant-tabs-nav,
-        .ant-tabs-bottom > div > .ant-tabs-nav {
+        .ant-tabs-top>.ant-tabs-nav,
+        .ant-tabs-bottom>.ant-tabs-nav,
+        .ant-tabs-top>div>.ant-tabs-nav,
+        .ant-tabs-bottom>div>.ant-tabs-nav {
             margin: 0;
         }
 
-        .ant-tabs-top > .ant-tabs-nav::before,
-        .ant-tabs-bottom > .ant-tabs-nav::before,
-        .ant-tabs-top > div > .ant-tabs-nav::before,
-        .ant-tabs-bottom > div > .ant-tabs-nav::before {
+        .ant-tabs-top>.ant-tabs-nav::before,
+        .ant-tabs-bottom>.ant-tabs-nav::before,
+        .ant-tabs-top>div>.ant-tabs-nav::before,
+        .ant-tabs-bottom>div>.ant-tabs-nav::before {
             border-bottom: 0;
         }
     }
@@ -329,9 +329,9 @@
             }
 
             .sub-menu-expand-item-label {
-                font-size: 12px;
+                font-size: 11px;
                 height: 12px;
-                line-height: 12px;
+                line-height: 10px;
             }
         }
 
