@@ -45,6 +45,7 @@ import {YakEditor} from "@/utils/editors"
 import {getScriptIcon} from "../layout/HeardMenu/HeardMenu"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {getRemoteValue} from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -71,9 +72,16 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     const pluginLocalDataRef = useRef<YakScript[]>([]) // 本地插件列表数据
     const defaultRouteMenuDataRef = useRef<MenuDataProps[]>(DefaultRouteMenuData) // 本地插件列表数据
     useEffect(() => {
-        const list = [...DefaultRouteMenuData.filter((i) => !i.hidden)]
-        defaultRouteMenuDataRef.current = list
-        setMenuData([...list])
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            let list: MenuDataProps[] = []
+            if (patternMenu === "new") {
+                list = [...DefaultRouteMenuData.filter((i) => !i.hidden && i.isNovice)]
+            } else {
+                list = [...DefaultRouteMenuData.filter((i) => !i.hidden)]
+            }
+            defaultRouteMenuDataRef.current = list
+            setMenuData([...list])
+        })
     }, [])
     const onSelect = useMemoizedFn((item: MenuDataProps) => {
         setCurrentFirstMenu(item)
@@ -217,8 +225,8 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     })
     const onSave = useMemoizedFn(() => {
         console.log("menuData", menuData)
-        const index=menuData.findIndex(item=>!item.subMenuData||item.subMenuData.length===0)
-        if(index!==-1){
+        const index = menuData.findIndex((item) => !item.subMenuData || item.subMenuData.length === 0)
+        if (index !== -1) {
             failed(`请设置【${menuData[index].label}】菜单的二级菜单或者删除该一级菜单`)
             return
         }

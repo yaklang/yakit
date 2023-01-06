@@ -176,6 +176,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         setRemoteValue("PatternMenu", key)
         setPatternMenu(key as "expert" | "new")
     })
+    /**
+     * @description: 编辑菜单
+     */
     const onGoCustomize = useMemoizedFn(() => {
         ipcRenderer.invoke("open-customize-menu")
     })
@@ -213,12 +216,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             tip: "复原专家模式",
             onRestoreMenu: () => onRestoreExpert()
         }
-        // {
-        //     key: "default",
-        //     label: "默认模式",
-        //     itemIcon: <CubeIcon />,
-        //     tip: "复原默认模式"
-        // }
     ]
     return (
         <div className={style["heard-menu-body"]}>
