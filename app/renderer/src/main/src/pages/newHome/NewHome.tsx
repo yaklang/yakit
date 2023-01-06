@@ -3,9 +3,13 @@ import {Row, Col} from "antd"
 import {ArrowRightOutlined} from "@ant-design/icons"
 import styles from "./newHome.module.scss"
 import classNames from "classnames"
-import {Route,ContentByRoute} from "@/routes/routeSpec"
-import {AuditOutlined, CodeOutlined} from "@ant-design/icons"
+import {MenuDataProps, Route, ContentByRoute} from "@/routes/routeSpec"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
+import {AuditOutlined, CodeOutlined} from "@ant-design/icons"
+import {useGetState} from "ahooks"
+import cloneDeep from "lodash/cloneDeep"
+import {failed, info, success} from "@/utils/notification"
+import {MenuItemGroup} from "@/pages//MainOperator"
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -24,7 +28,8 @@ import {
     MenuDNSLogDeepIcon,
     MenuICMPSizeLogDeepIcon,
     MenuTCPPortLogDeepIcon,
-    MenuYsoJavaHackDeepIcon
+    MenuYsoJavaHackDeepIcon,
+    MenuBaseReptileDeepIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
 const {ipcRenderer} = window.require("electron")
 
@@ -39,27 +44,24 @@ const RouteTitle: React.FC<RouteTitleProp> = (props) => {
 
 interface RouteItemProp {
     dataSource: DataItem
-    setOpenPage:(v:any)=>void
+    setOpenPage: (v: any) => void
 }
 
 const RouteItem: React.FC<RouteItemProp> = (props) => {
-    const {dataSource,setOpenPage} = props
+    const {dataSource, setOpenPage} = props
     const goRoute = () => {
-        console.log("点击跳转",dataSource)
-        setOpenPage(
-             {
+        setOpenPage({
             verbose: dataSource.label,
             route: dataSource.key,
             singleNode: ContentByRoute(Route.HTTPHacker),
             multipleNode: []
-        }
-        )
+        })
     }
     return (
         <div className={styles["route-item"]} onClick={goRoute}>
             <div className={styles["icon-box"]}>
                 <div className={styles["menu-icon"]}>{dataSource.icon}</div>
-                <ArrowRightOutlined className={styles["right-arrow"]}/>
+                <ArrowRightOutlined className={styles["right-arrow"]} />
             </div>
             <div className={styles["item-label"]}>{dataSource.label}</div>
             <div className={styles["item-describe"]}>{dataSource.describe}</div>
@@ -83,20 +85,25 @@ interface newHomeListData {
 interface RouteListProp {
     colLimit?: 1 | 2 | 3
     data: newHomeListData
-    setOpenPage:(v:any)=>void
+    setOpenPage: (v: any) => void
 }
 
 const RouteList: React.FC<RouteListProp> = (props) => {
-    const {colLimit = 1, data,setOpenPage} = props
+    const {colLimit = 1, data, setOpenPage} = props
     const [span, setSpan] = useState(24 / colLimit)
-    const rowCount = Math.ceil(data.subMenuData.length/colLimit)
+    const rowCount = Math.ceil(data.subMenuData.length / colLimit)
     return (
-        <div style={{height:"100%"}} className={styles["list-box"]}>
+        <div style={{height: "100%"}} className={styles["list-box"]}>
             <RouteTitle title={data.label} />
             <Row className={styles["list-content"]}>
                 {data.subMenuData.map((item) => (
-                    <Col span={span} key={item.id} flex={1} className={classNames(styles[`list-content-col${rowCount}`])}>
-                        <RouteItem dataSource={item} setOpenPage={setOpenPage}/>
+                    <Col
+                        span={span}
+                        key={item.id}
+                        flex={1}
+                        className={classNames(styles[`list-content-col${rowCount}`])}
+                    >
+                        <RouteItem dataSource={item} setOpenPage={setOpenPage} />
                     </Col>
                 ))}
             </Row>
@@ -104,14 +111,14 @@ const RouteList: React.FC<RouteListProp> = (props) => {
     )
 }
 
-export const newHomeList: newHomeListData[] =[
+export const newHomeList: newHomeListData[] = [
     {
         id: "1",
         label: "资产搜集",
         subMenuData: [
             {
                 id: "1-1",
-                key: Route.Mod_ScanPort, 
+                key: Route.Mod_ScanPort,
                 label: "端口/指纹扫描",
                 icon: <MenuPortScanningDeepIcon />,
                 describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
@@ -269,48 +276,105 @@ export const newHomeList: newHomeListData[] =[
         ]
     }
 ]
-
+export const getScriptIcon = (name: string) => {
+    switch (name) {
+        case "基础爬虫":
+            return <MenuBaseReptileDeepIcon />
+        case "综合目录扫描与爆破":
+            return <MenuComprehensiveCatalogScanningAndBlastingDeepIcon />
+        default:
+            return <MenuBaseReptileDeepIcon />
+    }
+}
 export interface NewHomeProp {
-    setOpenPage:(v:any)=>void
-    isShowHome:boolean
+    setOpenPage: (v: any) => void
+    isShowHome: boolean
 }
 const NewHome: React.FC<NewHomeProp> = (props) => {
-    // useEffect(()=>{
-    //     ipcRenderer
-    //         .invoke("QueryYakScript", {
-    //             Pagination: genDefaultPagination(1000),
-    //             IsGeneralModule: true,
-    //             Type: "yak"
-    //         } as QueryYakScriptRequest)
-    //         .then((data: QueryYakScriptsResponse) => {
-    //             console.log("菜单栏",data)
-    //         })
-    // },[])
-    const {setOpenPage,isShowHome} = props
+    const [newHomeData,setNewHomeData,getNewHomeData] = useGetState(newHomeList)
+    useEffect(() => {
+        getCustomizeMenus()
+    }, [])
+
+    // 获取自定义菜单
+    const getCustomizeMenus = () => {
+        ipcRenderer
+        .invoke("GetAllMenuItem", {})
+        .then((data: {Groups: MenuItemGroup[]}) => {
+            const newCustomMenu: DataItem[] = []
+            data.Groups.forEach((menuGroupItem, index) => {
+                menuGroupItem.Items.map((item) => {
+                    const key =
+                        item.YakScriptId > 0
+                            ? `plugin:${item.Group}:${item.YakScriptId}`
+                            : `batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`
+                    newCustomMenu.push({
+                        id: key,
+                        label: item.Verbose,
+                        key: key as Route,
+                        icon:getScriptIcon(item.Verbose),
+                        describe: "通过爬虫可快速了解网站的整体架构",
+                    })
+                })
+            })
+            let itemArr = newCustomMenu.filter((item) => item.label === "基础爬虫")
+            if (itemArr.length > 0) {
+                const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
+                deepList[0].subMenuData.push(itemArr[0])
+                setNewHomeData(deepList)
+            }
+        })
+        .catch((e: any) => failed("Update Menu Item Failed"))
+        .finally(() => setTimeout(() => {}, 300))
+
+        ipcRenderer
+            .invoke("QueryYakScript", {
+                Pagination: genDefaultPagination(1000),
+                IsGeneralModule: true,
+                Type: "yak"
+            } as QueryYakScriptRequest)
+            .then((data: QueryYakScriptsResponse) => {
+                const itemArr: DataItem[] = data.Data.map((i) => {
+                    return {
+                        id: `plugin:${i.Id}`,
+                        icon: getScriptIcon(i.ScriptName),
+                        key: `plugin:${i.Id}` as Route,
+                        label: i.ScriptName,
+                        describe: "带有内置字典的综合目录扫描与爆破",
+                    } 
+                }).filter((item) => item.label === "综合目录扫描与爆破")
+                if (itemArr.length > 0) {
+                    const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
+                    deepList[0].subMenuData.push(itemArr[0])
+                    setNewHomeData(deepList)
+                }
+            })
+    }
+    const {setOpenPage, isShowHome} = props
     return (
-        <div className={classNames(styles["new-home-page"],{[styles["no-show-home"]]:!isShowHome})}>
+        <div className={classNames(styles["new-home-page"], {[styles["no-show-home"]]: !isShowHome})}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeList[0]} setOpenPage={setOpenPage}/>
+                    <RouteList data={newHomeData[0]} setOpenPage={setOpenPage} />
                 </div>
                 <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
                     <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
-                        <RouteList data={newHomeList[1]} colLimit={2} setOpenPage={setOpenPage} />
+                        <RouteList data={newHomeData[1]} colLimit={2} setOpenPage={setOpenPage} />
                     </div>
                     <div className={styles["bottom-in"]}>
-                        <RouteList data={newHomeList[2]} colLimit={2} setOpenPage={setOpenPage} />
+                        <RouteList data={newHomeData[2]} colLimit={2} setOpenPage={setOpenPage} />
                     </div>
                 </div>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeList[3]} setOpenPage={setOpenPage} />
+                    <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
                 </div>
                 <div className={styles["top-small-block"]}>
-                    <RouteList data={newHomeList[4]} setOpenPage={setOpenPage} />
+                    <RouteList data={newHomeData[4]} setOpenPage={setOpenPage} />
                 </div>
             </div>
             <div className={styles["home-bottom-block"]}>
                 <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeList[5]} colLimit={3} setOpenPage={setOpenPage}/>
+                    <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
                 </div>
                 <div className={styles["bottom-small-block"]}>
                     <RouteTitle title='插件商店' />

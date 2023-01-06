@@ -386,7 +386,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(()=>{
         if(selectItemPage){
             goRouterPage(selectItemPage)
-            console.log("ppx")
         }
     },[selectItemPage])
 
