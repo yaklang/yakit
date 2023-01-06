@@ -157,7 +157,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     })
     const onTabClick = useMemoizedFn((key) => {
-        onRouteMenuSelect(key as Route)
+        const index = key.indexOf("###")
+        if (index === -1) return
+        const newKey = key.substring(0, index)
+        onRouteMenuSelect(newKey as Route)
     })
     return (
         <div className={style["heard-menu-body"]}>
@@ -281,7 +284,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         )}
                                     </div>
                                 }
-                                key={item.key + item.label}
+                                key={`${item.key}###${item.label}`}
                             />
                         ))}
                     </Tabs>
