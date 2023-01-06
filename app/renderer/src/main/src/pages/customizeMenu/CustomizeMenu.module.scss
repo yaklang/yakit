@@ -301,7 +301,7 @@
         }
 
         .second-menu-item {
-            height: 60px;
+            min-height: 60px;
             padding: 12px;
             background: #FFFFFF;
             border: 1px solid var(--yakit-border-color);
@@ -334,6 +334,7 @@
                     word-break: break-all;
                     margin-right: 8px;
                     max-width: calc(100% - 60px);
+                    line-height: 16px;
                 }
 
                 .second-menu-edit-icon {
@@ -356,6 +357,7 @@
             .second-menu-describe {
                 font-size: 11px;
                 color: var(--yakit-helper-text-color);
+                line-height: 16px;
             }
         }
 
@@ -421,6 +423,11 @@
         border-top: 1px solid var(--yakit-border-color);
         padding: 10px 0px;
         position: relative;
+
+        &:hover {
+            background-color: #F5F5F5;
+            padding: 0 8px;
+        }
 
         .menu-icon {
             margin-right: 8px;
@@ -493,6 +500,11 @@
         padding: 8px 0px;
         width: 100%;
         position: relative;
+
+        &:hover {
+            background-color: #F5F5F5;
+            padding: 0 8px;
+        }
 
         .plugin-local-item-left {
             display: flex;
