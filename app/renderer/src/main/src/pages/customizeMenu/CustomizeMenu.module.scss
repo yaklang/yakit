@@ -242,6 +242,8 @@
 
 .second-menu {
     padding: 12px;
+    overflow-y: overlay;
+    height: 100%;
 
     .second-menu-heard {
         .second-menu-heard-input {
@@ -695,4 +697,69 @@
         justify-content: flex-end;
         gap: 8px;
     }
+}
+
+.confirm-modal {
+    padding: 28px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .confirm-icon {
+        color: var(--yakit-warning-color);
+    }
+
+    .confirm-text {
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--yakit-header-color);
+        margin-top: 16px;
+        margin-bottom: 8px;
+    }
+
+    .confirm-tip {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-body-text-color);
+
+
+        span {
+            color: var(--yakit-primary-color);
+            margin: 0 4px;
+        }
+    }
+
+    .confirm-buttons {
+        margin-top: 24px;
+
+        .confirm-btn {
+            margin-right: 8px;
+        }
+    }
+}
+
+.json-export {
+    height: 224px;
+    padding: 24px;
+
+    .json-export-heard {
+        display: flex;
+        align-items: flex-start;
+
+        .json-export-icon {
+            color: var(--yakit-warning-color);
+            margin-right: 16px;
+        }
+
+        .json-export-title {
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            color: var(--yakit-header-color);
+        }
+    }
+
 }
