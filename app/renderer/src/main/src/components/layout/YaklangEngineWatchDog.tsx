@@ -3,6 +3,7 @@ import {useDebounceEffect, useGetState} from "ahooks";
 import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil";
 import {YaklangEngineMode} from "@/yakitGVDefine";
 import {EngineModeVerbose} from "@/components/basics/YakitLoading";
+import { failed } from "@/utils/notification";
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -70,6 +71,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     return
                 case "remote":
                     outputToWelcomeConsole("远程模式不自动启动本地引擎")
+                    failed(`${e}`)
                     return
             }
         }).finally(() => {
@@ -132,7 +134,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             outputToWelcomeConsole(`错误原因为: ${e}`)
         })
 
-    }, [autoStartProgress, props], {leading: false, wait: 1000})
+    }, [autoStartProgress, props.onKeepaliveShouldChange, props.credential], {leading: false, wait: 1000})
 
     useEffect(() => {
         const time = props.engineLink ? 5000 : 1000

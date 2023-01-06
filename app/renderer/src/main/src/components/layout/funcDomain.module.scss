@@ -403,8 +403,7 @@
             .update-title {
                 height: 16px;
                 font-weight: 600;
-                // 暂时修改(后续带更新内容时使用)，原配置为12px
-                font-size: 14px;
+                font-size: 12px;
                 line-height: 16px;
                 color: var(--yakit-body-text-color);
             }

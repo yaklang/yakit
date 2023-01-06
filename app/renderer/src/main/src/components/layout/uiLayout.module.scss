@@ -11,12 +11,14 @@
     .ui-layout-container {
         flex: 1;
         height: 100%;
+        overflow: hidden;
 
         .container-wrapper {
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         // display: flex;
@@ -237,6 +239,63 @@
                         margin-left: 8px;
                         cursor: pointer;
                     }
+                }
+            }
+            // 后续看看能不能整合成全局动画
+            .agr-shake-animation {
+                -webkit-animation-name: shake;
+                animation-name: shake;
+                -webkit-animation-iteration-count: 1;
+                animation-iteration-count: 1;
+                -webkit-animation-duration: 1s;
+                animation-duration: 1s;
+                -webkit-animation-fill-mode: both;
+                animation-fill-mode: both;
+                -webkit-animation-timing-function: ease;
+                animation-timing-function: ease;
+            }
+
+            @-webkit-keyframes shake {
+                0%,
+                100% {
+                    -webkit-transform: translateX(0);
+                }
+
+                10%,
+                30%,
+                50%,
+                70%,
+                90% {
+                    -webkit-transform: translateX(-5px);
+                }
+
+                20%,
+                40%,
+                60%,
+                80% {
+                    -webkit-transform: translateX(5px);
+                }
+            }
+
+            @keyframes shake {
+                0%,
+                100% {
+                    transform: translateX(0);
+                }
+
+                10%,
+                30%,
+                50%,
+                70%,
+                90% {
+                    transform: translateX(-5px);
+                }
+
+                20%,
+                40%,
+                60%,
+                80% {
+                    transform: translateX(5px);
                 }
             }
             .hint-right-agreement {

@@ -16,12 +16,12 @@ import {
     YaklangInstallHintSvgIcon
 } from "./icons"
 import {PerformanceDisplay} from "./PerformanceDisplay"
-import {FuncDomain} from "./FuncDomain"
+import {FuncDomain, yakProcess} from "./FuncDomain"
 import {WinUIOp} from "./WinUIOp"
 import {GlobalReverseState} from "./GlobalReverseState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
 import {DownloadingState, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, successControlled} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {CodeGV, LocalGV} from "@/yakitGV"
 import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
@@ -98,7 +98,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
     })
 
+    const [isDev, setIsDev] = useState<boolean>(false)
+
     useEffect(() => {
+        ipcRenderer.invoke("is-dev").then((flag: boolean) => setIsDev(!!flag))
         const id = setInterval(() => {
             if (getIsYakInstalled()) {
                 return
@@ -227,10 +230,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineMode, localPort, adminPort])
 
     /** yaklang引擎切换启动模式 */
-    const changeEngineMode = useMemoizedFn((type: YaklangEngineMode) => {
+    const changeEngineMode = useMemoizedFn((type: YaklangEngineMode, keepalive?: boolean) => {
         info(`引擎状态切换为: ${EngineModeVerbose(type as YaklangEngineMode)}`)
 
-        setKeepalive(false)
+        setKeepalive(!!keepalive)
         setEngineLink(false)
 
         /** 未安装引擎下的模式切换取消 */
@@ -321,6 +324,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.invoke("UIOperate", "max").then(() => {})
     }
 
+    const onReady = useMemoizedFn(() => {
+        if (!getEngineLink()) setEngineLink(true)
+
+        // 连接成功，保存一下端口缓存
+        switch (engineMode) {
+            case "local":
+                setLocalValue(LocalGV.YaklangEnginePort, credential.Port)
+                return
+            case "admin":
+                setLocalValue(LocalGV.YaklangEngineAdminPort, credential.Port)
+                return
+        }
+    })
+    const onFailed = useMemoizedFn((count: number) => {
+        if (isDev) {
+            if (count > 1) {
+                setEngineLink(false)
+            }
+        } else {
+            setEngineLink(false)
+        }
+    })
+
     // outputToWelcomeConsole("UILayout 刷新")
     return (
         <div className={styles["ui-layout-wrapper"]}>
@@ -332,24 +358,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         keepalive={keepalive}
                         engineLink={engineLink}
                         onKeepaliveShouldChange={setKeepalive}
-                        onReady={() => {
-                            if (!getEngineLink()) setEngineLink(true)
-
-                            // 连接成功，保存一下端口缓存
-                            switch (engineMode) {
-                                case "local":
-                                    setLocalValue(LocalGV.YaklangEnginePort, credential.Port)
-                                    return
-                                case "admin":
-                                    setLocalValue(LocalGV.YaklangEngineAdminPort, credential.Port)
-                                    return
-                            }
-                        }}
-                        onFailed={(count) => {
-                            if (count > 1) {
-                                setEngineLink(false)
-                            }
-                        }}
+                        onReady={onReady}
+                        onFailed={onFailed}
                     />
                     <div id='yakit-header' className={styles["ui-layout-header"]}>
                         {system === "Darwin" ? (
@@ -523,17 +533,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             {/* 升级步骤是独立的操作，和连接不连接没有太大关系 */}
                             {(yaklangDownload || yakitDownload) && (
                                 <div className={styles["ui-layout-body-mask"]}>
-                                    <DownloadYaklang
-                                        system={system}
-                                        visible={yaklangDownload}
-                                        setVisible={setYaklangDownload}
-                                        updateReconnect={() => {
-                                            // updateReconnect
-                                        }}
-                                        killEnginePid={() => {
-                                            alert("清除旧的进程")
-                                        }}
-                                    />
+                                    <KillAllEngineHint visible={yaklangDownload} setVisible={setYaklangDownload} />
+
                                     <DownloadYakit
                                         system={system}
                                         visible={yakitDownload}
@@ -614,6 +615,8 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
     const [agrCheck, setAgrCheck] = useState<boolean>(false)
     /** 执行一键安装功能时判断用户协议状态 */
     const [checkStatus, setCheckStatus] = useState<boolean>(false)
+    /** 展示抖动动画 */
+    const [isShake, setIsShake] = useState<boolean>(false)
 
     /** 用户协议弹窗是否展示 */
     const [agrShow, setAgrShow] = useState<boolean>(false)
@@ -678,7 +681,11 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
     /** 一键安装事件 */
     const installEngine = useMemoizedFn(() => {
         setCheckStatus(true)
-        if (!agrCheck) return
+        if (!agrCheck) {
+            setIsShake(true)
+            setTimeout(() => setIsShake(false), 1000)
+            return
+        }
 
         setInstall(true)
         ipcRenderer
@@ -821,7 +828,11 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
                                             </div>
                                         )}
 
-                                        <div className={styles["hint-right-agreement"]}>
+                                        <div
+                                            className={classnames(styles["hint-right-agreement"], {
+                                                [styles["agr-shake-animation"]]: !agrCheck && isShake
+                                            })}
+                                        >
                                             <Checkbox
                                                 className={classnames(
                                                     {[styles["agreement-checkbox"]]: !(!agrCheck && checkStatus)},
@@ -859,7 +870,11 @@ const YaklangEngineHint: React.FC<YaklangEngineHintProps> = React.memo((props) =
                                                     type='outline2'
                                                     onClick={() => {
                                                         setCheckStatus(true)
-                                                        if (!agrCheck) return
+                                                        if (!agrCheck) {
+                                                            setIsShake(true)
+                                                            setTimeout(() => setIsShake(false), 1000)
+                                                            return
+                                                        }
                                                         setIsRemoteEngine(true)
                                                     }}
                                                 >
@@ -1547,6 +1562,116 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
         >
             {children}
         </YakitPopover>
+    )
+})
+
+interface KillAllEngineHintProps {
+    visible: boolean
+    setVisible: (flag: boolean) => any
+}
+
+/** @name 关闭全部引擎并更新的确认弹窗 */
+const KillAllEngineHint: React.FC<KillAllEngineHintProps> = React.memo((props) => {
+    const {visible, setVisible} = props
+
+    const [disabled, setDisabled] = useState(true)
+    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
+    const draggleRef = useRef<HTMLDivElement>(null)
+
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const onKill = useMemoizedFn(() => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("ps-yak-grpc")
+            .then((i: yakProcess[]) => {
+                ;(i || []).forEach((i) => {
+                    ipcRenderer.invoke("kill-yak-grpc", i.pid).then(() => {
+                        info(`KILL yak PROCESS: ${i.pid}`)
+                    })
+                })
+                setTimeout(() => {
+                    successControlled("引擎进程关闭中...", 5)
+                    setVisible(false)
+                }, 1000)
+            })
+            .catch((e) => {
+                failed(`关闭引擎失败，请再次尝试关闭`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 300)
+            })
+    })
+    const onCancel = useMemoizedFn(() => setVisible(false))
+
+    /** 弹窗拖拽移动触发事件 */
+    const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
+        const {clientWidth, clientHeight} = window.document.documentElement
+        const targetRect = draggleRef.current?.getBoundingClientRect()
+        if (!targetRect) return
+
+        setBounds({
+            left: -targetRect.left + uiData.x,
+            right: clientWidth - (targetRect.right - uiData.x),
+            top: -targetRect.top + uiData.y + 36,
+            bottom: clientHeight - (targetRect.bottom - uiData.y)
+        })
+    })
+
+    return (
+        <>
+            <Draggable
+                defaultClassName={classnames(
+                    styles["yaklang-update-modal"],
+                    visible ? styles["engine-hint-modal-wrapper"] : styles["engine-hint-modal-hidden-wrapper"],
+                    [styles["modal-top-wrapper"]]
+                )}
+                disabled={disabled}
+                bounds={bounds}
+                onStart={(event, uiData) => onStart(event, uiData)}
+            >
+                <div ref={draggleRef}>
+                    <div className={styles["modal-yaklang-engine-hint"]}>
+                        <div className={styles["yaklang-engine-hint-wrapper"]}>
+                            <div
+                                className={styles["hint-draggle-body"]}
+                                onMouseEnter={() => {
+                                    if (disabled) setDisabled(false)
+                                }}
+                                onMouseLeave={() => setDisabled(true)}
+                            ></div>
+
+                            <div className={styles["hint-left-wrapper"]}>
+                                <div className={styles["hint-icon"]}>
+                                    <YaklangInstallHintSvgIcon />
+                                </div>
+                            </div>
+
+                            <div className={styles["hint-right-wrapper"]}>
+                                <div className={styles["hint-right-title"]}>关闭所有引擎进程</div>
+                                <div className={styles["hint-right-content"]}>
+                                    更新引擎需关闭所有引擎进程，包括正在连接的本地引擎进程，同时页面将进入加载页，并需要在加载页点击”更新引擎“
+                                </div>
+
+                                <div className={styles["hint-right-btn"]}>
+                                    <div></div>
+                                    <div className={styles["btn-group-wrapper"]}>
+                                        <YakitButton loading={loading} type='outline2' size='max' onClick={onCancel}>
+                                            取消
+                                        </YakitButton>
+                                        <YakitButton loading={loading} size='max' onClick={onKill}>
+                                            确认关闭
+                                        </YakitButton>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Draggable>
+        </>
     )
 })
 

@@ -18,7 +18,7 @@ import {YakitEllipsis} from "../basics/YakitEllipsis"
 import {useMemoizedFn} from "ahooks"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, successControlled} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YaklangEngineMode} from "@/yakitGVDefine"
@@ -236,7 +236,7 @@ interface UIEngineListProp {
     engineLink: boolean
     engineMode: YaklangEngineMode
 }
-interface yakProcess {
+export interface yakProcess {
     port: number
     pid: number
     cmd: string
@@ -308,6 +308,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 info(`KILL yak PROCESS: ${i.pid}`)
             })
         })
+        setTimeout(() => successControlled("引擎进程关闭中...", 5), 1000)
     })
 
     const isLocal = useMemo(() => {
@@ -316,6 +317,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
 
     return (
         <YakitPopover
+            visible={show}
             overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
             placement={"bottomRight"}
             content={
@@ -345,6 +347,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                             <YakitButton
                                                 type='text'
                                                 onClick={() => {
+                                                    setShow(false)
                                                     showModal({
                                                         title: "YakProcess 详情",
                                                         content: <div style={{padding: 8}}>{JSON.stringify(i)}</div>
@@ -354,10 +357,19 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 Details
                                             </YakitButton>
                                             <Popconfirm
-                                                title={"将会强制关闭该进程"}
+                                                title={
+                                                    <>
+                                                        确定关闭将会强制关闭进程,
+                                                        <br />
+                                                        如为当前连接引擎,未关闭Yakit再次连接引擎,
+                                                        <br />
+                                                        则需在加载页点击"其他连接模式-手动启动引擎"
+                                                    </>
+                                                }
                                                 onConfirm={() => {
                                                     ipcRenderer
                                                         .invoke("kill-yak-grpc", i.pid)
+                                                        .then(() => successControlled("引擎进程关闭中...", 5))
                                                         .catch((e: any) => {})
                                                         .finally(update)
                                                 }}
@@ -373,7 +385,18 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         </div>
                         <div className={styles["engine-list-footer"]}>
                             <div></div>
-                            <Popconfirm title={"确定要全部强制关闭进程"} onConfirm={() => allClose()}>
+                            <Popconfirm
+                                title={
+                                    <>
+                                        确定关闭将会强制关闭进程,
+                                        <br />
+                                        如为当前连接引擎,未关闭Yakit再次连接引擎,
+                                        <br />
+                                        则需在加载页点击"其他连接模式-手动启动引擎"
+                                    </>
+                                }
+                                onConfirm={() => allClose()}
+                            >
                                 <div className={styles["engine-list-footer-btn"]}>全部关闭</div>
                             </Popconfirm>
                         </div>
@@ -383,7 +406,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <GooglePhotosLogoSvgIcon className={classnames({[styles["icon-rotate-animation"]]: show})} />
+                <GooglePhotosLogoSvgIcon className={classnames({[styles["icon-rotate-animation"]]: !show})} />
             </div>
         </YakitPopover>
     )
@@ -619,9 +642,10 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     <div className={styles["update-icon"]}>
                         <YakitWhiteSvgIcon />
                     </div>
-                    {/* 等使用更新内容时，下面div样式需要被删除 */}
-                    <div style={{display: "flex", alignItems: "center"}}>
+                    {/* 等使用更新内容时，下面"当前版本"-div需要被删除 */}
+                    <div>
                         <div className={styles["update-title"]}>{`Yakit ${isUpdate ? lastVersion : version}`}</div>
+                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
                         {/* <div className={styles["update-time"]}>2022-10-01</div> */}
                     </div>
                 </div>
@@ -668,9 +692,10 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     <div className={styles["update-icon"]}>
                         <YaklangSvgIcon />
                     </div>
-                    {/* 等使用更新内容时，下面div样式需要被删除 */}
-                    <div style={{display: "flex", alignItems: "center"}}>
+                    {/* 等使用更新内容时，下面"当前版本"-div需要被删除 */}
+                    <div>
                         <div className={styles["update-title"]}>{`Yaklang ${isUpdate ? lastVersion : version}`}</div>
+                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
                         {/* <div className={styles["upda te-time"]}>2022-09-29</div> */}
                     </div>
                 </div>
