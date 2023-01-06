@@ -146,7 +146,7 @@ const PieChart: React.FC<PieChartProps> = (props) => {
     const g2Ref = useRef<any>()
     return (
         <Chart
-            padding={[0, 150, 0, 0]}
+            padding={[0, 160, 0, 0]}
             data={chartList || []}
             autoFit
             radius={0.8}
@@ -155,12 +155,14 @@ const PieChart: React.FC<PieChartProps> = (props) => {
             color={["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]}
             label={{visible: false}}
             onClick={(ev) => {
-                console.log("g2", g2Ref.current)
+                // console.log("g2", g2Ref.current)
                 const data = ev.data
                 console.log("data", data)
             }}
             onGetG2Instance={(g2chart) => {
                 g2Ref.current = g2chart
+                // Legend不允许点击
+                g2chart.removeInteraction('legend-filter');
             }}
         >
             <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
@@ -171,21 +173,26 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                 visible={true}
                 offsetX={-70}
                 itemHeight={18}
+                itemWidth={100}
+                onChange={(e, chart) =>{
+                    console.log("e",e,)
+                }}
                 itemName={{
                     formatter: (text: string) => `${text}`,
                     style: {
                         fill: "#85899E",
-                        width:60,
-                    }
+                    },
                 }}
                 itemValue={{
                     formatter: (_text: string, _item: any, index: number) => {
-                        return `        ${chartList[index].value}`
+                        return `${chartList[index].value}`
                     },
+                    // alignRight 需搭配 itemWidth 使用
+                    alignRight:true,
                     style: {
                         fill: "#31343F",
-                        fontWeight: 500
-                    }
+                        fontWeight: 500,
+                    },
                 }}
             />
             <Annotation.Text
@@ -229,8 +236,9 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
-                <div className={styles["add-count-box"]}>
-                    <div className={styles["day-add-count"]}>
+                <div className={styles["add-box"]}>
+                    <div className={styles["add-count-box"]}>
+                        <div className={styles["day-add-count"]}>
                         <div className={styles["add-title"]}>今日新增数</div>
                         <div className={styles["add-content"]}>12<AddDayCountIcon style={{paddingLeft:4}}/></div>
                     </div>
@@ -238,39 +246,11 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                     <div className={styles["add-title"]}>本周新增数</div>
                     <div className={styles["add-content"]}>256<AddWeekCountIcon style={{paddingLeft:4}}/></div>
                     </div>
+                    </div>
+                    
                 </div>
                 <div className={styles["chart-box"]} ref={listHeightRef}>
-                    {/* <DonutChart
-                        data={chartList || []}
-                        autoFit
-                        radius={0.8}
-                        padding='auto'
-                        angleField='value'
-                        colorField='type'
-                        color={['#FFB660','#4A94F8','#5F69DD','#56C991','#8863F7','#35D8EE']}
-                        label={{visible:false}}
-                        legend={{
-                            visible:true,
-                            offsetX:-40,
-                            itemHeight:18,
-                            itemName:{
-                                formatter: (text: string) => `${text}`,
-                                style: {
-                                    fill: '#85899E',
-                                },
-                            },
-                            itemValue:{
-                                formatter: (_text: string, _item: any, index: number) => {
-                                    return `    ${chartList[index].value}`;
-                                  },
-                                  style: {
-                                    fill: '#31343F',
-                                  },
-                            }
-                        }}
-                        forceFit={false}
-                        // pieStyle={{stroke: "white", lineWidth: 5}}
-                    /> */}
+                    {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
                     <PieChart />
                 </div>
             </div>
@@ -457,6 +437,7 @@ export interface NewHomeProps {
     isShowHome: boolean
 }
 const NewHome: React.FC<NewHomeProps> = (props) => {
+    const {setOpenPage, isShowHome} = props
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     useEffect(() => {
         getCustomizeMenus()
@@ -516,7 +497,6 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 }
             })
     }
-    const {setOpenPage, isShowHome} = props
     return (
         <div className={classNames(styles["new-home-page"], {[styles["no-show-home"]]: !isShowHome})}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
