@@ -751,3 +751,40 @@ const Cube = () => (
 export const CubeIcon = (props: Partial<IconProps>) => {
     return <Icon component={Cube} {...props} />
 }
+
+const ShieldExclamation = () => (
+    <svg width='41' height='40' viewBox='0 0 41 40' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <circle cx='20.5' cy='20' r='20' fill='currentColor' fill-opacity='0.2' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M20.4999 8.49207C17.5217 11.1576 13.6061 12.7973 9.30859 12.8556C9.15252 13.7852 9.07129 14.7403 9.07129 15.7143C9.07129 23.1784 13.8416 29.5283 20.4999 31.8817C27.1581 29.5283 31.9284 23.1784 31.9284 15.7143C31.9284 14.7403 31.8472 13.7852 31.6911 12.8556C27.3936 12.7973 23.478 11.1576 20.4999 8.49207ZM21.9284 25.7143C21.9284 26.5032 21.2888 27.1428 20.4999 27.1428C19.7109 27.1428 19.0713 26.5032 19.0713 25.7143C19.0713 24.9253 19.7109 24.2857 20.4999 24.2857C21.2888 24.2857 21.9284 24.9253 21.9284 25.7143ZM21.9284 15.7143C21.9284 14.9253 21.2888 14.2857 20.4999 14.2857C19.7109 14.2857 19.0713 14.9253 19.0713 15.7143V20C19.0713 20.789 19.7109 21.4286 20.4999 21.4286C21.2888 21.4286 21.9284 20.789 21.9284 20V15.7143Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description: shield-exclamation 确认提示
+ */
+export const ShieldExclamationIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ShieldExclamation} {...props} />
+}
+
+const DocumentDownload = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M9.5999 3.2C7.83259 3.2 6.3999 4.63269 6.3999 6.4V25.6C6.3999 27.3673 7.83259 28.8 9.5999 28.8H22.3999C24.1672 28.8 25.5999 27.3673 25.5999 25.6V11.8627C25.5999 11.014 25.2628 10.2001 24.6626 9.6L19.1999 4.13726C18.5998 3.53714 17.7859 3.2 16.9372 3.2H9.5999ZM17.5999 12.8C17.5999 11.9163 16.8836 11.2 15.9999 11.2C15.1162 11.2 14.3999 11.9163 14.3999 12.8V18.5373L12.3313 16.4686C11.7064 15.8438 10.6934 15.8438 10.0685 16.4686C9.44369 17.0935 9.44369 18.1065 10.0685 18.7314L14.8685 23.5314C15.4934 24.1562 16.5064 24.1562 17.1313 23.5314L21.9313 18.7314C22.5561 18.1065 22.5561 17.0935 21.9313 16.4686C21.3064 15.8438 20.2934 15.8438 19.6685 16.4686L17.5999 18.5373V12.8Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description: DocumentDownload 下载图标
+ */
+export const DocumentDownloadIcon = (props: Partial<IconProps>) => {
+    return <Icon component={DocumentDownload} {...props} />
+}

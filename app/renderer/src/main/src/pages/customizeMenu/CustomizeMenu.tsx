@@ -25,7 +25,9 @@ import {
     OfficialPluginIcon,
     QuestionMarkCircleIcon,
     TerminalIcon,
-    PencilAltIcon
+    PencilAltIcon,
+    ShieldExclamationIcon,
+    DocumentDownloadIcon
 } from "@/assets/newIcon"
 import {MenuDataProps, DefaultRouteMenuData, SystemRouteMenuData, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -46,6 +48,7 @@ import {getScriptIcon} from "../layout/HeardMenu/HeardMenu"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {getRemoteValue} from "@/utils/kv"
+import {saveABSFileToOpen} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,6 +59,30 @@ const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) =>
     return result
 }
 
+export const getMenuListBySort = (menuData: MenuDataProps[]) => {
+    let newMenu: MenuDataProps[] = []
+    menuData.forEach((item, index) => {
+        let subMenuData: MenuDataProps[] = []
+        if (item.subMenuData && item.subMenuData.length > 0) {
+            item.subMenuData.forEach((subItem, subIndex) => {
+                subMenuData.push({
+                    ...subItem,
+                    sort: subIndex,
+                    icon: undefined
+                })
+            })
+            newMenu.push({
+                ...item,
+                sort: index,
+                subMenuData
+            })
+        } else {
+            newMenu.push(item)
+        }
+    })
+    return newMenu
+}
+
 const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     const {onClose} = props
     const [menuData, setMenuData] = useState<MenuDataProps[]>([])
@@ -63,6 +90,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
     const [currentSubMenuData, setCurrentSubMenuData] = useState<MenuDataProps>()
     const [visibleSubMenu, setVisibleSubMenu] = useState<boolean>(false)
+    const [emptyMenuLength, setEmptyMenuLength] = useState<number>(0)
 
     const [subMenuName, setSubMenuName] = useState<string>("")
 
@@ -223,13 +251,29 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         setSubMenuData([...subMenuData])
         updateData(subMenuData)
     })
+    /**
+     * @description: 完成
+     */
     const onSave = useMemoizedFn(() => {
-        console.log("menuData", menuData)
-        const index = menuData.findIndex((item) => !item.subMenuData || item.subMenuData.length === 0)
-        if (index !== -1) {
-            failed(`请设置【${menuData[index].label}】菜单的二级菜单或者删除该一级菜单`)
-            return
+        let length = 0
+        menuData.forEach((item) => {
+            if (!item.subMenuData || item.subMenuData.length === 0) {
+                length += 1
+            }
+        })
+        if (length === 0) {
+            // 保存
+            onSaveLocal()
+        } else {
+            setEmptyMenuLength(length)
         }
+    })
+    /**
+     * @description: 保存至引擎
+     */
+    const onSaveLocal = useMemoizedFn(() => {
+        const newMenu: MenuDataProps[] = getMenuListBySort(menuData)
+        setEmptyMenuLength(0)
     })
     const onTip = useMemoizedFn(() => {
         if (JSON.stringify(defaultRouteMenuDataRef.current) === JSON.stringify(menuData)) {
@@ -280,6 +324,11 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         updateData(subMenuData)
         setVisibleSubMenu(false)
     })
+    const onImportJSON = useMemoizedFn(() => {
+        const newMenu: MenuDataProps[] = getMenuListBySort(menuData)
+        const menuString = JSON.stringify(newMenu)
+        saveABSFileToOpen(`menuData-${randomString(10)}.json`, menuString)
+    })
     return (
         <div className={style["content"]}>
             <div className={style["left"]}>
@@ -305,7 +354,9 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                     <YakitButton type='primary' onClick={() => onSave()}>
                         完成
                     </YakitButton>
-                    <YakitButton type='outline1'>导出 JSON</YakitButton>
+                    <YakitButton type='outline1' onClick={() => onImportJSON()}>
+                        导出 JSON
+                    </YakitButton>
                     <YakitButton onClick={() => onTip()}>取消</YakitButton>
                 </div>
             </div>
@@ -347,7 +398,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                             autoSize={{minRows: 3, maxRows: 3}}
                             showCount
                             value={subMenuName}
-                            maxLength={20}
+                            maxLength={50}
                             onChange={(e) => setSubMenuName(e.target.value)}
                         />
                     </div>
@@ -363,6 +414,34 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         </YakitButton>
                         <YakitButton type='primary' onClick={() => onEditSubMenuName()}>
                             确定
+                        </YakitButton>
+                    </div>
+                </div>
+            </YakitModal>
+            <YakitModal
+                closable={true}
+                footer={null}
+                visible={emptyMenuLength > 0}
+                onCancel={() => setEmptyMenuLength(0)}
+                width={431}
+            >
+                <div className={style["confirm-modal"]}>
+                    <ShieldExclamationIcon className={style["confirm-icon"]} />
+                    <div className={style["confirm-text"]}>检测到有空菜单</div>
+                    <div className={style["confirm-tip"]}>
+                        有<span>{emptyMenuLength}</span>个菜单功能为空，空菜单将不会在页面展示，是否仍要保存？
+                    </div>
+                    <div className={style["confirm-buttons"]}>
+                        <YakitButton
+                            type='outline2'
+                            size='large'
+                            className={style["confirm-btn"]}
+                            onClick={() => setEmptyMenuLength(0)}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' size='large' onClick={() => onSaveLocal()}>
+                            保存
                         </YakitButton>
                     </div>
                 </div>
@@ -399,7 +478,6 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
      */
     const onDragUpdate = useThrottleFn(
         (result) => {
-            // console.log("onDragUpdate", result)
             if (!result.destination) {
                 setDestinationDrag("")
                 return
@@ -504,7 +582,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                 <Droppable droppableId='droppable2'>
                     {(provided, snapshot) => {
                         return (
-                            <div {...provided.droppableProps} ref={provided.innerRef} style={{paddingBottom: 100}}>
+                            <div {...provided.droppableProps} ref={provided.innerRef} style={{paddingBottom: 70}}>
                                 {subMenuData.map((item, index) => (
                                     <Draggable key={item.id} draggableId={item.id} index={index}>
                                         {(provided, snapshot) => (
