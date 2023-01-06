@@ -191,7 +191,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         onSelect={(r) => onRouteMenuSelect(r.key as Route)}
                                         isExpand={isExpand}
                                         setSubMenuData={(menu) => {
-                                            console.log("menu", menu)
                                             setSubMenuData(menu.subMenuData || [])
                                             setMenuId(menu.id || "")
                                         }}
@@ -282,7 +281,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         )}
                                     </div>
                                 }
-                                key={item.key}
+                                key={item.key + item.label}
                             />
                         ))}
                     </Tabs>
