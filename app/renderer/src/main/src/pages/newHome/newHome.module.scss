@@ -170,7 +170,7 @@
     line-height: 32px;
     color: #31343f;
 }
-.add-box{
+.add-box {
     width: 30%;
     height: 100%;
     display: inline-block;
@@ -193,6 +193,7 @@
 .label-item {
     display: inline-block;
     margin-top: 8px;
+    margin-right: 8px;
     padding: 4px 8px;
     font-weight: 400;
     font-size: 12px;
@@ -202,6 +203,12 @@
     border: 1px solid #eaecf3;
     border-radius: 4px;
     cursor: pointer;
+}
+.label-item:hover {
+    background: rgba(242, 139, 68, 0.06);
+    border: 1px solid #fbc6a1;
+    border-radius: 4px;
+    color: #F28B44;
 }
 .bottom-box-title {
     margin-top: 16px;

@@ -5,11 +5,15 @@ import styles from "./newHome.module.scss"
 import classNames from "classnames"
 import {MenuDataProps, Route, ContentByRoute} from "@/routes/routeSpec"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {DonutChart, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend} from "bizcharts"
-import {useGetState} from "ahooks"
+import {NetWorkApi} from "@/services/fetch"
+import {Interaction, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend, getTheme} from "bizcharts"
+import {UserInfoProps, useStore} from "@/store"
+import {API} from "@/services/swagger/resposeType"
+import {useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
+import {PluginSearchStatisticsRequest, PluginType} from "@/pages/yakitStore/YakitStorePage"
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -113,151 +117,217 @@ const RouteList: React.FC<RouteListProps> = (props) => {
     )
 }
 interface PieChartProps {
-    
+    goStoreRoute: (v:any) => void
+    isShowHome: boolean
+}
+interface chartListProps {
+    type: string
+    value: number
 }
 const PieChart: React.FC<PieChartProps> = (props) => {
-    // 数据源
-    const chartList = [
-        {
-            type: "分类一",
-            value: 27
-        },
-        {
-            type: "分类二",
-            value: 25
-        },
-        {
-            type: "分类三",
-            value: 18
-        },
-        {
-            type: "分类四",
-            value: 15
-        },
-        {
-            type: "分类五",
-            value: 10
-        },
-        {
-            type: "其它",
-            value: 5
+    const {goStoreRoute,isShowHome} = props
+    const [chartList, setChartList] = useState<chartListProps[]>([])
+    // 全局登录状态
+    const {userInfo} = useStore()
+    useEffect(() => {
+        if(isShowHome){
+            getPluginSearch()
         }
-    ]
+        else{
+            setChartList([])
+        }
+    }, [isShowHome])
+    const getPluginSearch = useMemoizedFn(() => {
+        let url = "plugin/search/unlogged"
+        if (userInfo.isLogin) {
+            url = "plugin/search"
+        }
+        NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
+            method: "get",
+            url,
+            params: {
+                bind_me: false
+            }
+        })
+            .then((res: API.YakitSearch) => {
+                if (res.plugin_type) {
+                    setChartList(
+                        res.plugin_type.map((item) => ({type: PluginType[item.value] ?? "未识别", value: item.count,id:item.value}))
+                    )
+                }
+            })
+            .catch((err) => {
+                failed("线上统计数据获取失败:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {}, 200)
+            })
+    })
     const g2Ref = useRef<any>()
+    // 发送插件仓库
+    const onSendToTab = useMemoizedFn((pluginType:string) => {
+        goStoreRoute({pluginType})
+    })
     return (
-        <Chart
-            padding={[0, 160, 0, 0]}
-            data={chartList || []}
-            autoFit
-            radius={0.8}
-            angleField='value'
-            colorField='type'
-            color={["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]}
-            label={{visible: false}}
-            onClick={(ev) => {
-                // console.log("g2", g2Ref.current)
-                const data = ev.data
-                console.log("data", data)
-            }}
-            onGetG2Instance={(g2chart) => {
-                g2Ref.current = g2chart
-                // Legend不允许点击
-                g2chart.removeInteraction('legend-filter');
-            }}
-        >
-            <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
-            <Tooltip showTitle={false} />
-            <Axis visible={false} />
-            <Legend
-                position='right'
-                visible={true}
-                offsetX={-70}
-                itemHeight={18}
-                itemWidth={100}
-                onChange={(e, chart) =>{
-                    console.log("e",e,)
-                }}
-                itemName={{
-                    formatter: (text: string) => `${text}`,
-                    style: {
-                        fill: "#85899E",
-                    },
-                }}
-                itemValue={{
-                    formatter: (_text: string, _item: any, index: number) => {
-                        return `${chartList[index].value}`
-                    },
-                    // alignRight 需搭配 itemWidth 使用
-                    alignRight:true,
-                    style: {
-                        fill: "#31343F",
-                        fontWeight: 500,
-                    },
-                }}
-            />
-            <Annotation.Text
-                position={["50%", "46%"]}
-                content={chartList.map((item) => item.value).reduce((a, b) => a + b, 0)}
-                style={{
-                    lineHeight: 40,
-                    fontSize: 20,
-                    fontWeight: 600,
-                    fill: "#31343F",
-                    textAlign: "center"
-                }}
-            />
-            <Annotation.Text
-                position={["50%", "57%"]}
-                content='插件总数'
-                style={{
-                    lineHeight: 20,
-                    fontSize: 12,
-                    fill: "#85899E",
-                    textAlign: "center"
-                }}
-            />
-            <Interval
-                position='value'
-                adjust='stack'
-                color='type'
-                style={{
-                    lineWidth: 1,
-                    stroke: "#fff"
-                }}
-            />
-        </Chart>
+        <>
+            {chartList.length > 0 && (
+                <Chart
+                    padding={[0, 160, 0, 0]}
+                    data={chartList || []}
+                    autoFit
+                    radius={1.0}
+                    angleField='value'
+                    colorField='type'
+                    color={["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]}
+                    label={{visible: false}}
+                    onClick={(ev) => {
+                        // console.log("g2", g2Ref.current)
+                        const data = ev.data
+                        // console.log("data", data)
+                        if(data){
+                            onSendToTab(data.data.type??"")
+                        }
+                    }}
+                    onGetG2Instance={(g2chart) => {
+                        g2Ref.current = g2chart
+                        // Legend不允许点击
+                        g2chart.removeInteraction("legend-filter")
+                    }}
+                >
+                    <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
+
+                    <Tooltip showTitle={false} />
+                    <Axis visible={false} />
+                    <Legend
+                        position='right'
+                        visible={true}
+                        offsetX={-70}
+                        itemHeight={18}
+                        itemWidth={130}
+                        onChange={(e, chart) => {
+                            // console.log("e", e)
+                            if(e){
+                                onSendToTab(e.item.value??"")
+                            }
+                        }}
+                        itemName={{
+                            formatter: (text: string) => `${text}`,
+                            style: {
+                                fill: "#85899E",
+                                cursor: "pointer"
+                            }
+                        }}
+                        itemValue={{
+                            formatter: (_text: string, _item: any, index: number) => {
+                                return `${chartList[index].value}`
+                            },
+                            // alignRight 需搭配 itemWidth 使用
+                            alignRight: true,
+                            style: {
+                                fill: "#31343F",
+                                fontWeight: 500,
+                                cursor: "pointer"
+                            }
+                        }}
+                    />
+                    <Annotation.Text
+                        position={["50%", "46%"]}
+                        content={chartList.map((item) => item.value).reduce((a, b) => a + b, 0)}
+                        style={{
+                            lineHeight: 40,
+                            fontSize: 20,
+                            fontWeight: 600,
+                            fill: "#31343F",
+                            textAlign: "center"
+                        }}
+                    />
+                    <Annotation.Text
+                        position={["50%", "57%"]}
+                        content='插件总数'
+                        style={{
+                            lineHeight: 20,
+                            fontSize: 12,
+                            fill: "#85899E",
+                            textAlign: "center"
+                        }}
+                    />
+                    <Interaction type='element-active' />
+                    <Interval
+                        position='value'
+                        adjust='stack'
+                        color='type'
+                        style={{
+                            lineWidth: 1,
+                            // stroke: "#F0F1F3",
+                            stroke: "#fff",
+                            cursor: "pointer"
+                        }}
+                        state={{
+                            active: {
+                                style: (t) => {
+                                    const res = getTheme().geometries.interval.rect.selected.style(t)
+                                    return {...res}
+                                }
+                            }
+                        }}
+                    />
+                </Chart>
+            )}
+        </>
     )
 }
 
-interface PlugInShopProps {}
+interface PlugInShopProps {
+    setOpenPage: (v: any) => void
+    isShowHome:boolean
+}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
+    const {setOpenPage,isShowHome} = props
     const listHeightRef = useRef<any>()
-
+    const goStoreRoute = (params) => {
+        setOpenPage({
+            verbose: "插件仓库",
+            route: Route.ModManager,
+            singleNode: ContentByRoute(Route.ModManager),
+            multipleNode: []
+        })
+        // 向插件仓库发送参数
+        setTimeout(()=>{
+           ipcRenderer.send("yakit-store-params", params)  
+        },500)
+    }
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
                 <div className={styles["add-box"]}>
                     <div className={styles["add-count-box"]}>
                         <div className={styles["day-add-count"]}>
-                        <div className={styles["add-title"]}>今日新增数</div>
-                        <div className={styles["add-content"]}>12<AddDayCountIcon style={{paddingLeft:4}}/></div>
+                            <div className={styles["add-title"]}>今日新增数</div>
+                            <div className={styles["add-content"]}>
+                                12
+                                <AddDayCountIcon style={{paddingLeft: 4}} />
+                            </div>
+                        </div>
+                        <div className={styles["week-add-count"]}>
+                            <div className={styles["add-title"]}>本周新增数</div>
+                            <div className={styles["add-content"]}>
+                                256
+                                <AddWeekCountIcon style={{paddingLeft: 4}} />
+                            </div>
+                        </div>
                     </div>
-                    <div className={styles["week-add-count"]}>
-                    <div className={styles["add-title"]}>本周新增数</div>
-                    <div className={styles["add-content"]}>256<AddWeekCountIcon style={{paddingLeft:4}}/></div>
-                    </div>
-                    </div>
-                    
                 </div>
                 <div className={styles["chart-box"]} ref={listHeightRef}>
                     {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                    <PieChart />
+                    <PieChart goStoreRoute={goStoreRoute} isShowHome={isShowHome}/>
                 </div>
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
                 <div className={styles["label-box"]}>
-                    <div className={styles["label-item"]}>POC</div>
+                    <div className={styles["label-item"]} onClick={()=>goStoreRoute({keyword:"555"})}>555</div>
+                    
+                    <div className={styles["label-item"]} onClick={()=>goStoreRoute({keyword:"网站信息获取"})}>网站信息获取</div>
                 </div>
             </div>
         </div>
@@ -440,8 +510,13 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
     const {setOpenPage, isShowHome} = props
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     useEffect(() => {
-        getCustomizeMenus()
-    }, [])
+        if(isShowHome){
+            getCustomizeMenus()
+        }
+        else{
+            setNewHomeData(newHomeList)
+        }
+    }, [isShowHome])
 
     // 获取自定义菜单
     const getCustomizeMenus = () => {
@@ -524,7 +599,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 </div>
                 <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
                     <RouteTitle title='插件商店' />
-                    <PlugInShop />
+                    <PlugInShop setOpenPage={setOpenPage} isShowHome={isShowHome}/>
                 </div>
             </div>
         </div>

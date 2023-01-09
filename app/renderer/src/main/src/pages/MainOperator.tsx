@@ -144,6 +144,7 @@ export interface MainProp {
     addr?: string
     onErrorConfirmed?: () => any
     selectItemPage?:Route
+    setSelectItemPage?: (v:any)=> void
     isShowHome?:boolean
 }
 
@@ -384,8 +385,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }, [])
 
     useEffect(()=>{
-        if(selectItemPage){
+        if(selectItemPage&&setSelectItemPage){
             goRouterPage(selectItemPage)
+            setSelectItemPage(undefined)
         }
     },[selectItemPage])
 

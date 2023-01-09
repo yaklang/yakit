@@ -176,4 +176,9 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
         return await asyncDeleteLocalPluginsByWhere(params)
     })
+
+    // 参数携带
+    ipcMain.on("yakit-store-params", (event, arg) => {
+        win.webContents.send("get-yakit-store-params", arg)
+    })
 }

@@ -310,7 +310,7 @@ function NewApp() {
                 ) : (
                     <>
                     <NewHome setOpenPage={setOpenPage} isShowHome={isShowHome}/>
-                    <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} isShowHome={isShowHome}/>
+                    <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} setSelectItemPage={setSelectItemPage} isShowHome={isShowHome}/>
                     </>
                 )}
             </Suspense>

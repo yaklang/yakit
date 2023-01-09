@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, memo, ReactNode} from "react"
+import React, {useEffect, useState, useRef, memo, ReactNode, useLayoutEffect} from "react"
 import {
     Alert,
     Button,
@@ -136,7 +136,7 @@ interface GetYakScriptTagsAndTypeResponse {
     Tag: TagsAndType[]
 }
 
-interface PluginSearchStatisticsRequest {
+export interface PluginSearchStatisticsRequest {
     bind_me: boolean
 }
 
@@ -194,12 +194,38 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     const [userPlugin, setUserPlugin] = useState<API.YakitPluginDetail>()
     const [fullScreen, setFullScreen] = useState<boolean>(false)
-    const [isRefList, setIsRefList] = useState(false)
+    const [isRefList, setIsRefList,getIsRefList] = useGetState(false)
 
     // 监听是否点击编辑插件 用于控制插件仓库是否刷新
     const [isEdit, setMonitorEdit] = useState<boolean>(false)
     // 全局登录状态
     const {userInfo} = useStore()
+    // const isFirstOpen = useRef<boolean>(true)
+    // 参数动态更改
+    useEffect(() => {
+        ipcRenderer.on("get-yakit-store-params", (e, res) => {
+            if(res){
+                setPlugSource("online")
+                if(res.keyword){
+                    setPublicKeyword(res.keyword)
+                    setStatisticsQueryOnline({...defQueryOnline,keywords:res.keyword})
+                }else if(res.pluginType){
+                    let filterKey:string = ""
+                    for (let key in PluginType) {
+                        if(PluginType[key] === res.pluginType){
+                            filterKey = key
+                        }
+                    }
+                    setStatisticsQueryOnline({...getStatisticsQueryOnline(),plugin_type:filterKey,keywords:""}) 
+                }
+                // console.log("res999",res)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("get-yakit-store-params")
+        }
+    }, [])
+
     useEffect(() => {
         ipcRenderer
             .invoke("fetch-local-cache", userInitUse)
@@ -347,7 +373,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
-    const [statisticsQueryOnline, setStatisticsQueryOnline] = useState<SearchPluginOnlineRequest>(defQueryOnline)
+    const [statisticsQueryOnline, setStatisticsQueryOnline,getStatisticsQueryOnline] = useGetState<SearchPluginOnlineRequest>(defQueryOnline)
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     // 统计数据
     const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
@@ -2307,7 +2333,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         </div>
     )
 }
-const PluginType = {
+export const PluginType = {
     yak: "YAK 插件",
     mitm: "MITM 插件",
     "packet-hack": "数据包扫描",
