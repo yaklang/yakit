@@ -163,6 +163,7 @@
 
         .heard-menu-yak-run {
             width: 107px;
+            margin-right: 8px;
         }
 
         .heard-menu-label {
@@ -446,4 +447,75 @@
 
 .margin-right-0 {
     margin-right: 0 !important;
+}
+
+.customize-drop-menu {
+    padding: 6px 4px;
+    border-radius: 4px;
+
+    .customize-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px;
+        cursor: pointer;
+        color: var(--yakit-header-color);
+        border-radius: 4px;
+        font-size: 12px;
+        height: 28px;
+
+        svg {
+            color: var(--yakit-body-text-color);
+            width: 16px;
+            height: 16px;
+        }
+
+        &:hover {
+            background-color: var(--yakit-primary-color);
+            color: #fff;
+
+            svg {
+                color: #fff;
+            }
+        }
+
+        .customize-item-left {
+            display: flex;
+            align-items: center;
+            height: 16px;
+        }
+
+        .customize-item-label {
+            margin-left: 4px;
+        }
+    }
+
+    .customize-item-select {
+        color: var(--yakit-primary-color);
+
+        svg {
+            color: var(--yakit-primary-color);
+        }
+    }
+}
+
+.json-import {
+    padding: 24px;
+
+    :global {
+        .ant-upload.ant-upload-drag {
+            border: 0;
+            background: transparent;
+        }
+
+        .ant-upload.ant-upload-drag .ant-upload {
+            padding: 0;
+        }
+
+        .ant-upload.ant-upload-drag {
+            text-align: start;
+        }
+    }
+
+  
 }

@@ -39,8 +39,8 @@ import {YakCodeEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {getMenuListBySort} from "@/pages/customizeMenu/CustomizeMenu"
 import {InputFileNameItem} from "@/utils/inputUtil"
-
-const {Dragger} = Upload
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,6 +82,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
     const [menuId, setMenuId, getMenuId] = useGetState<string>("")
     const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
+    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    const [visibleImport, setVisibleImport] = useState<boolean>(false)
+    const [menuDataString, setMenuDataString] = useState<string>("")
+    const [fileName, setFileName] = useState<string>("")
+
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
     useEffect(() => {
@@ -180,6 +187,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         onRouteMenuSelect(newKey as Route)
     })
     const onCustomizeMenuClick = useMemoizedFn((key: string) => {
+        if (key === "new") {
+            setRouteMenu(DefaultRouteMenuData.filter((item) => item.isNovice))
+        } else {
+            setRouteMenu(DefaultRouteMenuData)
+        }
         setRemoteValue("PatternMenu", key)
         setPatternMenu(key as "expert" | "new")
     })
@@ -189,12 +201,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onGoCustomize = useMemoizedFn(() => {
         ipcRenderer.invoke("open-customize-menu")
     })
-    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
-    const [visibleImport, setVisibleImport] = useState<boolean>(false)
-    const [jsonFileName, setJsonFileName] = useState("")
-    const [menuDataString, setMenuDataString] = useState<string>(
-        JSON.stringify(getMenuListBySort(DefaultRouteMenuData))
-    )
     useEffect(() => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             setPatternMenu(patternMenu || "expert")
@@ -228,6 +234,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             onRestoreMenu: () => onRestoreExpert()
         }
     ]
+    const onImportJSON = useMemoizedFn(() => {
+        console.log("menuDataString", menuDataString)
+        setVisibleImport(false)
+    })
     return (
         <div className={style["heard-menu-body"]}>
             <div
@@ -298,9 +308,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     </YakitButton>
                     <YakitButton
                         type='secondary2'
-                        className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
-                            [style["margin-right-0"]]: isExpand
-                        })}
+                        className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}
                         onClick={() => onRouteMenuSelect(Route.YakScript)}
                         icon={<MenuYakRunnerIcon />}
                     >
@@ -356,12 +364,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     >
                         <YakitButton
                             type='secondary2'
-                            className={classNames(style["heard-menu-grey"], style["heard-menu-customize"], {
+                            className={classNames(style["heard-menu-customize"], {
                                 [style["margin-right-0"]]: isExpand,
                                 [style["heard-menu-customize-menu"]]: customizeVisible
                             })}
                             onClick={() => onRouteMenuSelect(Route.YakScript)}
-                            icon={<CursorClickIcon />}
+                            icon={<CursorClickIcon style={{color: "var(--yakit-body-text-color)"}} />}
                         >
                             <div className={style["heard-menu-customize-content"]}>
                                 自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
@@ -424,35 +432,24 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 visible={visibleImport}
                 onCancel={() => setVisibleImport(false)}
                 width='60%'
+                onOk={() => onImportJSON()}
             >
-                <Form className={style["json-import"]} labelCol={{span: 3}} wrapperCol={{span: 21}}>
-                    {/* <InputFileNameItem label="文件名" filename={jsonFileName} setFileName={setJsonFileName} /> */}
-                    <Form.Item label='文件名'>
-                        <Dragger
-                            name='file'
-                            onChange={(info) => {
-                                const {status} = info.file
-                                if (status !== "uploading") {
-                                    console.log(info.file, info.fileList)
-                                }
-                                if (status === "done") {
-                                } else if (status === "error") {
-                                }
-                            }}
-                            onDrop={(e) => {
-                                console.log("Dropped files", e.dataTransfer.files)
-                            }}
-                        >
-                            <p className='ant-upload-text'>Click or drag file to this area to upload</p>
-                            <p className='ant-upload-hint'>
-                                Support for a single or bulk upload. Strictly prohibit from uploading company data or
-                                other band files
-                            </p>
-                        </Dragger>
-                    </Form.Item>
+                <Form className={style["json-import"]} layout='vertical'>
+                    <YakitFormDragger
+                        multiple={false}
+                        maxCount={1}
+                        showUploadList={false}
+                        setContent={(val) => {
+                            setMenuDataString(val)
+                            setRefreshTrigger(!refreshTrigger)
+                        }}
+                        setFileName={setFileName}
+                        fileName={fileName}
+                    />
                     <Form.Item label='配置 JSON'>
                         <div style={{height: 400}}>
                             <YakCodeEditor
+                                refreshTrigger={refreshTrigger}
                                 originValue={StringToUint8Array(menuDataString, "utf8")}
                                 language={"json"}
                                 onChange={(r) => setMenuDataString(Uint8ArrayToString(r, "utf8"))}
