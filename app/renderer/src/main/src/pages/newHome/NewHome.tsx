@@ -7,7 +7,7 @@ import {MenuDataProps, Route, ContentByRoute} from "@/routes/routeSpec"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {NetWorkApi} from "@/services/fetch"
 import {Interaction, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend, getTheme} from "bizcharts"
-import {UserInfoProps, useStore} from "@/store"
+import {useStore, YakitStoreParams} from "@/store"
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -117,26 +117,20 @@ const RouteList: React.FC<RouteListProps> = (props) => {
     )
 }
 interface PieChartProps {
-    goStoreRoute: (v:any) => void
-    isShowHome: boolean
+    goStoreRoute: (v: any) => void
 }
 interface chartListProps {
     type: string
     value: number
 }
 const PieChart: React.FC<PieChartProps> = (props) => {
-    const {goStoreRoute,isShowHome} = props
+    const {goStoreRoute} = props
     const [chartList, setChartList] = useState<chartListProps[]>([])
     // 全局登录状态
     const {userInfo} = useStore()
     useEffect(() => {
-        if(isShowHome){
-            getPluginSearch()
-        }
-        else{
-            setChartList([])
-        }
-    }, [isShowHome])
+        getPluginSearch()
+    }, [])
     const getPluginSearch = useMemoizedFn(() => {
         let url = "plugin/search/unlogged"
         if (userInfo.isLogin) {
@@ -152,7 +146,11 @@ const PieChart: React.FC<PieChartProps> = (props) => {
             .then((res: API.YakitSearch) => {
                 if (res.plugin_type) {
                     setChartList(
-                        res.plugin_type.map((item) => ({type: PluginType[item.value] ?? "未识别", value: item.count,id:item.value}))
+                        res.plugin_type.map((item) => ({
+                            type: PluginType[item.value] ?? "未识别",
+                            value: item.count,
+                            id: item.value
+                        }))
                     )
                 }
             })
@@ -165,8 +163,14 @@ const PieChart: React.FC<PieChartProps> = (props) => {
     })
     const g2Ref = useRef<any>()
     // 发送插件仓库
-    const onSendToTab = useMemoizedFn((pluginType:string) => {
-        goStoreRoute({pluginType})
+    const onSendToTab = useMemoizedFn((pluginType: string) => {
+        let plugin_type: string = ""
+        for (let key in PluginType) {
+            if (PluginType[key] === pluginType) {
+                plugin_type = key
+            }
+        }
+        goStoreRoute({plugin_type})
     })
     return (
         <>
@@ -184,8 +188,8 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                         // console.log("g2", g2Ref.current)
                         const data = ev.data
                         // console.log("data", data)
-                        if(data){
-                            onSendToTab(data.data.type??"")
+                        if (data) {
+                            onSendToTab(data.data.type ?? "")
                         }
                     }}
                     onGetG2Instance={(g2chart) => {
@@ -206,8 +210,8 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                         itemWidth={130}
                         onChange={(e, chart) => {
                             // console.log("e", e)
-                            if(e){
-                                onSendToTab(e.item.value??"")
+                            if (e) {
+                                onSendToTab(e.item.value ?? "")
                             }
                         }}
                         itemName={{
@@ -279,22 +283,26 @@ const PieChart: React.FC<PieChartProps> = (props) => {
 
 interface PlugInShopProps {
     setOpenPage: (v: any) => void
-    isShowHome:boolean
 }
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
-    const {setOpenPage,isShowHome} = props
+    const {setOpenPage} = props
+    const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const listHeightRef = useRef<any>()
     const goStoreRoute = (params) => {
+        // 插件商店页面是否渲染
+        if (storeParams.isShowYakitStorePage) {
+            // 动态更新插件仓库搜索条件
+            ipcRenderer.send("yakit-store-params", params)
+        } else {
+            // 插件仓库初始进入参数
+            setYakitStoreParams({...storeParams, ...params})
+        }
         setOpenPage({
             verbose: "插件仓库",
             route: Route.ModManager,
             singleNode: ContentByRoute(Route.ModManager),
             multipleNode: []
         })
-        // 向插件仓库发送参数
-        setTimeout(()=>{
-           ipcRenderer.send("yakit-store-params", params)  
-        },500)
     }
     return (
         <div className={styles["plug-in-shop"]}>
@@ -319,15 +327,19 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                 </div>
                 <div className={styles["chart-box"]} ref={listHeightRef}>
                     {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                    <PieChart goStoreRoute={goStoreRoute} isShowHome={isShowHome}/>
+                    <PieChart goStoreRoute={goStoreRoute} />
                 </div>
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
                 <div className={styles["label-box"]}>
-                    <div className={styles["label-item"]} onClick={()=>goStoreRoute({keyword:"555"})}>555</div>
-                    
-                    <div className={styles["label-item"]} onClick={()=>goStoreRoute({keyword:"网站信息获取"})}>网站信息获取</div>
+                    <div className={styles["label-item"]} onClick={() => goStoreRoute({keywords: "555"})}>
+                        555
+                    </div>
+
+                    <div className={styles["label-item"]} onClick={() => goStoreRoute({keywords: "网站信息获取"})}>
+                        网站信息获取
+                    </div>
                 </div>
             </div>
         </div>
@@ -504,19 +516,13 @@ export const getScriptIcon = (name: string) => {
 }
 export interface NewHomeProps {
     setOpenPage: (v: any) => void
-    isShowHome: boolean
 }
 const NewHome: React.FC<NewHomeProps> = (props) => {
-    const {setOpenPage, isShowHome} = props
+    const {setOpenPage} = props
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     useEffect(() => {
-        if(isShowHome){
-            getCustomizeMenus()
-        }
-        else{
-            setNewHomeData(newHomeList)
-        }
-    }, [isShowHome])
+        getCustomizeMenus()
+    }, [])
 
     // 获取自定义菜单
     const getCustomizeMenus = () => {
@@ -573,7 +579,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
             })
     }
     return (
-        <div className={classNames(styles["new-home-page"], {[styles["no-show-home"]]: !isShowHome})}>
+        <div className={classNames(styles["new-home-page"])}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
                     <RouteList data={newHomeData[0]} setOpenPage={setOpenPage} />
@@ -599,7 +605,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 </div>
                 <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
                     <RouteTitle title='插件商店' />
-                    <PlugInShop setOpenPage={setOpenPage} isShowHome={isShowHome}/>
+                    <PlugInShop setOpenPage={setOpenPage} />
                 </div>
             </div>
         </div>

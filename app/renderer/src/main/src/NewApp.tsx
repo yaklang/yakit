@@ -309,7 +309,7 @@ function NewApp() {
                     <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
                     <>
-                    <NewHome setOpenPage={setOpenPage} isShowHome={isShowHome}/>
+                    {isShowHome&&<NewHome setOpenPage={setOpenPage}/>}
                     <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} setSelectItemPage={setSelectItemPage} isShowHome={isShowHome}/>
                     </>
                 )}
