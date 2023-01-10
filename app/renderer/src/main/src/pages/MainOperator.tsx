@@ -55,7 +55,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 // import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
+import HeardMenu, {getScriptHoverIcon, getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {LocalGV} from "@/yakitGV"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
@@ -389,6 +389,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             const extraMenus: MenuDataProps[] = data.Data.map((i) => {
                                 return {
                                     icon: getScriptIcon(i.ScriptName),
+                                    hoverIcon: getScriptHoverIcon(i.ScriptName),
                                     key: `plugin:${i.Id}`,
                                     label: i.ScriptName
                                 } as unknown as MenuDataProps

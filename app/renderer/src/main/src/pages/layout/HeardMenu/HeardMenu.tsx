@@ -41,6 +41,13 @@ import {getMenuListBySort} from "@/pages/customizeMenu/CustomizeMenu"
 import {InputFileNameItem} from "@/utils/inputUtil"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {
+    MenuSolidBasicCrawlerIcon,
+    MenuSolidComprehensiveCatalogScanningAndBlastingIcon,
+    MenuSolidDefaultPluginIcon,
+    MenuSolidSpaceEngineHunterIcon,
+    MenuSolidSubDomainCollectionIcon
+} from "@/pages/customizeMenu/icon/solidMenuIcon"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,6 +63,21 @@ export const getScriptIcon = (name: string) => {
             return <MenuComprehensiveCatalogScanningAndBlastingIcon />
         default:
             return <MenuDefaultPluginIcon />
+    }
+}
+
+export const getScriptHoverIcon = (name: string) => {
+    switch (name) {
+        case "基础爬虫":
+            return <MenuSolidBasicCrawlerIcon />
+        case "空间引擎: Hunter": //中文
+            return <MenuSolidSpaceEngineHunterIcon />
+        case "子域名收集":
+            return <MenuSolidSubDomainCollectionIcon />
+        case "综合目录扫描与爆破":
+            return <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />
+        default:
+            return <MenuSolidDefaultPluginIcon />
     }
 }
 
@@ -106,12 +128,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         id: key,
                         label: item.Verbose,
                         key: key as Route,
-                        icon: getScriptIcon(item.Verbose)
+                        icon: getScriptIcon(item.Verbose),
+                        hoverIcon: getScriptHoverIcon(item.Verbose)
                     }
                 })
             }
             newMenuItemGroup.push(item)
         })
+
         const route = newMenuItemGroup.concat(routeMenuData)
         setRouteMenu(route)
         if (getMenuId()) {
@@ -403,7 +427,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             className={style["sub-menu-expand-item"]}
                                             style={{paddingLeft: index === 0 ? 0 : ""}}
                                         >
-                                            <div className={style["sub-menu-expand-item-icon"]}>{item.icon}</div>
+                                            <div className={style["sub-menu-expand-item-icon"]}>
+                                                <span className={style["item-icon"]}>{item.icon}</span>
+                                                <span className={style["item-hoverIcon"]}>{item.hoverIcon}</span>
+                                            </div>
                                             <Tooltip title={item.label} placement='bottom'>
                                                 <div
                                                     className={classNames(
@@ -513,7 +540,10 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                     key={`subMenuItem-${subMenuItem.key}`}
                     onClick={() => onSelect(subMenuItem)}
                 >
-                    {subMenuItem.icon || <MenuDefaultPluginIcon />}
+                    <>
+                        <span className={style["heard-sub-menu-item-icon"]}>{subMenuItem.icon}</span>
+                        <span className={style["heard-sub-menu-item-hoverIcon"]}>{subMenuItem.hoverIcon}</span>
+                    </>
                     <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                 </div>
             ))}

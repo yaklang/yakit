@@ -1,11 +1,11 @@
 import Icon from "@ant-design/icons"
-import { CustomIconComponentProps } from "@ant-design/icons/lib/components/Icon"
+import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 
 const PortScanning = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
         <mask
             id='mask0_2721_76421'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -37,7 +37,7 @@ const BasicCrawler = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7447'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -85,7 +85,7 @@ const ComprehensiveCatalogScanningAndBlasting = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7395'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -114,17 +114,30 @@ export const MenuComprehensiveCatalogScanningAndBlastingIcon = (props: Partial<C
 }
 
 const SpecialVulnerabilityDetection = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_7833" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_7833'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_7833)">
-            <circle cx="12" cy="12" r="9" stroke="#31343F" strokeWidth="1.5" />
-            <path d="M1 12H5M12 1V5M19 12H23M12 19V23" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="12" cy="12" r="3" stroke="#f28b44" strokeWidth="1.5" />
+        <g mask='url(#mask0_3031_7833)'>
+            <circle cx='12' cy='12' r='9' stroke='#31343F' strokeWidth='1.5' />
+            <path
+                d='M1 12H5M12 1V5M19 12H23M12 19V23'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <circle cx='12' cy='12' r='3' stroke='#f28b44' strokeWidth='1.5' />
         </g>
     </svg>
-
 )
 
 /**
@@ -138,7 +151,7 @@ const BatchVulnerabilityDetection = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7504'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -168,7 +181,7 @@ const PluginWarehouse = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7475'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -178,13 +191,7 @@ const PluginWarehouse = () => (
             <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
         <g mask='url(#mask0_2812_7475)'>
-            <path
-                d='M23 9L12 1L1 9'
-                stroke='#f28b44'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-            />
+            <path d='M23 9L12 1L1 9' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
             <path
                 d='M4 13V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V11'
                 stroke='#31343F'
@@ -228,7 +235,7 @@ const MITMInteractiveHijacking = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7532'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -267,46 +274,51 @@ export const MenuMITMInteractiveHijackingIcon = (props: Partial<CustomIconCompon
 const WebFuzzer = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
-            id='mask0_2812_7361'
-            style={{ maskType: "alpha" }}
+            id='mask0_4918_9813'
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
             width='24'
             height='24'
         >
-            <rect opacity='0.5' width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask='url(#mask0_2812_7361)'></g>
-        <mask
-            id='mask1_2812_7361'
-            style={{ maskType: "alpha" }}
-            maskUnits='userSpaceOnUse'
-            x='4'
-            y='4'
-            width='16'
-            height='16'
-        >
-            <rect x='4' y='4' width='16' height='16' rx='2' fill='#D9D9D9' />
-        </mask>
-        <g mask='url(#mask1_2812_7361)'>
-            <path d='M4 4H13V11C13 12.1046 12.1046 13 11 13H4V4Z' stroke='#31343F' strokeWidth='1.5' />
+        <g mask='url(#mask0_4918_9813)'>
             <path
-                fillRule='evenodd'
-                clipRule='evenodd'
-                d='M12.9999 7.25201V11C12.9999 12.1045 12.1045 13 10.9999 13H7.25195C7.97551 10.1888 10.1887 7.97557 12.9999 7.25201Z'
-                fill='#f28b44'
+                d='M21 12C21 16.9706 16.9706 21 12 21C11.3126 21 10.6432 20.9229 10 20.777'
+                stroke='#31343F'
+                strokeWidth='1.5'
             />
-            <circle cx='15' cy='15' r='8' stroke='#31343F' strokeWidth='1.5' />
             <path
-                d='M13 8V11C13 12.1046 12.1046 13 11 13H8'
+                d='M3 12C3 7.02944 7.02944 3 12 3C12.6874 3 13.3568 3.07706 14 3.22302'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <circle cx='16' cy='4' r='2' stroke='#31343F' strokeWidth='1.5' />
+            <circle cx='8' cy='20' r='2' stroke='#31343F' strokeWidth='1.5' />
+            <path
+                d='M12.5 11V7.5L8 13H11.5L11.5 16.5L16 11L12.5 11Z'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M5 11L3 13L1 11'
                 stroke='#31343F'
                 strokeWidth='1.5'
                 strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M19 13L21 11L23 13'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
         </g>
-        <rect x='4' y='4' width='16' height='16' rx='2' stroke='#31343F' strokeWidth='1.5' />
-        <path d='M4 12V6C4 4.89543 4.89543 4 6 4H12' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='square' />
     </svg>
 )
 
@@ -321,7 +333,7 @@ const BlastingAndUnauthorizedTesting = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7557'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -371,7 +383,7 @@ const Codec = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7584'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -424,7 +436,7 @@ const DataComparison = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7610'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -463,7 +475,7 @@ const PortListener = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7637'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -506,7 +518,7 @@ const ReverseConnectionServer = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7666'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -544,7 +556,7 @@ const DNSLog = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7697'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -604,7 +616,7 @@ const ICMPSizeLog = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7727'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -644,7 +656,7 @@ const TCPPortLog = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7755'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -703,7 +715,7 @@ const YsoJavaHack = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7793'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -749,7 +761,7 @@ const PluginBatchExecution = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7819'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -791,7 +803,7 @@ const DefaultPlugin = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2879_6168'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -830,7 +842,7 @@ const SpaceEngineHunter = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_166_5755'
-            style={{ maskType: "alpha" }}
+            style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -900,22 +912,62 @@ export const MenuYakRunnerIcon = (props: Partial<CustomIconComponentProps>) => {
 }
 
 const WebsocketFuzzer = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_9116" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_9116'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_9116)">
-            <path d="M20 17C20 18.1046 16.4183 19 12 19C7.58172 19 4 18.1046 4 17" stroke="#31343F" strokeWidth="1.5" />
-            <path d="M19.25 20C19.25 19.8473 19.3557 19.9165 18.9897 20.1328C18.6739 20.3195 18.167 20.5136 17.475 20.6866C16.1023 21.0298 14.1663 21.25 12 21.25V22.75C14.252 22.75 16.316 22.5225 17.8388 22.1418C18.5944 21.9529 19.2591 21.716 19.7529 21.4241C20.1966 21.1619 20.75 20.705 20.75 20H19.25ZM12 21.25C9.83371 21.25 7.89769 21.0298 6.52505 20.6866C5.83296 20.5136 5.32609 20.3195 5.0103 20.1328C4.64431 19.9165 4.75 19.8473 4.75 20H3.25C3.25 20.705 3.80341 21.1619 4.24706 21.4241C4.74092 21.716 5.40562 21.9529 6.16124 22.1418C7.68404 22.5225 9.74801 22.75 12 22.75V21.25ZM19.25 14V20H20.75V14H19.25ZM4.75 20V14H3.25V20H4.75ZM19.25 14C19.25 13.8473 19.3557 13.9165 18.9897 14.1328C18.6739 14.3195 18.167 14.5136 17.475 14.6866C16.1023 15.0298 14.1663 15.25 12 15.25V16.75C14.252 16.75 16.316 16.5225 17.8388 16.1418C18.5944 15.9529 19.2591 15.716 19.7529 15.4241C20.1966 15.1619 20.75 14.705 20.75 14H19.25ZM12 15.25C9.83371 15.25 7.89769 15.0298 6.52505 14.6866C5.83296 14.5136 5.32609 14.3195 5.0103 14.1328C4.64431 13.9165 4.75 13.8473 4.75 14H3.25C3.25 14.705 3.80341 15.1619 4.24706 15.4241C4.74092 15.716 5.40562 15.9529 6.16124 16.1418C7.68404 16.5225 9.74801 16.75 12 16.75V15.25ZM4.75 14C4.75 14.1527 4.64431 14.0835 5.0103 13.8672C5.32609 13.6805 5.83296 13.4864 6.52505 13.3134C7.89769 12.9702 9.83371 12.75 12 12.75V11.25C9.74801 11.25 7.68404 11.4775 6.16124 11.8582C5.40562 12.0471 4.74092 12.284 4.24706 12.5759C3.80341 12.8381 3.25 13.295 3.25 14H4.75ZM12 12.75C14.1663 12.75 16.1023 12.9702 17.475 13.3134C18.167 13.4864 18.6739 13.6805 18.9897 13.8672C19.3557 14.0835 19.25 14.1527 19.25 14H20.75C20.75 13.295 20.1966 12.8381 19.7529 12.5759C19.2591 12.284 18.5944 12.0471 17.8388 11.8582C16.316 11.4775 14.252 11.25 12 11.25V12.75Z" fill="#31343F" />
-            <path d="M12 6V14" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M21 8V8C21 8.85693 20.3619 9.57976 19.5116 9.68605L16.7519 10.031C15.7511 10.1561 15 11.0069 15 12.0156V13" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M3 8V8C3 8.85693 3.6381 9.57976 4.48842 9.68605L7.24807 10.031C8.24893 10.1561 9 11.0069 9 12.0156V13" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M11.75 2.14434C11.9047 2.05502 12.0953 2.05502 12.25 2.14434L13.4821 2.85566C13.6368 2.94498 13.7321 3.11004 13.7321 3.28868V4.71132C13.7321 4.88996 13.6368 5.05502 13.4821 5.14434L12.25 5.85566C12.0953 5.94498 11.9047 5.94498 11.75 5.85566L10.5179 5.14434C10.3632 5.05502 10.2679 4.88996 10.2679 4.71132V3.28868C10.2679 3.11004 10.3632 2.94498 10.5179 2.85566L11.75 2.14434Z" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M20.75 4.14434C20.9047 4.05502 21.0953 4.05502 21.25 4.14434L22.4821 4.85566C22.6368 4.94498 22.7321 5.11004 22.7321 5.28868V6.71132C22.7321 6.88996 22.6368 7.05502 22.4821 7.14434L21.25 7.85566C21.0953 7.94498 20.9047 7.94498 20.75 7.85566L19.5179 7.14434C19.3632 7.05502 19.2679 6.88996 19.2679 6.71132V5.28868C19.2679 5.11004 19.3632 4.94498 19.5179 4.85566L20.75 4.14434Z" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M2.75 4.14434C2.9047 4.05502 3.0953 4.05502 3.25 4.14434L4.48205 4.85566C4.63675 4.94498 4.73205 5.11004 4.73205 5.28868V6.71132C4.73205 6.88996 4.63675 7.05502 4.48205 7.14434L3.25 7.85566C3.0953 7.94498 2.9047 7.94498 2.75 7.85566L1.51795 7.14434C1.36325 7.05502 1.26795 6.88996 1.26795 6.71132V5.28868C1.26795 5.11004 1.36325 4.94498 1.51795 4.85566L2.75 4.14434Z" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_9116)'>
+            <path d='M20 17C20 18.1046 16.4183 19 12 19C7.58172 19 4 18.1046 4 17' stroke='#31343F' strokeWidth='1.5' />
+            <path
+                d='M19.25 20C19.25 19.8473 19.3557 19.9165 18.9897 20.1328C18.6739 20.3195 18.167 20.5136 17.475 20.6866C16.1023 21.0298 14.1663 21.25 12 21.25V22.75C14.252 22.75 16.316 22.5225 17.8388 22.1418C18.5944 21.9529 19.2591 21.716 19.7529 21.4241C20.1966 21.1619 20.75 20.705 20.75 20H19.25ZM12 21.25C9.83371 21.25 7.89769 21.0298 6.52505 20.6866C5.83296 20.5136 5.32609 20.3195 5.0103 20.1328C4.64431 19.9165 4.75 19.8473 4.75 20H3.25C3.25 20.705 3.80341 21.1619 4.24706 21.4241C4.74092 21.716 5.40562 21.9529 6.16124 22.1418C7.68404 22.5225 9.74801 22.75 12 22.75V21.25ZM19.25 14V20H20.75V14H19.25ZM4.75 20V14H3.25V20H4.75ZM19.25 14C19.25 13.8473 19.3557 13.9165 18.9897 14.1328C18.6739 14.3195 18.167 14.5136 17.475 14.6866C16.1023 15.0298 14.1663 15.25 12 15.25V16.75C14.252 16.75 16.316 16.5225 17.8388 16.1418C18.5944 15.9529 19.2591 15.716 19.7529 15.4241C20.1966 15.1619 20.75 14.705 20.75 14H19.25ZM12 15.25C9.83371 15.25 7.89769 15.0298 6.52505 14.6866C5.83296 14.5136 5.32609 14.3195 5.0103 14.1328C4.64431 13.9165 4.75 13.8473 4.75 14H3.25C3.25 14.705 3.80341 15.1619 4.24706 15.4241C4.74092 15.716 5.40562 15.9529 6.16124 16.1418C7.68404 16.5225 9.74801 16.75 12 16.75V15.25ZM4.75 14C4.75 14.1527 4.64431 14.0835 5.0103 13.8672C5.32609 13.6805 5.83296 13.4864 6.52505 13.3134C7.89769 12.9702 9.83371 12.75 12 12.75V11.25C9.74801 11.25 7.68404 11.4775 6.16124 11.8582C5.40562 12.0471 4.74092 12.284 4.24706 12.5759C3.80341 12.8381 3.25 13.295 3.25 14H4.75ZM12 12.75C14.1663 12.75 16.1023 12.9702 17.475 13.3134C18.167 13.4864 18.6739 13.6805 18.9897 13.8672C19.3557 14.0835 19.25 14.1527 19.25 14H20.75C20.75 13.295 20.1966 12.8381 19.7529 12.5759C19.2591 12.284 18.5944 12.0471 17.8388 11.8582C16.316 11.4775 14.252 11.25 12 11.25V12.75Z'
+                fill='#31343F'
+            />
+            <path d='M12 6V14' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M21 8V8C21 8.85693 20.3619 9.57976 19.5116 9.68605L16.7519 10.031C15.7511 10.1561 15 11.0069 15 12.0156V13'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M3 8V8C3 8.85693 3.6381 9.57976 4.48842 9.68605L7.24807 10.031C8.24893 10.1561 9 11.0069 9 12.0156V13'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M11.75 2.14434C11.9047 2.05502 12.0953 2.05502 12.25 2.14434L13.4821 2.85566C13.6368 2.94498 13.7321 3.11004 13.7321 3.28868V4.71132C13.7321 4.88996 13.6368 5.05502 13.4821 5.14434L12.25 5.85566C12.0953 5.94498 11.9047 5.94498 11.75 5.85566L10.5179 5.14434C10.3632 5.05502 10.2679 4.88996 10.2679 4.71132V3.28868C10.2679 3.11004 10.3632 2.94498 10.5179 2.85566L11.75 2.14434Z'
+                stroke='#f28b44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M20.75 4.14434C20.9047 4.05502 21.0953 4.05502 21.25 4.14434L22.4821 4.85566C22.6368 4.94498 22.7321 5.11004 22.7321 5.28868V6.71132C22.7321 6.88996 22.6368 7.05502 22.4821 7.14434L21.25 7.85566C21.0953 7.94498 20.9047 7.94498 20.75 7.85566L19.5179 7.14434C19.3632 7.05502 19.2679 6.88996 19.2679 6.71132V5.28868C19.2679 5.11004 19.3632 4.94498 19.5179 4.85566L20.75 4.14434Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M2.75 4.14434C2.9047 4.05502 3.0953 4.05502 3.25 4.14434L4.48205 4.85566C4.63675 4.94498 4.73205 5.11004 4.73205 5.28868V6.71132C4.73205 6.88996 4.63675 7.05502 4.48205 7.14434L3.25 7.85566C3.0953 7.94498 2.9047 7.94498 2.75 7.85566L1.51795 7.14434C1.36325 7.05502 1.26795 6.88996 1.26795 6.71132V5.28868C1.26795 5.11004 1.36325 4.94498 1.51795 4.85566L2.75 4.14434Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
-
 )
 
 /**
@@ -926,18 +978,37 @@ export const MenuWebsocketFuzzerIcon = (props: Partial<CustomIconComponentProps>
 }
 
 const SubDomainCollection = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_9175" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_9175'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_9175)">
-            <path d="M11 5H17C18.1046 5 19 5.89543 19 7V7" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 16L10 16" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M3 11L22 11" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M22 18V9C22 7.89543 21.1046 7 20 7H13.0704C12.4017 7 11.7772 6.6658 11.4063 6.1094L10.5937 4.8906C10.2228 4.3342 9.59834 4 8.92963 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18Z" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_9175)'>
+            <path
+                d='M11 5H17C18.1046 5 19 5.89543 19 7V7'
+                stroke='#f28b44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M6 16L10 16' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M3 11L22 11' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M22 18V9C22 7.89543 21.1046 7 20 7H13.0704C12.4017 7 11.7772 6.6658 11.4063 6.1094L10.5937 4.8906C10.2228 4.3342 9.59834 4 8.92963 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
-
 )
 
 /**
@@ -948,16 +1019,33 @@ export const MenuSubDomainCollectionIcon = (props: Partial<CustomIconComponentPr
 }
 
 const Report = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_9207" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_9207'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_9207)">
-            <path d="M17 14.5V12V5C17 3.89543 16.1046 3 15 3H5C3.89543 3 3 3.89543 3 5V17C3 19.2091 4.79086 21 7 21H10" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 8L14 8" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 13L12 13" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_9207)'>
+            <path
+                d='M17 14.5V12V5C17 3.89543 16.1046 3 15 3H5C3.89543 3 3 3.89543 3 5V17C3 19.2091 4.79086 21 7 21H10'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M6 8L14 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M6 13L12 13' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
         </g>
-        <path d="M11 17V16.25H10.25V17H11ZM23 17H23.75V16.25H23V17ZM10.25 17C10.25 18.7949 8.79493 20.25 7 20.25V21.75C9.62335 21.75 11.75 19.6234 11.75 17H10.25ZM11 17.75H23V16.25H11V17.75ZM22.25 17C22.25 18.7949 20.7949 20.25 19 20.25V21.75C21.6234 21.75 23.75 19.6234 23.75 17H22.25ZM19 20.25H7V21.75H19V20.25Z" fill="#31343F" />
+        <path
+            d='M11 17V16.25H10.25V17H11ZM23 17H23.75V16.25H23V17ZM10.25 17C10.25 18.7949 8.79493 20.25 7 20.25V21.75C9.62335 21.75 11.75 19.6234 11.75 17H10.25ZM11 17.75H23V16.25H11V17.75ZM22.25 17C22.25 18.7949 20.7949 20.25 19 20.25V21.75C21.6234 21.75 23.75 19.6234 23.75 17H22.25ZM19 20.25H7V21.75H19V20.25Z'
+            fill='#31343F'
+        />
     </svg>
 )
 
@@ -969,20 +1057,45 @@ export const MenuReportIcon = (props: Partial<CustomIconComponentProps>) => {
 }
 
 const PlugExecutionResults = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_9237" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_9237'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_9237)">
-            <path d="M8 3H15C16.1046 3 17 3.89543 17 5V9.5M3 8V19C3 20.1046 3.89543 21 5 21H11.5" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M8 6V3L3 8H6C7.10457 8 8 7.10457 8 6Z" stroke="#31343F" strokeWidth="1.5" strokeLinejoin="round" />
-            <path d="M6 11L14 11" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 16L9 16" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M21.7877 13.7197C21.674 13.7256 21.5596 13.7285 21.4444 13.7285C19.737 13.7285 18.1794 13.0749 17 12C15.8205 13.0749 14.263 13.7285 12.5556 13.7285C12.4404 13.7285 12.326 13.7255 12.2123 13.7196C12.0737 14.2647 12 14.8364 12 15.4256C12 18.5887 14.1246 21.2464 17 22C19.8754 21.2464 22 18.5887 22 15.4256C22 14.8364 21.9263 14.2648 21.7877 13.7197Z" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M15.3333 17.1227L16.4444 18.2541L18.6666 15.9913" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_9237)'>
+            <path
+                d='M8 3H15C16.1046 3 17 3.89543 17 5V9.5M3 8V19C3 20.1046 3.89543 21 5 21H11.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M8 6V3L3 8H6C7.10457 8 8 7.10457 8 6Z' stroke='#31343F' strokeWidth='1.5' strokeLinejoin='round' />
+            <path d='M6 11L14 11' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M6 16L9 16' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M21.7877 13.7197C21.674 13.7256 21.5596 13.7285 21.4444 13.7285C19.737 13.7285 18.1794 13.0749 17 12C15.8205 13.0749 14.263 13.7285 12.5556 13.7285C12.4404 13.7285 12.326 13.7255 12.2123 13.7196C12.0737 14.2647 12 14.8364 12 15.4256C12 18.5887 14.1246 21.2464 17 22C19.8754 21.2464 22 18.5887 22 15.4256C22 14.8364 21.9263 14.2648 21.7877 13.7197Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M15.3333 17.1227L16.4444 18.2541L18.6666 15.9913'
+                stroke='#f28b44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
-
 )
 
 /**
@@ -993,22 +1106,47 @@ export const MenuPlugExecutionResultsIcon = (props: Partial<CustomIconComponentP
 }
 
 const PortAssets = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_7917" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_7917'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_7917)">
-            <path d="M18 8H20C21.1046 8 22 8.89543 22 10V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V10C2 8.89543 2.89543 8 4 8H6" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M18 8V6C18 5.44772 17.5523 5 17 5H16M6 8V6C6 5.44772 6.44772 5 7 5H8" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M16 5V4C16 3.44772 15.5523 3 15 3H9C8.44772 3 8 3.44772 8 4V5" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 12V16" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M9 12V16" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 12V16" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M15 12V16" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M18 12V16" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_7917)'>
+            <path
+                d='M18 8H20C21.1046 8 22 8.89543 22 10V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V10C2 8.89543 2.89543 8 4 8H6'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M18 8V6C18 5.44772 17.5523 5 17 5H16M6 8V6C6 5.44772 6.44772 5 7 5H8'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M16 5V4C16 3.44772 15.5523 3 15 3H9C8.44772 3 8 3.44772 8 4V5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M6 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M9 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M12 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M15 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M18 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
         </g>
     </svg>
-
 )
 
 /**
@@ -1019,17 +1157,42 @@ export const MenuPortAssetsIcon = (props: Partial<CustomIconComponentProps>) => 
 }
 
 const VulnerabilityRisk = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_7890" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_7890'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_7890)">
-            <path d="M17.5 6H19C20.1046 6 21 6.89543 21 8V16C21 17.1046 20.1046 18 19 18H5C3.89543 18 3 17.1046 3 16V8C3 6.89543 3.89543 6 5 6H6.5" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M1 18H23V19C23 20.1046 22.1046 21 21 21H3C1.89543 21 1 20.1046 1 19V18Z" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 6.375V7.5M12 9.75H12.0056M8.12134 12H15.8787C16.7406 12 17.2793 11.0625 16.8483 10.3125L12.9697 3.5625C12.5387 2.8125 11.4613 2.8125 11.0303 3.5625L7.15168 10.3125C6.72072 11.0625 7.25942 12 8.12134 12Z" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_7890)'>
+            <path
+                d='M17.5 6H19C20.1046 6 21 6.89543 21 8V16C21 17.1046 20.1046 18 19 18H5C3.89543 18 3 17.1046 3 16V8C3 6.89543 3.89543 6 5 6H6.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M1 18H23V19C23 20.1046 22.1046 21 21 21H3C1.89543 21 1 20.1046 1 19V18Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M12 6.375V7.5M12 9.75H12.0056M8.12134 12H15.8787C16.7406 12 17.2793 11.0625 16.8483 10.3125L12.9697 3.5625C12.5387 2.8125 11.4613 2.8125 11.0303 3.5625L7.15168 10.3125C6.72072 11.0625 7.25942 12 8.12134 12Z'
+                stroke='#f28b44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
-
 )
 
 /**
@@ -1039,29 +1202,69 @@ export const MenuVulnerabilityRiskIcon = (props: Partial<CustomIconComponentProp
     return <Icon component={VulnerabilityRisk} {...props} />
 }
 
-
 const DomainAssets = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_9146" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_9146'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_9146)">
-            <mask id="mask1_3031_9146" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="2" y="14" width="20" height="9">
-                <path d="M11.7948 22.9077C11.9253 22.9664 12.0747 22.9664 12.2052 22.9077L21.7052 18.6327C21.8846 18.5519 22 18.3735 22 18.1767V14.7385C22 14.3848 21.6427 14.1429 21.3143 14.2743L12.1857 17.9257C12.0665 17.9734 11.9335 17.9734 11.8143 17.9257L2.6857 14.2743C2.35726 14.1429 2 14.3848 2 14.7385V18.1767C2 18.3735 2.11539 18.5519 2.29482 18.6327L11.7948 22.9077Z" fill="white" />
+        <g mask='url(#mask0_3031_9146)'>
+            <mask
+                id='mask1_3031_9146'
+                style={{maskType: "alpha"}}
+                maskUnits='userSpaceOnUse'
+                x='2'
+                y='14'
+                width='20'
+                height='9'
+            >
+                <path
+                    d='M11.7948 22.9077C11.9253 22.9664 12.0747 22.9664 12.2052 22.9077L21.7052 18.6327C21.8846 18.5519 22 18.3735 22 18.1767V14.7385C22 14.3848 21.6427 14.1429 21.3143 14.2743L12.1857 17.9257C12.0665 17.9734 11.9335 17.9734 11.8143 17.9257L2.6857 14.2743C2.35726 14.1429 2 14.3848 2 14.7385V18.1767C2 18.3735 2.11539 18.5519 2.29482 18.6327L11.7948 22.9077Z'
+                    fill='white'
+                />
             </mask>
-            <g mask="url(#mask1_3031_9146)">
-                <path d="M11.6583 13.1243C11.879 13.044 12.121 13.044 12.3417 13.1243L20.4156 16.0602C21.2932 16.3794 21.2932 17.6206 20.4156 17.9398L12.3417 20.8757C12.121 20.956 11.879 20.956 11.6583 20.8757L3.58443 17.9398C2.70675 17.6206 2.70676 16.3794 3.58443 16.0602L11.6583 13.1243Z" stroke="#31343F" strokeWidth="1.5" />
+            <g mask='url(#mask1_3031_9146)'>
+                <path
+                    d='M11.6583 13.1243C11.879 13.044 12.121 13.044 12.3417 13.1243L20.4156 16.0602C21.2932 16.3794 21.2932 17.6206 20.4156 17.9398L12.3417 20.8757C12.121 20.956 11.879 20.956 11.6583 20.8757L3.58443 17.9398C2.70675 17.6206 2.70676 16.3794 3.58443 16.0602L11.6583 13.1243Z'
+                    stroke='#31343F'
+                    strokeWidth='1.5'
+                />
             </g>
-            <mask id="mask2_3031_9146" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="2" y="9" width="20" height="9">
-                <path d="M11.7948 17.9077C11.9253 17.9664 12.0747 17.9664 12.2052 17.9077L21.7052 13.6327C21.8846 13.5519 22 13.3735 22 13.1767V9.73852C22 9.38478 21.6427 9.14291 21.3143 9.27428L12.1857 12.9257C12.0665 12.9734 11.9335 12.9734 11.8143 12.9257L2.6857 9.27428C2.35726 9.14291 2 9.38478 2 9.73852V13.1767C2 13.3735 2.11539 13.5519 2.29482 13.6327L11.7948 17.9077Z" fill="white" />
+            <mask
+                id='mask2_3031_9146'
+                style={{maskType: "alpha"}}
+                maskUnits='userSpaceOnUse'
+                x='2'
+                y='9'
+                width='20'
+                height='9'
+            >
+                <path
+                    d='M11.7948 17.9077C11.9253 17.9664 12.0747 17.9664 12.2052 17.9077L21.7052 13.6327C21.8846 13.5519 22 13.3735 22 13.1767V9.73852C22 9.38478 21.6427 9.14291 21.3143 9.27428L12.1857 12.9257C12.0665 12.9734 11.9335 12.9734 11.8143 12.9257L2.6857 9.27428C2.35726 9.14291 2 9.38478 2 9.73852V13.1767C2 13.3735 2.11539 13.5519 2.29482 13.6327L11.7948 17.9077Z'
+                    fill='white'
+                />
             </mask>
-            <g mask="url(#mask2_3031_9146)">
-                <path d="M11.6583 8.12427C11.879 8.04399 12.121 8.04399 12.3417 8.12427L20.4156 11.0602C21.2932 11.3794 21.2932 12.6206 20.4156 12.9398L12.3417 15.8757C12.121 15.956 11.879 15.956 11.6583 15.8757L3.58443 12.9398C2.70675 12.6206 2.70676 11.3794 3.58443 11.0602L11.6583 8.12427Z" stroke="#f28b44" strokeWidth="1.5" />
+            <g mask='url(#mask2_3031_9146)'>
+                <path
+                    d='M11.6583 8.12427C11.879 8.04399 12.121 8.04399 12.3417 8.12427L20.4156 11.0602C21.2932 11.3794 21.2932 12.6206 20.4156 12.9398L12.3417 15.8757C12.121 15.956 11.879 15.956 11.6583 15.8757L3.58443 12.9398C2.70675 12.6206 2.70676 11.3794 3.58443 11.0602L11.6583 8.12427Z'
+                    stroke='#f28b44'
+                    strokeWidth='1.5'
+                />
             </g>
-            <path d="M11.6583 3.12427C11.879 3.04399 12.121 3.04399 12.3417 3.12427L20.4156 6.06021C21.2932 6.37936 21.2932 7.62064 20.4156 7.93979L12.3417 10.8757C12.121 10.956 11.879 10.956 11.6583 10.8757L3.58443 7.93979C2.70675 7.62064 2.70676 6.37936 3.58443 6.06021L11.6583 3.12427Z" stroke="#31343F" strokeWidth="1.5" />
+            <path
+                d='M11.6583 3.12427C11.879 3.04399 12.121 3.04399 12.3417 3.12427L20.4156 6.06021C21.2932 6.37936 21.2932 7.62064 20.4156 7.93979L12.3417 10.8757C12.121 10.956 11.879 10.956 11.6583 10.8757L3.58443 7.93979C2.70675 7.62064 2.70676 6.37936 3.58443 6.06021L11.6583 3.12427Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
         </g>
     </svg>
-
 )
 
 /**
@@ -1072,23 +1275,50 @@ export const MenuDomainAssetsIcon = (props: Partial<CustomIconComponentProps>) =
 }
 
 const HTTPHistory = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <mask id="mask0_3031_8824" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_3031_8824'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='24'
+            height='24'
+        >
+            <rect width='24' height='24' fill='#D9D9D9' />
         </mask>
-        <g mask="url(#mask0_3031_8824)">
-            <path d="M13 20H5C3.89543 20 3 19.1046 3 18V6C3 4.89543 3.89543 4 5 4H18C19.1046 4 20 4.89543 20 6V10" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 8L9 8" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 8L17 8" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 12L9 12" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 16L9 16" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 12L15 12" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 16L13 16" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="19" cy="17" r="4" stroke="#31343F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M19 15V17L20.5 18.5" stroke="#f28b44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g mask='url(#mask0_3031_8824)'>
+            <path
+                d='M13 20H5C3.89543 20 3 19.1046 3 18V6C3 4.89543 3.89543 4 5 4H18C19.1046 4 20 4.89543 20 6V10'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M6 8L9 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M12 8L17 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M6 12L9 12' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M6 16L9 16' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M12 12L15 12' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M12 16L13 16' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <circle
+                cx='19'
+                cy='17'
+                r='4'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M19 15V17L20.5 18.5'
+                stroke='#f28b44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
-
 )
 
 /**

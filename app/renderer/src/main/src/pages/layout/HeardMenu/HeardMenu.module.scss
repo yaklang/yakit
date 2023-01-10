@@ -225,6 +225,14 @@
             .heard-sub-menu-label {
                 color: var(--yakit-primary-color);
             }
+
+            .heard-sub-menu-item-icon {
+                display: none;
+            }
+
+            .heard-sub-menu-item-hoverIcon {
+                display: block;
+            }
         }
 
         .heard-sub-menu-label {
@@ -235,6 +243,14 @@
             overflow: hidden;
             word-break: break-all;
             max-width: 80vw;
+        }
+
+        .heard-sub-menu-item-icon {
+            display: block;
+        }
+
+        .heard-sub-menu-item-hoverIcon {
+            display: none;
         }
     }
 }
@@ -344,12 +360,32 @@
 
             &:hover {
                 color: var(--yakit-primary-color-hover);
+
+                .sub-menu-expand-item-icon {
+                    .item-icon {
+                        display: none;
+                    }
+
+                    .item-hoverIcon {
+                        display: block;
+                    }
+                }
+
             }
 
             .sub-menu-expand-item-icon {
                 width: 20px;
                 height: 20px;
                 margin-bottom: 2px;
+
+                .item-icon {
+                    display: block;
+                }
+
+                .item-hoverIcon {
+                    display: none;
+                }
+
 
                 svg {
                     width: 20px;
