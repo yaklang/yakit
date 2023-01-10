@@ -681,7 +681,7 @@ message DownloadOnlinePluginByScriptNameResponse {
 
 message DownloadOnlinePluginByScriptName {
   string ScriptName = 1;
-  int64 YakScriptId = 2;
+  int64 Id = 2;
 }
 
 message OnlineProfile {
