@@ -100,7 +100,7 @@ monaco.languages.registerCompletionItemProvider('http', {
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         },
                         {
-                            label: "array(使用‘|’分割数组元素渲染)",
+                            label: "array(使用'|'分割数组元素渲染)",
                             kind: monaco.languages.CompletionItemKind.Function,
                             insertText: 'array(${1:abc|def|123})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
@@ -171,6 +171,43 @@ monaco.languages.registerCompletionItemProvider('http', {
                             insertText: 'repeat(${1:10})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         },
+                        // yso 生成提示
+                        {
+                            label: "yso:urldns(domain)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'yso:urldns(domain)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "yso:dnslog(domain|随机标识) // 第二个参数可不填",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'yso:dnslog(domain|flag)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "yso:find_gadget_by_dns(domain) // 通过 dnslog 探测 gadget ",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'yso:find_gadget_by_dns(domain)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "yso:headerecho(key|value) // 指定回显成功的返回头 key:value",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'yso:headerecho(testecho|echo_flag)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "yso:bodyexec(whoami) // 执行命令",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'yso:bodyexec(whoami)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "headerauth // 回显链中需要添加此header头",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'headerauth}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        }
                     ]
                 }
             }
