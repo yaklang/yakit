@@ -253,6 +253,27 @@
             display: none;
         }
     }
+
+    .heard-sub-menu-item-disable {
+        opacity: 0.3;
+
+        &:hover {
+            background-color: #fff;
+            border-radius: 4px;
+
+            .heard-sub-menu-label {
+                color: var(--yakit-header-color);
+            }
+
+            .heard-sub-menu-item-icon {
+                display: block;
+            }
+
+            .heard-sub-menu-item-hoverIcon {
+                display: none;
+            }
+        }
+    }
 }
 
 .popover {
@@ -397,6 +418,21 @@
                 font-size: 11px;
                 height: 12px;
                 line-height: 10px;
+            }
+        }
+
+        .sub-menu-expand-item-disable {
+            opacity: 0.3;
+
+            &:hover {
+                color: var(--yakit-body-text-color);
+
+                .sub-menu-expand-item-icon {
+                    .item-icon {
+                        display: block;
+                    }
+                }
+
             }
         }
 
@@ -555,4 +591,23 @@
     }
 
 
+}
+
+.down-modal-wrap {
+    :global {
+
+        .ant-modal-close:focus,
+        .ant-modal-close:hover {
+            color: var(--yakit-primary-color);
+        }
+    }
+}
+
+.modal-content {
+    margin-top: 8px;
+
+    .menuItem-yakScripName {
+        margin: 0 4px;
+        color: var(--yakit-primary-color);
+    }
 }

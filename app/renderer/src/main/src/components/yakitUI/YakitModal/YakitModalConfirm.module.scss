@@ -1,0 +1,44 @@
+.modal-content-warp {
+    padding: 24px;
+
+
+    .down-modal {
+        .down-modal-heard {
+            display: flex;
+            justify-content: flex-start;
+
+            .modal-icon {
+                margin-right: 16px;
+
+                svg {
+                    color: var(--yakit-warning-color);
+                    width: 22px;
+                    height: 22px;
+                }
+            }
+
+            .modal-title {
+                display: block;
+                overflow: hidden;
+                color: var(--yakit-header-color);
+                font-weight: 500;
+                font-size: 16px;
+                line-height: 1.4;
+            }
+
+            .modal-content {
+                margin-top: 8px;
+            }
+        }
+
+        .modal-confirm-btns {
+            margin-top: 24px;
+            text-align: right;
+
+            .modal-confirm-btns-cancel {
+                margin-right: 8px;
+            }
+        }
+
+    }
+}

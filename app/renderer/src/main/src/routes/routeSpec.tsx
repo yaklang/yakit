@@ -444,21 +444,23 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 hoverIcon: <MenuSolidBlastingAndUnauthorizedTestingIcon />,
                 describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
             },
-            // {
-            //     id: "2-2",
-            //     key: undefined,
-            //     label: "基础爬虫",
-            //     icon: <MenuBasicCrawlerIcon />,
-            //     hoverIcon: <MenuSolidBasicCrawlerIcon />,
-            //     describe: "通过爬虫可快速了解网站的整体架构"
-            // },
-            // {
-            //     id: "2-3",
-            //     key: undefined,
-            //     label: "空间引擎: Hunter",
-            //     icon: <MenuSpaceEngineHunterIcon />,
-            //     hoverIcon: <MenuSolidSpaceEngineHunterIcon />
-            // },
+            {
+                id: "2-2",
+                key: undefined,
+                label: "基础爬虫",
+                yakScripName: "基础爬虫",
+                icon: <MenuBasicCrawlerIcon />,
+                hoverIcon: <MenuSolidBasicCrawlerIcon />,
+                describe: "通过爬虫可快速了解网站的整体架构"
+            },
+            {
+                id: "2-3",
+                key: undefined,
+                label: "空间引擎: Hunter",
+                yakScripName: "空间引擎: Hunter",
+                icon: <MenuSpaceEngineHunterIcon />,
+                hoverIcon: <MenuSolidSpaceEngineHunterIcon />
+            },
             {
                 id: "2-4",
                 key: Route.Mod_ScanPort,
@@ -466,22 +468,24 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 icon: <MenuPortScanningIcon />,
                 hoverIcon: <MenuSolidPortScanningIcon />,
                 describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+            },
+            {
+                id: "2-5",
+                key: undefined,
+                label: "子域名收集",
+                yakScripName: "子域名收集",
+                icon: <MenuSubDomainCollectionIcon />,
+                hoverIcon: <MenuSolidSubDomainCollectionIcon />
+            },
+            {
+                id: "2-6",
+                key: undefined,
+                label: "综合目录扫描与爆破",
+                yakScripName: "综合目录扫描与爆破",
+                icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />,
+                hoverIcon: <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />,
+                describe: "带有内置字典的综合目录扫描与爆破"
             }
-            // {
-            //     id: "2-5",
-            //     key: undefined,
-            //     label: "子域名收集",
-            //     icon: <MenuSubDomainCollectionIcon />,
-            //     hoverIcon: <MenuSolidSubDomainCollectionIcon />,
-            // },
-            // {
-            //     id: "2-6",
-            //     key: undefined,
-            //     label: "综合目录扫描与爆破",
-            //     icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />,
-            //     hoverIcon: <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />,
-            //     describe: "带有内置字典的综合目录扫描与爆破"
-            // }
         ]
     },
     {

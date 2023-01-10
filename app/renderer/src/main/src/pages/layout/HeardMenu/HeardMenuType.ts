@@ -4,7 +4,7 @@ import {MenuDataProps, Route} from "@/routes/routeSpec"
 export interface HeardMenuProps {
     routeMenuData: MenuDataProps[]
     menuItemGroup: MenuItemGroup[]
-    onRouteMenuSelect: (key: Route) => void
+    onRouteMenuSelect: (key: string) => void
 }
 
 /**
@@ -15,6 +15,7 @@ export interface HeardMenuProps {
  * @param {(s: MenuDataProps) => void} onSelect: 选中菜单
  * @param {(s: MenuDataProps) => void} setSubMenuData: 设置子菜单
  * @param {string} activeMenuId: 当前选中菜单
+ * @param {(s: MenuDataProps) => void} onOpenDownModal: 打开下载弹窗
  */
 export interface RouteMenuDataItemProps {
     menuItem: MenuDataProps
@@ -23,6 +24,7 @@ export interface RouteMenuDataItemProps {
     onSelect: (s: MenuDataProps) => void
     setSubMenuData: (s: MenuDataProps) => void
     activeMenuId: string
+    onOpenDownModal: (s: MenuDataProps) => void
 }
 
 // /**
@@ -45,10 +47,12 @@ export interface RouteMenuDataItemProps {
  * @description: 系统默认菜单的二级菜单 YakitPopover
  * @param {MenuDataProps} subMenuData: 菜单项
  * @param {(s: MenuDataProps) => void} onSelect: 选中菜单
+ * @param {(s: MenuDataProps) => void} onOpenDownModal: 打开下载弹窗
  */
 export interface SubMenuProps {
     subMenuData: MenuDataProps[]
     onSelect: (s: MenuDataProps) => void
+    onOpenDownModal: (s: MenuDataProps) => void
 }
 
 // /**
@@ -73,4 +77,8 @@ export interface CollapseMenuProp {
     moreLeft: number
     isExpand: boolean
     onMenuSelect: (s: string) => void
+}
+
+export interface MenuByGroupProps {
+    Groups: MenuItemGroup[]
 }

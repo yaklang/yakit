@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {HeardMenuProps, RouteMenuDataItemProps, SubMenuProps, CollapseMenuProp} from "./HeardMenuType"
+import {HeardMenuProps, RouteMenuDataItemProps, SubMenuProps, CollapseMenuProp, MenuByGroupProps} from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
 import {DefaultRouteMenuData, MenuDataProps, Route, SystemRouteMenuData} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -12,6 +12,7 @@ import {
     CursorClickIcon,
     DotsHorizontalIcon,
     PencilAltIcon,
+    RemoveIcon,
     SaveIcon,
     SortAscendingIcon,
     SortDescendingIcon,
@@ -20,7 +21,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
-import {Divider, Dropdown, Tabs, Tooltip, Form, Upload} from "antd"
+import {Divider, Dropdown, Tabs, Tooltip, Form, Upload, Modal} from "antd"
 import {
     MenuBasicCrawlerIcon,
     MenuComprehensiveCatalogScanningAndBlastingIcon,
@@ -48,6 +49,8 @@ import {
     MenuSolidSpaceEngineHunterIcon,
     MenuSolidSubDomainCollectionIcon
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -111,8 +114,26 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [menuDataString, setMenuDataString] = useState<string>("")
     const [fileName, setFileName] = useState<string>("")
 
+    const [downVisible, setDownVisible] = useState<boolean>(false)
+
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
+
+    useEffect(() => {
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            const menuMode = patternMenu || "expert"
+            setPatternMenu(menuMode)
+            // 如果获取的菜单数据为空，则新增默认菜单数据
+            ipcRenderer.invoke("QueryAllMenuItem", {Mode: menuMode}).then((rsp: MenuByGroupProps) => {
+                console.log("rsp", rsp)
+                if (rsp.Groups.length === 0) {
+                    // 获取的数据为空，先下载用户没有下载的插件，然后保存该模式下的菜单数据
+                    onDownPluginByScriptNames()
+                }
+            })
+        })
+    }, [])
+    const onDownPluginByScriptNames = useMemoizedFn(() => {})
     useEffect(() => {
         const newMenuItemGroup: MenuDataProps[] = []
         menuItemGroup.forEach((menuGroupItem, index) => {
@@ -137,6 +158,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
 
         const route = newMenuItemGroup.concat(routeMenuData)
+
         setRouteMenu(route)
         if (getMenuId()) {
             let currentMenu = route.find((ele) => ele.id === getMenuId())
@@ -225,11 +247,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onGoCustomize = useMemoizedFn(() => {
         ipcRenderer.invoke("open-customize-menu")
     })
-    useEffect(() => {
-        getRemoteValue("PatternMenu").then((patternMenu) => {
-            setPatternMenu(patternMenu || "expert")
-        })
-    }, [])
+
     /**
      * @description: 复原新手
      */
@@ -262,6 +280,25 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         console.log("menuDataString", menuDataString)
         setVisibleImport(false)
     })
+
+    const onOpenDownModal = useMemoizedFn((menuItem: MenuDataProps) => {
+        const m = YakitModalConfirm({
+            width: 420,
+            closable: false,
+            title: "插件加载失败",
+            content: (
+                <div className={style["modal-content"]}>
+                    {menuItem.label}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
+                    <span className={style["menuItem-yakScripName"]}>{menuItem.yakScripName}</span>插件
+                </div>
+            ),
+            onOkText: "重新下载",
+            onOk: () => {
+                m.destroy()
+            }
+        })
+    })
+
     return (
         <div className={style["heard-menu-body"]}>
             <div
@@ -298,6 +335,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             setMenuId(menu.id || "")
                                         }}
                                         activeMenuId={menuId}
+                                        onOpenDownModal={onOpenDownModal}
                                     />
                                 )
                             })}
@@ -423,25 +461,52 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             <Tabs.TabPane
                                 tab={
                                     <div className={style["sub-menu-expand"]}>
-                                        <div
-                                            className={style["sub-menu-expand-item"]}
-                                            style={{paddingLeft: index === 0 ? 0 : ""}}
-                                        >
-                                            <div className={style["sub-menu-expand-item-icon"]}>
-                                                <span className={style["item-icon"]}>{item.icon}</span>
-                                                <span className={style["item-hoverIcon"]}>{item.hoverIcon}</span>
-                                            </div>
-                                            <Tooltip title={item.label} placement='bottom'>
-                                                <div
-                                                    className={classNames(
-                                                        style["sub-menu-expand-item-label"],
-                                                        style["heard-menu-item-label"]
-                                                    )}
-                                                >
-                                                    {item.label}
+                                        {(item.key && (
+                                            <div
+                                                className={style["sub-menu-expand-item"]}
+                                                style={{paddingLeft: index === 0 ? 0 : ""}}
+                                            >
+                                                <div className={style["sub-menu-expand-item-icon"]}>
+                                                    <span className={style["item-icon"]}>{item.icon}</span>
+                                                    <span className={style["item-hoverIcon"]}>{item.hoverIcon}</span>
                                                 </div>
-                                            </Tooltip>
-                                        </div>
+                                                <Tooltip title={item.label} placement='bottom'>
+                                                    <div
+                                                        className={classNames(
+                                                            style["sub-menu-expand-item-label"],
+                                                            style["heard-menu-item-label"]
+                                                        )}
+                                                    >
+                                                        {item.label}
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        )) || (
+                                            <div
+                                                className={classNames(style["sub-menu-expand-item"], {
+                                                    [style["sub-menu-expand-item-disable"]]: !item.key
+                                                })}
+                                                style={{paddingLeft: index === 0 ? 0 : ""}}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    console.log("1")
+                                                }}
+                                            >
+                                                <div className={style["sub-menu-expand-item-icon"]}>
+                                                    <span className={style["item-icon"]}>{item.icon}</span>
+                                                </div>
+                                                <Tooltip title='插件丢失，点击下载' placement='bottom'>
+                                                    <div
+                                                        className={classNames(
+                                                            style["sub-menu-expand-item-label"],
+                                                            style["heard-menu-item-label"]
+                                                        )}
+                                                    >
+                                                        {item.label}
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        )}
                                         {index !== subMenuData.length - 1 && (
                                             <div className={style["sub-menu-expand-item-line"]} />
                                         )}
@@ -492,7 +557,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 export default HeardMenu
 
 const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) => {
-    const {menuItem, isShow, onSelect, isExpand, setSubMenuData, activeMenuId} = props
+    const {menuItem, isShow, onSelect, isExpand, setSubMenuData, activeMenuId, onOpenDownModal} = props
     const [visible, setVisible] = useState<boolean>(false)
     const onOpenSecondMenu = useMemoizedFn(() => {
         if (!isExpand) return
@@ -516,7 +581,13 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
         (isExpand && popoverContent) || (
             <YakitPopover
                 placement='bottomLeft'
-                content={<SubMenu subMenuData={menuItem.subMenuData || []} onSelect={onSelect} />}
+                content={
+                    <SubMenu
+                        subMenuData={menuItem.subMenuData || []}
+                        onSelect={onSelect}
+                        onOpenDownModal={onOpenDownModal}
+                    />
+                }
                 trigger='hover'
                 overlayClassName={classNames(style["popover"], {
                     [style["popover-content"]]: menuItem.subMenuData && menuItem.subMenuData.length <= 1
@@ -531,20 +602,36 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
 })
 
 const SubMenu: React.FC<SubMenuProps> = (props) => {
-    const {subMenuData, onSelect} = props
+    const {subMenuData, onSelect, onOpenDownModal} = props
     return (
         <div className={style["heard-sub-menu"]}>
             {subMenuData.map((subMenuItem) => (
                 <div
-                    className={style["heard-sub-menu-item"]}
-                    key={`subMenuItem-${subMenuItem.key}`}
-                    onClick={() => onSelect(subMenuItem)}
+                    className={classNames(style["heard-sub-menu-item"], {
+                        [style["heard-sub-menu-item-disable"]]: !subMenuItem.key
+                    })}
+                    key={`subMenuItem-${subMenuItem.id}`}
+                    onClick={() => {
+                        if (subMenuItem.key) {
+                            onSelect(subMenuItem)
+                        } else {
+                            onOpenDownModal(subMenuItem)
+                        }
+                    }}
                 >
                     <>
                         <span className={style["heard-sub-menu-item-icon"]}>{subMenuItem.icon}</span>
                         <span className={style["heard-sub-menu-item-hoverIcon"]}>{subMenuItem.hoverIcon}</span>
                     </>
-                    <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
+                    {(subMenuItem.key && (
+                        <div className={style["heard-sub-menu-label"]}>
+                            {subMenuItem.label}-{subMenuItem.key}
+                        </div>
+                    )) || (
+                        <Tooltip title='插件丢失，点击下载' placement='bottom' zIndex={9999}>
+                            <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
+                        </Tooltip>
+                    )}
                 </div>
             ))}
         </div>
