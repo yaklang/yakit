@@ -58,28 +58,6 @@
     .icon-hover-style {
         color: var(--yakit-primary-color);
     }
-    .icon-rotate-animation {
-        animation: rotate 1s linear infinite;
-    }
-
-    // 360度旋转
-    @keyframes rotate {
-        0% {
-            -webkit-transform: rotate(0deg);
-        }
-        25% {
-            -webkit-transform: rotate(90deg);
-        }
-        50% {
-            -webkit-transform: rotate(180deg);
-        }
-        75% {
-            -webkit-transform: rotate(270deg);
-        }
-        100% {
-            -webkit-transform: rotate(360deg);
-        }
-    }
 }
 .ui-op-btn-wrapper:hover {
     .icon-style {
@@ -89,107 +67,6 @@
 
 .ui-op-dropdown {
     top: 24px !important;
-}
-.ui-engine-list-dropdown {
-    :global {
-        .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
-            border-radius: 4px;
-            .ant-popover-inner-content {
-                padding: 0;
-            }
-        }
-    }
-
-    .ui-engine-list-wrapper {
-        width: 720px;
-        padding: 16px;
-
-        .ui-engine-list-body {
-            width: 100%;
-
-            .engine-list-header {
-                height: 16px;
-                font-size: 12px;
-                color: var(--yakit-body-text-color);
-                display: flex;
-                align-items: center;
-                .loading-icon {
-                    margin-left: 8px;
-                    color: var(--yakit-primary-5);
-                }
-            }
-
-            .engine-list-container {
-                margin-top: 16px;
-
-                .engine-list-opt {
-                    height: 24px;
-                    display: flex;
-                    justify-content: space-between;
-                    .left-body {
-                        display: flex;
-                        align-items: center;
-                        .engine-ps-info {
-                            height: 16px;
-                            font-weight: 500;
-                            font-size: 12px;
-                            display: flex;
-                            align-items: center;
-                            color: var(--yakit-header-color);
-                            .current-ps-info {
-                                color: var(--yakit-primary-5);
-                            }
-                        }
-                    }
-                    .right-body {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-
-                        .del-btn-coloc {
-                            --button-wave-shadow-color: var(--yakit-danger-2) !important;
-
-                            --button-background: var(--yakit-neutral10-color) !important;
-                            --button-color: var(--yakit-danger-5) !important;
-                            --button-border-color: var(--yakit-danger-3) !important;
-
-                            --button-hover-background: var(--yakit-neutral10-color) !important;
-                            --button-hover-color: var(--yakit-danger-4) !important;
-                            --button-hover-border-color: var(--yakit-danger-4) !important;
-
-                            --button-press-background: var(--yakit-neutral10-color) !important;
-                            --button-press-color: var(--yakit-danger-6) !important;
-                            --button-press-border-color: var(--yakit-danger-6) !important;
-                        }
-                    }
-                }
-
-                .engine-list-opt + .engine-list-opt {
-                    margin-top: 16px;
-                }
-            }
-
-            .engine-list-footer {
-                margin-top: 16px;
-                box-sizing: border-box;
-                padding: 12px 0px 0px;
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                border-top: 1px solid var(--yakit-border-color);
-                .engine-list-footer-btn {
-                    width: 48px;
-                    height: 16px;
-                    font-size: 12px;
-                    line-height: 16px;
-                    color: var(--yakit-body-text-color);
-                    cursor: pointer;
-                }
-            }
-        }
-    }
 }
 .ui-op-setting-dropdown {
     :global {
