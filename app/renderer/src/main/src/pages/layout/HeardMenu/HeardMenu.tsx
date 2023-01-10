@@ -606,6 +606,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <HomeSvgIcon />
                 </div>
             )}
+            <div style={{flex:1}}>
             <div
                 className={classNames(style["heard-menu-main"], {
                     [style["heard-menu-main-no-expand"]]: !isExpand
