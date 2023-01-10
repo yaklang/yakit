@@ -357,7 +357,7 @@ service Yak {
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
   rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
   rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
-  rpc DownloadOnlinePluginByScriptName(DownloadOnlinePluginByScriptNameRequest) returns (DownloadOnlinePluginByScriptNameResponse);
+  rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -759,12 +759,12 @@ message DownloadOnlinePluginByIdsRequest {
   repeated string UUID = 3;
 }
 
-message DownloadOnlinePluginByScriptNameRequest {
+message DownloadOnlinePluginByScriptNamesRequest {
   repeated string ScriptNames = 1;
   string Token = 2;
 }
 
-message DownloadOnlinePluginByScriptNameResponse {
+message DownloadOnlinePluginByScriptNamesResponse {
   repeated DownloadOnlinePluginByScriptName Data = 1;
 }
 
