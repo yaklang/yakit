@@ -158,7 +158,7 @@ export enum Route {
     TrustListPage = "trust-list-admin-page", // 信任用户管理
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
-    AttachEngineCombinedOutput = "attach-engine-combined-output",
+    AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -203,13 +203,14 @@ export interface MenuDataProps {
     subMenuData?: MenuDataProps[]
     label: string
     icon?: JSX.Element
+    hoverIcon?: JSX.Element
     disabled?: boolean
     hidden?: boolean
     describe?: string
     yakScriptId?: number
     yakScripName?: string
-    isNovice?:boolean
-    sort?:number
+    isNovice?: boolean
+    sort?: number
 }
 
 export const NoScrollRoutes: Route[] = [Route.HTTPHacker, Route.Mod_Brute, Route.YakScript]
@@ -390,7 +391,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
 }
 
 /**
- * @description: 系统默认菜单数据 
+ * @description: 系统默认菜单数据
  */
 export const DefaultRouteMenuData: MenuDataProps[] = [
     {
@@ -402,6 +403,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.HTTPHacker,
                 label: "MITM 交互式劫持",
                 icon: <MenuMITMInteractiveHijackingIcon />,
+                hoverIcon: <MenuSolidMITMInteractiveHijackingIcon />,
                 describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
             },
             {
@@ -409,9 +411,16 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.HTTPFuzzer,
                 label: "Web Fuzzer",
                 icon: <MenuWebFuzzerIcon />,
+                hoverIcon: <MenuSolidWebFuzzerIcon />,
                 describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
             },
-            {id: "1-3", key: Route.WebsocketFuzzer, label: "Websocket Fuzzer", icon: <MenuWebsocketFuzzerIcon />}
+            {
+                id: "1-3",
+                key: Route.WebsocketFuzzer,
+                label: "Websocket Fuzzer",
+                icon: <MenuWebsocketFuzzerIcon />,
+                hoverIcon: <MenuSolidWebsocketFuzzerIcon />
+            }
             // {
             //     id: "1-4",
             //     key: Route.PayloadGenerater_New,
@@ -424,7 +433,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "2",
         label: "基础工具",
-        isNovice:true,
+        isNovice: true,
         key: Route.GeneralModule,
         subMenuData: [
             {
@@ -432,6 +441,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.Mod_Brute,
                 label: "爆破与未授权检测",
                 icon: <MenuBlastingAndUnauthorizedTestingIcon />,
+                hoverIcon: <MenuSolidBlastingAndUnauthorizedTestingIcon />,
                 describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
             },
             // {
@@ -439,32 +449,37 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             //     key: undefined,
             //     label: "基础爬虫",
             //     icon: <MenuBasicCrawlerIcon />,
+            //     hoverIcon: <MenuSolidBasicCrawlerIcon />,
             //     describe: "通过爬虫可快速了解网站的整体架构"
             // },
             // {
             //     id: "2-3",
             //     key: undefined,
             //     label: "空间引擎: Hunter",
-            //     icon: <MenuSpaceEngineHunterIcon />
+            //     icon: <MenuSpaceEngineHunterIcon />,
+            //     hoverIcon: <MenuSolidSpaceEngineHunterIcon />
             // },
             {
                 id: "2-4",
                 key: Route.Mod_ScanPort,
                 label: "端口/指纹扫描",
                 icon: <MenuPortScanningIcon />,
+                hoverIcon: <MenuSolidPortScanningIcon />,
                 describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
-            },
+            }
             // {
             //     id: "2-5",
             //     key: undefined,
             //     label: "子域名收集",
-            //     icon: <MenuSubDomainCollectionIcon />
+            //     icon: <MenuSubDomainCollectionIcon />,
+            //     hoverIcon: <MenuSolidSubDomainCollectionIcon />,
             // },
             // {
             //     id: "2-6",
             //     key: undefined,
             //     label: "综合目录扫描与爆破",
             //     icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />,
+            //     hoverIcon: <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />,
             //     describe: "带有内置字典的综合目录扫描与爆破"
             // }
         ]
@@ -472,13 +487,14 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "3",
         label: "专项漏洞检测",
-        isNovice:true,
+        isNovice: true,
         subMenuData: [
             {
                 id: "3-1",
                 key: Route.PoC,
                 label: "专项漏洞检测",
                 icon: <MenuSpecialVulnerabilityDetectionIcon />,
+                hoverIcon: <MenuSolidSpecialVulnerabilityDetectionIcon />,
                 describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"
             }
         ]
@@ -486,13 +502,14 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "4",
         label: "插件",
-        isNovice:true,
+        isNovice: true,
         subMenuData: [
             {
                 id: "4-1",
                 key: Route.ModManager,
                 label: "插件仓库",
                 icon: <MenuPluginWarehouseIcon />,
+                hoverIcon: <MenuSolidPluginWarehouseIcon />,
                 describe: "目前插件为 6 大类型，可根据需要灵活编写插件，支持从 GitHub 加载插件"
             },
             {
@@ -500,6 +517,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.BatchExecutorPage,
                 label: "插件批量执行",
                 icon: <MenuPluginBatchExecutionIcon />,
+                hoverIcon: <MenuSolidPluginBatchExecutionIcon />,
                 describe: "自由选择需要的 POC 进行批量漏洞检测"
             }
         ]
@@ -515,6 +533,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.ShellReceiver,
                 label: "端口监听器",
                 icon: <MenuPortListenerIcon />,
+                hoverIcon: <MenuSolidPortListenerIcon />,
                 describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
             },
             {
@@ -522,6 +541,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.ReverseServer_New,
                 label: "反连服务器",
                 icon: <MenuReverseConnectionServerIcon />,
+                hoverIcon: <MenuSolidReverseConnectionServerIcon />,
                 describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连"
             },
             {
@@ -529,6 +549,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.DNSLog,
                 label: "DNSLog",
                 icon: <MenuDNSLogIcon />,
+                hoverIcon: <MenuSolidDNSLogIcon />,
                 describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"
             },
             {
@@ -536,6 +557,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.ICMPSizeLog,
                 label: "ICMP-SizeLog",
                 icon: <MenuICMPSizeLogIcon />,
+                hoverIcon: <MenuSolidICMPSizeLogIcon />,
                 describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"
             },
             {
@@ -543,6 +565,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.TCPPortLog,
                 label: "TCP-PortLog",
                 icon: <MenuTCPPortLogIcon />,
+                hoverIcon: <MenuSolidTCPPortLogIcon />,
                 describe: "使用未开放的随机端口来判定 TCP 反连"
             },
             {
@@ -550,6 +573,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.PayloadGenerater_New,
                 label: "Yso-Java Hack",
                 icon: <MenuYsoJavaHackIcon />,
+                hoverIcon: <MenuSolidYsoJavaHackIcon />,
                 describe: "配置序列化 Payload 或恶意类"
             }
         ]
@@ -557,13 +581,14 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "8",
         label: "数据处理",
-        isNovice:true,
+        isNovice: true,
         subMenuData: [
             {
                 id: "8-1",
                 key: Route.Codec,
                 label: "Codec",
                 icon: <MenuCodecIcon />,
+                hoverIcon: <MenuSolidCodecIcon />,
                 describe:
                     "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法"
             },
@@ -572,6 +597,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 key: Route.DataCompare,
                 label: "数据对比",
                 icon: <MenuDataComparisonIcon />,
+                hoverIcon: <MenuSolidDataComparisonIcon />,
                 describe: "将数据进行对比，快速识别不同处"
             }
         ]
@@ -579,7 +605,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "9",
         label: "数据库",
-        isNovice:true,
+        isNovice: true,
         subMenuData: [
             {id: "9-1", key: Route.DB_Report, label: "报告(Beta*)", icon: <MenuReportIcon />},
             {id: "9-2", key: Route.DB_ExecResults, label: "插件执行结果", icon: <MenuPlugExecutionResultsIcon />},

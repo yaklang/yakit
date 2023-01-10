@@ -1159,7 +1159,6 @@ export const MenuSolidVulnerabilityRiskIcon = (props: Partial<CustomIconComponen
     return <Icon component={SolidVulnerabilityRisk} {...props} />
 }
 
-
 const SolidPlugExecutionResults = () => (
     <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
@@ -1401,4 +1400,69 @@ const SolidWebFuzzer = () => (
  */
 export const MenuSolidWebFuzzerIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SolidWebFuzzer} {...props} />
+}
+
+const SolidPluginBatchExecution = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_4916_115569'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='32'
+            height='32'
+        >
+            <rect width='32' height='32' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_4916_115569)'>
+            <path
+                d='M4 8.65075C4 7.47313 4.77245 6.43494 5.90041 6.09655L13.9004 3.69655C15.6114 3.18326 17.3333 4.46445 17.3333 6.25075V25.7493C17.3333 27.5356 15.6114 28.8167 13.9004 28.3035L5.90041 25.9035C4.77245 25.5651 4 24.5269 4 23.3493V8.65075Z'
+                fill='#F28B44'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M16.3333 6.25074C16.3333 5.1343 15.2571 4.33355 14.1878 4.65436L6.18775 7.05436C5.48278 7.26585 5 7.91472 5 8.65073V23.3492C5 24.0853 5.48278 24.7341 6.18775 24.9456L14.1878 27.3456C15.2571 27.6664 16.3333 26.8657 16.3333 25.7492V6.25074ZM13.6131 2.73871C15.9656 2.03293 18.3333 3.79457 18.3333 6.25074V25.7492C18.3333 28.2054 15.9656 29.967 13.6131 29.2613L5.61306 26.8613C4.06212 26.396 3 24.9685 3 23.3492V8.65073C3 7.0315 4.06212 5.60399 5.61306 5.13871L13.6131 2.73871Z'
+                fill='#31343F'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M21.6666 7.60951C21.4196 7.6968 21.1388 7.68753 20.886 7.56113C20.392 7.31414 20.1918 6.71346 20.4388 6.21948C21.2429 4.61138 23.6666 5.18355 23.6666 6.98146V25.0186C23.6666 26.8165 21.2429 27.3887 20.4388 25.7806C20.1918 25.2866 20.392 24.6859 20.886 24.4389C21.1388 24.3125 21.4196 24.3033 21.6666 24.3906V7.60951Z'
+                fill='#F28B44'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M27.0001 8.94279C26.7531 9.03008 26.4723 9.02081 26.2195 8.89441C25.7255 8.64742 25.5253 8.04675 25.7723 7.55277C26.5763 5.94466 29.0001 6.51683 29.0001 8.31474V23.6852C29.0001 25.4831 26.5763 26.0553 25.7723 24.4472C25.5253 23.9532 25.7255 23.3525 26.2195 23.1056C26.4723 22.9792 26.7531 22.9699 27.0001 23.0572V8.94279Z'
+                fill='#31343F'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M14.3094 10.4497C14.4292 10.9889 14.0893 11.523 13.5502 11.6428L7.55015 12.9762C7.01102 13.096 6.47684 12.7561 6.35703 12.2169C6.23723 11.6778 6.57716 11.1436 7.11629 11.0238L13.1163 9.69047C13.6554 9.57066 14.1896 9.91059 14.3094 10.4497Z'
+                fill='#31343F'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M6.33325 16C6.33325 15.4477 6.78097 15 7.33325 15H11.3333C11.8855 15 12.3333 15.4477 12.3333 16C12.3333 16.5523 11.8855 17 11.3333 17H7.33325C6.78097 17 6.33325 16.5523 6.33325 16Z'
+                fill='#31343F'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M6.37174 19.7253C6.52347 19.1943 7.07695 18.8868 7.60799 19.0385L12.2747 20.3718C12.8057 20.5235 13.1132 21.077 12.9615 21.6081C12.8097 22.1391 12.2562 22.4466 11.7252 22.2949L7.05854 20.9615C6.52751 20.8098 6.22002 20.2563 6.37174 19.7253Z'
+                fill='#31343F'
+            />
+        </g>
+    </svg>
+)
+
+/**
+ * @description: 插件批量执行
+ */
+export const MenuSolidPluginBatchExecutionIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={SolidPluginBatchExecution} {...props} />
 }
