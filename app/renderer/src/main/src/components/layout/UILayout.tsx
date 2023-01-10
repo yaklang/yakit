@@ -286,7 +286,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 .invoke("install-yak-engine", version)
                 .then(() => {
                     success("安装成功，如未生效，重启 Yakit 即可")
-                    // updateReconnect()
                 })
                 .catch((err: any) => failed(`安装失败: ${err}`))
                 .finally(() => setTimeout(() => setYaklangDownload(false), 500))

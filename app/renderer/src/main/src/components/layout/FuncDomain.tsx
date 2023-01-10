@@ -44,6 +44,7 @@ import {showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {manageYakLocalProcess} from "@/components/layout/WelcomeConsoleUtil"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
+import {LoadingOutlined} from "@ant-design/icons"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -232,36 +233,35 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     )
 })
 
-interface UIEngineListProp {
-    engineLink: boolean
-    engineMode: YaklangEngineMode
-}
 export interface yakProcess {
     port: number
     pid: number
     cmd: string
     origin: any
 }
-/** @name 已启动引擎列表 */
-const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
-    const {engineLink, engineMode} = props
+interface EngineListProp {
+    isLocal: boolean
+    show: boolean
+    setShow: (flag: boolean) => any
+}
+/** @name 引擎列表 */
+const EngineList: React.FC<EngineListProp> = React.memo((props) => {
+    const {isLocal, show, setShow} = props
 
-    const [show, setShow] = useState<boolean>(false)
-
-    const [psIng, setPsIng] = useState(false)
-    const [notified, setNotified] = useState(false)
+    const [psLoading, setPSLoading] = useState<boolean>(false)
+    const notified = useRef<boolean>(false)
     const [process, setProcess] = useState<yakProcess[]>([])
 
     const [port, setPort] = useState<number>(0)
 
-    const update = useMemoizedFn(() => {
-        if (psIng) return
+    const fetchPSList = useMemoizedFn(() => {
+        if (psLoading) return
 
-        setPsIng(true)
+        setPSLoading(true)
         ipcRenderer
             .invoke("ps-yak-grpc")
             .then((i: yakProcess[]) => {
-                setNotified(false)
+                notified.current = false
                 setProcess(
                     i.map((element: yakProcess) => {
                         return {
@@ -274,13 +274,16 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 )
             })
             .catch((e) => {
-                if (!notified) {
+                if (!notified.current) {
                     failed(`PS | GREP yak failed ${e}`)
-                    setNotified(true)
+                    notified.current = true
                 }
             })
-            .finally(() => setPsIng(false))
-
+            .finally(() => {
+                setPSLoading(false)
+            })
+    })
+    const fetchCurrentPort = () => {
         ipcRenderer
             .invoke("fetch-yaklang-engine-addr")
             .then((data) => {
@@ -289,18 +292,24 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 if (+hosts[1]) setPort(+hosts[1])
             })
             .catch(() => {})
-    })
+    }
 
     useEffect(() => {
-        if (engineLink) {
-            update()
+        if (show) {
+            fetchPSList()
+            fetchCurrentPort()
 
-            let id = setInterval(update, 1000)
+            let id = setInterval(fetchPSList, 3000)
+            let ids = setInterval(fetchCurrentPort, 5000)
             return () => {
                 clearInterval(id)
+                clearInterval(ids)
             }
+        } else {
+            setProcess([])
+            setPort(0)
         }
-    }, [engineLink])
+    }, [show])
 
     const allClose = useMemoizedFn(() => {
         ;(process || []).forEach((i) => {
@@ -311,6 +320,104 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
         setTimeout(() => successControlled("引擎进程关闭中...", 5), 1000)
     })
 
+    return (
+        <div className={styles["ui-engine-list-wrapper"]}>
+            <div className={styles["ui-engine-list-body"]}>
+                <div className={styles["engine-list-header"]}>
+                    本地 Yak 进程管理 {psLoading && <LoadingOutlined className={styles["loading-icon"]} />}
+                </div>
+                <div className={styles["engine-list-container"]}>
+                    {process.map((i) => {
+                        return (
+                            <div key={i.pid} className={styles["engine-list-opt"]}>
+                                <div className={styles["left-body"]}>
+                                    <YakitTag color={isLocal && +i.port === port ? "success" : undefined}>
+                                        {`PID: ${i.pid}`}
+                                        {isLocal && +i.port === port && <CheckedSvgIcon style={{marginLeft: 8}} />}
+                                    </YakitTag>
+                                    <div className={styles["engine-ps-info"]}>
+                                        {`yak grpc --port ${i.port === 0 ? "获取中" : i.port}`}
+                                        &nbsp;
+                                        {isLocal && +i.port === port && (
+                                            <span className={styles["current-ps-info"]}>{"(当前)"}</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className={styles["right-body"]}>
+                                    <YakitButton
+                                        type='text'
+                                        onClick={() => {
+                                            setShow(false)
+                                            showModal({
+                                                title: "YakProcess 详情",
+                                                content: <div style={{padding: 8}}>{JSON.stringify(i)}</div>
+                                            })
+                                        }}
+                                    >
+                                        Details
+                                    </YakitButton>
+                                    <Popconfirm
+                                        title={
+                                            <>
+                                                确定关闭将会强制关闭进程,
+                                                <br />
+                                                如为当前连接引擎,未关闭Yakit再次连接引擎,
+                                                <br />
+                                                则需在加载页点击"其他连接模式-手动启动引擎"
+                                            </>
+                                        }
+                                        onConfirm={() => {
+                                            ipcRenderer
+                                                .invoke("kill-yak-grpc", i.pid)
+                                                .then(() => successControlled("引擎进程关闭中...", 5))
+                                                .catch((e: any) => {})
+                                                .finally(fetchPSList)
+                                        }}
+                                    >
+                                        <YakitButton type='outline2' themeClass={styles["del-btn-coloc"]}>
+                                            关闭引擎
+                                        </YakitButton>
+                                    </Popconfirm>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+                <div className={styles["engine-list-footer"]}>
+                    <div></div>
+                    <Popconfirm
+                        title={
+                            <>
+                                确定关闭将会强制关闭进程,
+                                <br />
+                                如为当前连接引擎,未关闭Yakit再次连接引擎,
+                                <br />
+                                则需在加载页点击"其他连接模式-手动启动引擎"
+                            </>
+                        }
+                        onConfirm={() => allClose()}
+                    >
+                        <div className={styles["engine-list-footer-btn"]}>全部关闭</div>
+                    </Popconfirm>
+                </div>
+            </div>
+        </div>
+    )
+})
+interface UIEngineListProp {
+    engineLink: boolean
+    engineMode: YaklangEngineMode
+}
+/** @name 已启动引擎列表 */
+const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
+    const {engineLink, engineMode} = props
+
+    const [show, setShow] = useState<boolean>(false)
+
+    useEffect(() => {
+        if (!engineLink) setShow(false)
+    }, [engineLink])
+
     const isLocal = useMemo(() => {
         return engineMode === "admin" || engineMode === "local"
     }, [engineMode])
@@ -320,89 +427,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             visible={show}
             overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
             placement={"bottomRight"}
-            content={
-                <div className={styles["ui-engine-list-wrapper"]}>
-                    <div className={styles["ui-engine-list-body"]}>
-                        <div className={styles["engine-list-header"]}>本地 Yak 进程管理</div>
-                        <div className={styles["engine-list-container"]}>
-                            {process.map((i) => {
-                                return (
-                                    <div className={styles["engine-list-opt"]}>
-                                        <div className={styles["left-body"]}>
-                                            <YakitTag color={isLocal && +i.port === port ? "success" : undefined}>
-                                                {`PID: ${i.pid}`}
-                                                {isLocal && +i.port === port && (
-                                                    <CheckedSvgIcon style={{marginLeft: 8}} />
-                                                )}
-                                            </YakitTag>
-                                            <div className={styles["engine-ps-info"]}>
-                                                {`yak grpc --port ${i.port === 0 ? "获取中" : i.port}`}
-                                                &nbsp;
-                                                {isLocal && +i.port === port && (
-                                                    <span className={styles["current-ps-info"]}>{"(当前)"}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className={styles["right-body"]}>
-                                            <YakitButton
-                                                type='text'
-                                                onClick={() => {
-                                                    setShow(false)
-                                                    showModal({
-                                                        title: "YakProcess 详情",
-                                                        content: <div style={{padding: 8}}>{JSON.stringify(i)}</div>
-                                                    })
-                                                }}
-                                            >
-                                                Details
-                                            </YakitButton>
-                                            <Popconfirm
-                                                title={
-                                                    <>
-                                                        确定关闭将会强制关闭进程,
-                                                        <br />
-                                                        如为当前连接引擎,未关闭Yakit再次连接引擎,
-                                                        <br />
-                                                        则需在加载页点击"其他连接模式-手动启动引擎"
-                                                    </>
-                                                }
-                                                onConfirm={() => {
-                                                    ipcRenderer
-                                                        .invoke("kill-yak-grpc", i.pid)
-                                                        .then(() => successControlled("引擎进程关闭中...", 5))
-                                                        .catch((e: any) => {})
-                                                        .finally(update)
-                                                }}
-                                            >
-                                                <YakitButton type='outline2' themeClass={styles["del-btn-coloc"]}>
-                                                    关闭引擎
-                                                </YakitButton>
-                                            </Popconfirm>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <div className={styles["engine-list-footer"]}>
-                            <div></div>
-                            <Popconfirm
-                                title={
-                                    <>
-                                        确定关闭将会强制关闭进程,
-                                        <br />
-                                        如为当前连接引擎,未关闭Yakit再次连接引擎,
-                                        <br />
-                                        则需在加载页点击"其他连接模式-手动启动引擎"
-                                    </>
-                                }
-                                onConfirm={() => allClose()}
-                            >
-                                <div className={styles["engine-list-footer-btn"]}>全部关闭</div>
-                            </Popconfirm>
-                        </div>
-                    </div>
-                </div>
-            }
+            content={<EngineList isLocal={isLocal} show={show} setShow={setShow} />}
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>

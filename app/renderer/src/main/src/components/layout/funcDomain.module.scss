@@ -112,8 +112,13 @@
             .engine-list-header {
                 height: 16px;
                 font-size: 12px;
-                line-height: 16px;
                 color: var(--yakit-body-text-color);
+                display: flex;
+                align-items: center;
+                .loading-icon {
+                    margin-left: 8px;
+                    color: var(--yakit-primary-5);
+                }
             }
 
             .engine-list-container {
