@@ -26,8 +26,8 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = (props) => {
         formItemClassName,
         showDefHelp = true
     } = props
-    const [uploadLoading, setUploadLoading] = useState(false)
-    const [name, setName] = useState("")
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
+    const [name, setName] = useState<string>("")
     const getContent = useMemoizedFn((path: string) => {
         if (!path) {
             failed("请输入路径")
@@ -100,7 +100,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = (props) => {
                         }}
                         onBlur={(e) => {
                             e.stopPropagation()
-                            getContent(name)
+                            if (name) getContent(name)
                         }}
                     />
                     <div
