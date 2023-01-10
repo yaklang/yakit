@@ -1381,6 +1381,13 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                             />
                                         </div>
                                     </Form.Item>
+                                    <Form.Item label='密码'>
+                                        <Input
+                                            className={styles["input-style"]}
+                                            value={remote.password}
+                                            onChange={(e) => setRemote({...remote, password: e.target.value})}
+                                        />
+                                    </Form.Item>
                                 </>
                             )}
                             <Form.Item
