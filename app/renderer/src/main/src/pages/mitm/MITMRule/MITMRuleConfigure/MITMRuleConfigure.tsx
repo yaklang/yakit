@@ -665,9 +665,9 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
         }
     })
     const onUseDefaultConfig = useMemoizedFn(() => {
-        const value = Buffer.from(JSON.stringify(defaultConfig))
+        const value = Buffer.from(JSON.stringify(defaultConfig.map((item) => ({...item, NoReplace: true}))))
         setLoading(true)
-        setParams({ReplaceAll: false, JsonRaw: value})
+        setParams({ReplaceAll: true, JsonRaw: value})
         setTimeout(() => setLoading(false), 300)
     })
     return (
