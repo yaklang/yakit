@@ -37,6 +37,8 @@ import {
     AddDayCountIcon,
     AddWeekCountIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 interface RouteTitleProps {
@@ -126,6 +128,7 @@ interface chartListProps {
 const PieChart: React.FC<PieChartProps> = (props) => {
     const {goStoreRoute} = props
     const [chartList, setChartList] = useState<chartListProps[]>([])
+    const [chartCount, setChartCount] = useState<any>({})
     // 全局登录状态
     const {userInfo} = useStore()
     useEffect(() => {
@@ -145,13 +148,21 @@ const PieChart: React.FC<PieChartProps> = (props) => {
         })
             .then((res: API.YakitSearch) => {
                 if (res.plugin_type) {
-                    setChartList(
-                        res.plugin_type.map((item) => ({
-                            type: PluginType[item.value] ?? "未识别",
-                            value: item.count,
-                            id: item.value
-                        }))
-                    )
+                    const chartList = res.plugin_type.map((item) => ({
+                        type: PluginType[item.value] ?? "未识别",
+                        value: item.count,
+                        id: item.value
+                    }))
+                    setChartList(chartList)
+                    const colorArr = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
+                    let obj = {}
+                    // 背景颜色赋值
+                    chartList
+                        .sort((a, b) => b.value - a.value)
+                        .forEach((item, index) => {
+                            obj[item.type] = colorArr[index]
+                        })
+                    setChartCount(obj)
                 }
             })
             .catch((err) => {
@@ -172,6 +183,7 @@ const PieChart: React.FC<PieChartProps> = (props) => {
         }
         goStoreRoute({plugin_type})
     })
+    console.log("chartCount", chartCount)
     return (
         <>
             {chartList.length > 0 && (
@@ -182,7 +194,6 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                     radius={1.0}
                     angleField='value'
                     colorField='type'
-                    color={["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]}
                     label={{visible: false}}
                     onClick={(ev) => {
                         // console.log("g2", g2Ref.current)
@@ -199,7 +210,6 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                     }}
                 >
                     <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
-
                     <Tooltip showTitle={false} />
                     <Axis visible={false} />
                     <Legend
@@ -259,7 +269,27 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                     <Interval
                         position='value'
                         adjust='stack'
-                        color='type'
+                        color={[
+                            "type",
+                            (xType) => {
+                                return chartCount[xType] ?? "#FFB660"
+                                // if (xType === 'YAK 插件') {
+                                //   return '#FFB660';
+                                // }else if(xType === 'MITM 插件'){
+                                //   return '#4A94F8';
+                                // }else if(xType === '数据包扫描'){
+                                //   return '#5F69DD';
+                                // }else if(xType === '端口扫描插件'){
+                                //   return '#56C991';
+                                // }else if(xType === 'CODEC插件'){
+                                //   return '#8863F7';
+                                // }else if(xType === 'YAML POC'){
+                                //   return '#35D8EE';
+                                // }else{
+                                //     return "#FFB660"
+                                // }
+                            }
+                        ]}
                         style={{
                             lineWidth: 1,
                             // stroke: "#F0F1F3",
@@ -307,25 +337,36 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
-                <div className={styles["add-box"]}>
+                <div
+                    className={classNames({
+                        [styles["add-box-show"]]: !IsEnterprise,
+                        [styles["add-box-hidden"]]: IsEnterprise
+                    })}
+                >
                     <div className={styles["add-count-box"]}>
                         <div className={styles["day-add-count"]}>
                             <div className={styles["add-title"]}>今日新增数</div>
                             <div className={styles["add-content"]}>
-                                12
+                                <span style={{cursor: "pointer"}}>12</span>
                                 <AddDayCountIcon style={{paddingLeft: 4}} />
                             </div>
                         </div>
                         <div className={styles["week-add-count"]}>
                             <div className={styles["add-title"]}>本周新增数</div>
                             <div className={styles["add-content"]}>
-                                256
+                                <span style={{cursor: "pointer"}}>256</span>
                                 <AddWeekCountIcon style={{paddingLeft: 4}} />
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className={styles["chart-box"]} ref={listHeightRef}>
+                <div
+                    className={classNames({
+                        [styles["chart-box-show"]]: !IsEnterprise,
+                        [styles["chart-box-hidden"]]: IsEnterprise
+                    })}
+                    ref={listHeightRef}
+                >
                     {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
                     <PieChart goStoreRoute={goStoreRoute} />
                 </div>
