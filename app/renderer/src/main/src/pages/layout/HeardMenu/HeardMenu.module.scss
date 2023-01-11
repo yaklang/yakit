@@ -11,6 +11,15 @@
     justify-content: center;
     cursor: pointer;
 }
+.heard-menu-home:hover{
+    .heard-menu-home-title,.heard-menu-icon{
+        color: var(--yakit-primary-color);
+    }
+}
+.heard-menu-icon{
+    color: #85899E;
+}
+
 .heard-menu-main{
     flex: 1;
 }
@@ -43,9 +52,6 @@ border-radius: 0px 4px 4px 0px;
     align-items: center;
     color: var(--yakit-header-color);
     text-align: center;
-}
-.heard-menu-home-title:hover {
-    color: var(--yakit-primary-color);
 }
 .heard-menu {
     display: flex;

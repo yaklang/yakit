@@ -603,7 +603,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <div className={classNames(style["heard-menu-home-title"], style["heard-menu-item-active"])}>
                         首页
                     </div>
-                    <HomeSvgIcon />
+                    <HomeSvgIcon className={style["heard-menu-icon"]}/>
                 </div>
             )}
             <div style={{flex:1}}>
