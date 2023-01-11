@@ -265,9 +265,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const connectRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
         setCredential({
             Host: info.host,
-            IsTLS: info.caPem !== "",
-            Password: info.password,
-            PemBytes: StringToUint8Array(info.caPem || ""),
+            IsTLS: info.tls,
+            Password: info.tls ? info.password : "",
+            PemBytes: StringToUint8Array(info.tls ? info.caPem || "" : ""),
             Port: parseInt(info.port),
             Mode: "remote"
         })
