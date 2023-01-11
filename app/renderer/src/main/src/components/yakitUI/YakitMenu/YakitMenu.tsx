@@ -2,16 +2,17 @@ import React, {ReactNode} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
+import {ChevronRightIcon} from "@/assets/newIcon"
 
 import classnames from "classnames"
 import styles from "./yakitMenu.module.scss"
-import {ChevronRightIcon} from "@/assets/newIcon"
 
 /**
  * 更新说明
  * 1、新增yakit-menu(参考原型稿 首页-头部悬浮菜单和软件导航栏):
  *     1)主题色-默认样式(不填)/secondary
  *     2)菜单项内容提示-isHint和菜单项内的title字段控制(未测试)
+ * 2、新增id=yakit-menu，方便外部直接书写样式
  */
 
 export interface YakitMenuItemProps {
@@ -129,6 +130,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
 
     return (
         <div
+            id='yakit-menu'
             className={classnames(styles["yakit-menu-div-wrapper"], {
                 [styles["yakit-menu-primary"]]: type === "primary",
                 [styles["yakit-menu-secondary"]]: type === "secondary"
