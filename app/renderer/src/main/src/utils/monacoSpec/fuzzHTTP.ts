@@ -191,6 +191,12 @@ monaco.languages.registerCompletionItemProvider('http', {
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         },
                         {
+                            label: "yso:find_gadget_by_bomb(all) // all 为内置,也可以自己指定class类 ",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'yso:find_gadget_by_bomb(all)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
                             label: "yso:headerecho(key|value) // 指定回显成功的返回头 key:value",
                             kind: monaco.languages.CompletionItemKind.Function,
                             insertText: 'yso:headerecho(testecho|echo_flag)}}',
