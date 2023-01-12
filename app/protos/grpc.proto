@@ -245,6 +245,7 @@ service Yak {
   rpc QueryGroupsByYakScriptId(QueryGroupsByYakScriptIdRequest) returns (GroupNames);
   rpc AddMenus(AddMenuRequest) returns (Empty);
   rpc QueryAllMenuItem(QueryAllMenuItemRequest) returns (MenuByGroup);
+  rpc DeleteAllMenu(QueryAllMenuItemRequest) returns (Empty);
 
   // document
   rpc SaveMarkdownDocument(SaveMarkdownDocumentRequest) returns (Empty);
