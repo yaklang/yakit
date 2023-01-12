@@ -153,6 +153,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
                 setRules(newRules)
+                setBanAndNoReplace(newRules)
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     }, [visible, importVisible])
@@ -160,12 +161,20 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
             const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
             setRules(newRules)
+            setBanAndNoReplace(newRules)
             return
         })
         return () => {
             ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
         }
     }, [])
+    const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
+        console.log("rules", rules)
+        const listReplace = rules.filter((item) => item.NoReplace === false)
+        const listDisabled = rules.filter((item) => item.Disabled === false)
+        setIsNoReplace(listReplace.length === 0)
+        setIsAllBan(listDisabled.length === 0)
+    })
     const styleDrawer = useCreation(() => {
         return {width: "100vw", top, height: `calc(100vh - ${top + 1}px)`}
     }, [top])
@@ -497,7 +506,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             if (item.Disabled) {
                 newRules.push(item)
             } else {
-                newRules.push({...item, NoReplace: !checked})
+                newRules.push({...item, NoReplace: checked})
             }
         })
         setRules(newRules)
@@ -762,7 +771,7 @@ const YakitCheckboxMemo = React.memo<YakitCheckboxProps>(
 const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
     (props) => {
         let node: ReactNode = (
-            <Tooltip title={props.Result} >
+            <Tooltip title={props.Result}>
                 <div className={styles["table-result-text"]}>{props.Result}</div>
             </Tooltip>
         )

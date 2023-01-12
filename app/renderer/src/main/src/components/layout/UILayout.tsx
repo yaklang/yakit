@@ -15,8 +15,8 @@ import {
     YakitThemeSvgIcon,
     YaklangInstallHintSvgIcon
 } from "./icons"
-import {PerformanceDisplay} from "./PerformanceDisplay"
-import {FuncDomain, yakProcess} from "./FuncDomain"
+import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
+import {FuncDomain} from "./FuncDomain"
 import {WinUIOp} from "./WinUIOp"
 import {GlobalReverseState} from "./GlobalReverseState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
@@ -265,9 +265,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const connectRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
         setCredential({
             Host: info.host,
-            IsTLS: info.caPem !== "",
-            Password: info.password,
-            PemBytes: StringToUint8Array(info.caPem || ""),
+            IsTLS: info.tls,
+            Password: info.tls ? info.password : "",
+            PemBytes: StringToUint8Array(info.tls ? info.caPem || "" : ""),
             Port: parseInt(info.port),
             Mode: "remote"
         })
@@ -286,7 +286,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 .invoke("install-yak-engine", version)
                 .then(() => {
                     success("安装成功，如未生效，重启 Yakit 即可")
-                    // updateReconnect()
                 })
                 .catch((err: any) => failed(`安装失败: ${err}`))
                 .finally(() => setTimeout(() => setYaklangDownload(false), 500))
@@ -411,7 +410,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
 
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay />
+                                        <PerformanceDisplay engineMode={engineMode} />
                                     </div>
                                 </div>
                                 <div className={styles["header-title"]} onDoubleClick={maxScreen} />
@@ -486,7 +485,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay />
+                                        <PerformanceDisplay engineMode={engineMode} />
                                     </div>
                                     <div className={styles["short-divider-wrapper"]}>
                                         <div className={styles["divider-style"]}></div>
@@ -1381,6 +1380,13 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                                 setValue={(caPem) => setRemote({...remote, caPem})}
                                             />
                                         </div>
+                                    </Form.Item>
+                                    <Form.Item label='密码'>
+                                        <Input
+                                            className={styles["input-style"]}
+                                            value={remote.password}
+                                            onChange={(e) => setRemote({...remote, password: e.target.value})}
+                                        />
                                     </Form.Item>
                                 </>
                             )}

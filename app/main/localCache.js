@@ -13,7 +13,7 @@ const extraKVCache = new Map()
  * @param {string} value 缓存数据
  */
 const syncLocalCacheFile = (type, value) => {
-    const filePath = type === "cache" ? localCachePath : extraLocalCachePath;
+    const filePath = type === "cache" ? localCachePath : extraLocalCachePath
 
     try {
         fs.unlinkSync(filePath)
@@ -23,17 +23,13 @@ const syncLocalCacheFile = (type, value) => {
     fs.writeFileSync(filePath, new Buffer(value, "utf8"))
 }
 
-/**
- * 写操作定时器
- * @param {"cache"|"extraCache"} type
- */
 const localCacheState = {
     cacheChanged: false,
     extraCacheChanged: false,
     cacheInitialized: false,
     extraCacheInitialized: false,
-    writingFile: false,
-};
+    writingFile: false
+}
 function getLocalCacheValue(key) {
     return kvCache.get(key)
 }
@@ -44,14 +40,20 @@ function setLocalCache(key, value) {
     if (value === kvCache.get(key)) {
         return
     }
-    kvCache.set(key, value);
+    kvCache.set(key, value)
     localCacheState.cacheChanged = true
 }
 function setExtraLocalCache(key, value) {
-    extraKVCache.set(key, value);
+    if (value === extraKVCache.get(key)) {
+        return
+    }
+    extraKVCache.set(key, value)
     localCacheState.extraCacheChanged = true
 }
-
+/**
+ * 写操作定时器
+ * @param {"cache"|"extraCache"} type
+ */
 const writeTimer = (type) => {
     if (type === "cache") {
         if (!localCacheState.cacheChanged) {
@@ -145,11 +147,11 @@ const syncCacheToFile = (type) => {
         cache.forEach((v, k) => {
             value.push({key: k, value: v})
         })
-        value.sort((a,b)=>`${a.key}`.localeCompare(`${b.key}`))
+        value.sort((a, b) => `${a.key}`.localeCompare(`${b.key}`))
         syncLocalCacheFile(type, JSON.stringify(value))
-    }catch (e) {
+    } catch (e) {
         console.info(e)
-    }finally {
+    } finally {
         localCacheState.writingFile = false
     }
 }
