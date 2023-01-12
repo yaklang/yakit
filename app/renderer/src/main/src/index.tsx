@@ -2,7 +2,6 @@ import ReactDOM from "react-dom"
 import reportWebVitals from "./reportWebVitals"
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
 import "./index.css"
-// import App from "./App"
 import NewApp from "./NewApp"
 
 import "./yakitUI.scss"
@@ -11,7 +10,6 @@ import "./assets/global.scss"
 ReactDOM.render(
     // <React.StrictMode>
     <NewApp />,
-    // <App />,
     // </React.StrictMode>,
     document.getElementById("root")
 )

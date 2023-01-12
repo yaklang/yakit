@@ -26,6 +26,8 @@ const basicDir = path.join(homeDir, "base")
 const localCachePath = path.join(basicDir, "yakit-local.json")
 /** 本地缓存数据(扩展数据)文件地址 */
 const extraLocalCachePath = path.join(basicDir, "yakit-extra-local.json")
+/** 本地引擎启动日志 */
+const engineLog = path.join(basicDir, "engine.log")
 
 /** 远程连接配置信息储存文件夹 */
 const remoteLinkDir = path.join(homeDir, "auth")
@@ -37,6 +39,7 @@ module.exports = {
     getLocalYaklangEngine,
     localCachePath,
     extraLocalCachePath,
+    engineLog,
     remoteLinkDir,
     remoteLinkFile
 }

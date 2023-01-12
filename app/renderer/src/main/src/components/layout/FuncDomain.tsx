@@ -40,7 +40,6 @@ import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {showConfigMenuItems} from "@/utils/ConfigMenuItems"
 import {showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
-import {manageYakLocalProcess} from "@/components/layout/WelcomeConsoleUtil"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -298,8 +297,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "invalidCache":
                 invalidCacheAndUserData()
                 return
-            case "manageProgress":
-                manageYakLocalProcess()
                 return
             default:
                 return
@@ -355,8 +352,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     key: "system-manager",
                     label: "进程与缓存管理",
                     children: [
-                        {key: "invalidCache", label: "删除缓存数据"},
-                        {key: "manageProgress", label: "管理引擎进程"}
+                        {key: "invalidCache", label: "删除缓存数据"}
                     ]
                 }
             ]}
