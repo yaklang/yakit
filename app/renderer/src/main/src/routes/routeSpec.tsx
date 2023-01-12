@@ -211,6 +211,10 @@ export interface MenuDataProps {
     yakScripName?: string
     isNovice?: boolean
     /**
+     * @description: 父级的分组名称
+     */
+    Group?: string
+    /**
      * @description: 后端接口需要的排序字段
      */
     MenuSort?: number

@@ -60,6 +60,7 @@ import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
 import {failed} from "@/utils/notification"
+import {YakScript} from "@/pages/invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -119,7 +120,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
     const [loading, setLoading] = useState<boolean>(true)
-    const [downLoading, setDownLoading] = useState<boolean>(false)
+    const [downLoading, setDownLoading, getDownLoading] = useGetState<boolean>(false)
 
     const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
@@ -136,25 +137,30 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             init(menuMode)
         })
     }, [])
+    useEffect(() => {
+        ipcRenderer.on("fetch-new-main-menu", (e) => {
+            init(patternMenu)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-new-main-menu")
+        }
+    }, [])
     /**
-     * @description: 菜单
+     * @description: 初始化菜单
      */
-    const init = useMemoizedFn((menuMode: string) => {
-        console.log("menuMode", menuMode)
-
+    const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
         // 如果获取的菜单数据为空，则新增默认菜单数据
         ipcRenderer
             .invoke("QueryAllMenuItem", {Mode: menuMode})
             .then((rsp: MenuByGroupProps) => {
-                console.log("QueryAllMenuItem", rsp.Groups)
                 if (rsp.Groups.length === 0) {
                     // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
-                    oninitMenuData(menuMode)
+                    onInitMenuData(menuMode)
                 } else {
                     // 有数据赋值菜单
                     const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
                     setRouteMenu(routerList)
-                    if (routerList.length > 0) {
+                    if ((updateSubMenu || !menuId) && routerList.length > 0) {
                         setSubMenuData(routerList[0].subMenuData || [])
                         setMenuId(routerList[0].id)
                     }
@@ -165,7 +171,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 failed("获取菜单失败：" + err)
             })
     })
-    const oninitMenuData = useMemoizedFn((menuMode: string) => {
+    const onInitMenuData = useMemoizedFn((menuMode: string) => {
         const noDownPluginScriptNames: string[] = []
         // 获取没有key的菜单名称
         let listMenu: MenuDataProps[] = DefaultRouteMenuData
@@ -187,8 +193,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             setSubMenuData(listMenu[0].subMenuData || [])
             setMenuId(listMenu[0].id)
         }
-        setTimeout(() => setLoading(false), 300)
-        // onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
+        onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
     })
     /**
      * @description: 通过名字下载插件
@@ -198,7 +203,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             ipcRenderer
                 .invoke("DownloadOnlinePluginByScriptNames", {ScriptNames: noDownPluginScriptNames})
                 .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
-                    console.log("DownloadOnlinePluginByScriptNames", rsp.Data)
                     if (rsp.Data.length > 0) {
                         const newMenuData: MenuDataProps[] = []
                         listMenu.forEach((item) => {
@@ -241,8 +245,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      */
     const onAddMenus = useMemoizedFn((data: MenuDataProps[], menuMode: string, callBack?: () => void) => {
         const menuLists = getMenuListBySort(data, menuMode)
-        console.log("menuLists", menuLists)
-
         ipcRenderer
             .invoke("AddMenus", {Data: menuLists})
             .then((rsp) => {
@@ -264,16 +266,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             })
     })
 
-    // useEffect(() => {
-    //     updateMenuItems()
-    //     ipcRenderer.on("fetch-new-main-menu", (e) => {
-    //         updateMenuItems()
-    //     })
-
-    //     return () => {
-    //         ipcRenderer.removeAllListeners("fetch-new-main-menu")
-    //     }
-    // }, [])
     useEffect(() => {
         if (!width) return
         toMove()
@@ -326,19 +318,50 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             setMenuId(routeMenu[0].id || "")
         }
     })
+    /**
+     * @description: 打开页面
+     */
     const onTabClick = useMemoizedFn((key) => {
         const index = key.indexOf("###")
         if (index === -1) return
-        const newKey = key.substring(0, index)
-        onRouteMenuSelect(newKey as Route)
+        const newKey: string = key.substring(0, index)
+        if (newKey.includes("plugin")) {
+            const name = key.substring(index + 3, key.length)
+            // 先验证菜单的插件id和本地最新的插件id是不是一致的
+            ipcRenderer.invoke("GetYakScriptByName", {Name: name}).then((i: YakScript) => {
+                const lastPluginID = `plugin:${i.Id}`
+                onRouteMenuSelect(`${lastPluginID}` as Route)
+                if (newKey !== lastPluginID) {
+                    // 更新菜单
+                    onUpdateMenuItem(i)
+                }
+            })
+        } else {
+            onRouteMenuSelect(newKey as Route)
+        }
+    })
+    /**
+     * @description: 更新菜单数据，单条
+     */
+    const onUpdateMenuItem = useMemoizedFn((i: YakScript) => {
+        const selectMenu = subMenuData.find((ele) => ele.yakScripName === i.ScriptName)
+        const params = {
+            Group: selectMenu?.Group,
+            Verbose: i.ScriptName,
+            YakScriptId: i.Id
+        }
+        ipcRenderer
+            .invoke("AddToMenu", params)
+            .then(() => {
+                // 更新菜单
+                ipcRenderer.invoke("change-main-menu")
+            })
+            .catch((e: any) => {
+                failed(`${e}`)
+            })
     })
     const onCustomizeMenuClick = useMemoizedFn((key: string) => {
-        if (key === "new") {
-            setRouteMenu(DefaultRouteMenuData.filter((item) => item.isNovice))
-        } else {
-            setRouteMenu(DefaultRouteMenuData)
-        }
-        init(key)
+        init(key, true)
         setRemoteValue("PatternMenu", key)
         setPatternMenu(key as "expert" | "new")
     })
@@ -378,7 +401,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     ]
     const onImportJSON = useMemoizedFn(() => {
-        console.log("menuDataString", menuDataString)
         setVisibleImport(false)
     })
 
@@ -387,7 +409,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             width: 420,
             closable: false,
             title: "插件加载失败",
-            confirmLoading: downLoading,
+            confirmLoading: getDownLoading(),
             content: (
                 <div className={style["modal-content"]}>
                     {menuItem.label}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
@@ -562,67 +584,76 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         popupClassName={style["heard-sub-menu-popup"]}
                         moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
                     >
-                        {subMenuData.map((item, index) => (
-                            <Tabs.TabPane
-                                tab={
-                                    <div className={style["sub-menu-expand"]}>
-                                        {(item.key && (
-                                            <div
-                                                className={style["sub-menu-expand-item"]}
-                                                style={{paddingLeft: index === 0 ? 0 : ""}}
-                                            >
-                                                <div className={style["sub-menu-expand-item-icon"]}>
-                                                    <span className={style["item-icon"]}>{item.icon}</span>
-                                                    <span className={style["item-hoverIcon"]}>{item.hoverIcon}</span>
-                                                </div>
-                                                <Tooltip title={item.label} placement='bottom'>
-                                                    <div
-                                                        className={classNames(
-                                                            style["sub-menu-expand-item-label"],
-                                                            style["heard-menu-item-label"]
-                                                        )}
-                                                    >
-                                                        {item.label}
+                        {subMenuData.map((item, index) => {
+                            const nodeLabel = (
+                                <div
+                                    className={classNames(
+                                        style["sub-menu-expand-item-label"],
+                                        style["heard-menu-item-label"]
+                                    )}
+                                >
+                                    {item.label}
+                                </div>
+                            )
+                            return (
+                                <Tabs.TabPane
+                                    tab={
+                                        <div className={style["sub-menu-expand"]}>
+                                            {(item.key && (
+                                                <div
+                                                    className={style["sub-menu-expand-item"]}
+                                                    style={{paddingLeft: index === 0 ? 0 : ""}}
+                                                >
+                                                    <div className={style["sub-menu-expand-item-icon"]}>
+                                                        <span className={style["item-icon"]}>{item.icon}</span>
+                                                        <span className={style["item-hoverIcon"]}>
+                                                            {item.hoverIcon}
+                                                        </span>
                                                     </div>
-                                                </Tooltip>
-                                            </div>
-                                        )) || (
-                                            <div
-                                                className={classNames(style["sub-menu-expand-item"], {
-                                                    [style["sub-menu-expand-item-disable"]]: !item.key
-                                                })}
-                                                style={{paddingLeft: index === 0 ? 0 : ""}}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    if (loading) return
-                                                    onOpenDownModal(item)
-                                                }}
-                                            >
-                                                <div className={style["sub-menu-expand-item-icon"]}>
-                                                    <span className={style["item-icon"]}>
-                                                        {(loading && <LoadingOutlined />) || item.icon}
-                                                    </span>
+                                                    <Tooltip title={item.label} placement='bottom'>
+                                                        <div
+                                                            className={classNames(
+                                                                style["sub-menu-expand-item-label"],
+                                                                style["heard-menu-item-label"]
+                                                            )}
+                                                        >
+                                                            {item.label}
+                                                        </div>
+                                                    </Tooltip>
                                                 </div>
-                                                <Tooltip title='插件丢失，点击下载' placement='bottom'>
-                                                    <div
-                                                        className={classNames(
-                                                            style["sub-menu-expand-item-label"],
-                                                            style["heard-menu-item-label"]
-                                                        )}
-                                                    >
-                                                        {item.label}
+                                            )) || (
+                                                <div
+                                                    className={classNames(style["sub-menu-expand-item"], {
+                                                        [style["sub-menu-expand-item-disable"]]: !item.key
+                                                    })}
+                                                    style={{paddingLeft: index === 0 ? 0 : ""}}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        if (loading) return
+                                                        onOpenDownModal(item)
+                                                    }}
+                                                >
+                                                    <div className={style["sub-menu-expand-item-icon"]}>
+                                                        <span className={style["item-icon"]}>
+                                                            {(loading && <LoadingOutlined />) || item.icon}
+                                                        </span>
                                                     </div>
-                                                </Tooltip>
-                                            </div>
-                                        )}
-                                        {index !== subMenuData.length - 1 && (
-                                            <div className={style["sub-menu-expand-item-line"]} />
-                                        )}
-                                    </div>
-                                }
-                                key={`${item.key}###${item.label}`}
-                            />
-                        ))}
+                                                    {(loading && nodeLabel) || (
+                                                        <Tooltip title='插件丢失，点击下载' placement='bottom'>
+                                                            {nodeLabel}
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {index !== subMenuData.length - 1 && (
+                                                <div className={style["sub-menu-expand-item-line"]} />
+                                            )}
+                                        </div>
+                                    }
+                                    key={`${item.key}###${item.yakScripName || item.label}`}
+                                />
+                            )
+                        })}
                     </Tabs>
                 </div>
             )}

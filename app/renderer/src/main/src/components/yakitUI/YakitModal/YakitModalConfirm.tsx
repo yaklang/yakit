@@ -108,11 +108,12 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         </ErrorBoundary>
                     </YakitBaseModal>
                 </>,
-                div,
+                div
             )
         })
     }
-
+    console.log('props',props);
+    
     render(props)
     return {
         destroy: () => {

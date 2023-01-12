@@ -104,6 +104,7 @@ export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
                     hoverIcon: undefined
                 }
                 subMenuData.push({
+                    Group: item.Group,
                     key: currentItemSub.key
                         ? (currentItemSub.key as Route)
                         : (`plugin:${subItem.YakScriptId}` as Route),
