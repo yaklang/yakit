@@ -659,7 +659,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                         />
                                     }
                                     trigger='hover'
-                                    overlayClassName={classNames(styles["popover-remove"])}
+                                    overlayClassName={classNames(styles["popover-remove"], "old-theme-html")}
                                 >
                                     <YakitButton
                                         type='outline2'
