@@ -1,6 +1,6 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react"
 import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Checkbox, Form, Input, Popconfirm, Progress, Select, Spin} from "antd"
+import {Checkbox, Form, Input, Popconfirm, Progress, Select, Spin, Tooltip} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -33,6 +33,7 @@ import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/lay
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
+import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -271,6 +272,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             Port: parseInt(info.port),
             Mode: "remote"
         })
+        /** 保存远程连接信息 */
+        if (info.allowSave) {
+            const params = {
+                host: info.host,
+                port: +info.port || 0,
+                caPem: info.caPem || "",
+                password: info.password || "",
+                tls: info.tls,
+                name: info.linkName || ""
+            }
+            saveAuthInfo({...params})
+        }
         setRemoteConnectLoading(true)
         setTimeout(() => {
             setRemoteConnectLoading(false)
@@ -414,20 +427,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
                                 </div>
                                 <div className={styles["header-title"]} onDoubleClick={maxScreen} />
-                                {engineLink ? (
-                                    <div className={styles["header-right"]}>
-                                        <FuncDomain
-                                            isEngineLink={engineLink}
-                                            engineMode={engineMode || "remote"}
-                                            isRemoteMode={engineMode === "remote"}
-                                            onEngineModeChange={changeEngineMode}
-                                        />
-                                        <div className={styles["divider-wrapper"]}></div>
-                                        <GlobalReverseState isEngineLink={engineLink} />
+                                <div className={styles["header-right"]}>
+                                    <div
+                                        className={styles["ui-op-btn-wrapper"]}
+                                        onClick={() =>
+                                            ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
+                                        }
+                                    >
+                                        <Tooltip placement='bottom' title='官方网站'>
+                                            <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                        </Tooltip>
                                     </div>
-                                ) : (
-                                    <div></div>
-                                )}
+                                    {engineLink && (
+                                        <>
+                                            <FuncDomain
+                                                isEngineLink={engineLink}
+                                                engineMode={engineMode || "remote"}
+                                                isRemoteMode={engineMode === "remote"}
+                                                onEngineModeChange={changeEngineMode}
+                                            />
+                                            <div className={styles["divider-wrapper"]}></div>
+                                            <GlobalReverseState isEngineLink={engineLink} />
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         ) : (
                             <div className={classnames(styles["header-body"], styles["win-header-body"])}>
@@ -440,24 +463,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                                 </div>
 
-                                {engineLink ? (
-                                    <div className={styles["header-left"]}>
-                                        <GlobalReverseState isEngineLink={engineLink} />
+                                <div className={styles["header-left"]}>
+                                    {engineLink && (
+                                        <>
+                                            <GlobalReverseState isEngineLink={engineLink} />
 
-                                        <div
-                                            className={classnames(styles["yakit-mode-icon"], {
-                                                [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
-                                            })}
-                                            onClick={() => changeYakitMode("soft")}
-                                        >
-                                            {yakitMode === "soft" ? (
-                                                <YakitThemeSvgIcon style={{fontSize: 20}} />
-                                            ) : (
-                                                <YakitGraySvgIcon style={{fontSize: 20}} />
-                                            )}
-                                        </div>
+                                            <div
+                                                className={classnames(styles["yakit-mode-icon"], {
+                                                    [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
+                                                })}
+                                                onClick={() => changeYakitMode("soft")}
+                                            >
+                                                {yakitMode === "soft" ? (
+                                                    <YakitThemeSvgIcon style={{fontSize: 20}} />
+                                                ) : (
+                                                    <YakitGraySvgIcon style={{fontSize: 20}} />
+                                                )}
+                                            </div>
 
-                                        {/* <div
+                                            {/* <div
                                     className={classnames(styles["yakit-mode-icon"], {
                                         [styles["yakit-mode-selected"]]: false&&yakitMode === "store"
                                     })}
@@ -466,20 +490,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     {yakitMode === "store" ? <YakitStoreThemeSvgIcon /> : <YakitStoreGraySvgIcon />}
                                 </div> */}
 
-                                        <div className={styles["divider-wrapper"]}></div>
-                                        <div>
-                                            <FuncDomain
-                                                isEngineLink={engineLink}
-                                                isReverse={true}
-                                                engineMode={engineMode || "remote"}
-                                                isRemoteMode={engineMode === "remote"}
-                                                onEngineModeChange={changeEngineMode}
-                                            />
-                                        </div>
+                                            <div className={styles["divider-wrapper"]}></div>
+                                            <div>
+                                                <FuncDomain
+                                                    isEngineLink={engineLink}
+                                                    isReverse={true}
+                                                    engineMode={engineMode || "remote"}
+                                                    isRemoteMode={engineMode === "remote"}
+                                                    onEngineModeChange={changeEngineMode}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div
+                                        className={styles["ui-op-btn-wrapper"]}
+                                        onClick={() =>
+                                            ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
+                                        }
+                                    >
+                                        <Tooltip placement='bottom' title='官方网站'>
+                                            <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                        </Tooltip>
                                     </div>
-                                ) : (
-                                    <div></div>
-                                )}
+                                </div>
 
                                 <div className={styles["header-title"]} onDoubleClick={maxScreen}></div>
 

@@ -132,14 +132,14 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classnames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
                 {showDevTool() && <UIDevTool />}
-                <div
+                {/* <div
                     className={styles["ui-op-btn-wrapper"]}
                     onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")}
                 >
                     <Tooltip placement='bottom' title='官方网站'>
                         <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                     </Tooltip>
-                </div>
+                </div> */}
                 {/* <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
                     <ScreensHotSvgIcon className={styles["icon-style"]} />
                 </div> */}
@@ -351,9 +351,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "system-manager",
                     label: "进程与缓存管理",
-                    children: [
-                        {key: "invalidCache", label: "删除缓存数据"}
-                    ]
+                    children: [{key: "invalidCache", label: "删除缓存数据"}]
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
