@@ -122,7 +122,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [loading, setLoading] = useState<boolean>(true)
     const [downLoading, setDownLoading, getDownLoading] = useGetState<boolean>(false)
 
-    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    const [patternMenu, setPatternMenu, getPatternMenu] = useGetState<"expert" | "new">("expert")
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [menuDataString, setMenuDataString] = useState<string>("")
     const [fileName, setFileName] = useState<string>("")
@@ -139,7 +139,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
-            init(patternMenu)
+            init(getPatternMenu())
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
@@ -153,6 +153,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         ipcRenderer
             .invoke("QueryAllMenuItem", {Mode: menuMode})
             .then((rsp: MenuByGroupProps) => {
+                console.log("rsp.Groups", rsp.Groups)
                 if (rsp.Groups.length === 0) {
                     // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                     onInitMenuData(menuMode)
@@ -371,18 +372,19 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onGoCustomize = useMemoizedFn(() => {
         ipcRenderer.invoke("open-customize-menu")
     })
-
     /**
-     * @description: 复原新手
+     * @description: 复原菜单
      */
-    const onRestoreNew = useMemoizedFn(() => {
-        const newMenuData = DefaultRouteMenuData.filter((item) => item.isNovice)
-    })
-    /**
-     * @description: 复原专家
-     */
-    const onRestoreExpert = useMemoizedFn(() => {
-        const newMenuData = DefaultRouteMenuData
+    const onRestoreMenu = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeleteAllMenu", {Mode: patternMenu})
+            .then(() => {
+                // 更新菜单
+                ipcRenderer.invoke("change-main-menu")
+            })
+            .catch((e: any) => {
+                failed(`删除菜单失败:${e}`)
+            })
     })
     const CustomizeMenuData = [
         {
@@ -390,14 +392,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             label: "新手模式",
             itemIcon: <UserIcon />,
             tip: "复原新手模式",
-            onRestoreMenu: () => onRestoreNew()
+            onRestoreMenu: () => onRestoreMenu()
         },
         {
             key: "expert",
             label: "专家模式",
             itemIcon: <AcademicCapIcon />,
             tip: "复原专家模式",
-            onRestoreMenu: () => onRestoreExpert()
+            onRestoreMenu: () => onRestoreMenu()
         }
     ]
     const onImportJSON = useMemoizedFn(() => {

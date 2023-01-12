@@ -192,4 +192,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DownloadOnlinePluginByScriptNames", async (e, params) => {
         return await asyncDownloadOnlinePluginByScriptNames(params)
     })
+
+    // 删除 所有菜单
+    const asyncDeleteAllMenu = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAllMenu(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteAllMenu", async (e, params) => {
+        return await asyncDeleteAllMenu(params)
+    })
 }
