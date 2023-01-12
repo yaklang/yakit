@@ -1,5 +1,12 @@
 import React, {useEffect, useRef, useState} from "react"
-import {HeardMenuProps, RouteMenuDataItemProps, SubMenuProps, CollapseMenuProp, MenuByGroupProps} from "./HeardMenuType"
+import {
+    HeardMenuProps,
+    RouteMenuDataItemProps,
+    SubMenuProps,
+    CollapseMenuProp,
+    MenuByGroupProps,
+    DownloadOnlinePluginByScriptNamesResponse
+} from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
 import {DefaultRouteMenuData, MenuDataProps, Route, SystemRouteMenuData} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -21,7 +28,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
-import {Divider, Dropdown, Tabs, Tooltip, Form, Upload, Modal} from "antd"
+import {Divider, Dropdown, Tabs, Tooltip, Form, Upload, Modal, Spin} from "antd"
 import {
     MenuBasicCrawlerIcon,
     MenuComprehensiveCatalogScanningAndBlastingIcon,
@@ -38,7 +45,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakCodeEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {getMenuListBySort} from "@/pages/customizeMenu/CustomizeMenu"
+import {getMenuListBySort, getMenuListToLocal} from "@/pages/customizeMenu/CustomizeMenu"
 import {InputFileNameItem} from "@/utils/inputUtil"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
@@ -49,8 +56,10 @@ import {
     MenuSolidSpaceEngineHunterIcon,
     MenuSolidSubDomainCollectionIcon
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
+import {failed} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -109,12 +118,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
+    const [loading, setLoading] = useState<boolean>(true)
+    const [downLoading, setDownLoading] = useState<boolean>(false)
+
     const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [menuDataString, setMenuDataString] = useState<string>("")
     const [fileName, setFileName] = useState<string>("")
-
-    const [downVisible, setDownVisible] = useState<boolean>(false)
 
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
@@ -123,57 +133,147 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setPatternMenu(menuMode)
-            // 如果获取的菜单数据为空，则新增默认菜单数据
-            ipcRenderer.invoke("QueryAllMenuItem", {Mode: menuMode}).then((rsp: MenuByGroupProps) => {
-                console.log("rsp", rsp)
-                if (rsp.Groups.length === 0) {
-                    // 获取的数据为空，先下载用户没有下载的插件，然后保存该模式下的菜单数据
-                    onDownPluginByScriptNames()
-                }
-            })
+            init(menuMode)
         })
     }, [])
-    const onDownPluginByScriptNames = useMemoizedFn(() => {})
-    useEffect(() => {
-        const newMenuItemGroup: MenuDataProps[] = []
-        menuItemGroup.forEach((menuGroupItem, index) => {
-            let item: MenuDataProps = {
-                id: menuGroupItem.Group === "UserDefined" ? "社区插件" : menuGroupItem.Group,
-                label: menuGroupItem.Group === "UserDefined" ? "社区插件" : menuGroupItem.Group,
-                subMenuData: menuGroupItem.Items.map((item) => {
-                    const key =
-                        item.YakScriptId > 0
-                            ? `plugin:${item.Group}:${item.YakScriptId}`
-                            : `batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`
-                    return {
-                        id: key,
-                        label: item.Verbose,
-                        key: key as Route,
-                        icon: getScriptIcon(item.Verbose),
-                        hoverIcon: getScriptHoverIcon(item.Verbose)
+    /**
+     * @description: 菜单
+     */
+    const init = useMemoizedFn((menuMode: string) => {
+        console.log("menuMode", menuMode)
+
+        // 如果获取的菜单数据为空，则新增默认菜单数据
+        ipcRenderer
+            .invoke("QueryAllMenuItem", {Mode: menuMode})
+            .then((rsp: MenuByGroupProps) => {
+                console.log("QueryAllMenuItem", rsp.Groups)
+                if (rsp.Groups.length === 0) {
+                    // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
+                    oninitMenuData(menuMode)
+                } else {
+                    // 有数据赋值菜单
+                    const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
+                    setRouteMenu(routerList)
+                    if (routerList.length > 0) {
+                        setSubMenuData(routerList[0].subMenuData || [])
+                        setMenuId(routerList[0].id)
+                    }
+                    setTimeout(() => setLoading(false), 300)
+                }
+            })
+            .catch((err) => {
+                failed("获取菜单失败：" + err)
+            })
+    })
+    const oninitMenuData = useMemoizedFn((menuMode: string) => {
+        const noDownPluginScriptNames: string[] = []
+        // 获取没有key的菜单名称
+        let listMenu: MenuDataProps[] = DefaultRouteMenuData
+        if (menuMode == "new") {
+            listMenu = DefaultRouteMenuData.filter((item) => item.isNovice)
+        }
+        listMenu.forEach((item) => {
+            if (item.subMenuData && item.subMenuData.length > 0) {
+                item.subMenuData.forEach((subItem) => {
+                    if (!subItem.key) {
+                        noDownPluginScriptNames.push(subItem.yakScripName || subItem.label)
                     }
                 })
             }
-            newMenuItemGroup.push(item)
         })
-
-        const route = newMenuItemGroup.concat(routeMenuData)
-
-        setRouteMenu(route)
-        if (getMenuId()) {
-            let currentMenu = route.find((ele) => ele.id === getMenuId())
-            if (!currentMenu) {
-                setSubMenuData((route[0] && route[0].subMenuData) || [])
-                setMenuId((route[0] && routeMenu[0].id) || "")
-            } else {
-                setSubMenuData(currentMenu.subMenuData || [])
-            }
-        } else {
-            if (route.length >= 0) {
-                setSubMenuData((route[0] && route[0].subMenuData) || [])
-            }
+        // 下载插件这个接口受网速影响，有点慢，采取先赋值菜单，然后再去下载，下载成功后再次替换菜单数据
+        setRouteMenu(listMenu)
+        if (listMenu.length > 0) {
+            setSubMenuData(listMenu[0].subMenuData || [])
+            setMenuId(listMenu[0].id)
         }
-    }, [routeMenuData, menuItemGroup])
+        setTimeout(() => setLoading(false), 300)
+        // onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
+    })
+    /**
+     * @description: 通过名字下载插件
+     */
+    const onDownPluginByScriptNames = useMemoizedFn(
+        (listMenu: MenuDataProps[], noDownPluginScriptNames: string[], menuMode: string, callBack?: () => void) => {
+            ipcRenderer
+                .invoke("DownloadOnlinePluginByScriptNames", {ScriptNames: noDownPluginScriptNames})
+                .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                    console.log("DownloadOnlinePluginByScriptNames", rsp.Data)
+                    if (rsp.Data.length > 0) {
+                        const newMenuData: MenuDataProps[] = []
+                        listMenu.forEach((item) => {
+                            const firstMenuList: MenuDataProps[] = []
+                            if (item.subMenuData && item.subMenuData.length > 0) {
+                                item.subMenuData.forEach((subItem) => {
+                                    if (!subItem.key) {
+                                        const currentMenuItem = rsp.Data.find(
+                                            (m) => m.ScriptName === (subItem.yakScripName || subItem.label)
+                                        ) || {
+                                            Id: 0,
+                                            ScriptName: ""
+                                        }
+                                        if (currentMenuItem.Id) {
+                                            subItem.key = `plugin:${currentMenuItem.Id}` as Route
+                                            subItem.yakScriptId = currentMenuItem.Id
+                                            subItem.yakScripName = currentMenuItem.ScriptName
+                                        }
+                                    }
+                                    firstMenuList.push(subItem)
+                                })
+                            }
+                            newMenuData.push({...item, subMenuData: firstMenuList})
+                        })
+                        onAddMenus(newMenuData, menuMode, callBack)
+                    } else {
+                    }
+                })
+                .catch((err) => {
+                    failed("下载菜单插件失败：" + err)
+                    setTimeout(() => {
+                        setLoading(false)
+                        setDownLoading(false)
+                    }, 300)
+                })
+        }
+    )
+    /**
+     * @description: 保存最新的菜单数据
+     */
+    const onAddMenus = useMemoizedFn((data: MenuDataProps[], menuMode: string, callBack?: () => void) => {
+        const menuLists = getMenuListBySort(data, menuMode)
+        console.log("menuLists", menuLists)
+
+        ipcRenderer
+            .invoke("AddMenus", {Data: menuLists})
+            .then((rsp) => {
+                setRouteMenu(data)
+                if (!menuId && data.length > 0) {
+                    setSubMenuData(data[0].subMenuData || [])
+                    setMenuId(data[0].id)
+                }
+            })
+            .catch((err) => {
+                failed("保存菜单失败：" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                    setDownLoading(false)
+                }, 300)
+                if (callBack) callBack()
+            })
+    })
+
+    // useEffect(() => {
+    //     updateMenuItems()
+    //     ipcRenderer.on("fetch-new-main-menu", (e) => {
+    //         updateMenuItems()
+    //     })
+
+    //     return () => {
+    //         ipcRenderer.removeAllListeners("fetch-new-main-menu")
+    //     }
+    // }, [])
     useEffect(() => {
         if (!width) return
         toMove()
@@ -238,6 +338,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         } else {
             setRouteMenu(DefaultRouteMenuData)
         }
+        init(key)
         setRemoteValue("PatternMenu", key)
         setPatternMenu(key as "expert" | "new")
     })
@@ -286,6 +387,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             width: 420,
             closable: false,
             title: "插件加载失败",
+            confirmLoading: downLoading,
             content: (
                 <div className={style["modal-content"]}>
                     {menuItem.label}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
@@ -294,7 +396,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             ),
             onOkText: "重新下载",
             onOk: () => {
-                m.destroy()
+                const noDownPluginScriptNames: string[] = [menuItem.yakScripName || menuItem.label]
+                setDownLoading(true)
+                onDownPluginByScriptNames(routeMenu, noDownPluginScriptNames, patternMenu, () => {
+                    m.destroy()
+                })
             }
         })
     })
@@ -430,7 +536,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 [style["margin-right-0"]]: isExpand,
                                 [style["heard-menu-customize-menu"]]: customizeVisible
                             })}
-                            onClick={() => onRouteMenuSelect(Route.YakScript)}
                             icon={<CursorClickIcon style={{color: "var(--yakit-body-text-color)"}} />}
                         >
                             <div className={style["heard-menu-customize-content"]}>
@@ -489,11 +594,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                 style={{paddingLeft: index === 0 ? 0 : ""}}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    console.log("1")
+                                                    if (loading) return
+                                                    onOpenDownModal(item)
                                                 }}
                                             >
                                                 <div className={style["sub-menu-expand-item-icon"]}>
-                                                    <span className={style["item-icon"]}>{item.icon}</span>
+                                                    <span className={style["item-icon"]}>
+                                                        {(loading && <LoadingOutlined />) || item.icon}
+                                                    </span>
                                                 </div>
                                                 <Tooltip title='插件丢失，点击下载' placement='bottom'>
                                                     <div

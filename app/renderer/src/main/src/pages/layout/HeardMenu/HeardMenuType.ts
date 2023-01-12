@@ -55,15 +55,6 @@ export interface SubMenuProps {
     onOpenDownModal: (s: MenuDataProps) => void
 }
 
-// /**
-//  * @description: 插件自定义菜单的二级菜单 YakitPopover
-//  * @param {MenuItem} subMenuGroupData: 菜单项
-//  * @param {(s: string) => void} onSelectMenuGroup: 选中菜单
-//  */
-// export interface SubMenuGroupProps {
-//     subMenuGroupData: MenuItem[]
-//     onSelectMenuGroup: (s: string) => void
-// }
 
 /**
  * @description: 一级菜单过多折叠起来的菜单
@@ -81,4 +72,17 @@ export interface CollapseMenuProp {
 
 export interface MenuByGroupProps {
     Groups: MenuItemGroup[]
+}
+
+export interface DownloadOnlinePluginByScriptNamesResponse {
+    Data: DownloadOnlinePluginByScriptName[]
+}
+
+export interface DownloadOnlinePluginByScriptName {
+    ScriptName: string
+    Id: number
+}
+
+export interface AddMenuRequest{
+    Data:MenuItemGroup
 }

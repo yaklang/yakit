@@ -150,7 +150,9 @@ export interface MenuItem {
     YakScriptId: number
     Verbose: string
     Query?: SimpleQueryYakScriptSchema
-    MenuItemId: number
+    MenuItemId?: number
+    GroupSort?:number
+    YakScriptName?:string
 }
 
 export interface MenuItemGroup {
@@ -438,56 +440,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
     }, [])
 
-    // 获取自定义菜单
-    const updateMenuItems = () => {
-        setLoading(true)
-        // Fetch User Defined Plugins
-        ipcRenderer
-            .invoke("GetAllMenuItem", {})
-            .then((data: {Groups: MenuItemGroup[]}) => {
-                setMenuItems(data.Groups)
-            })
-            .catch((e: any) => failed("Update Menu Item Failed"))
-            .finally(() => setTimeout(() => setLoading(false), 300))
-        // Fetch Official General Plugins
-        ipcRenderer
-            .invoke("QueryYakScript", {
-                Pagination: genDefaultPagination(1000),
-                IsGeneralModule: true,
-                Type: "yak"
-            } as QueryYakScriptRequest)
-            .then((data: QueryYakScriptsResponse) => {
-                const tabList: MenuDataProps[] = cloneDeep(DefaultRouteMenuData)
-                for (let item of tabList) {
-                    if (item.subMenuData) {
-                        if (item.key === Route.GeneralModule) {
-                            const extraMenus: MenuDataProps[] = data.Data.map((i) => {
-                                return {
-                                    icon: getScriptIcon(i.ScriptName),
-                                    hoverIcon: getScriptHoverIcon(i.ScriptName),
-                                    key: `plugin:${i.Id}`,
-                                    label: i.ScriptName
-                                } as unknown as MenuDataProps
-                            })
-                            item.subMenuData.push(...extraMenus)
-                        }
-                        item.subMenuData.sort((a, b) => a.label.localeCompare(b.label))
-                    }
-                }
-                setRouteMenuData(tabList)
-            })
-    }
-    useEffect(() => {
-        updateMenuItems()
-        ipcRenderer.on("fetch-new-main-menu", (e) => {
-            updateMenuItems()
-        })
-
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-new-main-menu")
-        }
-    }, [])
-
     // useEffect(() => {
     //     if (engineStatus === "error") props.onErrorConfirmed && props.onErrorConfirmed()
     // }, [engineStatus])
@@ -525,7 +477,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ) => {
             const filterPage = pageCache.filter((i) => i.route === route)
             const filterPageLength = filterPage.length
-
+            // debugger
             if (singletonRoute.includes(route)) {
                 if (filterPageLength > 0) {
                     setCurrentTabKey(route)

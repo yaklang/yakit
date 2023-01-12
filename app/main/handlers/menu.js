@@ -176,4 +176,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryAllMenuItem", async (e, params) => {
         return await asyncQueryAllMenuItem(params)
     })
+
+    // 查询所有菜单
+    const asyncDownloadOnlinePluginByScriptNames = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByScriptNames(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadOnlinePluginByScriptNames", async (e, params) => {
+        return await asyncDownloadOnlinePluginByScriptNames(params)
+    })
 }

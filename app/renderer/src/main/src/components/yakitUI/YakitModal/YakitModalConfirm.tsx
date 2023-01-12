@@ -23,6 +23,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     const div = document.createElement("div")
     document.body.appendChild(div)
     let setter: (r: boolean) => any = () => {}
+
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
             ReactDOM.render(
@@ -97,8 +98,9 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                                                     setter(false)
                                                 }
                                             }}
+                                            loading={props.confirmLoading}
                                         >
-                                            {props.onOkText || "确定"}
+                                            {`${props.confirmLoading}`} {props.onOkText || "确定"}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -106,10 +108,11 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         </ErrorBoundary>
                     </YakitBaseModal>
                 </>,
-                div
+                div,
             )
         })
     }
+
     render(props)
     return {
         destroy: () => {

@@ -76,8 +76,8 @@ import {
     MenuVulnerabilityRiskIcon,
     MenuWebsocketFuzzerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
-import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
-import {ProjectPage} from "@/pages/projects/ProjectPage";
+import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
+import {ProjectPage} from "@/pages/projects/ProjectPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -195,7 +195,7 @@ export function RouteNameToVerboseName(r: string) {
  * @param {number} yakScriptId 如果该路由为插件时的插件id
  * @param {string} yakScripName 插件名称
  * @param {string} isNovice 是否新手模式菜单
- * @param {number} sort 一级菜单排序字段
+ * @param {number} MenuSort 菜单排序字段
  */
 export interface MenuDataProps {
     id: string
@@ -210,7 +210,10 @@ export interface MenuDataProps {
     yakScriptId?: number
     yakScripName?: string
     isNovice?: boolean
-    sort?: number
+    /**
+     * @description: 后端接口需要的排序字段
+     */
+    MenuSort?: number
 }
 
 export const NoScrollRoutes: Route[] = [Route.HTTPHacker, Route.Mod_Brute, Route.YakScript]
@@ -382,9 +385,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.PlugInAdminPage:
             return <PlugInAdminPage />
         case Route.AttachEngineCombinedOutput:
-            return <EngineConsole/>
+            return <EngineConsole />
         case Route.DB_Projects:
-            return <ProjectPage/>
+            return <ProjectPage />
         default:
             return <div />
     }
@@ -620,48 +623,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "9-7", key: Route.AttachEngineCombinedOutput, label: "引擎 Console", icon: <MenuHTTPHistoryIcon />},
             {id: "9-8", key: Route.DB_Projects, label: "项目管理（Beta）", icon: <MenuHTTPHistoryIcon />},
         ]
-    },
-    {
-        id: "10",
-        key: Route.BatchExecutorRecover,
-        label: "继续任务：批量执行插件",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "11",
-        key: Route.AccountAdminPage,
-        label: "用户管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "12",
-        key: Route.RoleAdminPage,
-        label: "角色管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "13",
-        key: Route.LicenseAdminPage,
-        label: "License管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "14",
-        key: Route.TrustListPage,
-        label: "用户管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "15",
-        key: Route.PlugInAdminPage,
-        label: "插件权限",
-        disabled: true,
-        hidden: true
     }
 ]
 
@@ -674,6 +635,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.Mod_ScanPort,
         label: "端口/指纹扫描",
         icon: <MenuPortScanningIcon />,
+        hoverIcon: <MenuSolidPortScanningIcon />,
         describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
     },
     {
@@ -681,6 +643,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: undefined,
         label: "基础爬虫",
         icon: <MenuBasicCrawlerIcon />,
+        hoverIcon: <MenuSolidBasicCrawlerIcon />,
         describe: "通过爬虫可快速了解网站的整体架构"
     },
     {
@@ -688,6 +651,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: undefined,
         label: "综合目录扫描与爆破",
         icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />,
+        hoverIcon: <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />,
         describe: "带有内置字典的综合目录扫描与爆破"
     },
     {
@@ -695,6 +659,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.PoC,
         label: "专项漏洞检测",
         icon: <MenuSpecialVulnerabilityDetectionIcon />,
+        hoverIcon: <MenuSolidSpecialVulnerabilityDetectionIcon />,
         describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"
     },
     {
@@ -702,6 +667,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.ModManager,
         label: "插件仓库",
         icon: <MenuPluginWarehouseIcon />,
+        hoverIcon: <MenuSolidPluginWarehouseIcon />,
         describe: "目前插件为 6 大类型，可根据需要灵活编写插件，支持从 GitHub 加载插件"
     },
     {
@@ -709,6 +675,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.HTTPHacker,
         label: "MITM 交互式劫持",
         icon: <MenuMITMInteractiveHijackingIcon />,
+        hoverIcon: <MenuSolidMITMInteractiveHijackingIcon />,
         describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
     },
     {
@@ -716,6 +683,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.HTTPFuzzer,
         label: "Web Fuzzer",
         icon: <MenuWebFuzzerIcon />,
+        hoverIcon: <MenuSolidWebFuzzerIcon />,
         describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
     },
     {
@@ -723,6 +691,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.Mod_Brute,
         label: "爆破与未授权检测",
         icon: <MenuBlastingAndUnauthorizedTestingIcon />,
+        hoverIcon: <MenuSolidBlastingAndUnauthorizedTestingIcon />,
         describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
     },
     {
@@ -730,6 +699,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.Codec,
         label: "Codec",
         icon: <MenuCodecIcon />,
+        hoverIcon: <MenuSolidCodecIcon />,
         describe: "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法"
     },
     {
@@ -737,6 +707,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DataCompare,
         label: "数据对比",
         icon: <MenuDataComparisonIcon />,
+        hoverIcon: <MenuSolidDataComparisonIcon />,
         describe: "将数据进行对比，快速识别不同处"
     },
     {
@@ -744,6 +715,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.ShellReceiver,
         label: "端口监听器",
         icon: <MenuPortListenerIcon />,
+        hoverIcon: <MenuSolidPortListenerIcon />,
         describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
     },
     {
@@ -751,6 +723,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.ReverseServer_New,
         label: "反连服务器",
         icon: <MenuReverseConnectionServerIcon />,
+        hoverIcon: <MenuSolidReverseConnectionServerIcon />,
         describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连"
     },
     {
@@ -758,6 +731,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DNSLog,
         label: "DNSLog",
         icon: <MenuDNSLogIcon />,
+        hoverIcon: <MenuSolidDNSLogIcon />,
         describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"
     },
     {
@@ -765,6 +739,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.ICMPSizeLog,
         label: "ICMP-SizeLog",
         icon: <MenuICMPSizeLogIcon />,
+        hoverIcon: <MenuSolidICMPSizeLogIcon />,
         describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"
     },
     {
@@ -772,6 +747,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.TCPPortLog,
         label: "TCP-PortLog",
         icon: <MenuTCPPortLogIcon />,
+        hoverIcon: <MenuSolidTCPPortLogIcon />,
         describe: "使用未开放的随机端口来判定 TCP 反连"
     },
     {
@@ -779,6 +755,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.PayloadGenerater_New,
         label: "Yso-Java Hack",
         icon: <MenuYsoJavaHackIcon />,
+        hoverIcon: <MenuSolidYsoJavaHackIcon />,
         describe: "配置序列化 Payload 或恶意类"
     },
     {
@@ -786,6 +763,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.BatchExecutorPage,
         label: "插件批量执行",
         icon: <MenuPluginBatchExecutionIcon />,
+        hoverIcon: <MenuSolidPluginBatchExecutionIcon />,
         describe: "自由选择需要的 POC 进行批量漏洞检测"
     },
     {
@@ -793,6 +771,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DB_HTTPHistory,
         label: "HTTP History",
         icon: <MenuHTTPHistoryIcon />,
+        hoverIcon: <MenuSolidHTTPHistoryIcon />,
         describe: ""
     },
     {
@@ -800,6 +779,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.WebsocketFuzzer,
         label: "Websocket Fuzzer",
         icon: <MenuWebsocketFuzzerIcon />,
+        hoverIcon: <MenuSolidWebsocketFuzzerIcon />,
         describe: ""
     },
     {
@@ -807,6 +787,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DB_Domain,
         label: "域名资产",
         icon: <MenuDomainAssetsIcon />,
+        hoverIcon: <MenuSolidDomainAssetsIcon />,
         describe: ""
     },
     {
@@ -814,6 +795,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: undefined,
         label: "子域名收集",
         icon: <MenuSubDomainCollectionIcon />,
+        hoverIcon: <MenuSolidSubDomainCollectionIcon />,
         describe: ""
     },
     {
@@ -821,6 +803,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DB_Report,
         label: "报告",
         icon: <MenuReportIcon />,
+        hoverIcon: <MenuSolidReportIcon />,
         describe: ""
     },
     {
@@ -828,6 +811,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DB_ExecResults,
         label: "插件执行结果",
         icon: <MenuPlugExecutionResultsIcon />,
+        hoverIcon: <MenuSolidPlugExecutionResultsIcon />,
         describe: ""
     },
     {
@@ -835,6 +819,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DB_Risk,
         label: "漏洞与风险",
         icon: <MenuVulnerabilityRiskIcon />,
+        hoverIcon: <MenuSolidVulnerabilityRiskIcon />,
         describe: ""
     },
     {
@@ -842,6 +827,7 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: Route.DB_Ports,
         label: "端口资产",
         icon: <MenuPortAssetsIcon />,
+        hoverIcon: <MenuSolidPortAssetsIcon />,
         describe: ""
     },
     {
@@ -849,6 +835,55 @@ export const SystemRouteMenuData: MenuDataProps[] = [
         key: undefined,
         label: "空间引擎: Hunter",
         icon: <MenuSpaceEngineHunterIcon />,
+        hoverIcon: <MenuSolidSpaceEngineHunterIcon />,
         describe: ""
+    }
+]
+
+/**
+ * @description: 隐藏的菜单
+ */
+export const HiddenMenuData: MenuDataProps[] = [
+    {
+        id: "Route.BatchExecutorRecover",
+        key: Route.BatchExecutorRecover,
+        label: "继续任务：批量执行插件",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.AccountAdminPage",
+        key: Route.AccountAdminPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.RoleAdminPage",
+        key: Route.RoleAdminPage,
+        label: "角色管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.LicenseAdminPage",
+        key: Route.LicenseAdminPage,
+        label: "License管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.TrustListPage",
+        key: Route.TrustListPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.PlugInAdminPage",
+        key: Route.PlugInAdminPage,
+        label: "插件权限",
+        disabled: true,
+        hidden: true
     }
 ]

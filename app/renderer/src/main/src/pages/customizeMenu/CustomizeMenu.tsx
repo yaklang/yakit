@@ -44,11 +44,12 @@ import {failed} from "@/utils/notification"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
-import {getScriptIcon} from "../layout/HeardMenu/HeardMenu"
+import {getScriptHoverIcon, getScriptIcon} from "../layout/HeardMenu/HeardMenu"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {getRemoteValue} from "@/utils/kv"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {MenuItem, MenuItemGroup} from "../MainOperator"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -59,28 +60,76 @@ const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) =>
     return result
 }
 
-export const getMenuListBySort = (menuData: MenuDataProps[]) => {
-    let newMenu: MenuDataProps[] = []
+export const getMenuListBySort = (menuData: MenuDataProps[], menuMode: string) => {
+    const menuLists: MenuItemGroup[] = []
     menuData.forEach((item, index) => {
-        let subMenuData: MenuDataProps[] = []
+        let subMenuData: MenuItem[] = []
         if (item.subMenuData && item.subMenuData.length > 0) {
             item.subMenuData.forEach((subItem, subIndex) => {
                 subMenuData.push({
-                    ...subItem,
-                    sort: subIndex,
-                    icon: undefined
+                    Group: item.label,
+                    YakScriptId: subItem.yakScriptId || 0,
+                    Verbose: subItem.label,
+                    GroupSort: subIndex + 1,
+                    YakScriptName: subItem.yakScripName
                 })
             })
-            newMenu.push({
-                ...item,
-                sort: index,
+            menuLists.push({
+                Group: item.label,
+                MenuSort: index + 1,
+                Items: subMenuData,
+                Mode: menuMode
+            })
+        } else {
+            menuLists.push({
+                Group: item.label,
+                Items: [],
+                MenuSort: index + 1,
+                Mode: menuMode
+            })
+        }
+    })
+    return menuLists
+}
+
+export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
+    const menuLists: MenuDataProps[] = []
+    menuData.forEach((item, index) => {
+        let subMenuData: MenuDataProps[] = []
+        if (item.Items && item.Items.length > 0) {
+            item.Items.forEach((subItem, subIndex) => {
+                const currentItemSub = SystemRouteMenuData.find((s) => s.label === subItem.Verbose) || {
+                    key: undefined,
+                    icon: undefined,
+                    hoverIcon: undefined
+                }
+                subMenuData.push({
+                    key: currentItemSub.key
+                        ? (currentItemSub.key as Route)
+                        : (`plugin:${subItem.YakScriptId}` as Route),
+                    id: `${index + 1}-${subIndex + 1}`,
+                    label: subItem.Verbose,
+                    yakScriptId: subItem.YakScriptId,
+                    yakScripName: subItem.YakScriptName,
+                    icon: currentItemSub.icon,
+                    hoverIcon: currentItemSub.hoverIcon
+                })
+            })
+            menuLists.push({
+                id: `${index + 1}`,
+                label: item.Group,
                 subMenuData
             })
         } else {
-            newMenu.push(item)
+            menuLists.push({
+                key: undefined,
+                id: `${index + 1}`,
+                label: item.Group,
+                subMenuData: []
+            })
         }
     })
-    return newMenu
+    return menuLists
 }
 
 const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
@@ -272,7 +321,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
      * @description: 保存至引擎
      */
     const onSaveLocal = useMemoizedFn(() => {
-        const newMenu: MenuDataProps[] = getMenuListBySort(menuData)
+        const newMenu: MenuItemGroup[] = getMenuListBySort(menuData, "")
         setEmptyMenuLength(0)
     })
     const onTip = useMemoizedFn(() => {
@@ -325,7 +374,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         setVisibleSubMenu(false)
     })
     const onImportJSON = useMemoizedFn(() => {
-        const newMenu: MenuDataProps[] = getMenuListBySort(menuData)
+        const newMenu: MenuItemGroup[] = getMenuListBySort(menuData, "")
         const menuString = JSON.stringify(newMenu)
         saveABSFileToOpen(`menuData-${randomString(10)}.json`, menuString)
     })
