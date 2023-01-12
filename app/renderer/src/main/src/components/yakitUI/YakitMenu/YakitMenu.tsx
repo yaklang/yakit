@@ -28,7 +28,7 @@ export interface YakitMenuProp extends MenuProps {
     data?: YakitMenuItemProps[]
     width?: number
     /** 有默认菜单样式(深底白字)和'secondary-浅底深字'样式 */
-    type?: "secondary"
+    type?: "secondary" | "primary"
     /** 是否鼠标悬浮展示文字内容弹窗 */
     isHint?: boolean
 }
@@ -130,7 +130,6 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
 
     return (
         <div
-            id='yakit-menu'
             className={classnames(styles["yakit-menu-div-wrapper"], {
                 [styles["yakit-menu-primary"]]: type === "primary",
                 [styles["yakit-menu-secondary"]]: type === "secondary"

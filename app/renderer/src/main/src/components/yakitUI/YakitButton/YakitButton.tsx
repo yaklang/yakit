@@ -96,7 +96,6 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
                 {...resePopover}
                 size='middle'
                 type='default'
-                id='yakit-button'
                 className={classnames(styles[sizeClass], styles["yakit-button"], styles["yakit-button-type"], {
                     [className || ""]: !!className
                 })}
