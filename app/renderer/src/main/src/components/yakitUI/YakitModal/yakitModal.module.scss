@@ -8,7 +8,7 @@
     }
 
     .yakit-modal-body {
-        background-color: #ffffff;
+        background-color: var(--yakit-neutral10-color);
         position: relative;
         border-radius: 4px;
 
@@ -20,7 +20,7 @@
             height: 16px;
             display: flex;
             font-size: 16px;
-            color: #b4bbca;
+            color: var(--yakit-helper-text-color);
             cursor: pointer;
 
             .close-icon {
@@ -29,7 +29,6 @@
                     height: 16px;
                 }
             }
-
         }
 
         .body-close:hover {
@@ -44,25 +43,26 @@
             padding: 8px 16px;
             gap: 16px;
             height: 41px;
-            background: #f8f8f8;
-            border-bottom: 1px solid #eaecf3;
+            background: var(--yakit-card-background-color);
+            border-bottom: 1px solid var(--yakit-border-color);
             border-radius: 4px 4px 0px 0px;
 
             font-weight: 600;
             font-size: 14px;
             line-height: 20px;
-            color: #31343f;
+            color: var(--yakit-header-color);
 
             .body-header-subTitle {
                 font-weight: 400;
                 font-size: 12px;
-                color: #B4BBCA;
+                color: var(--yakit-helper-text-color);
                 flex: 1;
                 margin-right: 16px;
             }
         }
 
-        .body-content {}
+        .body-content {
+        }
 
         .body-footer {
             box-sizing: border-box;
@@ -71,11 +71,12 @@
             align-items: center;
             padding: 8px 16px;
             height: 41px;
-            background: #f8f8f8;
-            border-top: 1px solid #eaecf3;
+            background: var(--yakit-card-background-color);
+            border-top: 1px solid var(--yakit-border-color);
             border-radius: 0px 0px 4px 4px;
 
-            .body-footer-extra {}
+            .body-footer-extra {
+            }
 
             .body-footer-btn {
                 display: flex;
@@ -88,8 +89,8 @@
             display: flex;
             align-items: center;
             padding: 8px 16px;
-            background: #f8f8f8;
-            border-top: 1px solid #eaecf3;
+            background: var(--yakit-card-background-color);
+            border-top: 1px solid var(--yakit-border-color);
             border-radius: 0px 0px 4px 4px;
         }
     }
