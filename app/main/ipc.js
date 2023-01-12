@@ -68,15 +68,6 @@ function getClient(createNew) {
 }
 
 /**
- * @name 测试本地缓存端口是否已启动yaklang引擎
- * @param {String} port 端口号
- */
-function testClient(port, callback) {
-    const yak = new Yak(`localhost:${port}`, grpc.credentials.createInsecure(), options)
-    yak.Echo({text: "hello yak? are u ok?"}, callback)
-}
-
-/**
  * @name 测试远程连接引擎是否成功
  * @param {Object} params
  * @param {String} params.host 域名
@@ -112,7 +103,6 @@ function testRemoteClient(params, callback) {
 }
 
 module.exports = {
-    testClient,
     testRemoteClient,
     clearing: () => {
         require("./handlers/yakLocal").clearing()
