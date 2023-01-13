@@ -475,8 +475,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 hideAdd?: boolean
             }
         ) => {
-            console.log("routeKeyToLabel", routeKeyToLabel)
-
             const filterPage = pageCache.filter((i) => i.route === route)
             const filterPageLength = filterPage.length
             // debugger
@@ -1451,7 +1449,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 val.forEach((value, key) => {
                                     routeKeyToLabel.current.set(key, value)
                                 })
-                                console.log("routeKeyToLabel", routeKeyToLabel.current)
                             }}
                         />
                         <Content

@@ -169,6 +169,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         ipcRenderer
             .invoke("QueryAllMenuItem", {Mode: menuMode})
             .then((rsp: MenuByGroupProps) => {
+                console.log("rsp.Groups", rsp.Groups)
+
                 if (rsp.Groups.length === 0) {
                     // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                     onInitMenuData(menuMode)
@@ -194,7 +196,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         if (menuMode == "new") {
             listMenu = DefaultRouteMenuData.filter((item) => item.isNovice)
         }
-        listMenu.forEach((item) => {
+        ;[...listMenu].forEach((item) => {
             if (item.subMenuData && item.subMenuData.length > 0) {
                 item.subMenuData.forEach((subItem) => {
                     if (!subItem.key) {
@@ -203,6 +205,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 })
             }
         })
+
         // 下载插件这个接口受网速影响，有点慢，采取先赋值菜单，然后再去下载，下载成功后再次替换菜单数据
         setRouteMenu(listMenu)
         if (listMenu.length > 0) {
@@ -245,6 +248,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         })
                         onAddMenus(newMenuData, menuMode, callBack)
                     } else {
+                        onAddMenus(listMenu, menuMode, callBack)
                     }
                 })
                 .catch((err) => {
