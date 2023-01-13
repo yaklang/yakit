@@ -37,6 +37,7 @@ import {
     AddDayCountIcon,
     AddWeekCountIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
+import CountUp from "react-countup"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
@@ -347,14 +348,18 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                         <div className={styles["day-add-count"]}>
                             <div className={styles["add-title"]}>今日新增数</div>
                             <div className={styles["add-content"]}>
-                                <span style={{cursor: "pointer"}}>12</span>
+                                <span style={{cursor: "pointer"}}>
+                                    <CountUp start={0} end={12} duration={1} style={{padding: "0px"}} />
+                                </span>
                                 <AddDayCountIcon style={{paddingLeft: 4}} />
                             </div>
                         </div>
                         <div className={styles["week-add-count"]}>
                             <div className={styles["add-title"]}>本周新增数</div>
                             <div className={styles["add-content"]}>
-                                <span style={{cursor: "pointer"}}>256</span>
+                                <span style={{cursor: "pointer"}}>
+                                    <CountUp start={0} end={256} duration={1} style={{padding: "0px"}} />
+                                </span>
                                 <AddWeekCountIcon style={{paddingLeft: 4}} />
                             </div>
                         </div>
