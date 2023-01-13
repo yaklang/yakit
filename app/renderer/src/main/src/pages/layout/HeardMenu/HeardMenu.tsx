@@ -26,7 +26,7 @@ import {
     UserIcon
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Divider, Dropdown, Tabs, Tooltip, Form, Upload, Modal, Spin} from "antd"
 import {
@@ -101,7 +101,7 @@ export const getScriptHoverIcon = (name: string) => {
  * @param {} onRouteMenuSelect 系统菜单选择事件
  */
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
-    const {routeMenuData, menuItemGroup, onRouteMenuSelect} = props
+    const {menuItemGroup, onRouteMenuSelect, setRouteKeyToLabel} = props
     /**
      * @description: 融合系统菜单和自定义菜单
      */
@@ -120,7 +120,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
     const [loading, setLoading] = useState<boolean>(true)
-    const [downLoading, setDownLoading, getDownLoading] = useGetState<boolean>(false)
 
     const [patternMenu, setPatternMenu, getPatternMenu] = useGetState<"expert" | "new">("expert")
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
@@ -129,6 +128,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
+
+    const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
 
     useEffect(() => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
@@ -145,6 +146,21 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
         }
     }, [])
+    useUpdateEffect(() => {
+        getRouteKeyToLabel()
+    }, [routeMenu])
+    /**
+     * @description: 菜单更新后，重新刷新路由key值，并返回给父级组件
+     */
+    const getRouteKeyToLabel = useMemoizedFn(() => {
+        routeMenu.forEach((k) => {
+            ;(k.subMenuData || []).forEach((subKey) => {
+                routeKeyToLabel.current.set(`${subKey.key}`, subKey.label)
+            })
+            routeKeyToLabel.current.set(`${k.key}`, k.label)
+        })
+        setRouteKeyToLabel(routeKeyToLabel.current)
+    })
     /**
      * @description: 初始化菜单
      */
@@ -153,7 +169,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         ipcRenderer
             .invoke("QueryAllMenuItem", {Mode: menuMode})
             .then((rsp: MenuByGroupProps) => {
-                console.log("rsp.Groups", rsp.Groups)
                 if (rsp.Groups.length === 0) {
                     // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                     onInitMenuData(menuMode)
@@ -236,7 +251,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     failed("下载菜单插件失败：" + err)
                     setTimeout(() => {
                         setLoading(false)
-                        setDownLoading(false)
                     }, 300)
                 })
         }
@@ -261,7 +275,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
-                    setDownLoading(false)
                 }, 300)
                 if (callBack) callBack()
             })
@@ -329,14 +342,32 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         if (newKey.includes("plugin")) {
             const name = key.substring(index + 3, key.length)
             // 先验证菜单的插件id和本地最新的插件id是不是一致的
-            ipcRenderer.invoke("GetYakScriptByName", {Name: name}).then((i: YakScript) => {
-                const lastPluginID = `plugin:${i.Id}`
-                onRouteMenuSelect(`${lastPluginID}` as Route)
-                if (newKey !== lastPluginID) {
-                    // 更新菜单
-                    onUpdateMenuItem(i)
-                }
-            })
+            ipcRenderer
+                .invoke("GetYakScriptByName", {Name: name})
+                .then((i: YakScript) => {
+                    const lastPluginID = `plugin:${i.Id}`
+                    onRouteMenuSelect(`${lastPluginID}` as Route)
+                    if (newKey !== lastPluginID) {
+                        // 更新菜单
+                        onUpdateMenuItem(i)
+                    }
+                })
+                .catch((err) => {
+                    const currentMenuItem: MenuDataProps = subMenuData.find((l) => l.key === newKey) || {
+                        id: "",
+                        label: ""
+                    }
+                    if (currentMenuItem) {
+                        const item: MenuDataProps = {
+                            id: currentMenuItem.id,
+                            label: currentMenuItem.label,
+                            yakScripName: currentMenuItem.yakScripName
+                        }
+                        onOpenDownModal(item)
+                    } else {
+                        failed("菜单数据异常,请刷新菜单重试")
+                    }
+                })
         } else {
             onRouteMenuSelect(newKey as Route)
         }
@@ -411,7 +442,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             width: 420,
             closable: false,
             title: "插件加载失败",
-            confirmLoading: getDownLoading(),
+            showConfirmLoading: true,
             content: (
                 <div className={style["modal-content"]}>
                     {menuItem.label}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
@@ -421,7 +452,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             onOkText: "重新下载",
             onOk: () => {
                 const noDownPluginScriptNames: string[] = [menuItem.yakScripName || menuItem.label]
-                setDownLoading(true)
                 onDownPluginByScriptNames(routeMenu, noDownPluginScriptNames, patternMenu, () => {
                     m.destroy()
                 })

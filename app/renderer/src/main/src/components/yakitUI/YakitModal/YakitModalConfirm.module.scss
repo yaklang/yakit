@@ -31,14 +31,16 @@
             }
         }
 
-        .modal-confirm-btns {
-            margin-top: 24px;
-            text-align: right;
+    }
+}
 
-            .modal-confirm-btns-cancel {
-                margin-right: 8px;
-            }
-        }
+.modal-confirm-btns {
+    padding-bottom: 24px;
+    text-align: right;
+    width: 100%;
+    padding-right: 24px;
 
+    .modal-confirm-btns-cancel {
+        margin-right: 8px;
     }
 }

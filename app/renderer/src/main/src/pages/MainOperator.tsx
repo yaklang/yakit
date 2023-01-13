@@ -151,8 +151,8 @@ export interface MenuItem {
     Verbose: string
     Query?: SimpleQueryYakScriptSchema
     MenuItemId?: number
-    GroupSort?:number
-    YakScriptName?:string
+    GroupSort?: number
+    YakScriptName?: string
 }
 
 export interface MenuItemGroup {
@@ -326,7 +326,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [loading, setLoading] = useState(false)
     const [menuItems, setMenuItems] = useState<MenuItemGroup[]>([])
-    const [routeMenuData, setRouteMenuData] = useState<MenuDataProps[]>(DefaultRouteMenuData)
+    // const [routeMenuData, setRouteMenuData] = useState<MenuDataProps[]>(DefaultRouteMenuData)
 
     const [notification, setNotification] = useState("")
 
@@ -446,19 +446,19 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     // 整合路由对应名称
     const pluginKey = (item: PluginMenuItem) => `plugin:${item.Group}:${item.YakScriptId}`
-    const routeKeyToLabel = new Map<string, string>()
-    routeMenuData.forEach((k) => {
-        ;(k.subMenuData || []).forEach((subKey) => {
-            routeKeyToLabel.set(`${subKey.key}`, subKey.label)
-        })
+    const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
+    // routeMenuData.forEach((k) => {
+    //     ;(k.subMenuData || []).forEach((subKey) => {
+    //         routeKeyToLabel.set(`${subKey.key}`, subKey.label)
+    //     })
 
-        routeKeyToLabel.set(`${k.key}`, k.label)
-    })
-    menuItems.forEach((k) => {
-        k.Items.forEach((value) => {
-            routeKeyToLabel.set(pluginKey(value), value.Verbose)
-        })
-    })
+    //     routeKeyToLabel.set(`${k.key}`, k.label)
+    // })
+    // menuItems.forEach((k) => {
+    //     k.Items.forEach((value) => {
+    //         routeKeyToLabel.set(pluginKey(value), value.Verbose)
+    //     })
+    // })
 
     // Tabs Bar Operation Function
     const getCacheIndex = (route: string) => {
@@ -475,6 +475,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 hideAdd?: boolean
             }
         ) => {
+            console.log("routeKeyToLabel", routeKeyToLabel)
+
             const filterPage = pageCache.filter((i) => i.route === route)
             const filterPageLength = filterPage.length
             // debugger
@@ -482,7 +484,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 if (filterPageLength > 0) {
                     setCurrentTabKey(route)
                 } else {
-                    const tabName = RouteNameToVerboseName(routeKeyToLabel.get(`${route}`) || `${route}`)
+                    const tabName = RouteNameToVerboseName(routeKeyToLabel.current.get(`${route}`) || `${route}`)
                     setPageCache([
                         ...pageCache,
                         {
@@ -496,7 +498,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 }
             } else {
                 if (filterPageLength > 0) {
-                    const tabName = RouteNameToVerboseName(routeKeyToLabel.get(`${route}`) || `${route}`)
+                    const tabName = RouteNameToVerboseName(routeKeyToLabel.current.get(`${route}`) || `${route}`)
                     const tabId = `${route}-[${randomString(49)}]`
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
@@ -517,7 +519,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     setCurrentTabKey(route)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 } else {
-                    const tabName = RouteNameToVerboseName(routeKeyToLabel.get(`${route}`) || `${route}`)
+                    const tabName = RouteNameToVerboseName(routeKeyToLabel.current.get(`${route}`) || `${route}`)
                     const tabId = `${route}-[${randomString(49)}]`
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
@@ -938,7 +940,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(() => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
             const newTabId = `${Route.DataCompare}-[${randomString(49)}]`
-            const verboseNameRaw = routeKeyToLabel.get(Route.DataCompare) || `${Route.DataCompare}`
+            const verboseNameRaw = routeKeyToLabel.current.get(Route.DataCompare) || `${Route.DataCompare}`
             addTabPage(Route.DataCompare, {node: ContentByRoute(Route.DataCompare, undefined, {system: system})})
 
             // 区分新建对比页面还是别的页面请求对比的情况
@@ -1442,9 +1444,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 {(isShowCustomizeMenu && <CustomizeMenu onClose={() => setIsShowCustomizeMenu(false)} />) || (
                     <>
                         <HeardMenu
-                            routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
+                            // routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
                             menuItemGroup={menuItems}
                             onRouteMenuSelect={onRouteMenuSelect}
+                            setRouteKeyToLabel={(val) => {
+                                val.forEach((value, key) => {
+                                    routeKeyToLabel.current.set(key, value)
+                                })
+                                console.log("routeKeyToLabel", routeKeyToLabel.current)
+                            }}
                         />
                         <Content
                             style={{

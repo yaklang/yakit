@@ -18,6 +18,7 @@ interface YakitModalConfirmProps extends YakitBaseModalProp {
     onCancel?: () => any
     onOkText?: string
     onCancelText?: string
+    showConfirmLoading?: boolean
 }
 export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     const div = document.createElement("div")
@@ -77,32 +78,6 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                                             )}
                                         </div>
                                     </div>
-                                    <div className={style["modal-confirm-btns"]}>
-                                        <YakitButton
-                                            type='outline2'
-                                            themeClass={style["modal-confirm-btns-cancel"]}
-                                            onClick={() => {
-                                                if (setter) {
-                                                    setter(false)
-                                                }
-                                                if (props.onCancel) props.onCancel()
-                                            }}
-                                        >
-                                            {props.onCancelText || "取消"}
-                                        </YakitButton>
-                                        <YakitButton
-                                            onClick={() => {
-                                                if (props.onOk) {
-                                                    props.onOk()
-                                                } else if (setter) {
-                                                    setter(false)
-                                                }
-                                            }}
-                                            loading={props.confirmLoading}
-                                        >
-                                            {`${props.confirmLoading}`} {props.onOkText || "确定"}
-                                        </YakitButton>
-                                    </div>
                                 </div>
                             </div>
                         </ErrorBoundary>
@@ -112,8 +87,6 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
             )
         })
     }
-    console.log('props',props);
-    
     render(props)
     return {
         destroy: () => {
@@ -134,10 +107,12 @@ interface YakitBaseModalProp
     extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType">,
         React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
+    showConfirmLoading?: boolean
 }
 
 const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
-    const [visible, setVisible] = useState(true)
+    const [visible, setVisible] = useState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(false)
 
     useEffect(() => {
         if (visible && props.onVisibleSetter) {
@@ -149,15 +124,36 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
         <YakitModal
             {...props}
             title={null}
-            footer={null}
+            footerStyle={{backgroundColor: "#fff", borderTop: 0, padding: 0}}
+            footer={
+                <div className={style["modal-confirm-btns"]}>
+                    <YakitButton
+                        type='outline2'
+                        themeClass={style["modal-confirm-btns-cancel"]}
+                        onClick={(e) => {
+                            if (props.onCancel) props.onCancel(e)
+                        }}
+                    >
+                        {props.onCancelText || "取消"}
+                    </YakitButton>
+                    <YakitButton
+                        onClick={(e) => {
+                            if (props.showConfirmLoading) {
+                                setLoading(true)
+                            }
+                            if (props.onOk) {
+                                props.onOk(e)
+                            }
+                        }}
+                        loading={loading}
+                    >
+                        {props.onOkText || "确定"}
+                    </YakitButton>
+                </div>
+            }
             visible={visible}
-            onCancel={() => setVisible(false)}
-            onOk={(e) => {
-                if (props.onOk) props.onOk(e)
-            }}
             closable={true}
             destroyOnClose={true}
-            cancelButtonProps={{hidden: true}}
         />
     )
 }

@@ -2,9 +2,9 @@ import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
 import {MenuDataProps, Route} from "@/routes/routeSpec"
 
 export interface HeardMenuProps {
-    routeMenuData: MenuDataProps[]
     menuItemGroup: MenuItemGroup[]
     onRouteMenuSelect: (key: string) => void
+    setRouteKeyToLabel: (r: Map<string, string>) => void
 }
 
 /**
@@ -55,7 +55,6 @@ export interface SubMenuProps {
     onOpenDownModal: (s: MenuDataProps) => void
 }
 
-
 /**
  * @description: 一级菜单过多折叠起来的菜单
  * @param {MenuDataProps[]} menuData: 菜单list
@@ -83,6 +82,6 @@ export interface DownloadOnlinePluginByScriptName {
     Id: number
 }
 
-export interface AddMenuRequest{
-    Data:MenuItemGroup
+export interface AddMenuRequest {
+    Data: MenuItemGroup
 }
