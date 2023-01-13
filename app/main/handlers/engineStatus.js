@@ -9,6 +9,17 @@ const {getLocalYaklangEngine, engineLog} = require("../filePath")
 const net = require("net");
 const fs = require("fs")
 
+/** 本地引擎启动日志 */
+let out = null
+fs.open(engineLog, "a", (err, fd) => {
+    if (err) {
+        console.log("获取本地引擎日志错误：", err)
+    } else {
+        out = fd
+    }
+})
+
+
 /** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
 let engineCount = 0
 
@@ -152,9 +163,6 @@ module.exports = (win, callback, getClient, newClient) => {
      * @param {Number} params.port 本地缓存数据里的引擎启动端口号
      */
     const asyncStartLocalYakEngineServer = (win, params) => {
-        /** 本期引擎启动日志 */
-        const out = fs.openSync(engineLog, "a")
-
         engineCount += 1
 
         const {sudo, port} = params
@@ -196,10 +204,12 @@ module.exports = (win, callback, getClient, newClient) => {
                     }
                 } else {
                     toLog("已启动本地引擎进程")
+                    const log = out ? out : "ignore"
+
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${port}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
                         detached: true,
-                        stdio: ["ignore", out, out],
+                        stdio: ["ignore", log, log]
                     })
                     
                     subprocess.unref()
