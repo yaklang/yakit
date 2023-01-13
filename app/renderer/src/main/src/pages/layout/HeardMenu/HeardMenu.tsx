@@ -126,6 +126,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [menuDataString, setMenuDataString] = useState<string>("")
     const [fileName, setFileName] = useState<string>("")
 
+    const [importLoading, setImportLoading] = useState<boolean>(false)
+
     const menuLeftRef = useRef<any>()
     const menuLeftInnerRef = useRef<any>()
 
@@ -140,7 +142,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
-            init(getPatternMenu())
+            init(getPatternMenu(), true)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
@@ -179,8 +181,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
                     setRouteMenu(routerList)
                     if ((updateSubMenu || !menuId) && routerList.length > 0) {
-                        setSubMenuData(routerList[0].subMenuData || [])
-                        setMenuId(routerList[0].id)
+                        let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
+                        if (menuId) {
+                            firstMenu = routerList.find((i) => i.id === menuId) || {id: "", label: ""}
+                        }
+                        setSubMenuData(firstMenu.subMenuData || [])
+                        setMenuId(firstMenu.id)
                     }
                     setTimeout(() => setLoading(false), 300)
                 }
@@ -437,8 +443,39 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             onRestoreMenu: () => onRestoreMenu()
         }
     ]
+
     const onImportJSON = useMemoizedFn(() => {
-        setVisibleImport(false)
+        if (!menuDataString) {
+            failed("数据不能为空")
+            return
+        }
+        try {
+            const menuLists = getMenuListBySort(JSON.parse(menuDataString), patternMenu)
+            setImportLoading(true)
+            ipcRenderer
+                .invoke("DeleteAllMenu", {Mode: patternMenu})
+                .then(() => {
+                    ipcRenderer
+                        .invoke("AddMenus", {Data: menuLists})
+                        .then(() => {
+                            setVisibleImport(false)
+                            ipcRenderer.invoke("change-main-menu")
+                        })
+                        .catch((err) => {
+                            failed("保存菜单失败：" + err)
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                setImportLoading(false)
+                            }, 300)
+                        })
+                })
+                .catch((e: any) => {
+                    failed(`删除菜单失败:${e}`)
+                })
+        } catch (error) {
+            failed("导入失败:" + error)
+        }
     })
 
     const onOpenDownModal = useMemoizedFn((menuItem: MenuDataProps) => {
@@ -577,7 +614,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     </div>
                                     <div
                                         className={classNames(style["customize-item"])}
-                                        onClick={() => setVisibleImport(true)}
+                                        onClick={() => {
+                                            setVisibleImport(true)
+                                            setMenuDataString("")
+                                            setFileName("")
+                                            setRefreshTrigger(!refreshTrigger)
+                                        }}
                                     >
                                         导入 JSON 配置
                                     </div>
@@ -700,6 +742,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 onCancel={() => setVisibleImport(false)}
                 width='60%'
                 onOk={() => onImportJSON()}
+                confirmLoading={importLoading}
             >
                 <Form className={style["json-import"]} layout='vertical'>
                     <YakitFormDragger
