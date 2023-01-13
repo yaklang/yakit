@@ -145,15 +145,18 @@
     justify-content: space-evenly;
     height: 100%;
 }
-.week-add-count {
+.common-count {
     padding-left: 15px;
-    border-left: 2px solid rgb(180, 187, 220);
     border-radius: 2px;
 }
-.day-add-count {
-    padding-left: 15px;
+.keep-border-left{
+    border-left: 2px solid #B4BBCA;
+}
+.add-border-left{
     border-left: 2px solid #f4736b;
-    border-radius: 2px;
+}
+.reduce-border-left{
+    border-left: 2px solid rgb(86, 201, 145);
 }
 .add-title {
     font-weight: 400;

@@ -34,8 +34,9 @@ import {
     MenuTCPPortLogDeepIcon,
     MenuYsoJavaHackDeepIcon,
     MenuBaseReptileDeepIcon,
-    AddDayCountIcon,
-    AddWeekCountIcon
+    ReduceCountIcon,
+    AddCountIcon,
+    KeepCountIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
 import CountUp from "react-countup"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
@@ -345,22 +346,32 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                     })}
                 >
                     <div className={styles["add-count-box"]}>
-                        <div className={styles["day-add-count"]}>
+                        <div className={classNames(styles["common-count"],{
+                            [styles["keep-border-left"]]: false,
+                            [styles["add-border-left"]]: true,
+                            [styles["reduce-border-left"]]: false,
+                        })}>
                             <div className={styles["add-title"]}>今日新增数</div>
                             <div className={styles["add-content"]}>
                                 <span style={{cursor: "pointer"}}>
                                     <CountUp start={0} end={12} duration={1} style={{padding: "0px"}} />
                                 </span>
-                                <AddDayCountIcon style={{paddingLeft: 4}} />
+                                <AddCountIcon style={{paddingLeft: 4}} /> 
                             </div>
                         </div>
-                        <div className={styles["week-add-count"]}>
+                        <div className={classNames(styles["common-count"],{
+                            [styles["keep-border-left"]]: true,
+                            [styles["add-border-left"]]: false,
+                            [styles["reduce-border-left"]]: false,
+                        })}>
                             <div className={styles["add-title"]}>本周新增数</div>
                             <div className={styles["add-content"]}>
                                 <span style={{cursor: "pointer"}}>
                                     <CountUp start={0} end={256} duration={1} style={{padding: "0px"}} />
                                 </span>
-                                <AddWeekCountIcon style={{paddingLeft: 4}} />
+                                {/* <AddCountIcon style={{paddingLeft: 4}} /> */}
+                                {/* <ReduceCountIcon style={{paddingLeft: 4}} /> */}
+                                <KeepCountIcon style={{paddingLeft: 4}}/>
                             </div>
                         </div>
                     </div>
