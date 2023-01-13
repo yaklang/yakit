@@ -153,7 +153,8 @@ export const defQueryOnline: SearchPluginOnlineRequest = {
     is_private: "",
     tags: "",
     recycle: false,
-    user_id: 0
+    user_id: 0,
+    time_search:""
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
@@ -208,7 +209,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
-    const [statisticsQueryOnline, setStatisticsQueryOnline,getStatisticsQueryOnline] = useGetState<SearchPluginOnlineRequest>({...defQueryOnline,keywords:storeParams.keywords,plugin_type:storeParams.plugin_type})
+    const [statisticsQueryOnline, setStatisticsQueryOnline,getStatisticsQueryOnline] = useGetState<SearchPluginOnlineRequest>({...defQueryOnline,keywords:storeParams.keywords,plugin_type:storeParams.plugin_type,time_search:storeParams.time_search})
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     // 统计数据
     const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
@@ -223,17 +224,20 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             setPlugSource("online")
             if(res.keywords&&res.keywords.length>0){
                 setPublicKeyword(res.keywords)
-                setStatisticsQueryOnline({...defQueryOnline,keywords:res.keywords,plugin_type:typeOnline})
+                setStatisticsQueryOnline({...defQueryOnline,keywords:res.keywords,plugin_type:typeOnline,time_search:""})
             }else if(res.plugin_type){
                 setPublicKeyword("")
-                setStatisticsQueryOnline({...defQueryOnline,plugin_type:res.plugin_type,keywords:""}) 
+                setStatisticsQueryOnline({...defQueryOnline,plugin_type:res.plugin_type,keywords:"",time_search:""}) 
+            }else if(res.time_search){
+                setPublicKeyword("")
+                setStatisticsQueryOnline({...defQueryOnline,plugin_type:typeOnline,keywords:"",time_search:res.time_search}) 
             }
         }
     }
 
     // 参数动态更改
     useEffect(() => {
-        if(storeParams.keywords.length>0||storeParams.plugin_type!==typeOnline){
+        if(storeParams.keywords.length>0||storeParams.plugin_type!==typeOnline||storeParams.time_search.length>0){
             setPlugSource("online")
         }
         else{
@@ -258,6 +262,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             ipcRenderer.removeAllListeners("get-yakit-store-params")
             setYakitStoreParams({
                 keywords: "",
+                time_search:"",
                 plugin_type:typeOnline,
                 isShowYakitStorePage:false,
             })
@@ -3511,8 +3516,6 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         }
     }, [bind_me, refresh, userInfo.isLogin])
     const search = useMemoizedFn((page: number) => {
-        // 插件仓库参数及页面状态
-        // const {storeParams, setYakitStoreParams} = YakitStoreParams()
         let url = "yakit/plugin/unlogged"
         if (userInfo.isLogin) {
             url = "yakit/plugin"

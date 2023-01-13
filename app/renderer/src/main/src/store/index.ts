@@ -48,6 +48,8 @@ export interface StoreParamsProps{
     keywords:string
     // 插件类型参数
     plugin_type:string
+    // 今日/本周
+    time_search:string
     // 插件仓库页是否已渲染
     isShowYakitStorePage:boolean
 }
@@ -63,6 +65,7 @@ export const YakitStoreParams = create<YakitStoreParamsProps>((set, get) => ({
         keywords: "",
         plugin_type:typeOnline,
         isShowYakitStorePage:false,
+        time_search:"",
     },
     setYakitStoreParams: (info) => set({storeParams: info})
 }))

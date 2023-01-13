@@ -185,7 +185,6 @@ const PieChart: React.FC<PieChartProps> = (props) => {
         }
         goStoreRoute({plugin_type})
     })
-    console.log("chartCount", chartCount)
     return (
         <>
             {chartList.length > 0 && (
@@ -316,10 +315,81 @@ const PieChart: React.FC<PieChartProps> = (props) => {
 interface PlugInShopProps {
     setOpenPage: (v: any) => void
 }
+
+export interface DataParams {
+    min?: string
+    max?: string
+    offset?: number
+    count?: number
+}
+export interface PlugInShopHotProps {
+    Data: DataParams
+}
+interface countAddObjProps {
+    day_incre: string
+    week_incre: string
+    day_incre_num: number
+    week_incre_num: number
+}
+interface PlugInShopNewIncreProps {}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const {setOpenPage} = props
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
+    const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
+    const [hotArr, setHotArr] = useState<string[]>([])
     const listHeightRef = useRef<any>()
+
+    useEffect(() => {
+        getPlugInShopHot()
+        getPlugInShopNewIncre()
+    }, [])
+    const getPlugInShopHot = () => {
+        NetWorkApi<PlugInShopHotProps, API.PluginTopSearchResponse>({
+            method: "get",
+            url: "plugin/topSearch"
+        })
+            .then((res: API.PluginTopSearchResponse) => {
+                if (res) {
+                    const newArr = res.data.map((item) => item.member).filter((item) => !!item)
+                    setHotArr(newArr)
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
+    const judgeStatus = (v: number, v1: number) => {
+        if (v > v1) return ">"
+        else if (v < v1) return "<"
+        else return "="
+    }
+
+    const getPlugInShopNewIncre = () => {
+        NetWorkApi<PlugInShopNewIncreProps, API.PluginIncreResponse>({
+            method: "get",
+            url: "plugin/newIncre"
+        })
+            .then((res: API.PluginIncreResponse) => {
+                if (res) {
+                    const {day_incre_num, yesterday_incre_num, week_incre_num, lastWeek_incre_num} = res
+                    const day_incre = judgeStatus(day_incre_num, yesterday_incre_num)
+                    const week_incre = judgeStatus(week_incre_num, lastWeek_incre_num)
+                    setCountAddObj({
+                        day_incre,
+                        week_incre,
+                        day_incre_num,
+                        week_incre_num
+                    })
+                }
+            })
+            .catch((err) => {
+                failed("失败：" + err)
+            })
+            .finally(() => {})
+    }
+
     const goStoreRoute = (params) => {
         // 插件商店页面是否渲染
         if (storeParams.isShowYakitStorePage) {
@@ -336,6 +406,14 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             multipleNode: []
         })
     }
+
+    const selectIconShow = (v: string) => {
+        if (v === ">") return <AddCountIcon style={{paddingLeft: 4}} />
+        else if (v === "=") return <KeepCountIcon style={{paddingLeft: 4}} />
+        else {
+            return <ReduceCountIcon style={{paddingLeft: 4}} />
+        }
+    }
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
@@ -346,34 +424,50 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                     })}
                 >
                     <div className={styles["add-count-box"]}>
-                        <div className={classNames(styles["common-count"],{
-                            [styles["keep-border-left"]]: false,
-                            [styles["add-border-left"]]: true,
-                            [styles["reduce-border-left"]]: false,
-                        })}>
-                            <div className={styles["add-title"]}>今日新增数</div>
-                            <div className={styles["add-content"]}>
-                                <span style={{cursor: "pointer"}}>
-                                    <CountUp start={0} end={12} duration={1} style={{padding: "0px"}} />
-                                </span>
-                                <AddCountIcon style={{paddingLeft: 4}} /> 
-                            </div>
-                        </div>
-                        <div className={classNames(styles["common-count"],{
-                            [styles["keep-border-left"]]: true,
-                            [styles["add-border-left"]]: false,
-                            [styles["reduce-border-left"]]: false,
-                        })}>
-                            <div className={styles["add-title"]}>本周新增数</div>
-                            <div className={styles["add-content"]}>
-                                <span style={{cursor: "pointer"}}>
-                                    <CountUp start={0} end={256} duration={1} style={{padding: "0px"}} />
-                                </span>
-                                {/* <AddCountIcon style={{paddingLeft: 4}} /> */}
-                                {/* <ReduceCountIcon style={{paddingLeft: 4}} /> */}
-                                <KeepCountIcon style={{paddingLeft: 4}}/>
-                            </div>
-                        </div>
+                        {countAddObj && (
+                            <>
+                                <div
+                                    className={classNames(styles["common-count"], {
+                                        [styles["keep-border-left"]]: countAddObj?.day_incre === "=",
+                                        [styles["add-border-left"]]: countAddObj?.day_incre === ">",
+                                        [styles["reduce-border-left"]]: countAddObj?.day_incre === "<"
+                                    })}
+                                >
+                                    <div className={styles["add-title"]}>今日新增数</div>
+                                    <div className={styles["add-content"]}>
+                                        <span style={{cursor: "pointer"}} onClick={()=>goStoreRoute({time_search:"day"})}>
+                                            <CountUp
+                                                start={0}
+                                                end={countAddObj.day_incre_num}
+                                                duration={1}
+                                                style={{padding: "0px"}}
+                                            />
+                                        </span>
+                                        {selectIconShow(countAddObj.day_incre)}
+                                    </div>
+                                </div>
+                                <div
+                                    className={classNames(styles["common-count"], {
+                                        [styles["keep-border-left"]]: countAddObj?.week_incre === "=",
+                                        [styles["add-border-left"]]: countAddObj?.week_incre === ">",
+                                        [styles["reduce-border-left"]]: countAddObj?.week_incre === "<"
+                                    })}
+                                >
+                                    <div className={styles["add-title"]}>本周新增数</div>
+                                    <div className={styles["add-content"]}>
+                                        <span style={{cursor: "pointer"}} onClick={()=>goStoreRoute({time_search:"week"})}>
+                                            <CountUp
+                                                start={0}
+                                                end={countAddObj.week_incre_num}
+                                                duration={1}
+                                                style={{padding: "0px"}}
+                                            />
+                                        </span>
+                                        {selectIconShow(countAddObj.week_incre)}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div
@@ -390,13 +484,17 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
                 <div className={styles["label-box"]}>
-                    <div className={styles["label-item"]} onClick={() => goStoreRoute({keywords: "555"})}>
-                        555
-                    </div>
-
-                    <div className={styles["label-item"]} onClick={() => goStoreRoute({keywords: "网站信息获取"})}>
-                        网站信息获取
-                    </div>
+                    {hotArr.map((item) => {
+                        return (
+                            <div
+                                key={item}
+                                className={styles["label-item"]}
+                                onClick={() => goStoreRoute({keywords: item})}
+                            >
+                                {item}
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </div>
@@ -571,6 +669,7 @@ export const getScriptIcon = (name: string) => {
             return <MenuBaseReptileDeepIcon />
     }
 }
+
 export interface NewHomeProps {
     setOpenPage: (v: any) => void
 }
@@ -635,6 +734,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 }
             })
     }
+
     return (
         <div className={classNames(styles["new-home-page"])}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
