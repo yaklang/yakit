@@ -132,6 +132,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                         themeClass={style["modal-confirm-btns-cancel"]}
                         onClick={(e) => {
                             if (props.onCancel) props.onCancel(e)
+                            setVisible(false)
                         }}
                     >
                         {props.onCancelText || "取消"}
@@ -151,6 +152,10 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                     </YakitButton>
                 </div>
             }
+            onCancel={(e) => {
+                if (props.onCancel) props.onCancel(e)
+                setVisible(false)
+            }}
             visible={visible}
             closable={true}
             destroyOnClose={true}

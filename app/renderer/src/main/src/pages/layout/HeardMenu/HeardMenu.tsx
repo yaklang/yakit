@@ -351,36 +351,39 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         const newKey: string = key.substring(0, index)
         if (newKey.includes("plugin")) {
             const name = key.substring(index + 3, key.length)
-            // 先验证菜单的插件id和本地最新的插件id是不是一致的
-            ipcRenderer
-                .invoke("GetYakScriptByName", {Name: name})
-                .then((i: YakScript) => {
-                    const lastPluginID = `plugin:${i.Id}`
-                    onRouteMenuSelect(`${lastPluginID}` as Route)
-                    if (newKey !== lastPluginID) {
-                        // 更新菜单
-                        onUpdateMenuItem(i)
-                    }
-                })
-                .catch((err) => {
-                    const currentMenuItem: MenuDataProps = subMenuData.find((l) => l.key === newKey) || {
-                        id: "",
-                        label: ""
-                    }
-                    if (currentMenuItem) {
-                        const item: MenuDataProps = {
-                            id: currentMenuItem.id,
-                            label: currentMenuItem.label,
-                            yakScripName: currentMenuItem.yakScripName
-                        }
-                        onOpenDownModal(item)
-                    } else {
-                        failed("菜单数据异常,请刷新菜单重试")
-                    }
-                })
+            onCheckPlugin(name, newKey)
         } else {
             onRouteMenuSelect(newKey as Route)
         }
+    })
+    const onCheckPlugin = useMemoizedFn((name: string, newKey: string) => {
+        // 先验证菜单的插件id和本地最新的插件id是不是一致的
+        ipcRenderer
+            .invoke("GetYakScriptByName", {Name: name})
+            .then((i: YakScript) => {
+                const lastPluginID = `plugin:${i.Id}`
+                onRouteMenuSelect(`${lastPluginID}` as Route)
+                if (newKey !== lastPluginID) {
+                    // 更新菜单
+                    onUpdateMenuItem(i)
+                }
+            })
+            .catch((err) => {
+                const currentMenuItem: MenuDataProps = subMenuData.find((l) => l.key === newKey) || {
+                    id: "",
+                    label: ""
+                }
+                if (currentMenuItem) {
+                    const item: MenuDataProps = {
+                        id: currentMenuItem.id,
+                        label: currentMenuItem.label,
+                        yakScripName: currentMenuItem.yakScripName
+                    }
+                    onOpenDownModal(item)
+                } else {
+                    failed("菜单数据异常,请刷新菜单重试")
+                }
+            })
     })
     /**
      * @description: 更新菜单数据，单条
@@ -529,7 +532,15 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         key={`menuItem-${menuItem.id}`}
                                         menuItem={menuItem}
                                         isShow={number > 0 ? number <= index : false}
-                                        onSelect={(r) => onRouteMenuSelect(r.key as Route)}
+                                        onSelect={(r) => {
+                                            console.log("r", r)
+                                            if (!r.key) return
+                                            if (r.key.includes("plugin")) {
+                                                onCheckPlugin(r.yakScripName || r.label, r.key)
+                                            } else {
+                                                onRouteMenuSelect(r.key as Route)
+                                            }
+                                        }}
                                         isExpand={isExpand}
                                         setSubMenuData={(menu) => {
                                             setSubMenuData(menu.subMenuData || [])
@@ -841,11 +852,7 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                         <span className={style["heard-sub-menu-item-icon"]}>{subMenuItem.icon}</span>
                         <span className={style["heard-sub-menu-item-hoverIcon"]}>{subMenuItem.hoverIcon}</span>
                     </>
-                    {(subMenuItem.key && (
-                        <div className={style["heard-sub-menu-label"]}>
-                            {subMenuItem.label}-{subMenuItem.key}
-                        </div>
-                    )) || (
+                    {(subMenuItem.key && <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>) || (
                         <Tooltip title='插件丢失，点击下载' placement='bottom' zIndex={9999}>
                             <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
                         </Tooltip>
