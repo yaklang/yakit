@@ -746,6 +746,7 @@ message DownloadOnlinePluginByTokenRequest {
   string Tags = 7;
   string UserName = 8;
   int64  UserId = 9;
+  string TimeSearch = 10;
 }
 
 message DownloadOnlinePluginByIdRequest {
