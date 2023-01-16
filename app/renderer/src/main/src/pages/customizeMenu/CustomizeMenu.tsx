@@ -850,7 +850,7 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
                     <div {...provided.droppableProps} ref={provided.innerRef} className={style["system-function-list"]}>
                         {systemRouteMenuData.map((item, index) => {
                             const isDragDisabled =
-                                props.subMenuData.findIndex((i) => i.yakScripName === item.label) !== -1
+                                props.subMenuData.findIndex((i) => i.yakScripName || i.label === item.label) !== -1
                             return (
                                 <Draggable
                                     key={item.id}
@@ -943,17 +943,19 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     }, [props.isSearch])
     const getYakScriptList = (page?: number, limit?: number) => {
         const newParams = {
-            Tag: [],
-            Type: "mitm,port-scan",
+            // Tag: [],
+            // Type: "yak,mitm,codec,packet-hack,port-scan,nuclei", //不传查所有
             Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
             Keyword: keyword
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
+        console.log("newParams", newParams)
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
+                console.log("item", item)
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)
@@ -1054,8 +1056,8 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
             <div className={style["plugin-local-item-left"]}>
                 <img alt='' src={plugin.HeadImg} className={style["plugin-local-headImg"]} />
                 <span className={style["plugin-local-scriptName"]}>{plugin.ScriptName}</span>
-                <PrivatePluginIcon className={style["plugin-local-icon"]} />
-                <OfficialPluginIcon className={style["plugin-local-icon"]} />
+                {plugin.OnlineIsPrivate && <PrivatePluginIcon className={style["plugin-local-icon"]} />}
+                {plugin.OnlineOfficial && <OfficialPluginIcon className={style["plugin-local-icon"]} />}
                 <Tooltip
                     title={plugin.Help || "No Description about it."}
                     placement='topRight'

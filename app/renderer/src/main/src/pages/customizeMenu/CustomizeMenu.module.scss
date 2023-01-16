@@ -511,6 +511,7 @@
         .plugin-local-item-left {
             display: flex;
             align-items: center;
+            width: calc(100% - 55px);
             max-width: calc(100% - 55px);
         }
 

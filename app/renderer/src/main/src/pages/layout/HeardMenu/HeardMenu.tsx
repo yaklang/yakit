@@ -136,6 +136,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     useEffect(() => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
+            setRemoteValue("PatternMenu", menuMode)
             setPatternMenu(menuMode)
             init(menuMode)
         })
@@ -234,7 +235,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             const firstMenuList: MenuDataProps[] = []
                             if (item.subMenuData && item.subMenuData.length > 0) {
                                 item.subMenuData.forEach((subItem) => {
-                                    if (!subItem.key) {
+                                    if (!subItem.key || (subItem.key as string) === "plugin:0") {
                                         const currentMenuItem = rsp.Data.find(
                                             (m) => m.ScriptName === (subItem.yakScripName || subItem.label)
                                         ) || {
@@ -278,6 +279,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     setSubMenuData(data[0].subMenuData || [])
                     setMenuId(data[0].id)
                 }
+                if (callBack) callBack()
             })
             .catch((err) => {
                 failed("保存菜单失败：" + err)
@@ -286,7 +288,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 300)
-                if (callBack) callBack()
             })
     })
 
@@ -346,6 +347,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      * @description: 打开页面
      */
     const onTabClick = useMemoizedFn((key) => {
+        if (!key || key === "plugin:0") return
         const index = key.indexOf("###")
         if (index === -1) return
         const newKey: string = key.substring(0, index)
@@ -453,7 +455,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             return
         }
         try {
-            const menuLists = getMenuListBySort(JSON.parse(menuDataString), patternMenu)
+            const menuLists: MenuItemGroup = JSON.parse(menuDataString).map((ele) => ({...ele, Mode: patternMenu}))
             setImportLoading(true)
             ipcRenderer
                 .invoke("DeleteAllMenu", {Mode: patternMenu})
@@ -495,8 +497,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             ),
             onOkText: "重新下载",
             onOk: () => {
-                const noDownPluginScriptNames: string[] = [menuItem.yakScripName || menuItem.label]
+                // 插件一定有插件名称
+                const noDownPluginScriptNames: string[] = [menuItem.yakScripName || ""]
                 onDownPluginByScriptNames(routeMenu, noDownPluginScriptNames, patternMenu, () => {
+                    const itemMenu = subMenuData.find((i) => i.yakScripName === menuItem.yakScripName)
+                    console.log("itemMenu", itemMenu)
+                    if (!itemMenu) return
+                    onTabClick(`${itemMenu.key}###${itemMenu.yakScripName || ""}`)
                     m.destroy()
                 })
             }
@@ -533,7 +540,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         menuItem={menuItem}
                                         isShow={number > 0 ? number <= index : false}
                                         onSelect={(r) => {
-                                            console.log("r", r)
                                             if (!r.key) return
                                             if (r.key.includes("plugin")) {
                                                 onCheckPlugin(r.yakScripName || r.label, r.key)
