@@ -5,8 +5,20 @@ const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
 const {GLOBAL_YAK_SETTING} = require("../state")
 const {testRemoteClient} = require("../ipc")
-const {getLocalYaklangEngine} = require("../filePath")
+const {getLocalYaklangEngine, engineLog} = require("../filePath")
 const net = require("net");
+const fs = require("fs")
+
+/** 本地引擎启动日志 */
+let out = null
+fs.open(engineLog, "a", (err, fd) => {
+    if (err) {
+        console.log("获取本地引擎日志错误：", err)
+    } else {
+        out = fd
+    }
+})
+
 
 /** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
 let engineCount = 0
@@ -192,22 +204,36 @@ module.exports = (win, callback, getClient, newClient) => {
                     }
                 } else {
                     toLog("已启动本地引擎进程")
+                    const log = out ? out : "ignore"
+
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${port}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
-                        stdio: "pipe"
+                        detached: true,
+                        stdio: ["ignore", log, log]
                     })
-                    subprocess.stdout.on("data", (stdout) => {
-                        toStdout(stdout)
-                    })
-                    subprocess.stderr.on("data", (stdout) => {
-                        toStdout(stdout)
-                    })
+                    
+                    subprocess.unref()
+
                     subprocess.on("error", (err) => {
                         toLog(`本地引擎遭遇错误，错误原因为：${err}`)
                         reject(err)
                     })
                     subprocess.on("close", async (e) => {
                         toLog(`本地引擎退出，退出码为：${e}`)
+                        fs.readFile(engineLog,(err,data) => {
+                            if(err){
+                                console.log("读取引擎文件失败",err);
+                            }else{
+                                toStdout(data)
+                                setTimeout(() => {
+                                   try {
+                                       fs.unlinkSync(engineLog)
+                                   } catch (e) {
+                                       console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
+                                   }
+                                }, 1000);
+                            }
+                        })
                     })
                     resolve()
                 }

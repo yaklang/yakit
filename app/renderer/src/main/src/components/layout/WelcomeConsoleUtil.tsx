@@ -29,12 +29,3 @@ export const isEngineConnectionAlive = () => {
         return true
     })
 }
-
-export const manageYakLocalProcess = () => {
-    showModal({
-        width: "80%",
-        content: (
-            <YakLocalProcess justClose={true}/>
-        )
-    })
-}

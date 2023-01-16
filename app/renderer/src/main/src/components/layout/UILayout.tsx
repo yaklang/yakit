@@ -1,6 +1,6 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react"
 import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Checkbox, Form, Input, Popconfirm, Progress, Select, Spin} from "antd"
+import {Checkbox, Form, Input, Popconfirm, Progress, Select, Spin, Tooltip} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -33,6 +33,7 @@ import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/lay
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
+import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -271,6 +272,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             Port: parseInt(info.port),
             Mode: "remote"
         })
+        /** 保存远程连接信息 */
+        if (info.allowSave) {
+            const params = {
+                host: info.host,
+                port: +info.port || 0,
+                caPem: info.caPem || "",
+                password: info.password || "",
+                tls: info.tls,
+                name: info.linkName || ""
+            }
+            saveAuthInfo({...params})
+        }
         setRemoteConnectLoading(true)
         setTimeout(() => {
             setRemoteConnectLoading(false)
@@ -414,20 +427,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
                                 </div>
                                 <div className={styles["header-title"]} onDoubleClick={maxScreen} />
-                                {engineLink ? (
-                                    <div className={styles["header-right"]}>
-                                        <FuncDomain
-                                            isEngineLink={engineLink}
-                                            engineMode={engineMode || "remote"}
-                                            isRemoteMode={engineMode === "remote"}
-                                            onEngineModeChange={changeEngineMode}
-                                        />
-                                        <div className={styles["divider-wrapper"]}></div>
-                                        <GlobalReverseState isEngineLink={engineLink} />
+                                <div className={styles["header-right"]}>
+                                    <div
+                                        className={styles["ui-op-btn-wrapper"]}
+                                        onClick={() =>
+                                            ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
+                                        }
+                                    >
+                                        <Tooltip placement='bottom' title='官方网站'>
+                                            <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                        </Tooltip>
                                     </div>
-                                ) : (
-                                    <div></div>
-                                )}
+                                    {engineLink && (
+                                        <>
+                                            <FuncDomain
+                                                isEngineLink={engineLink}
+                                                engineMode={engineMode || "remote"}
+                                                isRemoteMode={engineMode === "remote"}
+                                                onEngineModeChange={changeEngineMode}
+                                            />
+                                            <div className={styles["divider-wrapper"]}></div>
+                                            <GlobalReverseState isEngineLink={engineLink} />
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         ) : (
                             <div className={classnames(styles["header-body"], styles["win-header-body"])}>
@@ -440,24 +463,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                                 </div>
 
-                                {engineLink ? (
-                                    <div className={styles["header-left"]}>
-                                        <GlobalReverseState isEngineLink={engineLink} />
+                                <div className={styles["header-left"]}>
+                                    {engineLink && (
+                                        <>
+                                            <GlobalReverseState isEngineLink={engineLink} />
 
-                                        <div
-                                            className={classnames(styles["yakit-mode-icon"], {
-                                                [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
-                                            })}
-                                            onClick={() => changeYakitMode("soft")}
-                                        >
-                                            {yakitMode === "soft" ? (
-                                                <YakitThemeSvgIcon style={{fontSize: 20}} />
-                                            ) : (
-                                                <YakitGraySvgIcon style={{fontSize: 20}} />
-                                            )}
-                                        </div>
+                                            <div
+                                                className={classnames(styles["yakit-mode-icon"], {
+                                                    [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
+                                                })}
+                                                onClick={() => changeYakitMode("soft")}
+                                            >
+                                                {yakitMode === "soft" ? (
+                                                    <YakitThemeSvgIcon style={{fontSize: 20}} />
+                                                ) : (
+                                                    <YakitGraySvgIcon style={{fontSize: 20}} />
+                                                )}
+                                            </div>
 
-                                        {/* <div
+                                            {/* <div
                                     className={classnames(styles["yakit-mode-icon"], {
                                         [styles["yakit-mode-selected"]]: false&&yakitMode === "store"
                                     })}
@@ -466,20 +490,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     {yakitMode === "store" ? <YakitStoreThemeSvgIcon /> : <YakitStoreGraySvgIcon />}
                                 </div> */}
 
-                                        <div className={styles["divider-wrapper"]}></div>
-                                        <div>
-                                            <FuncDomain
-                                                isEngineLink={engineLink}
-                                                isReverse={true}
-                                                engineMode={engineMode || "remote"}
-                                                isRemoteMode={engineMode === "remote"}
-                                                onEngineModeChange={changeEngineMode}
-                                            />
-                                        </div>
+                                            <div className={styles["divider-wrapper"]}></div>
+                                            <div>
+                                                <FuncDomain
+                                                    isEngineLink={engineLink}
+                                                    isReverse={true}
+                                                    engineMode={engineMode || "remote"}
+                                                    isRemoteMode={engineMode === "remote"}
+                                                    onEngineModeChange={changeEngineMode}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div
+                                        className={styles["ui-op-btn-wrapper"]}
+                                        onClick={() =>
+                                            ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
+                                        }
+                                    >
+                                        <Tooltip placement='bottom' title='官方网站'>
+                                            <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                        </Tooltip>
                                     </div>
-                                ) : (
-                                    <div></div>
-                                )}
+                                </div>
 
                                 <div className={styles["header-title"]} onDoubleClick={maxScreen}></div>
 
@@ -1677,253 +1711,6 @@ const KillAllEngineHint: React.FC<KillAllEngineHintProps> = React.memo((props) =
                     </div>
                 </div>
             </Draggable>
-        </>
-    )
-})
-
-interface DownloadYaklangProps {
-    system: YakitSystem
-    visible: boolean
-    setVisible: (flag: boolean) => any
-    updateReconnect: () => any
-    killEnginePid: () => any
-}
-
-/** @name Yaklang引擎更新下载弹窗 */
-const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
-    const {system, visible, setVisible, updateReconnect, killEnginePid} = props
-
-    const [install, setInstall] = useState<boolean>(true)
-    const [loading, setLoading] = useState<boolean>(false)
-
-    /** 常见文件弹窗是否展示 */
-    const [qsShow, setQSShow] = useState<boolean>(false)
-
-    /** 是否置顶 */
-    const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
-
-    const [disabled, setDisabled] = useState(true)
-    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
-    const draggleRef = useRef<HTMLDivElement>(null)
-
-    /** 远端最新yaklang引擎版本 */
-    const [latestVersion, setLatestVersion] = useState("")
-    /** 下载进度条数据 */
-    const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
-
-    // 是否中断下载进程
-    const isBreakRef = useRef<boolean>(false)
-
-    /**
-     * 1. 获取最新引擎版本号(版本号内带有'v'字符)，并下载
-     * 2. 监听本地下载引擎进度数据
-     * @returns 删除监听事件2
-     */
-    useEffect(() => {
-        if (visible) {
-            isBreakRef.current = true
-            ipcRenderer
-                .invoke("fetch-latest-yaklang-version")
-                .then((data: string) => {
-                    setLatestVersion(data)
-
-                    ipcRenderer
-                        .invoke("download-latest-yak", data)
-                        .then(() => {
-                            if (!isBreakRef.current) return
-
-                            success("下载完毕")
-                            if (!getDownloadProgress()?.size) return
-                            setDownloadProgress({
-                                time: {
-                                    elapsed: downloadProgress?.time.elapsed || 0,
-                                    remaining: 0
-                                },
-                                speed: 0,
-                                percent: 100,
-                                // @ts-ignore
-                                size: getDownloadProgress().size
-                            })
-                            setInstall(false)
-                        })
-                        .catch((e: any) => {
-                            if (!isBreakRef.current) return
-                            failed(`下载失败: ${e}`)
-                            setVisible(false)
-                        })
-                })
-                .catch((e: any) => {
-                    if (!isBreakRef.current) return
-                    failed(`${e}`)
-                    setVisible(false)
-                })
-
-            ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
-                if (!isBreakRef.current) return
-                setDownloadProgress(state)
-            })
-
-            return () => {
-                ipcRenderer.removeAllListeners("download-yak-engine-progress")
-            }
-        } else {
-            isBreakRef.current = false
-            setLoading(false)
-        }
-    }, [visible])
-
-    /** 立即更新 */
-    const onUpdate = useMemoizedFn(() => {
-        setLoading(true)
-        killEnginePid()
-
-        setTimeout(() => setVisible(false), 500)
-        setTimeout(() => {
-            ipcRenderer
-                .invoke("install-yak-engine", latestVersion)
-                .then(() => {
-                    success("安装成功，如未生效，重启 Yakit 即可")
-                    updateReconnect()
-                })
-                .catch((err: any) => {
-                    failed(
-                        `安装失败: ${err.message.indexOf("operation not permitted") > -1 ? "请关闭引擎后重试" : err}`
-                    )
-                    onInstallClose()
-                })
-        }, 2000)
-    })
-    /** 稍后再说 */
-    const onWait = useMemoizedFn(() => {
-        ipcRenderer.invoke("download-update-wait", "yaklang")
-        onInstallClose()
-    })
-
-    /** 弹窗拖拽移动触发事件 */
-    const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
-        const {clientWidth, clientHeight} = window.document.documentElement
-        const targetRect = draggleRef.current?.getBoundingClientRect()
-        if (!targetRect) return
-
-        setBounds({
-            left: -targetRect.left + uiData.x,
-            right: clientWidth - (targetRect.right - uiData.x),
-            top: -targetRect.top + uiData.y + 36,
-            bottom: clientHeight - (targetRect.bottom - uiData.y)
-        })
-    })
-
-    /** 取消下载事件 */
-    const onInstallClose = useMemoizedFn(() => {
-        isBreakRef.current = false
-        setVisible(false)
-        setDownloadProgress(undefined)
-        setInstall(true)
-    })
-
-    return (
-        <>
-            <Draggable
-                defaultClassName={classnames(
-                    styles["yaklang-update-modal"],
-                    visible ? styles["engine-hint-modal-wrapper"] : styles["engine-hint-modal-hidden-wrapper"],
-                    {[styles["modal-top-wrapper"]]: isTop === 0}
-                )}
-                disabled={disabled}
-                bounds={bounds}
-                onStart={(event, uiData) => onStart(event, uiData)}
-            >
-                <div ref={draggleRef}>
-                    <div className={styles["modal-yaklang-engine-hint"]} onClick={() => setIsTop(0)}>
-                        <div className={styles["yaklang-engine-hint-wrapper"]}>
-                            <div
-                                className={styles["hint-draggle-body"]}
-                                onMouseEnter={() => {
-                                    if (disabled) setDisabled(false)
-                                }}
-                                onMouseLeave={() => setDisabled(true)}
-                                onMouseDown={() => setIsTop(0)}
-                            ></div>
-
-                            <div className={styles["hint-left-wrapper"]}>
-                                <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
-                                </div>
-                                {install && (
-                                    <div
-                                        className={styles["qs-icon"]}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            setQSShow(true)
-                                            setIsTop(2)
-                                        }}
-                                    >
-                                        <HelpSvgIcon style={{fontSize: 20}} />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className={styles["hint-right-wrapper"]}>
-                                {install ? (
-                                    <div className={styles["hint-right-download"]}>
-                                        <div className={styles["hint-right-title"]}>Yaklang 引擎下载中...</div>
-                                        <div className={styles["download-progress"]}>
-                                            <Progress
-                                                strokeColor='#F28B44'
-                                                trailColor='#F0F2F5'
-                                                percent={Math.floor((downloadProgress?.percent || 0) * 100)}
-                                            />
-                                        </div>
-                                        <div className={styles["download-info-wrapper"]}>
-                                            <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
-                                            <div className={styles["divider-wrapper"]}>
-                                                <div className={styles["divider-style"]}></div>
-                                            </div>
-                                            <div>耗时 : {(downloadProgress?.time.elapsed || 0).toFixed(2)}s</div>
-                                            <div className={styles["divider-wrapper"]}>
-                                                <div className={styles["divider-style"]}></div>
-                                            </div>
-                                            <div>
-                                                下载速度 : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s
-                                            </div>
-                                        </div>
-                                        <div style={{marginTop: 24}}>
-                                            <YakitButton size='max' type='outline2' onClick={onInstallClose}>
-                                                取消
-                                            </YakitButton>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className={styles["hint-right-title"]}>现在更新 Yaklang 引擎？</div>
-                                        <div className={styles["hint-right-content"]}>
-                                            更新 Yaklang 引擎，需要先断开当前连接，确定要现在更新吗？
-                                        </div>
-
-                                        <div className={styles["hint-right-btn"]}>
-                                            <div></div>
-                                            <div className={styles["btn-group-wrapper"]}>
-                                                <YakitButton
-                                                    loading={loading}
-                                                    size='max'
-                                                    type='outline2'
-                                                    onClick={onWait}
-                                                >
-                                                    稍后再说
-                                                </YakitButton>
-                                                <YakitButton loading={loading} size='max' onClick={onUpdate}>
-                                                    立即更新
-                                                </YakitButton>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Draggable>
-            <QuestionModal isTop={isTop} setIsTop={setIsTop} system={system} visible={qsShow} setVisible={setQSShow} />
         </>
     )
 })
