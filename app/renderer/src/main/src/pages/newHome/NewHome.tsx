@@ -9,7 +9,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {Interaction, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend, getTheme} from "bizcharts"
 import {useStore, YakitStoreParams} from "@/store"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn,useSize} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
@@ -133,6 +133,9 @@ const PieChart: React.FC<PieChartProps> = (props) => {
     const [chartCount, setChartCount] = useState<any>({})
     // 全局登录状态
     const {userInfo} = useStore()
+
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+
     useEffect(() => {
         getPluginSearch()
     }, [])
@@ -185,11 +188,12 @@ const PieChart: React.FC<PieChartProps> = (props) => {
         }
         goStoreRoute({plugin_type})
     })
+    console.log("width",width)
     return (
         <>
             {chartList.length > 0 && (
                 <Chart
-                    padding={[0, 160, 0, 0]}
+                    padding={[0, width>1200?160:0, 0, 0]}
                     data={chartList || []}
                     autoFit
                     radius={1.0}
@@ -215,10 +219,10 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                     <Axis visible={false} />
                     <Legend
                         position='right'
-                        visible={true}
-                        offsetX={-70}
-                        itemHeight={18}
-                        itemWidth={130}
+                        visible={width>1200?true:false}
+                        offsetX={width>1200?-70:0}
+                        itemHeight={width>1200?18:0}
+                        itemWidth={width>1200?130:0}
                         onChange={(e, chart) => {
                             // console.log("e", e)
                             if (e) {
@@ -298,12 +302,12 @@ const PieChart: React.FC<PieChartProps> = (props) => {
                             cursor: "pointer"
                         }}
                         state={{
-                            active: {
-                                style: (t) => {
-                                    const res = getTheme().geometries.interval.rect.selected.style(t)
-                                    return {...res}
-                                }
-                            }
+                            // active: {
+                            //     style: (t) => {
+                            //         const res = getTheme().geometries.interval.rect.selected.style(t)
+                            //         return {...res}
+                            //     }
+                            // }
                         }}
                     />
                 </Chart>

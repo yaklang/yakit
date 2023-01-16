@@ -54,7 +54,7 @@ import {failed, success, warn, info} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
 import {PluginOperator} from "./PluginOperator"
-import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoCard} from "../../components/AutoCard"
 import {UserInfoProps, useStore,YakitStoreParams} from "@/store"
 import "./YakitStorePage.scss"
@@ -3323,6 +3323,12 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             </div>
                         </div>
                     )}
+                    {statisticsQueryOnline.time_search&&statisticsQueryOnline.time_search?.length>0&&
+                    <YakitTag closable color='blue' onClose={()=>{
+                        setStatisticsQueryOnline({...statisticsQueryOnline,time_search:""})
+                    }}>
+                        {statisticsQueryOnline.time_search==="week"?"本周新增":"今日新增"}
+                    </YakitTag>}
                 </Col>
                 <Col span={8} className='col-flex-end'>
                     {isShowFilter && (
