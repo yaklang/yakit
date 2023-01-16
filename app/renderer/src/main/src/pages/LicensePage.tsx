@@ -47,7 +47,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
     }
 
     return (
-        <div>
+        <div style={{height:"100%"}}>
             <Spin spinning={licensePageLoading}>
                 <Row style={{paddingTop: 50}}>
                     <Col span={4} />
