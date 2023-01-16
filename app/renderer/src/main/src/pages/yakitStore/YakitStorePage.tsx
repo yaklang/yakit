@@ -2777,6 +2777,7 @@ interface DownloadOnlinePluginByTokenRequest {
     IsPrivate?: string
     UserName?: string
     UserId?: number
+    TimeSearch?: string
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
@@ -2826,7 +2827,8 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     Status: query?.status,
                     IsPrivate: query?.is_private,
                     UserId: query?.user_id,
-                    UserName: query?.user_name
+                    UserName: query?.user_name,
+                    TimeSearch:query?.time_search
                 }
             }
 
