@@ -352,7 +352,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         if (index === -1) return
         const newKey: string = key.substring(0, index)
         if (newKey.includes("plugin")) {
-            const name = key.substring(index + 3, key.length)
+            const labelIndex = key.indexOf("***")
+            const name = key.substring(index + 3, labelIndex)
             onCheckPlugin(name, newKey)
         } else {
             onRouteMenuSelect(newKey as Route)
@@ -503,7 +504,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     const itemMenu = subMenuData.find((i) => i.yakScripName === menuItem.yakScripName)
                     console.log("itemMenu", itemMenu)
                     if (!itemMenu) return
-                    onTabClick(`${itemMenu.key}###${itemMenu.yakScripName || ""}`)
+                    onTabClick(`${itemMenu.key}###${itemMenu.yakScripName || ""}***1`)
                     m.destroy()
                 })
             }
@@ -745,7 +746,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             )}
                                         </div>
                                     }
-                                    key={`${item.key}###${item.yakScripName || item.label}`}
+                                    key={`${item.key}###${item.yakScripName || item.label}***${index}`}
                                 />
                             )
                         })}

@@ -13,7 +13,8 @@ import {
     Tag,
     Tooltip,
     Card,
-    Badge
+    Badge,
+    MenuItemProps
 } from "antd"
 import {YakScript} from "../invoker/schema"
 import {failed, success} from "../../utils/notification"
@@ -42,6 +43,11 @@ import {YakitPluginOnlineJournal} from "./YakitPluginOnlineJournal/YakitPluginOn
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {getRemoteValue} from "@/utils/kv"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {MenuByGroupProps} from "../layout/HeardMenu/HeardMenuType"
+import {MenuItemGroup} from "../MainOperator"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -83,10 +89,16 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [settingShow, setSettingShow] = useState<boolean>(false)
     // 是否展示（根据插件url与私有域比较）
     const [isShowPrivateDom, setIsShowPrivateDom] = useState<boolean>(true)
-
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    useEffect(() => {
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            const menuMode = patternMenu || "expert"
+            setPatternMenu(menuMode)
+        })
+    }, [])
     const updateGroups = () => {
         ipcRenderer
-            .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId})
+            .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId, Mode: patternMenu})
             .then((data: {Groups: string[]}) => {
                 setGroups(data.Groups)
             })
@@ -268,6 +280,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     deletePluginLocal={(value) => {
                                         if (props.deletePluginLocal) props.deletePluginLocal(value)
                                     }}
+                                    patternMenu={patternMenu}
                                 />
                             }
                         />
@@ -607,42 +620,70 @@ export interface AddToMenuActionFormProp {
     updateGroups?: () => any
 }
 
+interface OptionsProps {
+    label: string
+    value: string
+}
+
+interface AddToMenuRequest {
+    YakScriptId: number
+    Group: string
+    Verbose: string
+    MenuSort: number
+}
+
 export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) => {
+    const [form] = Form.useForm()
     const {script} = props
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
-
-    const [params, setParams] = useState<{
-        Group: string
-        YakScriptId: number
-        Verbose: string
-    }>({
-        Group: "社区组件",
-        Verbose: props.script.ScriptName,
-        YakScriptId: props.script.Id
-    })
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    const [menuData, setMenuData] = useState<MenuItemGroup[]>([])
+    const [option, setOption] = useState<OptionsProps[]>([])
 
     useEffect(() => {
-        setParams({
-            Group: "社区组件",
-            Verbose: props.script.ScriptName,
-            YakScriptId: props.script.Id
+        form.setFieldsValue({
+            Group: "",
+            Verbose: props.script.ScriptName
+        })
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            const menuMode = patternMenu || "expert"
+            setPatternMenu(menuMode)
+            init(menuMode)
         })
     }, [props.script])
-
+    /**
+     * @description:获取一级菜单
+     */
+    const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
+        ipcRenderer
+            .invoke("QueryAllMenuItem", {Mode: menuMode})
+            .then((rsp: MenuByGroupProps) => {
+                setOption(rsp.Groups.map((ele) => ({label: ele.Group, value: ele.Group})))
+                setMenuData(rsp.Groups)
+            })
+            .catch((err) => {
+                failed("获取菜单失败：" + err)
+            })
+    })
     return (
         <div>
             <Form
                 size={"small"}
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-
+                form={form}
+                onFinish={(values) => {
                     if (!script) {
                         failed("No Yak Modeule Selected")
                         return
                     }
-
+                    const subMenuData = menuData.find((ele) => ele.Group === values.Group)?.Items || []
+                    const prams: AddToMenuRequest = {
+                        ...values,
+                        YakScriptId: props.script.Id,
+                        Mode: patternMenu,
+                        MenuSort: subMenuData.length + 1
+                    }
                     ipcRenderer
-                        .invoke("AddToMenu", params)
+                        .invoke("AddToMenu", prams)
                         .then(() => {
                             ipcRenderer.invoke("change-main-menu")
                             updateGroups()
@@ -652,22 +693,23 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                             failed(`${e}`)
                         })
                 }}
+                className='old-theme-html'
             >
-                <InputItem
+                <Form.Item
                     label={"菜单选项名(展示名称)"}
-                    setValue={(Verbose) => setParams({...params, Verbose})}
-                    value={params.Verbose}
-                />
-                <InputItem
-                    label={"菜单分组"}
-                    setValue={(Group) => setParams({...params, Group})}
-                    value={params.Group}
-                />
+                    name='Verbose'
+                    rules={[{required: true, message: "该项为必填"}]}
+                >
+                    <YakitInput size='small' />
+                </Form.Item>
+                <Form.Item label={"菜单分组"} name='Group' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitAutoComplete size='small' options={option} dropdownClassName='old-theme-html' />
+                </Form.Item>
+
                 <Form.Item colon={false} label={" "}>
-                    <Button type='primary' htmlType='submit'>
-                        {" "}
-                        添加{" "}
-                    </Button>
+                    <YakitButton type='primary' htmlType='submit'>
+                        添加
+                    </YakitButton>
                 </Form.Item>
             </Form>
         </div>
@@ -681,13 +723,13 @@ interface PluginManagementProps {
     groups?: string[]
     updateGroups?: () => any
     style?: React.CSSProperties
-
+    patternMenu: "expert" | "new"
     setScript?: (item: any) => any
     deletePluginLocal?: (i: YakScript) => void
 }
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
-    const {script, groups, style} = props
+    const {script, groups, style, patternMenu} = props
     const update = props?.update ? props.update : () => {}
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
 
@@ -716,7 +758,8 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                                                 ipcRenderer
                                                     .invoke("RemoveFromMenu", {
                                                         YakScriptId: script?.Id,
-                                                        Group: element
+                                                        Group: element,
+                                                        Mode: patternMenu
                                                     })
                                                     .then(() => {
                                                         ipcRenderer.invoke("change-main-menu")
