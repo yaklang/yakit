@@ -73,6 +73,8 @@ function NewApp() {
     const [isShowHome, setShowHome] = useState<boolean>(true)
     /** 添加或选择页面 */
     const [selectItemPage,setSelectItemPage] = useState<Route>()
+    /** 私有域是否设置成功 */
+    const [onlineProfileStatus,setOnlineProfileStatus] = useState<boolean>(false)
 
     /** 是否展示用户协议 */
     useEffect(() => {
@@ -139,6 +141,10 @@ function NewApp() {
                     .catch((e) => {
                         failed(`获取失败:${e}`)
                     })
+                    .finally(() => {
+                        setOnlineProfileStatus(true)
+                    })
+                    
             } else {
                 const values = JSON.parse(setting)
                 ipcRenderer
@@ -151,7 +157,10 @@ function NewApp() {
                         refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
-                    .finally(() => setTimeout(() => setLoading(false), 300))
+                    .finally(() => {
+                        setOnlineProfileStatus(true)
+                        setTimeout(() => setLoading(false), 300)
+                    })
             }
         })
     }
@@ -309,7 +318,7 @@ function NewApp() {
                     <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
                     <>
-                    {isShowHome&&<NewHome setOpenPage={setOpenPage}/>}
+                    {isShowHome&&onlineProfileStatus&&<NewHome setOpenPage={setOpenPage}/>}
                     <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} setSelectItemPage={setSelectItemPage} isShowHome={isShowHome}/>
                     </>
                 )}
