@@ -1635,6 +1635,7 @@ message GroupNames {
 
 message QueryGroupsByYakScriptIdRequest {
   int64 YakScriptId = 1;
+  string Mode = 2;
 }
 
 message MenuItem {
