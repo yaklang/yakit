@@ -9,7 +9,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {Interaction, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend, getTheme} from "bizcharts"
 import {useStore, YakitStoreParams} from "@/store"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn,useSize} from "ahooks"
+import {useGetState, useMemoizedFn, useSize} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
@@ -40,6 +40,16 @@ import {
 } from "@/pages/customizeMenu/icon/homeIcon"
 import CountUp from "react-countup"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+// echarts
+// import * as echarts from "echarts/core"
+// import {TooltipComponent, TooltipComponentOption, LegendComponent, LegendComponentOption} from "echarts/components"
+// import {PieChart, PieSeriesOption} from "echarts/charts"
+// import {LabelLayout} from "echarts/features"
+// import {CanvasRenderer} from "echarts/renderers"
+// echarts.use([TooltipComponent, LegendComponent, PieChart, CanvasRenderer, LabelLayout])
+// type EChartsOption = echarts.ComposeOption<TooltipComponentOption | LegendComponentOption | PieSeriesOption>
+
+import * as echarts from "echarts"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 
@@ -127,18 +137,139 @@ interface chartListProps {
     type: string
     value: number
 }
-const PieChart: React.FC<PieChartProps> = (props) => {
+interface echartListProps{
+    name: string
+    value: number
+}
+const PieEcharts: React.FC<PieChartProps> = (props) => {
     const {goStoreRoute} = props
-    const [chartList, setChartList] = useState<chartListProps[]>([])
-    const [chartCount, setChartCount] = useState<any>({})
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     // 全局登录状态
     const {userInfo} = useStore()
+    const [_, setChartList,getChartList] = useGetState<echartListProps[]>([])
+    const colorList = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
+    const optionRef = useRef<any>({
+        color: colorList,
+        title: {
+            show: false,
+            text: 0,
+            subtext: "插件总数",
+            top: "38%",
+            left: "23%",
+            textAlign: "center",
+            itemGap: 0,
+            // triggerEvent: true,
+            textStyle: {
+                fontSize: 20,
+                color: "#31343F",
+                lineHeight: 32,
+                fontWeight: 600,
+                fontFamily: "PingFang HK"
+            },
+            subtextStyle: {
+                color: "#85899E",
+                fontSize: 12,
+                lineHeight: 16
+            }
+        },
+        tooltip: {
+            trigger: "item"
+        },
+        legend: {
+            show: false,
+            top: "middle",
+            right: "2%",
+            type: "scroll",
+            orient: "vertical",
+            icon: "circle",
+            padding: [0, 0, 0, 0],
+            // 点的大小位置
+            itemWidth: 13,
+            itemHeight: 7,
+            itemStyle: {
+                borderWidth: 0
+                // borderColor:"#0ba5ff"
+            },
+            formatter: (name) => {
+                const itemValue = getChartList().filter((item) => item.name === name)[0].value
+                return "{name|" + name + "} " + "{value|" + itemValue + "}"
+            },
+            textStyle: {
+                rich: {
+                    name: {
+                        color: "#85899E",
+                        fontSize: 12,
+                        width: 100
+                    },
+                    value: {
+                        color: "#31343F",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        width: 40,
+                        align: "right"
+                    }
+                }
+            }
+        },
 
-    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-
+        series: [
+            {
+                // 空心饼图内外径
+                radius: ["60%", "77%"],
+                // 饼图上下左右位置
+                center: ["24%", "50%"],
+                itemStyle: {
+                    borderColor: "#F0F1F3",
+                    borderWidth: 4
+                },
+                avoidLabelOverlap: false,
+                type: "pie",
+                label: {
+                    show: false,
+                    color: "#eeeeee",
+                    fontSize: 14
+                },
+                labelLine: {
+                    show: false
+                },
+                data: []
+            }
+        ]
+    })
+    const echartsRef = useRef<any>()
     useEffect(() => {
+        if (width >= 1380) {
+            optionRef.current.legend.show = true
+            optionRef.current.series[0].center = ["24%", "50%"]
+            optionRef.current.title.left = "23%"
+            setEcharts(optionRef.current)
+        } else {
+            optionRef.current.legend.show = false
+            optionRef.current.series[0].center = ["50%", "50%"]
+            optionRef.current.title.left = "48%"
+            setEcharts(optionRef.current)
+        }
+        echartsRef.current && echartsRef.current.resize()
+    }, [width])
+
+    useEffect(()=>{
         getPluginSearch()
-    }, [])
+        //先解绑事件，防止事件重复触发
+        echartsRef.current.off('click')
+        echartsRef.current.off('legendselectchanged')
+        echartsRef.current.on("click", function (params) {
+            // console.log("点击", params)
+            onSendToTab(params.name ?? "")
+        })
+        echartsRef.current.on("legendselectchanged", (e) => {
+            // console.log("点击了", e) // 如果不加off事件，就会叠加触发
+            onSendToTab(e.name ?? "")
+            echartsRef.current.setOption({
+                legend: {selected: {[e.name]: true}}
+            })
+        })
+    },[])
+
     const getPluginSearch = useMemoizedFn(() => {
         let url = "plugin/search/unlogged"
         if (userInfo.isLogin) {
@@ -153,32 +284,26 @@ const PieChart: React.FC<PieChartProps> = (props) => {
         })
             .then((res: API.YakitSearch) => {
                 if (res.plugin_type) {
-                    const chartList = res.plugin_type.map((item) => ({
-                        type: PluginType[item.value] ?? "未识别",
+                    const chartListCache = res.plugin_type.map((item) => ({
+                        name: PluginType[item.value] ?? "未识别",
                         value: item.count,
-                        id: item.value
                     }))
-                    setChartList(chartList)
-                    const colorArr = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
-                    let obj = {}
-                    // 背景颜色赋值
-                    chartList
-                        .sort((a, b) => b.value - a.value)
-                        .forEach((item, index) => {
-                            obj[item.type] = colorArr[index]
-                        })
-                    setChartCount(obj)
+                    // console.log("chartListCache",chartListCache,res.plugin_type)
+                    // @ts-ignore
+                    optionRef.current.series[0].data = chartListCache
+                    optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
+                    optionRef.current.title.show = true
+                    setChartList(chartListCache)
+                    setEcharts(optionRef.current)
                 }
             })
             .catch((err) => {
                 failed("线上统计数据获取失败:" + err)
             })
             .finally(() => {
-                setTimeout(() => {}, 200)
             })
     })
-    const g2Ref = useRef<any>()
-    // 发送插件仓库
+
     const onSendToTab = useMemoizedFn((pluginType: string) => {
         let plugin_type: string = ""
         for (let key in PluginType) {
@@ -188,133 +313,203 @@ const PieChart: React.FC<PieChartProps> = (props) => {
         }
         goStoreRoute({plugin_type})
     })
-    console.log("width",width)
-    return (
-        <>
-            {chartList.length > 0 && (
-                <Chart
-                    padding={[0, width>1200?160:0, 0, 0]}
-                    data={chartList || []}
-                    autoFit
-                    radius={1.0}
-                    angleField='value'
-                    colorField='type'
-                    label={{visible: false}}
-                    onClick={(ev) => {
-                        // console.log("g2", g2Ref.current)
-                        const data = ev.data
-                        // console.log("data", data)
-                        if (data) {
-                            onSendToTab(data.data.type ?? "")
-                        }
-                    }}
-                    onGetG2Instance={(g2chart) => {
-                        g2Ref.current = g2chart
-                        // Legend不允许点击
-                        g2chart.removeInteraction("legend-filter")
-                    }}
-                >
-                    <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
-                    <Tooltip showTitle={false} />
-                    <Axis visible={false} />
-                    <Legend
-                        position='right'
-                        visible={width>1200?true:false}
-                        offsetX={width>1200?-70:0}
-                        itemHeight={width>1200?18:0}
-                        itemWidth={width>1200?130:0}
-                        onChange={(e, chart) => {
-                            // console.log("e", e)
-                            if (e) {
-                                onSendToTab(e.item.value ?? "")
-                            }
-                        }}
-                        itemName={{
-                            formatter: (text: string) => `${text}`,
-                            style: {
-                                fill: "#85899E",
-                                cursor: "pointer"
-                            }
-                        }}
-                        itemValue={{
-                            formatter: (_text: string, _item: any, index: number) => {
-                                return `${chartList[index].value}`
-                            },
-                            // alignRight 需搭配 itemWidth 使用
-                            alignRight: true,
-                            style: {
-                                fill: "#31343F",
-                                fontWeight: 500,
-                                cursor: "pointer"
-                            }
-                        }}
-                    />
-                    <Annotation.Text
-                        position={["50%", "46%"]}
-                        content={chartList.map((item) => item.value).reduce((a, b) => a + b, 0)}
-                        style={{
-                            lineHeight: 40,
-                            fontSize: 20,
-                            fontWeight: 600,
-                            fill: "#31343F",
-                            textAlign: "center"
-                        }}
-                    />
-                    <Annotation.Text
-                        position={["50%", "57%"]}
-                        content='插件总数'
-                        style={{
-                            lineHeight: 20,
-                            fontSize: 12,
-                            fill: "#85899E",
-                            textAlign: "center"
-                        }}
-                    />
-                    <Interaction type='element-active' />
-                    <Interval
-                        position='value'
-                        adjust='stack'
-                        color={[
-                            "type",
-                            (xType) => {
-                                return chartCount[xType] ?? "#FFB660"
-                                // if (xType === 'YAK 插件') {
-                                //   return '#FFB660';
-                                // }else if(xType === 'MITM 插件'){
-                                //   return '#4A94F8';
-                                // }else if(xType === '数据包扫描'){
-                                //   return '#5F69DD';
-                                // }else if(xType === '端口扫描插件'){
-                                //   return '#56C991';
-                                // }else if(xType === 'CODEC插件'){
-                                //   return '#8863F7';
-                                // }else if(xType === 'YAML POC'){
-                                //   return '#35D8EE';
-                                // }else{
-                                //     return "#FFB660"
-                                // }
-                            }
-                        ]}
-                        style={{
-                            lineWidth: 1,
-                            // stroke: "#F0F1F3",
-                            stroke: "#fff",
-                            cursor: "pointer"
-                        }}
-                        state={{
-                            // active: {
-                            //     style: (t) => {
-                            //         const res = getTheme().geometries.interval.rect.selected.style(t)
-                            //         return {...res}
-                            //     }
-                            // }
-                        }}
-                    />
-                </Chart>
-            )}
-        </>
-    )
+
+    const setEcharts = (options) => {
+        const chartDom = document.getElementById("main-home-pie")!
+        echartsRef.current = echarts.init(chartDom)
+        options && echartsRef.current.setOption(options)
+    }
+    return <div id='main-home-pie' style={{width: "100%", height: "100%"}}></div>
 }
+
+// const PieEcharts: React.FC<PieChartProps> = (props) => {
+//     const {goStoreRoute} = props
+//     const [chartList, setChartList] = useState<chartListProps[]>([])
+//     const [chartCount, setChartCount] = useState<any>({})
+//     // 全局登录状态
+//     const {userInfo} = useStore()
+
+//     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+
+//     useEffect(() => {
+//         getPluginSearch()
+//     }, [])
+//     const getPluginSearch = useMemoizedFn(() => {
+//         let url = "plugin/search/unlogged"
+//         if (userInfo.isLogin) {
+//             url = "plugin/search"
+//         }
+//         NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
+//             method: "get",
+//             url,
+//             params: {
+//                 bind_me: false
+//             }
+//         })
+//             .then((res: API.YakitSearch) => {
+//                 if (res.plugin_type) {
+//                     const chartList = res.plugin_type.map((item) => ({
+//                         type: PluginType[item.value] ?? "未识别",
+//                         value: item.count,
+//                         id: item.value
+//                     }))
+//                     setChartList(chartList)
+//                     const colorArr = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
+//                     let obj = {}
+//                     // 背景颜色赋值
+//                     chartList
+//                         .sort((a, b) => b.value - a.value)
+//                         .forEach((item, index) => {
+//                             obj[item.type] = colorArr[index]
+//                         })
+//                     setChartCount(obj)
+//                 }
+//             })
+//             .catch((err) => {
+//                 failed("线上统计数据获取失败:" + err)
+//             })
+//             .finally(() => {
+//                 setTimeout(() => {}, 200)
+//             })
+//     })
+//     const g2Ref = useRef<any>()
+//     // 发送插件仓库
+//     const onSendToTab = useMemoizedFn((pluginType: string) => {
+//         let plugin_type: string = ""
+//         for (let key in PluginType) {
+//             if (PluginType[key] === pluginType) {
+//                 plugin_type = key
+//             }
+//         }
+//         goStoreRoute({plugin_type})
+//     })
+//     console.log("width",width)
+//     return (
+//         <>
+//             {chartList.length > 0 && (
+//                 <Chart
+//                     padding={[0, width>1200?160:0, 0, 0]}
+//                     data={chartList || []}
+//                     autoFit
+//                     radius={1.0}
+//                     angleField='value'
+//                     colorField='type'
+//                     label={{visible: false}}
+//                     onClick={(ev) => {
+//                         // console.log("g2", g2Ref.current)
+//                         const data = ev.data
+//                         // console.log("data", data)
+//                         if (data) {
+//                             onSendToTab(data.data.type ?? "")
+//                         }
+//                     }}
+//                     onGetG2Instance={(g2chart) => {
+//                         g2Ref.current = g2chart
+//                         // Legend不允许点击
+//                         g2chart.removeInteraction("legend-filter")
+//                     }}
+//                 >
+//                     <Coordinate type='theta' radius={0.65} innerRadius={0.77} />
+//                     <Tooltip showTitle={false} />
+//                     <Axis visible={false} />
+//                     <Legend
+//                         position='right'
+//                         visible={width>1200?true:false}
+//                         offsetX={width>1200?-70:0}
+//                         itemHeight={width>1200?18:0}
+//                         itemWidth={width>1200?130:0}
+//                         onChange={(e, chart) => {
+//                             // console.log("e", e)
+//                             if (e) {
+//                                 onSendToTab(e.item.value ?? "")
+//                             }
+//                         }}
+//                         itemName={{
+//                             formatter: (text: string) => `${text}`,
+//                             style: {
+//                                 fill: "#85899E",
+//                                 cursor: "pointer"
+//                             }
+//                         }}
+//                         itemValue={{
+//                             formatter: (_text: string, _item: any, index: number) => {
+//                                 return `${chartList[index].value}`
+//                             },
+//                             // alignRight 需搭配 itemWidth 使用
+//                             alignRight: true,
+//                             style: {
+//                                 fill: "#31343F",
+//                                 fontWeight: 500,
+//                                 cursor: "pointer"
+//                             }
+//                         }}
+//                     />
+//                     <Annotation.Text
+//                         position={["50%", "46%"]}
+//                         content={chartList.map((item) => item.value).reduce((a, b) => a + b, 0)}
+//                         style={{
+//                             lineHeight: 40,
+//                             fontSize: 20,
+//                             fontWeight: 600,
+//                             fill: "#31343F",
+//                             textAlign: "center"
+//                         }}
+//                     />
+//                     <Annotation.Text
+//                         position={["50%", "57%"]}
+//                         content='插件总数'
+//                         style={{
+//                             lineHeight: 20,
+//                             fontSize: 12,
+//                             fill: "#85899E",
+//                             textAlign: "center"
+//                         }}
+//                     />
+//                     <Interaction type='element-active' />
+//                     <Interval
+//                         position='value'
+//                         adjust='stack'
+//                         color={[
+//                             "type",
+//                             (xType) => {
+//                                 return chartCount[xType] ?? "#FFB660"
+//                                 // if (xType === 'YAK 插件') {
+//                                 //   return '#FFB660';
+//                                 // }else if(xType === 'MITM 插件'){
+//                                 //   return '#4A94F8';
+//                                 // }else if(xType === '数据包扫描'){
+//                                 //   return '#5F69DD';
+//                                 // }else if(xType === '端口扫描插件'){
+//                                 //   return '#56C991';
+//                                 // }else if(xType === 'CODEC插件'){
+//                                 //   return '#8863F7';
+//                                 // }else if(xType === 'YAML POC'){
+//                                 //   return '#35D8EE';
+//                                 // }else{
+//                                 //     return "#FFB660"
+//                                 // }
+//                             }
+//                         ]}
+//                         style={{
+//                             lineWidth: 1,
+//                             // stroke: "#F0F1F3",
+//                             stroke: "#fff",
+//                             cursor: "pointer"
+//                         }}
+//                         state={{
+//                             // active: {
+//                             //     style: (t) => {
+//                             //         const res = getTheme().geometries.interval.rect.selected.style(t)
+//                             //         return {...res}
+//                             //     }
+//                             // }
+//                         }}
+//                     />
+//                 </Chart>
+//             )}
+//         </>
+//     )
+// }
 
 interface PlugInShopProps {
     setOpenPage: (v: any) => void
@@ -439,7 +634,10 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                 >
                                     <div className={styles["add-title"]}>今日新增数</div>
                                     <div className={styles["add-content"]}>
-                                        <span style={{cursor: "pointer"}} onClick={()=>goStoreRoute({time_search:"day"})}>
+                                        <span
+                                            style={{cursor: "pointer"}}
+                                            onClick={() => goStoreRoute({time_search: "day"})}
+                                        >
                                             <CountUp
                                                 start={0}
                                                 end={countAddObj.day_incre_num}
@@ -459,7 +657,10 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                 >
                                     <div className={styles["add-title"]}>本周新增数</div>
                                     <div className={styles["add-content"]}>
-                                        <span style={{cursor: "pointer"}} onClick={()=>goStoreRoute({time_search:"week"})}>
+                                        <span
+                                            style={{cursor: "pointer"}}
+                                            onClick={() => goStoreRoute({time_search: "week"})}
+                                        >
                                             <CountUp
                                                 start={0}
                                                 end={countAddObj.week_incre_num}
@@ -482,7 +683,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                     ref={listHeightRef}
                 >
                     {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                    <PieChart goStoreRoute={goStoreRoute} />
+                    <PieEcharts goStoreRoute={goStoreRoute} />
                 </div>
             </div>
             <div className={styles["show-bottom-box"]}>
