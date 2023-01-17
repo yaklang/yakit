@@ -115,7 +115,9 @@ const RouteList: React.FC<RouteListProps> = (props) => {
     return (
         <div style={{height: "100%"}} className={styles["list-box"]}>
             <RouteTitle title={data.label} />
-            <Row className={styles["list-content"]}>
+            <Row className={classNames(styles["list-content"],{
+                [styles["set-ant-row"]]: colLimit===1,
+            })}>
                 {data.subMenuData.map((item) => (
                     <Col
                         span={span}

@@ -104,7 +104,9 @@
     flex: 1;
     position: relative;
 }
-
+.set-ant-row{
+    flex-flow: column;
+}
 .list-content-col2 {
     height: 50%;
 }
