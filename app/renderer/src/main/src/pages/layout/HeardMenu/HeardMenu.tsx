@@ -61,6 +61,8 @@ import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfi
 import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
 import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -169,6 +171,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      */
     const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
         let oldMenuData: MenuItemGroup[] = []
+        setLoading(true)
         // 获取老版的菜单数据，兼容
         ipcRenderer
             .invoke("QueryAllMenuItem", {Mode: ""})
@@ -178,7 +181,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("QueryAllMenuItem", {Mode: menuMode})
                     .then((rsp: MenuByGroupProps) => {
-                        console.log("rsp.Groups", menuMode, rsp.Groups)
                         if (rsp.Groups.length === 0) {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
@@ -199,10 +201,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     })
                     .catch((err) => {
                         failed("获取菜单失败：" + err)
+                        setTimeout(() => setLoading(false), 300)
                     })
             })
-            .catch((e: any) => failed("Update Menu Item Failed"))
-            .finally(() => setTimeout(() => setLoading(false), 300))
+            .catch((e: any) => {
+                failed("获取菜单失败：" + e)
+                setTimeout(() => setLoading(false), 300)
+            })
     })
     const onInitMenuData = useMemoizedFn((menuMode: string, oldMenuData: MenuItemGroup[]) => {
         const oldMenuDataLocal: MenuDataProps[] = getMenuListToLocal(oldMenuData)
@@ -237,13 +242,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
         onDownPluginByScriptNames(menuList, noDownPluginScriptNames, menuMode)
     })
+    /** 登录用户信息 */
+    const {userInfo} = useStore()
     /**
      * @description: 通过名字下载插件
      */
     const onDownPluginByScriptNames = useMemoizedFn(
         (listMenu: MenuDataProps[], noDownPluginScriptNames: string[], menuMode: string, callBack?: () => void) => {
             ipcRenderer
-                .invoke("DownloadOnlinePluginByScriptNames", {ScriptNames: noDownPluginScriptNames})
+                .invoke("DownloadOnlinePluginByScriptNames", {
+                    ScriptNames: noDownPluginScriptNames,
+                    Token: userInfo.token
+                })
                 .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
                     if (rsp.Data.length > 0) {
                         const newMenuData: MenuDataProps[] = []
@@ -290,8 +300,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         ipcRenderer
             .invoke("AddMenus", {Data: menuLists})
             .then((rsp) => {
-                console.log("data", data)
-
                 setRouteMenu(data)
                 if (!menuId && data.length > 0) {
                     setSubMenuData(data[0].subMenuData || [])
@@ -520,7 +528,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 const noDownPluginScriptNames: string[] = [menuItem.yakScripName || ""]
                 onDownPluginByScriptNames(routeMenu, noDownPluginScriptNames, patternMenu, () => {
                     const itemMenu = subMenuData.find((i) => i.yakScripName === menuItem.yakScripName)
-                    console.log("itemMenu", itemMenu)
                     if (!itemMenu) return
                     onTabClick(`${itemMenu.key}###${itemMenu.yakScripName || ""}***1`)
                     m.destroy()
@@ -633,7 +640,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     </div>
                                 ))}
                                 <Divider style={{margin: "6px 0"}} />
-                                <div>
+                                <YakitSpin spinning={loading} tip='Loading...' size='small'>
                                     <div
                                         className={classNames(style["customize-item"])}
                                         onClick={() =>
@@ -659,7 +666,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     >
                                         导入 JSON 配置
                                     </div>
-                                </div>
+                                </YakitSpin>
                             </>
                         }
                         onVisibleChange={(e) => {
@@ -706,14 +713,15 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         style["heard-menu-item-label"]
                                     )}
                                 >
-                                    {item.label}
+                                    {/* {item.label} */}
+                                    {item.label === "UserDefined" ? "社区组件" : item.label}
                                 </div>
                             )
                             return (
                                 <Tabs.TabPane
                                     tab={
                                         <div className={style["sub-menu-expand"]}>
-                                            {(item.key && (
+                                            {(item.key && (item.key as string) !== "plugin:0" && (
                                                 <div
                                                     className={style["sub-menu-expand-item"]}
                                                     style={{paddingLeft: index === 0 ? 0 : ""}}
@@ -877,9 +885,15 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                         <span className={style["heard-sub-menu-item-icon"]}>{subMenuItem.icon}</span>
                         <span className={style["heard-sub-menu-item-hoverIcon"]}>{subMenuItem.hoverIcon}</span>
                     </>
-                    {(subMenuItem.key && <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>) || (
+                    {(subMenuItem.key && (
+                        <div className={style["heard-sub-menu-label"]}>
+                            {subMenuItem.label === "UserDefined" ? "社区组件" : subMenuItem.label}
+                        </div>
+                    )) || (
                         <Tooltip title='插件丢失，点击下载' placement='bottom' zIndex={9999}>
-                            <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
+                            <div className={style["heard-sub-menu-label"]}>
+                                {subMenuItem.label === "UserDefined" ? "社区组件" : subMenuItem.label}
+                            </div>
                         </Tooltip>
                     )}
                 </div>
@@ -903,7 +917,6 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 label: subItem.label
             })) || []
     }))
-    console.log("newMenuData", newMenuData)
 
     const menu = (
         <YakitMenu
