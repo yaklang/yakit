@@ -158,7 +158,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             left: "23%",
             textAlign: "center",
             itemGap: 0,
-            // triggerEvent: true,
+            triggerEvent: true,
             textStyle: {
                 fontSize: 20,
                 color: "#31343F",
@@ -875,6 +875,15 @@ export const getScriptIcon = (name: string) => {
     }
 }
 
+export const getDescribe = (name:string) => {
+    if(name==="综合目录扫描与爆破"){
+        return "带有内置字典的综合目录扫描与爆破"
+    }
+    else{
+        return "通过爬虫可快速了解网站的整体架构"
+    }
+}
+
 export interface NewHomeProps {
     setOpenPage: (v: any) => void
 }
@@ -888,35 +897,6 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
     // 获取自定义菜单
     const getCustomizeMenus = () => {
         ipcRenderer
-            .invoke("GetAllMenuItem", {})
-            .then((data: {Groups: MenuItemGroup[]}) => {
-                const newCustomMenu: DataItem[] = []
-                data.Groups.forEach((menuGroupItem, index) => {
-                    menuGroupItem.Items.map((item) => {
-                        const key =
-                            item.YakScriptId > 0
-                                ? `plugin:${item.Group}:${item.YakScriptId}`
-                                : `batch:${item.Group}:${item.Verbose}:${item.MenuItemId}`
-                        newCustomMenu.push({
-                            id: key,
-                            label: item.Verbose,
-                            key: key as Route,
-                            icon: getScriptIcon(item.Verbose),
-                            describe: "通过爬虫可快速了解网站的整体架构"
-                        })
-                    })
-                })
-                let itemArr = newCustomMenu.filter((item) => item.label === "基础爬虫")
-                if (itemArr.length > 0) {
-                    const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
-                    deepList[0].subMenuData.push(itemArr[0])
-                    setNewHomeData(deepList)
-                }
-            })
-            .catch((e: any) => failed("Update Menu Item Failed"))
-            .finally(() => setTimeout(() => {}, 300))
-
-        ipcRenderer
             .invoke("QueryYakScript", {
                 Pagination: genDefaultPagination(1000),
                 IsGeneralModule: true,
@@ -929,12 +909,14 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                         icon: getScriptIcon(i.ScriptName),
                         key: `plugin:${i.Id}` as Route,
                         label: i.ScriptName,
-                        describe: "带有内置字典的综合目录扫描与爆破"
+                        describe: getDescribe(i.ScriptName)
                     }
-                }).filter((item) => item.label === "综合目录扫描与爆破")
+                }).filter((item) => item.label === "综合目录扫描与爆破"||item.label ==="基础爬虫")
                 if (itemArr.length > 0) {
                     const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
-                    deepList[0].subMenuData.push(itemArr[0])
+                    itemArr.map((itemIn)=>{
+                        deepList[0].subMenuData.push(itemIn)
+                    })
                     setNewHomeData(deepList)
                 }
             })
