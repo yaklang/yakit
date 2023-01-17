@@ -126,7 +126,7 @@ export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
             menuLists.push({
                 key: undefined,
                 id: `${index + 1}`,
-                label: item.Group,
+                label: item.Group==='UserDefined'?'社区插件':item.Group,
                 subMenuData: []
             })
         }
@@ -200,14 +200,16 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     /**
      * @description: 删除一级菜单
      */
-    const onRemoveFirstMenu = useMemoizedFn(() => {
+    const onRemoveFirstMenu = useMemoizedFn((currentFirstMenu?: MenuDataProps) => {
         if (!currentFirstMenu) return
         const index = menuData.findIndex((ele) => ele.id === currentFirstMenu?.id)
         if (index === -1) return
         menuData.splice(index, 1)
         setCurrentFirstMenu(undefined)
         setMenuData([...menuData])
+        setSubMenuData([])
     })
+
     /**
      * @description: 修改一级菜单以及当前选中的菜单项
      */
@@ -338,9 +340,22 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
      * @description: 保存至引擎
      */
     const onSaveLocal = useMemoizedFn(() => {
-        // setEmptyMenuLength(0)
+        let firstStageMenu = menuData.map((ele) => ele.label).sort()
+        let repeatMenu = ""
+        for (let i = 0; i < firstStageMenu.length; i++) {
+            if (firstStageMenu[i] == firstStageMenu[i + 1]) {
+                repeatMenu = firstStageMenu[i]
+                break
+            }
+        }
+        if (repeatMenu) {
+            failed(`【${repeatMenu}】名称重复，请修改`)
+            return
+        }
         setAddLoading(true)
         const menuLists = getMenuListBySort(menuData, patternMenu)
+        console.log('menuLists',menuLists);
+        
         ipcRenderer
             .invoke("DeleteAllMenu", {Mode: patternMenu})
             .then(() => {
@@ -436,11 +451,14 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 <div className={style["left-heard"]}>
                     <div className={style["display-flex"]}>
                         <ArrowLeftIcon className={style["content-icon"]} onClick={() => onTip()} />
-                        <div className={style["left-title"]}>自定义菜单</div>
+                        <div className={style["left-title"]}>
+                            {patternMenu === "expert" ? "编辑专家模式" : "编辑新手模式"}
+                        </div>
                         <div className={style["left-number"]}>{menuData.length}/50</div>
                     </div>
-                    <div onClick={() => onAddFirstMenu()}>
-                        <PlusIcon className={style["content-icon"]} />
+                    <div>
+                        <TrashIcon className={style["remove-icon"]} />
+                        <PlusIcon className={style["content-icon"]} onClick={() => onAddFirstMenu()} />
                     </div>
                 </div>
                 <div className={style["left-content"]}>
@@ -449,6 +467,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         setMenuData={setMenuData}
                         currentFirstMenu={currentFirstMenu}
                         onSelect={onSelect}
+                        onRemove={onRemoveFirstMenu}
                     />
                 </div>
                 <div className={style["left-footer"]}>
@@ -467,7 +486,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         currentFirstMenu={currentFirstMenu}
                         editCurrentFirstMenu={editCurrentFirstMenu}
                         subMenuData={subMenuData}
-                        onRemoveFirstMenu={onRemoveFirstMenu}
+                        onRemoveFirstMenu={() => onRemoveFirstMenu(currentFirstMenu)}
                         onRemoveSecondMenu={onRemoveSecondMenu}
                         onEdit={onEditSecondMenu}
                     />
@@ -558,7 +577,7 @@ const getItemStyle = (isDragging, draggableStyle) => ({
 })
 
 const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
-    const {menuData, setMenuData, currentFirstMenu, onSelect} = props
+    const {menuData, setMenuData, currentFirstMenu, onSelect, onRemove} = props
 
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable1")
 
@@ -609,6 +628,7 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
                                                 isDragging={snapshot.isDragging}
                                                 onSelect={onSelect}
                                                 destinationDrag={destinationDrag}
+                                                onRemove={onRemove}
                                             />
                                         </div>
                                     )}
@@ -624,7 +644,7 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
 })
 
 const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
-    const {menuItem, currentMenuItem, isDragging, onSelect, destinationDrag} = props
+    const {menuItem, currentMenuItem, isDragging, onSelect, destinationDrag, onRemove} = props
     return (
         <div
             className={classNames(style["first-menu-item"], {
@@ -644,6 +664,13 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
                 </div>
             </div>
             <div className={style["first-sub-menu-number"]}>{menuItem.subMenuData?.length || 0}</div>
+            <TrashIcon
+                className={style["trash-icon"]}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    onRemove(menuItem)
+                }}
+            />
             {!destinationDrag && isDragging && (
                 <div className={style["first-drag-state"]}>
                     <BanIcon />
@@ -850,7 +877,7 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
                     <div {...provided.droppableProps} ref={provided.innerRef} className={style["system-function-list"]}>
                         {systemRouteMenuData.map((item, index) => {
                             const isDragDisabled =
-                                props.subMenuData.findIndex((i) => i.yakScripName || i.label === item.label) !== -1
+                                props.subMenuData.findIndex((i) => (i.yakScripName || i.label) === item.label) !== -1
                             return (
                                 <Draggable
                                     key={item.id}

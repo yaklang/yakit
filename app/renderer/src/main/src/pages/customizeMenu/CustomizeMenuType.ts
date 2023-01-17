@@ -7,13 +7,18 @@ export interface CustomizeMenuProps {
 
 /**
  * @description: 一级菜单项
- * @property {MenuDataProps}  menuData 菜单数据
+ * @property {MenuDataProps}  menuData 菜单数据 
+ * @property {(s: MenuDataProps) => void} setMenuData  
+ * @property {MenuDataProps} currentFirstMenu  
+ * @property {(s: MenuDataProps) => void}  onSelect 
+ * @property {(s: MenuDataProps) => void}  onRemove 删除该项
  */
 export interface FirstMenuProps {
     menuData: MenuDataProps[]
     setMenuData: (s: MenuDataProps[]) => void
     currentFirstMenu?: MenuDataProps
     onSelect: (s: MenuDataProps) => void
+    onRemove: (s: MenuDataProps) => void
 }
 /**
  * @description: 一级菜单项
@@ -22,6 +27,7 @@ export interface FirstMenuProps {
  * @property {boolean} isDragging 拖拽中
  * @property {(s: MenuDataProps) => void} onSelect 选中
  * @property {string}  destinationDrag 拖拽的目的地
+ * @property {(s: MenuDataProps) => void}  onRemove 删除该项
  */
 export interface FirstMenuItemProps {
     menuItem: MenuDataProps
@@ -29,6 +35,7 @@ export interface FirstMenuItemProps {
     isDragging: boolean
     onSelect: (s: MenuDataProps) => void
     destinationDrag: string
+    onRemove: (s: MenuDataProps) => void
 }
 
 /**

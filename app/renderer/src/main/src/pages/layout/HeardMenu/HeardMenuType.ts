@@ -2,7 +2,6 @@ import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
 import {MenuDataProps, Route} from "@/routes/routeSpec"
 
 export interface HeardMenuProps {
-    menuItemGroup: MenuItemGroup[]
     onRouteMenuSelect: (key: string) => void
     setRouteKeyToLabel: (r: Map<string, string>) => void
 }

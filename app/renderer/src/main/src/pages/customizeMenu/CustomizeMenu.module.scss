@@ -71,6 +71,16 @@
                 color: var(--yakit-body-text-color);
                 font-size: 12px;
             }
+
+            .remove-icon {
+                margin-right: 8px;
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--yakit-danger-color);
+                }
+            }
         }
 
         .left-content {
@@ -184,8 +194,18 @@
         padding: 12px 8px;
         user-select: none;
 
+        .trash-icon {
+            margin-left: 8px;
+            color: var(--yakit-danger-color);
+            display: none;
+        }
+
         &:hover {
             background-color: #F5F5F5;
+
+            .trash-icon {
+                display: inline-flex;
+            }
         }
     }
 

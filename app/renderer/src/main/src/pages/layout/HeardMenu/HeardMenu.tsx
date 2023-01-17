@@ -101,7 +101,7 @@ export const getScriptHoverIcon = (name: string) => {
  * @param {} onRouteMenuSelect 系统菜单选择事件
  */
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
-    const {menuItemGroup, onRouteMenuSelect, setRouteKeyToLabel} = props
+    const {onRouteMenuSelect, setRouteKeyToLabel} = props
     /**
      * @description: 融合系统菜单和自定义菜单
      */
@@ -168,58 +168,74 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      * @description: 初始化菜单
      */
     const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
-        // 如果获取的菜单数据为空，则新增默认菜单数据
+        let oldMenuData: MenuItemGroup[] = []
+        // 获取老版的菜单数据，兼容
         ipcRenderer
-            .invoke("QueryAllMenuItem", {Mode: menuMode})
-            .then((rsp: MenuByGroupProps) => {
-                console.log("rsp.Groups", rsp.Groups)
-
-                if (rsp.Groups.length === 0) {
-                    // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
-                    onInitMenuData(menuMode)
-                } else {
-                    // 有数据赋值菜单
-                    const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
-                    setRouteMenu(routerList)
-                    if ((updateSubMenu || !menuId) && routerList.length > 0) {
-                        let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
-                        if (menuId) {
-                            firstMenu = routerList.find((i) => i.id === menuId) || {id: "", label: ""}
+            .invoke("QueryAllMenuItem", {Mode: ""})
+            .then((data: {Groups: MenuItemGroup[]}) => {
+                oldMenuData = data.Groups
+                //获取模式菜单 如果获取的菜单数据为空，则新增默认菜单数据
+                ipcRenderer
+                    .invoke("QueryAllMenuItem", {Mode: menuMode})
+                    .then((rsp: MenuByGroupProps) => {
+                        console.log("rsp.Groups", menuMode, rsp.Groups)
+                        if (rsp.Groups.length === 0) {
+                            // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
+                            onInitMenuData(menuMode, oldMenuData)
+                        } else {
+                            // 有数据赋值菜单
+                            const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
+                            setRouteMenu(routerList)
+                            if ((updateSubMenu || !menuId) && routerList.length > 0) {
+                                let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
+                                if (menuId) {
+                                    firstMenu = routerList.find((i) => i.id === menuId) || {id: "", label: ""}
+                                }
+                                setSubMenuData(firstMenu.subMenuData || [])
+                                setMenuId(firstMenu.id)
+                            }
+                            setTimeout(() => setLoading(false), 300)
                         }
-                        setSubMenuData(firstMenu.subMenuData || [])
-                        setMenuId(firstMenu.id)
-                    }
-                    setTimeout(() => setLoading(false), 300)
-                }
+                    })
+                    .catch((err) => {
+                        failed("获取菜单失败：" + err)
+                    })
             })
-            .catch((err) => {
-                failed("获取菜单失败：" + err)
-            })
+            .catch((e: any) => failed("Update Menu Item Failed"))
+            .finally(() => setTimeout(() => setLoading(false), 300))
     })
-    const onInitMenuData = useMemoizedFn((menuMode: string) => {
+    const onInitMenuData = useMemoizedFn((menuMode: string, oldMenuData: MenuItemGroup[]) => {
+        const oldMenuDataLocal: MenuDataProps[] = getMenuListToLocal(oldMenuData)
+        let menuList: MenuDataProps[] = DefaultRouteMenuData
+        if (oldMenuData.length > 0) {
+            menuList = [...oldMenuDataLocal, ...menuList].map((item, index) => {
+                item.subMenuData?.map((subItem, subIndex) => ({...subItem, id: `${index + 1}-${subIndex + 1}`}))
+                item.id = `${index + 1}`
+                return item
+            })
+        }
         const noDownPluginScriptNames: string[] = []
         // 获取没有key的菜单名称
-        let listMenu: MenuDataProps[] = DefaultRouteMenuData
+        let listMenu: MenuDataProps[] = menuList
         if (menuMode == "new") {
-            listMenu = DefaultRouteMenuData.filter((item) => item.isNovice)
+            listMenu = menuList.filter((item) => item.isNovice)
         }
         ;[...listMenu].forEach((item) => {
             if (item.subMenuData && item.subMenuData.length > 0) {
                 item.subMenuData.forEach((subItem) => {
-                    if (!subItem.key) {
+                    if (!subItem.key || (subItem.key as string) === "plugin:0") {
                         noDownPluginScriptNames.push(subItem.yakScripName || subItem.label)
                     }
                 })
             }
         })
-
         // 下载插件这个接口受网速影响，有点慢，采取先赋值菜单，然后再去下载，下载成功后再次替换菜单数据
-        setRouteMenu(listMenu)
-        if (listMenu.length > 0) {
-            setSubMenuData(listMenu[0].subMenuData || [])
-            setMenuId(listMenu[0].id)
+        setRouteMenu(menuList)
+        if (menuList.length > 0) {
+            setSubMenuData(menuList[0].subMenuData || [])
+            setMenuId(menuList[0].id)
         }
-        onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
+        onDownPluginByScriptNames(menuList, noDownPluginScriptNames, menuMode)
     })
     /**
      * @description: 通过名字下载插件
@@ -274,6 +290,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         ipcRenderer
             .invoke("AddMenus", {Data: menuLists})
             .then((rsp) => {
+                console.log("data", data)
+
                 setRouteMenu(data)
                 if (!menuId && data.length > 0) {
                     setSubMenuData(data[0].subMenuData || [])
@@ -885,11 +903,13 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 label: subItem.label
             })) || []
     }))
+    console.log("newMenuData", newMenuData)
+
     const menu = (
         <YakitMenu
             type='secondary'
+            isHint={true}
             data={newMenuData}
-            selectedKeys={[]}
             width={136}
             onSelect={({key}) => onMenuSelect(key)}
         ></YakitMenu>
@@ -904,7 +924,6 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 trigger='hover'
                 onVisibleChange={(visible) => setShow(visible)}
                 overlayClassName={classNames(style["popover"])}
-                // visible={true}
             >
                 <div
                     className={classNames(style["heard-menu-item"], style["heard-menu-item-font-weight"], {

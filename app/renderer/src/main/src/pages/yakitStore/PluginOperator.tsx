@@ -630,6 +630,7 @@ interface AddToMenuRequest {
     Group: string
     Verbose: string
     MenuSort: number
+    GroupSort: number
 }
 
 export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) => {
@@ -642,7 +643,7 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
 
     useEffect(() => {
         form.setFieldsValue({
-            Group: "",
+            Group: "社区组件",
             Verbose: props.script.ScriptName
         })
         getRemoteValue("PatternMenu").then((patternMenu) => {
@@ -675,12 +676,34 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                         failed("No Yak Modeule Selected")
                         return
                     }
-                    const subMenuData = menuData.find((ele) => ele.Group === values.Group)?.Items || []
+                    const index = menuData.findIndex((ele) => ele.Group === values.Group)
+                    // 一级排序
+                    let MenuSort = menuData.length + 1
+                    // 二级排序
+                    let GroupSort = 0
+                    if (index === -1) {
+                        if (menuData.length >= 50) {
+                            failed("最多添加50个一级菜单")
+                            return
+                        }
+                    } else {
+                        if (menuData[index].Items.length >= 50) {
+                            failed("同一个一级菜单最多添加50个二级菜单")
+                            return
+                        }
+                        MenuSort = menuData[index].MenuSort
+                        const subIndex = menuData[index].Items.findIndex((ele) => ele.Verbose === values.Verbose)
+                        GroupSort =
+                            subIndex === -1
+                                ? menuData[index].Items.length + 1
+                                : menuData[index].Items[subIndex].GroupSort || 0
+                    }
                     const prams: AddToMenuRequest = {
                         ...values,
                         YakScriptId: props.script.Id,
                         Mode: patternMenu,
-                        MenuSort: subMenuData.length + 1
+                        MenuSort,
+                        GroupSort
                     }
                     ipcRenderer
                         .invoke("AddToMenu", prams)

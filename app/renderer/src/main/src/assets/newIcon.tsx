@@ -3,7 +3,7 @@ import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 import React from "react"
 
 interface IconProps extends CustomIconComponentProps {
-    onClick: () => void
+    onClick: (e: React.MouseEvent) => void
 }
 
 const CheckCircle = () => (
