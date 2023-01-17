@@ -941,7 +941,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             // 区分新建对比页面还是别的页面请求对比的情况
             ipcRenderer.invoke("created-data-compare")
         })
-
+        if(getPageCache().length===0){
+            ipcRenderer.send("is-go-home", {isShow:true}) 
+        }
         return () => {
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
