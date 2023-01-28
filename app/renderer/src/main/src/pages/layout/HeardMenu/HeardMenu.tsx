@@ -181,6 +181,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("QueryAllMenuItem", {Mode: menuMode})
                     .then((rsp: MenuByGroupProps) => {
+                        console.log('rsp.Groups',rsp.Groups);
+                        
                         if (rsp.Groups.length === 0) {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
@@ -225,7 +227,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         if (menuMode == "new") {
             listMenu = menuList.filter((item) => item.isNovice)
         }
-        ;[...listMenu].forEach((item) => {
+        listMenu.forEach((item) => {
             if (item.subMenuData && item.subMenuData.length > 0) {
                 item.subMenuData.forEach((subItem) => {
                     if (!subItem.key || (subItem.key as string) === "plugin:0") {
@@ -235,12 +237,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             }
         })
         // 下载插件这个接口受网速影响，有点慢，采取先赋值菜单，然后再去下载，下载成功后再次替换菜单数据
-        setRouteMenu(menuList)
-        if (menuList.length > 0) {
-            setSubMenuData(menuList[0].subMenuData || [])
-            setMenuId(menuList[0].id)
+        setRouteMenu(listMenu)
+        if (listMenu.length > 0) {
+            setSubMenuData(listMenu[0].subMenuData || [])
+            setMenuId(listMenu[0].id)
         }
-        onDownPluginByScriptNames(menuList, noDownPluginScriptNames, menuMode)
+        onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
     })
     /** 登录用户信息 */
     const {userInfo} = useStore()
@@ -713,15 +715,15 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         style["heard-menu-item-label"]
                                     )}
                                 >
-                                    {/* {item.label} */}
-                                    {item.label === "UserDefined" ? "社区组件" : item.label}
+                                    {item.label === "UserDefined" ? "社区插件" : item.label}
                                 </div>
                             )
+                            const isDisable = !item.key || (item.key as string) === "plugin:0"
                             return (
                                 <Tabs.TabPane
                                     tab={
                                         <div className={style["sub-menu-expand"]}>
-                                            {(item.key && (item.key as string) !== "plugin:0" && (
+                                            {(!isDisable && (
                                                 <div
                                                     className={style["sub-menu-expand-item"]}
                                                     style={{paddingLeft: index === 0 ? 0 : ""}}
@@ -746,7 +748,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             )) || (
                                                 <div
                                                     className={classNames(style["sub-menu-expand-item"], {
-                                                        [style["sub-menu-expand-item-disable"]]: !item.key
+                                                        [style["sub-menu-expand-item-disable"]]: isDisable
                                                     })}
                                                     style={{paddingLeft: index === 0 ? 0 : ""}}
                                                     onClick={(e) => {
@@ -887,12 +889,12 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                     </>
                     {(subMenuItem.key && (
                         <div className={style["heard-sub-menu-label"]}>
-                            {subMenuItem.label === "UserDefined" ? "社区组件" : subMenuItem.label}
+                            {subMenuItem.label === "UserDefined" ? "社区插件" : subMenuItem.label}
                         </div>
                     )) || (
                         <Tooltip title='插件丢失，点击下载' placement='bottom' zIndex={9999}>
                             <div className={style["heard-sub-menu-label"]}>
-                                {subMenuItem.label === "UserDefined" ? "社区组件" : subMenuItem.label}
+                                {subMenuItem.label === "UserDefined" ? "社区插件" : subMenuItem.label}
                             </div>
                         </Tooltip>
                     )}

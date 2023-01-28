@@ -32,7 +32,7 @@ import {
 import {MenuDataProps, DefaultRouteMenuData, SystemRouteMenuData, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
-import {Button, Input, Modal, Radio, Tooltip} from "antd"
+import {Button, Input, Modal, Popconfirm, Radio, Tooltip} from "antd"
 import {useDebounceEffect, useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -40,7 +40,7 @@ import {MenuDefaultPluginIcon} from "./icon/menuIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
-import {failed} from "@/utils/notification"
+import {yakitFailed} from "@/utils/notification"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
@@ -126,7 +126,7 @@ export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
             menuLists.push({
                 key: undefined,
                 id: `${index + 1}`,
-                label: item.Group==='UserDefined'?'社区插件':item.Group,
+                label: item.Group === "UserDefined" ? "社区插件" : item.Group,
                 subMenuData: []
             })
         }
@@ -154,6 +154,15 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     const pluginLocalDataRef = useRef<YakScript[]>([]) // 本地插件列表数据
     const defaultRouteMenuDataRef = useRef<MenuDataProps[]>(DefaultRouteMenuData) // 本地插件列表数据
 
+    const onRemoveAll = useMemoizedFn(() => {
+        setMenuData([])
+        setCurrentFirstMenu(undefined)
+        setSubMenuData([])
+        setCurrentSubMenuData(undefined)
+        setEmptyMenuLength(0)
+        setSubMenuName("")
+    })
+
     useEffect(() => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             setPatternMenu(patternMenu)
@@ -172,7 +181,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 setMenuData([...list])
             })
             .catch((err) => {
-                failed("获取菜单失败：" + err)
+                yakitFailed("获取菜单失败：" + err)
             })
     })
     const onSelect = useMemoizedFn((item: MenuDataProps) => {
@@ -184,7 +193,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
      */
     const onAddFirstMenu = useMemoizedFn(() => {
         if (menuData.length >= 50) {
-            failed("最多只能设置50个")
+            yakitFailed("最多只能设置50个")
             return
         }
         const length = menuData.filter((ele) => ele.label.includes("未命名")).length
@@ -229,7 +238,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             return
         }
         if (!currentFirstMenu?.id) {
-            failed("请先选择左边一级菜单")
+            yakitFailed("请先选择左边一级菜单")
             return
         }
         if (result.source.droppableId === "droppable2" && result.destination.droppableId === "droppable2") {
@@ -238,7 +247,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             updateData(subMenuList)
         }
         if (subMenuData.length > 50) {
-            failed("最多只能设置50个")
+            yakitFailed("最多只能设置50个")
             return
         }
         if (result.source.droppableId === "droppable3" && result.destination.droppableId === "droppable2") {
@@ -299,11 +308,11 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     ).run
     const onAddMenuData = useMemoizedFn((item: MenuDataProps) => {
         if (!currentFirstMenu?.id) {
-            failed("请先选择左边一级菜单")
+            yakitFailed("请先选择左边一级菜单")
             return
         }
         if (subMenuData.length > 50) {
-            failed("最多只能设置50个")
+            yakitFailed("最多只能设置50个")
             return
         }
 
@@ -349,13 +358,12 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             }
         }
         if (repeatMenu) {
-            failed(`【${repeatMenu}】名称重复，请修改`)
+            yakitFailed(`【${repeatMenu}】名称重复，请修改`)
             return
         }
         setAddLoading(true)
         const menuLists = getMenuListBySort(menuData, patternMenu)
-        console.log('menuLists',menuLists);
-        
+
         ipcRenderer
             .invoke("DeleteAllMenu", {Mode: patternMenu})
             .then(() => {
@@ -366,7 +374,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         ipcRenderer.invoke("change-main-menu")
                     })
                     .catch((err) => {
-                        failed("保存菜单失败：" + err)
+                        yakitFailed("保存菜单失败：" + err)
                     })
                     .finally(() => {
                         setTimeout(() => {
@@ -375,7 +383,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                     })
             })
             .catch((e: any) => {
-                failed(`删除菜单失败:${e}`)
+                yakitFailed(`删除菜单失败:${e}`)
             })
     })
     const onTip = useMemoizedFn(() => {
@@ -445,6 +453,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             setEmptyMenuLength(length)
         }
     })
+
     return (
         <div className={style["content"]}>
             <div className={style["left"]}>
@@ -457,7 +466,14 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         <div className={style["left-number"]}>{menuData.length}/50</div>
                     </div>
                     <div>
-                        <TrashIcon className={style["remove-icon"]} />
+                        {/* <Popconfirm
+                            title='确定清空菜单吗？'
+                            onConfirm={() => onRemoveAll()}
+                            okText='Yes'
+                            cancelText='No'
+                        >
+                            <TrashIcon className={style["remove-icon"]} />
+                        </Popconfirm> */}
                         <PlusIcon className={style["content-icon"]} onClick={() => onAddFirstMenu()} />
                     </div>
                 </div>
@@ -928,7 +944,14 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
                 </Tooltip>
             </div>
             {(isDragDisabled && <div className={style["have-add"]}>已添加</div>) || (
-                <YakitButton type='text' onClick={() => onAddMenuData(item)}>
+                <YakitButton
+                    type='text'
+                    onClick={() => {
+                        console.log("系统", item)
+
+                        onAddMenuData(item)
+                    }}
+                >
                     添加
                 </YakitButton>
             )}
@@ -977,12 +1000,10 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
         }
         if (page) newParams.Pagination.Page = page
         if (limit) newParams.Pagination.Limit = limit
-        console.log("newParams", newParams)
         setLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
-                console.log("item", item)
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)
@@ -996,7 +1017,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
                 }
             })
             .catch((e: any) => {
-                failed("Query Local Yak Script failed: " + `${e}`)
+                yakitFailed("Query Local Yak Script yakitFailed: " + `${e}`)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -1072,6 +1093,8 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
             yakScripName: plugin.ScriptName
             // yakScriptId: plugin.Id
         }
+        console.log("menuItem", menuItem)
+
         onAddMenuData(menuItem)
     })
     return (

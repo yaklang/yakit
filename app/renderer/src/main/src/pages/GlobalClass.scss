@@ -97,3 +97,45 @@
 .bg-color-grey-opacity {
     background-color: #B4BBCA;
 }
+
+// ========================== notification ==========================
+.yakit-notification-failed {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0px 4px 8px rgb(133 137 158 / 12%);
+    padding: 0;
+
+    .ant-notification-notice-content {
+        background: var(--yakit-danger-1);
+        border: 1px solid var(--yakit-danger-3);
+        border-radius: 4px;
+        padding: 16px 12px;
+    }
+
+    .ant-notification-notice-message {
+        margin-bottom: 4px;
+        margin-left: 28px;
+        font-size: 14px;
+        color: var(--yakit-header-color);
+        line-height: 20px;
+    }
+
+    .anticon.ant-notification-notice-icon-error {
+        color: var(--yakit-danger-5);
+        margin-left: 0;
+        font-size: 20px;
+        line-height: 20px;
+        height: 20px;
+    }
+
+    .ant-notification-notice-closable .ant-notification-notice-message {
+        padding-right: 32px;
+    }
+
+    .ant-notification-notice-with-icon .ant-notification-notice-description {
+        margin-left: 28px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-body-text-color);
+        padding-right: 32px;
+    }
+}

@@ -30,6 +30,7 @@
     .content-icon {
         color: var(--yakit-body-text-color);
         margin-right: 4px;
+        cursor: pointer;
 
         &:hover {
             color: var(--yakit-primary-color);
@@ -74,6 +75,7 @@
 
             .remove-icon {
                 margin-right: 8px;
+                cursor: pointer;
 
                 svg {
                     width: 16px;
