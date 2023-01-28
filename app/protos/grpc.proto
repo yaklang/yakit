@@ -392,12 +392,62 @@ service Yak {
   // Linux 和 MacOS 应该尝试 pcap 打开网卡就行
   rpc IsPrivilegedForNetRaw(Empty) returns (IsPrivilegedForNetRawResponse);
   rpc PromotePermissionForUserPcap(Empty) returns (Empty);
+
+  // 操作项目的相关接口，通过设置 ProjectDatabase
+  rpc SetCurrentProject(SetCurrentProjectRequest) returns (Empty);
+  rpc GetCurrentProject(Empty) returns (ProjectDescription);
+  rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
+  rpc NewProject(NewProjectRequest) returns (Empty);
+  rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty);
 }
 
 message IsPrivilegedForNetRawResponse {
   bool IsPrivileged = 1;
   string Advice = 2;
   string AdviceVerbose = 3;
+}
+
+message RemoveProjectRequest {
+  string ProjectName = 1;
+}
+
+message IsProjectNameValidRequest {
+  string ProjectName = 1;
+}
+
+message NewProjectRequest {
+  string ProjectName = 1;
+  string Description = 2;
+}
+
+message GetProjectsRequest {
+  string ProjectName = 1;
+  string Description = 2;
+  Paging Pagination = 3;
+}
+
+message ProjectDescription {
+  string ProjectName = 1;
+  string Description = 2;
+
+  int64 Id = 3;
+  string DatabasePath = 4;
+
+  // 创建时间
+  int64 CreatedAt = 5;
+}
+
+message GetProjectsResponse {
+  repeated ProjectDescription Projects = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+  int64 TotalPage = 4;
+}
+
+message SetCurrentProjectRequest {
+  // ProjectName
+  string ProjectName = 1;
 }
 
 message AttachCombinedOutputRequest {
@@ -608,6 +658,7 @@ message StaticAnalyzeErrorRequest {
 message YaklangCompileAndFormatRequest {
   string Code = 1;
 }
+
 
 message YaklangCompileAndFormatResponse {
   string Code = 1;
