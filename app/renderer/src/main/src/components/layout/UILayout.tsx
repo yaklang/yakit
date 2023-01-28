@@ -13,7 +13,8 @@ import {
     // YakitStoreGraySvgIcon,
     // YakitStoreThemeSvgIcon,
     YakitThemeSvgIcon,
-    YaklangInstallHintSvgIcon
+    YaklangInstallHintSvgIcon,
+    RocketSvgIcon
 } from "./icons"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
 import {FuncDomain} from "./FuncDomain"
@@ -34,7 +35,7 @@ import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/componen
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {saveAuthInfo} from "@/protected/YakRemoteAuth"
-
+import { BaseMiniConsole } from "../baseConsole/baseConsole";
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
 
@@ -311,6 +312,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const [yaklangDownload, setYaklangDownload, getYaklangDownload] = useGetState<boolean>(false)
     const [yakitDownload, setYakitDownload, getYakitDownload] = useGetState<boolean>(false)
+    const [yakitConsole, setYakitConsole, getYakitConsole] = useGetState<boolean>(false)
     /**
      * 1. 监听激活 yaklang 和 yakit 更新下载
      */
@@ -438,6 +440,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                                         </Tooltip>
                                     </div>
+                                    <div
+                                        className={styles["ui-op-btn-wrapper"]}
+                                        onClick={() =>{
+                                            setYakitConsole(true)
+                                        }}
+                                    >
+                                        <Tooltip placement='bottom' title='引擎Console'>
+                                            <RocketSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                        </Tooltip>
+                                    </div>
                                     {engineLink && (
                                         <>
                                             <FuncDomain
@@ -511,6 +523,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     >
                                         <Tooltip placement='bottom' title='官方网站'>
                                             <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                        </Tooltip>
+                                    </div>
+
+                                    <div
+                                        className={styles["ui-op-btn-wrapper"]}
+                                        onClick={() =>{
+                                            setYakitConsole(true)
+                                        }}
+                                    >
+                                        <Tooltip placement='bottom' title='引擎Console'>
+                                            <RocketSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                                         </Tooltip>
                                     </div>
                                 </div>
@@ -626,6 +649,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             >
                 <EngineLog visible={engineLink} setVisible={setShowEngineLog} />
             </div>
+
+                <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole}/>
+
         </div>
     )
 }

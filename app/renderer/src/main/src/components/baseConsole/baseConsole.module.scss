@@ -1,0 +1,42 @@
+.yaklang-console-modal {
+    width: 448px;
+
+    position: absolute;
+    top: 35%;
+    left: calc(50% - 224px);
+}
+.engine-console-modal-wrapper {
+    position: absolute;
+    top: 35%;
+    left: calc(50% - 224px);
+}
+.engine-console-modal-hidden-wrapper {
+    display: none;
+}
+.modal-yaklang-engine-console {
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .yaklang-engine-console-wrapper {
+        width: 100%;
+        padding: 36px 24px 24px;
+        // display: flex;
+        // gap: 16px;
+        position: relative;
+        .console-draggle-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 36px;
+            background: #FFFFFF;
+        }
+        .console-draggle-body {
+            
+        }
+    }
+}
