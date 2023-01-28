@@ -382,11 +382,71 @@ service Yak {
   // Yaklang Shell
   // 创建一个交互式 Shell
   rpc CreateYaklangShell(stream YaklangShellRequest) returns (stream YaklangShellResponse);
+
+  // 接入标准输出和标准错误流
   rpc AttachCombinedOutput(AttachCombinedOutputRequest) returns (stream ExecResult);
+
+  // 判断当前引擎对网卡是否有操作权限？
+  // 主要是能否发包等敏感操作
+  // Windows 判断是否是管理员即可 I Am Admin
+  // Linux 和 MacOS 应该尝试 pcap 打开网卡就行
+  rpc IsPrivilegedForNetRaw(Empty) returns (IsPrivilegedForNetRawResponse);
+  rpc PromotePermissionForUserPcap(Empty) returns (Empty);
+  
+  // 操作项目的相关接口，通过设置 ProjectDatabase
+  rpc SetCurrentProject(SetCurrentProjectRequest) returns (Empty);
+  rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
+  rpc NewProject(NewProjectRequest) returns (Empty);
+  rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty);
+}
+
+message IsPrivilegedForNetRawResponse {
+  bool IsPrivileged = 1;
+  string Advice = 2;
+  string AdviceVerbose = 3;
+}
+
+message RemoveProjectRequest {
+  string ProjectName = 1;
+}
+
+message IsProjectNameValidRequest {
+  string ProjectName = 1;
+}
+
+message NewProjectRequest {
+  string ProjectName = 1;
+  string Description = 2;
+}
+
+message GetProjectsRequest {
+  string ProjectName = 1;
+  string Description = 2;
+}
+
+message ProjectDescription {
+  string ProjectName = 1;
+  string Description = 2;
+
+  string Uid = 3;
+  string DatabasePath = 4;
+
+  // 创建时间
+  int64 CreatedAt = 5;
+}
+
+message GetProjectsResponse {
+  ProjectDescription Projects = 1;
+}
+
+message SetCurrentProjectRequest {
+  // ProjectName
+  string ProjectName = 1;
 }
 
 message AttachCombinedOutputRequest {
-  
+
 }
 
 message YaklangShellRequest {
@@ -593,6 +653,7 @@ message StaticAnalyzeErrorRequest {
 message YaklangCompileAndFormatRequest {
   string Code = 1;
 }
+
 
 message YaklangCompileAndFormatResponse {
   string Code = 1;
