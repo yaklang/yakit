@@ -1,9 +1,14 @@
 import {InputNumber, Tag} from "antd"
-import React from "react"
-import {YakitTagProps} from "./YakitTagType"
+import React, {useState} from "react"
+import {CopyComponentsProps, YakitTagProps} from "./YakitTagType"
 import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
 import {RemoveIcon} from "@/assets/newIcon"
+import {useMemoizedFn} from "ahooks"
+import {CheckOutlined, CopyOutlined, LoadingOutlined} from "@ant-design/icons"
+import {success} from "@/utils/notification"
+
+const {ipcRenderer} = window.require("electron")
 
 /**
  * 更新说明
@@ -19,11 +24,18 @@ import {RemoveIcon} from "@/assets/newIcon"
  * @param {boolean} disable
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const {color, size, disable, className} = props
+    const {color, size, disable, className, enableCopy} = props
+    const onAfterCopy = useMemoizedFn((e) => {
+        if (props.onAfterCopy) props.onAfterCopy(e)
+    })
     return (
         <Tag
-            closeIcon={<RemoveIcon />}
             {...props}
+            closeIcon={
+                (enableCopy && <CopyComponents copyText={props.copyText || ""} onAfterCopy={onAfterCopy} />) ||
+                props.closeIcon || <RemoveIcon />
+            }
+            closable={props.closable || enableCopy}
             className={classNames(
                 styles["yakit-tag-middle"],
                 {
@@ -42,11 +54,37 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 className
             )}
             onClose={(e) => {
-                if (disable) return
+                if (disable || enableCopy) return
                 if (props.onClose) props.onClose(e)
             }}
         >
-            {props.children}
+            {(enableCopy && props.copyText) || props.children}
         </Tag>
+    )
+}
+
+export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
+    const [loading, setLoading] = useState<boolean>(false)
+    const [isShowSure, setIsShowSure] = useState<boolean>(false)
+    const onCopy = useMemoizedFn((e) => {
+        if (!props.copyText) return
+        setLoading(true)
+        ipcRenderer.invoke("set-copy-clipboard", props.copyText)
+        setTimeout(() => {
+            setLoading(false)
+            setIsShowSure(true)
+            setTimeout(() => {
+                setIsShowSure(false)
+            }, 2000)
+            success("复制成功")
+        }, 1000)
+        if (props.onAfterCopy) props.onAfterCopy(e)
+    })
+    return (
+        <span className={styles["yakit-copy"]} onClick={onCopy}>
+            {(loading && <LoadingOutlined />) || (
+                <>{(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || <CopyOutlined />}</>
+            )}
+        </span>
     )
 }
