@@ -1,9 +1,9 @@
 .yaklang-console-modal {
     width: 448px;
-
     position: absolute;
     top: 35%;
     left: calc(50% - 224px);
+    z-index: 999;
 }
 .engine-console-modal-wrapper {
     position: absolute;
@@ -23,7 +23,7 @@
 
     .yaklang-engine-console-wrapper {
         width: 100%;
-        padding: 36px 24px 24px;
+        padding: 32px 24px 24px;
         // display: flex;
         // gap: 16px;
         position: relative;
@@ -32,11 +32,76 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 36px;
-            background: #FFFFFF;
+            height: 32px;
+            background: #ffffff;
+            .header-box {
+                display: flex;
+                .header-left {
+                    flex: 1;
+                    text-align: left;
+                    .dot {
+                        width: 12px;
+                        height: 12px;
+                        background: #f7544a;
+                        border: 1px solid #ea4439;
+                        border-radius: 50%;
+                        margin-left: 14px;
+                        position: relative;
+                        top: 10px;
+                    }
+                }
+                .header-center {
+                    width: 100px;
+                    font-family: "PingFang HK";
+                    font-style: normal;
+                    font-weight: 600;
+                    font-size: 14px;
+                    line-height: 32px;
+                    text-align: center;
+                    cursor: default;
+                }
+                .header-right {
+                    flex: 1;
+                    text-align: right;
+                    margin-right: 14px;
+                    .right-dots-icon {
+                        position: relative;
+                        top: 6px;
+                        color: #85899e;
+                        cursor: pointer;
+                    }
+                    .right-dots-icon:hover {
+                        color: #f28b44;
+                    }
+                }
+            }
         }
         .console-draggle-body {
-            
         }
+    }
+}
+.right-icon-box {
+    color: #85899e;
+    display: inline-block;
+    width: 86px;
+    .item-icon {
+        position: relative;
+        top: 6px;
+        cursor: pointer;
+    }
+    .item-icon-active {
+        color: #f28b44;
+    }
+    .item-icon:hover {
+        color: #f28b44;
+    }
+}
+.right-icon-menu {
+    [class*="ant-popover-title"] {
+        border-bottom: none;
+        min-width: auto;
+    }
+    [class*="ant-popover-inner-content"] {
+        padding-top: 0px;
     }
 }
