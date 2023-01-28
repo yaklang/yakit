@@ -1,21 +1,21 @@
 // ========================== wrapper ==========================
 .yakit-input-number-wrapper {
 
-    --input-number-box-shadow-color: var(--yakit-primary-color-focus);
-    --input-number-box-shadow-error-color: var(--yakit-danger-color-focus);
+    --input-number-box-shadow-color: var(--yakit-primary-2);
+    --input-number-box-shadow-error-color: var(--yakit-danger-2);
 
-    --input-number-border-hover-color: var(--yakit-primary-color-hover);
-    --input-number-border-focus-color: var(--yakit-primary-color);
-    --input-number-border-error-color: var(--yakit-danger-color);
+    --input-number-border-hover-color: var(--yakit-primary-4);
+    --input-number-border-focus-color: var(--yakit-primary-5);
+    --input-number-border-error-color: var(--yakit-danger-5);
     --input-number-border-color: var(--yakit-border-color);
     --input-number-border-disabled-color: var(--yakit-border-color);
 
-    --input-number-icon-hover-color: var(--yakit-primary-color-hover);
-    --input-number-icon-error-color: var(--yakit-danger-color);
+    --input-number-icon-hover-color: var(--yakit-primary-4);
+    --input-number-icon-error-color: var(--yakit-danger-5);
     --input-number-icon-disabled-color: var(--yakit-helper-text-color);
 
-    --input-number-hover-color: var(--yakit-primary-color-hover);
-    --input-number-hover-error-color: var(--yakit-danger-color);
+    --input-number-hover-color: var(--yakit-primary-4);
+    --input-number-hover-error-color: var(--yakit-danger-5);
 
     --input-number-background-disabled-color: var(--yakit-background-color);
 

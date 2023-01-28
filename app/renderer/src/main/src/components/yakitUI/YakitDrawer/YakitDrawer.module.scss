@@ -4,11 +4,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #F8F8F8;
+            background-color: var(--yakit-card-background-color);
             padding: 8px 16px;
             height: 40px;
-            border-bottom: 1px solid #EAECF3;
-            color: #31343F;
+            border-bottom: 1px solid var(--yakit-border-color);
+            color: var(--yakit-header-color);
             border-radius: 0;
         }
     }
@@ -17,7 +17,7 @@
 .yakit-drawer-bottom {
     :global {
         .ant-drawer-header {
-            background-color: #F8F8F8;
+            background-color: var(--yakit-card-background-color);
         }
     }
 }

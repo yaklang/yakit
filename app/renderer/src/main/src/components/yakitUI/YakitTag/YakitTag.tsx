@@ -12,24 +12,6 @@ import {RemoveIcon} from "@/assets/newIcon"
  */
 
 /**
- * 更新说明
- * 1、关闭按钮增加hover主题色
- * 2.height 修为不加border
- */
-
-/**
- * 更新说明
- * 1、关闭按钮增加hover主题色
- * 2.height 修为不加border
- */
-
-/**
- * 更新说明
- * 1、关闭按钮增加hover主题色
- * 2.height 修为不加border
- */
-
-/**
  * @description: tag
  * @augments TagProps 继承antd的TagProps默认属性
  * @param {middle|large|small} size 默认middle 16 20 24

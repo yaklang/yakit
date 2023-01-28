@@ -2,9 +2,9 @@
     height: 20px;
     border-radius: 4px;
     padding: 2px 6px;
-    background: #F8F8F8;
-    border: 1px solid #EAECF3;
-    color: #85899E;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    color: var(--yakit-body-text-color);
     display: inline-flex;
     align-items: center;
     font-size: 11px;
@@ -14,10 +14,10 @@
             margin-left: 8px;
             display: inline-flex;
             align-items: center;
-            color: #85899E;
+            color: var(--yakit-body-text-color);
 
             &:hover {
-                color: #1890ff;
+                color: var(--yakit-primary-5);
             }
         }
     }

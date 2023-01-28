@@ -1,11 +1,11 @@
 // ========================== switch ==========================
 .yakit-switch-wrapper-item {
 
-    --switch-box-shadow-color: var(--yakit-primary-color-focus);
-    --switch-border-color: var(--yakit-primary-border-color);
+    --switch-box-shadow-color: var(--yakit-primary-2);
+    --switch-border-color: var(--yakit-primary-3);
     --switch-border-close-color: var(--yakit-border-color); // switch关闭的时候
 
-    --switch-background-color: var(--yakit-primary-color);
+    --switch-background-color: var(--yakit-primary-5);
     --switch-background-close-color: var(--yakit-disable-text-color); // switch关闭的时候的背景色
     --switch-background-disable-color: var(--yakit-background-color);
 

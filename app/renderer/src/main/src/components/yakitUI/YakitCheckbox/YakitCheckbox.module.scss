@@ -1,15 +1,15 @@
 // ========================== checkbox ==========================
 .yakit-checkbox-wrapper {
 
-    --checkbox-box-shadow-color: var(--yakit-primary-color-focus);
-    --checkbox-hover-color: var(--yakit-primary-color-hover);
-    --checkbox-active-color: var(--yakit-primary-color-press);
+    --checkbox-box-shadow-color: var(--yakit-primary-2);
+    --checkbox-hover-color: var(--yakit-primary-4);
+    --checkbox-active-color: var(--yakit-primary-6);
 
     --checkbox-border-color: var(--yakit-border-color);
-    --checkbox-border-primary-color: var(--yakit-primary-color);
+    --checkbox-border-primary-color: var(--yakit-primary-5);
     --checkbox-border-disabled-color: var(--yakit-disable-text-color);
 
-    --checkbox-background-color: var(--yakit-primary-color);
+    --checkbox-background-color: var(--yakit-primary-5);
     --checkbox-background-disabled-color: var(--yakit-disable-text-color);
 
     height: 16px;

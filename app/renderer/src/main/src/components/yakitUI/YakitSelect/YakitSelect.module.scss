@@ -1,14 +1,14 @@
 // ========================== select ==========================
 .yakit-select {
-    --select-box-shadow-color: var(--yakit-primary-color-focus);
-    --select-border-primary-color: var(--yakit-primary-border-color);
+    --select-box-shadow-color: var(--yakit-primary-2);
+    --select-border-primary-color: var(--yakit-primary-3);
     --select-border-color: var(--yakit-border-color);
 
-    --select-primary-font-color: var(--yakit-primary-background-color);
+    --select-primary-font-color: var(--yakit-primary-1);
     --select-font-color: var(--yakit-header-color);
     --select-font-disabled-color: var(--yakit-helper-text-color);
 
-    --select-background-color: var(--yakit-primary-color-focus);
+    --select-background-color: var(--yakit-primary-2);
     --select-background-disabled-color: var(--yakit-background-color);
     --select-background-white: var(--yakit-neutral10-color);
 

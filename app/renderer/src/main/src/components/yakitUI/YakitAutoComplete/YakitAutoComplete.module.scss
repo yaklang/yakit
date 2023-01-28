@@ -25,9 +25,9 @@
 // ========================== middle ==========================
 .yakit-auto-complete-wrapper {
 
-    --yakit-box-shadow-color: var(--yakit-primary-color-focus);
-    --yakit-border-color: var(--yakit-primary-color-hover);
-    --yakit-font-color: var(--yakit-primary-color);
+    --yakit-box-shadow-color: var(--yakit-primary-2);
+    --yakit-border-color: var(--yakit-primary-4);
+    --yakit-font-color: var(--yakit-primary-5);
 
     display: inline-flex;
     width: 100%;
@@ -93,8 +93,8 @@
 
 // ========================== popup ==========================
 .yakit-auto-complete-popup {
-    --auto-complete-font-color: var(--yakit-primary-color);
-    --auto-complete-background-color: var(--yakit-select-background-color);
+    --auto-complete-font-color: var(--yakit-primary-5);
+    --auto-complete-background-color: var(--yakit-primary-1);
 
     padding: 6px 4px;
     border-radius: 4px;

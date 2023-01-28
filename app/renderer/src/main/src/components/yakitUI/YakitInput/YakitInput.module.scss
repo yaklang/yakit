@@ -1,9 +1,9 @@
 // ========================== input ==========================
 .yakit-input-wrapper {
 
-    --input-box-shadow-color: var(--yakit-primary-color-focus);
+    --input-box-shadow-color: var(--yakit-primary-2);
     --input-border-color: var(--yakit-border-color);
-    --input-hover-border-color: var(--yakit-primary-color-hover);
+    --input-hover-border-color: var(--yakit-primary-4);
 
 
     display: inline-flex;
@@ -132,15 +132,15 @@
 
 // ========================== search ==========================
 .yakit-search-wrapper {
-    --search-box-shadow-color: var(--yakit-primary-color-focus);
+    --search-box-shadow-color: var(--yakit-primary-2);
 
-    --search-background-color: var(--yakit-primary-color);
-    --search-background-hover-color: var(--yakit-primary-color-hover);
-    --search-background-focus-color: var(--yakit-primary-color-focus);
+    --search-background-color: var(--yakit-primary-5);
+    --search-background-hover-color: var(--yakit-primary-4);
+    --search-background-focus-color: var(--yakit-primary-2);
 
     --search-border-color: var(--yakit-border-color);
-    --search-border-hover-color: var(--yakit-primary-color-hover);
-    --search-border-focus-color: var(--yakit-primary-color-focus);
+    --search-border-hover-color: var(--yakit-primary-4);
+    --search-border-focus-color: var(--yakit-primary-2);
 
     border-radius: 4px;
     height: 24px;
@@ -301,13 +301,13 @@
 
     :global {
         .ant-input:hover {
-            border-color: var(--yakit-primary-color-hover)
+            border-color: var(--yakit-primary-4)
         }
 
         .ant-input:focus,
         .ant-input-focused {
-            border-color: var(--yakit-primary-color-hover);
-            box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
+            border-color: var(--yakit-primary-4);
+            box-shadow: 0 0 0 2px var(--yakit-primary-2);
         }
 
         .ant-input-textarea-show-count::after {
