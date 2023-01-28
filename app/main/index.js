@@ -11,6 +11,8 @@ const {
     initLocalCache,
     setExtraLocalCache,
 } = require("./localCache")
+const { engineLog } = require("./filePath")
+const fs = require("fs")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -116,6 +118,12 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
+    try {
+        fs.unlinkSync(engineLog)
+    } catch (e) {
+        console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
+    }
+
     createWindow()
 
     try {
