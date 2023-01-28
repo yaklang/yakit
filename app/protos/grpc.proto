@@ -400,6 +400,31 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (Empty);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
   rpc RemoveProject(RemoveProjectRequest) returns (Empty);
+
+  // 导入导出项目，带密码，带进度
+  rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
+  rpc ImportProject(ImportProjectRequest) returns (stream ProjectIOProgress);
+}
+
+message ExportProjectRequest {
+  string ProjectName = 1;
+  string Password = 2;
+}
+
+message ProjectIOProgress {
+  string TargetPath = 1;
+
+  // 如果未完成，这个是百分比 0-1.0
+  double Percent = 2;
+
+  // 展示的提示语，可能是中断原因或者错误原因之类的
+  string Verbose = 4;
+}
+
+message ImportProjectRequest {
+  string LocalProjectName = 1;
+  string ProjectFilePath = 2;
+  string Password = 3;
 }
 
 message IsPrivilegedForNetRawResponse {
