@@ -364,4 +364,35 @@ module.exports = (win, getClient) => {
     /*
     * File Ops
     * */
+    // asyncIsPrivilegedForNetRaw wrapper
+    const asyncIsPrivilegedForNetRaw = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsPrivilegedForNetRaw(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IsPrivilegedForNetRaw", async (e, params) => {
+        return await asyncIsPrivilegedForNetRaw(params)
+    })
+
+    // asyncPromotePermissionForUserPcap wrapper
+    const asyncPromotePermissionForUserPcap = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().PromotePermissionForUserPcap(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("PromotePermissionForUserPcap", async (e, params) => {
+        return await asyncPromotePermissionForUserPcap(params)
+    })
 }
