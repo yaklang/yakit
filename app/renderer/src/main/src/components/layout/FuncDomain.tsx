@@ -337,7 +337,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     children: [
                         {label: "本地", key: "local"},
                         {label: "远程", key: "remote"},
-                        {label: "管理员", key: "admin"}
                     ]
                 },
                 {

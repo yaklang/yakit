@@ -7,7 +7,7 @@ import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {ArrowRightSvgIcon, ChevronDownSvgIcon, YaklangInstallHintSvgIcon} from "../layout/icons"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import { yakProcess } from "../layout/PerformanceDisplay"
+import {yakProcess} from "../layout/PerformanceDisplay"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {failed, info, success} from "@/utils/notification"
@@ -36,12 +36,12 @@ const LoadingTitle: string[] = [
 
 export const EngineModeVerbose = (m: YaklangEngineMode) => {
     switch (m) {
-        case "admin":
-            return "管理权限"
+        // case "admin":
+        //     return "管理权限"
         case "local":
-            return "普通权限"
+            return "本地模式"
         case "remote":
-            return "远程连接"
+            return "远程模式"
         default:
             return "未知模式"
     }
@@ -78,7 +78,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     })
                 })
             })
-            .catch((e) => {})
+            .catch((e) => {
+            })
             .finally(() => {
                 setTimeout(() => {
                     setDownload(true)
@@ -165,11 +166,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["theme-icon-wrapper"]}>
                         <div className={styles["theme-icon"]}>
-                            <YakitThemeLoadingSvgIcon />
+                            <YakitThemeLoadingSvgIcon/>
                         </div>
                     </div>
                     <div className={styles["white-icon"]}>
-                        <YakitLoadingSvgIcon />
+                        <YakitLoadingSvgIcon/>
                     </div>
                 </div>
 
@@ -181,14 +182,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         {!showEngineLog && getShowLog() >= 5 && (
                             <YakitButton type='danger' size='max' onClick={() => setShowEngineLog(true)}>
                                 查看日志
-                                <ArrowRightSvgIcon />
+                                <ArrowRightSvgIcon/>
                             </YakitButton>
                         )}
                         <Popconfirm
                             title={
                                 <>
                                     将关闭所有本地引擎进程, 如未完全关闭所有引擎进程,
-                                    <br />
+                                    <br/>
                                     更新引擎可能会失败
                                 </>
                             }
@@ -203,13 +204,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <Dropdown placement='bottom' overlay={menu} overlayClassName={styles["switch-mode-overlay"]}>
                             <div style={{cursor: "pointer"}}>
                                 其他连接模式
-                                <ChevronDownSvgIcon style={{marginLeft: 4}} />
+                                <ChevronDownSvgIcon style={{marginLeft: 4}}/>
                             </div>
                         </Dropdown>
                     </div>
                 </div>
             </div>
-            <DownloadYaklang visible={download} setVisible={setDownload} updateFinal={() => setUpdateLoading(false)} />
+            <DownloadYaklang visible={download} setVisible={setDownload} updateFinal={() => setUpdateLoading(false)}/>
         </div>
     )
 }
@@ -346,7 +347,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
+                                    <YaklangInstallHintSvgIcon/>
                                 </div>
                             </div>
 

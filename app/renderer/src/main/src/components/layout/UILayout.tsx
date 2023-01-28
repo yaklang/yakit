@@ -1474,16 +1474,16 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                         >
                                             {EngineModeVerbose("local")}
                                         </YakitButton>
-                                        <Popconfirm
-                                            title={"启动管理员模式将需要用户额外认证"}
-                                            onConfirm={() => {
-                                                changeEngineMode("admin")
-                                            }}
-                                        >
-                                            <YakitButton style={{marginLeft: 8}} size='max' type='outline2'>
-                                                {EngineModeVerbose("admin")}
-                                            </YakitButton>
-                                        </Popconfirm>
+                                        {/*<Popconfirm*/}
+                                        {/*    title={"启动管理员模式将需要用户额外认证"}*/}
+                                        {/*    onConfirm={() => {*/}
+                                        {/*        changeEngineMode("admin")*/}
+                                        {/*    }}*/}
+                                        {/*>*/}
+                                        {/*    <YakitButton style={{marginLeft: 8}} size='max' type='outline2'>*/}
+                                        {/*        {EngineModeVerbose("admin")}*/}
+                                        {/*    </YakitButton>*/}
+                                        {/*</Popconfirm>*/}
                                     </>
                                 ) : (
                                     <YakitButton
