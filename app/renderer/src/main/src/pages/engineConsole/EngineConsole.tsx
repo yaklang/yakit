@@ -1,27 +1,26 @@
-import React, {useEffect, useRef} from "react";
-import {AutoCard} from "@/components/AutoCard";
-import {randomString} from "@/utils/randomUtil";
-import {failed, info} from "@/utils/notification";
-import {ExecResult} from "@/pages/invoker/schema";
-import {Uint8ArrayToString} from "@/utils/str";
-import {writeXTerm, xtermFit} from "@/utils/xtermUtils";
-import {XTerm} from "xterm-for-react";
+import React, {useEffect, useRef} from "react"
+import {AutoCard} from "@/components/AutoCard"
+import {randomString} from "@/utils/randomUtil"
+import {failed, info} from "@/utils/notification"
+import {ExecResult} from "@/pages/invoker/schema"
+import {Uint8ArrayToString} from "@/utils/str"
+import {writeXTerm, xtermFit} from "@/utils/xtermUtils"
+import {XTerm} from "xterm-for-react"
+import ReactResizeDetector from "react-resize-detector"
 
-export interface EngineConsoleProp {
+export interface EngineConsoleProp {}
 
-}
-
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
-    const xtermRef = useRef<any>(null);
+    const xtermRef = useRef<any>(null)
 
     useEffect(() => {
         if (!xtermRef) {
             return
         }
 
-        const token = randomString(40);
+        const token = randomString(40)
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             try {
                 writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + "\r\n")
@@ -48,44 +47,61 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
         }
     }, [xtermRef])
 
-    return <AutoCard size={"small"} hoverable={false} bodyStyle={{padding: 0}}>
-        <XTerm
-            ref={xtermRef}
-            options={{
-                convertEol: true, rows: 12, cols: 104,
-                theme: {
-                    foreground: "#536870",
-                    background: "#E8E9E8",
-                    cursor: "#536870",
+    return (
+        <div style={{width: "100%", height: "100%", overflow: "hidden",background:"rgb(232,233,232)"}}>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) return
 
-                    black: "#002831",
-                    brightBlack: "#001e27",
+                    const row = Math.floor(height / 18.5)
+                    const col = Math.floor(width / 10)
+                    if (xtermRef) xtermFit(xtermRef, col, row)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <XTerm
+                ref={xtermRef}
+                options={{
+                    convertEol: true,
+                    // rows: 12,
+                    // cols: 104,
+                    theme: {
+                        foreground: "#536870",
+                        background: "#E8E9E8",
+                        cursor: "#536870",
 
-                    red: "#d11c24",
-                    brightRed: "#bd3613",
+                        black: "#002831",
+                        brightBlack: "#001e27",
 
-                    green: "#738a05",
-                    brightGreen: "#475b62",
+                        red: "#d11c24",
+                        brightRed: "#bd3613",
 
-                    yellow: "#a57706",
-                    brightYellow: "#536870",
+                        green: "#738a05",
+                        brightGreen: "#475b62",
 
-                    blue: "#2176c7",
-                    brightBlue: "#708284",
+                        yellow: "#a57706",
+                        brightYellow: "#536870",
 
-                    magenta: "#c61c6f",
-                    brightMagenta: "#5956ba",
+                        blue: "#2176c7",
+                        brightBlue: "#708284",
 
-                    cyan: "#259286",
-                    brightCyan: "#819090",
+                        magenta: "#c61c6f",
+                        brightMagenta: "#5956ba",
 
-                    white: "#eae3cb",
-                    brightWhite: "#fcf4dc"
-                }
-            }}
-            onResize={(r) => {
-                xtermFit(xtermRef, 120, 18)
-            }}
-        />
-    </AutoCard>
-};
+                        cyan: "#259286",
+                        brightCyan: "#819090",
+
+                        white: "#eae3cb",
+                        brightWhite: "#fcf4dc"
+                    }
+                }}
+                // onResize={(r) => {
+                //     xtermFit(xtermRef, 120, 18)
+                // }}
+            />
+        </div>
+    )
+}
