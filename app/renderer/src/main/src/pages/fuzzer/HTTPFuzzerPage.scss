@@ -3,3 +3,40 @@
     justify-content: flex-end;
     align-items: center;
 }
+
+.chevron-icon {
+    cursor: pointer;
+
+    svg {
+        width: 16px;
+        height: 16px;
+
+        &:hover {
+            color: #1890ff;
+        }
+
+        &:active {
+            color: #096dd9;
+        }
+    }
+}
+
+.chevron-icon-disable {
+
+    cursor: not-allowed;
+
+    svg {
+        width: 16px;
+        height: 16px;
+        color: #CCD2DE;
+        cursor: not-allowed;
+
+        &:hover {
+            color: #CCD2DE;
+        }
+
+        &:active {
+            color: #CCD2DE;
+        }
+    }
+}
