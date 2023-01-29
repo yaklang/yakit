@@ -16,7 +16,7 @@ import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {Resizable} from "re-resizable"
 import styles from "./baseConsole.module.scss"
 import {CloseOutlined} from "@ant-design/icons"
-import { EngineConsole } from "../../pages/engineConsole/EngineConsole";
+import {EngineConsole} from "../../pages/engineConsole/EngineConsole"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -137,13 +137,6 @@ export const BaseConsoleTitle: React.FC<BaseConsoleTitleProps> = (props) => {
     )
 }
 
-export interface ConsoleContentProps {}
-
-export const ConsoleContent: React.FC<ConsoleContentProps> = (props) => {
-    return <div className={styles["console-content"]}>
-        <EngineConsole/>
-    </div>
-}
 export interface BaseConsoleProps {
     directionBaseConsole: "left" | "bottom" | "right"
     setIsShowBaseConsole: (v: boolean) => void
@@ -167,7 +160,9 @@ export const BaseConsole: React.FC<BaseConsoleProps> = (props) => {
                 setIsShowBaseConsole={setIsShowBaseConsole}
                 callBackSource={callBackSource}
             />
-            <ConsoleContent />
+            <div className={styles["console-content"]}>
+                <EngineConsole />
+            </div>
         </div>
     )
     return (
@@ -219,7 +214,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const draggleRef = useRef<HTMLDivElement>(null)
     const size = useSize(draggleRef)
     const [disabled, setDisabled] = useState(false)
-    const [bounds, setBounds,getBounds] = useGetState({left: 0, top: 0, bottom: 0, right: 0})
+    const [bounds, setBounds, getBounds] = useGetState({left: 0, top: 0, bottom: 0, right: 0})
     /** 弹窗拖拽移动触发事件 */
     const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
         const {clientWidth, clientHeight} = window.document.documentElement
@@ -263,7 +258,9 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
             disabled={disabled}
             bounds={bounds}
             onStart={(event, uiData) => onStart(event, uiData)}
-            
+            // onDrag={(event, uiData)=>{
+            //     console.log("uiData",uiData.x,uiData.y)
+            // }}
         >
             <div ref={draggleRef}>
                 <Resizable
@@ -275,9 +272,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                     minHeight={176}
                     bounds={"window"}
                 >
-                    <div
-                        className={styles["modal-yaklang-engine-console"]}
-                    >
+                    <div className={styles["modal-yaklang-engine-console"]}>
                         <div className={styles["yaklang-engine-console-wrapper"]}>
                             <div
                                 className={styles["console-draggle-header"]}
@@ -295,9 +290,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                             }}
                                         ></div>
                                     </div>
-                                    <div className={styles["header-center"]}>
-                                        引擎 Console
-                                    </div>
+                                    <div className={styles["header-center"]}>引擎 Console</div>
                                     <div className={styles["header-right"]}>
                                         {size && size.width > 400 && (
                                             <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
@@ -307,7 +300,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                 </div>
                             </div>
                             <div className={styles["console-draggle-body"]}>
-                                <EngineConsole/>
+                                <EngineConsole />
                             </div>
                         </div>
                     </div>
