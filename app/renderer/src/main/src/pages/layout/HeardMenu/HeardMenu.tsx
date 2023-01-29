@@ -181,8 +181,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("QueryAllMenuItem", {Mode: menuMode})
                     .then((rsp: MenuByGroupProps) => {
-                        console.log('rsp.Groups',rsp.Groups);
-                        
                         if (rsp.Groups.length === 0) {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)

@@ -947,8 +947,6 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
                 <YakitButton
                     type='text'
                     onClick={() => {
-                        console.log("系统", item)
-
                         onAddMenuData(item)
                     }}
                 >
@@ -1093,8 +1091,6 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
             yakScripName: plugin.ScriptName
             // yakScriptId: plugin.Id
         }
-        console.log("menuItem", menuItem)
-
         onAddMenuData(menuItem)
     })
     return (

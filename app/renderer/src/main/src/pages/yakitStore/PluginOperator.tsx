@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     Button,
     Upload,
@@ -31,7 +31,7 @@ import {BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm} from "../in
 import {EditOutlined, QuestionOutlined, SettingOutlined, CloudUploadOutlined, CloseOutlined} from "@ant-design/icons"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {getLocalValue, setLocalValue} from "../../utils/kv"
-import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useGetState, useHover, useMemoizedFn} from "ahooks"
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import "./PluginOperator.scss"
 import {ResizeBox} from "../../components/ResizeBox"
@@ -48,6 +48,8 @@ import {MenuByGroupProps} from "../layout/HeardMenu/HeardMenuType"
 import {MenuItemGroup} from "../MainOperator"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {RemoveIcon} from "@/assets/newIcon"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -90,22 +92,21 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     // 是否展示（根据插件url与私有域比较）
     const [isShowPrivateDom, setIsShowPrivateDom] = useState<boolean>(true)
     const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
-    useEffect(() => {
+
+    const updateGroups = () => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setPatternMenu(menuMode)
+            ipcRenderer
+                .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId, Mode: menuMode})
+                .then((data: {Groups: string[]}) => {
+                    setGroups(data.Groups)
+                })
+                .catch((e: any) => {
+                    console.info(e)
+                })
+                .finally()
         })
-    }, [])
-    const updateGroups = () => {
-        ipcRenderer
-            .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId, Mode: patternMenu})
-            .then((data: {Groups: string[]}) => {
-                setGroups(data.Groups)
-            })
-            .catch((e: any) => {
-                console.info(e)
-            })
-            .finally()
     }
 
     const update = () => {
@@ -617,6 +618,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
 export interface AddToMenuActionFormProp {
     script: YakScript
+    visible: boolean
     updateGroups?: () => any
 }
 
@@ -635,7 +637,7 @@ interface AddToMenuRequest {
 
 export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) => {
     const [form] = Form.useForm()
-    const {script} = props
+    const {script, visible} = props
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
     const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
     const [menuData, setMenuData] = useState<MenuItemGroup[]>([])
@@ -646,12 +648,14 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
             Group: "社区组件",
             Verbose: props.script.ScriptName
         })
+    }, [props.script])
+    useEffect(() => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setPatternMenu(menuMode)
             init(menuMode)
         })
-    }, [props.script])
+    }, [visible])
     /**
      * @description:获取一级菜单
      */
@@ -705,16 +709,18 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                         MenuSort,
                         GroupSort
                     }
-                    ipcRenderer
-                        .invoke("AddToMenu", prams)
-                        .then(() => {
-                            ipcRenderer.invoke("change-main-menu")
-                            updateGroups()
-                            success("添加成功")
-                        })
-                        .catch((e: any) => {
-                            failed(`${e}`)
-                        })
+                    console.log("prams", prams)
+
+                    // ipcRenderer
+                    //     .invoke("AddToMenu", prams)
+                    //     .then(() => {
+                    //         ipcRenderer.invoke("change-main-menu")
+                    //         updateGroups()
+                    //         success("添加成功")
+                    //     })
+                    //     .catch((e: any) => {
+                    //         failed(`${e}`)
+                    //     })
                 }}
                 className='old-theme-html'
             >
@@ -753,14 +759,25 @@ interface PluginManagementProps {
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
     const {script, groups, style, patternMenu} = props
+    const [visibleRemove, setVisibleRemove] = useState<boolean>(false)
+    const [visibleAdd, setVisibleAdd] = useState<boolean>(false)
     const update = props?.update ? props.update : () => {}
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
-
     return (
         <Space style={{...style}} direction={props.vertical ? "vertical" : "horizontal"}>
             <Popover
                 title={`添加到左侧菜单栏中[${script?.Id}]`}
-                content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups} />}</>}
+                content={
+                    <>
+                        {script && (
+                            <AddToMenuActionForm visible={visibleAdd} script={script} updateGroups={updateGroups} />
+                        )}
+                    </>
+                }
+                trigger={["click"]}
+                onVisibleChange={(visible) => {
+                    setVisibleAdd(visible)
+                }}
             >
                 <Button size={"small"} type={"primary"} ghost>
                     添加到菜单栏
@@ -770,38 +787,8 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 size={"small"}
                 danger={true}
                 onClick={(e) => {
-                    let m = showModal({
-                        title: "移除菜单栏",
-                        content: (
-                            <Space direction={"vertical"}>
-                                {(groups || []).map((element) => {
-                                    return (
-                                        <Button
-                                            onClick={() => {
-                                                ipcRenderer
-                                                    .invoke("RemoveFromMenu", {
-                                                        YakScriptId: script?.Id,
-                                                        Group: element,
-                                                        Mode: patternMenu
-                                                    })
-                                                    .then(() => {
-                                                        ipcRenderer.invoke("change-main-menu")
-                                                        updateGroups()
-                                                        m.destroy()
-                                                    })
-                                                    .catch((e: any) => {
-                                                        console.info(e)
-                                                    })
-                                                    .finally()
-                                            }}
-                                        >
-                                            从 {element} 中移除
-                                        </Button>
-                                    )
-                                })}
-                            </Space>
-                        )
-                    })
+                    updateGroups()
+                    setVisibleRemove(true)
                 }}
             >
                 移除菜单栏
@@ -885,6 +872,45 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                     删除插件
                 </Button>
             </Popconfirm>
+            <YakitModal
+                title='移除菜单栏'
+                visible={visibleRemove}
+                onCancel={() => setVisibleRemove(false)}
+                footer={null}
+                closable={true}
+                closeIcon={<RemoveIcon className='modal-remove-icon' />}
+            >
+                <Space direction={"vertical"} className='modal-remove-menu'>
+                    {(groups &&
+                        groups.length > 0 &&
+                        groups.map((element) => {
+                            return (
+                                <Button
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("RemoveFromMenu", {
+                                                YakScriptId: script?.Id,
+                                                Group: element,
+                                                Mode: patternMenu
+                                            })
+                                            .then(() => {
+                                                ipcRenderer.invoke("change-main-menu")
+                                                updateGroups()
+                                                setVisibleRemove(false)
+                                            })
+                                            .catch((e: any) => {
+                                                failed("移除菜单失败：" + e)
+                                            })
+                                            .finally()
+                                    }}
+                                >
+                                    从 {element} 中移除
+                                </Button>
+                            )
+                        })) ||
+                        "暂无数据"}
+                </Space>
+            </YakitModal>
         </Space>
     )
 })
