@@ -1,9 +1,9 @@
 .yaklang-console-modal {
-    width: 448px;
+    // width: 448px;
     position: absolute;
     top: 35%;
     left: calc(50% - 224px);
-    z-index: 999;
+    z-index: 1001;
 }
 .engine-console-modal-wrapper {
     position: absolute;
@@ -16,15 +16,17 @@
 .modal-yaklang-engine-console {
     box-sizing: border-box;
     width: 100%;
-    background: var(--yakit-card-background-color);
+    height: 100%;
+    background: #F0F1F3;
     border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
     border-radius: 4px;
 
     .yaklang-engine-console-wrapper {
+        height: 100%;
         width: 100%;
-        padding: 32px 24px 24px;
-        // display: flex;
+        padding: 32px 0px 0px;
+        display: flex;
         // gap: 16px;
         position: relative;
         .console-draggle-header {
@@ -48,6 +50,7 @@
                         margin-left: 14px;
                         position: relative;
                         top: 10px;
+                        cursor: pointer;
                     }
                 }
                 .header-center {
@@ -77,6 +80,7 @@
             }
         }
         .console-draggle-body {
+            flex: 1;
         }
     }
 }
@@ -104,4 +108,44 @@
     [class*="ant-popover-inner-content"] {
         padding-top: 0px;
     }
+}
+.base-console-title {
+    height: 32px;
+    border-width: 1px 0px 1px 1px;
+    border-style: solid;
+    border-color: #eaecf3;
+    padding: 4px 12px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background: #ffffff;
+    .title {
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .operation {
+        position: relative;
+        
+        .right-icon-box{
+            position: absolute;
+            right: 30px;
+            top: -4px;
+        }
+        .close {
+            color: #b4bbca;
+            font-size: 13px;
+        }
+        .close:hover {
+            color: #f28b44;
+        }
+    }
+}
+.console-content{
+    flex: 1;
+    background: #F0F1F3;
+}
+.base-console-box{
+    height: 100%;
+    display: flex;
+    flex-flow: column;
 }
