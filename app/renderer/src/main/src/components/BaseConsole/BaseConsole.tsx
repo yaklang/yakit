@@ -219,7 +219,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const draggleRef = useRef<HTMLDivElement>(null)
     const size = useSize(draggleRef)
     const [disabled, setDisabled] = useState(false)
-    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
+    const [bounds, setBounds,getBounds] = useGetState({left: 0, top: 0, bottom: 0, right: 0})
     /** 弹窗拖拽移动触发事件 */
     const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
         const {clientWidth, clientHeight} = window.document.documentElement
@@ -239,8 +239,10 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const onResize = (e, direction, ref, d) => {
         // console.log("onResize执行")
         // console.log(direction, d)
-        if (direction === "left") {
-        }
+        // if (direction === "left") {
+        // }
+        // else if(direction === "top"){
+        // }
     }
     const onResizeStop = (e, direction, ref, d) => {
         // console.log("onResizeStop执行")
@@ -261,19 +263,20 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
             disabled={disabled}
             bounds={bounds}
             onStart={(event, uiData) => onStart(event, uiData)}
+            
         >
             <div ref={draggleRef}>
                 <Resizable
                     defaultSize={{width: 400, height: 400}}
-                    onResize={onResize}
-                    onResizeStart={(e) => onResizeStart(e)}
-                    onResizeStop={onResizeStop}
+                    // onResize={onResize}
+                    // onResizeStart={(e) => onResizeStart(e)}
+                    // onResizeStop={onResizeStop}
                     minWidth={256}
                     minHeight={176}
+                    bounds={"window"}
                 >
                     <div
                         className={styles["modal-yaklang-engine-console"]}
-                        // onClick={() => setIsTop(0)}
                     >
                         <div className={styles["yaklang-engine-console-wrapper"]}>
                             <div
@@ -282,7 +285,6 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                     if (disabled) setDisabled(false)
                                 }}
                                 onMouseLeave={() => setDisabled(true)}
-                                // onMouseDown={() => setIsTop(0)}
                             >
                                 <div className={styles["header-box"]}>
                                     <div className={styles["header-left"]}>
@@ -295,14 +297,12 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                     </div>
                                     <div className={styles["header-center"]}>
                                         引擎 Console
-                                        {/* <span style={{paddingRight:6}}>引擎</span><span>Console</span> */}
                                     </div>
                                     <div className={styles["header-right"]}>
                                         {size && size.width > 400 && (
                                             <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
                                         )}
                                         {size && size.width <= 400 && <RightIconMenu callBackSource={callBackSource} />}
-                                        {/* <RightIconMenu /> */}
                                     </div>
                                 </div>
                             </div>

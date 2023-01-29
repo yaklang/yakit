@@ -36,7 +36,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
         })
 
         ipcRenderer.invoke("AttachCombinedOutput", {}, token).then(() => {
-            info(`启动输出监控成功: ${"111"}`)
+            info(`启动输出监控成功`)
         })
 
         return () => {
