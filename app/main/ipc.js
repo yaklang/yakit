@@ -223,6 +223,9 @@ module.exports = {
         // misc
         require("./handlers/misc")(win, getClient)
 
+        // project
+        require("./handlers/project")(win, getClient)
+
         // 数据对比
         require("./handlers/dataCompare")(win, getClient)
 
