@@ -497,6 +497,8 @@ export interface InputFileNameItemProps {
     filename?: string
     setFileName?: (i: string) => any
     accept?: string[]
+    required?: boolean
+    disabled?: boolean
 
     // 提示信息内容组件
     hint?: React.ReactNode
@@ -505,8 +507,9 @@ export interface InputFileNameItemProps {
 const {ipcRenderer} = window.require("electron");
 export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
     const [uploadLoading, setUploadLoading] = useState(false);
-    return <Item label={p.label}>
+    return <Item label={p.label} required={p.required} >
         <Upload.Dragger
+            disabled={p.disabled}
             className='targets-upload-dragger'
             accept={(p.accept || [])?.join(",")}
             multiple={false}
