@@ -16,9 +16,120 @@ import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {Resizable} from "re-resizable"
 import styles from "./baseConsole.module.scss"
 import {CloseOutlined} from "@ant-design/icons"
-import {EngineConsole} from "../../pages/engineConsole/EngineConsole"
+import {ExecResult} from "@/pages/invoker/schema"
+import {failed, info} from "@/utils/notification"
+import {randomString} from "@/utils/randomUtil"
+import {writeXTerm, xtermFit} from "@/utils/xtermUtils"
+import {Uint8ArrayToString} from "@/utils/str"
+import {XTerm} from "xterm-for-react"
+import ReactResizeDetector from "react-resize-detector"
+import {useStore} from "./StoreConsole"
 
 const {ipcRenderer} = window.require("electron")
+
+export interface EngineConsoleProp {}
+export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
+    const xtermRef = useRef<any>(null)
+    // 缓存Console日志信息
+    const {consoleLog, setConsoleInfo,isFirst,setIsFirst} = useStore()
+    useEffect(()=>{
+        if(consoleLog.length>0){
+            writeXTerm(xtermRef,consoleLog)
+        }
+    },[])
+    useEffect(() => {
+        if (!xtermRef) {
+            return
+        }
+        if(consoleLog.length>0){
+            writeXTerm(xtermRef,consoleLog)
+        }
+        const token = randomString(40)
+        ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
+            try {
+                setConsoleInfo(consoleLog+Uint8ArrayToString(data.Raw) + "\r\n")
+                writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + "\r\n")
+            } catch (e) {
+                console.info(e)
+            }
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`[AttachCombinedOutput] error:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            info("[AttachCombinedOutput] finished")
+        })
+
+        ipcRenderer.invoke("AttachCombinedOutput", {}, token).then(() => {
+            if(isFirst) {
+                info(`启动输出监控成功`)
+                setIsFirst(false)
+            }
+        })
+
+        return () => {
+            ipcRenderer.invoke("cancel-AttachCombinedOutput", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [xtermRef])
+
+    return (
+        <div style={{width: "100%", height: "100%", overflow: "hidden",background:"rgb(232,233,232)"}}>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) return
+
+                    const row = Math.floor(height / 18)
+                    const col = Math.floor(width / 10)
+                    if (xtermRef) xtermFit(xtermRef, col, row)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <XTerm
+                ref={xtermRef}
+                options={{
+                    convertEol: true,
+                    // rows: 12,
+                    // cols: 104,
+                    theme: {
+                        foreground: "#536870",
+                        background: "#E8E9E8",
+                        cursor: "#536870",
+
+                        black: "#002831",
+                        brightBlack: "#001e27",
+
+                        red: "#d11c24",
+                        brightRed: "#bd3613",
+
+                        green: "#738a05",
+                        brightGreen: "#475b62",
+
+                        yellow: "#a57706",
+                        brightYellow: "#536870",
+
+                        blue: "#2176c7",
+                        brightBlue: "#708284",
+
+                        magenta: "#c61c6f",
+                        brightMagenta: "#5956ba",
+
+                        cyan: "#259286",
+                        brightCyan: "#819090",
+
+                        white: "#eae3cb",
+                        brightWhite: "#fcf4dc"
+                    }
+                }}
+            />
+        </div>
+    )
+}
 
 export interface RightIconMenuProps {
     callBackSource?: (v: OperationProps) => void
@@ -121,6 +232,7 @@ export interface BaseConsoleTitleProps {
 
 export const BaseConsoleTitle: React.FC<BaseConsoleTitleProps> = (props) => {
     const {setIsShowBaseConsole, callBackSource, direction} = props
+    const {setConsoleInfo,setIsFirst} = useStore()
     return (
         <div className={styles["base-console-title"]}>
             <div className={styles["title"]}>引擎 Console</div>
@@ -129,6 +241,8 @@ export const BaseConsoleTitle: React.FC<BaseConsoleTitleProps> = (props) => {
                 <CloseOutlined
                     className={styles["close"]}
                     onClick={() => {
+                        setConsoleInfo("")
+                        setIsFirst(true)
                         setIsShowBaseConsole(false)
                     }}
                 />
@@ -211,6 +325,7 @@ export interface BaseConsoleMiniProps {
 
 export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const {visible, setVisible} = props
+    const {setConsoleInfo,setIsFirst} = useStore()
     const draggleRef = useRef<HTMLDivElement>(null)
     const size = useSize(draggleRef)
     const [disabled, setDisabled] = useState(false)
@@ -286,6 +401,8 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                         <div
                                             className={styles["dot"]}
                                             onClick={() => {
+                                                setConsoleInfo("")
+                                                setIsFirst(true)
                                                 setVisible(false)
                                             }}
                                         ></div>
@@ -300,7 +417,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                 </div>
                             </div>
                             <div className={styles["console-draggle-body"]}>
-                                <EngineConsole />
+                                {visible&&<EngineConsole />}
                             </div>
                         </div>
                     </div>
