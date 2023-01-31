@@ -293,6 +293,20 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     )
     /**
+     * @description: 删除mode为空的菜单
+     */
+    const onRemoveEmpty = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeleteAllMenu", {Mode: ""})
+            .then(() => {
+                // 更新菜单
+                // ipcRenderer.invoke("change-main-menu")
+            })
+            .catch((e: any) => {
+                failed(`删除菜单失败:${e}`)
+            })
+    })
+    /**
      * @description: 保存最新的菜单数据
      */
     const onAddMenus = useMemoizedFn((data: MenuDataProps[], menuMode: string, callBack?: () => void) => {
@@ -305,6 +319,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     setSubMenuData(data[0].subMenuData || [])
                     setMenuId(data[0].id)
                 }
+                onRemoveEmpty()
                 if (callBack) callBack()
             })
             .catch((err) => {
