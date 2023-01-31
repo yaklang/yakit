@@ -169,7 +169,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         }
     }, [])
     const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
-        console.log("rules", rules)
         const listReplace = rules.filter((item) => item.NoReplace === false)
         const listDisabled = rules.filter((item) => item.Disabled === false)
         setIsNoReplace(listReplace.length === 0)
@@ -660,7 +659,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                         />
                                     }
                                     trigger='hover'
-                                    overlayClassName={classNames(styles["popover-remove"])}
+                                    overlayClassName={classNames(styles["popover-remove"], "old-theme-html")}
                                 >
                                     <YakitButton
                                         type='outline2'

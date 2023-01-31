@@ -74,6 +74,25 @@
                     -webkit-app-region: drag;
                 }
 
+                .ui-op-btn-wrapper {
+                    box-sizing: border-box;
+                    width: 44px;
+                    height: 36px;
+                    padding: 8px 12px;
+
+                    .icon-style {
+                        color: var(--yakit-body-text-color);
+                    }
+                    .icon-hover-style {
+                        color: var(--yakit-primary-color);
+                    }
+                }
+                .ui-op-btn-wrapper:hover {
+                    .icon-style {
+                        color: var(--yakit-primary-color);
+                    }
+                }
+
                 .header-left {
                     height: 100%;
                     display: flex;

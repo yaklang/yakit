@@ -1,9 +1,10 @@
 import React, {CSSProperties, ReactNode} from "react"
 import {Modal, ModalProps} from "antd"
-import styles from "./yakitModal.module.scss"
-import classnames from "classnames"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {RemoveIcon} from "@/assets/newIcon"
+
+import styles from "./yakitModal.module.scss"
+import classnames from "classnames"
 
 /**
  * 更新说明

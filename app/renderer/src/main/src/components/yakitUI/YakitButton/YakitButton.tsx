@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react"
+import React, {useMemo} from "react"
 import {Button, ButtonProps} from "antd"
 
 import classnames from "classnames"
@@ -65,9 +65,7 @@ export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
  *  --button-press-border-color: 按钮 press 边框色
  */
 export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
-    const {size, type, themeClass, children, className, onMouseDown, onMouseUp, ...resePopover} = props
-
-    const [press, setPress] = useState<boolean>(false)
+    const {size, type, themeClass, children, className, ...resePopover} = props
 
     const typeClass = useMemo(() => {
         if (!type) return "yakit-button-primary"
@@ -98,22 +96,9 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
                 {...resePopover}
                 size='middle'
                 type='default'
-                id='yakit-button'
-                className={classnames(
-                    styles[sizeClass],
-                    styles["yakit-button"],
-                    styles["yakit-button-type"],
-                    {[styles["yakit-button-press"]]: press},
-                    {[className || ""]: !!className}
-                )}
-                onMouseDown={(e) => {
-                    if (onMouseDown) onMouseDown(e)
-                    setPress(true)
-                }}
-                onMouseUp={(e) => {
-                    if (onMouseDown) onMouseDown(e)
-                    setPress(false)
-                }}
+                className={classnames(styles[sizeClass], styles["yakit-button"], styles["yakit-button-type"], {
+                    [className || ""]: !!className
+                })}
             >
                 {children}
             </Button>

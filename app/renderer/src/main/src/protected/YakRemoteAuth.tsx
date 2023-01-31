@@ -26,36 +26,40 @@ export const saveAuthInfo = (info: YakitAuthInfo, alias?: string) => {
         return
     }
 
-
-    Modal.confirm({
-        title: "保存当前连接历史？",
-        width: "50%",
-        content: <>
-            <Alert message={<>
-                注意：Yakit 并不会把历史记录上传到互联网
-                <br/>
-                你可以在你的本地目录（客户端目录）下找到远程登录信息
-                <br/>
-                <br/>
-                <Space>
-                    <CopyableField text={"$HOME/yakit-projects/auth/yakit-remote.json"}/>
-                    <Button
-                        onClick={() => {
-                            ipcRenderer.invoke("get-yakit-remote-auth-dir").then(dir => {
-                                openABSFile(dir)
-                            })
-                        }}
-                        type={"link"}
-                    >打开认证信息存储位置</Button>
-                </Space>
-            </>}/>
-        </>,
-        onOk: () => {
-            ipcRenderer.invoke("save-yakit-remote-auth", info).then().catch((e: any) => {
-                console.info(e)
-            })
-        },
+    ipcRenderer.invoke("save-yakit-remote-auth", info).then().catch((e: any) => {
+        console.info(e)
     })
+
+
+    // Modal.confirm({
+    //     title: "保存当前连接历史？",
+    //     width: "50%",
+    //     content: <>
+    //         <Alert message={<>
+    //             注意：Yakit 并不会把历史记录上传到互联网
+    //             <br/>
+    //             你可以在你的本地目录（客户端目录）下找到远程登录信息
+    //             <br/>
+    //             <br/>
+    //             <Space>
+    //                 <CopyableField text={"$HOME/yakit-projects/auth/yakit-remote.json"}/>
+    //                 <Button
+    //                     onClick={() => {
+    //                         ipcRenderer.invoke("get-yakit-remote-auth-dir").then(dir => {
+    //                             openABSFile(dir)
+    //                         })
+    //                     }}
+    //                     type={"link"}
+    //                 >打开认证信息存储位置</Button>
+    //             </Space>
+    //         </>}/>
+    //     </>,
+    //     onOk: () => {
+    //         ipcRenderer.invoke("save-yakit-remote-auth", info).then().catch((e: any) => {
+    //             console.info(e)
+    //         })
+    //     },
+    // })
 
     return <div/>
 }

@@ -138,7 +138,7 @@ jobs:
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
   publish_yakit_ee_to_oss:
-    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') && !endsWith(github.ref, '/no-release') }}
     needs:
       - build_yakit
     runs-on: ubuntu-latest
