@@ -81,7 +81,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
                 onResize={(width, height) => {
                     if (!width || !height) return
 
-                    const row = Math.floor(height / 18)
+                    const row = Math.floor(height / 18.5)
                     const col = Math.floor(width / 10)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
@@ -94,8 +94,6 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
                 ref={xtermRef}
                 options={{
                     convertEol: true,
-                    // rows: 12,
-                    // cols: 104,
                     theme: {
                         foreground: "#536870",
                         background: "#E8E9E8",
