@@ -8,7 +8,7 @@ import {InputFileNameItem, InputItem, OneLine} from "@/utils/inputUtil";
 import {showByCursorMenuByEvent, showByCursorMenu} from "@/utils/showByCursor";
 import {openABSFileLocated} from "@/utils/openWebsite";
 import {callCopyToClipboard} from "@/utils/basic";
-import {DeleteOutlined} from "@ant-design/icons/lib";
+import {DeleteOutlined, ReloadOutlined} from "@ant-design/icons/lib";
 import {showModal} from "@/utils/showModal";
 import {randomString} from "@/utils/randomUtil";
 
@@ -41,6 +41,7 @@ export const ProjectPage: React.FC<ProjectPageProp> = (props) => {
     const limit = response.Pagination.Limit || 10;
     const total = response.Total;
     const projects = response.Projects;
+    const [loading, setLoading] = useState(false);
 
     const [reload, setReload] = useState(false);
     useEffect(() => {
@@ -64,6 +65,7 @@ export const ProjectPage: React.FC<ProjectPageProp> = (props) => {
     const isDefault = current?.ProjectName === "[default]";
 
     const update = useMemoizedFn((iPage?: number, iLimit?: number) => {
+        setLoading(true)
         ipcRenderer.invoke("GetProjects", {
             Pagination: {Page: iPage || page, Limit: iLimit || limit, Order: "desc", OrderBy: "created_at"}
         }).then((rsp: ProjectsResponse) => {
@@ -74,7 +76,7 @@ export const ProjectPage: React.FC<ProjectPageProp> = (props) => {
             }
         }).catch(e => {
             failed(`查看全部 Projects 失败：${e}`)
-        })
+        }).finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     useEffect(() => {
@@ -103,6 +105,9 @@ export const ProjectPage: React.FC<ProjectPageProp> = (props) => {
         {current && <div>{current?.DatabasePath}</div>}
     </Space>} size={"small"} extra={<div>
         <Button.Group size={"small"}>
+            <Button type={"link"} icon={<ReloadOutlined/>} onClick={() => {
+                update(1)
+            }}/>
             {current && exportButton(current.ProjectName, "导出当前项目")}
             <Button onClick={() => {
                 importProject(() => update(1))
@@ -111,7 +116,7 @@ export const ProjectPage: React.FC<ProjectPageProp> = (props) => {
                 createNewProject(reloadPage)
             }}>新建项目</Button>
         </Button.Group>
-    </div>}>
+    </div>} loading={loading}>
         {!current && <Empty>无法找到当前项目管理信息</Empty>}
         {current && <div style={{
             width: "100%",
