@@ -64,7 +64,7 @@ import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue,setLocalValue} from "@/utils/kv"
 // import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 // import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 // import {onImportShare} from "./fuzzer/components/ShareImport"
@@ -382,6 +382,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             ipcRenderer.removeAllListeners("callback-direction-console-log")
         }
     }, [])
+    // 缓存console展示状态 用于状态互斥
+    useEffect(()=>{
+        setLocalValue("SHOW_BASE_CONSOLE", isShowBaseConsole)
+    },[isShowBaseConsole])
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))

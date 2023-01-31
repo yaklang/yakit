@@ -459,7 +459,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     {engineLink && <div
                                         className={styles["ui-op-btn-wrapper"]}
                                         onClick={() =>{
-                                            setYakitConsole(true)
+                                            getLocalValue("SHOW_BASE_CONSOLE").then((val: boolean) => {
+                                                if(!val){
+                                                    setYakitConsole(true)
+                                                }
+                                            })
                                         }}
                                     >
                                         <Tooltip placement='bottom' title='引擎Console'>
@@ -545,7 +549,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     {engineLink && <div
                                         className={styles["ui-op-btn-wrapper"]}
                                         onClick={() =>{
-                                            setYakitConsole(true)
+                                            getLocalValue("SHOW_BASE_CONSOLE").then((val: boolean) => {
+                                                if(!val){
+                                                    setYakitConsole(true)
+                                                }
+                                            })
                                         }}
                                     >
                                         <Tooltip placement='bottom' title='引擎Console'>
