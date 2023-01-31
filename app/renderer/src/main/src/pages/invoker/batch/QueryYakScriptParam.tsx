@@ -237,7 +237,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             title={"选择插件"}
             extra={
                 <Space>
-                    <Popconfirm title={"强制更新讲重新构建 Tags 索引"} onConfirm={() => onAllTag()}>
+                    <Popconfirm title={"强制更新将重新构建 Tags 索引"} onConfirm={() => onAllTag()}>
                         <a href={"#"}>强制更新 Tags</a>
                     </Popconfirm>
                     <Popconfirm
