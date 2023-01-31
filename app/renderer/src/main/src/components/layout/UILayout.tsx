@@ -314,6 +314,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yakitDownload, setYakitDownload, getYakitDownload] = useGetState<boolean>(false)
     const [yakitConsole, setYakitConsole, getYakitConsole] = useGetState<boolean>(false)
 
+    useEffect(()=>{
+        if(!engineLink) setYakitConsole(false)
+    },[engineLink])
+
     // 监听console缩放打开
     useEffect(() => {
         ipcRenderer.on("callback-shrink-console-log", (e, res: any) => {
@@ -662,7 +666,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 <EngineLog visible={engineLink} setVisible={setShowEngineLog} />
             </div>
 
-                <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole}/>
+            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole}/>
 
         </div>
     )

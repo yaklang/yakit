@@ -22,7 +22,7 @@
     .yaklang-engine-console-wrapper {
         height: 100%;
         width: 100%;
-        padding: calc(32px + 12px) 0px 0px 12px;
+        padding: 32px 0px 0px 0px;
         display: flex;
         // gap: 16px;
         position: relative;
@@ -145,4 +145,11 @@
     height: 100%;
     display: flex;
     flex-flow: column;
+}
+.engine-console{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: rgb(232,233,232);
+    padding: 12px 0 0 12px;
 }

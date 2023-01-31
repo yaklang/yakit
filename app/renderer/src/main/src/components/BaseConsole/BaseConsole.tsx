@@ -76,7 +76,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }, [xtermRef])
 
     return (
-        <div style={{width: "100%", height: "100%", overflow: "hidden",background:"rgb(232,233,232)"}}>
+        <div className={styles["engine-console"]}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
