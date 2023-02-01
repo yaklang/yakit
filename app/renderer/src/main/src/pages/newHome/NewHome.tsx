@@ -691,7 +691,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
                 <div className={styles["label-box"]}>
-                    {hotArr.map((item) => {
+                    {hotArr.slice(0,10).map((item) => {
                         return (
                             <div
                                 key={item}

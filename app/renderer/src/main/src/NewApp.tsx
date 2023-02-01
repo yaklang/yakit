@@ -319,7 +319,7 @@ function NewApp() {
                 ) : (
                     <>
                     {isShowHome&&onlineProfileStatus&&<NewHome setOpenPage={setOpenPage}/>}
-                    <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} setSelectItemPage={setSelectItemPage} isShowHome={isShowHome}/>
+                    <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} setSelectItemPage={setSelectItemPage} isShowHome={isShowHome} setJudgeLicense={setJudgeLicense}/>
                     </>
                 )}
             </Suspense>
