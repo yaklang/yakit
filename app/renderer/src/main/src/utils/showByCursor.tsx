@@ -67,7 +67,12 @@ export interface ByCursorMenuProp {
     content: ByCursorMenuItemProps[]
 }
 
-const cursorMenuId = "yakit-cursor-menu"
+const cursorMenuId = "yakit-cursor-menu";
+
+export const showByCursorMenuByEvent = (props: ByCursorMenuProp, event: {clientX: number, clientY: number}) => {
+    return showByCursorMenu(props, event.clientX, event.clientY)
+}
+
 export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) => {
     const divExisted = document.getElementById(cursorMenuId)
     const div: HTMLDivElement = divExisted ? (divExisted as HTMLDivElement) : document.createElement("div")
