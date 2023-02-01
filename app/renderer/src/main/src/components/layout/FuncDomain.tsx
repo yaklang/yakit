@@ -31,6 +31,7 @@ import {loginOut} from "@/utils/login"
 import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
+import SelectUpload from "@/pages/SelectUpload";
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
@@ -70,6 +71,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     ])
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
+    /** 上传数据弹框 */
+    const [uploadModalShow,setUploadModalShow] = useState<boolean>(false)
 
     useEffect(() => {
         const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo}/>
@@ -102,6 +105,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                {key: "upload-data", title: "上传数据"},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
@@ -113,6 +117,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         else if (userInfo.role !== "admin" && userInfo.platform === "company") {
             setUserMenu([
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                {key: "upload-data", title: "上传数据"},
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -175,6 +180,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                         openMenu(key)
                                     }
                                     if (key === "set-password") setPasswordShow(true)
+                                    if (key === "upload-data") setUploadModalShow(true)
                                     if (key === "role-admin") {
                                         const key = Route.RoleAdminPage
                                         openMenu(key)
@@ -223,6 +229,19 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 footer={null}
             >
                 <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo}/>
+            </Modal>
+
+            <Modal
+                visible={uploadModalShow}
+                title={"上传数据"}
+                destroyOnClose={true}
+                maskClosable={false}
+                bodyStyle={{padding: "10px 24px 24px 24px"}}
+                width={520}
+                onCancel={() => setUploadModalShow(false)}
+                footer={null}
+            >
+                <SelectUpload onCancel={() => setUploadModalShow(false)}/>
             </Modal>
         </div>
     )
