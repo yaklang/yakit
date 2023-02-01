@@ -77,6 +77,7 @@ import {
     MenuWebsocketFuzzerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
+import {ProjectPage} from "@/pages/projects/ProjectPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -122,6 +123,7 @@ export enum Route {
     DB_ExecResults = "db-exec-results",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
+    DB_Projects = "db-projects",
 
     // Handler
     DataHandler = "data-handler", // include codec compare
@@ -376,6 +378,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <PlugInAdminPage />
         case Route.AttachEngineCombinedOutput:
             return <EngineConsole/>
+        case Route.DB_Projects:
+            return <ProjectPage/>
         default:
             return <div />
     }
@@ -504,6 +508,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "9-5", key: Route.DB_Domain, label: "域名资产", icon: <MenuDomainAssetsIcon />},
             {id: "9-6", key: Route.DB_HTTPHistory, label: "HTTP History", icon: <MenuHTTPHistoryIcon />},
             {id: "9-7", key: Route.AttachEngineCombinedOutput, label: "引擎 Console", icon: <MenuHTTPHistoryIcon />},
+            {id: "9-8", key: Route.DB_Projects, label: "项目管理", icon: <MenuHTTPHistoryIcon />},
         ]
     },
     {
