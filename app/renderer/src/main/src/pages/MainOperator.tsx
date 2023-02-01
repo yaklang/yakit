@@ -76,7 +76,7 @@ import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfil
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData";
 import {LocalGV} from "@/yakitGV"
-import { BaseConsole } from "../components/BaseConsole/BaseConsole";
+import { BaseConsole } from "../components/baseConsole/BaseConsole";
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 

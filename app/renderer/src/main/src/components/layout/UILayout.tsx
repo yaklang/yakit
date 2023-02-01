@@ -35,7 +35,7 @@ import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/componen
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {saveAuthInfo} from "@/protected/YakRemoteAuth"
-import { BaseMiniConsole } from "../BaseConsole/BaseConsole";
+import { BaseMiniConsole } from "../baseConsole/BaseConsole";
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
 
