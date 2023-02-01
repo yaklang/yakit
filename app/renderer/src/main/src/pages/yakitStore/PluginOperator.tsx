@@ -709,18 +709,16 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                         MenuSort,
                         GroupSort
                     }
-                    console.log("prams", prams)
-
-                    // ipcRenderer
-                    //     .invoke("AddToMenu", prams)
-                    //     .then(() => {
-                    //         ipcRenderer.invoke("change-main-menu")
-                    //         updateGroups()
-                    //         success("添加成功")
-                    //     })
-                    //     .catch((e: any) => {
-                    //         failed(`${e}`)
-                    //     })
+                    ipcRenderer
+                        .invoke("AddToMenu", prams)
+                        .then(() => {
+                            ipcRenderer.invoke("change-main-menu")
+                            updateGroups()
+                            success("添加成功")
+                        })
+                        .catch((e: any) => {
+                            failed(`${e}`)
+                        })
                 }}
                 className='old-theme-html'
             >
@@ -766,7 +764,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
     return (
         <Space style={{...style}} direction={props.vertical ? "vertical" : "horizontal"}>
             <Popover
-                title={`添加到左侧菜单栏中[${script?.Id}]`}
+                title={`添加到菜单栏中[${script?.Id}]`}
                 content={
                     <>
                         {script && (
