@@ -199,6 +199,8 @@ module.exports = {
         //assets
         require("./handlers/assets")(win, getClient)
 
+        require("./handlers/webshell")(win, getClient)
+
         // 加载更多的 menu
         require("./handlers/menu")(win, getClient)
 

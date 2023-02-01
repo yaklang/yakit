@@ -1,0 +1,228 @@
+.title-debug {
+    color: #000000;
+}
+
+.title-background-debug {
+    color: #000000;
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.title-info {
+    color: #8c8c8c;
+}
+
+.title-background-info {
+    color: #8c8c8c;
+    background-color: rgba(140, 140, 140, 0.08);
+}
+
+.title-low {
+    color: #ffa940;
+}
+
+.title-background-low {
+    color: #ffa940;
+    background-color: rgba(255, 169, 64, 0.08);
+}
+
+.title-middle {
+    color: #ff7a45;
+}
+
+.title-background-middle {
+    color: #ff7a45;
+    background-color: rgba(255, 122, 69, 0.08);
+}
+
+.title-high {
+    color: #f5222d;
+}
+
+.title-background-high {
+    color: #f5222d;
+    background-color: rgba(245, 34, 45, 0.08);
+}
+
+.title-fatal {
+    color: #a8071a;
+}
+
+.title-background-fatal {
+    color: #a8071a;
+    background-color: rgba(168, 7, 26, 0.08);
+}
+
+.title-default {
+    color: #000000;
+}
+
+.title-background-default {
+    color: #000000;
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.risk-table-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+}
+
+.risk-table-container .container-table {
+    flex: 1;
+    overflow: hidden auto;
+}
+
+.risk-table-container .container-table .table-title {
+    display: flex;
+    justify-content: space-between;
+}
+
+.risk-table-container .container-table .title-header {
+    margin-top: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-flow: wrap;
+    align-items: center;
+    min-height: 40px;
+    border: 1px solid #f1f1f1;
+    border-radius: 4px;
+    background-color: #fafafa;
+    padding: 4px;
+}
+
+.risk-table-container .container-table .title-header .title-selected-tag {
+    display: flex;
+    height: 20px;
+    font-size: 12px;
+    color: #7e7e7e;
+    border: 1px solid #a9a9a9;
+    border-radius: 2px;
+    margin: 2px;
+}
+
+.risk-table-container .container-table .title-header .title-selected-tag .tag-name-style {
+    height: 100%;
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.risk-table-container .container-table .title-header .title-selected-tag .tag-del-style {
+    height: 100%;
+    margin-left: 6px;
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.risk-table-container .container-filter-body {
+    width: 240px;
+    padding: 6px 10px;
+}
+
+.risk-table-container .container-filter-body .filter-body-opt {}
+
+.risk-table-container .container-filter-body .filter-body-opt .opt-header {
+    height: 30px;
+    line-height: 30px;
+    font-weight: 600;
+}
+
+.risk-table-container .container-filter-body .filter-body-opt .opt-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-left: 8px;
+}
+
+.risk-table-container .container-filter-body .filter-body-opt .opt-list .opt-list-item {
+    cursor: pointer;
+    height: 24px;
+    line-height: 24px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.risk-table-container .container-filter-body .filter-body-opt .opt-list .item-name {
+    max-width: 170px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.risk-table-container .container-filter-body .filter-body-opt .opt-list .selected {
+    color: #40a9ff;
+}
+
+.risk-table-container .container-filter-body .opt-separator {
+    height: 1px;
+    background-color: #e6eaef;
+    border-radius: 1px;
+    margin: 20px 0;
+}
+
+.text-ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.container-title-body {
+    display: flex;
+}
+
+.container-title-body .title-icon {
+    width: 64px;
+    height: 64px;
+}
+
+.container-title-body .title-icon .icon-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+}
+
+.container-title-body .title-header {
+    flex: 1;
+    padding-left: 8px;
+    overflow: hidden;
+}
+
+.container-title-body .title-header .header-name {
+    height: 24px;
+    line-height: 24px;
+    max-width: 90%;
+}
+
+.container-title-body .title-header .header-subtitle {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.container-title-body .title-header .header-subtitle .subtitle-level {
+    width: 48px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+}
+
+.container-title-body .title-header .header-subtitle .subtitle-spacing {
+    margin: 0 24px;
+}
+
+.container-title-body .title-header .header-subtitle .subtitle-font {
+    color: #999EA8;
+    margin-left: 8px;
+}
+
+.container-title-body .title-header .header-subtitle .subtitle-url {
+    max-width: 260px;
+    display: flex;
+    align-items: center;
+}
+
+.container-title-body .title-header .header-subtitle div.ant-typography,
+.ant-typography p {
+    margin-bottom: 0;
+}

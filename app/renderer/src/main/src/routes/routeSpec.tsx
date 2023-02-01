@@ -78,6 +78,7 @@ import {
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
 import {ProjectPage} from "@/pages/projects/ProjectPage";
+import {WebShellPage} from "@/pages/webshellManager/WebShellPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -124,6 +125,7 @@ export enum Route {
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
     DB_Projects = "db-projects",
+    DB_WebShells = "db-webshells",
 
     // Handler
     DataHandler = "data-handler", // include codec compare
@@ -380,6 +382,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <EngineConsole/>
         case Route.DB_Projects:
             return <ProjectPage/>
+        case Route.DB_WebShells:
+            return <WebShellPage/>
         default:
             return <div />
     }
@@ -509,6 +513,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "9-6", key: Route.DB_HTTPHistory, label: "HTTP History", icon: <MenuHTTPHistoryIcon />},
             {id: "9-7", key: Route.AttachEngineCombinedOutput, label: "引擎 Console", icon: <MenuHTTPHistoryIcon />},
             {id: "9-8", key: Route.DB_Projects, label: "项目管理", icon: <MenuHTTPHistoryIcon />},
+            {id: "9-9", key: Route.DB_WebShells, label: "WebShell管理", icon: <MenuHTTPHistoryIcon />},
         ]
     },
     {
