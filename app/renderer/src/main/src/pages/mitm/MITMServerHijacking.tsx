@@ -40,7 +40,8 @@ import {showDrawer, showModal} from "@/utils/showModal"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {MITMResponse} from "@/pages/mitm/MITMPage"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-import { MITMContentReplacerRule } from "./MITMRule/MITMRuleType"
+import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
+import style from "./MITMPage.module.scss"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -562,7 +563,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 <Row gutter={14} style={{height: "100%"}}>
                     <Col style={{display: "flex", flexDirection: "column", height: "100%", width: "100%"}}>
                         <PageHeader
-                            className='mitm-header-title'
+                            className={style["mitm-header-title"]}
                             title={"劫持 HTTP Request"}
                             subTitle={addr}
                             style={{marginRight: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 8}}

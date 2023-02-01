@@ -1,0 +1,88 @@
+.mitm-header-title {
+    :global {
+        .ant-page-header-content {
+            padding-top: 0;
+        }
+    }
+}
+
+.mitm-page {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 1px);
+    /* overflow: hidden; */
+}
+
+.mitm-server-start-pre-first {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    .mitm-server-start-pre-line {
+        width: 1px;
+        height: 100%;
+        background-color: var(--yakit-border-color);
+        position: absolute;
+        right: -3px;
+    }
+
+    .mitm-plugin-local {
+        width: 100%;
+        height: 100%;
+        padding-right: 12px;
+
+        .mitm-plugin-group {
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+
+            .mitm-plugin-group-left {
+                display: flex;
+                gap: 4px;
+                align-items: center;
+                color: var(--yakit-header-color);
+                font-size: 12px;
+
+                .chevron-down {
+                    svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+
+                svg {
+                    color: var(--yakit-body-text-color);
+                }
+
+                .mitm-plugin-group-number {
+                    padding: 0px 8px;
+                    height: 16px;
+                    line-height: 16px;
+                    background: var(--yakit-background-color);
+                    border-radius: 8px;
+                    color: var(--yakit-body-text-color);
+                    font-size: 12px;
+                }
+            }
+
+            .mitm-plugin-group-left-open {
+                color: var(--yakit-primary-5);
+
+                svg {
+                    color: var(--yakit-primary-5);
+                }
+
+                .mitm-plugin-group-number {
+                    background: var(--yakit-primary-1);
+                    color: var(--yakit-primary-5);
+                }
+            }
+
+            .plus-circle {
+                margin-left: 4px;
+                height: 15px;
+            }
+        }
+    }
+}

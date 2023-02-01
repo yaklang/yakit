@@ -45,7 +45,7 @@ import {
     SettingOutlined,
     CloseOutlined,
     DownOutlined,
-    CloudUploadOutlined,
+    CloudUploadOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -98,6 +98,7 @@ import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
+import {YakFilterRemoteObj} from "../mitm/MITMPage"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -114,7 +115,7 @@ export interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }
 
-export interface QueryYakScriptLocalAndUserRequest{
+export interface QueryYakScriptLocalAndUserRequest {
     OnlineBaseUrl: string
     UserId: number
 }
@@ -277,9 +278,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         isFirstRendergraphPage.current = false
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn((clearFilter = true) => {
-        if(clearFilter){
-           setPublicKeyword("") 
-           onResetQuery()
+        if (clearFilter) {
+            setPublicKeyword("")
+            onResetQuery()
         }
         onResetPluginDetails()
         setScriptIdOnlineId(undefined)
@@ -979,7 +980,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
-    const [selectedUploadRowKeysRecordLocal,setSelectedUploadRowKeysRecordLocal,getSelectedUploadRowKeysRecordLocal] = useGetState<YakScript[]>([])
+    const [selectedUploadRowKeysRecordLocal, setSelectedUploadRowKeysRecordLocal, getSelectedUploadRowKeysRecordLocal] =
+        useGetState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState<boolean>(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
@@ -1154,37 +1156,37 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             warn("请选择需要上传的本地数据")
             return
         }
-        if(isSelectAllLocal){
+        if (isSelectAllLocal) {
             getRemoteValue("httpSetting").then((setting) => {
                 const values = JSON.parse(setting)
                 const OnlineBaseUrl: string = values.BaseUrl
                 const UserId = userInfo.user_id
                 ipcRenderer
-                            .invoke("QueryYakScriptLocalAndUser", {
-                                OnlineBaseUrl,
-                                UserId
-                            } as QueryYakScriptLocalAndUserRequest)
-                            .then((newSrcipt: {Data:YakScript[]}) => {
-                                setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
-                                JudgeIsShowVisible(newSrcipt.Data)
-                            })
-                            .catch((e) => {
-                                failed(`查询所有插件错误:${e}`)
-                                setUpLoading(false)
-                            })
-                            .finally(() => {})
+                    .invoke("QueryYakScriptLocalAndUser", {
+                        OnlineBaseUrl,
+                        UserId
+                    } as QueryYakScriptLocalAndUserRequest)
+                    .then((newSrcipt: {Data: YakScript[]}) => {
+                        setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
+                        JudgeIsShowVisible(newSrcipt.Data)
+                    })
+                    .catch((e) => {
+                        failed(`查询所有插件错误:${e}`)
+                        setUpLoading(false)
+                    })
+                    .finally(() => {})
             })
-        }
-        else{
+        } else {
             setSelectedUploadRowKeysRecordLocal(selectedRowKeysRecordLocal)
             JudgeIsShowVisible(selectedRowKeysRecordLocal)
         }
     })
 
     // 判断是否显示私密公开弹框(如没有新增则不显示弹窗)
-    const JudgeIsShowVisible = (selectArr:YakScript[]) => {
+    const JudgeIsShowVisible = (selectArr: YakScript[]) => {
         const index = selectArr.findIndex((s) => s.UUID === "")
-        if (index === -1) { // 所选插件全都有UUID
+        if (index === -1) {
+            // 所选插件全都有UUID
             upOnlineBatch(2)
             return
         }
@@ -1201,7 +1203,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async(type: number) => {
+    const upOnlineBatch = useMemoizedFn(async (type: number) => {
         setUpLoading(true)
         const realSelectedRowKeysRecordLocal = [...getSelectedUploadRowKeysRecordLocal()]
         const length = realSelectedRowKeysRecordLocal.length
@@ -1312,7 +1314,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             onClickBatch: () => {
                 onBatchUpload()
             }
-        },
+        }
     ]
 
     return (
@@ -1903,10 +1905,7 @@ export interface YakFilterModuleList {
     TagsSelectRender?: () => any
     settingRender?: () => any
 }
-interface YakFilterRemoteObj {
-    name: string
-    value: string[]
-}
+
 export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
     const {
         // 控件来源
@@ -2706,7 +2705,12 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             )}
             {loadMode === "local-nuclei" && (
                 <div style={{position: "relative"}}>
-                    <InputItem style={{width: "calc(100% - 20px)"}} label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
+                    <InputItem
+                        style={{width: "calc(100% - 20px)"}}
+                        label={"Nuclei PoC 本地路径"}
+                        value={localNucleiPath}
+                        setValue={setLocalNucleiPath}
+                    />
                     <Tooltip title={"选择导入路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
@@ -2716,8 +2720,8 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
-                                        if(data.filePaths.length){
-                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                        if (data.filePaths.length) {
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                                             setLocalNucleiPath(absolutePath)
                                         }
                                     })
@@ -3803,7 +3807,7 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 // @ts-ignore
                                 <OfficialYakitLogoIcon className='text-icon-style' />
                             )}
-                            {!bind_me&& <>{(info.is_private && <LockOutlined style={{paddingLeft:5}}/>)}</>}
+                            {!bind_me && <>{info.is_private && <LockOutlined style={{paddingLeft: 5}} />}</>}
                             {bind_me && <>{(info.is_private && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
                     </div>
