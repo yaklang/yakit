@@ -48,13 +48,14 @@ import ReactResizeDetector from "react-resize-detector"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {ChevronDownIcon, ChevronUpIcon, FolderOpenIcon, PlusCircleIcon} from "@/assets/newIcon"
+import {ChevronDownIcon, ChevronUpIcon, FolderOpenIcon, PlusCircleIcon, RemoveIcon} from "@/assets/newIcon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakModuleList} from "../yakitStore/YakitStorePage"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 const {Text} = Typography
 const {Item} = Form
@@ -268,6 +269,7 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
             }
         })
     }, [])
+    const onSavePluginGroup = useMemoizedFn(() => {})
     return (
         <div className={style["mitm-plugin-local"]}>
             <YakitInput.Search />
@@ -307,6 +309,7 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                     <PlusCircleIcon className={style["plus-circle"]} />
                 </YakitButton>
             </div>
+            <YakitEmpty />
             {/* <YakModuleList
                 queryLocal={{
                     Tag: tag,
@@ -339,10 +342,40 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                     )
                 }}
             /> */}
-            <YakitModal title='添加至插件组' visible={addGroupVisible} onCancel={() => setAddGroupVisible(false)}>
-                <YakitInput placeholder='请输入插件组名'></YakitInput>
-                <div>
-                    共选择了 <span>2</span> 个插件
+            <YakitModal
+                visible={addGroupVisible}
+                // visible={true}
+                onCancel={() => setAddGroupVisible(false)}
+                footer={null}
+                closable={false}
+            >
+                <div className={style["plugin-group-modal"]}>
+                    <div className={style["plugin-group-heard"]}>
+                        <div className={style["plugin-group-title"]}>添加至插件组</div>
+                        <div className={style["close-icon"]} onClick={() => setAddGroupVisible(false)}>
+                            <RemoveIcon />
+                        </div>
+                    </div>
+                    <div className={style["plugin-group-input"]}>
+                        <YakitInput placeholder='请输入插件组名'></YakitInput>
+                    </div>
+
+                    <div className={style["plugin-group-tip"]}>
+                        共选择了<span>{checkList.length}</span>个插件
+                    </div>
+                    <div className={style["plugin-buttons"]}>
+                        <YakitButton
+                            type='outline2'
+                            size='large'
+                            className={style["plugin-btn"]}
+                            onClick={() => setAddGroupVisible(false)}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' size='large' onClick={() => onSavePluginGroup()}>
+                            确定
+                        </YakitButton>
+                    </div>
                 </div>
             </YakitModal>
         </div>

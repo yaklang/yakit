@@ -86,3 +86,54 @@
         }
     }
 }
+
+.plugin-group-modal {
+    padding: 18px 24px;
+
+    .plugin-group-heard {
+        display: flex;
+        justify-content: space-between;
+
+        .plugin-group-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--yakit-header-color);
+        }
+
+        .close-icon {
+            color: var(--yakit-helper-text-color);
+
+            svg {
+                width: 16px;
+                height: 16px;
+
+                &:hover {
+                    color: var(--yakit-primary-color)
+                }
+            }
+        }
+    }
+
+    .plugin-group-input {
+        padding-top: 16px;
+        margin-bottom: 2px;
+    }
+
+    .plugin-group-tip {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--yakit-helper-text-color);
+        padding-bottom: 16px;
+
+        span {
+            margin: 0 2px;
+            color: var(--yakit-primary-color);
+        }
+    }
+
+    .plugin-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}
