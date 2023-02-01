@@ -12019,7 +12019,7 @@ rc-virtual-list@^3.2.0, rc-virtual-list@^3.4.8:
 
 re-resizable@^6.9.9:
   version "6.9.9"
-  resolved "https://registry.npmmirror.com/re-resizable/-/re-resizable-6.9.9.tgz#99e8b31c67a62115dc9c5394b7e55892265be216"
+  resolved "https://registry.yarnpkg.com/re-resizable/-/re-resizable-6.9.9.tgz#99e8b31c67a62115dc9c5394b7e55892265be216"
   integrity sha512-l+MBlKZffv/SicxDySKEEh42hR6m5bAHfNu3Tvxks2c4Ah+ldnWjfnVRwxo/nxF27SsUsxDS0raAzFuJNKABXA==
 
 react-app-polyfill@^2.0.0:
