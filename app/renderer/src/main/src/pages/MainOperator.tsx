@@ -102,6 +102,7 @@ const singletonRoute: Route[] = [
     Route.DB_Risk,
     Route.DB_Report,
     Route.DB_Projects,
+    Route.DB_WebShells,
 
     Route.PoC,
     Route.DNSLog,
