@@ -15,31 +15,28 @@ import {
     Tag,
     Tooltip,
     Typography
-} from "antd";
-import {
-    LeftOutlined,
-    RightOutlined,
-    PlusCircleOutlined,
-} from "@ant-design/icons"
-import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable";
-import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors";
-import {failed} from "../utils/notification";
-import {FuzzableParamList} from "./FuzzableParamList";
-import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage";
-import {randomString} from "../utils/randomUtil";
-import {HTTPPacketFuzzable} from "./HTTPHistory";
-import {AutoSpin} from "./AutoSpin";
-import {ResizeBox} from "./ResizeBox";
-import ReactResizeDetector from "react-resize-detector";
-import {Buffer} from "buffer";
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
-import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer";
-import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory";
+} from "antd"
+import {LeftOutlined, RightOutlined, PlusCircleOutlined} from "@ant-design/icons"
+import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
+import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors"
+import {failed} from "../utils/notification"
+import {FuzzableParamList} from "./FuzzableParamList"
+import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
+import {randomString} from "../utils/randomUtil"
+import {HTTPPacketFuzzable} from "./HTTPHistory"
+import {AutoSpin} from "./AutoSpin"
+import {ResizeBox} from "./ResizeBox"
+import ReactResizeDetector from "react-resize-detector"
+import {Buffer} from "buffer"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
+import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
-import {callCopyToClipboard} from "@/utils/basic";
-import {AutoCard} from "@/components/AutoCard";
-import {SelectOne} from "@/utils/inputUtil";
+import {callCopyToClipboard} from "@/utils/basic"
+import {AutoCard} from "@/components/AutoCard"
+import {SelectOne} from "@/utils/inputUtil"
+import {useMemoizedFn} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -112,7 +109,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }
 
     if (loading) {
-        return <Spin tip={"正在分析详细参数"}/>
+        return <Spin tip={"正在分析详细参数"} />
     }
 
     return (
@@ -188,6 +185,19 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [props.id])
 
+    const onCloseDetails = useMemoizedFn(() => {
+        if (props.onClose) props.onClose()
+    })
+
+    useEffect(() => {
+        // 发送webfuzzer后关闭详情
+        ipcRenderer.on("fetch-send-to-tab", onCloseDetails)
+
+        return () => {
+            ipcRenderer.removeListener("fetch-send-to-tab", onCloseDetails)
+        }
+    }, [])
+
     return (
         <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
             {flow ? (
@@ -203,7 +213,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isFront}
-                                                icon={<LeftOutlined/>}
+                                                icon={<LeftOutlined />}
                                                 onClick={() => {
                                                     props?.fetchRequest!(1)
                                                 }}
@@ -213,7 +223,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isBehind}
-                                                icon={<RightOutlined/>}
+                                                icon={<RightOutlined />}
                                                 onClick={() => {
                                                     props?.fetchRequest!(2)
                                                 }}
@@ -300,11 +310,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <YakEditor
+                                        <HTTPPacketEditor
                                             readOnly={true}
-                                            type={"http"} //theme={"fuzz-http-theme"}
-                                            value={new Buffer(flow.Request).toString("utf8")}
-                                            actions={[...actionFuzzer]}
+                                            hideSearch={true}
+                                            noHex={true}
+                                            noHeader={true}
+                                            originValue={new Buffer(flow.Request)}
+                                            // actions={[...actionFuzzer]}
                                         />
                                     </div>
                                 </Card>
@@ -312,10 +324,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <YakEditor
+                                        <HTTPPacketEditor
                                             readOnly={true}
-                                            type={"http"} // theme={"fuzz-http-theme"}
-                                            value={new Buffer(flow.Response).toString("utf8")}
+                                            hideSearch={true}
+                                            noHex={true}
+                                            noHeader={true}
+                                            originValue={new Buffer(flow.Response)}
+                                            // actions={[...actionFuzzer]}
                                         />
                                     </div>
                                 </Card>
@@ -431,14 +446,14 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     )
 }
 
-type HTTPFlowInfoType = "domains" | "root-domains" | "json";
+type HTTPFlowInfoType = "domains" | "root-domains" | "json"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
-    const [infoType, setInfoType] = useState<HTTPFlowInfoType>();
-    const [infoTypeLoading, setInfoTypeLoading] = useState(false);
-    const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([]);
+    const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
+    const [infoTypeLoading, setInfoTypeLoading] = useState(false)
+    const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
 
     useEffect(() => {
         if (!props.id) {
@@ -452,7 +467,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .invoke("GetHTTPFlowById", {Id: props.id})
             .then((i: HTTPFlow) => {
                 setFlow(i)
-                const existedExtraInfos: HTTPFlowInfoType[] = [];
+                const existedExtraInfos: HTTPFlowInfoType[] = []
                 if ((i.Domains || []).length > 0) {
                     existedExtraInfos.push("domains")
                 }
@@ -477,8 +492,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 setTimeout(() => setLoading(false), 300)
             })
         return () => {
-            setExistedInfoType([]);
-        };
+            setExistedInfoType([])
+        }
     }, [props.id])
 
     useEffect(() => {
@@ -498,10 +513,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     <ResizeBox
                         firstNode={() => {
                             if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
+                                return <Empty description={"选择想要查看的 HTTP 记录请求"} />
                             }
                             if (flow?.IsWebsocket) {
-                                return <HTTPFlowForWebsocketViewer flow={flow}/>
+                                return <HTTPFlowForWebsocketViewer flow={flow} />
                             }
                             return (
                                 <HTTPPacketEditor
@@ -515,21 +530,23 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     hideSearch={true}
                                     noHex={true}
                                     noMinimap={true}
-                                    actions={flow?.RawRequestBodyBase64 ? [
-                                        {
-                                            contextMenuGroupId: "auto-suggestion",
-                                            label: "复制请求Body (Base64)",
-                                            id: "copy-request-base64-body",
-                                            run: () => {
-                                                callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
-                                            }
-                                        }
-                                    ] : undefined}
+                                    actions={
+                                        flow?.RawRequestBodyBase64
+                                            ? [
+                                                  {
+                                                      contextMenuGroupId: "auto-suggestion",
+                                                      label: "复制请求Body (Base64)",
+                                                      id: "copy-request-base64-body",
+                                                      run: () => {
+                                                          callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
+                                                      }
+                                                  }
+                                              ]
+                                            : undefined
+                                    }
                                     // 这个为了解决不可见字符的问题
-                                    defaultPacket={(!!flow?.SafeHTTPRequest) ? flow.SafeHTTPRequest : undefined}
-                                    extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>
-                                        含二进制流
-                                    </Tag> : undefined}
+                                    defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
+                                    extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
                                     defaultSearchKeyword={props.search}
                                 />
                             )
@@ -537,23 +554,27 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         firstMinSize={300}
                         secondNode={() => {
                             if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
+                                return <Empty description={"选择想要查看的 HTTP 记录响应"} />
                             }
                             if (flow?.IsWebsocket) {
-                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""}/>
+                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
                             }
                             return (
                                 <HTTPPacketEditor
-                                    actions={flow?.RawResponseBodyBody64 ? [
-                                        {
-                                            contextMenuGroupId: "auto-suggestion",
-                                            label: "复制响应Body (Base64)",
-                                            id: "copy-response-base64-body",
-                                            run: () => {
-                                                callCopyToClipboard(flow?.RawResponseBodyBody64 || "")
-                                            }
-                                        }
-                                    ] : undefined}
+                                    actions={
+                                        flow?.RawResponseBodyBody64
+                                            ? [
+                                                  {
+                                                      contextMenuGroupId: "auto-suggestion",
+                                                      label: "复制响应Body (Base64)",
+                                                      id: "copy-response-base64-body",
+                                                      run: () => {
+                                                          callCopyToClipboard(flow?.RawResponseBodyBody64 || "")
+                                                      }
+                                                  }
+                                              ]
+                                            : undefined
+                                    }
                                     isResponse={true}
                                     noHex={true}
                                     noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
@@ -570,40 +591,47 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         secondMinSize={300}
                     />
                 </Col>
-                {existedInfoType.length > 0 && <Col span={5}>
-                    <HTTPPacketEditor
-                        title={<Button.Group size={"small"}>
-                            {existedInfoType.map(i => {
-                                return <Button
-                                    type={infoType === i ? "primary" : "default"}
-                                    onClick={() => {
-                                        setInfoType(i)
-                                    }}
-                                >
-                                    {infoTypeVerbose(i)}
-                                </Button>
-                            })}
-                        </Button.Group>}
-                        readOnly={true}
-                        noLineNumber={true}
-                        noMinimap={true}
-                        noHex={true} hideSearch={true}
-                        refreshTrigger={infoType}
-                        loading={infoTypeLoading}
-                        originValue={(() => {
-                            switch (infoType) {
-                                case "domains":
-                                    return StringToUint8Array((flow?.Domains || []).join("\r\n"))
-                                case "json":
-                                    return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
-                                case "root-domains":
-                                    return StringToUint8Array((flow?.RootDomains || []).join("\r\n"))
-                                default:
-                                    return new Uint8Array();
+                {existedInfoType.length > 0 && (
+                    <Col span={5}>
+                        <HTTPPacketEditor
+                            title={
+                                <Button.Group size={"small"}>
+                                    {existedInfoType.map((i) => {
+                                        return (
+                                            <Button
+                                                type={infoType === i ? "primary" : "default"}
+                                                onClick={() => {
+                                                    setInfoType(i)
+                                                }}
+                                            >
+                                                {infoTypeVerbose(i)}
+                                            </Button>
+                                        )
+                                    })}
+                                </Button.Group>
                             }
-                        })()}
-                    />
-                </Col>}
+                            readOnly={true}
+                            noLineNumber={true}
+                            noMinimap={true}
+                            noHex={true}
+                            hideSearch={true}
+                            refreshTrigger={infoType}
+                            loading={infoTypeLoading}
+                            originValue={(() => {
+                                switch (infoType) {
+                                    case "domains":
+                                        return StringToUint8Array((flow?.Domains || []).join("\r\n"))
+                                    case "json":
+                                        return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                    case "root-domains":
+                                        return StringToUint8Array((flow?.RootDomains || []).join("\r\n"))
+                                    default:
+                                        return new Uint8Array()
+                                }
+                            })()}
+                        />
+                    </Col>
+                )}
             </Row>
         </AutoSpin>
     )
