@@ -65,35 +65,90 @@ const RouteTitle: React.FC<RouteTitleProps> = (props) => {
 interface RouteItemProps {
     dataSource: DataItem
     setOpenPage: (v: any) => void
+    load:boolean
+    getCustomizeMenus?:()=>void
 }
 
 const RouteItem: React.FC<RouteItemProps> = (props) => {
-    const {dataSource, setOpenPage} = props
+    const {dataSource, setOpenPage,load,getCustomizeMenus} = props
     const goRoute = () => {
-        setOpenPage({
-            verbose: dataSource.label,
-            route: dataSource.key,
-            singleNode: ContentByRoute(Route.HTTPHacker),
-            multipleNode: []
-        })
+        dataSource.key &&
+            setOpenPage({
+                verbose: dataSource.label,
+                route: dataSource.key,
+                singleNode: ContentByRoute(Route.HTTPHacker),
+                multipleNode: []
+            })
+    }
+    const addLocalLab = useMemoizedFn((params) => {
+        ipcRenderer
+            .invoke("DownloadOnlinePluginById", params)
+            .then(() => {
+                success("添加菜单成功")
+                ipcRenderer.invoke("change-main-menu")
+            })
+            .catch((e) => {
+                failed(`添加菜单失败:${e}`)
+            })
+            .finally(() => {
+                getCustomizeMenus&&getCustomizeMenus()
+            })
+    })
+    const addMenu = (name: string) => {
+        if (name === "基础爬虫") {
+            addLocalLab({
+                OnlineID: 4104,
+                UUID: "eb77ddbc-e703-4e95-b59f-41b3b172ce3d"
+            })
+        }
+        if (name === "综合目录扫描与爆破") {
+            addLocalLab({
+                OnlineID: 4125,
+                UUID: "33d0b3c7-d417-4bb0-a23c-cb5965c6cbb9"
+            })
+        }
     }
     return (
-        <div className={styles["route-item"]} onClick={goRoute}>
-            <div className={styles["icon-box"]}>
-                <div className={styles["menu-icon"]}>{dataSource.icon}</div>
-                <ArrowRightOutlined className={styles["right-arrow"]} />
-            </div>
-            <div className={styles["item-label"]}>{dataSource.label}</div>
-            <div className={styles["item-describe"]}>{dataSource.describe}</div>
-        </div>
+        <>
+            {load && (
+                <div
+                    className={classNames(styles["route-item"], dataSource.isShow && styles["route-item-active"])}
+                    onClick={goRoute}
+                >
+                    <div className={styles["icon-box"]}>
+                        <div
+                            className={classNames(styles["menu-icon"], !dataSource.isShow && styles["control-opacity"])}
+                        >
+                            {dataSource.icon}
+                        </div>
+                        {dataSource.isShow ? (
+                            <ArrowRightOutlined className={styles["right-arrow"]} />
+                        ) : (
+                            <div className={styles["right-arrow-text"]} onClick={() => addMenu(dataSource.label)}>
+                                获取菜单
+                            </div>
+                        )}
+                    </div>
+                    <div className={classNames(styles["item-label"], !dataSource.isShow && styles["control-opacity"])}>
+                        {dataSource.label}
+                    </div>
+                    <div
+                        className={classNames(styles["item-describe"], !dataSource.isShow && styles["control-opacity"])}
+                    >
+                        {dataSource.describe}
+                    </div>
+                </div>
+            )}
+        </>
     )
 }
 interface DataItem {
     id: string
-    key: Route
+    key?: Route
     icon: JSX.Element
     describe: string
     label: string
+    isShow: boolean
 }
 
 interface newHomeListData {
@@ -103,21 +158,25 @@ interface newHomeListData {
 }
 
 interface RouteListProps {
+    load?:boolean
     colLimit?: 1 | 2 | 3
     data: newHomeListData
     setOpenPage: (v: any) => void
+    getCustomizeMenus?:()=>void
 }
 
 const RouteList: React.FC<RouteListProps> = (props) => {
-    const {colLimit = 1, data, setOpenPage} = props
+    const {colLimit = 1, data, setOpenPage,load=true,getCustomizeMenus} = props
     const [span, setSpan] = useState(24 / colLimit)
     const rowCount = Math.ceil(data.subMenuData.length / colLimit)
     return (
         <div style={{height: "100%"}} className={styles["list-box"]}>
             <RouteTitle title={data.label} />
-            <Row className={classNames(styles["list-content"],{
-                [styles["set-ant-row"]]: colLimit===1,
-            })}>
+            <Row
+                className={classNames(styles["list-content"], {
+                    [styles["set-ant-row"]]: colLimit === 1
+                })}
+            >
                 {data.subMenuData.map((item) => (
                     <Col
                         span={span}
@@ -125,7 +184,7 @@ const RouteList: React.FC<RouteListProps> = (props) => {
                         flex={1}
                         className={classNames(styles[`list-content-col${rowCount}`])}
                     >
-                        <RouteItem dataSource={item} setOpenPage={setOpenPage} />
+                        <RouteItem load={load} dataSource={item} setOpenPage={setOpenPage} getCustomizeMenus={getCustomizeMenus}/>
                     </Col>
                 ))}
             </Row>
@@ -139,7 +198,7 @@ interface chartListProps {
     type: string
     value: number
 }
-interface echartListProps{
+interface echartListProps {
     name: string
     value: number
 }
@@ -148,7 +207,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     // 全局登录状态
     const {userInfo} = useStore()
-    const [_, setChartList,getChartList] = useGetState<echartListProps[]>([])
+    const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
     const colorList = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
     const optionRef = useRef<any>({
         color: colorList,
@@ -254,11 +313,11 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         echartsRef.current && echartsRef.current.resize()
     }, [width])
 
-    useEffect(()=>{
+    useEffect(() => {
         getPluginSearch()
         //先解绑事件，防止事件重复触发
-        echartsRef.current.off('click')
-        echartsRef.current.off('legendselectchanged')
+        echartsRef.current.off("click")
+        echartsRef.current.off("legendselectchanged")
         echartsRef.current.on("click", function (params) {
             // console.log("点击", params)
             onSendToTab(params.name ?? "")
@@ -270,7 +329,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                 legend: {selected: {[e.name]: true}}
             })
         })
-    },[])
+    }, [])
 
     const getPluginSearch = useMemoizedFn(() => {
         let url = "plugin/search/unlogged"
@@ -288,7 +347,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                 if (res.plugin_type) {
                     const chartListCache = res.plugin_type.map((item) => ({
                         name: PluginType[item.value] ?? "未识别",
-                        value: item.count,
+                        value: item.count
                     }))
                     // console.log("chartListCache",chartListCache,res.plugin_type)
                     // @ts-ignore
@@ -302,8 +361,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             .catch((err) => {
                 failed("线上统计数据获取失败:" + err)
             })
-            .finally(() => {
-            })
+            .finally(() => {})
     })
 
     const onSendToTab = useMemoizedFn((pluginType: string) => {
@@ -544,6 +602,16 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         getPlugInShopHot()
         getPlugInShopNewIncre()
     }, [])
+
+    useEffect(() => {
+        ipcRenderer.on("edit-baseUrl-status", (e, res: any) => {
+            getPlugInShopHot()
+            getPlugInShopNewIncre()
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("edit-baseUrl-status")
+        }
+    }, [])
     const getPlugInShopHot = () => {
         NetWorkApi<PlugInShopHotProps, API.PluginTopSearchResponse>({
             method: "get",
@@ -610,10 +678,9 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
 
     const selectIconShow = (v: string) => {
         if (v === ">") return <AddCountIcon style={{paddingLeft: 4}} />
-        else if (v === "=") return <KeepCountIcon style={{paddingLeft: 4}} />
-        else {
-            return <ReduceCountIcon style={{paddingLeft: 4}} />
-        }
+        // else if (v === "=") return <KeepCountIcon style={{paddingLeft: 4}} />
+        else if (v === "<") return <ReduceCountIcon style={{paddingLeft: 4}} />
+        else return <></>
     }
     return (
         <div className={styles["plug-in-shop"]}>
@@ -633,13 +700,12 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                         [styles["add-border-left"]]: countAddObj?.day_incre === ">",
                                         [styles["reduce-border-left"]]: countAddObj?.day_incre === "<"
                                     })}
+                                    style={{cursor: "pointer"}}
+                                    onClick={() => goStoreRoute({time_search: "day"})}
                                 >
                                     <div className={styles["add-title"]}>今日新增数</div>
                                     <div className={styles["add-content"]}>
-                                        <span
-                                            style={{cursor: "pointer"}}
-                                            onClick={() => goStoreRoute({time_search: "day"})}
-                                        >
+                                        <span>
                                             <CountUp
                                                 start={0}
                                                 end={countAddObj.day_incre_num}
@@ -656,13 +722,12 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                         [styles["add-border-left"]]: countAddObj?.week_incre === ">",
                                         [styles["reduce-border-left"]]: countAddObj?.week_incre === "<"
                                     })}
+                                    style={{cursor: "pointer"}}
+                                    onClick={() => goStoreRoute({time_search: "week"})}
                                 >
                                     <div className={styles["add-title"]}>本周新增数</div>
                                     <div className={styles["add-content"]}>
-                                        <span
-                                            style={{cursor: "pointer"}}
-                                            onClick={() => goStoreRoute({time_search: "week"})}
-                                        >
+                                        <span>
                                             <CountUp
                                                 start={0}
                                                 end={countAddObj.week_incre_num}
@@ -691,7 +756,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
                 <div className={styles["label-box"]}>
-                    {hotArr.slice(0,10).map((item) => {
+                    {hotArr.slice(0, 10).map((item) => {
                         return (
                             <div
                                 key={item}
@@ -718,7 +783,22 @@ export const newHomeList: newHomeListData[] = [
                 key: Route.Mod_ScanPort,
                 label: "端口/指纹扫描",
                 icon: <MenuPortScanningDeepIcon />,
-                describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+                describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求",
+                isShow: true
+            },
+            {
+                id: "1-2",
+                label: "基础爬虫",
+                icon: <MenuBaseReptileDeepIcon />,
+                describe: "通过爬虫可快速了解网站的整体架构",
+                isShow: false
+            },
+            {
+                id: "1-3",
+                label: "综合目录扫描与爆破",
+                icon: <MenuComprehensiveCatalogScanningAndBlastingDeepIcon />,
+                describe: "带有内置字典的综合目录扫描与爆破",
+                isShow: false
             }
         ]
     },
@@ -731,14 +811,16 @@ export const newHomeList: newHomeListData[] = [
                 key: Route.PoC,
                 label: "专项漏洞检测",
                 icon: <MenuSpecialVulnerabilityDetectionDeepIcon />,
-                describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"
+                describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类",
+                isShow: true
             },
             {
                 id: "2-2",
                 key: Route.BatchExecutorPage,
                 label: "插件批量执行",
                 icon: <MenuPluginBatchExecutionDeepIcon />,
-                describe: "自由选择需要的 POC 进行批量漏洞检测"
+                describe: "自由选择需要的 POC 进行批量漏洞检测",
+                isShow: true
             }
         ]
     },
@@ -751,14 +833,16 @@ export const newHomeList: newHomeListData[] = [
                 key: Route.ModManager,
                 label: "插件仓库",
                 icon: <MenuPluginWarehouseDeepIcon />,
-                describe: "目前插件为 6 大类型，可根据需要灵活编写插件，支持从 GitHub 加载插件 POC 种类"
+                describe: "目前插件为 6 大类型，可根据需要灵活编写插件，支持从 GitHub 加载插件 POC 种类",
+                isShow: true
             },
             {
                 id: "3-2",
                 key: Route.YakScript,
                 label: "Yak Runner",
                 icon: <MenuYakRunnerDeepIcon />,
-                describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"
+                describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类",
+                isShow: true
             }
         ]
     },
@@ -771,21 +855,24 @@ export const newHomeList: newHomeListData[] = [
                 key: Route.HTTPHacker,
                 label: "MITM 交互式劫持",
                 icon: <MenuMITMInteractiveHijackingDeepIcon />,
-                describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+                describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式",
+                isShow: true
             },
             {
                 id: "4-2",
                 key: Route.HTTPFuzzer,
                 label: "Web Fuzzer",
                 icon: <MenuWebFuzzerDeepIcon />,
-                describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
+                describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合",
+                isShow: true
             },
             {
                 id: "4-3",
                 key: Route.Mod_Brute,
                 label: "爆破与未授权检测",
                 icon: <MenuBlastingAndUnauthorizedTestingDeepIcon />,
-                describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"
+                describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测",
+                isShow: true
             }
         ]
     },
@@ -799,21 +886,24 @@ export const newHomeList: newHomeListData[] = [
                 label: "Codec",
                 icon: <MenuCodecDeepIcon />,
                 describe:
-                    "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法"
+                    "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法",
+                isShow: true
             },
             {
                 id: "5-2",
                 key: Route.DataCompare,
                 label: "数据对比",
                 icon: <MenuDataComparisonDeepIcon />,
-                describe: "将数据进行对比，快速识别不同处"
+                describe: "将数据进行对比，快速识别不同处",
+                isShow: true
             },
             {
                 id: "5-3",
                 key: Route.PayloadManager,
                 label: "Payload 管理",
                 icon: <AuditOutlinedDeepIcon />,
-                describe: "通过上传文件、手动删改等，自定义 Payload，可在爆破和 Web Fuzzer 中进行使用"
+                describe: "通过上传文件、手动删改等，自定义 Payload，可在爆破和 Web Fuzzer 中进行使用",
+                isShow: true
             }
         ]
     },
@@ -826,42 +916,48 @@ export const newHomeList: newHomeListData[] = [
                 key: Route.ShellReceiver,
                 label: "端口监听器",
                 icon: <MenuPortListenerDeepIcon />,
-                describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
+                describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互",
+                isShow: true
             },
             {
                 id: "6-2",
                 key: Route.ReverseServer_New,
                 label: "反连服务器",
                 icon: <MenuReverseConnectionServerDeepIcon />,
-                describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连"
+                describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连",
+                isShow: true
             },
             {
                 id: "6-3",
                 key: Route.DNSLog,
                 label: "DNSLog",
                 icon: <MenuDNSLogDeepIcon />,
-                describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"
+                describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中",
+                isShow: true
             },
             {
                 id: "6-4",
                 key: Route.ICMPSizeLog,
                 label: "ICMP-SizeLog",
                 icon: <MenuICMPSizeLogDeepIcon />,
-                describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"
+                describe: "使用 ping 携带特定长度数据包判定 ICMP 反连",
+                isShow: true
             },
             {
                 id: "6-5",
                 key: Route.TCPPortLog,
                 label: "TCP-PortLog",
                 icon: <MenuTCPPortLogDeepIcon />,
-                describe: "使用未开放的随机端口来判定 TCP 反连"
+                describe: "使用未开放的随机端口来判定 TCP 反连",
+                isShow: true
             },
             {
                 id: "6-6",
                 key: Route.PayloadGenerater_New,
                 label: "Yso-Java Hack",
                 icon: <MenuYsoJavaHackDeepIcon />,
-                describe: "配置序列化 Payload 或恶意类"
+                describe: "配置序列化 Payload 或恶意类",
+                isShow: true
             }
         ]
     }
@@ -877,11 +973,10 @@ export const getScriptIcon = (name: string) => {
     }
 }
 
-export const getDescribe = (name:string) => {
-    if(name==="综合目录扫描与爆破"){
+export const getDescribe = (name: string) => {
+    if (name === "综合目录扫描与爆破") {
         return "带有内置字典的综合目录扫描与爆破"
-    }
-    else{
+    } else {
         return "通过爬虫可快速了解网站的整体架构"
     }
 }
@@ -892,6 +987,8 @@ export interface NewHomeProps {
 const NewHome: React.FC<NewHomeProps> = (props) => {
     const {setOpenPage} = props
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
+    // 加载是否完成
+    const [load,setLoad] = useState<boolean>(false)
     useEffect(() => {
         getCustomizeMenus()
     }, [])
@@ -905,22 +1002,20 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 Type: "yak"
             } as QueryYakScriptRequest)
             .then((data: QueryYakScriptsResponse) => {
-                const itemArr: DataItem[] = data.Data.map((i) => {
-                    return {
-                        id: `plugin:${i.Id}`,
-                        icon: getScriptIcon(i.ScriptName),
-                        key: `plugin:${i.Id}` as Route,
-                        label: i.ScriptName,
-                        describe: getDescribe(i.ScriptName)
+                const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
+                data.Data.map((i) => {
+                    if (i.ScriptName === "基础爬虫") {
+                        deepList[0].subMenuData[1].isShow = true
+                        deepList[0].subMenuData[1].key = `plugin:${i.Id}` as Route
                     }
-                }).filter((item) => item.label === "综合目录扫描与爆破"||item.label ==="基础爬虫")
-                if (itemArr.length > 0) {
-                    const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
-                    itemArr.map((itemIn)=>{
-                        deepList[0].subMenuData.push(itemIn)
-                    })
-                    setNewHomeData(deepList)
-                }
+                    if (i.ScriptName === "综合目录扫描与爆破") {
+                        deepList[0].subMenuData[2].isShow = true
+                        deepList[0].subMenuData[2].key = `plugin:${i.Id}` as Route
+                    }
+                })
+                setNewHomeData(deepList)
+            }).finally(() => {
+                setLoad(true)
             })
     }
 
@@ -928,7 +1023,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
         <div className={classNames(styles["new-home-page"])}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeData[0]} setOpenPage={setOpenPage} />
+                    <RouteList data={newHomeData[0]} setOpenPage={setOpenPage} load={load} getCustomizeMenus={getCustomizeMenus}/>
                 </div>
                 <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
                     <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>

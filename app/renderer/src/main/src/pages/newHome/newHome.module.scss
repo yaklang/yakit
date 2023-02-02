@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: auto;
 }
 .home-top-block {
     flex: 4;
@@ -61,21 +62,31 @@
 }
 .route-item {
     padding: 16px;
-    cursor: pointer;
     border-radius: 4px;
     height: 100%;
 }
-.route-item:hover {
+.route-item-active{
+    cursor: pointer;
+}
+.route-item-active:hover {
     background: rgba(242, 139, 68, 0.06);
     .right-arrow {
         color: #f28b44;
     }
+}
+.control-opacity{
+    opacity: .3;
 }
 .right-arrow {
     font-size: 12px;
     color: #b4bbca;
     position: relative;
     top: 8px;
+}
+.right-arrow-text{
+    font-size: 12px;
+    color: #F28B44;
+    cursor: pointer;
 }
 .item-label {
     margin-top: 8px;
@@ -150,6 +161,9 @@
 .common-count {
     padding-left: 15px;
     border-radius: 2px;
+}
+.common-count:hover{
+    background: #F0F1F3;
 }
 .keep-border-left{
     border-left: 2px solid #B4BBCA;
