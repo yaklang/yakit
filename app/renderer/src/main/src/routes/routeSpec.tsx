@@ -508,7 +508,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {id: "9-5", key: Route.DB_Domain, label: "域名资产", icon: <MenuDomainAssetsIcon />},
             {id: "9-6", key: Route.DB_HTTPHistory, label: "HTTP History", icon: <MenuHTTPHistoryIcon />},
             {id: "9-7", key: Route.AttachEngineCombinedOutput, label: "引擎 Console", icon: <MenuHTTPHistoryIcon />},
-            {id: "9-8", key: Route.DB_Projects, label: "项目管理", icon: <MenuHTTPHistoryIcon />},
+            {id: "9-8", key: Route.DB_Projects, label: "项目管理（Beta）", icon: <MenuHTTPHistoryIcon />},
         ]
     },
     {

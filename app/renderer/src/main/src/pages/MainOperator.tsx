@@ -11,7 +11,7 @@ import {
     Tabs,
     Typography,
     Upload,
-    Avatar
+    Avatar, Alert
 } from "antd"
 import {
     ContentByRoute,
@@ -385,6 +385,43 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             .then((flag: any) => setWinCloseFlag(flag === undefined ? true : flag))
     }, [])
 
+    useEffect(() => {
+        const firstUseProjectFlag = `FIRST_USE_PROJECT_BETA_SrLYymNzXvhO`
+        getRemoteValue(firstUseProjectFlag).then((value) => {
+            if (!value) {
+                const m = showModal({
+                    title: "重要提示", content: (
+                        <Space direction={"vertical"}>
+                            <div>{`本系统 >= 1.1.17，引擎 >= 1.1.18 后为了新增 "项目" 功能，项目数据库和用户数据库进行了严格分离`}</div>
+                            <div>用户可在 "数据库" - "项目管理" 中查看新的项目管理 （Beta）</div>
+                            <div>您的流量数据与扫描结果将会存储新的项目数据库中</div>
+                            <Alert type={"warning"}
+                                   description={"原本的用户数据并不会丢失，用户目录下 SQLite3 数据库 yakit-projects/default-yakit.db 包含所有用户信息"}/>
+                            <div>
+                                <Button.Group>
+                                    <Button onClick={() => {
+                                        m.destroy()
+                                    }}>Ok</Button>
+                                    <Button type={"link"}
+                                            onClick={() => {
+                                                m.destroy()
+                                                setRemoteValue(firstUseProjectFlag, "1").catch(e => {
+
+                                                })
+                                            }}
+                                    >知道了，不再提示</Button>
+                                </Button.Group>
+                            </div>
+                        </Space>
+                    )
+                })
+                return
+            }
+        }).catch(e => {
+            info("无法获取第一次使用项目标签")
+        })
+    }, [])
+
     // 获取自定义菜单
     const updateMenuItems = () => {
         setLoading(true)
@@ -707,7 +744,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             } else {
                 removePage(Route.LicenseAdminPage, false)
                 removePage(Route.TrustListPage, false)
-                removePage(Route.PlugInAdminPage,false)
+                removePage(Route.PlugInAdminPage, false)
             }
             IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
@@ -734,8 +771,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
-                {key: "license-admin",title:"License管理"},
-                {key:"plugIn-admin",title:"插件权限"},
+                {key: "license-admin", title: "License管理"},
+                {key: "plugIn-admin", title: "插件权限"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
