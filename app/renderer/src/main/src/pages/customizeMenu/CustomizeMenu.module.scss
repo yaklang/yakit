@@ -1,5 +1,5 @@
 .content {
-    display: flex;
+    display: none;
     height: 100%;
 
     ::-webkit-scrollbar {
@@ -97,6 +97,7 @@
             padding: 8px 12px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
 
             .button-done {
                 padding: 0 12px;
@@ -161,6 +162,10 @@
             height: 16px;
         }
     }
+}
+
+.content-show {
+    display: flex;
 }
 
 @media screen and (max-width: 900px) {
@@ -266,6 +271,8 @@
     padding: 12px;
     overflow-y: overlay;
     height: 100%;
+    display: flex;
+    flex-direction: column;
 
     .second-menu-heard {
         .second-menu-heard-input {
@@ -295,6 +302,12 @@
     }
 
     .second-menu-list {
+        flex: 1;
+
+        .second-menu-drop {
+            min-height: calc(100% - 76px);
+        }
+
         .second-menu-no-data {
             padding: 12px;
             margin-top: 8px;
@@ -491,6 +504,21 @@
             color: var(--yakit-disable-text-color);
             padding: 4px 8px;
         }
+
+        .menu-cancel {
+            font-size: 12px;
+            padding: 4px 8px;
+            color: var(--yakit-danger-5);
+            cursor: pointer;
+
+            &:hover {
+                color: var(--yakit-danger-4);
+            }
+
+            &:active {
+                color: var(--yakit-danger-6);
+            }
+        }
     }
 
     .system-function-item-isDragging {
@@ -537,6 +565,7 @@
             max-width: calc(100% - 55px);
         }
 
+
         .plugin-local-headImg {
             width: 28px;
             height: 28px;
@@ -575,6 +604,21 @@
             font-size: 12px;
             color: var(--yakit-disable-text-color);
             padding: 4px 8px;
+        }
+
+        .menu-cancel {
+            font-size: 12px;
+            padding: 4px 8px;
+            color: var(--yakit-danger-5);
+            cursor: pointer;
+
+            &:hover {
+                color: var(--yakit-danger-4);
+            }
+
+            &:active {
+                color: var(--yakit-danger-6);
+            }
         }
     }
 
@@ -785,4 +829,8 @@
         }
     }
 
+}
+
+.menu-item-isDragDisabled {
+    opacity: 0.3;
 }

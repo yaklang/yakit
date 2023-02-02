@@ -33,7 +33,7 @@ import {MenuDataProps, DefaultRouteMenuData, SystemRouteMenuData, Route} from "@
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {Button, Input, Modal, Popconfirm, Radio, Tooltip} from "antd"
-import {useDebounceEffect, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {MenuDefaultPluginIcon} from "./icon/menuIcon"
@@ -135,7 +135,7 @@ export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
 }
 
 const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
-    const {onClose} = props
+    const {visible, onClose} = props
     const [menuData, setMenuData] = useState<MenuDataProps[]>([])
     const [currentFirstMenu, setCurrentFirstMenu] = useState<MenuDataProps>()
     const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
@@ -179,6 +179,10 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 const list: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
                 defaultRouteMenuDataRef.current = list
                 setMenuData([...list])
+                //默认选中第一个一级菜单
+                if (list.length > 0) {
+                    onSelect(list[0])
+                }
             })
             .catch((err) => {
                 yakitFailed("获取菜单失败：" + err)
@@ -191,7 +195,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     /**
      * @description: 新增一级菜单
      */
-    const onAddFirstMenu = useMemoizedFn(() => {
+    const onAddFirstMenu = useMemoizedFn((value?: string) => {
         if (menuData.length >= 50) {
             yakitFailed("最多只能设置50个")
             return
@@ -200,7 +204,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         const id = randomString(4)
         const menu: MenuDataProps = {
             id,
-            label: `未命名${length + 1}`
+            label: value || `未命名${length + 1}`
         }
         setCurrentFirstMenu({...menu})
         setMenuData([...menuData, menu])
@@ -223,6 +227,10 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
      * @description: 修改一级菜单以及当前选中的菜单项
      */
     const editCurrentFirstMenu = useMemoizedFn((value: string) => {
+        // 如果一级菜单不存在，默认给用户创建一个一级菜单
+        if (!currentFirstMenu) {
+            onAddFirstMenu(value)
+        }
         if (!currentFirstMenu) return
         const index = menuData.findIndex((ele) => ele.id === currentFirstMenu?.id)
         if (index === -1) return
@@ -237,10 +245,14 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
-        if (!currentFirstMenu?.id) {
-            yakitFailed("请先选择左边一级菜单")
-            return
+        // 如果一级菜单不存在，默认给用户创建一个一级菜单
+        if (!currentFirstMenu) {
+            onAddFirstMenu()
         }
+        // if (!currentFirstMenu?.id) {
+        //     yakitFailed("请先选择左边一级菜单")
+        //     return
+        // }
         if (result.source.droppableId === "droppable2" && result.destination.droppableId === "droppable2") {
             const subMenuList: MenuDataProps[] = reorder(subMenuData, result.source.index, result.destination.index)
             // setSubMenuData(subMenuList)
@@ -350,6 +362,10 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
      */
     const onSaveLocal = useMemoizedFn(() => {
         let firstStageMenu = menuData.map((ele) => ele.label).sort()
+        if (firstStageMenu.filter((ele) => !ele).length > 0) {
+            yakitFailed(`一级菜单名称不能为空`)
+            return
+        }
         let repeatMenu = ""
         for (let i = 0; i < firstStageMenu.length; i++) {
             if (firstStageMenu[i] == firstStageMenu[i + 1]) {
@@ -455,7 +471,11 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     })
 
     return (
-        <div className={style["content"]}>
+        <div
+            className={classNames(style["content"], {
+                [style["content-show"]]: visible
+            })}
+        >
             <div className={style["left"]}>
                 <div className={style["left-heard"]}>
                     <div className={style["display-flex"]}>
@@ -487,13 +507,17 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                     />
                 </div>
                 <div className={style["left-footer"]}>
-                    <YakitButton type='primary' onClick={() => onSave()} loading={addLoading}>
-                        完成
+                    <YakitButton type='outline2' onClick={() => onTip()}>
+                        取消
                     </YakitButton>
-                    <YakitButton type='outline1' onClick={() => onImportJSON()}>
-                        导出 JSON
-                    </YakitButton>
-                    <YakitButton onClick={() => onTip()}>取消</YakitButton>
+                    <div>
+                        <YakitButton type='outline1' onClick={() => onImportJSON()}>
+                            导出 JSON
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={() => onSave()} loading={addLoading}>
+                            完成
+                        </YakitButton>
+                    </div>
                 </div>
             </div>
             <DragDropContext onDragEnd={onDragEnd} onDragUpdate={onDragUpdate}>
@@ -513,6 +537,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         setPluginList={(list) => (pluginLocalDataRef.current = list)}
                         onAddMenuData={onAddMenuData}
                         subMenuData={subMenuData}
+                        onRemoveMenu={onRemoveSecondMenu}
                     />
                 </div>
             </DragDropContext>
@@ -589,6 +614,11 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
 export default CustomizeMenu
 
 const getItemStyle = (isDragging, draggableStyle) => ({
+    ...draggableStyle
+})
+
+const getItemStyleSecond = (isDragging, draggableStyle) => ({
+    background: isDragging ? "red" : "",
     ...draggableStyle
 })
 
@@ -713,9 +743,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                         }
                         value={currentFirstMenu?.label}
                         onChange={(e) => {
-                            if (currentFirstMenu) {
-                                editCurrentFirstMenu(e.target.value)
-                            }
+                            editCurrentFirstMenu(e.target.value)
                         }}
                     />
                 </div>
@@ -726,7 +754,12 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                 <Droppable droppableId='droppable2'>
                     {(provided, snapshot) => {
                         return (
-                            <div {...provided.droppableProps} ref={provided.innerRef} style={{paddingBottom: 70}}>
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className={style["second-menu-drop"]}
+                                style={{marginBottom: 70}}
+                            >
                                 {subMenuData.map((item, index) => (
                                     <Draggable key={item.id} draggableId={item.id} index={index}>
                                         {(provided, snapshot) => (
@@ -736,6 +769,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                                                 {...provided.dragHandleProps}
                                                 style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                                             >
+                                                {provided.draggableProps.style.transform && <div>1654</div>}
                                                 <SecondMenuItem
                                                     key={item.id}
                                                     menuItem={item}
@@ -854,6 +888,7 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
                     subMenuData={props.subMenuData}
                     keywords={keywords}
                     isSearch={isSearch}
+                    onRemoveMenu={props.onRemoveMenu}
                 />
             )}
             {type === "plugin" && (
@@ -864,6 +899,7 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
                     setPluginList={props.setPluginList}
                     onAddMenuData={props.onAddMenuData}
                     subMenuData={props.subMenuData}
+                    onRemoveMenu={props.onRemoveMenu}
                 />
             )}
         </>
@@ -914,6 +950,7 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
                                                 destinationDrag={props.destinationDrag}
                                                 onAddMenuData={props.onAddMenuData}
                                                 isDragDisabled={isDragDisabled}
+                                                onRemoveMenu={props.onRemoveMenu}
                                             />
                                         </div>
                                     )}
@@ -929,21 +966,40 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
 })
 
 const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.memo((props) => {
-    const {item, isDragging, destinationDrag, onAddMenuData, isDragDisabled} = props
+    const {item, isDragging, destinationDrag, onAddMenuData, isDragDisabled, onRemoveMenu} = props
+    const systemRef = useRef(null)
+    const isHovering = useHover(systemRef)
     return (
         <div
             className={classNames(style["system-function-item"], {
                 [style["system-function-item-isDragging"]]: isDragging
             })}
+            ref={systemRef}
         >
             <div className={style["display-flex"]}>
-                <span className={style["menu-icon"]}>{item.icon}</span>
-                <span className={style["menu-label"]}>{item.label}</span>
+                <span className={classNames(style["menu-icon"], {[style["menu-item-isDragDisabled"]]: isDragDisabled})}>
+                    {item.icon}
+                </span>
+                <span
+                    className={classNames(style["menu-label"], {[style["menu-item-isDragDisabled"]]: isDragDisabled})}
+                >
+                    {item.label}
+                </span>
                 <Tooltip title={item.describe} placement='topRight' overlayClassName={style["question-tooltip"]}>
                     <QuestionMarkCircleIcon className={style["menu-question-icon"]} />
                 </Tooltip>
             </div>
-            {(isDragDisabled && <div className={style["have-add"]}>已添加</div>) || (
+            {(isDragDisabled && (
+                <>
+                    {isHovering ? (
+                        <div className={style["menu-cancel"]} onClick={() => onRemoveMenu(item)}>
+                            取&nbsp;消
+                        </div>
+                    ) : (
+                        <div className={style["have-add"]}>已添加</div>
+                    )}
+                </>
+            )) || (
                 <YakitButton
                     type='text'
                     onClick={() => {
@@ -1064,6 +1120,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
                                                     destinationDrag={props.destinationDrag}
                                                     onAddMenuData={props.onAddMenuData}
                                                     isDragDisabled={isDragDisabled}
+                                                    onRemoveMenu={props.onRemoveMenu}
                                                 />
                                             </div>
                                         )}
@@ -1080,7 +1137,9 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
 })
 
 const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
-    const {plugin, isDragging, destinationDrag, onAddMenuData, isDragDisabled} = props
+    const {plugin, isDragging, destinationDrag, onAddMenuData, isDragDisabled, onRemoveMenu} = props
+    const pluginRef = useRef(null)
+    const isHovering = useHover(pluginRef)
     const onAdd = useMemoizedFn(() => {
         const menuItem: MenuDataProps = {
             id: `${plugin.Id}`,
@@ -1093,15 +1152,41 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
         }
         onAddMenuData(menuItem)
     })
+    const onRemove = useMemoizedFn(() => {
+        const menuItem: MenuDataProps = {
+            id: `${plugin.Id}`,
+            key: `plugin:${plugin.Id}` as Route,
+            label: plugin.ScriptName,
+            icon: getScriptIcon(plugin.ScriptName),
+            describe: plugin.Help,
+            yakScripName: plugin.ScriptName
+            // yakScriptId: plugin.Id
+        }
+        onRemoveMenu(menuItem)
+    })
+
     return (
         <div
             className={classNames(style["plugin-local-item"], {
                 [style["plugin-local-item-isDragging"]]: isDragging
             })}
+            ref={pluginRef}
         >
             <div className={style["plugin-local-item-left"]}>
-                <img alt='' src={plugin.HeadImg} className={style["plugin-local-headImg"]} />
-                <span className={style["plugin-local-scriptName"]}>{plugin.ScriptName}</span>
+                <img
+                    alt=''
+                    src={plugin.HeadImg}
+                    className={classNames(style["plugin-local-headImg"], {
+                        [style["menu-item-isDragDisabled"]]: isDragDisabled
+                    })}
+                />
+                <span
+                    className={classNames(style["plugin-local-scriptName"], {
+                        [style["menu-item-isDragDisabled"]]: isDragDisabled
+                    })}
+                >
+                    {plugin.ScriptName}
+                </span>
                 {plugin.OnlineIsPrivate && <PrivatePluginIcon className={style["plugin-local-icon"]} />}
                 {plugin.OnlineOfficial && <OfficialPluginIcon className={style["plugin-local-icon"]} />}
                 <Tooltip
@@ -1119,7 +1204,17 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
                     <TerminalIcon className={style["plugin-local-icon"]} />
                 </YakitPopover>
             </div>
-            {(isDragDisabled && <div className={style["have-add"]}>已添加</div>) || (
+            {(isDragDisabled && (
+                <>
+                    {isHovering ? (
+                        <div className={style["menu-cancel"]} onClick={() => onRemove()}>
+                            取&nbsp;消
+                        </div>
+                    ) : (
+                        <div className={style["have-add"]}>已添加</div>
+                    )}
+                </>
+            )) || (
                 <YakitButton type='text' onClick={() => onAdd()}>
                     添加
                 </YakitButton>
