@@ -16,9 +16,6 @@ import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
-import { PageCache } from "@/pages/MainOperator";
-import {Route} from "@/routes/routeSpec"
-const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 /** 快捷键目录 */
@@ -69,10 +66,6 @@ function NewApp() {
     /** 展示用户协议计时时间 */
     const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
     const agrTimeRef = useRef<any>(null)
-    /** 是否展示首页导航栏 */
-    const [isShowHome, setShowHome] = useState<boolean>(true)
-    /** 添加或选择页面 */
-    const [selectItemPage,setSelectItemPage] = useState<Route>()
     /** 私有域是否设置成功 */
     const [onlineProfileStatus,setOnlineProfileStatus] = useState<boolean>(false)
 
@@ -231,25 +224,6 @@ function NewApp() {
         }
     }, [])
 
-    /**
-     * 控制首页展示
-     */
-    useEffect(() => {
-        ipcRenderer.on("go-home-page-status", (e, res) => {
-            if(res){
-                setShowHome(res.isShow)
-            }
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("go-home-page-status")
-        }
-    }, [])
-
-    const setOpenPage = (v:PageCache) => {
-        setSelectItemPage(v.route)
-        setShowHome(false)
-    }
-
     if (!agreed) {
         return (
             <>
@@ -317,10 +291,7 @@ function NewApp() {
                 {isJudgeLicense ? (
                     <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
-                    <>
-                    {isShowHome&&onlineProfileStatus&&<NewHome setOpenPage={setOpenPage}/>}
-                    <Main onErrorConfirmed={() => {}} selectItemPage={selectItemPage} setSelectItemPage={setSelectItemPage} isShowHome={isShowHome} setJudgeLicense={setJudgeLicense}/>
-                    </>
+                    <Main onErrorConfirmed={() => {}} setJudgeLicense={setJudgeLicense}/>
                 )}
             </Suspense>
         </UILayout>

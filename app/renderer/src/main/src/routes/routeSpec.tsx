@@ -48,7 +48,6 @@ import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 
-
 import {
     MenuDomainAssetsIcon,
     MenuHTTPHistoryIcon,
@@ -112,7 +111,7 @@ import {ProjectPage} from "@/pages/projects/ProjectPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
-
+const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 export enum Route {
     MITM = "mitm",
     YakScript = "yakScript",
@@ -189,6 +188,10 @@ export enum Route {
     TrustListPage = "trust-list-admin-page", // 信任用户管理
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
+    AttachEngineCombinedOutput = "attach-engine-combined-output",
+
+    // 首页
+    NewHome = "new-home"
     AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
 
@@ -343,6 +346,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     shareContent={params?.shareContent}
                 />
             )
+        case Route.NewHome:
+            return <NewHome/>
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case Route.Codec:
@@ -707,5 +712,54 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 hoverIcon: <MenuSolidDefaultPluginIcon />
             }
         ]
+    },
+    {
+        id: "10",
+        key: Route.BatchExecutorRecover,
+        label: "继续任务：批量执行插件",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "11",
+        key: Route.AccountAdminPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "12",
+        key: Route.RoleAdminPage,
+        label: "角色管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "13",
+        key: Route.LicenseAdminPage,
+        label: "License管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "14",
+        key: Route.TrustListPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "15",
+        key: Route.PlugInAdminPage,
+        label: "插件权限",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "16",
+        key: Route.NewHome,
+        label: "首页",
+        disabled: true,
+        hidden: true
     }
 ]

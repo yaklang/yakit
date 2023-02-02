@@ -334,8 +334,3 @@ ipcMain.on("edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
     win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
 })
-
-
-ipcMain.on("is-go-home", (event, arg) => {
-    win.webContents.send("go-home-page-status", arg)
-})

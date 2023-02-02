@@ -65,12 +65,12 @@ const RouteTitle: React.FC<RouteTitleProps> = (props) => {
 interface RouteItemProps {
     dataSource: DataItem
     setOpenPage: (v: any) => void
-    load:boolean
-    getCustomizeMenus?:()=>void
+    load: boolean
+    getCustomizeMenus?: () => void
 }
 
 const RouteItem: React.FC<RouteItemProps> = (props) => {
-    const {dataSource, setOpenPage,load,getCustomizeMenus} = props
+    const {dataSource, setOpenPage, load, getCustomizeMenus} = props
     const goRoute = () => {
         dataSource.key &&
             setOpenPage({
@@ -91,7 +91,7 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
                 failed(`添加菜单失败:${e}`)
             })
             .finally(() => {
-                getCustomizeMenus&&getCustomizeMenus()
+                getCustomizeMenus && getCustomizeMenus()
             })
     })
     const addMenu = (name: string) => {
@@ -158,15 +158,15 @@ interface newHomeListData {
 }
 
 interface RouteListProps {
-    load?:boolean
+    load?: boolean
     colLimit?: 1 | 2 | 3
     data: newHomeListData
     setOpenPage: (v: any) => void
-    getCustomizeMenus?:()=>void
+    getCustomizeMenus?: () => void
 }
 
 const RouteList: React.FC<RouteListProps> = (props) => {
-    const {colLimit = 1, data, setOpenPage,load=true,getCustomizeMenus} = props
+    const {colLimit = 1, data, setOpenPage, load = true, getCustomizeMenus} = props
     const [span, setSpan] = useState(24 / colLimit)
     const rowCount = Math.ceil(data.subMenuData.length / colLimit)
     return (
@@ -184,7 +184,12 @@ const RouteList: React.FC<RouteListProps> = (props) => {
                         flex={1}
                         className={classNames(styles[`list-content-col${rowCount}`])}
                     >
-                        <RouteItem load={load} dataSource={item} setOpenPage={setOpenPage} getCustomizeMenus={getCustomizeMenus}/>
+                        <RouteItem
+                            load={load}
+                            dataSource={item}
+                            setOpenPage={setOpenPage}
+                            getCustomizeMenus={getCustomizeMenus}
+                        />
                     </Col>
                 ))}
             </Row>
@@ -981,17 +986,18 @@ export const getDescribe = (name: string) => {
     }
 }
 
-export interface NewHomeProps {
-    setOpenPage: (v: any) => void
-}
+export interface NewHomeProps {}
 const NewHome: React.FC<NewHomeProps> = (props) => {
-    const {setOpenPage} = props
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     // 加载是否完成
-    const [load,setLoad] = useState<boolean>(false)
+    const [load, setLoad] = useState<boolean>(false)
     useEffect(() => {
         getCustomizeMenus()
     }, [])
+
+    const setOpenPage = (v) => {
+        ipcRenderer.invoke("open-user-manage", v.route)
+    }
 
     // 获取自定义菜单
     const getCustomizeMenus = () => {
@@ -1014,7 +1020,8 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                     }
                 })
                 setNewHomeData(deepList)
-            }).finally(() => {
+            })
+            .finally(() => {
                 setLoad(true)
             })
     }
@@ -1023,7 +1030,12 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
         <div className={classNames(styles["new-home-page"])}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeData[0]} setOpenPage={setOpenPage} load={load} getCustomizeMenus={getCustomizeMenus}/>
+                    <RouteList
+                        data={newHomeData[0]}
+                        setOpenPage={setOpenPage}
+                        load={load}
+                        getCustomizeMenus={getCustomizeMenus}
+                    />
                 </div>
                 <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
                     <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
