@@ -10,8 +10,11 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {HTTPPacketEditor, YakEditor} from "@/utils/editors"
 import {InputItem} from "@/utils/inputUtil"
 import {QuestionOutlined, SearchOutlined} from "@ant-design/icons/lib"
+import {CheckIcon} from "@/assets/newIcon"
+import style from "./HTTPFuzzerHistory.module.scss"
 
 export interface HTTPFuzzerHistorySelectorProp {
+    currentSelectId?: number
     onSelect: (i: number, page: number) => any
 }
 
@@ -41,6 +44,7 @@ export interface HTTPFuzzerTaskDetail {
 * */
 
 export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> = React.memo((props) => {
+    const {currentSelectId} = props
     const [tasks, setTasks] = useState<HTTPFuzzerTaskDetail[]>([])
     const [loading, setLoading] = useState(false)
     const [paging, setPaging] = useState<PaginationSchema>({Limit: 10, Order: "desc", OrderBy: "created_at", Page: 1})
@@ -190,16 +194,21 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                     }}
                                     bordered={false}
                                 >
-                                    <Space size={4} style={{display: "flex", flexDirection: "row"}}>
-                                        <div>{`ID:${i.Id}`}</div>
-                                        <Tag color={"geekblue"}>{!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}</Tag>
-                                        <Tag>共{i.HTTPFlowTotal}个</Tag>
-                                        {i.HTTPFlowSuccessCount != i.HTTPFlowTotal && (
-                                            <div style={{flex: 1, alignItems: "right", textAlign: "right"}}>
-                                                <Tag>成功:{i.HTTPFlowSuccessCount}个</Tag>
-                                            </div>
-                                        )}
-                                    </Space>
+                                    <div className={style["history-item"]}>
+                                        <Space size={4} style={{display: "flex", flexDirection: "row"}}>
+                                            <div>{`ID:${i.Id}`}</div>
+                                            <Tag color={"geekblue"}>
+                                                {!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}
+                                            </Tag>
+                                            <Tag>共{i.HTTPFlowTotal}个</Tag>
+                                            {i.HTTPFlowSuccessCount != i.HTTPFlowTotal && (
+                                                <div style={{flex: 1, alignItems: "right", textAlign: "right"}}>
+                                                    <Tag>成功:{i.HTTPFlowSuccessCount}个</Tag>
+                                                </div>
+                                            )}
+                                        </Space>
+                                        {currentSelectId == i.Id && <CheckIcon className={style["check-icon"]} />}
+                                    </div>
                                 </Card>
                             </Popover>
                         </List.Item>

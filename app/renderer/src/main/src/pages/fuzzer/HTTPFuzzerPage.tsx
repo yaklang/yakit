@@ -293,6 +293,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
+    const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
+
     // filter
     const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
         Keywords: [],
@@ -423,13 +425,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setHistoryTask(undefined)
         setLoading(true)
         setDroppedCount(0)
-
-        setLoading(true)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
                 .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
                     setHistoryTask(data.OriginRequest)
+                    setCurrentSelectId(id)
                 })
         })
     })
@@ -1043,6 +1044,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             content={
                                 <div style={{width: 400}}>
                                     <HTTPFuzzerHistorySelector
+                                        currentSelectId={currentSelectId}
                                         onSelect={(e, page) => {
                                             setCurrentPage(page)
                                             loadHistory(e)
