@@ -10,8 +10,11 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {HTTPPacketEditor, YakEditor} from "@/utils/editors"
 import {InputItem} from "@/utils/inputUtil"
 import {QuestionOutlined, SearchOutlined} from "@ant-design/icons/lib"
+<<<<<<< HEAD
 import {CheckIcon} from "@/assets/newIcon"
 import style from "./HTTPFuzzerHistory.module.scss"
+=======
+>>>>>>> 38bedd0f (-)
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
@@ -44,7 +47,10 @@ export interface HTTPFuzzerTaskDetail {
 * */
 
 export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> = React.memo((props) => {
+<<<<<<< HEAD
     const {currentSelectId} = props
+=======
+>>>>>>> 38bedd0f (-)
     const [tasks, setTasks] = useState<HTTPFuzzerTaskDetail[]>([])
     const [loading, setLoading] = useState(false)
     const [paging, setPaging] = useState<PaginationSchema>({Limit: 10, Order: "desc", OrderBy: "created_at", Page: 1})
@@ -156,7 +162,11 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         // submit(1, limit)
                     }
                 }}
+<<<<<<< HEAD
                 renderItem={(detail: HTTPFuzzerTaskDetail, index: number) => {
+=======
+                renderItem={(detail: HTTPFuzzerTaskDetail) => {
+>>>>>>> 38bedd0f (-)
                     const i = detail.BasicInfo
                     let verbose = detail.OriginRequest.Verbose
                     if (!verbose) {
