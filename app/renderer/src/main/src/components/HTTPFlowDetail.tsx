@@ -36,6 +36,7 @@ import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
 import {AutoCard} from "@/components/AutoCard"
 import {SelectOne} from "@/utils/inputUtil"
+import {useMemoizedFn} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -184,6 +185,19 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [props.id])
 
+    const onClose = useMemoizedFn(() => {
+        if (props.onClose) props.onClose()
+    })
+
+    useEffect(() => {
+        // 发送webfuzzer后关闭详情
+        ipcRenderer.on("fetch-send-to-tab", onClose)
+
+        return () => {
+            ipcRenderer.removeListener("fetch-send-to-tab", onClose)
+        }
+    }, [])
+
     return (
         <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
             {flow ? (
@@ -302,7 +316,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             noHex={true}
                                             noHeader={true}
                                             originValue={new Buffer(flow.Request)}
-                                            actions={[...actionFuzzer]}
+                                            // actions={[...actionFuzzer]}
                                         />
                                     </div>
                                 </Card>
@@ -316,7 +330,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             noHex={true}
                                             noHeader={true}
                                             originValue={new Buffer(flow.Response)}
-                                            actions={[...actionFuzzer]}
+                                            // actions={[...actionFuzzer]}
                                         />
                                     </div>
                                 </Card>
