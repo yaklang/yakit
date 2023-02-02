@@ -384,6 +384,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                     minWidth={256}
                     minHeight={176}
                     bounds={"window"}
+                    enable={{ top:false, right:true, bottom:true, left:false, topRight:false, bottomRight:true, bottomLeft:false, topLeft:false }}
                 >
                     <div className={styles["modal-yaklang-engine-console"]}>
                         <div className={styles["yaklang-engine-console-wrapper"]}>
