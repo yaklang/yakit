@@ -11,7 +11,7 @@ import {
     YakitConsoleBottomSvgIcon,
     YakitConsoleDotsSvgIcon
 } from "../layout/icons"
-import {Space} from "antd"
+import {Space, Tooltip} from "antd"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {Resizable} from "re-resizable"
 import styles from "./baseConsole.module.scss"
@@ -24,6 +24,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
 import {useStore} from "../baseConsole/StoreConsole"
+import {YakitSystem} from "@/yakitGVDefine"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -31,23 +32,23 @@ export interface EngineConsoleProp {}
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     const xtermRef = useRef<any>(null)
     // 缓存Console日志信息
-    const {consoleLog, setConsoleInfo,isFirst,setIsFirst} = useStore()
-    useEffect(()=>{
-        if(consoleLog.length>0){
-            writeXTerm(xtermRef,consoleLog)
+    const {consoleLog, setConsoleInfo, isFirst, setIsFirst} = useStore()
+    useEffect(() => {
+        if (consoleLog.length > 0) {
+            writeXTerm(xtermRef, consoleLog)
         }
-    },[])
+    }, [])
     useEffect(() => {
         if (!xtermRef) {
             return
         }
-        if(consoleLog.length>0){
-            writeXTerm(xtermRef,consoleLog)
+        if (consoleLog.length > 0) {
+            writeXTerm(xtermRef, consoleLog)
         }
         const token = randomString(40)
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             try {
-                setConsoleInfo(consoleLog+Uint8ArrayToString(data.Raw) + "\r\n")
+                setConsoleInfo(consoleLog + Uint8ArrayToString(data.Raw) + "\r\n")
                 writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + "\r\n")
             } catch (e) {
                 console.info(e)
@@ -61,7 +62,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
         })
 
         ipcRenderer.invoke("AttachCombinedOutput", {}, token).then(() => {
-            if(isFirst) {
+            if (isFirst) {
                 info(`启动输出监控成功`)
                 setIsFirst(false)
             }
@@ -172,51 +173,63 @@ export const RightIconBox: React.FC<RightIconBoxProps> = (props) => {
     }
     return (
         <div className={styles["right-icon-box"]}>
-            <Space>
-                <span
-                    onClick={() => {
-                        clickType("shrink")
-                    }}
-                >
-                    <YakitConsoleShrinkSvgIcon
-                        className={classnames(styles["item-icon"], {
-                            [styles["item-icon-active"]]: activeSource === "shrink"
-                        })}
-                    />
-                </span>
-                <span
-                    onClick={() => {
-                        clickType("left")
-                    }}
-                >
-                    <YakitConsoleLeftSvgIcon
-                        className={classnames(styles["item-icon"], {
-                            [styles["item-icon-active"]]: activeSource === "left"
-                        })}
-                    />
-                </span>
-                <span
-                    onClick={() => {
-                        clickType("bottom")
-                    }}
-                >
-                    <YakitConsoleBottomSvgIcon
-                        className={classnames(styles["item-icon"], {
-                            [styles["item-icon-active"]]: activeSource === "bottom"
-                        })}
-                    />
-                </span>
-                <span
-                    onClick={() => {
-                        clickType("right")
-                    }}
-                >
-                    <YakitConsoleRightSvgIcon
-                        className={classnames(styles["item-icon"], {
-                            [styles["item-icon-active"]]: activeSource === "right"
-                        })}
-                    />
-                </span>
+            <Space size={10} style={{padding: "3px 0"}}>
+                <Tooltip title={"浮窗"}>
+                    <span
+                        onClick={() => {
+                            clickType("shrink")
+                        }}
+                        className={styles["span-icon-box"]}
+                    >
+                        <YakitConsoleShrinkSvgIcon
+                            className={classnames(styles["item-icon"], {
+                                [styles["item-icon-active"]]: activeSource === "shrink"
+                            })}
+                        />
+                    </span>
+                </Tooltip>
+                <Tooltip title={"向左"}>
+                    <span
+                        onClick={() => {
+                            clickType("left")
+                        }}
+                        className={styles["span-icon-box"]}
+                    >
+                        <YakitConsoleLeftSvgIcon
+                            className={classnames(styles["item-icon"], {
+                                [styles["item-icon-active"]]: activeSource === "left"
+                            })}
+                        />
+                    </span>
+                </Tooltip>
+                <Tooltip title={"向下"}>
+                    <span
+                        onClick={() => {
+                            clickType("bottom")
+                        }}
+                        className={styles["span-icon-box"]}
+                    >
+                        <YakitConsoleBottomSvgIcon
+                            className={classnames(styles["item-icon"], {
+                                [styles["item-icon-active"]]: activeSource === "bottom"
+                            })}
+                        />
+                    </span>
+                </Tooltip>
+                <Tooltip title={"向右"}>
+                    <span
+                        onClick={() => {
+                            clickType("right")
+                        }}
+                        className={styles["span-icon-box"]}
+                    >
+                        <YakitConsoleRightSvgIcon
+                            className={classnames(styles["item-icon"], {
+                                [styles["item-icon-active"]]: activeSource === "right"
+                            })}
+                        />
+                    </span>
+                </Tooltip>
             </Space>
         </div>
     )
@@ -230,7 +243,7 @@ export interface BaseConsoleTitleProps {
 
 export const BaseConsoleTitle: React.FC<BaseConsoleTitleProps> = (props) => {
     const {setIsShowBaseConsole, callBackSource, direction} = props
-    const {setConsoleInfo,setIsFirst} = useStore()
+    const {setConsoleInfo, setIsFirst} = useStore()
     return (
         <div className={styles["base-console-title"]}>
             <div className={styles["title"]}>引擎 Console</div>
@@ -323,11 +336,17 @@ export interface BaseConsoleMiniProps {
 
 export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const {visible, setVisible} = props
-    const {setConsoleInfo,setIsFirst} = useStore()
+    const {setConsoleInfo, setIsFirst} = useStore()
     const draggleRef = useRef<HTMLDivElement>(null)
     const size = useSize(draggleRef)
     const [disabled, setDisabled] = useState(false)
     const [bounds, setBounds, getBounds] = useGetState({left: 0, top: 0, bottom: 0, right: 0})
+
+    const [system, setSystem] = useState<YakitSystem>()
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => setSystem(type))
+    }, [])
+
     /** 弹窗拖拽移动触发事件 */
     const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
         const {clientWidth, clientHeight} = window.document.documentElement
@@ -384,7 +403,16 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                     minWidth={256}
                     minHeight={176}
                     bounds={"window"}
-                    enable={{ top:false, right:true, bottom:true, left:false, topRight:false, bottomRight:true, bottomLeft:false, topLeft:false }}
+                    enable={{
+                        top: false,
+                        right: true,
+                        bottom: true,
+                        left: false,
+                        topRight: false,
+                        bottomRight: true,
+                        bottomLeft: false,
+                        topLeft: false
+                    }}
                 >
                     <div className={styles["modal-yaklang-engine-console"]}>
                         <div className={styles["yaklang-engine-console-wrapper"]}>
@@ -395,29 +423,59 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                 }}
                                 onMouseLeave={() => setDisabled(true)}
                             >
-                                <div className={styles["header-box"]}>
-                                    <div className={styles["header-left"]}>
-                                        <div
-                                            className={styles["dot"]}
-                                            onClick={() => {
-                                                setConsoleInfo("")
-                                                setIsFirst(true)
-                                                setVisible(false)
-                                            }}
-                                        ></div>
+                                {system === "Windows_NT" ? (
+                                    <div className={styles["header-box"]}>
+                                        <div className={styles["header-center"]}>引擎 Console</div>
+                                        <div className={styles["header-right"]}>
+                                            {size && size.width > 400 && (
+                                                <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
+                                            )}
+                                            {size && size.width <= 400 && (
+                                                <RightIconMenu callBackSource={callBackSource} />
+                                            )}
+
+                                            {size && (
+                                                <CloseOutlined
+                                                    className={classnames(
+                                                        styles["header-close"],
+                                                        size.width > 400
+                                                            ? styles["header-close-long"]
+                                                            : styles["header-close-short"]
+                                                    )}
+                                                    onClick={() => {
+                                                        setConsoleInfo("")
+                                                        setIsFirst(true)
+                                                        setVisible(false)
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className={styles["header-center"]}>引擎 Console</div>
-                                    <div className={styles["header-right"]}>
-                                        {size && size.width > 400 && (
-                                            <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
-                                        )}
-                                        {size && size.width <= 400 && <RightIconMenu callBackSource={callBackSource} />}
+                                ) : (
+                                    <div className={styles["header-box"]}>
+                                        <div className={styles["header-left"]}>
+                                            <div
+                                                className={styles["dot"]}
+                                                onClick={() => {
+                                                    setConsoleInfo("")
+                                                    setIsFirst(true)
+                                                    setVisible(false)
+                                                }}
+                                            ></div>
+                                        </div>
+                                        <div className={styles["header-center"]}>引擎 Console</div>
+                                        <div className={styles["header-right"]}>
+                                            {size && size.width > 400 && (
+                                                <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
+                                            )}
+                                            {size && size.width <= 400 && (
+                                                <RightIconMenu callBackSource={callBackSource} />
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
-                            <div className={styles["console-draggle-body"]}>
-                                {visible&&<EngineConsole />}
-                            </div>
+                            <div className={styles["console-draggle-body"]}>{visible && <EngineConsole />}</div>
                         </div>
                     </div>
                 </Resizable>

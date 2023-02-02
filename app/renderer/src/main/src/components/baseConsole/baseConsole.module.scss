@@ -70,7 +70,24 @@
                         color: #85899e;
                         cursor: pointer;
                     }
-                    .right-dots-icon:hover {
+                    // .right-dots-icon:hover {
+                    //     color: #f28b44;
+                    // }
+                    .header-close {
+                        color: #b4bbca;
+                        font-size: 15px;
+                        padding-left: 24px;
+                        
+                    }
+                    .header-close-long{
+                        position: relative;
+                        top: -2px;
+                    }
+                    .header-close-short{
+                        position: relative;
+                        top: 2px;
+                    }
+                    .header-close:hover {
                         color: #f28b44;
                     }
                 }
@@ -84,17 +101,23 @@
 .right-icon-box {
     color: #85899e;
     display: inline-block;
-    width: 86px;
+    height: 100%;
     .item-icon {
-        position: relative;
-        top: 6px;
         cursor: pointer;
+        position: relative;
+        top: -2px;
     }
     .item-icon-active {
         color: #f28b44;
     }
-    .item-icon:hover {
-        color: #f28b44;
+    .span-icon-box {
+        display: inline-block;
+        padding: 4px;
+        border-radius: 4px;
+        height: 24px;
+    }
+    .span-icon-box:hover{
+        background: #f0f1f3;
     }
 }
 .right-icon-menu {
@@ -122,8 +145,8 @@
     }
     .operation {
         position: relative;
-        
-        .right-icon-box{
+
+        .right-icon-box {
             position: absolute;
             right: 30px;
             top: -4px;
@@ -137,19 +160,19 @@
         }
     }
 }
-.console-content{
+.console-content {
     flex: 1;
-    background: #F0F1F3;
+    background: #f0f1f3;
 }
-.base-console-box{
+.base-console-box {
     height: 100%;
     display: flex;
     flex-flow: column;
 }
-.engine-console{
+.engine-console {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: rgb(232,233,232);
+    background: rgb(232, 233, 232);
     padding: 12px 0 0 12px;
 }
