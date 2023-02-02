@@ -77,6 +77,34 @@ import {
     MenuWebsocketFuzzerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
+import {
+    MenuSolidBasicCrawlerIcon,
+    MenuSolidBlastingAndUnauthorizedTestingIcon,
+    MenuSolidCodecIcon,
+    MenuSolidComprehensiveCatalogScanningAndBlastingIcon,
+    MenuSolidDataComparisonIcon,
+    MenuSolidDNSLogIcon,
+    MenuSolidDomainAssetsIcon,
+    MenuSolidHTTPHistoryIcon,
+    MenuSolidICMPSizeLogIcon,
+    MenuSolidMITMInteractiveHijackingIcon,
+    MenuSolidPlugExecutionResultsIcon,
+    MenuSolidPluginBatchExecutionIcon,
+    MenuSolidPluginWarehouseIcon,
+    MenuSolidPortAssetsIcon,
+    MenuSolidPortListenerIcon,
+    MenuSolidPortScanningIcon,
+    MenuSolidReportIcon,
+    MenuSolidReverseConnectionServerIcon,
+    MenuSolidSpaceEngineHunterIcon,
+    MenuSolidSpecialVulnerabilityDetectionIcon,
+    MenuSolidSubDomainCollectionIcon,
+    MenuSolidTCPPortLogIcon,
+    MenuSolidVulnerabilityRiskIcon,
+    MenuSolidWebFuzzerIcon,
+    MenuSolidWebsocketFuzzerIcon,
+    MenuSolidYsoJavaHackIcon
+} from "@/pages/customizeMenu/icon/solidMenuIcon"
 import {ProjectPage} from "@/pages/projects/ProjectPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
