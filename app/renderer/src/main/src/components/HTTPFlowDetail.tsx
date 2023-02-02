@@ -185,16 +185,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [props.id])
 
-    const onClose = useMemoizedFn(() => {
+    const onCloseDetails = useMemoizedFn(() => {
         if (props.onClose) props.onClose()
     })
 
     useEffect(() => {
         // 发送webfuzzer后关闭详情
-        ipcRenderer.on("fetch-send-to-tab", onClose)
+        ipcRenderer.on("fetch-send-to-tab", onCloseDetails)
 
         return () => {
-            ipcRenderer.removeListener("fetch-send-to-tab", onClose)
+            ipcRenderer.removeListener("fetch-send-to-tab", onCloseDetails)
         }
     }, [])
 

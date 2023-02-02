@@ -20,7 +20,8 @@ import {
     Menu,
     InputNumber,
     Spin,
-    Dropdown, Alert
+    Dropdown,
+    Alert
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -59,8 +60,8 @@ import {
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
-import {saveABSFileToOpen} from "@/utils/openWebsite";
-import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser";
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -489,7 +490,7 @@ const availableColors = [
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 红色
-                <div className={classNames(style["tag-color-display"],"bg-color-red-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-red-opacity")}></div>
             </div>
         )
     },
@@ -501,7 +502,7 @@ const availableColors = [
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 绿色
-                <div className={classNames(style["tag-color-display"], 'bg-color-green-opacity')}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-green-opacity")}></div>
             </div>
         )
     },
@@ -537,7 +538,7 @@ const availableColors = [
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 橙色
-                <div className={classNames(style["tag-color-display"],"bg-color-orange-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-orange-opacity")}></div>
             </div>
         )
     },
@@ -549,7 +550,7 @@ const availableColors = [
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 紫色
-                <div className={classNames(style["tag-color-display"],"bg-color-purple-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-purple-opacity")}></div>
             </div>
         )
     },
@@ -573,7 +574,7 @@ const availableColors = [
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 灰色
-                <div className={classNames(style["tag-color-display"],"bg-color-grey-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-grey-opacity")}></div>
             </div>
         )
     }
@@ -1586,13 +1587,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
                 })
-            },
+            }
         },
         {
             title: "浏览器中打开",
             onClickSingle: (v) => {
                 showResponseViaHTTPFlowID(v)
-            },
+            }
         },
         {
             title: "复制为 CSRF Poc",
