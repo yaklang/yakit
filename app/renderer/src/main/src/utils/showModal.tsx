@@ -1,15 +1,17 @@
-import React, {useEffect, useRef, useState} from "react";
-import ReactDOM from "react-dom";
-import {ModalProps} from "antd/lib/modal";
-import {Drawer, DrawerProps, Modal} from "antd";
-import {ErrorBoundary} from 'react-error-boundary'
+import React, {useEffect, useRef, useState} from "react"
+import ReactDOM from "react-dom"
+import {ModalProps} from "antd/lib/modal"
+import {Drawer, DrawerProps, Modal} from "antd"
+import {ErrorBoundary} from "react-error-boundary"
+
+const {ipcRenderer} = window.require("electron")
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
 }
 
 export const BaseModal: React.FC<BaseModalProp> = (props) => {
-    const [visible, setVisible] = useState(true);
+    const [visible, setVisible] = useState(true)
 
     useEffect(() => {
         if (visible && props.onVisibleSetter) {
@@ -17,69 +19,78 @@ export const BaseModal: React.FC<BaseModalProp> = (props) => {
         }
     }, [visible])
 
-    return <Modal
-        {...props}
-        footer={false}
-        visible={visible}
-        onCancel={() => setVisible(false)}
-        onOk={(e) => {
-            if (props.onOk) props.onOk(e)
-        }}
-        closable={true} destroyOnClose={true}
-        cancelButtonProps={{hidden: true}}
-    />
-};
+    return (
+        <Modal
+            {...props}
+            footer={false}
+            visible={visible}
+            onCancel={() => setVisible(false)}
+            onOk={(e) => {
+                if (props.onOk) props.onOk(e)
+            }}
+            closable={true}
+            destroyOnClose={true}
+            cancelButtonProps={{hidden: true}}
+        />
+    )
+}
 
 export interface ShowModalProps extends BaseModalProp {
-    content?: React.ReactNode;
+    content?: React.ReactNode
     modalAfterClose?: () => any
 }
 
 export const showModal = (props: ShowModalProps) => {
-    const div = document.createElement("div");
+    const div = document.createElement("div")
     document.body.appendChild(div)
 
-    let setter: (r: boolean) => any = () => {
-    };
+    let setter: (r: boolean) => any = () => {}
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
-            ReactDOM.render(<>
-                <BaseModal
-                    {...targetConfig as ModalProps}
-                    onVisibleSetter={r => {
-                        setter = r
-                    }}
-                    afterClose={() => {
-                        if(props.modalAfterClose) props.modalAfterClose()
-                        const unmountResult = ReactDOM.unmountComponentAtNode(div);
-                        if (unmountResult && div.parentNode) {
-                            div.parentNode.removeChild(div);
-                        }
-                    }}
-                >
-                    <ErrorBoundary FallbackComponent={({error, resetErrorBoundary}) => {
-                        if (!error) {
-                            return <div>未知错误</div>
-                        }
-                        return <div>
-                            <p>弹框内逻辑性崩溃，请关闭重试！</p>
-                            <pre>{error?.message}</pre>
-                        </div>
-                    }}>
-                        {targetConfig.content}
-                    </ErrorBoundary>
-                </BaseModal>
-            </>, div)
+            ReactDOM.render(
+                <>
+                    <BaseModal
+                        {...(targetConfig as ModalProps)}
+                        onVisibleSetter={(r) => {
+                            setter = r
+                        }}
+                        afterClose={() => {
+                            if (props.modalAfterClose) props.modalAfterClose()
+                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                            if (unmountResult && div.parentNode) {
+                                div.parentNode.removeChild(div)
+                            }
+                        }}
+                    >
+                        <ErrorBoundary
+                            FallbackComponent={({error, resetErrorBoundary}) => {
+                                if (!error) {
+                                    return <div>未知错误</div>
+                                }
+                                return (
+                                    <div>
+                                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                                        <pre>{error?.message}</pre>
+                                    </div>
+                                )
+                            }}
+                        >
+                            {targetConfig.content}
+                        </ErrorBoundary>
+                    </BaseModal>
+                </>,
+                div
+            )
         })
     }
-    render(props);
+    render(props)
     return {
         destroy: () => {
             if (setter) {
                 setter(false)
             }
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div);
+                const unmountResult = ReactDOM.unmountComponentAtNode(div)
                 if (unmountResult && div.parentNode) {
                     div.parentNode.removeChild(div)
                 }
@@ -95,7 +106,7 @@ export interface BaseDrawerProp extends DrawerProps, React.ComponentProps<any> {
 }
 
 export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
-    const [visible, setVisible] = useState(false);
+    const [visible, setVisible] = useState(false)
 
     useEffect(() => {
         setVisible(true)
@@ -103,65 +114,73 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
 
     useEffect(() => {
         if (visible) {
-            if (props.afterVisible) props.afterVisible(setVisible);
+            ipcRenderer.invoke("update-yakit-header-title-drop", false)
+            if (props.afterVisible) props.afterVisible(setVisible)
+        } else {
+            ipcRenderer.invoke("update-yakit-header-title-drop", true)
         }
     }, [visible])
 
     const close = () => {
         setVisible(false)
-        if (props.afterInvisible) props.afterInvisible(setVisible);
+        if (props.afterInvisible) props.afterInvisible(setVisible)
         setTimeout(() => {
-            if (props.afterClose) props.afterClose(setVisible);
+            if (props.afterClose) props.afterClose(setVisible)
         }, 1000)
     }
 
-    return <Drawer
-        visible={visible}
-        destroyOnClose={true}
-        onClose={close}
-        closable={true} width={"50%"} maskClosable={true}
-        {...props}
-    >
-
-    </Drawer>
-};
+    return (
+        <Drawer
+            visible={visible}
+            destroyOnClose={true}
+            onClose={close}
+            closable={true}
+            width={"50%"}
+            maskClosable={true}
+            {...props}
+        ></Drawer>
+    )
+}
 
 export interface ShowDrawerProps extends BaseDrawerProp {
-    content?: React.ReactNode;
+    content?: React.ReactNode
 }
 
 export const showDrawer = (props: ShowDrawerProps) => {
-    const div = document.createElement("div");
+    const div = document.createElement("div")
     document.body.appendChild(div)
 
-    let onDestroy: ((i: boolean) => any) | undefined = () => undefined;
+    let onDestroy: ((i: boolean) => any) | undefined = () => undefined
 
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
-            ReactDOM.render(<>
-                <BaseDrawer
-                    {...targetConfig as BaseDrawerProp}
-                    afterVisible={(setter) => {
-                        onDestroy = setter
-                    }}
-                    afterClose={() => {
-                        const unmountResult = ReactDOM.unmountComponentAtNode(div);
-                        if (unmountResult && div.parentNode) {
-                            div.parentNode.removeChild(div);
-                        }
-                    }}
-                >
-                    {targetConfig.content}
-                </BaseDrawer>
-            </>, div)
+            ReactDOM.render(
+                <>
+                    <BaseDrawer
+                        {...(targetConfig as BaseDrawerProp)}
+                        afterVisible={(setter) => {
+                            onDestroy = setter
+                        }}
+                        afterClose={() => {
+                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                            if (unmountResult && div.parentNode) {
+                                div.parentNode.removeChild(div)
+                            }
+                        }}
+                    >
+                        {targetConfig.content}
+                    </BaseDrawer>
+                </>,
+                div
+            )
         })
     }
-    render(props);
+    render(props)
     return {
         destroy: () => {
             onDestroy && onDestroy(false)
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div);
+                const unmountResult = ReactDOM.unmountComponentAtNode(div)
                 if (unmountResult && div.parentNode) {
                     div.parentNode.removeChild(div)
                 }

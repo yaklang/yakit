@@ -33,11 +33,13 @@
                 width: 1px;
                 height: 100%;
                 padding: 10px 0;
+
                 .divider-style {
                     height: 100%;
                     border-left: 1px solid var(--yakit-border-color);
                 }
             }
+
             .divider-wrapper {
                 width: 1px;
                 height: 100%;
@@ -74,6 +76,8 @@
                     -webkit-app-region: drag;
                 }
 
+
+
                 .ui-op-btn-wrapper {
                     box-sizing: border-box;
                     width: 44px;
@@ -83,10 +87,12 @@
                     .icon-style {
                         color: var(--yakit-body-text-color);
                     }
+
                     .icon-hover-style {
                         color: var(--yakit-primary-color);
                     }
                 }
+
                 .ui-op-btn-wrapper:hover {
                     .icon-style {
                         color: var(--yakit-primary-color);
@@ -97,20 +103,30 @@
                     height: 100%;
                     display: flex;
                 }
+
                 .header-title {
                     flex: 1;
                     height: 100%;
-                    -webkit-app-region: drag;
+                    // -webkit-app-region: drag;
                 }
+
+                .header-title-drop {
+                    flex: 1;
+                    height: 100%;
+                    color: red;
+                }
+
                 .header-right {
                     height: 100%;
                     display: flex;
                 }
+
                 .yakit-mode-icon {
                     box-sizing: border-box;
                     padding: 8px 12px;
                     border-left: 1px solid var(--yakit-border-color);
                 }
+
                 .yakit-mode-selected {
                     background: var(--yakit-card-background-color);
                 }
@@ -132,6 +148,7 @@
                 overflow: hidden;
             }
         }
+
         .ui-layout-mask {
             width: 100%;
             flex: 1;
@@ -146,11 +163,13 @@
         height: 100%;
         overflow: hidden;
     }
+
     .uilayout-hidden-log {
         width: 0;
         height: 100%;
         overflow: hidden;
     }
+
     .uilayout-noshow-log {
         display: none;
     }
@@ -167,9 +186,11 @@
     top: 35%;
     left: calc(50% - 224px);
 }
+
 .engine-hint-modal-hidden-wrapper {
     display: none;
 }
+
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
@@ -197,16 +218,19 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+
             .hint-icon {
                 width: 32px;
                 height: 32px;
             }
+
             .qs-icon {
                 width: 20px;
                 height: 20px;
                 color: var(--yakit-body-text-color);
                 cursor: pointer;
             }
+
             .qs-icon:hover {
                 color: var(--yakit-primary-color);
             }
@@ -214,6 +238,7 @@
 
         .hint-right-wrapper {
             flex: 1;
+
             .hint-right-title {
                 height: 24px;
                 font-weight: 600;
@@ -221,12 +246,14 @@
                 line-height: 24px;
                 color: var(--yakit-header-color);
             }
+
             .hint-right-content {
                 margin-top: 8px;
                 font-size: 14px;
                 line-height: 20px;
                 color: var(--yakit-body-text-color);
             }
+
             .hint-right-macarm {
                 margin-top: 8px;
                 box-sizing: border-box;
@@ -234,11 +261,13 @@
                 background: var(--yakit-neutral10-color);
                 border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
+
                 .mac-arm-hint {
                     font-size: 12px;
                     line-height: 16px;
                     color: var(--yakit-header-color);
                 }
+
                 .mac-arm-command {
                     margin-top: 8px;
                     display: flex;
@@ -251,6 +280,7 @@
 
                     font-size: 11px;
                     color: var(--yakit-primary-color);
+
                     .copy-icon {
                         width: 12px;
                         height: 12px;
@@ -260,6 +290,7 @@
                     }
                 }
             }
+
             // 后续看看能不能整合成全局动画
             .agr-shake-animation {
                 -webkit-animation-name: shake;
@@ -275,6 +306,7 @@
             }
 
             @-webkit-keyframes shake {
+
                 0%,
                 100% {
                     -webkit-transform: translateX(0);
@@ -297,6 +329,7 @@
             }
 
             @keyframes shake {
+
                 0%,
                 100% {
                     transform: translateX(0);
@@ -317,6 +350,7 @@
                     transform: translateX(5px);
                 }
             }
+
             .hint-right-agreement {
                 margin-top: 8px;
                 height: 24px;
@@ -325,27 +359,32 @@
                 gap: 8px;
                 font-size: 12px;
                 color: var(--yakit-header-color);
+
                 .agreement-checkbox {
                     :global {
                         .ant-checkbox-inner {
                             border: 1px solid var(--yakit-helper-text-color);
                             border-radius: 4px;
                         }
+
                         .ant-checkbox-checked .ant-checkbox-inner {
                             background-color: var(--yakit-primary-color);
                             border-color: var(--yakit-primary-color);
                         }
+
                         .ant-checkbox-checked::after {
                             border: 0px;
                         }
                     }
                 }
+
                 .agreement-danger-checkbox {
                     :global {
                         .ant-checkbox-inner {
                             border: 1px solid var(--yakit-danger-color);
                             border-radius: 4px;
                         }
+
                         .ant-checkbox-checked::after {
                             border: 0px;
                         }
@@ -357,6 +396,7 @@
                     cursor: pointer;
                 }
             }
+
             .hint-right-btn {
                 margin-top: 24px;
                 display: flex;
@@ -378,6 +418,7 @@
                         }
                     }
                 }
+
                 .download-info-wrapper {
                     margin-top: 16px;
                     display: flex;
@@ -385,12 +426,14 @@
                     font-size: 12px;
                     line-height: 16px;
                     color: var(--yakit-helper-text-color);
+
                     .divider-wrapper {
                         margin: 0 8px;
                         width: 1px;
                         height: 16px;
                         display: flex;
                         align-items: center;
+
                         .divider-style {
                             width: 100%;
                             height: 12px;
@@ -402,6 +445,7 @@
         }
     }
 }
+
 /** 用户协议和常见问题弹窗样式 **/
 .agr-and-qs-modal-wrapper {
     z-index: 99;
@@ -409,6 +453,7 @@
     top: 30%;
     left: calc(50% - 312px);
 }
+
 .agr-and-qs-modal-hidden-wrapper {
     display: none;
 }
@@ -434,16 +479,20 @@
         font-size: 14px;
         color: var(--yakit-header-color);
     }
+
     .mac-header {
         gap: 12px;
+
         .close-wrapper {
             width: 36px;
             height: 36px;
             padding: 10px;
             display: flex;
             cursor: pointer;
+
             .close-btn {
                 padding: 2px;
+
                 .btn-icon {
                     width: 12px;
                     height: 12px;
@@ -453,19 +502,24 @@
             }
         }
     }
+
     .win-header {
         justify-content: space-between;
+
         .header-title {
             margin-left: 12px;
         }
+
         .close-wrapper {
             width: 36px;
             height: 36px;
             padding: 8px;
+
             .icon-style {
                 color: var(--yakit-helper-text-color);
             }
         }
+
         .close-wrapper:hover {
             .icon-style {
                 color: var(--yakit-primary-color);
@@ -476,6 +530,7 @@
     .agreement-content-modal-wrapper {
         .modal-body {
             padding: 16px 24px 24px 24px;
+
             .body-title {
                 height: 24px;
                 font-weight: 600;
@@ -483,19 +538,23 @@
                 line-height: 24px;
                 color: var(--yakit-header-color);
             }
+
             .body-content {
                 margin-top: 8px;
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
                 color: var(--yakit-body-text-color);
+
                 .sign-content {
                     color: var(--yakit-danger-color);
                 }
+
                 .underline-content {
                     color: var(--yakit-danger-color);
                     text-decoration: underline;
                 }
+
                 .sign-bold-content {
                     color: var(--yakit-danger-color);
                     font-weight: 500;
@@ -507,15 +566,18 @@
     .question-modal-wrapper {
         .modal-body {
             padding: 16px 24px 24px 24px;
+
             .body-hint {
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
                 color: var(--yakit-body-text-color);
+
                 .hint-sign {
                     color: var(--yakit-danger-color);
                 }
             }
+
             .body-link {
                 margin-top: 8px;
                 box-sizing: border-box;
@@ -526,9 +588,11 @@
                 gap: 12px;
                 border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
+
                 .link-opt {
                     display: flex;
                     align-items: center;
+
                     .link-title {
                         font-size: 12px;
                         text-align: justify;
@@ -547,6 +611,7 @@
                         line-height: 12px;
                         color: var(--yakit-body-text-color);
                         word-break: break-all;
+
                         .copy-icon {
                             margin-left: 8px;
                             display: inline-block;
@@ -563,12 +628,14 @@
                 text-align: justify;
                 color: var(--yakit-danger-color);
             }
+
             .yakit-update-link {
                 margin-top: 8px;
                 height: 20px;
                 display: flex;
                 align-items: center;
                 gap: 8px;
+
                 .link-wrapper {
                     height: 20px;
                     display: flex;
@@ -581,6 +648,7 @@
                     border-radius: 4px;
                     font-size: 11px;
                     color: var(--yakit-body-text-color);
+
                     .copy-icon {
                         cursor: pointer;
                         height: 16px;
@@ -597,15 +665,19 @@
 .yakit-agr-modal {
     width: 624px;
 }
+
 .yaklang-update-modal {
     width: 448px;
 }
+
 .yaklang-qs-modal {
     width: 657px;
 }
+
 .yakit-update-modal {
     width: 448px;
 }
+
 .yakit-qs-modal {
     width: 448px;
 }
@@ -626,10 +698,12 @@
 
     .remote-yaklang-engine-body {
         overflow: auto;
+
         .remote-title {
             display: flex;
             flex-direction: column;
             align-items: center;
+
             .title-style {
                 margin-top: 24px;
                 height: 24px;
@@ -638,9 +712,11 @@
                 line-height: 24px;
                 color: var(--yakit-header-color);
             }
+
             .remote-history {
                 margin-top: 16px;
                 display: flex;
+
                 .select-title {
                     box-sizing: border-box;
                     width: 80px;
@@ -657,6 +733,7 @@
                     font-size: 14px;
                     color: var(--yakit-header-color);
                 }
+
                 .select-style {
                     width: 320px;
                     height: 32px;
@@ -664,6 +741,7 @@
                     background: var(--yakit-neutral10-color);
                     border: 1px solid var(--yakit-border-color);
                     border-radius: 0px 4px 4px 0px;
+
                     :global {
                         .ant-select-selector {
                             background-color: unset;
@@ -672,6 +750,7 @@
                         }
                     }
                 }
+
                 :global {
                     .ant-select-focused {
                         .ant-select-selector {
@@ -682,11 +761,13 @@
                 }
             }
         }
+
         .rmeote-divider {
             width: 100%;
             margin: 24px 0;
             border-top: 1px solid var(--yakit-background-color);
         }
+
         .remote-info {
             :global {
                 .ant-form-item-no-colon {
@@ -694,6 +775,7 @@
                 }
 
                 --antd-wave-shadow-color: var(--yakit-primary-color);
+
                 .ant-switch-checked {
                     background: var(--yakit-primary-color);
                 }
@@ -709,6 +791,7 @@
                 border: 1px solid var(--yakit-border-color);
                 border-radius: 4px;
             }
+
             .input-style:focus {
                 box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
             }
@@ -716,17 +799,20 @@
             .pem-title {
                 display: flex;
                 align-items: center;
+
                 .icon-style {
                     margin: 0 4px;
                     font-size: 16px;
                     color: var(--yakit-body-text-color);
                 }
+
                 .icon-show-style {
                     margin: 0 4px;
                     font-size: 16px;
                     color: var(--yakit-primary-color);
                 }
             }
+
             .pem-content {
                 width: 400px;
                 height: 254px;
@@ -743,16 +829,19 @@
             border-radius: 4px;
         }
     }
+
     .pem-wrapper {
         width: 460px;
 
         line-height: 20px;
         font-size: 11px;
         color: var(--yakit-header-color);
+
         .title-style {
             font-size: 14px;
             line-height: 24px;
         }
+
         .content-code {
             display: inline-block;
             padding: 0 4px;
@@ -760,16 +849,19 @@
             background-color: var(--yakit-card-background-color);
             border-radius: 4px;
         }
+
         .code-pem {
             width: 460px;
             height: 280px;
         }
+
         .path-wrapper {
             margin-top: 6px;
             height: 20px;
             display: flex;
             align-items: center;
             gap: 8px;
+
             .link-wrapper {
                 width: 280px;
                 height: 20px;
@@ -783,6 +875,7 @@
                 border-radius: 4px;
                 font-size: 11px;
                 color: var(--yakit-body-text-color);
+
                 .copy-icon {
                     cursor: pointer;
                     height: 16px;
@@ -790,6 +883,7 @@
                     display: flex;
                 }
             }
+
             .link-open {
                 height: 20px;
                 line-height: 20px;
