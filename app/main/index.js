@@ -333,4 +333,5 @@ ipcMain.on("sync-update-user", (event, user) => {
 ipcMain.on("edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
     win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
+    win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
 })

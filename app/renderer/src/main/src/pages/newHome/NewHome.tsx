@@ -609,12 +609,12 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     }, [])
 
     useEffect(() => {
-        ipcRenderer.on("edit-baseUrl-status", (e, res: any) => {
+        ipcRenderer.on("refresh-new-home", (e, res: any) => {
             getPlugInShopHot()
             getPlugInShopNewIncre()
         })
         return () => {
-            ipcRenderer.removeAllListeners("edit-baseUrl-status")
+            ipcRenderer.removeAllListeners("refresh-new-home")
         }
     }, [])
     const getPlugInShopHot = () => {
