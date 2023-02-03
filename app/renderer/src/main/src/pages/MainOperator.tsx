@@ -11,7 +11,7 @@ import {
     Tabs,
     Typography,
     Upload,
-    Avatar
+    Avatar, Alert
 } from "antd"
 import {
     ContentByRoute,
@@ -64,7 +64,7 @@ import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
 import "./GlobalClass.scss"
 import {loginOut, refreshToken} from "@/utils/login"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue,setLocalValue} from "@/utils/kv"
 // import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 // import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 // import {onImportShare} from "./fuzzer/components/ShareImport"
@@ -76,6 +76,7 @@ import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfil
 import HeardMenu, {getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData";
 import {LocalGV} from "@/yakitGV"
+import { BaseConsole } from "../components/baseConsole/BaseConsole";
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
@@ -364,6 +365,28 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     // 系统类型
     const [system, setSystem] = useState<string>("")
+
+    // 是否展示console
+    const [isShowBaseConsole,setIsShowBaseConsole] = useState<boolean>(false)
+    // 展示console方向
+    const [directionBaseConsole,setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
+    // 监听console方向打开
+    useEffect(() => {
+        ipcRenderer.on("callback-direction-console-log", (e, res: any) => {
+            if(res?.direction){
+                setDirectionBaseConsole(res.direction)
+                setIsShowBaseConsole(true)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("callback-direction-console-log")
+        }
+    }, [])
+    // 缓存console展示状态 用于状态互斥
+    useEffect(()=>{
+        setLocalValue("SHOW_BASE_CONSOLE", isShowBaseConsole)
+    },[isShowBaseConsole])
+
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
@@ -383,6 +406,43 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer
             .invoke("fetch-local-cache", LocalGV.WindowsCloseFlag)
             .then((flag: any) => setWinCloseFlag(flag === undefined ? true : flag))
+    }, [])
+
+    useEffect(() => {
+        const firstUseProjectFlag = `FIRST_USE_PROJECT_BETA_SrLYymNzXvhO`
+        getRemoteValue(firstUseProjectFlag).then((value) => {
+            if (!value) {
+                const m = showModal({
+                    title: "重要提示", content: (
+                        <Space direction={"vertical"}>
+                            <div>{`本系统 >= 1.1.17，引擎 >= 1.1.18 后为了新增 "项目" 功能，项目数据库和用户数据库进行了严格分离`}</div>
+                            <div>用户可在 "数据库" - "项目管理" 中查看新的项目管理 （Beta）</div>
+                            <div>您的流量数据与扫描结果将会存储新的项目数据库中</div>
+                            <Alert type={"warning"}
+                                   description={"原本的用户数据并不会丢失，用户目录下 SQLite3 数据库 yakit-projects/default-yakit.db 包含所有用户信息"}/>
+                            <div>
+                                <Button.Group>
+                                    <Button onClick={() => {
+                                        m.destroy()
+                                    }}>Ok</Button>
+                                    <Button type={"link"}
+                                            onClick={() => {
+                                                m.destroy()
+                                                setRemoteValue(firstUseProjectFlag, "1").catch(e => {
+
+                                                })
+                                            }}
+                                    >知道了，不再提示</Button>
+                                </Button.Group>
+                            </div>
+                        </Space>
+                    )
+                })
+                return
+            }
+        }).catch(e => {
+            info("无法获取第一次使用项目标签")
+        })
     }, [])
 
     // 获取自定义菜单
@@ -707,7 +767,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             } else {
                 removePage(Route.LicenseAdminPage, false)
                 removePage(Route.TrustListPage, false)
-                removePage(Route.PlugInAdminPage,false)
+                removePage(Route.PlugInAdminPage, false)
             }
             IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
@@ -734,8 +794,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
-                {key: "license-admin",title:"License管理"},
-                {key:"plugIn-admin",title:"插件权限"},
+                {key: "license-admin", title: "License管理"},
+                {key: "plugIn-admin", title: "插件权限"},
                 {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
@@ -1538,7 +1598,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                     overflow: "hidden",
                                     flex: "1",
                                     display: "flex",
-                                    flexFlow: "column"
+                                    flexFlow: "column",
+                                    position:"relative"
                                 }}
                             >
                                 {pageCache.length > 0 ? (
@@ -1653,6 +1714,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 ) : (
                                     <></>
                                 )}
+
+                                {isShowBaseConsole&&<BaseConsole setIsShowBaseConsole={setIsShowBaseConsole} directionBaseConsole={directionBaseConsole}/>}
                             </div>
                         </Content>
                     </Layout>

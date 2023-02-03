@@ -486,23 +486,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             }
                         />
                     )} */}
-                    {enablePluginSelector && (
-                        <ResizeBox
-                            firstNode={
-                                <SimplePluginList
-                                    pluginTypes={script?.PluginSelectorTypes || "mitm,port-scan"}
-                                    onSelected={(names) => {
-                                        setExtraParams([
-                                            {Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|")}
-                                        ])
-                                    }}
-                                />
-                            }
-                            firstMinSize={"300px"}
-                            firstRatio={"320px"}
-                            secondNode={executor()}
-                        />
-                    )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"} disabled={isDisabledLocal}>
                     {script && (

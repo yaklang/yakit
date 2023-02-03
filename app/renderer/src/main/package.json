@@ -36,6 +36,7 @@
         "monaco-editor": "^0.26.1",
         "monaco-editor-webpack-plugin": "^4.1.1",
         "monaco-themes": "^0.3.3",
+        "re-resizable": "^6.9.9",
         "react": "^17.0.2",
         "react-app-rewired": "^2.1.8",
         "react-beautiful-dnd": "^13.1.1",

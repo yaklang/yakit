@@ -1,0 +1,14 @@
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .check-icon {
+        color: #1890ff;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
