@@ -646,7 +646,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>(
-        props.params || {SourceType: "mitm", Tags: []}
+        {
+            ...(
+                props.params || {SourceType: "mitm", Tags: []}
+            ), SourceType: props.params?.SourceType || "mitm"
+        }
     )
     const [tagsQuery, setTagsQuery] = useState<string[]>([])
     const [contentTypeQuery, setContentTypeQuery] = useState<string>("")
