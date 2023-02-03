@@ -208,11 +208,11 @@ module.exports = (win, callback, getClient, newClient) => {
 
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${port}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
-                        detached: true,
+                        detached: false, windowsHide: true,
                         stdio: ["ignore", log, log]
                     })
                     
-                    subprocess.unref()
+                    // subprocess.unref()
 
                     subprocess.on("error", (err) => {
                         toLog(`本地引擎遭遇错误，错误原因为：${err}`)
