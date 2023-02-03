@@ -76,8 +76,6 @@
                     -webkit-app-region: drag;
                 }
 
-
-
                 .ui-op-btn-wrapper {
                     box-sizing: border-box;
                     width: 44px;
@@ -107,13 +105,10 @@
                 .header-title {
                     flex: 1;
                     height: 100%;
-                    // -webkit-app-region: drag;
                 }
 
                 .header-title-drop {
-                    flex: 1;
-                    height: 100%;
-                    color: red;
+                    -webkit-app-region: drag;
                 }
 
                 .header-right {
