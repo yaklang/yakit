@@ -36,6 +36,7 @@ import {API} from "@/services/swagger/resposeType"
 import {globalUserLogin, isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {LocalGV} from "@/yakitGV"
+import {EnterpriseLoginInfoIcon} from "@/assets/icons"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
@@ -95,6 +96,8 @@ const singletonRoute: Route[] = [
 
     // 录屏
     Route.ScreenRecorderPage,
+    // 远程管理
+    Route.ControlAdminPage,
     // Matcher n Extractor
     Route.Beta_MatcherExtractorPage,
 ]
@@ -207,12 +210,12 @@ export interface SetUserInfoProp {
     setStoreUserInfo: (info: any) => void
 }
 
-export const judgeAvatar = (userInfo) => {
+export const judgeAvatar = (userInfo,size:number) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
+        <Avatar size={size} style={{cursor: "pointer"}} src={companyHeadImg}/>
     ) : (
-        <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
+        <Avatar size={size} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
         </Avatar>
     )
@@ -299,8 +302,8 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 }}
             >
                 <div className='img-box'>
-                    <div className='img-box-mask'>{judgeAvatar(userInfo)}</div>
-                    <CameraOutlined className='hover-icon' />
+                    <div className='img-box-mask'>{judgeAvatar(userInfo,40)}</div>
+                    <CameraOutlined className='hover-icon'/>
                 </div>
             </Upload.Dragger>
 
@@ -313,7 +316,9 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 }
             >
                 <div className='user-name'>{userInfo.companyName}</div>
-                {userInfo.role === "admin" && <div className='permission-show'>管理员</div>}
+                {userInfo.role === "admin" && <><div className='permission-show'>管理员
+                
+                </div><span className='user-admin-icon'><EnterpriseLoginInfoIcon/></span></>}
             </div>
         </div>
     )
@@ -774,9 +779,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnpriTrace) {
                 ipcRenderer.invoke("update-judge-license", true)
-                removePage(Route.AccountAdminPage)
-                removePage(Route.RoleAdminPage)
-                removePage(Route.HoleCollectPage)
+                removePage(Route.AccountAdminPage, false)
+                removePage(Route.RoleAdminPage, false)
+                removePage(Route.HoleCollectPage, false)
+                removePage(Route.ControlAdminPage, false)
             } else {
                 removePage(Route.LicenseAdminPage)
                 removePage(Route.TrustListPage)

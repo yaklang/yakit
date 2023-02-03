@@ -23,7 +23,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
         dropdown: {overlay, ...restDropdown} = {},
         menu: {data = [], onClick: onclick, ...restMenu} = {},
         onClick,
-        children
+        children,
     } = props
 
     const Menus = () => {

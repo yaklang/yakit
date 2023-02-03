@@ -117,25 +117,23 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
+                {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
             ])
         }
         // 非企业超级管理员登录
         else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
             setUserMenu([
-                {key: "trust-list", title: "用户管理"},
-                {key: "license-admin", title: "License管理"},
-                {key: "plugIn-admin", title: "插件权限"},
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
+                {key: "trust-list", title: "用户管理",render: () => LoginTextItem("用户管理")},
+                {key: "license-admin", title: "License管理",render: () => LoginTextItem("License管理")},
+                {key: "plugIn-admin", title: "插件权限",render: () => LoginTextItem("插件权限")},
+                {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
             ])
         }
         // 非企业license管理员
         else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
             setUserMenu([
-                {key: "license-admin", title: "License管理"},
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
+                {key: "license-admin", title: "License管理",render: () => LoginTextItem("License管理")},
+                {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
             ])
         }
         // 企业用户管理员登录
