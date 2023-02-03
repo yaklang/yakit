@@ -1,18 +1,18 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Button, Input, Form, Select, Spin} from "antd"
+import {Button, Input, Form, Select, Spin, Progress} from "antd"
 import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
-import {failed, success, warn,info} from "@/utils/notification"
+import {failed, success, warn, info} from "@/utils/notification"
 import {API} from "@/services/swagger/resposeType"
 import {PaginationSchema} from "./invoker/schema"
-import {ProjectsResponse, ProjectDescription,ProjectIOProgress} from "./projects/ProjectPage"
-import {randomString} from "@/utils/randomUtil";
-
+import {ProjectsResponse, ProjectDescription, ProjectIOProgress} from "./projects/ProjectPage"
+import {randomString} from "@/utils/randomUtil"
+import {NetWorkApi} from "@/services/fetch"
 import {} from "@ant-design/icons"
 const {Option} = Select
 const {ipcRenderer} = window.require("electron")
 
 export interface SelectUploadProps {
-    onCancel: (v: boolean) => void
+    onCancel: () => void
 }
 const layout = {
     labelCol: {span: 5},
@@ -30,29 +30,54 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         Page: 1
     })
     const [projectList, setProjectList] = useState<ProjectDescription[]>([])
-    const [allowPassword, setAllowPassword] = useState<"0"|"1">()
-    const [token, _] = useState(randomString(40));
+    const [allowPassword, setAllowPassword] = useState<"0" | "1">()
+    const [token, _] = useState(randomString(40))
     const [form] = Form.useForm()
+    const [percent, setPercent] = useState<number>(0.0)
+    const filePath = useRef<string>()
+
+    const uploadFile = () => {
+        ipcRenderer
+            .invoke("upload-project", {path: filePath.current})
+            .then((res) => {
+                if (res?.data?.ok) {
+                    setPercent(1)
+                    onCancel()
+                    success("上传数据成功")
+                }
+                else{
+                    failed(`项目上传失败`)
+                }
+            })
+            .catch((err) => {
+                failed(`项目上传失败:${err}`)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
+    }
 
     useEffect(() => {
         if (!token) {
             return
         }
         ipcRenderer.on(`${token}-data`, async (e, data: ProjectIOProgress) => {
-            console.log("data",data)
+            filePath.current = data.TargetPath.replace(/\\/g, "\\")
             if (!!data.Verbose) {
             }
             if (data.Percent > 0) {
+                setLoading(true)
+                setPercent(data.Percent*0.9)
             }
             if (!!data.TargetPath) {
             }
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
+            setLoading(false)
             failed(`[ExportProject] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            setLoading(false)
-            info("[ExportProject] finished")
+            uploadFile()
         })
 
         return () => {
@@ -68,11 +93,14 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     }, [])
 
     const onFinish = useMemoizedFn((values) => {
-        console.log("values",values)
-        ipcRenderer.invoke("ExportProject", {
-            ProjectName: values.name,
-            Password: allowPassword==="1" ? values.password : ""
-        }, token)
+        ipcRenderer.invoke(
+            "ExportProject",
+            {
+                ProjectName: values.name,
+                Password: allowPassword === "1" ? values.password : ""
+            },
+            token
+        )
     })
 
     const {run} = useThrottleFn(
@@ -150,6 +178,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                     ))}
                 </Select>
             </Form.Item>
+            {percent > 0 && (
+                <div style={{width: 276, margin: "0 auto", paddingBottom: 14}}>
+                    <Progress percent={Math.floor((percent || 0) * 100)} />
+                </div>
+            )}
             <div style={{textAlign: "center"}}>
                 <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                     确定
