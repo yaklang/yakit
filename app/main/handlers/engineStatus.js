@@ -211,7 +211,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         detached: false, windowsHide: true,
                         stdio: ["ignore", log, log]
                     })
-                    
+
                     // subprocess.unref()
 
                     subprocess.on("error", (err) => {
@@ -220,17 +220,17 @@ module.exports = (win, callback, getClient, newClient) => {
                     })
                     subprocess.on("close", async (e) => {
                         toLog(`本地引擎退出，退出码为：${e}`)
-                        fs.readFile(engineLog,(err,data) => {
-                            if(err){
-                                console.log("读取引擎文件失败",err);
-                            }else{
+                        fs.readFile(engineLog, (err, data) => {
+                            if (err) {
+                                console.log("读取引擎文件失败", err);
+                            } else {
                                 toStdout(data)
                                 setTimeout(() => {
-                                   try {
-                                       fs.unlinkSync(engineLog)
-                                   } catch (e) {
-                                       console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
-                                   }
+                                    try {
+                                        fs.unlinkSync(engineLog)
+                                    } catch (e) {
+                                        console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
+                                    }
                                 }, 1000);
                             }
                         })
