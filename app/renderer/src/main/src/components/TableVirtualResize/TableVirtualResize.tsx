@@ -1023,6 +1023,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                     )}
                 </div>
                 <div className={style["virtual-table-title-icon"]}>
+                    {columnsItem.beforeIconExtra}
                     {columnsItem.sorterProps?.sorter && (
                         <>
                             {disableSorting ? (
@@ -1096,7 +1097,8 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                             </Popover>
                         </>
                     )}
-                    {columnsItem.extra}
+                    {columnsItem.afterIconExtra}
+                    {/* {columnsItem.extra} */}
                 </div>
                 {enableDrag && columnsItem.enableDrag !== false && cIndex < columns.length - 1 && (
                     <div

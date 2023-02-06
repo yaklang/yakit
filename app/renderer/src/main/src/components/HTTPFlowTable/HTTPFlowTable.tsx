@@ -21,7 +21,8 @@ import {
     InputNumber,
     Spin,
     Dropdown,
-    Alert
+    Alert,
+    Radio
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -63,6 +64,7 @@ import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResi
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1175,6 +1177,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 title: "响应长度",
                 dataKey: "BodyLength",
                 width: 200,
+                minWidth: 140,
+                beforeIconExtra: (
+                    <div className={classNames(style['body-length-checkbox'],"old-theme-html")}>
+                        <YakitCheckbox />
+                        <span className={style['tip']}>大于0</span>
+                    </div>
+                ),
                 filterProps: {
                     filterKey: "bodyLength",
                     filterRender: () => (
@@ -2048,7 +2057,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                 </div>
                                 <div className={style["http-history-table-right"]}>
-                                    <div className={style["http-history-table-right-item"]}>
+                                    <div
+                                        className={classNames(style["http-history-table-right-item"], "old-theme-html")}
+                                    >
                                         {/* <div className={style["http-history-table-right-label"]}>只看 Websocket</div>
                                         <Switch
                                             size='small'
@@ -2057,17 +2068,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
                                             }}
                                         /> */}
-                                        {/* <div className={style["http-history-table-right-label"]}>协议类型</div>
+                                        <div className={style["http-history-table-right-label"]}>协议类型</div>
                                         <YakitSelect
                                             size='small'
                                             defaultValue='all'
                                             dropdownClassName='old-theme-html'
+                                            wrapperStyle={{width: 150}}
                                             // onSelect={(val) => {}}
                                         >
-                                            <YakitSelect.Option key="all" value='all'>全部</YakitSelect.Option>
-                                            <YakitSelect.Option key="http/https" value='http/https'>http/https</YakitSelect.Option>
-                                            <YakitSelect.Option key="websocket" value='websocket'>websocket</YakitSelect.Option>
-                                        </YakitSelect> */}
+                                            <YakitSelect.Option key='all' value='all'>
+                                                全部
+                                            </YakitSelect.Option>
+                                            <YakitSelect.Option key='http/https' value='http/https'>
+                                                http/https
+                                            </YakitSelect.Option>
+                                            <YakitSelect.Option key='websocket' value='websocket'>
+                                                websocket
+                                            </YakitSelect.Option>
+                                        </YakitSelect>
                                     </div>
                                     <div className={style["http-history-table-right-filter-small"]}>
                                         <Popover

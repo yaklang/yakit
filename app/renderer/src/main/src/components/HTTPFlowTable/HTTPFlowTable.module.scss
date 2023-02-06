@@ -705,3 +705,13 @@
 .color-select-footer {
     position: relative !important;
 }
+
+.body-length-checkbox {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+
+    .tip {
+        margin-left: 4px;
+    }
+}
