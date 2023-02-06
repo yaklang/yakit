@@ -77,6 +77,18 @@
         margin-right: 16px;
     }
 
+    .http-history-table-check-tag {
+        :global {
+            .ant-tag-checkable {
+                background-color: var(--yakit-background-color);
+            }
+
+            .ant-tag-checkable-checked {
+                background-color: #1890ff;
+            }
+        }
+    }
+
     .http-history-table-tip {
         font-weight: 400;
         font-size: 12px;
@@ -693,4 +705,3 @@
 .color-select-footer {
     position: relative !important;
 }
-
