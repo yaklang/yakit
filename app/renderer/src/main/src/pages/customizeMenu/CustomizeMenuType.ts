@@ -77,6 +77,7 @@ export interface SecondMenuItemProps {
  * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
  * @property { MenuDataProps[]} subMenuData 二级菜单
  * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
+ * @property {MenuDataProps[]} SystemRouteMenuData 系统所有二级菜单
  */
 export interface FeaturesAndPluginProps {
     destinationDrag: string
@@ -84,6 +85,7 @@ export interface FeaturesAndPluginProps {
     onAddMenuData: (m: MenuDataProps) => void
     subMenuData: MenuDataProps[]
     onRemoveMenu: (m: MenuDataProps) => void
+    SystemRouteMenuData: MenuDataProps[]
 }
 
 /**
@@ -94,6 +96,7 @@ export interface FeaturesAndPluginProps {
  * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
  * @property { MenuDataProps[]} subMenuData 二级菜单
  * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
+ * @property {MenuDataProps[]} SystemRouteMenuData 系统所有二级菜单
  */
 export interface SystemFunctionListProps {
     keywords: string
@@ -102,6 +105,7 @@ export interface SystemFunctionListProps {
     onAddMenuData: (m: MenuDataProps) => void
     subMenuData: MenuDataProps[]
     onRemoveMenu: (m: MenuDataProps) => void
+    SystemRouteMenuData: MenuDataProps[]
 }
 
 /**

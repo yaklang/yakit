@@ -29,11 +29,11 @@ import {
     ShieldExclamationIcon,
     DocumentDownloadIcon
 } from "@/assets/newIcon"
-import {MenuDataProps, DefaultRouteMenuData, SystemRouteMenuData, Route} from "@/routes/routeSpec"
+import {MenuDataProps, DefaultRouteMenuData, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {Button, Input, Modal, Popconfirm, Radio, Tooltip} from "antd"
-import {useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {MenuDefaultPluginIcon} from "./icon/menuIcon"
@@ -94,15 +94,22 @@ export const getMenuListBySort = (menuData: MenuDataProps[], menuMode: string) =
 }
 
 export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
+    let allSystemRouteMenuData: MenuDataProps[] = []
+    DefaultRouteMenuData.forEach((ele) => {
+        // allSystemRouteMenuData = [...allSystemRouteMenuData, ...(ele.subMenuData?.filter((ele) => ele.key) || [])]
+        allSystemRouteMenuData = [...allSystemRouteMenuData, ...(ele.subMenuData || [])]
+    })
+
     const menuLists: MenuDataProps[] = []
     menuData.forEach((item, index) => {
         let subMenuData: MenuDataProps[] = []
         if (item.Items && item.Items.length > 0) {
             item.Items.forEach((subItem, subIndex) => {
-                const currentItemSub = SystemRouteMenuData.find((s) => s.label === subItem.Verbose) || {
+                const currentItemSub = allSystemRouteMenuData.find((s) => s.label === subItem.Verbose) || {
                     key: undefined,
                     icon: undefined,
-                    hoverIcon: undefined
+                    hoverIcon: undefined,
+                    describe: ""
                 }
                 subMenuData.push({
                     Group: item.Group,
@@ -114,7 +121,8 @@ export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
                     yakScriptId: subItem.YakScriptId,
                     yakScripName: subItem.YakScriptName,
                     icon: currentItemSub.icon || getScriptIcon(subItem.YakScriptName || ""),
-                    hoverIcon: currentItemSub.hoverIcon || getScriptHoverIcon(subItem.YakScriptName || "")
+                    hoverIcon: currentItemSub.hoverIcon || getScriptHoverIcon(subItem.YakScriptName || ""),
+                    describe: currentItemSub.describe
                 })
             })
             menuLists.push({
@@ -150,23 +158,25 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
     const [addLoading, setAddLoading] = useState<boolean>(false)
 
-    const systemRouteMenuDataRef = useRef<MenuDataProps[]>(SystemRouteMenuData) // 系统功能列表数据
+    const systemRouteMenuDataRef = useRef<MenuDataProps[]>([]) // 系统功能列表数据
     const pluginLocalDataRef = useRef<YakScript[]>([]) // 本地插件列表数据
-    const defaultRouteMenuDataRef = useRef<MenuDataProps[]>(DefaultRouteMenuData) // 本地插件列表数据
+    const defaultRouteMenuDataRef = useRef<MenuDataProps[]>(DefaultRouteMenuData)
 
-    const onRemoveAll = useMemoizedFn(() => {
-        setMenuData([])
-        setCurrentFirstMenu(undefined)
-        setSubMenuData([])
-        setCurrentSubMenuData(undefined)
-        setEmptyMenuLength(0)
-        setSubMenuName("")
-    })
+    // 获取 系统功能菜单列表 所有 一维
+    const SystemRouteMenuData = useCreation(() => {
+        let data: MenuDataProps[] = []
+        DefaultRouteMenuData.forEach((ele) => {
+            data = [...data, ...(ele.subMenuData?.filter((ele) => ele.key) || [])]
+        })
+        systemRouteMenuDataRef.current = data
+        return data
+    }, [DefaultRouteMenuData])
 
     useEffect(() => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
-            setPatternMenu(patternMenu)
-            getMenuData(patternMenu)
+            const menuMode = patternMenu || "expert"
+            setPatternMenu(menuMode)
+            getMenuData(menuMode)
         })
     }, [])
     /**
@@ -481,7 +491,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                     <div className={style["display-flex"]}>
                         <ArrowLeftIcon className={style["content-icon"]} onClick={() => onTip()} />
                         <div className={style["left-title"]}>
-                            {patternMenu === "expert" ? "编辑专家模式" : "编辑新手模式"}
+                            {patternMenu === "expert" ? "编辑专家模式" : "编辑扫描模式"}
                         </div>
                         <div className={style["left-number"]}>{menuData.length}/50</div>
                     </div>
@@ -538,6 +548,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         onAddMenuData={onAddMenuData}
                         subMenuData={subMenuData}
                         onRemoveMenu={onRemoveSecondMenu}
+                        SystemRouteMenuData={SystemRouteMenuData}
                     />
                 </div>
             </DragDropContext>
@@ -728,7 +739,6 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
 
 const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
     const {currentFirstMenu, subMenuData, editCurrentFirstMenu, onRemoveFirstMenu, onRemoveSecondMenu, onEdit} = props
-
     return (
         <div className={style["second-menu"]}>
             <div className={style["second-menu-heard"]}>
@@ -769,7 +779,6 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                                                 {...provided.dragHandleProps}
                                                 style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                                             >
-                                                {provided.draggableProps.style.transform && <div>1654</div>}
                                                 <SecondMenuItem
                                                     key={item.id}
                                                     menuItem={item}
@@ -811,6 +820,14 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
 
 const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
     const {menuItem, isDragging, onRemoveSecondMenu, onEdit} = props
+    const isShowRemove = useCreation<boolean>(() => {
+        const subMenuList: MenuDataProps[] =
+            DefaultRouteMenuData.find((ele) => ele.label === menuItem.Group)?.subMenuData || []
+        const index = subMenuList.findIndex(
+            (ele) => menuItem.label === ele.label && ele.key && !ele.key.includes("plugin")
+        )
+        return index === -1
+    }, [menuItem.label])
     return (
         <div className={style["second-menu-item-content"]}>
             <div
@@ -838,9 +855,11 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
                         {menuItem.describe || "No Description about it."}
                     </div>
                 </div>
-            </div>
-            <div className={style["close-icon"]} onClick={() => onRemoveSecondMenu(menuItem)}>
-                <RemoveIcon />
+                {isShowRemove && (
+                    <div className={style["close-icon"]} onClick={() => onRemoveSecondMenu(menuItem)}>
+                        <RemoveIcon />
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -889,6 +908,7 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
                     keywords={keywords}
                     isSearch={isSearch}
                     onRemoveMenu={props.onRemoveMenu}
+                    SystemRouteMenuData={props.SystemRouteMenuData}
                 />
             )}
             {type === "plugin" && (
@@ -907,6 +927,7 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
 })
 
 const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props) => {
+    const {SystemRouteMenuData} = props
     const [keyword, setKeyword] = useState<string>("")
     const [systemRouteMenuData, setSystemRouteMenuData] = useState(SystemRouteMenuData)
     useDebounceEffect(

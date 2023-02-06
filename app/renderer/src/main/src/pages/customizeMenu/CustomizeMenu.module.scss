@@ -354,7 +354,7 @@
             }
 
             .second-menu-label-body {
-                width: calc(100% - 60px);
+                width: calc(100% - 70px);
             }
 
             .second-menu-label-content {
@@ -399,16 +399,23 @@
         }
 
         .close-icon {
-            padding: 0 12px;
             display: flex;
             align-items: center;
             color: var(--yakit-body-text-color);
             cursor: pointer;
             height: 20px;
 
-            &:hover {
-                color: var(--yakit-primary-border-color);
+            svg {
+                width: 16px;
+                height: 16px;
+                margin-right: 0;
+
+                &:hover {
+                    color: var(--yakit-primary-border-color);
+                }
             }
+
+
         }
     }
 
@@ -448,7 +455,7 @@
 }
 
 .system-function-list {
-    padding: 0 12px;
+    // padding: 0 12px;
     height: calc(100% - 64px);
     overflow-y: overlay;
 

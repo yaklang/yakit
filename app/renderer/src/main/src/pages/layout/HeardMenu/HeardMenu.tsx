@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, MenuDataProps, Route, SystemRouteMenuData} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -146,6 +146,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     useEffect(() => {
         ipcRenderer.on("fetch-new-main-menu", (e) => {
             init(getPatternMenu(), true)
+            // onRefInit(getPatternMenu(), true)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
@@ -167,6 +168,48 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         setRouteKeyToLabel(routeKeyToLabel.current)
     })
     /**
+     * @description: 初始化菜单  不自动更新新增菜单
+     */
+    const onRefInit = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
+        let oldMenuData: MenuItemGroup[] = []
+        setLoading(true)
+        // 获取老版的菜单数据，兼容
+        ipcRenderer
+            .invoke("QueryAllMenuItem", {Mode: ""})
+            .then((data: {Groups: MenuItemGroup[]}) => {
+                oldMenuData = data.Groups
+                //获取模式菜单 如果获取的菜单数据为空，则新增默认菜单数据
+                ipcRenderer
+                    .invoke("QueryAllMenuItem", {Mode: menuMode})
+                    .then((rsp: MenuByGroupProps) => {
+                        if (rsp.Groups.length === 0) {
+                            // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
+                            onInitMenuData(menuMode, oldMenuData)
+                        } else {
+                            const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
+                            setRouteMenu(routerList)
+                            if ((updateSubMenu || !menuId) && routerList.length > 0) {
+                                let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
+                                if (menuId) {
+                                    firstMenu = routerList.find((i) => i.id === menuId) || {id: "", label: ""}
+                                }
+                                setSubMenuData(firstMenu.subMenuData || [])
+                                setMenuId(firstMenu.id)
+                            }
+                            setTimeout(() => setLoading(false), 300)
+                        }
+                    })
+                    .catch((err) => {
+                        failed("获取菜单失败：" + err)
+                        setTimeout(() => setLoading(false), 300)
+                    })
+            })
+            .catch((e: any) => {
+                failed("获取菜单失败：" + e)
+                setTimeout(() => setLoading(false), 300)
+            })
+    })
+    /**
      * @description: 初始化菜单
      */
     const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
@@ -185,8 +228,44 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
                         } else {
-                            // 有数据赋值菜单
+                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除
+                            let currentMenuList: MenuDataProps[] = DefaultRouteMenuData
+                            if (menuMode == "new") {
+                                currentMenuList = DefaultRouteMenuData.filter((item) => item.isNovice)
+                            }
+                            const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
+                            const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
+                            for (let i = 0; i < rsp.Groups.length; i++) {
+                                const onlineMenuItem = rsp.Groups[i]
+                                const localMenuItem = currentMenuList.find((ele) => ele.label === onlineMenuItem.Group)
+                                if (localMenuItem && localMenuItem.subMenuData) {
+                                    for (let j = 0; j < localMenuItem.subMenuData.length; j++) {
+                                        const item = localMenuItem.subMenuData[j]
+                                        if (!item.key) continue
+                                        const index = onlineMenuItem.Items.findIndex((o) => o.Verbose === item.label)
+                                        if (index === -1) {
+                                            if (!item.key) {
+                                                // 新增的默认插件菜单
+                                                addMenuScripName.push(item.yakScripName || item.label)
+                                            }
+                                            const newMenuItem: MenuItem = {
+                                                Group: onlineMenuItem.Group,
+                                                GroupSort: rsp.Groups[i].Items.length + 1,
+                                                Verbose: item.label,
+                                                YakScriptId: 0,
+                                                YakScriptName: item.key ? "" : item.yakScripName
+                                            }
+                                            newMenuList.push(newMenuItem)
+                                            rsp.Groups[i].Items.push(newMenuItem)
+                                        }
+                                    }
+                                }
+                            }
+                            console.log("QueryAllMenuItem", rsp.Groups)
                             const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
+                            if (newMenuList.length > 0) {
+                                onDownPluginByScriptNames(routerList, addMenuScripName, menuMode)
+                            }
                             setRouteMenu(routerList)
                             if ((updateSubMenu || !menuId) && routerList.length > 0) {
                                 let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
@@ -452,7 +531,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onCustomizeMenuClick = useMemoizedFn((key: string) => {
         init(key, true)
         setRemoteValue("PatternMenu", key)
-        setPatternMenu(key as "expert" | "new")
+            .then(() => {
+                setPatternMenu(key as "expert" | "new")
+            })
+            .catch((e: any) => {
+                failed(`切换菜单模式失败:${e}`)
+            })
     })
     /**
      * @description: 编辑菜单
@@ -477,9 +561,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const CustomizeMenuData = [
         {
             key: "new",
-            label: "新手模式",
+            label: "扫描模式",
             itemIcon: <UserIcon />,
-            tip: "复原新手模式",
+            tip: "复原扫描模式",
             onRestoreMenu: () => onRestoreMenu()
         },
         {
@@ -551,6 +635,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
     })
 
+    const onRefMenu = useMemoizedFn(() => {
+        init(getPatternMenu(), true)
+    })
+
     return (
         <div className={style["heard-menu-body"]}>
             <div
@@ -611,6 +699,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
+                    {/* <YakitButton onClick={() => onRefMenu()}>刷新</YakitButton> */}
                     <YakitButton
                         type='text'
                         className={style["heard-menu-theme"]}
