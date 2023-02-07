@@ -28,7 +28,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = (props) => {
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
-    const getContent = useMemoizedFn((path: string) => {
+    const getContent = useMemoizedFn((path: string, fileType: string) => {
         if (!path) {
             failed("请输入路径")
             return
@@ -40,10 +40,18 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = (props) => {
             return
         }
 
-        const type = path.substring(index + 1, path.length)
-        if (type.toLocaleLowerCase() !== "json") {
-            failed("仅支持.json结尾的文件")
+        // const type = path.substring(index + 1, path.length)
+        // if (type.toLocaleLowerCase() !== "json") {
+        //     failed("仅支持.json结尾的文件")
+        //     return
+        // }
+        if (props.accept && !props.accept.split(",").includes(fileType)) {
+            failed(`仅支持${props.accept}格式的文件`)
             return
+        }
+        // 设置名字
+        if (setFileName) {
+            setFileName(path)
         }
         setUploadLoading(true)
         ipcRenderer
@@ -77,11 +85,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = (props) => {
                 {...props}
                 className={classNames(styles["yakit-dragger"], props.className)}
                 beforeUpload={(f: any) => {
-                    // 设置名字
-                    if (setFileName) {
-                        setFileName(f?.path)
-                    }
-                    getContent(f?.path)
+                    getContent(f?.path, f?.type)
                     return false
                 }}
             >
@@ -93,14 +97,34 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = (props) => {
                         onChange={(e) => {
                             setName(e.target.value)
                             if (setFileName) setFileName(e.target.value)
+                            e.stopPropagation()
                         }}
                         onPressEnter={(e) => {
                             e.stopPropagation()
-                            getContent(name)
+                            const index = name.lastIndexOf(".")
+                            if (index === -1) {
+                                failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
+                        }}
+                        onFocus={(e) => {
+                            e.stopPropagation()
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation()
                         }}
                         onBlur={(e) => {
                             e.stopPropagation()
-                            if (name) getContent(name)
+                            if (!name) return
+                            const index = name.lastIndexOf(".")
+                            if (index === -1) {
+                                failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
                         }}
                     />
                     <div

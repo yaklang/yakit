@@ -850,6 +850,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             >
                 <Form className={style["json-import"]} layout='vertical'>
                     <YakitFormDragger
+                        // accept='application/json,.json'
                         multiple={false}
                         maxCount={1}
                         showUploadList={false}
