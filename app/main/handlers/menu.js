@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncAddToMenu wrapper
@@ -143,5 +143,69 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ExportMenuItem", async (e, params) => {
         return await asyncExportMenuItem(params)
+    })
+
+    // 新增或者修改所有菜单
+    const asyncAddMenus = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AddMenus(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AddMenus", async (e, params) => {
+        return await asyncAddMenus(params)
+    })
+
+    // 查询所有菜单
+    const asyncQueryAllMenuItem = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAllMenuItem(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryAllMenuItem", async (e, params) => {
+        return await asyncQueryAllMenuItem(params)
+    })
+
+    // 查询所有菜单
+    const asyncDownloadOnlinePluginByScriptNames = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByScriptNames(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadOnlinePluginByScriptNames", async (e, params) => {
+        return await asyncDownloadOnlinePluginByScriptNames(params)
+    })
+
+    // 删除 所有菜单
+    const asyncDeleteAllMenu = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAllMenu(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteAllMenu", async (e, params) => {
+        return await asyncDeleteAllMenu(params)
     })
 }

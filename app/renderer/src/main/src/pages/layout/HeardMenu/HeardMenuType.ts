@@ -2,9 +2,8 @@ import {MenuItem, MenuItemGroup} from "@/pages/MainOperator"
 import {MenuDataProps, Route} from "@/routes/routeSpec"
 
 export interface HeardMenuProps {
-    routeMenuData: MenuDataProps[]
-    menuItemGroup: MenuItemGroup[]
-    onRouteMenuSelect: (key: Route) => void
+    onRouteMenuSelect: (key: string) => void
+    setRouteKeyToLabel: (r: Map<string, string>) => void
 }
 
 /**
@@ -15,6 +14,7 @@ export interface HeardMenuProps {
  * @param {(s: MenuDataProps) => void} onSelect: 选中菜单
  * @param {(s: MenuDataProps) => void} setSubMenuData: 设置子菜单
  * @param {string} activeMenuId: 当前选中菜单
+ * @param {(s: MenuDataProps) => void} onOpenDownModal: 打开下载弹窗
  */
 export interface RouteMenuDataItemProps {
     menuItem: MenuDataProps
@@ -23,6 +23,7 @@ export interface RouteMenuDataItemProps {
     onSelect: (s: MenuDataProps) => void
     setSubMenuData: (s: MenuDataProps) => void
     activeMenuId: string
+    onOpenDownModal: (s: MenuDataProps) => void
 }
 
 // /**
@@ -45,21 +46,13 @@ export interface RouteMenuDataItemProps {
  * @description: 系统默认菜单的二级菜单 YakitPopover
  * @param {MenuDataProps} subMenuData: 菜单项
  * @param {(s: MenuDataProps) => void} onSelect: 选中菜单
+ * @param {(s: MenuDataProps) => void} onOpenDownModal: 打开下载弹窗
  */
 export interface SubMenuProps {
     subMenuData: MenuDataProps[]
     onSelect: (s: MenuDataProps) => void
+    onOpenDownModal: (s: MenuDataProps) => void
 }
-
-// /**
-//  * @description: 插件自定义菜单的二级菜单 YakitPopover
-//  * @param {MenuItem} subMenuGroupData: 菜单项
-//  * @param {(s: string) => void} onSelectMenuGroup: 选中菜单
-//  */
-// export interface SubMenuGroupProps {
-//     subMenuGroupData: MenuItem[]
-//     onSelectMenuGroup: (s: string) => void
-// }
 
 /**
  * @description: 一级菜单过多折叠起来的菜单
@@ -73,4 +66,21 @@ export interface CollapseMenuProp {
     moreLeft: number
     isExpand: boolean
     onMenuSelect: (s: string) => void
+}
+
+export interface MenuByGroupProps {
+    Groups: MenuItemGroup[]
+}
+
+export interface DownloadOnlinePluginByScriptNamesResponse {
+    Data: DownloadOnlinePluginByScriptName[]
+}
+
+export interface DownloadOnlinePluginByScriptName {
+    ScriptName: string
+    Id: number
+}
+
+export interface AddMenuRequest {
+    Data: MenuItemGroup
 }

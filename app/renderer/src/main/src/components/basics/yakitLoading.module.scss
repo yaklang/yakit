@@ -12,6 +12,7 @@
         .yakit-loading-title {
             margin-top: 16vh;
             width: 100%;
+
             .title-style {
                 width: 100%;
                 text-align: center;
@@ -20,6 +21,7 @@
                 color: var(--yakit-header-color);
                 font-weight: 600;
             }
+
             .subtitle-stlye {
                 width: 100%;
                 text-align: center;
@@ -36,6 +38,7 @@
             overflow: hidden;
             position: relative;
             font-size: 96px;
+
             .theme-icon-wrapper {
                 width: 96px;
                 height: 96px;
@@ -48,6 +51,7 @@
                 animation: building-blocks 1s ease 0s infinite;
                 animation-direction: alternate;
             }
+
             .theme-icon {
                 width: 96px;
                 height: 96px;
@@ -57,6 +61,7 @@
                 left: 0;
                 overflow: hidden;
             }
+
             .white-icon {
                 width: 96px;
                 height: 96px;
@@ -73,30 +78,31 @@
             font-size: 16px;
             color: #f28b44;
             line-height: 24px;
+        }
 
-            .time-out-title {
-                color: var(--yakit-danger-5);
-            }
+        .time-out-title {
+            color: var(--yakit-danger-5);
+        }
 
-            .engine-log-btn {
-                margin-top: 8px;
-                display: flex;
-                justify-content: center;
-                gap: 8px;
-            }
+        .engine-log-btn {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
 
-            .switch-engine-mode {
-                margin-top: 32px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 4px 0px;
-                font-weight: 500;
-                font-size: 14px;
-            }
+        .switch-engine-mode {
+            margin-top: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px 0px;
+            font-weight: 500;
+            font-size: 14px;
         }
     }
 }
+
 .switch-mode-overlay {
     background: #f8f8f8;
     border-radius: 4px;
@@ -116,14 +122,17 @@
     from {
         height: 96;
     }
+
     to {
         height: 0px;
     }
 }
+
 @keyframes building-blocks {
     from {
         height: 96px;
     }
+
     to {
         height: 0px;
     }
@@ -133,14 +142,17 @@
     width: 448px;
     z-index: 999;
 }
+
 .engine-hint-modal-wrapper {
     position: absolute;
     top: 35%;
     left: calc(50% - 224px);
 }
+
 .engine-hint-modal-hidden-wrapper {
     display: none;
 }
+
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
@@ -168,6 +180,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+
             .hint-icon {
                 width: 32px;
                 height: 32px;
@@ -176,6 +189,7 @@
 
         .hint-right-wrapper {
             flex: 1;
+
             .hint-right-title {
                 height: 24px;
                 font-weight: 600;
@@ -194,6 +208,7 @@
                         }
                     }
                 }
+
                 .download-info-wrapper {
                     margin-top: 16px;
                     display: flex;
@@ -201,12 +216,14 @@
                     font-size: 12px;
                     line-height: 16px;
                     color: var(--yakit-helper-text-color);
+
                     .divider-wrapper {
                         margin: 0 8px;
                         width: 1px;
                         height: 16px;
                         display: flex;
                         align-items: center;
+
                         .divider-style {
                             width: 100%;
                             height: 12px;

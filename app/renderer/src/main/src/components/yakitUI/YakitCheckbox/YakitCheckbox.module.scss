@@ -1,15 +1,15 @@
 // ========================== checkbox ==========================
 .yakit-checkbox-wrapper {
 
-    --checkbox-box-shadow-color: var(--yakit-primary-color-focus);
-    --checkbox-hover-color: var(--yakit-primary-color-hover);
-    --checkbox-active-color: var(--yakit-primary-color-press);
+    --checkbox-box-shadow-color: var(--yakit-primary-2);
+    --checkbox-hover-color: var(--yakit-primary-4);
+    --checkbox-active-color: var(--yakit-primary-6);
 
     --checkbox-border-color: var(--yakit-border-color);
-    --checkbox-border-primary-color: var(--yakit-primary-color);
+    --checkbox-border-primary-color: var(--yakit-primary-5);
     --checkbox-border-disabled-color: var(--yakit-disable-text-color);
 
-    --checkbox-background-color: var(--yakit-primary-color);
+    --checkbox-background-color: var(--yakit-primary-5);
     --checkbox-background-disabled-color: var(--yakit-disable-text-color);
 
     height: 16px;
@@ -47,7 +47,7 @@
         .ant-checkbox:active .ant-checkbox-inner,
         .ant-checkbox-input:focus+.ant-checkbox-inner {
             border-color: var(--checkbox-border-primary-color);
-            box-shadow: 0 0 0 3px var(--checkbox-box-shadow-color);
+            box-shadow: -1px -1px 2px 2px var(--checkbox-box-shadow-color);
         }
 
         .ant-checkbox-checked .ant-checkbox-inner {
@@ -57,7 +57,7 @@
 
         .ant-checkbox-checked:active {
             .ant-checkbox-inner {
-                box-shadow: 0 0 0 3px var(--checkbox-box-shadow-color);
+                box-shadow: -1px -1px 2px 2px var(--checkbox-box-shadow-color);
             }
         }
 
@@ -89,7 +89,7 @@
         .ant-checkbox-indeterminate:active {
             .ant-checkbox-inner {
                 border-color: var(--checkbox-active-color);
-                box-shadow: 0 0 0 3px var(--checkbox-box-shadow-color);
+                box-shadow: -1px -1px 2px 2px var(--checkbox-box-shadow-color);
             }
 
             .ant-checkbox-inner::after {

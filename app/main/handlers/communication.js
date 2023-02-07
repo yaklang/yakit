@@ -61,4 +61,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("direction-console-log", async (e, params) => {
         win.webContents.send("callback-direction-console-log", params)
     })
+    // 打开自定义菜单
+    ipcMain.handle("open-customize-menu", (e, params) => {
+        win.webContents.send("fetch-open-customize-menu", params)
+    })
 }
