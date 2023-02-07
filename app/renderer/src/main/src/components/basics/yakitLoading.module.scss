@@ -2,11 +2,12 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    position: relative;
 
     .yakit-loading-body {
         width: 100%;
         height: 100%;
-        overflow: hidden;
+        overflow: hidden auto;
         background: #fbe7d9;
 
         .yakit-loading-title {
@@ -33,15 +34,14 @@
 
         .yakit-loading-icon-wrapper {
             margin: 48px auto 0;
-            width: 96px;
-            height: 96px;
+            width: 160px;
+            height: 160px;
             overflow: hidden;
             position: relative;
-            font-size: 96px;
-
+            font-size: 160px;
             .theme-icon-wrapper {
-                width: 96px;
-                height: 96px;
+                width: 160px;
+                height: 160px;
                 position: absolute;
                 bottom: 0;
                 left: 0;
@@ -53,9 +53,9 @@
             }
 
             .theme-icon {
-                width: 96px;
-                height: 96px;
-                line-height: 96px;
+                width: 160px;
+                height: 160px;
+                line-height: 160px;
                 position: absolute;
                 bottom: 0;
                 left: 0;
@@ -63,9 +63,9 @@
             }
 
             .white-icon {
-                width: 96px;
-                height: 96px;
-                line-height: 96px;
+                width: 160px;
+                height: 160px;
+                line-height: 160px;
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -80,16 +80,27 @@
             line-height: 24px;
         }
 
-        .time-out-title {
-            color: var(--yakit-danger-5);
-        }
+            .time-wait-title {
+                color: var(--yakit-helper-text-color);
+            }
+            .time-link-title {
+                color: var(--yakit-primary-5);
+            }
+            .time-out-title {
+                color: var(--yakit-danger-5);
+            }
 
-        .engine-log-btn {
-            margin-top: 8px;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-        }
+            .engine-log-btn {
+                margin-top: 16px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+                .btn-style {
+                    width: 280px;
+                    justify-content: center;
+                }
+            }
 
         .switch-engine-mode {
             margin-top: 32px;
@@ -102,25 +113,10 @@
         }
     }
 }
-
-.switch-mode-overlay {
-    background: #f8f8f8;
-    border-radius: 4px;
-    box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
-
-    :global {
-        .ant-dropdown-menu {
-            border-radius: 4px;
-            padding: 8px 4px;
-            box-shadow: unset;
-            background-color: #f8f8f8;
-        }
-    }
-}
-
+// 加载图标动画
 @-webkit-keyframes building-blocks {
     from {
-        height: 96;
+        height: 160px;
     }
 
     to {
@@ -130,7 +126,7 @@
 
 @keyframes building-blocks {
     from {
-        height: 96px;
+        height: 160px;
     }
 
     to {
@@ -138,21 +134,32 @@
     }
 }
 
-.yaklang-update-modal {
-    width: 448px;
-    z-index: 999;
+// 遮罩层
+.yakit-modal-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.hidden-yakit-modal-mask {
+    display: none;
 }
 
-.engine-hint-modal-wrapper {
+// 弹窗是否置顶
+.modal-top-wrapper {
+    z-index: 999 !important;
+}
+.yaklang-update-modal {
+    width: 448px;
+    z-index: 99;
+}
+.hint-modal-wrapper {
     position: absolute;
     top: 35%;
     left: calc(50% - 224px);
 }
-
-.engine-hint-modal-hidden-wrapper {
-    display: none;
-}
-
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
@@ -185,6 +192,15 @@
                 width: 32px;
                 height: 32px;
             }
+            .qs-icon {
+                width: 20px;
+                height: 20px;
+                color: var(--yakit-body-text-color);
+                cursor: pointer;
+            }
+            .qs-icon:hover {
+                color: var(--yakit-primary-color);
+            }
         }
 
         .hint-right-wrapper {
@@ -196,6 +212,13 @@
                 font-size: 16px;
                 line-height: 24px;
                 color: var(--yakit-header-color);
+            }
+
+            .hint-right-content {
+                margin-top: 8px;
+                font-size: 14px;
+                line-height: 20px;
+                color: var(--yakit-body-text-color);
             }
 
             .hint-right-download {
@@ -230,6 +253,23 @@
                             border: 1px solid var(--yakit-border-color);
                         }
                     }
+                }
+                .download-btn {
+                    margin-top: 24px;
+                    display: flex;
+                    justify-content: right;
+                    gap: 8px;
+                }
+            }
+
+            .hint-right-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: space-between;
+
+                .btn-group-wrapper {
+                    display: flex;
+                    gap: 8px;
                 }
             }
         }

@@ -41,6 +41,9 @@ import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {showConfigMenuItems} from "@/utils/ConfigMenuItems"
 import {showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
+import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
+import {LocalGV} from "@/yakitGV"
+import {getLocalValue, setLocalValue} from "@/utils/kv"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
@@ -455,7 +458,8 @@ const UIDevTool: React.FC = React.memo(() => {
 interface UIOpUpdateProps {
     version: string
     lastVersion: string
-    isUpdateWait: boolean
+    localVersion?: string
+    isUpdateWait?: boolean
     isRemoteMode?: boolean
     onDownload: (type: "yakit" | "yaklang") => any
 }
@@ -512,14 +516,15 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 })
 /** @name Yaklang引擎版本 */
 const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
-    const {version, lastVersion, isUpdateWait, isRemoteMode = false, onDownload} = props
+    const {version, lastVersion, localVersion = "", isRemoteMode = false, onDownload} = props
 
-    const isUpdate = lastVersion !== "" && lastVersion !== version
+    const isUpdate = lastVersion !== "" && lastVersion !== version && localVersion !== lastVersion
+    const isKillEngine = localVersion && localVersion !== version && localVersion === lastVersion
 
     return (
         <div
             className={classnames(styles["version-update-wrapper"], {
-                [styles["version-has-update"]]: !isRemoteMode && isUpdate && !isUpdateWait
+                [styles["version-has-update"]]: !isRemoteMode && (isUpdate || isKillEngine)
             })}
         >
             <div className={styles["update-header-wrapper"]}>
@@ -536,18 +541,18 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 </div>
 
                 <div className={styles["header-btn"]}>
-                    {!isRemoteMode && isUpdateWait && (
-                        <YakitButton
-                            onClick={() => ipcRenderer.invoke("update-yaklang-reconnect", lastVersion)}
-                        >{`更新 `}</YakitButton>
-                    )}
-                    {!isRemoteMode && !isUpdateWait && isUpdate && (
+                    {!isRemoteMode && isUpdate && (
                         <div className={styles["update-btn"]} onClick={() => onDownload("yaklang")}>
                             <UpdateSvgIcon style={{marginRight: 4}}/>
                             立即更新
                         </div>
                     )}
-                    {!isUpdate && "已是最新"}
+                    {!isRemoteMode && isKillEngine && (
+                        <YakitButton
+                            onClick={() => ipcRenderer.invoke("kill-old-engine-process")}
+                        >{`更新 `}</YakitButton>
+                    )}
+                    {!isUpdate && !isKillEngine && "已是最新"}
                     {isRemoteMode && isUpdate && "远程连接无法更新"}
                 </div>
             </div>
@@ -657,7 +662,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     /** Yaklang引擎版本号 */
     const [yaklangVersion, setYaklangVersion] = useState<string>("dev")
     const [yaklangLastVersion, setYaklangLastVersion] = useState<string>("")
+    const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>("")
     const yaklangTime = useRef<any>(null)
+
+    /** 是否启动检测更新 */
+    const [isCheck, setIsCheck] = useState<boolean>(true)
 
     /** 获取最新Yakit版本号 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
@@ -669,15 +678,14 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             .catch(() => {
             })
     })
-    /** 获取最新Yaklang版本号 */
+    /** 获取最新Yaklang版本号和本地版本号 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("fetch-latest-yaklang-version")
-            .then((data: string) => {
-                if (yaklangVersion !== data) setYaklangLastVersion(data)
-            })
-            .catch(() => {
-            })
+        ipcRenderer.invoke("fetch-latest-yaklang-version").then((data: string) => {
+            if (yaklangVersion !== data) setYaklangLastVersion(data)
+        })
+        ipcRenderer.invoke("get-current-yak").then((data: string) => {
+            setYaklangLocalVersion(data)
+        })
     })
 
     /** 接收本地Yaklang引擎版本号信息 */
@@ -695,6 +703,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     useEffect(() => {
         if (isEngineLink) {
+            getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
+                setIsCheck(val)
+            })
             /** 获取本地Yakit版本号，启动获取最新Yakit版本的定时器 */
             ipcRenderer.invoke("fetch-yakit-version").then((v: string) => setYakitVersion(`v${v}`))
             if (yakitTime.current) clearInterval(yakitTime.current)
@@ -727,13 +738,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         ipcRenderer.invoke("receive-download-yaklang-or-yakit", type)
     })
 
-    const [isYaklangUpdateWait, setIsYaklangUpdateWait] = useState<boolean>(false)
     const [isYakitUpdateWait, setIsYakitUpdateWait] = useState<boolean>(false)
     /** 监听下载 yaklang 或 yakit 成功后是否稍后安装 */
     useEffect(() => {
-        ipcRenderer.on("download-update-wait-callback", (e: any, type: "yaklang" | "yakit") => {
+        ipcRenderer.on("download-update-wait-callback", (e: any, type: "yakit") => {
             if (type === "yakit") setIsYakitUpdateWait(true)
-            if (type === "yaklang") setIsYaklangUpdateWait(true)
         })
 
         return () => {
@@ -773,6 +782,22 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             </div>
                         </div>
                     </div> */}
+                    <div className={styles["notice-version-header"]}>
+                        <div className={styles["header-title"]}>更新通知</div>
+                        <div className={styles["switch-title"]}>
+                            启动检测更新
+                            <YakitSwitch
+                                style={{marginLeft: 4}}
+                                showInnerText={true}
+                                size='large'
+                                checked={!isCheck}
+                                onChange={(val: boolean) => {
+                                    setLocalValue(LocalGV.NoAutobootLatestVersionCheck, !val)
+                                    setIsCheck(!val)
+                                }}
+                            />
+                        </div>
+                    </div>
 
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
@@ -785,7 +810,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             <UIOpUpdateYaklang
                                 version={yaklangVersion}
                                 lastVersion={yaklangLastVersion}
-                                isUpdateWait={isYaklangUpdateWait}
+                                localVersion={yaklangLocalVersion}
                                 isRemoteMode={isRemoteMode}
                                 onDownload={onDownload}
                             />
@@ -807,13 +832,14 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             </div>
         )
     }, [
+        isCheck,
         isEngineLink,
         isRemoteMode,
         yakitVersion,
         yakitLastVersion,
         yaklangVersion,
         yaklangLastVersion,
-        isYaklangUpdateWait,
+        yaklangLocalVersion,
         isYakitUpdateWait
     ])
 

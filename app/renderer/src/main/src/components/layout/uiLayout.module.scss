@@ -242,167 +242,6 @@
                 color: var(--yakit-header-color);
             }
 
-            .hint-right-content {
-                margin-top: 8px;
-                font-size: 14px;
-                line-height: 20px;
-                color: var(--yakit-body-text-color);
-            }
-
-            .hint-right-macarm {
-                margin-top: 8px;
-                box-sizing: border-box;
-                padding: 12px;
-                background: var(--yakit-neutral10-color);
-                border: 1px solid var(--yakit-border-color);
-                border-radius: 4px;
-
-                .mac-arm-hint {
-                    font-size: 12px;
-                    line-height: 16px;
-                    color: var(--yakit-header-color);
-                }
-
-                .mac-arm-command {
-                    margin-top: 8px;
-                    display: flex;
-                    align-items: center;
-                    height: 20px;
-                    padding: 4px 6px;
-                    background: var(--yakit-primary-background-color);
-                    border: 1px solid var(--yakit-primary-border-color);
-                    border-radius: 4px;
-
-                    font-size: 11px;
-                    color: var(--yakit-primary-color);
-
-                    .copy-icon {
-                        width: 12px;
-                        height: 12px;
-                        display: flex;
-                        margin-left: 8px;
-                        cursor: pointer;
-                    }
-                }
-            }
-
-            // 后续看看能不能整合成全局动画
-            .agr-shake-animation {
-                -webkit-animation-name: shake;
-                animation-name: shake;
-                -webkit-animation-iteration-count: 1;
-                animation-iteration-count: 1;
-                -webkit-animation-duration: 1s;
-                animation-duration: 1s;
-                -webkit-animation-fill-mode: both;
-                animation-fill-mode: both;
-                -webkit-animation-timing-function: ease;
-                animation-timing-function: ease;
-            }
-
-            @-webkit-keyframes shake {
-
-                0%,
-                100% {
-                    -webkit-transform: translateX(0);
-                }
-
-                10%,
-                30%,
-                50%,
-                70%,
-                90% {
-                    -webkit-transform: translateX(-5px);
-                }
-
-                20%,
-                40%,
-                60%,
-                80% {
-                    -webkit-transform: translateX(5px);
-                }
-            }
-
-            @keyframes shake {
-
-                0%,
-                100% {
-                    transform: translateX(0);
-                }
-
-                10%,
-                30%,
-                50%,
-                70%,
-                90% {
-                    transform: translateX(-5px);
-                }
-
-                20%,
-                40%,
-                60%,
-                80% {
-                    transform: translateX(5px);
-                }
-            }
-
-            .hint-right-agreement {
-                margin-top: 8px;
-                height: 24px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 12px;
-                color: var(--yakit-header-color);
-
-                .agreement-checkbox {
-                    :global {
-                        .ant-checkbox-inner {
-                            border: 1px solid var(--yakit-helper-text-color);
-                            border-radius: 4px;
-                        }
-
-                        .ant-checkbox-checked .ant-checkbox-inner {
-                            background-color: var(--yakit-primary-color);
-                            border-color: var(--yakit-primary-color);
-                        }
-
-                        .ant-checkbox-checked::after {
-                            border: 0px;
-                        }
-                    }
-                }
-
-                .agreement-danger-checkbox {
-                    :global {
-                        .ant-checkbox-inner {
-                            border: 1px solid var(--yakit-danger-color);
-                            border-radius: 4px;
-                        }
-
-                        .ant-checkbox-checked::after {
-                            border: 0px;
-                        }
-                    }
-                }
-
-                .agreement-style {
-                    color: var(--yakit-primary-color);
-                    cursor: pointer;
-                }
-            }
-
-            .hint-right-btn {
-                margin-top: 24px;
-                display: flex;
-                justify-content: space-between;
-
-                .btn-group-wrapper {
-                    display: flex;
-                    gap: 8px;
-                }
-            }
-
             .hint-right-download {
                 .download-progress {
                     :global {
@@ -522,99 +361,9 @@
         }
     }
 
-    .agreement-content-modal-wrapper {
-        .modal-body {
-            padding: 16px 24px 24px 24px;
-
-            .body-title {
-                height: 24px;
-                font-weight: 600;
-                font-size: 16px;
-                line-height: 24px;
-                color: var(--yakit-header-color);
-            }
-
-            .body-content {
-                margin-top: 8px;
-                font-size: 14px;
-                line-height: 24px;
-                text-align: justify;
-                color: var(--yakit-body-text-color);
-
-                .sign-content {
-                    color: var(--yakit-danger-color);
-                }
-
-                .underline-content {
-                    color: var(--yakit-danger-color);
-                    text-decoration: underline;
-                }
-
-                .sign-bold-content {
-                    color: var(--yakit-danger-color);
-                    font-weight: 500;
-                }
-            }
-        }
-    }
-
     .question-modal-wrapper {
         .modal-body {
             padding: 16px 24px 24px 24px;
-
-            .body-hint {
-                font-size: 14px;
-                line-height: 24px;
-                text-align: justify;
-                color: var(--yakit-body-text-color);
-
-                .hint-sign {
-                    color: var(--yakit-danger-color);
-                }
-            }
-
-            .body-link {
-                margin-top: 8px;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px;
-                gap: 12px;
-                border: 1px solid var(--yakit-border-color);
-                border-radius: 4px;
-
-                .link-opt {
-                    display: flex;
-                    align-items: center;
-
-                    .link-title {
-                        font-size: 12px;
-                        text-align: justify;
-                        text-align-last: justify;
-                        color: var(--yakit-header-color);
-                    }
-
-                    .link-style {
-                        margin-left: 8px;
-                        flex: 1;
-                        padding: 4px 6px;
-                        background: var(--yakit-card-background-color);
-                        border: 1px solid var(--yakit-border-color);
-                        border-radius: 4px;
-                        font-size: 11px;
-                        line-height: 12px;
-                        color: var(--yakit-body-text-color);
-                        word-break: break-all;
-
-                        .copy-icon {
-                            margin-left: 8px;
-                            display: inline-block;
-                            cursor: pointer;
-                        }
-                    }
-                }
-            }
 
             .yakit-update-hint {
                 height: 24px;
@@ -657,18 +406,6 @@
 }
 
 // 各类系统信息弹窗的宽度
-.yakit-agr-modal {
-    width: 624px;
-}
-
-.yaklang-update-modal {
-    width: 448px;
-}
-
-.yaklang-qs-modal {
-    width: 657px;
-}
-
 .yakit-update-modal {
     width: 448px;
 }
@@ -884,6 +621,69 @@
                 line-height: 20px;
                 color: var(--yakit-primary-color);
                 cursor: pointer;
+            }
+        }
+    }
+}
+
+.kill-old-engine-modal {
+    width: 448px;
+    z-index: 99;
+    position: absolute;
+    top: 35%;
+    left: calc(50% - 224px);
+}
+.kill-old-engine-hint {
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .yaklang-engine-hint-wrapper {
+        width: 100%;
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        position: relative;
+
+        .hint-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            .hint-icon {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        .hint-right-wrapper {
+            flex: 1;
+            .hint-right-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+
+            .hint-right-content {
+                margin-top: 8px;
+                font-size: 14px;
+                line-height: 20px;
+                color: var(--yakit-body-text-color);
+            }
+
+            .hint-right-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: space-between;
+
+                .btn-group-wrapper {
+                    display: flex;
+                    gap: 8px;
+                }
             }
         }
     }

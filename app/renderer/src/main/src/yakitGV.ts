@@ -6,12 +6,16 @@ export enum LocalGV {
     YaklangEngineMode = "yaklang-engine-mode",
     /** @name 获取缓存数据里引擎启动配置 */
     YaklangEnginePort = "yaklang-engine-port",
+    /** @name 获取缓存数据里引擎启动配置(管理员权限) */
     YaklangEngineAdminPort = "yaklang-engine-admin-port",
     /** @name 关闭窗口的二次确认 */
     WindowsCloseFlag = "windows-close-flag",
 
     /** @name 远程引擎的认证信息本地缓存 */
     YaklangRemoteEngineCredential = "yaklang-remote-engine-credential",
+
+    /** @name 是否自启最新版本检测 */
+    NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check"
 }
 
 /** 引擎数据库缓存数据-键值变量 */

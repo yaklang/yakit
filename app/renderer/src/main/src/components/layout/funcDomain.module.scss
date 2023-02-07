@@ -145,7 +145,22 @@
                 }
             }
 
+            .notice-version-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 20px;
+                font-size: 12px;
+                .header-title {
+                    color: var(--yakit-body-text-color);
+                }
+                .switch-title {
+                    color: var(--yakit-header-color);
+                }
+            }
+
             .notice-version-wrapper {
+                margin-top: 16px;
                 .version-update-wrapper + .version-update-wrapper {
                     margin-top: 16px;
                 }

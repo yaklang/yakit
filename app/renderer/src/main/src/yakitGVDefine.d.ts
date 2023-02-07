@@ -2,7 +2,7 @@
 export type YakitSystem = "Linux" | "Darwin" | "Windows_NT"
 
 /** 当前启动yaklang引擎模式 */
-export type YaklangEngineMode = "local" | "admin" | "remote";
+export type YaklangEngineMode = "local" | "admin" | "remote"
 
 /** 下载进度条-时间数据 */
 interface DownloadingTime {
@@ -45,3 +45,6 @@ interface UserInfoProps {
     token: string
     showStatusSearch?: boolean
 }
+
+/** @name 当前yakit使用状态 */
+export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | ""
