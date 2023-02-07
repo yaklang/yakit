@@ -248,3 +248,11 @@
 .label-box {
     flex: 1;
 }
+.echarts-box{
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+}
+.echarts-box-show{
+    opacity: 1;
+}

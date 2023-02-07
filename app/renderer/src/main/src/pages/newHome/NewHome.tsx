@@ -213,6 +213,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     // 全局登录状态
     const {userInfo} = useStore()
     const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
+    const [isShowEcharts,setIsShowEcharts] = useState<boolean>(false)
     const colorList = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
     const optionRef = useRef<any>({
         color: colorList,
@@ -366,7 +367,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             .catch((err) => {
                 failed("线上统计数据获取失败:" + err)
             })
-            .finally(() => {})
+            .finally(() => {setIsShowEcharts(true)})
     })
 
     const onSendToTab = useMemoizedFn((pluginType: string) => {
@@ -384,7 +385,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         echartsRef.current = echarts.init(chartDom)
         options && echartsRef.current.setOption(options)
     }
-    return <div id='main-home-pie' style={{width: "100%", height: "100%"}}></div>
+    return <div id='main-home-pie' className={classNames(styles["echarts-box"],isShowEcharts&&styles["echarts-box-show"])}></div>
 }
 
 // const PieEcharts: React.FC<PieChartProps> = (props) => {
