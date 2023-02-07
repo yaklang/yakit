@@ -2276,7 +2276,7 @@ message QueryHTTPFlowRequest {
 
   int64 AfterBodyLength = 27;
   int64 BeforeBodyLength = 28;
-
+  string IsWebsocket = 29;
 }
 
 message DeleteHTTPFlowRequest {
