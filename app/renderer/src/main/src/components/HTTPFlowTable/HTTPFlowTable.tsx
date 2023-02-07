@@ -2074,7 +2074,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             defaultValue='all'
                                             dropdownClassName='old-theme-html'
                                             wrapperStyle={{width: 150}}
-                                            // onSelect={(val) => {}}
                                         >
                                             <YakitSelect.Option key='all' value='all'>
                                                 全部
