@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -162,6 +162,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             ;(k.subMenuData || []).forEach((subKey) => {
                 routeKeyToLabel.current.set(`${subKey.key}`, subKey.label)
             })
+            routeKeyToLabel.current.set(`${k.key}`, k.label)
+        })
+        HiddenMenuData.forEach((k) => {
             routeKeyToLabel.current.set(`${k.key}`, k.label)
         })
         setRouteKeyToLabel(routeKeyToLabel.current)

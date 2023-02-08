@@ -762,3 +762,51 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
         hidden: true
     }
 ]
+
+/**
+ * @description: 隐藏的菜单
+ */
+export const HiddenMenuData: MenuDataProps[] = [
+    {
+        id: "Route.BatchExecutorRecover",
+        key: Route.BatchExecutorRecover,
+        label: "继续任务：批量执行插件",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.AccountAdminPage",
+        key: Route.AccountAdminPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.RoleAdminPage",
+        key: Route.RoleAdminPage,
+        label: "角色管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.LicenseAdminPage",
+        key: Route.LicenseAdminPage,
+        label: "License管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.TrustListPage",
+        key: Route.TrustListPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.PlugInAdminPage",
+        key: Route.PlugInAdminPage,
+        label: "插件权限",
+        disabled: true,
+        hidden: true
+    }
+]
