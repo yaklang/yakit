@@ -62,11 +62,14 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
                 .then((res:API.UserData) => {
                     console.log("返回结果：", res)
-                    success("企业登录成功")
-                    onCloseTab()
-                    onClose&&onClose()
-                    onSuccee&&onSuccee()
-                    res&&ipcRenderer.send("company-sign-in", {...res})
+                    ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
+                        if(data?.next){
+                            success("企业登录成功")
+                            onCloseTab()
+                            onClose&&onClose()
+                            onSuccee&&onSuccee()
+                        }
+                    })
                 })
                 .catch((err) => {
                     setTimeout(() => setLoading(false), 300)

@@ -606,13 +606,13 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
 
     useEffect(() => {
         getPlugInShopHot()
-        getPlugInShopNewIncre()
+        !IsEnterprise&&getPlugInShopNewIncre()
     }, [])
 
     useEffect(() => {
         ipcRenderer.on("refresh-new-home", (e, res: any) => {
             getPlugInShopHot()
-            getPlugInShopNewIncre()
+            !IsEnterprise&&getPlugInShopNewIncre()
         })
         return () => {
             ipcRenderer.removeAllListeners("refresh-new-home")
