@@ -68,7 +68,13 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                         </YakitTag>
                     )
                 }}
-                suffixIcon={show ? <ChevronUpIcon className={styles['yakit-select-icon']}/> : <ChevronDownIcon className={styles['yakit-select-icon']}/>}
+                suffixIcon={
+                    show ? (
+                        <ChevronUpIcon className={styles["yakit-select-icon"]} />
+                    ) : (
+                        <ChevronDownIcon className={styles["yakit-select-icon"]} />
+                    )
+                }
             >
                 {props.children}
             </Select>

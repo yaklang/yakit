@@ -119,6 +119,7 @@ export interface YakScript {
     HeadImg?: string
     OnlineBaseUrl?: string
     BaseOnlineId?: number
+    OnlineOfficial?: boolean
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
