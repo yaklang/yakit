@@ -99,6 +99,7 @@
         .ant-dropdown-menu-item-selected {
             color: var(--menu-background);
         }
+
         .ant-dropdown-menu-item {
             height: 100%;
             padding: 0;
@@ -168,8 +169,9 @@
     }
 
     .yakit-menu-item-title {
-        height: 100%;
-        display: flex;
-        align-items: center;
+        // height: 100%;
+        // display: flex;
+        // align-items: center;
+        line-height: 16px;
     }
 }

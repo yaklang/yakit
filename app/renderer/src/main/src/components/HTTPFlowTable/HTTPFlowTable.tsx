@@ -20,7 +20,8 @@ import {
     Menu,
     InputNumber,
     Spin,
-    Dropdown, Alert
+    Dropdown,
+    Alert
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -59,8 +60,8 @@ import {
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
-import {saveABSFileToOpen} from "@/utils/openWebsite";
-import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser";
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -502,7 +503,7 @@ const availableColors = [
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 绿色
-                <div className={classNames(style["tag-color-display"], 'bg-color-green-opacity')}></div>
+                <div className={classNames(style["tag-color-display"], "bg-color-green-opacity")}></div>
             </div>
         )
     },
@@ -645,7 +646,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>(
-        props.params || {SourceType: "mitm", Tags: []}
+        {
+            ...(
+                props.params || {SourceType: "mitm", Tags: []}
+            ), SourceType: props.params?.SourceType || "mitm"
+        }
     )
     const [tagsQuery, setTagsQuery] = useState<string[]>([])
     const [contentTypeQuery, setContentTypeQuery] = useState<string>("")
@@ -1589,13 +1594,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: { Raw: Uint8Array }) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
                 })
-            },
+            }
         },
         {
             title: "浏览器中打开",
             onClickSingle: (v) => {
                 showResponseViaHTTPFlowID(v)
-            },
+            }
         },
         {
             title: "复制为 CSRF Poc",

@@ -1,21 +1,21 @@
 .yakit-radio-buttons-solid {
     --yakit-solid-primary-font-color: #fff;
-    --yakit-solid-primary-font-hover-color: var(--yakit-primary-color-hover);
+    --yakit-solid-primary-font-hover-color: var(--yakit-primary-4);
 }
 
 // ========================== middle ==========================
 .yakit-radio-buttons-middle {
-    --radio-buttons-box-shadow-color: var(--yakit-primary-color-focus);
-    --radio-buttons-border-color: var(--yakit-primary-color);
-    --radio-buttons-border-hover-color: var(--yakit-primary-border-color);
-    --radio-buttons-border-active-color: var(--yakit-primary-color-press);
+    --radio-buttons-box-shadow-color: var(--yakit-primary-2);
+    --radio-buttons-border-color: var(--yakit-primary-5);
+    --radio-buttons-border-hover-color: var(--yakit-primary-3);
+    --radio-buttons-border-active-color: var(--yakit-primary-6);
 
-    --radio-buttons-primary-font-color: var(--yakit-primary-color);
-    --radio-buttons-primary-font-hover-color: var(--yakit-primary-color-hover);
+    --radio-buttons-primary-font-color: var(--yakit-primary-5);
+    --radio-buttons-primary-font-hover-color: var(--yakit-primary-4);
 
-    --radio-buttons-background-color: var(--yakit-primary-color);
-    --radio-buttons-background-hover-color: var(--yakit-primary-color-hover);
-    --radio-buttons-background-active-color: var(--yakit-primary-color-press);
+    --radio-buttons-background-color: var(--yakit-primary-5);
+    --radio-buttons-background-hover-color: var(--yakit-primary-4);
+    --radio-buttons-background-active-color: var(--yakit-primary-6);
 
 
     :global {
@@ -34,7 +34,7 @@
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            border-color: var(--yakit-border-color);
+            border-color: var(--yakit-border-color);
         }
 
         .ant-radio-button-wrapper:hover {

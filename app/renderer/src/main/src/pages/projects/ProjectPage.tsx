@@ -100,7 +100,7 @@ export const ProjectPage: React.FC<ProjectPageProp> = (props) => {
     }
 
     return <AutoCard bordered={false} title={<Space>
-        项目管理
+        项目管理（Beta）
         {isDefault && <Tag color={"green"}>默认数据库</Tag>}
         {current && <div>{current?.DatabasePath}</div>}
     </Space>} size={"small"} extra={<div>

@@ -1,0 +1,15 @@
+.yakit-spin {
+    :global {
+        .ant-spin {
+            color: var(--yakit-primary-color);
+        }
+
+        .ant-spin-text {
+            color: var(--yakit-primary-color);
+        }
+
+        .ant-spin-dot-item {
+            background-color: var(--yakit-primary-color);
+        }
+    }
+}

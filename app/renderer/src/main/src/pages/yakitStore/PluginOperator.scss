@@ -54,3 +54,18 @@
         overflow-y: auto;
     }
 }
+
+.modal-remove-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+
+        &:hover {
+            color: #1890ff;
+        }
+    }
+}
+
+.modal-remove-menu {
+    padding: 24px;
+}

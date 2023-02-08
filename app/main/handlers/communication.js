@@ -51,4 +51,18 @@ module.exports = (win, getClient) => {
     ipcMain.handle("open-user-manage", (e, params) => {
         win.webContents.send("callback-open-user-manage", params)
     })
+
+    /** 缩放日志的打开通信 */
+    ipcMain.handle("shrink-console-log", async (e, params) => {
+        win.webContents.send("callback-shrink-console-log", params)
+    })
+
+    /** 方向日志的打开通信 */
+    ipcMain.handle("direction-console-log", async (e, params) => {
+        win.webContents.send("callback-direction-console-log", params)
+    })
+    // 打开自定义菜单
+    ipcMain.handle("open-customize-menu", (e, params) => {
+        win.webContents.send("fetch-open-customize-menu", params)
+    })
 }

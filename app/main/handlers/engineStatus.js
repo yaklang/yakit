@@ -55,7 +55,6 @@ function generateWindowsSudoCommand(file, args) {
     const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
     return `powershell.exe start-process -verb runas -WindowStyle hidden -filepath ${cmds}`
 }
-
 /** @name 以管理员权限执行命令 */
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
@@ -208,11 +207,11 @@ module.exports = (win, callback, getClient, newClient) => {
 
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${port}`], {
                         // stdio: ["ignore", "ignore", "ignore"]
-                        detached: true,
+                        detached: false, windowsHide: true,
                         stdio: ["ignore", log, log]
                     })
                     
-                    subprocess.unref()
+                    // subprocess.unref()
 
                     subprocess.on("error", (err) => {
                         toLog(`本地引擎遭遇错误，错误原因为：${err}`)

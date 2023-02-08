@@ -1,0 +1,76 @@
+// ========================== form-label-small ==========================
+.form-label-small {
+    :global {
+        .ant-form-item-label>label {
+            height: 24px
+        }
+    }
+}
+
+// ========================== form-label-middle ==========================
+.form-label-middle {
+    :global {
+        .ant-form-item-label>label {
+            height: 28px
+        }
+    }
+}
+
+// ========================== form-label-large ==========================
+.form-label-large {
+    :global {
+        .ant-form-item-label>label {
+            height: 32px
+        }
+    }
+}
+
+
+// ========================== dragger-help-middle ==========================
+.dragger-help-middle {
+    font-size: 12px;
+    color: var(--yakit-body-text-color);
+    line-height: 16px;
+    font-weight: 400;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2px;
+
+    .dragger-help-active {
+        color: var(--yakit-primary-color);
+        cursor: pointer;
+    }
+
+    .dragger-help-number {
+        color: var(--yakit-primary-color);
+        cursor: pointer;
+        margin: 0 4px;
+        font-style: normal;
+    }
+}
+
+// ========================== dragger-help-small ==========================
+.dragger-help-small {}
+
+// ========================== dragger-help-large ==========================
+.dragger-help-large {
+    font-size: 14px;
+}
+
+// ========================== yakit-dragger ==========================
+.yakit-dragger {
+    :global {
+        .ant-upload.ant-upload-drag {
+            border: 0;
+            background: transparent;
+        }
+
+        .ant-upload.ant-upload-drag .ant-upload {
+            padding: 0;
+        }
+
+        .ant-upload.ant-upload-drag {
+            text-align: start;
+        }
+    }
+}

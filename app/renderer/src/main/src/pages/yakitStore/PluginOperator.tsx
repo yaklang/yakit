@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     Button,
     Upload,
@@ -13,7 +13,8 @@ import {
     Tag,
     Tooltip,
     Card,
-    Badge
+    Badge,
+    MenuItemProps
 } from "antd"
 import {YakScript} from "../invoker/schema"
 import {failed, success} from "../../utils/notification"
@@ -30,7 +31,7 @@ import {BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, YakScriptCreatorForm} from "../in
 import {EditOutlined, QuestionOutlined, SettingOutlined, CloudUploadOutlined, CloseOutlined} from "@ant-design/icons"
 import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {getLocalValue, setLocalValue} from "../../utils/kv"
-import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useGetState, useHover, useMemoizedFn} from "ahooks"
 import {YakitPluginInfoOnline} from "./YakitPluginInfoOnline/YakitPluginInfoOnline"
 import "./PluginOperator.scss"
 import {ResizeBox} from "../../components/ResizeBox"
@@ -42,6 +43,13 @@ import {YakitPluginOnlineJournal} from "./YakitPluginOnlineJournal/YakitPluginOn
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {getRemoteValue} from "@/utils/kv"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {MenuByGroupProps} from "../layout/HeardMenu/HeardMenuType"
+import {MenuItemGroup} from "../MainOperator"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {RemoveIcon} from "@/assets/newIcon"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -83,17 +91,22 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const [settingShow, setSettingShow] = useState<boolean>(false)
     // 是否展示（根据插件url与私有域比较）
     const [isShowPrivateDom, setIsShowPrivateDom] = useState<boolean>(true)
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
 
     const updateGroups = () => {
-        ipcRenderer
-            .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId})
-            .then((data: {Groups: string[]}) => {
-                setGroups(data.Groups)
-            })
-            .catch((e: any) => {
-                console.info(e)
-            })
-            .finally()
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            const menuMode = patternMenu || "expert"
+            setPatternMenu(menuMode)
+            ipcRenderer
+                .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId, Mode: menuMode})
+                .then((data: {Groups: string[]}) => {
+                    setGroups(data.Groups)
+                })
+                .catch((e: any) => {
+                    console.info(e)
+                })
+                .finally()
+        })
     }
 
     const update = () => {
@@ -268,6 +281,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                                     deletePluginLocal={(value) => {
                                         if (props.deletePluginLocal) props.deletePluginLocal(value)
                                     }}
+                                    patternMenu={patternMenu}
                                 />
                             }
                         />
@@ -486,23 +500,6 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                             }
                         />
                     )} */}
-                    {enablePluginSelector && (
-                        <ResizeBox
-                            firstNode={
-                                <SimplePluginList
-                                    pluginTypes={script?.PluginSelectorTypes || "mitm,port-scan"}
-                                    onSelected={(names) => {
-                                        setExtraParams([
-                                            {Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: names.join("|")}
-                                        ])
-                                    }}
-                                />
-                            }
-                            firstMinSize={"300px"}
-                            firstRatio={"320px"}
-                            secondNode={executor()}
-                        />
-                    )}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文档"} key={"docs"} disabled={isDisabledLocal}>
                     {script && (
@@ -621,70 +618,127 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
 
 export interface AddToMenuActionFormProp {
     script: YakScript
+    visible: boolean
     updateGroups?: () => any
+    setVisible: (b: boolean) => any
+}
+
+interface OptionsProps {
+    label: string
+    value: string
+}
+
+interface AddToMenuRequest {
+    YakScriptId: number
+    Group: string
+    Verbose: string
+    MenuSort: number
+    GroupSort: number
 }
 
 export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) => {
-    const {script} = props
+    const [form] = Form.useForm()
+    const {script, visible, setVisible} = props
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
-
-    const [params, setParams] = useState<{
-        Group: string
-        YakScriptId: number
-        Verbose: string
-    }>({
-        Group: "社区组件",
-        Verbose: props.script.ScriptName,
-        YakScriptId: props.script.Id
-    })
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    const [menuData, setMenuData] = useState<MenuItemGroup[]>([])
+    const [option, setOption] = useState<OptionsProps[]>([])
 
     useEffect(() => {
-        setParams({
+        form.setFieldsValue({
             Group: "社区组件",
-            Verbose: props.script.ScriptName,
-            YakScriptId: props.script.Id
+            Verbose: props.script.ScriptName
         })
     }, [props.script])
-
+    useEffect(() => {
+        getRemoteValue("PatternMenu").then((patternMenu) => {
+            const menuMode = patternMenu || "expert"
+            setPatternMenu(menuMode)
+            init(menuMode)
+        })
+    }, [visible])
+    /**
+     * @description:获取一级菜单
+     */
+    const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
+        ipcRenderer
+            .invoke("QueryAllMenuItem", {Mode: menuMode})
+            .then((rsp: MenuByGroupProps) => {
+                setOption(rsp.Groups.map((ele) => ({label: ele.Group, value: ele.Group})))
+                setMenuData(rsp.Groups)
+            })
+            .catch((err) => {
+                failed("获取菜单失败：" + err)
+            })
+    })
     return (
         <div>
             <Form
                 size={"small"}
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-
+                form={form}
+                onFinish={(values) => {
                     if (!script) {
                         failed("No Yak Modeule Selected")
                         return
                     }
-
+                    const index = menuData.findIndex((ele) => ele.Group === values.Group)
+                    // 一级排序
+                    let MenuSort = menuData.length + 1
+                    // 二级排序
+                    let GroupSort = 0
+                    if (index === -1) {
+                        if (menuData.length >= 50) {
+                            failed("最多添加50个一级菜单")
+                            return
+                        }
+                    } else {
+                        if (menuData[index].Items.length >= 50) {
+                            failed("同一个一级菜单最多添加50个二级菜单")
+                            return
+                        }
+                        MenuSort = menuData[index].MenuSort
+                        const subIndex = menuData[index].Items.findIndex((ele) => ele.Verbose === values.Verbose)
+                        GroupSort =
+                            subIndex === -1
+                                ? menuData[index].Items.length + 1
+                                : menuData[index].Items[subIndex].GroupSort || 0
+                    }
+                    const prams: AddToMenuRequest = {
+                        ...values,
+                        YakScriptId: props.script.Id,
+                        Mode: patternMenu,
+                        MenuSort,
+                        GroupSort
+                    }
                     ipcRenderer
-                        .invoke("AddToMenu", params)
+                        .invoke("AddToMenu", prams)
                         .then(() => {
                             ipcRenderer.invoke("change-main-menu")
                             updateGroups()
+                            setVisible(false)
                             success("添加成功")
                         })
                         .catch((e: any) => {
                             failed(`${e}`)
                         })
                 }}
+                className='old-theme-html'
             >
-                <InputItem
+                <Form.Item
                     label={"菜单选项名(展示名称)"}
-                    setValue={(Verbose) => setParams({...params, Verbose})}
-                    value={params.Verbose}
-                />
-                <InputItem
-                    label={"菜单分组"}
-                    setValue={(Group) => setParams({...params, Group})}
-                    value={params.Group}
-                />
+                    name='Verbose'
+                    rules={[{required: true, message: "该项为必填"}]}
+                >
+                    <YakitInput size='small' />
+                </Form.Item>
+                <Form.Item label={"菜单分组"} name='Group' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitAutoComplete size='small' options={option} dropdownClassName='old-theme-html' />
+                </Form.Item>
+
                 <Form.Item colon={false} label={" "}>
-                    <Button type='primary' htmlType='submit'>
-                        {" "}
-                        添加{" "}
-                    </Button>
+                    <YakitButton type='primary' htmlType='submit'>
+                        添加
+                    </YakitButton>
                 </Form.Item>
             </Form>
         </div>
@@ -698,21 +752,38 @@ interface PluginManagementProps {
     groups?: string[]
     updateGroups?: () => any
     style?: React.CSSProperties
-
+    patternMenu: "expert" | "new"
     setScript?: (item: any) => any
     deletePluginLocal?: (i: YakScript) => void
 }
 
 export const PluginManagement: React.FC<PluginManagementProps> = React.memo<PluginManagementProps>((props) => {
-    const {script, groups, style} = props
+    const {script, groups, style, patternMenu} = props
+    const [visibleRemove, setVisibleRemove] = useState<boolean>(false)
+    const [visibleAdd, setVisibleAdd] = useState<boolean>(false)
     const update = props?.update ? props.update : () => {}
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
-
     return (
         <Space style={{...style}} direction={props.vertical ? "vertical" : "horizontal"}>
             <Popover
-                title={`添加到左侧菜单栏中[${script?.Id}]`}
-                content={<>{script && <AddToMenuActionForm script={script} updateGroups={updateGroups} />}</>}
+                title={`添加到菜单栏中[${script?.Id}]`}
+                content={
+                    <>
+                        {script && (
+                            <AddToMenuActionForm
+                                visible={visibleAdd}
+                                setVisible={setVisibleAdd}
+                                script={script}
+                                updateGroups={updateGroups}
+                            />
+                        )}
+                    </>
+                }
+                trigger={["click"]}
+                visible={visibleAdd}
+                onVisibleChange={(visible) => {
+                    setVisibleAdd(visible)
+                }}
             >
                 <Button size={"small"} type={"primary"} ghost>
                     添加到菜单栏
@@ -722,37 +793,8 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 size={"small"}
                 danger={true}
                 onClick={(e) => {
-                    let m = showModal({
-                        title: "移除菜单栏",
-                        content: (
-                            <Space direction={"vertical"}>
-                                {(groups || []).map((element) => {
-                                    return (
-                                        <Button
-                                            onClick={() => {
-                                                ipcRenderer
-                                                    .invoke("RemoveFromMenu", {
-                                                        YakScriptId: script?.Id,
-                                                        Group: element
-                                                    })
-                                                    .then(() => {
-                                                        ipcRenderer.invoke("change-main-menu")
-                                                        updateGroups()
-                                                        m.destroy()
-                                                    })
-                                                    .catch((e: any) => {
-                                                        console.info(e)
-                                                    })
-                                                    .finally()
-                                            }}
-                                        >
-                                            从 {element} 中移除
-                                        </Button>
-                                    )
-                                })}
-                            </Space>
-                        )
-                    })
+                    updateGroups()
+                    setVisibleRemove(true)
                 }}
             >
                 移除菜单栏
@@ -836,6 +878,45 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                     删除插件
                 </Button>
             </Popconfirm>
+            <YakitModal
+                title='移除菜单栏'
+                visible={visibleRemove}
+                onCancel={() => setVisibleRemove(false)}
+                footer={null}
+                closable={true}
+                closeIcon={<RemoveIcon className='modal-remove-icon' />}
+            >
+                <Space direction={"vertical"} className='modal-remove-menu'>
+                    {(groups &&
+                        groups.length > 0 &&
+                        groups.map((element) => {
+                            return (
+                                <Button
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("RemoveFromMenu", {
+                                                YakScriptId: script?.Id,
+                                                Group: element,
+                                                Mode: patternMenu
+                                            })
+                                            .then(() => {
+                                                ipcRenderer.invoke("change-main-menu")
+                                                updateGroups()
+                                                setVisibleRemove(false)
+                                            })
+                                            .catch((e: any) => {
+                                                failed("移除菜单失败：" + e)
+                                            })
+                                            .finally()
+                                    }}
+                                >
+                                    从 {element} 中移除
+                                </Button>
+                            )
+                        })) ||
+                        "暂无数据"}
+                </Space>
+            </YakitModal>
         </Space>
     )
 })
