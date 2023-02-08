@@ -213,6 +213,8 @@ export function RouteNameToVerboseName(r: string) {
             return "Payload"
         case "yakScript":
             return "Yak Runner"
+        case "httpFuzzer":
+            return "Web Fuzzer"
         default:
             return r
     }
