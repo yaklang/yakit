@@ -598,18 +598,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     return (
         <div className={style["heard-menu-body"]}>
-            {isExpand && (
-                <div className={style["heard-menu-home"]} onClick={() => goHomePage()}>
-                    <div className={classNames(style["heard-menu-home-title"], style["heard-menu-item-active"])}>
-                        首页
-                    </div>
-                    <HomeSvgIcon className={style["heard-menu-icon"]}/>
-                </div>
-            )}
-            <div style={{flex:1}}>
             <div
-                className={classNames(style["heard-menu-main"], {
-                    [style["heard-menu-main-no-expand"]]: !isExpand
+                className={classNames(style["heard-menu"], {
+                    [style["heard-menu-expand"]]: isExpand
                 })}
             >
                 <ReactResizeDetector
@@ -652,17 +643,17 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     />
                                 )
                             })}
-                            onClick={() => onRouteMenuSelect(Route.YakScript)}
-                            icon={<MenuYakRunnerIcon />}
-                        >
-                            Yak Runner
-                        </YakitButton>
-                        {!isExpand && (
-                            <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
-                                {!isExpand && <SortDescendingIcon />}
-                            </div>
-                        )}
                     </div>
+                    {number > 0 && routeMenuDataAfter.length > 0 && (
+                        <>
+                            <CollapseMenu
+                                moreLeft={moreLeft}
+                                menuData={routeMenuDataAfter}
+                                isExpand={isExpand}
+                                onMenuSelect={(key) => onRouteMenuSelect(key as Route)}
+                            />
+                        </>
+                    )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
                     <YakitButton

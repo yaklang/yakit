@@ -2,6 +2,7 @@
     background-color: var(--yakit-card-background-color);
     border-bottom: 1px solid var(--yakit-border-color);
     display: flex;
+    flex-direction: column;
 }
 .heard-menu-home{
     width: 20px;

@@ -192,7 +192,6 @@ export enum Route {
 
     // 首页
     NewHome = "new-home"
-    AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
 
 

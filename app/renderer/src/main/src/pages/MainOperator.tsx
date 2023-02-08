@@ -108,7 +108,7 @@ const singletonRoute: Route[] = [
     // 插件权限
     Route.PlugInAdminPage,
     // 获取引擎输出
-    Route.AttachEngineCombinedOutput
+    Route.AttachEngineCombinedOutput,
     // 首页
     Route.NewHome
 ]
@@ -329,6 +329,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 })
 
 const Main: React.FC<MainProp> = React.memo((props) => {
+    const { setJudgeLicense } = props
     const [loading, setLoading] = useState(false)
 
     const [notification, setNotification] = useState("")
@@ -1346,10 +1347,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 >
                                                                     <EditOutlined className='main-container-cion' />
                                                                 </Popover> */}
-                                                                <CloseOutlined
-                                                                    className='main-container-cion'
-                                                                    onClick={() => removePage(`${i.route}`)}
-                                                                />
+                                                                {i.verbose!=="首页"&&<CloseOutlined
+                                                                className='main-container-cion'
+                                                                onClick={() => removePage(`${i.route}`)}
+                                                            />}
                                                             </Space>
                                                         }
                                                     >
@@ -1368,7 +1369,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             }}
                                                         >
                                                             {i.singleNode ? (
-                                                                i.singleNode
+                                                                <>
+                                                                {i.verbose==="首页"?
+                                                                (currentTabKey===Route.NewHome?i.singleNode:<></>)
+                                                                :i.singleNode}
+                                                            </>
                                                             ) : (
                                                                 <MainTabs
                                                                     currentTabKey={currentTabKey}
