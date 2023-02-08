@@ -698,6 +698,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetState<number>()
     const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
     const [isReset, setIsReset] = useState<boolean>(false)
+
+    const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
+
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -828,7 +831,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 SourceType: sourceType,
                 ...params,
                 Tags: params.Tags,
-                // Color: color,
                 Pagination: {...paginationProps},
                 OffsetId:
                     paginationProps.Page == 1
@@ -837,6 +839,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
                 BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
             }
+
+            if (checkBodyLength && !query.AfterBodyLength) {
+                query.AfterBodyLength = 1
+            }
+
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -993,13 +1000,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {wait: 400, trailing: true, leading: true}
     )
     // 设置是否自动刷新
-    useEffect(() => {
-        if (props.inViewport) {
-            scrollUpdateTop()
-            let id = setInterval(scrollUpdateTop, 1000)
-            return () => clearInterval(id)
-        }
-    }, [props.inViewport])
+    // useEffect(() => {
+    //     if (props.inViewport) {
+    //         scrollUpdateTop()
+    //         let id = setInterval(scrollUpdateTop, 1000)
+    //         return () => clearInterval(id)
+    //     }
+    // }, [props.inViewport])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -1068,15 +1075,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {wait: 200}
     ).run
     const getLength = useMemoizedFn((length: number) => {
-        if (getBodyLengthUnit() === "k") {
-            length = length * 1024
+        switch (getBodyLengthUnit()) {
+            case "k":
+                return length * 1024
+            case "M":
+                return length * 1024 * 1024
+            default:
+                return length
         }
-        if (getBodyLengthUnit() === "M") {
-            length = length * 1024 * 1024
-        }
-        return length
     })
 
+    const onCheckThan0 = useDebounceFn(
+        (check: boolean) => {
+            setCheckBodyLength(check)
+            setTimeout(() => {
+                update(1)
+            }, 100)
+        },
+        {wait: 200}
+    ).run
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -1086,10 +1103,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ellipsis: false,
                 width: 96,
                 enableDrag: false
-                // sorterProps: {
-                //     sorterKey: "id",
-                //     sorter: true
-                // }
             },
             {
                 title: "方法",
@@ -1179,9 +1192,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 width: 200,
                 minWidth: 140,
                 beforeIconExtra: (
-                    <div className={classNames(style['body-length-checkbox'],"old-theme-html")}>
-                        <YakitCheckbox />
-                        <span className={style['tip']}>大于0</span>
+                    <div className={classNames(style["body-length-checkbox"], "old-theme-html")}>
+                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
+                        <span className={style["tip"]}>大于0</span>
                     </div>
                 ),
                 filterProps: {
@@ -1224,17 +1237,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 onReset={() => {
                                     setParams({
                                         ...getParams(),
-                                        AfterBodyLength: afterBodyLength,
-                                        BeforeBodyLength: beforeBodyLength
+                                        AfterBodyLength: getAfterBodyLength(),
+                                        BeforeBodyLength: getBeforeBodyLength()
                                     })
                                     setBeforeBodyLength(undefined)
                                     setAfterBodyLength(undefined)
                                     setBodyLengthUnit("B")
+                                }}
+                                onSure={() => {
+                                    setParams({
+                                        ...getParams(),
+                                        AfterBodyLength: getAfterBodyLength(),
+                                        BeforeBodyLength: getBeforeBodyLength()
+                                    })
                                     setTimeout(() => {
                                         update(1)
                                     }, 100)
                                 }}
-                                onSure={() => update(1)}
                             />
                         </div>
                     )
@@ -1345,7 +1364,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             }
         ]
-    }, [statusCode, tags])
+    }, [statusCode, tags, checkBodyLength])
 
     // 发送web fuzzer
     const onSendToTab = useMemoizedFn((rowData) => {
@@ -1816,8 +1835,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     }
 
-    const [selectSourceType, setSelectSourceType] = useState<string[]>([])
-
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div
@@ -1908,19 +1925,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     {SourceType.map((tag) => (
                                         <CheckableTag
                                             key={tag.value}
-                                            checked={selectSourceType.indexOf(tag.value) > -1}
+                                            checked={!!params.SourceType?.split(",").includes(tag.value)}
                                             onChange={(checked) => {
                                                 if (checked) {
-                                                    const selectTypeList = [...selectSourceType, tag.value]
-                                                    setSelectSourceType(selectTypeList)
+                                                    const selectTypeList = [
+                                                        ...(params.SourceType?.split(",") || []),
+                                                        tag.value
+                                                    ]
                                                     setParams({...params, SourceType: selectTypeList.join(",")})
                                                 } else {
-                                                    const selectTypeList = selectSourceType.filter(
+                                                    const selectTypeList = (params.SourceType?.split(",") || []).filter(
                                                         (ele) => ele !== tag.value
                                                     )
-                                                    setSelectSourceType(selectTypeList)
                                                     setParams({...params, SourceType: selectTypeList.join(",")})
                                                 }
+                                                setTimeout(() => {
+                                                    update(1)
+                                                }, 10)
                                             }}
                                         >
                                             {tag.text}
@@ -2060,30 +2081,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     <div
                                         className={classNames(style["http-history-table-right-item"], "old-theme-html")}
                                     >
-                                        {/* <div className={style["http-history-table-right-label"]}>只看 Websocket</div>
-                                        <Switch
-                                            size='small'
-                                            checked={params.OnlyWebsocket}
-                                            onChange={() => {
-                                                setParams({...params, OnlyWebsocket: !params.OnlyWebsocket})
-                                            }}
-                                        /> */}
                                         <div className={style["http-history-table-right-label"]}>协议类型</div>
                                         <YakitSelect
                                             size='small'
-                                            defaultValue='all'
+                                            value={params.IsWebsocket||''}
                                             dropdownClassName='old-theme-html'
                                             wrapperStyle={{width: 150}}
+                                            onSelect={(val) => {
+                                                setParams({...params, IsWebsocket: val})
+                                                setTimeout(() => {
+                                                    update(1)
+                                                }, 50)
+                                            }}
                                         >
-                                            <YakitSelect.Option key='all' value='all'>
-                                                全部
-                                            </YakitSelect.Option>
-                                            <YakitSelect.Option key='http/https' value='http/https'>
-                                                http/https
-                                            </YakitSelect.Option>
-                                            <YakitSelect.Option key='websocket' value='websocket'>
-                                                websocket
-                                            </YakitSelect.Option>
+                                            <YakitSelect.Option value=''>全部</YakitSelect.Option>
+                                            <YakitSelect.Option value='http/https'>http/https</YakitSelect.Option>
+                                            <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
                                         </YakitSelect>
                                     </div>
                                     <div className={style["http-history-table-right-filter-small"]}>
@@ -2108,9 +2121,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
-                                            // onVisibleChange={(visible) => {
-                                            //     if (!visible) onFilterSure()
-                                            // }}
                                         >
                                             <div
                                                 className={classNames(style["filter-small-icon"], {
