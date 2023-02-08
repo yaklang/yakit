@@ -62,6 +62,19 @@ module.exports = (win, getClient) => {
         return await asyncQueryWebShells(params)
     })
 
-
+    const asyncPingWebShells = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().Ping(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("Ping", async (e, params) => {
+        return await asyncPingWebShells(params)
+    })
 
 }

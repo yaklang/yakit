@@ -244,6 +244,9 @@ service Yak {
   rpc ExportMenuItem (Empty) returns (ExportMenuItemResult);
   rpc GetMenuItemById (GetMenuItemByIdRequest) returns (MenuItem);
   rpc QueryGroupsByYakScriptId (QueryGroupsByYakScriptIdRequest) returns (GroupNames);
+  rpc AddMenus (AddMenuRequest) returns (Empty);
+  rpc QueryAllMenuItem (QueryAllMenuItemRequest) returns (MenuByGroup);
+  rpc DeleteAllMenu (QueryAllMenuItemRequest) returns (Empty);
 
   // document
   rpc SaveMarkdownDocument (SaveMarkdownDocumentRequest) returns (Empty);
@@ -309,7 +312,7 @@ service Yak {
   // 更新
   rpc UpdateWebShellById (UpdateWebShellRequest) returns (Empty);
   rpc QueryWebShells (QueryWebShellsRequest) returns (QueryWebShellsResponse);
-  //  rpc Ping() returns ();
+  rpc Ping (WebShellRequest) returns (WebShellResponse);
 
 
   // DNSLog / ICMP / RandomTrigger
@@ -367,6 +370,7 @@ service Yak {
   rpc DeleteAllLocalPlugins (Empty) returns (Empty);
   rpc GetYakScriptTagsAndType (Empty) returns (GetYakScriptTagsAndTypeResponse);
   rpc DeleteLocalPluginsByWhere (DeleteLocalPluginsByWhereRequest) returns (Empty);
+  rpc DownloadOnlinePluginByScriptNames (DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
   // 新的扫描模式
   rpc ExecPacketScan (ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -754,6 +758,7 @@ message DownloadOnlinePluginByTokenRequest {
   string Tags = 7;
   string UserName = 8;
   int64 UserId = 9;
+  string TimeSearch = 10;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -766,6 +771,20 @@ message DownloadOnlinePluginByIdsRequest {
   repeated int64 OnlineIDs = 1;
   string Token = 2;
   repeated string UUID = 3;
+}
+
+message DownloadOnlinePluginByScriptNamesRequest {
+  repeated string ScriptNames = 1;
+  string Token = 2;
+}
+
+message DownloadOnlinePluginByScriptNamesResponse {
+  repeated DownloadOnlinePluginByScriptName Data = 1;
+}
+
+message DownloadOnlinePluginByScriptName {
+  string ScriptName = 1;
+  int64 Id = 2;
 }
 
 message OnlineProfile {
@@ -1123,6 +1142,14 @@ enum ShellScript {
   ASPX = 3;
   PHP = 4;
 }
+enum EncMode {
+  Raw =0 ;
+  Base64 =1;
+  AesRaw = 2;
+  AesBase64 = 3;
+  XorRaw = 4;
+  XorBase64 = 5;
+}
 
 message WebShell {
   int64 Id = 1;
@@ -1136,9 +1163,15 @@ message WebShell {
   bool State = 9;
   string Tag = 10;
   //    Proxy
-  //string Proxy = 11;
+//string Proxy = 11;
   int64 CreatedAt = 11;
   int64 UpdatedAt = 12;
+}
+message WebShellRequest {
+  int64 Id = 1;
+}
+message WebShellResponse {
+  string Data = 1;
 }
 
 message QueryWebShellsRequest {
@@ -1690,6 +1723,7 @@ message GroupNames {
 
 message QueryGroupsByYakScriptIdRequest {
   int64 YakScriptId = 1;
+  string Mode = 2;
 }
 
 message MenuItem {
@@ -1698,6 +1732,8 @@ message MenuItem {
   int64 YakScriptId = 3;
   BatchExecutionPluginFilter Query = 4;
   uint64 MenuItemId = 5;
+  int64 GroupSort = 6;
+  string YakScriptName = 7;
 }
 
 // 这里的小写不要改动，兼容前端已有的格式
@@ -1711,6 +1747,8 @@ message BatchExecutionPluginFilter {
 message MenuItemGroup {
   string Group = 1;
   repeated MenuItem Items = 2;
+  int64 MenuSort = 3;
+  string Mode = 4;
 }
 
 message GetMenuItemByIdRequest {
@@ -1729,12 +1767,25 @@ message YakScriptIsInMenuRequest {
 message RemoveFromMenuRequest {
   int64 YakScriptId = 1;
   string Group = 2;
+  string Mode = 3;
 }
 
 message AddToMenuRequest {
   int64 YakScriptId = 1;
   string Group = 2;
   string Verbose = 3;
+  string Mode = 4;
+  int64 MenuSort = 5;
+  int64 GroupSort = 6;
+}
+
+message AddMenuRequest {
+  repeated MenuItemGroup Data = 1;
+}
+
+message QueryAllMenuItemRequest {
+  string Mode = 1;
+  string Group = 2;
 }
 
 message ImportMenuItemRequest {
@@ -2017,6 +2068,7 @@ message YakScript {
   string HeadImg = 25;
   string OnlineBaseUrl = 26;
   int64 BaseOnlineId = 27;
+  bool OnlineOfficial = 28;
 }
 
 message GetYakScriptTagsAndTypeResponse {

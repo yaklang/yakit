@@ -324,7 +324,7 @@ const EditShell: React.FC<WebShell> = (props) => {
             </Select>
         </Form.Item>
         <InputItem label={`参数`} value={pass} setValue={setPass}/>
-        <InputItem label={`密钥`}  value={secret_key} setValue={setSecretKey}/>
+        <InputItem label={`密钥`} value={secret_key} setValue={setSecretKey}/>
         <InputItem label={`加密模式`} value={enc_mode} setValue={setEncMode}/>
 
         <Form.Item colon={false} label={" "}>
@@ -493,7 +493,7 @@ export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
             dataIndex: "ShellType",
             width: 70,
             filteredValue: (getParams()["ShellType"]) || null,
-            render: (_, i: WebShell) => i.ShellType === "behinder" ? <Tag color={"geekblue"}>B</Tag> :
+            render: (_, i: WebShell) => i.ShellType === "Behinder" ? <Tag color={"geekblue"}>B</Tag> :
                 <Tag color={"orange"}>G</Tag>,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
@@ -798,8 +798,14 @@ export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
                                                     <EditShell {...record}/>
                                                 )
                                             })
-                                        }else if (key ==="ping_shell") {
-
+                                        } else if (key === "ping_shell") {
+                                            console.log("xxxx")
+                                            ipcRenderer.invoke("Ping", {
+                                                Id: record.Id
+                                            }).then(e => {
+                                                console.log(e)
+                                                success(e.Data)
+                                            })
                                         }
                                     }
                                 })
