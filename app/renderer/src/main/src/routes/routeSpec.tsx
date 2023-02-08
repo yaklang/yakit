@@ -808,5 +808,12 @@ export const HiddenMenuData: MenuDataProps[] = [
         label: "插件权限",
         disabled: true,
         hidden: true
+    },
+    {
+        id: "Route.NewHome",
+        key: Route.NewHome,
+        label: "首页",
+        disabled: true,
+        hidden: true
     }
 ]
