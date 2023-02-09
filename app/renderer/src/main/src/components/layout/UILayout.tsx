@@ -379,6 +379,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setEngineLink(false)
         }
     })
+    const [drop, setDrop] = useState<boolean>(true)
+    useEffect(() => {
+        // 监听是否开启header拖拽
+        ipcRenderer.on("fetch-yakit-header-title-drop", (e, d: boolean) => {
+            setDrop(d)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-yakit-header-title-drop")
+        }
+    }, [])
 
     // outputToWelcomeConsole("UILayout 刷新")
     return (
@@ -402,7 +412,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             className={styles["header-border-yakit-mask"]}
                         ></div> */}
 
-                                <div className={styles["yakit-header-title"]} onDoubleClick={maxScreen}>
+                                <div
+                                    className={classnames(styles["yakit-header-title"])}
+                                    onDoubleClick={maxScreen}
+                                >
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                                 </div>
 
@@ -447,7 +460,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <PerformanceDisplay engineMode={engineMode} />
                                     </div>
                                 </div>
-                                <div className={styles["header-title"]} onDoubleClick={maxScreen} />
+                                <div
+                                    className={classnames(styles["header-title"], {
+                                        [styles["header-title-drop"]]: drop
+                                    })}
+                                    onDoubleClick={maxScreen}
+                                />
                                 <div className={styles["header-right"]}>
                                     <div
                                         className={styles["ui-op-btn-wrapper"]}
@@ -494,7 +512,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             className={styles["header-border-yakit-mask"]}
                         ></div> */}
 
-                                <div className={styles["yakit-header-title"]} onDoubleClick={maxScreen}>
+                                <div className={classnames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                                 </div>
 
@@ -565,7 +583,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>}
                                 </div>
 
-                                <div className={styles["header-title"]} onDoubleClick={maxScreen}></div>
+                                <div
+                                    className={classnames(styles["header-title"], {
+                                        [styles["header-title-drop"]]: drop
+                                    })}
+                                    onDoubleClick={maxScreen}
+                                />
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
