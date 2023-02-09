@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {YaklangInstallHintSvgIcon} from "../icons"
 import {Progress} from "antd"
 import {DownloadingState} from "@/yakitGVDefine"
@@ -36,9 +36,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         onCancel
     } = props
 
-    const [yakitProgress, setYakitProgress] = useState<DownloadingState>()
+    const [yakitProgress, setYakitProgress, getYakitProgress] = useGetState<DownloadingState>()
     const isYakitBreak = useRef<boolean>(false)
-    const [yaklangProgress, setYaklangProgress] = useState<DownloadingState>()
+    const [yaklangProgress, setYaklangProgress, getYaklangProgress] = useGetState<DownloadingState>()
     const isYaklangBreak = useRef<boolean>(false)
 
     const [installYakit, setInstallYakit] = useState<boolean>(false)
@@ -104,16 +104,16 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             .then(() => {
                 if (isYakitBreak.current) return
                 success("下载完毕")
-                if (!yakitProgress?.size) return
+                if (!getYakitProgress()?.size) return
                 setYakitProgress({
                     time: {
-                        elapsed: yakitProgress?.time.elapsed || 0,
+                        elapsed: getYakitProgress()?.time.elapsed || 0,
                         remaining: 0
                     },
                     speed: 0,
                     percent: 100,
                     // @ts-ignore
-                    size: yakitProgress.size
+                    size: getYakitProgress().size
                 })
                 setInstallYakit(false)
                 setInstalledYakit(true)
@@ -151,16 +151,16 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 if (!isYaklangBreak.current) return
 
                 success("下载完毕")
-                if (!yaklangProgress?.size) return
+                if (!getYaklangProgress()?.size) return
                 setYaklangProgress({
                     time: {
-                        elapsed: yaklangProgress?.time.elapsed || 0,
+                        elapsed: getYaklangProgress()?.time.elapsed || 0,
                         remaining: 0
                     },
                     speed: 0,
                     percent: 100,
                     // @ts-ignore
-                    size: yaklangProgress.size
+                    size: getYaklangProgress().size
                 })
                 yaklangUpdate()
             })

@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
-import {failed, info, successControlled} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {showModal} from "@/utils/showModal"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
@@ -18,6 +18,7 @@ const {ipcRenderer} = window.require("electron")
 
 interface PerformanceDisplayProps {
     engineMode: YaklangEngineMode | undefined
+    typeCallback: (type: "console" | "adminMode" | "break") => any
 }
 
 export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo((props) => {
@@ -78,7 +79,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
                     </div>
                 )}
             </div>
-            <UIEngineList engineMode={props.engineMode} />
+            <UIEngineList {...props} />
         </div>
     )
 })
@@ -91,10 +92,11 @@ export interface yakProcess {
 }
 interface UIEngineListProp {
     engineMode: YaklangEngineMode | undefined
+    typeCallback: (type: "console" | "adminMode" | "break") => any
 }
 /** @name 已启动引擎列表 */
 const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
-    const {engineMode} = props
+    const {engineMode, typeCallback} = props
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -164,9 +166,12 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
         ;(process || []).forEach((i) => {
             ipcRenderer.invoke("kill-yak-grpc", i.pid).then(() => {
                 info(`KILL yak PROCESS: ${i.pid}`)
+                if (process.length > 0 && i.pid === process[process.length - 1].pid) {
+                    if (isLocal) typeCallback("break")
+                }
             })
         })
-        setTimeout(() => successControlled("引擎进程关闭中...", 5), 1000)
+        setTimeout(() => success("引擎进程关闭中..."), 1000)
     })
 
     const isLocal = useMemo(() => {
@@ -229,7 +234,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 onConfirm={() => {
                                                     ipcRenderer
                                                         .invoke("kill-yak-grpc", i.pid)
-                                                        .then(() => successControlled("引擎进程关闭中...", 5))
+                                                        .then(() => {
+                                                            if (isLocal && +i.port === port) typeCallback("break")
+                                                            success("引擎进程关闭中...")
+                                                        })
                                                         .catch((e: any) => {})
                                                         .finally(fetchPSList)
                                                 }}
@@ -266,7 +274,9 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <GooglePhotosLogoSvgIcon className={classnames({[styles["icon-rotate-animation"]]: !show})} />
+                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <GooglePhotosLogoSvgIcon className={classnames({[styles["icon-rotate-animation"]]: !show})} />
+                </div>
             </div>
         </YakitPopover>
     )

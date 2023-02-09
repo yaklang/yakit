@@ -8,7 +8,16 @@
         width: 100%;
         height: 100%;
         overflow: hidden auto;
-        background: #fbe7d9;
+        background: #f8f8f8;
+        display: flex;
+        justify-content: center;
+
+        .body-content {
+            width: 1387px;
+            background-image: url("../../assets/uiLayout/primaryBg.png");
+            background-repeat: no-repeat;
+            background-size: 100% auto;
+        }
 
         .yakit-loading-title {
             margin-top: 16vh;
@@ -80,27 +89,27 @@
             line-height: 24px;
         }
 
-            .time-wait-title {
-                color: var(--yakit-helper-text-color);
-            }
-            .time-link-title {
-                color: var(--yakit-primary-5);
-            }
-            .time-out-title {
-                color: var(--yakit-danger-5);
-            }
+        .time-wait-title {
+            color: var(--yakit-helper-text-color);
+        }
+        .time-link-title {
+            color: var(--yakit-primary-5);
+        }
+        .time-out-title {
+            color: var(--yakit-danger-5);
+        }
 
-            .engine-log-btn {
-                margin-top: 16px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 16px;
-                .btn-style {
-                    width: 280px;
-                    justify-content: center;
-                }
+        .engine-log-btn {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            .btn-style {
+                width: 280px;
+                justify-content: center;
             }
+        }
 
         .switch-engine-mode {
             margin-top: 32px;

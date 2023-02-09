@@ -164,28 +164,38 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             setLatestYakit("")
             setLatestYaklang("")
         }
+        if (yakitStatus === "break") {
+            setEngineReady(0)
+            clearInterval(readyTime.current)
+            setShowLog(0)
+        }
 
         return () => {
             engineTimeClear("log")
             engineTimeClear("ready")
         }
     }, [yakitStatus])
-    /** 是否可以连接 */
-    const isReady = useMemo(() => {
-        return __engineReady > 0
-    }, [__engineReady])
-    /** 是否展示日志按钮 */
-    const isLog = useMemo(() => {
-        return __showLog >= 5
-    }, [__showLog])
 
     const isShowUpdate = useMemo(() => {
         if (yakitStatus !== "ready") return false
 
-        if (!latestYakit && !latestYaklang) return false
+        if (
+            !!currentYakit &&
+            !!latestYakit &&
+            currentYakit !== latestYakit &&
+            getEngineReady() > 0 &&
+            !!readyTime.current
+        ) {
+            setTimeout(() => {
+                clearInterval(readyTime.current)
+            }, 300)
+            return true
+        }
 
         if (
-            (currentYakit !== latestYakit || currentYaklang !== latestYaklang) &&
+            !!currentYaklang &&
+            !!latestYaklang &&
+            currentYaklang !== latestYaklang &&
             getEngineReady() > 0 &&
             !!readyTime.current
         ) {
@@ -212,7 +222,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 .then(() => {
                     outputToWelcomeConsole("手动引擎启动成功！")
                     if (onEngineModeChange) {
-                        onEngineModeChange(props.engineMode, true)
+                        onEngineModeChange(key, true)
                     }
                 })
                 .catch((e) => {
@@ -253,6 +263,23 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             })
     })
 
+    /** 切换模式 */
+    const changeMode = useMemoizedFn((val: boolean) => {
+        if (val) clearInterval(readyTime.current)
+        else {
+            readyTime.current = setInterval(() => {
+                setEngineReady(getEngineReady() - 1)
+                if (getEngineReady() <= 0) {
+                    clearInterval(readyTime.current)
+                    readyTime.current = null
+                    ipcRenderer.invoke("engine-ready-link").finally(() => {
+                        engineTime("log")
+                    })
+                }
+            }, 1000)
+        }
+    })
+
     const menu = useMemo(() => {
         return (
             <YakitMenu
@@ -285,12 +312,198 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     }
                 ]}
                 onClick={({key}) => {
-                    if (key === engineMode) return
+                    if (key === engineMode && key === "local") return
                     selectEngineMode(key)
                 }}
             />
         )
-    }, [])
+    }, [engineMode])
+
+    const hintTitle = useMemo(() => {
+        if (loading) {
+            return <div className={styles["time-wait-title"]}>软件加载中 ...</div>
+        }
+        if (yakitStatus === "ready") {
+            if (__engineReady > 0) {
+                return (
+                    <div className={styles["time-wait-title"]}>
+                        <span className={styles["time-link-title"]}>{`${__engineReady}s`}</span> 后自动连接引擎 ...
+                    </div>
+                )
+            }
+            if (__engineReady === 0 && __showLog < 5) {
+                return <div className={styles["time-link-title"]}>引擎连接中 ...</div>
+            }
+            if (__showLog >= 5) {
+                return <div className={styles["time-out-title"]}>连接超时 ...</div>
+            }
+            return <></>
+        }
+        if (yakitStatus === "error") {
+            if (__showLog >= 5) {
+                return <div className={styles["time-out-title"]}>连接超时 ...</div>
+            } else {
+                return <div className={styles["time-link-title"]}>尝试重新连接引擎中 ...</div>
+            }
+        }
+        if (yakitStatus === "break") {
+            if (__showLog === 0) {
+                return <div className={styles["time-wait-title"]}>请选择连接模式</div>
+            }
+            if (__showLog >= 5) {
+                return <div className={styles["time-out-title"]}>连接超时 ...</div>
+            } else {
+                return <div className={styles["time-link-title"]}>引擎连接中 ...</div>
+            }
+        }
+
+        return <></>
+    }, [yakitStatus, loading, __engineReady, readyTime.current, __showLog, logTime.current])
+
+    const btns = useMemo(() => {
+        if (yakitStatus === "ready") {
+            if (__engineReady > 0) {
+                return (
+                    <>
+                        <YakitButton className={styles["btn-style"]} size='max' disabled={loading} onClick={skipTime}>
+                            跳过倒计时
+                        </YakitButton>
+
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
+                    </>
+                )
+            }
+            if (__showLog >= 5) {
+                return (
+                    <>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            手动连接引擎
+                        </YakitButton>
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='text'
+                            onClick={() => setShowEngineLog(!showEngineLog)}
+                        >
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                    </>
+                )
+            }
+            return <></>
+        }
+
+        if (yakitStatus === "error") {
+            if (__showLog >= 5) {
+                return (
+                    <>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            手动连接引擎
+                        </YakitButton>
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='text'
+                            onClick={() => setShowEngineLog(!showEngineLog)}
+                        >
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                    </>
+                )
+            } else {
+                return <></>
+            }
+        }
+
+        if (yakitStatus === "break") {
+            if (__showLog === 0) {
+                return (
+                    <>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            手动连接引擎
+                        </YakitButton>
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
+                    </>
+                )
+            }
+            if (__showLog >= 5) {
+                return (
+                    <>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            手动连接引擎
+                        </YakitButton>
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='text'
+                            onClick={() => setShowEngineLog(!showEngineLog)}
+                        >
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                    </>
+                )
+            } else {
+                return <></>
+            }
+        }
+
+        return <></>
+    }, [
+        yakitStatus,
+        loading,
+        __engineReady,
+        readyTime.current,
+        __showLog,
+        logTime.current,
+        skipTime,
+        changeMode,
+        manuallyStartEngine,
+        menu,
+        showEngineLog
+    ])
 
     /** 加载页随机宣传语 */
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
@@ -298,67 +511,26 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
-                <div className={styles["yakit-loading-title"]}>
-                    <div className={styles["title-style"]}>欢迎使用 Yakit</div>
-                    <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>
-                </div>
+                <div className={styles["body-content"]}>
+                    <div className={styles["yakit-loading-title"]}>
+                        <div className={styles["title-style"]}>欢迎使用 Yakit</div>
+                        <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>
+                    </div>
 
-                <div className={styles["yakit-loading-icon-wrapper"]}>
-                    <div className={styles["theme-icon-wrapper"]}>
-                        <div className={styles["theme-icon"]}>
-                            <YakitThemeLoadingSvgIcon/>
+                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["theme-icon-wrapper"]}>
+                            <div className={styles["theme-icon"]}>
+                                <YakitThemeLoadingSvgIcon />
+                            </div>
+                        </div>
+                        <div className={styles["white-icon"]}>
+                            <YakitLoadingSvgIcon />
                         </div>
                     </div>
-                    <div className={styles["white-icon"]}>
-                        <YakitLoadingSvgIcon/>
-                    </div>
-                </div>
 
-                <div className={styles["yakit-loading-content"]}>
-                    {loading && <div className={styles["time-wait-title"]}>软件加载中 ...</div>}
-                    {!isReady && <div className={styles["time-link-title"]}>引擎连接中 ...</div>}
-                    {isLog && <div className={styles["time-out-title"]}>连接超时 ...</div>}
-                    {isReady && (
-                        <div className={styles["time-wait-title"]}>
-                            <span className={styles["time-link-title"]}>{`${__engineReady}s`}</span> 后自动连接引擎 ...
-                        </div>
-                    )}
-                    <div className={styles["engine-log-btn"]}>
-                        {isReady && (
-                            <YakitButton
-                                className={styles["btn-style"]}
-                                size='max'
-                                disabled={loading}
-                                onClick={skipTime}
-                            >
-                                跳过倒计时
-                            </YakitButton>
-                        )}
-                        {isLog && (
-                            <YakitButton
-                                className={styles["btn-style"]}
-                                size='max'
-                                disabled={loading}
-                                onClick={manuallyStartEngine}
-                            >
-                                手动连接引擎
-                            </YakitButton>
-                        )}
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
-                        {isLog && (
-                            <YakitButton
-                                className={styles["btn-style"]}
-                                size='max'
-                                type='text'
-                                onClick={() => setShowEngineLog(!showEngineLog)}
-                            >
-                                {showEngineLog ? "隐藏日志" : "查看日志"}
-                            </YakitButton>
-                        )}
+                    <div className={styles["yakit-loading-content"]}>
+                        {hintTitle}
+                        <div className={styles["engine-log-btn"]}>{btns}</div>
                     </div>
                 </div>
             </div>
@@ -553,7 +725,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon/>
+                                    <YaklangInstallHintSvgIcon />
                                 </div>
                                 <div
                                     className={styles["qs-icon"]}

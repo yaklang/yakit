@@ -47,4 +47,4 @@ interface UserInfoProps {
 }
 
 /** @name 当前yakit使用状态 */
-export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | ""
+export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | "break" | ""

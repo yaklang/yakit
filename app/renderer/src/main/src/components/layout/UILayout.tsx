@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
 import {Form, Input, Progress, Select, Spin, Tooltip} from "antd"
 import Draggable from "react-draggable"
@@ -13,8 +13,7 @@ import {
     // YakitStoreGraySvgIcon,
     // YakitStoreThemeSvgIcon,
     YakitThemeSvgIcon,
-    YaklangInstallHintSvgIcon,
-    RocketSvgIcon
+    YaklangInstallHintSvgIcon
 } from "./icons"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
 import {FuncDomain} from "./FuncDomain"
@@ -118,7 +117,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 3、获取yakit本地版本和最新版本
      * 4、获取yaklang本地版本和最新版本
      */
-    useLayoutEffect(() => {
+    useEffect(() => {
         setLoading(true)
         ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = !!flag))
         ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => setSystem(type))
@@ -268,17 +267,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 outputToWelcomeConsole(`本地普通权限引擎模式，开始启动本地引擎: ${localPort}`)
                 setCredential({...getCredential(), Port: localPort, Mode: "local"})
                 setTimeout(() => {
+                    setStartAdminEngine(false)
                     setYakitStatus("ready")
                     cacheYakitStatus.current = "ready"
                 }, 100)
                 return
             case "remote":
                 outputToWelcomeConsole("远程模式或调试模式，需要用户手动启动引擎")
+                setStartAdminEngine(false)
                 return
             case "admin":
                 outputToWelcomeConsole(`管理员模式，启动本地引擎: ${adminPort}`)
                 setCredential({...getCredential(), Port: adminPort, Mode: "admin"})
                 setTimeout(() => {
+                    setStartAdminEngine(false)
                     setYakitStatus("ready")
                     cacheYakitStatus.current = "ready"
                 }, 100)
@@ -291,9 +293,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const changeEngineMode = useMemoizedFn((type: YaklangEngineMode, keepalive?: boolean) => {
         info(`引擎状态切换为: ${EngineModeVerbose(type as YaklangEngineMode)}`)
 
+        setYakitStatus("")
         setKeepalive(false)
         setEngineLink(false)
-        setYakitStatus("")
         cacheYakitStatus.current = ""
 
         /** 未安装引擎下的模式切换取消 */
@@ -372,7 +374,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
-    const [yakitConsole, setYakitConsole, getYakitConsole] = useGetState<boolean>(false)
+    /** 是否启动并连接管理员权限引擎 */
+    const [startAdminEngine, setStartAdminEngine] = useState<boolean>(false)
+    const startAdminEngineProcess = useMemoizedFn(() => {
+        changeEngineMode("admin")
+    })
+
+    /** funcDomain组件的回调事件 */
+    const typeCallback = useMemoizedFn((type: "console" | "adminMode" | "break") => {
+        switch (type) {
+            case "console":
+                setYakitConsole(true)
+                return
+            case "adminMode":
+                setStartAdminEngine(true)
+                return
+
+            case "break":
+                if (cacheYakitStatus.current === "link") {
+                    setYakitStatus("break")
+                    cacheYakitStatus.current = "break"
+                    setTimeout(() => {
+                        setKeepalive(false)
+                        setEngineLink(false)
+                    }, 100)
+                }
+                return
+
+            default:
+                return
+        }
+    })
+
+    const [yakitConsole, setYakitConsole] = useState<boolean>(false)
 
     useEffect(() => {
         if (!engineLink) setYakitConsole(false)
@@ -602,7 +636,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
 
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback} />
                                     </div>
                                 </div>
                                 <div
@@ -618,29 +652,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
                                         }
                                     >
-                                        <Tooltip placement='bottom' title='官方网站'>
-                                            <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
-                                        </Tooltip>
-                                    </div>
-                                    {engineLink && (
-                                        <div
-                                            className={styles["ui-op-btn-wrapper"]}
-                                            onClick={() => {
-                                                getLocalValue("SHOW_BASE_CONSOLE").then((val: boolean) => {
-                                                    if (!val) {
-                                                        setYakitConsole(true)
-                                                    }
-                                                })
-                                            }}
-                                        >
-                                            <Tooltip placement='bottom' title='引擎Console'>
-                                                <RocketSvgIcon
-                                                    style={{fontSize: 20}}
-                                                    className={styles["icon-style"]}
-                                                />
+                                        <div className={styles["op-btn-body"]}>
+                                            <Tooltip placement='bottom' title='官方网站'>
+                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                                             </Tooltip>
                                         </div>
-                                    )}
+                                    </div>
+
                                     {engineLink && (
                                         <>
                                             <FuncDomain
@@ -648,6 +666,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 engineMode={engineMode || "remote"}
                                                 isRemoteMode={engineMode === "remote"}
                                                 onEngineModeChange={changeEngineMode}
+                                                typeCallback={typeCallback}
                                             />
                                             <div className={styles["divider-wrapper"]}></div>
                                             <GlobalReverseState isEngineLink={engineLink} />
@@ -701,6 +720,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     engineMode={engineMode || "remote"}
                                                     isRemoteMode={engineMode === "remote"}
                                                     onEngineModeChange={changeEngineMode}
+                                                    typeCallback={typeCallback}
                                                 />
                                             </div>
                                         </>
@@ -712,30 +732,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
                                         }
                                     >
-                                        <Tooltip placement='bottom' title='官方网站'>
-                                            <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
-                                        </Tooltip>
-                                    </div>
-
-                                    {engineLink && (
-                                        <div
-                                            className={styles["ui-op-btn-wrapper"]}
-                                            onClick={() => {
-                                                getLocalValue("SHOW_BASE_CONSOLE").then((val: boolean) => {
-                                                    if (!val) {
-                                                        setYakitConsole(true)
-                                                    }
-                                                })
-                                            }}
-                                        >
-                                            <Tooltip placement='bottom' title='引擎Console'>
-                                                <RocketSvgIcon
-                                                    style={{fontSize: 20}}
-                                                    className={styles["icon-style"]}
-                                                />
+                                        <div className={styles["op-btn-body"]}>
+                                            <Tooltip placement='bottom' title='官方网站'>
+                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
                                             </Tooltip>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 <div
@@ -747,7 +749,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback} />
                                     </div>
                                     <div className={styles["short-divider-wrapper"]}>
                                         <div className={styles["divider-style"]}></div>
@@ -820,6 +822,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     loading={killLoading}
                                     setVisible={setKillOldEngine}
                                     onSubmit={killOldProcess}
+                                />
+                            </div>
+                        )}
+                        {engineLink && startAdminEngine && (
+                            <div className={styles["ui-layout-body-mask"]}>
+                                <StartAdminEngineHint
+                                    setVisible={setStartAdminEngine}
+                                    onSubmit={startAdminEngineProcess}
                                 />
                             </div>
                         )}
@@ -1527,7 +1537,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
 })
 
 interface KillOldEngineProcessProps {
-    loading: boolean
+    loading?: boolean
     setVisible: (val: boolean) => any
     onSubmit: () => any
 }
@@ -1563,6 +1573,47 @@ const KillOldEngineProcess: React.FC<KillOldEngineProcessProps> = React.memo((pr
                                     取消
                                 </YakitButton>
                                 <YakitButton loading={loading} size='max' onClick={onSubmit}>
+                                    确定
+                                </YakitButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+})
+
+const StartAdminEngineHint: React.FC<KillOldEngineProcessProps> = React.memo((props) => {
+    const {setVisible, onSubmit} = props
+
+    return (
+        <div className={classnames(styles["kill-old-engine-modal"], styles["modal-top-wrapper"])}>
+            <div className={styles["kill-old-engine-hint"]}>
+                <div className={styles["yaklang-engine-hint-wrapper"]}>
+                    <div className={styles["hint-left-wrapper"]}>
+                        <div className={styles["hint-icon"]}>
+                            <YaklangInstallHintSvgIcon />
+                        </div>
+                    </div>
+
+                    <div className={styles["hint-right-wrapper"]}>
+                        <div className={styles["hint-right-title"]}>启动管理员权限引擎</div>
+                        <div className={styles["hint-right-content"]}>
+                            是否启动并连接管理员权限引擎
+                            <br />
+                            <span className={styles["warning-content"]}>
+                                由于后续功能规划，管理员权限将逐步进行下架，用本地模式出现问题时，建议使用“设置-网卡权限修复”即可正常使用
+                            </span>
+                        </div>
+
+                        <div className={styles["hint-right-btn"]}>
+                            <div></div>
+                            <div className={styles["btn-group-wrapper"]}>
+                                <YakitButton size='max' type='outline2' onClick={() => setVisible(false)}>
+                                    取消
+                                </YakitButton>
+                                <YakitButton size='max' onClick={onSubmit}>
                                     确定
                                 </YakitButton>
                             </div>
