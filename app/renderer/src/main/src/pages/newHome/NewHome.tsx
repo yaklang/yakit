@@ -213,7 +213,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     // 全局登录状态
     const {userInfo} = useStore()
     const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
-    const [isShowEcharts,setIsShowEcharts] = useState<boolean>(false)
+    const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const colorList = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
     const optionRef = useRef<any>({
         color: colorList,
@@ -339,7 +339,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
     const getPluginSearch = useMemoizedFn(() => {
         let url = "plugin/search/unlogged"
-        if (IsEnterprise||userInfo.isLogin) {
+        if (IsEnterprise || userInfo.isLogin) {
             url = "plugin/search"
         }
         NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
@@ -367,7 +367,9 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             .catch((err) => {
                 failed("线上统计数据获取失败:" + err)
             })
-            .finally(() => {setIsShowEcharts(true)})
+            .finally(() => {
+                setIsShowEcharts(true)
+            })
     })
 
     const onSendToTab = useMemoizedFn((pluginType: string) => {
@@ -385,7 +387,12 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         echartsRef.current = echarts.init(chartDom)
         options && echartsRef.current.setOption(options)
     }
-    return <div id='main-home-pie' className={classNames(styles["echarts-box"],isShowEcharts&&styles["echarts-box-show"])}></div>
+    return (
+        <div
+            id='main-home-pie'
+            className={classNames(styles["echarts-box"], isShowEcharts && styles["echarts-box-show"])}
+        ></div>
+    )
 }
 
 // const PieEcharts: React.FC<PieChartProps> = (props) => {
@@ -606,13 +613,13 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
 
     useEffect(() => {
         getPlugInShopHot()
-        !IsEnterprise&&getPlugInShopNewIncre()
+        !IsEnterprise && getPlugInShopNewIncre()
     }, [])
 
     useEffect(() => {
         ipcRenderer.on("refresh-new-home", (e, res: any) => {
             getPlugInShopHot()
-            !IsEnterprise&&getPlugInShopNewIncre()
+            !IsEnterprise && getPlugInShopNewIncre()
         })
         return () => {
             ipcRenderer.removeAllListeners("refresh-new-home")
@@ -1031,12 +1038,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
         <div className={classNames(styles["new-home-page"])}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList
-                        data={newHomeData[0]}
-                        setOpenPage={setOpenPage}
-                        load={load}
-                        getCustomizeMenus={getCustomizeMenus}
-                    />
+                    <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
                 </div>
                 <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
                     <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
@@ -1047,7 +1049,12 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                     </div>
                 </div>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
+                    <RouteList
+                        data={newHomeData[0]}
+                        setOpenPage={setOpenPage}
+                        load={load}
+                        getCustomizeMenus={getCustomizeMenus}
+                    />
                 </div>
                 <div className={styles["top-small-block"]}>
                     <RouteList data={newHomeData[4]} setOpenPage={setOpenPage} />
