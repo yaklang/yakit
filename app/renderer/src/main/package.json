@@ -77,11 +77,14 @@
     "scripts": {
         "electron-render": "env-cmd -e noBrouser,devTool -f ./.env-cmdrc react-app-rewired start",
         "electron-render-enterprise": "env-cmd -e noBrouser,devTool,enterprise -f ./.env-cmdrc react-app-rewired start",
+        "electron-render-simble-enterprise": "env-cmd -e noBrouser,devTool,simbleEE -f ./.env-cmdrc react-app-rewired start",
         "start": "react-app-rewired start",
         "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-test": "env-cmd -e devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-enterprise": "env-cmd -e enterprise -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-test-enterprise": "env-cmd -e enterprise,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-simble-enterprise": "env-cmd -e simbleEE -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-test-simble-enterprise": "env-cmd -e simbleEE,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject"
     },

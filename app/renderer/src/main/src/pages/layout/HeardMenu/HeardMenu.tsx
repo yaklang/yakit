@@ -63,6 +63,7 @@ import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
+import {isSimbleEnterprise} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -123,7 +124,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     const [loading, setLoading] = useState<boolean>(true)
 
-    const [patternMenu, setPatternMenu, getPatternMenu] = useGetState<"expert" | "new">("expert")
+    const [patternMenu, setPatternMenu, getPatternMenu] = useGetState<"expert" | "new" | "simple-ee">(isSimbleEnterprise?"simple-ee":"expert")
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [menuDataString, setMenuDataString] = useState<string>("")
     const [fileName, setFileName] = useState<string>("")
@@ -134,21 +135,39 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftInnerRef = useRef<any>()
 
     const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
-
+    
+    /** 登录用户信息 */
+    const {userInfo} = useStore()
     useEffect(() => {
-        getRemoteValue("PatternMenu").then((patternMenu) => {
+        // 当为企业简易版且不为admin用户
+        console.log("userInfo.role",userInfo.role)
+        if(isSimbleEnterprise&&userInfo.role!=="admin"){
+            let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData].filter((item)=>item.menuPattern?.includes("simple-ee"))
+            setRouteMenu(currentMenuList)
+            setSubMenuData(currentMenuList[0].subMenuData||[])
+            setMenuId(currentMenuList[0].id)
+        }
+        else{
+            getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setRemoteValue("PatternMenu", menuMode)
             setPatternMenu(menuMode)
             init(menuMode)
         })
+        }
+        
     }, [])
     useEffect(() => {
-        ipcRenderer.on("fetch-new-main-menu", (e) => {
-            init(getPatternMenu(), true)
-        })
+        if(!isSimbleEnterprise||userInfo.role==="admin"){
+            ipcRenderer.on("fetch-new-main-menu", (e) => {
+                init(getPatternMenu(), true)
+            })
+        }
+        
         return () => {
-            ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            if(!isSimbleEnterprise||userInfo.role==="admin"){
+                ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            }
         }
     }, [])
     useUpdateEffect(() => {
@@ -188,10 +207,15 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
                         } else {
-                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除
+                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除 企业简易版管理员默认展示所有菜单
                             let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData]
+                            // 专业版菜单不要企业版简易版菜单
+                            if(menuMode == "expert"){
+                                currentMenuList = [...DefaultRouteMenuData].filter((item) => !item.menuPattern?.includes("simple-ee"))
+                            }
+                            // 新手版菜单-novice
                             if (menuMode == "new") {
-                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.isNovice)
+                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.menuPattern?.includes("novice"))
                             }
                             const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
                             const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
@@ -261,7 +285,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         // 获取没有key的菜单名称
         let listMenu: MenuDataProps[] = menuList
         if (menuMode == "new") {
-            listMenu = menuList.filter((item) => item.isNovice)
+            listMenu = menuList.filter((item) => item.menuPattern?.includes("novice"))
         }
         listMenu.forEach((item) => {
             if (item.subMenuData && item.subMenuData.length > 0) {
@@ -280,8 +304,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
         onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
     })
-    /** 登录用户信息 */
-    const {userInfo} = useStore()
     /**
      * @description: 通过名字下载插件
      */
