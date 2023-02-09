@@ -36,9 +36,12 @@ import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 import { BaseMiniConsole } from "../baseConsole/BaseConsole";
+import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
-
+// 是否为企业版
+const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 export interface UILayoutProp {
@@ -1799,7 +1802,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                     if (version.startsWith("v")) version = version.substr(1)
 
                     ipcRenderer
-                        .invoke("download-latest-yakit", version)
+                        .invoke("download-latest-yakit", version,isEnterprise)
                         .then(() => {
                             if (!isBreakRef.current) return
                             success("下载完毕")

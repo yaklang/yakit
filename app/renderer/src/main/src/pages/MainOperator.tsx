@@ -108,7 +108,9 @@ const singletonRoute: Route[] = [
     // 插件权限
     Route.PlugInAdminPage,
     // 获取引擎输出
-    Route.AttachEngineCombinedOutput
+    Route.AttachEngineCombinedOutput,
+    // 首页
+    Route.NewHome
 ]
 /** 不需要首页组件安全边距的页面 */
 const noPaddingPage = [
@@ -119,7 +121,8 @@ const noPaddingPage = [
     Route.ModManager,
     Route.ICMPSizeLog,
     Route.TCPPortLog,
-    Route.DNSLog
+    Route.DNSLog,
+    Route.NewHome
 ]
 
 export const defaultUserInfo: UserInfoProps = {
@@ -143,6 +146,8 @@ export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
     onErrorConfirmed?: () => any
+    isShowHome?:boolean
+    setJudgeLicense?: (v:boolean)=> void
 }
 
 export interface MenuItem {
@@ -175,7 +180,7 @@ export interface multipleNodeInfo {
     time?: string
 }
 
-interface PageCache {
+export interface PageCache {
     verbose: string
     route: Route
     singleNode: ReactNode | any
@@ -324,19 +329,20 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 })
 
 const Main: React.FC<MainProp> = React.memo((props) => {
+    const { setJudgeLicense } = props
     const [loading, setLoading] = useState(false)
 
     const [notification, setNotification] = useState("")
 
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
         {
-            verbose: "MITM",
-            route: Route.HTTPHacker,
-            singleNode: ContentByRoute(Route.HTTPHacker),
+            verbose: "首页",
+            route: Route.NewHome,
+            singleNode: ContentByRoute(Route.NewHome),
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.HTTPHacker)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.NewHome)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -380,6 +386,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             ipcRenderer.removeAllListeners("refresh-token")
         }
     }, [])
+
+    // useEffect(()=>{
+    //     if(selectItemPage&&setSelectItemPage){
+    //         goRouterPage(selectItemPage)
+    //         setSelectItemPage(undefined)
+    //     }
+    // },[selectItemPage])
+
     // yakit页面关闭是否二次确认提示
     const [winCloseFlag, setWinCloseFlag] = useState<boolean>(true)
     const [winCloseShow, setWinCloseShow] = useState<boolean>(false)
@@ -694,6 +708,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnterprise) {
+                setJudgeLicense&&setJudgeLicense(true)
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
             } else {
@@ -930,7 +945,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             // 区分新建对比页面还是别的页面请求对比的情况
             ipcRenderer.invoke("created-data-compare")
         })
-
+        // if(getPageCache().length===0){
+            
+        // }
         return () => {
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
@@ -1143,7 +1160,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache([])
+                setPageCache([{
+                    verbose: "首页",
+                    route: Route.NewHome,
+                    singleNode: ContentByRoute(Route.NewHome),
+                    multipleNode: []
+                }])
+                setCurrentTabKey(Route.NewHome)
             }
         })
     })
@@ -1153,7 +1176,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                setPageCache(arr)
+                setPageCache([{
+                    verbose: "首页",
+                    route: Route.NewHome,
+                    singleNode: ContentByRoute(Route.NewHome),
+                    multipleNode: []
+                },...arr])
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })
@@ -1319,10 +1347,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 >
                                                                     <EditOutlined className='main-container-cion' />
                                                                 </Popover> */}
-                                                                <CloseOutlined
-                                                                    className='main-container-cion'
-                                                                    onClick={() => removePage(`${i.route}`)}
-                                                                />
+                                                                {i.verbose!=="首页"&&<CloseOutlined
+                                                                className='main-container-cion'
+                                                                onClick={() => removePage(`${i.route}`)}
+                                                            />}
                                                             </Space>
                                                         }
                                                     >
@@ -1341,7 +1369,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             }}
                                                         >
                                                             {i.singleNode ? (
-                                                                i.singleNode
+                                                                <>
+                                                                {i.verbose==="首页"?
+                                                                (currentTabKey===Route.NewHome?i.singleNode:<></>)
+                                                                :i.singleNode}
+                                                            </>
                                                             ) : (
                                                                 <MainTabs
                                                                     currentTabKey={currentTabKey}

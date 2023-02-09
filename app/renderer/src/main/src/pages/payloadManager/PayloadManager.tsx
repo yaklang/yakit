@@ -571,6 +571,8 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
             info("字典上传完毕")
+            props.onFinished && props.onFinished(data)
+            props.onLoadingFinished && props.onLoadingFinished()
         })
         setToken(token)
         return () => {

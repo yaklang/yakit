@@ -250,7 +250,7 @@ ipcMain.on("user-sign-in", (event, arg) => {
 })
 
 // company login
-ipcMain.on("company-sign-in", (event, info) => {
+ipcMain.handle("company-sign-in", async(event, info) => {
     const user = {
         isLogin: true,
         platform: info.from_platform,
@@ -283,6 +283,10 @@ ipcMain.on("company-sign-in", (event, info) => {
     USER_INFO.companyHeadImg = user.companyHeadImg
     win.webContents.send("fetch-signin-token", user)
     win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+
+    return new Promise((resolve, reject) => {
+        resolve({next:true})
+    })
 })
 
 ipcMain.on("company-refresh-in", (event) => {
@@ -333,4 +337,5 @@ ipcMain.on("sync-update-user", (event, user) => {
 ipcMain.on("edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
     win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
+    win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
 })

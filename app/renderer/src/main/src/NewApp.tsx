@@ -1,4 +1,4 @@
-import {useRef, useEffect, useState, Suspense, lazy} from "react"
+import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
 import {failed} from "./utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -15,7 +15,6 @@ import UILayout from "./components/layout/UILayout"
 import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
-
 import styles from "./app.module.scss"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
@@ -67,6 +66,8 @@ function NewApp() {
     /** 展示用户协议计时时间 */
     const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
     const agrTimeRef = useRef<any>(null)
+    /** 私有域是否设置成功 */
+    const [onlineProfileStatus,setOnlineProfileStatus] = useState<boolean>(false)
 
     /** 是否展示用户协议 */
     useEffect(() => {
@@ -133,6 +134,10 @@ function NewApp() {
                     .catch((e) => {
                         failed(`获取失败:${e}`)
                     })
+                    .finally(() => {
+                        setOnlineProfileStatus(true)
+                    })
+                    
             } else {
                 const values = JSON.parse(setting)
                 ipcRenderer
@@ -145,7 +150,10 @@ function NewApp() {
                         refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
-                    .finally(() => setTimeout(() => setLoading(false), 300))
+                    .finally(() => {
+                        setOnlineProfileStatus(true)
+                        setTimeout(() => setLoading(false), 300)
+                    })
             }
         })
     }
@@ -228,9 +236,11 @@ function NewApp() {
                     width='75%'
                     cancelText={"关闭 / Closed"}
                     onCancel={() => ipcRenderer.invoke("UIOperate", "close")}
-                    okButtonProps={{
-                        // disabled: readingSeconds > 0,
-                    }}
+                    okButtonProps={
+                        {
+                            // disabled: readingSeconds > 0,
+                        }
+                    }
                     onOk={() => {
                         ipcRenderer.invoke("set-local-cache", LocalGV.UserProtocolAgreed, true)
                         setReadingSeconds(3)
@@ -281,7 +291,7 @@ function NewApp() {
                 {isJudgeLicense ? (
                     <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
                 ) : (
-                    <Main onErrorConfirmed={() => {}} />
+                    <Main onErrorConfirmed={() => {}} setJudgeLicense={setJudgeLicense}/>
                 )}
             </Suspense>
         </UILayout>
