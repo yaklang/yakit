@@ -213,6 +213,8 @@ export function RouteNameToVerboseName(r: string) {
             return "Payload"
         case "yakScript":
             return "Yak Runner"
+        case "httpFuzzer":
+            return "Web Fuzzer"
         default:
             return r
     }
@@ -439,7 +441,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
 export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "1",
-        label: "手工渗测",
+        label: "手工渗透",
         subMenuData: [
             {
                 id: "1-1",

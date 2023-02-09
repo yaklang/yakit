@@ -1,6 +1,11 @@
 .yaklang-console-modal {
     overflow: hidden;
     z-index: 1001;
+    border: 0.5px solid #b4bbca;
+    /* 投影-大 */
+
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
 }
 .engine-console-modal-wrapper {
     position: absolute;
@@ -77,13 +82,12 @@
                         color: #b4bbca;
                         font-size: 15px;
                         padding-left: 24px;
-                        
                     }
-                    .header-close-long{
+                    .header-close-long {
                         position: relative;
                         top: -2px;
                     }
-                    .header-close-short{
+                    .header-close-short {
                         position: relative;
                         top: 2px;
                     }
@@ -116,7 +120,7 @@
         border-radius: 4px;
         height: 24px;
     }
-    .span-icon-box:hover{
+    .span-icon-box:hover {
         background: #f0f1f3;
     }
 }
@@ -131,9 +135,10 @@
 }
 .base-console-title {
     height: 32px;
-    border-width: 1px 0px 1px 1px;
-    border-style: solid;
-    border-color: #eaecf3;
+    border-bottom: 1px solid #eaecf3;
+    border-top: 1px solid #b4bbca;
+    border-left: 1px solid #b4bbca;
+    border-right: 1px solid #b4bbca;
     padding: 4px 12px;
     display: flex;
     flex-direction: row;
@@ -175,4 +180,8 @@
     overflow: hidden;
     background: rgb(232, 233, 232);
     padding: 12px 0 0 12px;
+}
+.engine-console-noMini {
+    border-left: 1px solid #b4bbca;
+    border-right: 1px solid #b4bbca;
 }

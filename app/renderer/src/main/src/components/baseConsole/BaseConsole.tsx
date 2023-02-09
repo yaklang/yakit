@@ -28,8 +28,11 @@ import {YakitSystem} from "@/yakitGVDefine"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface EngineConsoleProp {}
+export interface EngineConsoleProp {
+    isMini:boolean
+}
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
+    const {isMini} = props
     const xtermRef = useRef<any>(null)
     // 缓存Console日志信息
     const {consoleLog, setConsoleInfo, isFirst, setIsFirst} = useStore()
@@ -77,7 +80,9 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }, [xtermRef])
 
     return (
-        <div className={styles["engine-console"]}>
+        <div className={classnames(styles["engine-console"],{
+            [styles["engine-console-noMini"]]: !isMini,
+        }) }>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -286,7 +291,7 @@ export const BaseConsole: React.FC<BaseConsoleProps> = (props) => {
                 callBackSource={callBackSource}
             />
             <div className={styles["console-content"]}>
-                <EngineConsole />
+                <EngineConsole isMini={false}/>
             </div>
         </div>
     )
@@ -475,7 +480,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                     </div>
                                 )}
                             </div>
-                            <div className={styles["console-draggle-body"]}>{visible && <EngineConsole />}</div>
+                            <div className={styles["console-draggle-body"]}>{visible && <EngineConsole isMini={true}/>}</div>
                         </div>
                     </div>
                 </Resizable>

@@ -199,6 +199,10 @@ export interface fuzzerInfoProp {
     actualHost?: string
     timeout?: number
     request?: string
+    /**
+     * @param 二级菜单修改了名称后保存的字段，目前仅仅webFuzzer二级支持
+     */
+    verbose?: string
 }
 
 export interface MenuItemType {
@@ -473,6 +477,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 node: ReactNode
                 isRecord?: boolean
                 hideAdd?: boolean
+                verbose?: string
             }
         ) => {
             const filterPage = pageCache.filter((i) => i.route === route)
@@ -486,7 +491,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     setPageCache([
                         ...pageCache,
                         {
-                            verbose: tabName,
+                            verbose: nodeParams?.verbose || tabName,
                             route: route,
                             singleNode: ContentByRoute(route),
                             multipleNode: []
@@ -501,7 +506,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
                         id: tabId,
-                        verbose: `${tabName}-[${filterPage[0].multipleNode.length + 1}]`,
+                        verbose: nodeParams?.verbose || `${tabName}-[${filterPage[0].multipleNode.length + 1}]`,
                         node: nodeParams && nodeParams.node ? nodeParams?.node || <></> : ContentByRoute(route),
                         time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
                     }
@@ -522,7 +527,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
                         id: tabId,
-                        verbose: `${tabName}-[1]`,
+                        verbose: nodeParams?.verbose || `${tabName}-[1]`,
                         node: nodeParams && nodeParams.node ? nodeParams?.node || <></> : ContentByRoute(route),
                         time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
                     }
@@ -660,6 +665,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         const indexNode = pageCache[index].multipleNode.findIndex((ele) => ele.id === key)
         if (indexNode < 0) return
         pageCache[index].multipleNode[indexNode].verbose = verbose
+        // webFuzzer
+        if (tabType === "httpFuzzer") {
+            const currentTimeKey: string = pageCache[index].multipleNode[indexNode].time
+            const newFuzzerItem = {...fuzzerList.current.get(currentTimeKey)}
+            updateFuzzerList(currentTimeKey, {...newFuzzerItem, time: currentTimeKey, verbose})
+        }
         setPageCache([...pageCache])
     })
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
@@ -803,7 +814,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const saveFuzzerList = debounce(() => {
         const historys: fuzzerInfoProp[] = []
         fuzzerList.current.forEach((value) => historys.push(value))
-        historys.sort((a, b) => +a.time - +b.time)
+        // historys.sort((a, b) => +a.time - +b.time)
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
@@ -821,6 +832,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     fuzzerList.current.set(time, {...item, time: time})
                     addTabPage(Route.HTTPFuzzer, {
                         time: time,
+                        verbose: item.verbose, // webFuzzer 保存的修改后的菜单二级tab名字
                         node: ContentByRoute(Route.HTTPFuzzer, undefined, {
                             isHttps: item.isHttps || false,
                             request: item.request || "",
@@ -837,8 +849,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
-        fuzzerList.current.set(key, {request, isHttps, time: key})
+    const addFuzzerList = (key: string, request?: string, isHttps?: boolean, verbose?: string) => {
+        fuzzerList.current.set(key, {request, isHttps, time: key, verbose})
     }
     const delFuzzerList = (type: number, key?: string) => {
         if (type === 1) fuzzerList.current.clear()
@@ -857,7 +869,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         saveFuzzerList()
     }
     useEffect(() => {
-        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => updateFuzzerList(res.key, JSON.parse(res.param)))
+        setPageCache([
+            {
+                verbose: "MITM",
+                route: Route.HTTPHacker,
+                singleNode: ContentByRoute(Route.HTTPHacker),
+                multipleNode: []
+            }
+        ])
+        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
+            try {
+                updateFuzzerList(res.key, {...(fuzzerList.current.get(res.key) || {}), ...JSON.parse(res.param)})
+            } catch (error) {
+                failed("webFuzzer数据缓存失败：" + error)
+            }
+        })
         // 开发环境不展示fuzzer缓存
         ipcRenderer
             .invoke("is-dev")

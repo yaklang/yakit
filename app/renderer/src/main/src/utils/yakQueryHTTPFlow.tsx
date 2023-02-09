@@ -22,7 +22,8 @@ export interface YakQueryHTTPFlowRequest {
     AfterUpdatedAt?: number
     AfterBodyLength?: number
     BeforeBodyLength?: number
-    Color?:string[]
+    Color?: string[]
+    IsWebsocket?: string
 }
 
 export interface Paging {
