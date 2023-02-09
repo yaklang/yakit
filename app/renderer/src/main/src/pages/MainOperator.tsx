@@ -786,7 +786,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         // ctrl + w 关闭tab页面
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-            if (pageCache.length === 0) return
+            if (pageCache.length === 0 || currentTabKey===Route.NewHome) return
 
             setLoading(true)
             removePage(`${currentTabKey}`)
