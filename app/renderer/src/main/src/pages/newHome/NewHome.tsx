@@ -339,7 +339,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
     const getPluginSearch = useMemoizedFn(() => {
         let url = "plugin/search/unlogged"
-        if (userInfo.isLogin) {
+        if (IsEnterprise||userInfo.isLogin) {
             url = "plugin/search"
         }
         NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
