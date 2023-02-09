@@ -108,6 +108,7 @@ import {
     MenuSolidYsoJavaHackIcon
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
 import {ProjectPage} from "@/pages/projects/ProjectPage"
+import {isSimbleEnterprise} from "@/utils/envfile"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -229,7 +230,7 @@ export function RouteNameToVerboseName(r: string) {
  * @param {string} describe 描述
  * @param {number} yakScriptId 如果该路由为插件时的插件id
  * @param {string} yakScripName 插件名称
- * @param {string} isNovice 是否扫描模式菜单
+ * @param {string} menuPattern 菜单模式 novice新手模式 expert专家模式 simple-ee企业版简易模式
  * @param {number} MenuSort 菜单排序字段
  */
 export interface MenuDataProps {
@@ -244,7 +245,7 @@ export interface MenuDataProps {
     describe?: string
     yakScriptId?: number
     yakScripName?: string
-    isNovice?: boolean
+    menuPattern?: ("novice"|"expert"|"simple-ee")[]
     /**
      * @description: 父级的分组名称
      */
@@ -477,7 +478,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "2",
         label: "基础工具",
-        isNovice: true,
+        menuPattern: ["novice","expert"],
         key: Route.GeneralModule,
         subMenuData: [
             {
@@ -535,7 +536,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "3",
         label: "专项漏洞检测",
-        isNovice: true,
+        menuPattern: ["novice","expert"],
         subMenuData: [
             {
                 id: "3-1",
@@ -550,7 +551,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "4",
         label: "插件",
-        isNovice: true,
+        menuPattern: ["novice","expert"],
         subMenuData: [
             {
                 id: "4-1",
@@ -629,7 +630,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "8",
         label: "数据处理",
-        isNovice: true,
+        menuPattern: ["novice","expert"],
         subMenuData: [
             {
                 id: "8-1",
@@ -653,7 +654,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "9",
         label: "数据库",
-        isNovice: true,
+        menuPattern: ["novice","expert"],
         subMenuData: [
             {
                 id: "9-1",
@@ -712,7 +713,25 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 hoverIcon: <MenuSolidDefaultPluginIcon />
             }
         ]
-    }
+    },
+    /**
+        * @description: 企业版简易版菜单
+    */
+    {
+        id: "10",
+        label: "手test",
+        menuPattern: ["simple-ee"],
+        subMenuData: [
+            {
+                id: "10-1",
+                key: Route.HTTPHacker,
+                label: "test-in",
+                icon: <MenuMITMInteractiveHijackingIcon />,
+                hoverIcon: <MenuSolidMITMInteractiveHijackingIcon />,
+                describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+            },
+        ]
+    },
 ]
 
 /**
@@ -769,3 +788,4 @@ export const HiddenMenuData: MenuDataProps[] = [
         hidden: true
     }
 ]
+

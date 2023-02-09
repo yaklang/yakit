@@ -45,7 +45,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         getHttpSetting()
     }, [])
     // 全局监听登录状态
-    const {userInfo} = useStore()
+    const {userInfo,setStoreUserInfo} = useStore()
     const syncLoginOut = async () => {
         await loginOut(userInfo)
     }
@@ -63,6 +63,23 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 .then((res:API.UserData) => {
                     console.log("返回结果：", res)
                     ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
+                        const user = {
+                            isLogin: true,
+                            platform: res.from_platform,
+                            githubName: res.from_platform === "github" ? res.name : null,
+                            githubHeadImg: res.from_platform === "github" ? res.head_img : null,
+                            wechatName: res.from_platform === "wechat" ? res.name : null,
+                            wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
+                            qqName: res.from_platform === "qq" ? res.name : null,
+                            qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
+                            companyName: res.from_platform === "company" ? res.name : null,
+                            companyHeadImg: res.from_platform === "company" ? res.head_img : null,
+                            role: res.role,
+                            user_id: res.user_id,
+                            token: res.token,
+                            showStatusSearch: res?.showStatusSearch || false
+                        }
+                        setStoreUserInfo(user)
                         if(data?.next){
                             success("企业登录成功")
                             onCloseTab()
