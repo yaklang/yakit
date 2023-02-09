@@ -847,80 +847,80 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
     })
 
-    useEffect(() => {
-        if (!props.request) {
-            return
-        }
-
-        setLoading(true)
-        getRemoteValue(ALLOW_MULTIPART_DATA_ALERT)
-            .then((e) => {
-                if (e === "1") {
-                    setLoading(false)
-                    return
-                }
-                ipcRenderer
-                    .invoke("IsMultipartFormDataRequest", {
-                        Request: StringToUint8Array(props.request || "", "utf8")
-                    })
-                    .then((e: { IsMultipartFormData: boolean }) => {
-                        if (e.IsMultipartFormData) {
-                            const notify = showModal({
-                                title: "潜在的数据包编码问题提示",
-                                content: (
-                                    <Space direction={"vertical"}>
-                                        <Space>
-                                            <Typography>
-                                                <Text>当前数据包包含一个</Text>
-                                                <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
-                                                <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
-                                            </Typography>
-                                        </Space>
-                                        <Typography>
-                                            <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
-                                        </Typography>
-                                        <Typography>
-                                            <Text>如果上传文件内容包含图片，将有可能导致</Text>
-                                            <Text mark={true}>PNG 格式的图片被异常编码，</Text>
-                                            <Text>破坏图片格式，导致</Text>
-                                            <Text mark={true}>图片马</Text>
-                                            <Text>上传失败</Text>
-                                        </Typography>
-                                        <br/>
-                                        <Space>
-                                            <Typography>
-                                                <Text>如需要插入具体文件内容，可右键</Text>
-                                                <Text mark={true}>插入文件</Text>
-                                            </Typography>
-                                        </Space>
-                                        <br/>
-                                        <Checkbox
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
-                                                    notify.destroy()
-                                                } else {
-                                                    setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
-                                                }
-                                            }}
-                                        >
-                                            一周内不提醒
-                                        </Checkbox>
-                                        <Button type={"primary"} onClick={() => notify.destroy()}>
-                                            我知道了
-                                        </Button>
-                                    </Space>
-                                ),
-                                width: "40%"
-                            })
-                        }
-                    })
-                    .finally(() => setLoading(false))
-            })
-            .catch((e) => {
-                setLoading(false)
-            })
-    }, [props.request])
+    // useEffect(() => {
+    //     if (!props.request) {
+    //         return
+    //     }
+    //
+    //     setLoading(true)
+    //     getRemoteValue(ALLOW_MULTIPART_DATA_ALERT)
+    //         .then((e) => {
+    //             if (e === "1") {
+    //                 setLoading(false)
+    //                 return
+    //             }
+    //             ipcRenderer
+    //                 .invoke("IsMultipartFormDataRequest", {
+    //                     Request: StringToUint8Array(props.request || "", "utf8")
+    //                 })
+    //                 .then((e: { IsMultipartFormData: boolean }) => {
+    //                     if (e.IsMultipartFormData) {
+    //                         const notify = showModal({
+    //                             title: "潜在的数据包编码问题提示",
+    //                             content: (
+    //                                 <Space direction={"vertical"}>
+    //                                     <Space>
+    //                                         <Typography>
+    //                                             <Text>当前数据包包含一个</Text>
+    //                                             <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
+    //                                             <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
+    //                                         </Typography>
+    //                                     </Space>
+    //                                     <Typography>
+    //                                         <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
+    //                                     </Typography>
+    //                                     <Typography>
+    //                                         <Text>如果上传文件内容包含图片，将有可能导致</Text>
+    //                                         <Text mark={true}>PNG 格式的图片被异常编码，</Text>
+    //                                         <Text>破坏图片格式，导致</Text>
+    //                                         <Text mark={true}>图片马</Text>
+    //                                         <Text>上传失败</Text>
+    //                                     </Typography>
+    //                                     <br/>
+    //                                     <Space>
+    //                                         <Typography>
+    //                                             <Text>如需要插入具体文件内容，可右键</Text>
+    //                                             <Text mark={true}>插入文件</Text>
+    //                                         </Typography>
+    //                                     </Space>
+    //                                     <br/>
+    //                                     <Checkbox
+    //                                         onChange={(e) => {
+    //                                             if (e.target.checked) {
+    //                                                 setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
+    //                                                 notify.destroy()
+    //                                             } else {
+    //                                                 setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
+    //                                             }
+    //                                         }}
+    //                                     >
+    //                                         一周内不提醒
+    //                                     </Checkbox>
+    //                                     <Button type={"primary"} onClick={() => notify.destroy()}>
+    //                                         我知道了
+    //                                     </Button>
+    //                                 </Space>
+    //                             ),
+    //                             width: "40%"
+    //                         })
+    //                     }
+    //                 })
+    //                 .finally(() => setLoading(false))
+    //         })
+    //         .catch((e) => {
+    //             setLoading(false)
+    //         })
+    // }, [props.request])
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
             isHttps,
@@ -995,9 +995,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setCurrentPage(currentPage + 1)
         getList(currentPage + 1)
     })
+
     useEffect(() => {
-        reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
+        try {
+            if (!reqEditor) {
+                return
+            }
+            reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
+        }catch (e) {
+            failed("初始化 EOL CRLF 失败")
+        }
     }, [reqEditor])
+
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
