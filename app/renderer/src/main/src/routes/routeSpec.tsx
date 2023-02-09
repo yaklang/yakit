@@ -194,7 +194,6 @@ export enum Route {
     NewHome = "new-home"
 }
 
-
 export function RouteNameToVerboseName(r: string) {
     switch (r) {
         case "packet-scan-page":
@@ -348,7 +347,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                 />
             )
         case Route.NewHome:
-            return <NewHome/>
+            return <NewHome />
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case Route.Codec:
@@ -713,55 +712,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 hoverIcon: <MenuSolidDefaultPluginIcon />
             }
         ]
-    },
-    {
-        id: "10",
-        key: Route.BatchExecutorRecover,
-        label: "继续任务：批量执行插件",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "11",
-        key: Route.AccountAdminPage,
-        label: "用户管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "12",
-        key: Route.RoleAdminPage,
-        label: "角色管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "13",
-        key: Route.LicenseAdminPage,
-        label: "License管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "14",
-        key: Route.TrustListPage,
-        label: "用户管理",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "15",
-        key: Route.PlugInAdminPage,
-        label: "插件权限",
-        disabled: true,
-        hidden: true
-    },
-    {
-        id: "16",
-        key: Route.NewHome,
-        label: "首页",
-        disabled: true,
-        hidden: true
     }
 ]
 
