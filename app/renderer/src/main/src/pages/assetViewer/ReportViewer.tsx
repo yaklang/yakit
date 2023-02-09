@@ -1,8 +1,8 @@
-import React, {useEffect, useState,useRef} from "react"
+import React, {useEffect, useState, useRef} from "react"
 import {Report} from "./models"
 import {failed} from "../../utils/notification"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Empty, Space, Tag} from "antd"
+import {Button, Empty, Space, Tag,Spin} from "antd"
 import {showModal} from "../../utils/showModal"
 import {YakEditor} from "../../utils/editors"
 import {ReportItem} from "./reportRenders/schema"
@@ -17,6 +17,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     const [loading, setLoading] = useState(false)
+    const [SpinLoading,setSpinLoading] = useState(false)
     const [report, setReport] = useState<Report>({
         From: "",
         Hash: "",
@@ -27,7 +28,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         Title: "-"
     })
     const [reportItems, setReportItems] = useState<ReportItem[]>([])
-    const divRef=useRef<HTMLDivElement>(null)
+    const divRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if ((props?.id || 0) <= 0) {
             return
@@ -63,32 +64,33 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             </AutoCard>
         )
     }
-    const opt={
+    const opt = {
         margin: [10, 5, 10, 5],
-        filename:`${report.Title}.pdf`,
-        image:{ type:"jpeg",quality: 0.95 },
-        jsPDF: {  
-            format: 'a4' 
+        filename: `${report.Title}.pdf`,
+        image: {type: "jpeg", quality: 0.95},
+        jsPDF: {
+            format: "a4"
         },
         html2canvas: {
-            scale: 2,
+            scale: 2
         },
-        pagebreak: { 
+        pagebreak: {
             // 自动分页控制属性
             // mode: 'avoid-all',
             after: "#cover"
         }
     }
     const downloadPdf = () => {
-        if(!divRef||!divRef.current)return
-        const div=divRef.current
-        html2pdf()
-        .from(div)
-        .set(opt)
-        .save(); // 导出
+        setSpinLoading(true)
+        if (!divRef || !divRef.current) return
+        const div = divRef.current
+        html2pdf().from(div).set(opt).save().then(()=>{
+            setSpinLoading(false)
+        }) // 导出
     }
 
     return (
+        <Spin spinning={SpinLoading}>
         <AutoCard
             size={"small"}
             bordered={false}
@@ -129,11 +131,13 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             }
         >
             <div ref={divRef}>
-            <Space direction={"vertical"} style={{width: "100%"}}>
-                {reportItems.map((i, index) => {
-                    return <ReportItemRender item={i} key={index} />
-                })}
-            </Space></div>
+                <Space direction={"vertical"} style={{width: "100%"}}>
+                    {reportItems.map((i, index) => {
+                        return <ReportItemRender item={i} key={index} />
+                    })}
+                </Space>
+            </div>
         </AutoCard>
+        </Spin>
     )
 }
