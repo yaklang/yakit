@@ -34,14 +34,14 @@ import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/componen
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {saveAuthInfo} from "@/protected/YakRemoteAuth"
-import { BaseMiniConsole } from "../baseConsole/BaseConsole";
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import {BaseMiniConsole} from "../baseConsole/BaseConsole"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
 // 是否为企业版
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
+const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 export interface UILayoutProp {
@@ -387,6 +387,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setYakitConsole(true)
                 return
             case "adminMode":
+                if (engineMode === "admin") {
+                    info("当前已是管理员模式")
+                    return
+                }
                 setStartAdminEngine(true)
                 return
 
@@ -1281,7 +1285,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                     if (version.startsWith("v")) version = version.substr(1)
 
                     ipcRenderer
-                        .invoke("download-latest-yakit", version,isEnterprise)
+                        .invoke("download-latest-yakit", version, isEnterprise)
                         .then(() => {
                             if (!isBreakRef.current) return
                             success("下载完毕")
@@ -1603,7 +1607,7 @@ const StartAdminEngineHint: React.FC<KillOldEngineProcessProps> = React.memo((pr
                             是否启动并连接管理员权限引擎
                             <br />
                             <span className={styles["warning-content"]}>
-                                由于后续功能规划，管理员权限将逐步进行下架，用本地模式出现问题时，建议使用“设置-网卡权限修复”即可正常使用
+                                由于后续功能规划，管理员权限将逐步进行下架，建议使用本地模式，如出现问题，使用“设置-网卡权限修复”即可
                             </span>
                         </div>
 

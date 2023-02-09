@@ -119,7 +119,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 setInstalledYakit(true)
             })
             .catch((e: any) => {
-                if (!isYakitBreak.current) return
+                if (isYakitBreak.current) return
                 failed(`下载失败: ${e}`)
                 setYakitProgress(undefined)
                 setInstallYakit(false)
@@ -148,7 +148,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         ipcRenderer
             .invoke("download-latest-yak", latestYaklang)
             .then(() => {
-                if (!isYaklangBreak.current) return
+                if (isYaklangBreak.current) return
 
                 success("下载完毕")
                 if (!getYaklangProgress()?.size) return
@@ -165,7 +165,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 yaklangUpdate()
             })
             .catch((e: any) => {
-                if (!isYaklangBreak.current) return
+                if (isYaklangBreak.current) return
                 failed(`引擎下载失败: ${e}`)
                 setInstallYaklang(false)
                 setYaklangProgress(undefined)

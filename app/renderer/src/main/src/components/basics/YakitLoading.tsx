@@ -92,6 +92,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         onEngineModeChange
     } = props
 
+    const [restartLoading, setRestartLoading] = useState<boolean>(false)
+
     const [system, setSystem] = useState<YakitSystem>("Darwin")
 
     /** 启动引擎倒计时 */
@@ -182,7 +184,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         if (
             !!currentYakit &&
             !!latestYakit &&
-            currentYakit !== latestYakit &&
+            `v${currentYakit}` !== latestYakit &&
             getEngineReady() > 0 &&
             !!readyTime.current
         ) {
@@ -242,7 +244,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     })
     /** 手动启动引擎 */
     const manuallyStartEngine = useMemoizedFn(() => {
-        const isAdmin = props.engineMode === "admin"
+        const isAdmin = yakitStatus === "break" ? false : props.engineMode === "admin"
         ipcRenderer
             .invoke("start-local-yaklang-engine", {
                 port: isAdmin ? props.adminPort : props.localPort,
@@ -250,8 +252,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             })
             .then(() => {
                 outputToWelcomeConsole("手动引擎启动成功！")
-                if (onEngineModeChange) {
-                    onEngineModeChange(props.engineMode, true)
+                if (engineMode === "local") {
+                    setRestartLoading(true)
+                    ipcRenderer.invoke("engine-ready-link").finally(() => {
+                        setTimeout(() => {
+                            setRestartLoading(false)
+                        }, 1000)
+                    })
+                } else {
+                    onEngineModeChange(isAdmin ? "admin" : "local", true)
                 }
             })
             .catch((e) => {
@@ -383,6 +392,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
+                            loading={restartLoading}
                             disabled={loading}
                             onClick={manuallyStartEngine}
                         >
@@ -414,6 +424,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
+                            loading={restartLoading}
                             disabled={loading}
                             onClick={manuallyStartEngine}
                         >
@@ -446,6 +457,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
+                            loading={restartLoading}
                             disabled={loading}
                             onClick={manuallyStartEngine}
                         >
@@ -465,6 +477,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
+                            loading={restartLoading}
                             disabled={loading}
                             onClick={manuallyStartEngine}
                         >
@@ -502,7 +515,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         changeMode,
         manuallyStartEngine,
         menu,
-        showEngineLog
+        showEngineLog,
+        restartLoading
     ])
 
     /** 加载页随机宣传语 */

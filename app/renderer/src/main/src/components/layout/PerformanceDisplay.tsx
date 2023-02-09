@@ -156,18 +156,15 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             return () => {
                 clearInterval(id)
             }
-        } else {
-            setProcess([])
-            setPort(0)
         }
     }, [inViewport])
 
     const allClose = useMemoizedFn(() => {
         ;(process || []).forEach((i) => {
-            ipcRenderer.invoke("kill-yak-grpc", i.pid).then(() => {
-                info(`KILL yak PROCESS: ${i.pid}`)
-                if (process.length > 0 && i.pid === process[process.length - 1].pid) {
-                    if (isLocal) typeCallback("break")
+            ipcRenderer.invoke("kill-yak-grpc", i.pid).then((val) => {
+                if (!val) {
+                    info(`KILL yak PROCESS: ${i.pid}`)
+                    if (+i.port === port && isLocal) typeCallback("break")
                 }
             })
         })
@@ -234,9 +231,11 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 onConfirm={() => {
                                                     ipcRenderer
                                                         .invoke("kill-yak-grpc", i.pid)
-                                                        .then(() => {
-                                                            if (isLocal && +i.port === port) typeCallback("break")
-                                                            success("引擎进程关闭中...")
+                                                        .then((val) => {
+                                                            if (!val) {
+                                                                if (isLocal && +i.port === port) typeCallback("break")
+                                                                success("引擎进程关闭中...")
+                                                            }
                                                         })
                                                         .catch((e: any) => {})
                                                         .finally(fetchPSList)

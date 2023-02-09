@@ -192,7 +192,7 @@ module.exports = {
             try {
                 return await asyncKillYakGRPC(pid)
             } catch (e) {
-                return ""
+                return "failed"
             }
         })
 
