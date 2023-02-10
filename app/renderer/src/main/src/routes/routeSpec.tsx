@@ -47,7 +47,7 @@ import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
-
+import { SimbleDetect } from "@/pages/simbleDetect/SimbleDetect";
 import {
     MenuDomainAssetsIcon,
     MenuHTTPHistoryIcon,
@@ -75,7 +75,8 @@ import {
     MenuSubDomainCollectionIcon,
     MenuVulnerabilityRiskIcon,
     MenuWebsocketFuzzerIcon,
-    MenuDefaultPluginIcon
+    MenuDefaultPluginIcon,
+    MenuBatchVulnerabilityDetectionIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
 import {
@@ -105,7 +106,8 @@ import {
     MenuSolidVulnerabilityRiskIcon,
     MenuSolidWebFuzzerIcon,
     MenuSolidWebsocketFuzzerIcon,
-    MenuSolidYsoJavaHackIcon
+    MenuSolidYsoJavaHackIcon,
+    MenuSolidBatchVulnerabilityDetectionIcon,
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
 import {ProjectPage} from "@/pages/projects/ProjectPage"
 import {isSimbleEnterprise} from "@/utils/envfile"
@@ -128,6 +130,7 @@ export enum Route {
 
     PenTest = "pen-test",
     HTTPHacker = "httpHacker",
+    SimbleDetect = "simbleDetect",
     HTTPFuzzer = "httpFuzzer",
     WebsocketFuzzer = "websocket-fuzzer",
     WebsocketHistory = "websocket-history",
@@ -348,7 +351,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                 />
             )
         case Route.NewHome:
-            return <NewHome />
+            return <NewHome/>
+        case Route.SimbleDetect:
+            return <SimbleDetect/>
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case Route.Codec:
@@ -719,16 +724,16 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     */
     {
         id: "10",
-        label: "手test",
+        label: "安全检测",
         menuPattern: ["simple-ee"],
         subMenuData: [
             {
                 id: "10-1",
-                key: Route.HTTPHacker,
-                label: "test-in",
-                icon: <MenuMITMInteractiveHijackingIcon />,
-                hoverIcon: <MenuSolidMITMInteractiveHijackingIcon />,
-                describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+                key: Route.SimbleDetect,
+                label: "安全检测",
+                icon: <MenuBatchVulnerabilityDetectionIcon />,
+                hoverIcon: <MenuSolidBatchVulnerabilityDetectionIcon />,
+                describe: ""
             },
         ]
     },
