@@ -1,4 +1,4 @@
-import React from "react"
+import React,{ReactNode} from "react"
 import {Upload} from "antd"
 import {
     ItemDraggerInput,
@@ -12,10 +12,11 @@ import "./ContentUploadTextArea.css"
 export interface ContentUploadInputProps extends ItemDraggerTextAreaProps, ItemDraggerInputProps {
     type?: "input" | "textarea"
     beforeUpload?: (f: any) => any
+    otherHelpNode?:ReactNode
 }
 
 export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => {
-    const {type = "input", beforeUpload, dragger, item, textarea, input, ...restProps} = props
+    const {type = "input", beforeUpload, dragger, item, textarea, input,otherHelpNode, ...restProps} = props
 
     if (type === "input") {
         return (
@@ -39,6 +40,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                                 <span className='help-hint-title'>点击此处</span>
                             </Upload>
                             上传
+                            {otherHelpNode}
                         </div>
                     ),
                     ...item
@@ -70,6 +72,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                                 <span className='help-hint-title'>点击此处</span>
                             </Upload>
                             上传
+                            {otherHelpNode}
                         </div>
                     ),
                     ...item
