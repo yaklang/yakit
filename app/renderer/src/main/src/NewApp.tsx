@@ -59,8 +59,6 @@ interface OnlineProfileProps {
 }
 
 function NewApp() {
-    const [loading, setLoading] = useState(false)
-
     /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
     /** 展示用户协议计时时间 */
@@ -71,7 +69,6 @@ function NewApp() {
 
     /** 是否展示用户协议 */
     useEffect(() => {
-        setLoading(true)
         ipcRenderer
             .invoke("fetch-local-cache", LocalGV.UserProtocolAgreed)
             .then((value: any) => {
@@ -88,7 +85,6 @@ function NewApp() {
                 }
             })
             .catch(() => {})
-            .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
 
     // 企业版-连接引擎后验证license=>展示企业登录
@@ -152,7 +148,6 @@ function NewApp() {
                     .catch((e: any) => failed("设置私有域失败:" + e))
                     .finally(() => {
                         setOnlineProfileStatus(true)
-                        setTimeout(() => setLoading(false), 300)
                     })
             }
         })

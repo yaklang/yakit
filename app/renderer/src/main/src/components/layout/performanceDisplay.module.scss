@@ -32,7 +32,19 @@
     box-sizing: border-box;
     width: 44px;
     height: 36px;
-    padding: 8px 12px;
+    padding: 4px;
+
+    .op-btn-body {
+        border-radius: 4px;
+        width: 36px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .op-btn-body-hover {
+        background-color: var(--yakit-background-color);
+    }
 
     .icon-rotate-animation {
         animation: rotate 1s linear infinite;
@@ -55,6 +67,11 @@
         100% {
             -webkit-transform: rotate(360deg);
         }
+    }
+}
+.ui-op-btn-wrapper:hover {
+    .op-btn-body {
+        background-color: var(--yakit-background-color);
     }
 }
 
