@@ -244,32 +244,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     })
     /** 手动启动引擎 */
     const manuallyStartEngine = useMemoizedFn(() => {
-        const isAdmin = yakitStatus === "break" ? false : props.engineMode === "admin"
-        ipcRenderer
-            .invoke("start-local-yaklang-engine", {
-                port: isAdmin ? props.adminPort : props.localPort,
-                sudo: isAdmin
-            })
-            .then(() => {
-                outputToWelcomeConsole("手动引擎启动成功！")
-                if (engineMode === "local") {
-                    setRestartLoading(true)
-                    ipcRenderer.invoke("engine-ready-link").finally(() => {
-                        setTimeout(() => {
-                            setRestartLoading(false)
-                        }, 1000)
-                    })
-                } else {
-                    onEngineModeChange(isAdmin ? "admin" : "local", true)
-                }
-            })
-            .catch((e) => {
-                outputToWelcomeConsole("手动引擎启动失败！")
-                outputToWelcomeConsole(`失败原因:${e}`)
-            })
-            .finally(() => {
-                engineTime("log")
-            })
+        setRestartLoading(true)
+
+        outputToWelcomeConsole("手动引擎启动成功！")
+
+        ipcRenderer.invoke("engine-ready-link")
+        engineTime("log")
+        setTimeout(() => {
+            setRestartLoading(false)
+        }, 1000)
     })
 
     /** 切换模式 */

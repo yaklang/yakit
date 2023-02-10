@@ -28,6 +28,7 @@ export interface YaklangEngineWatchDogProps {
     onReady?: () => any
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
+    onAdminPort?: () => any
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
@@ -159,6 +160,15 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             `端口被占用，无法启动本地引擎（${EngineModeVerbose(mode as YaklangEngineMode)}）`
                         )
                         outputToWelcomeConsole(`错误原因为: ${e}`)
+                        /**
+                         * 管理员模式补充情况
+                         * 连接的管理员进程进行关闭，然后手动触发重连，端口检测接口发出'端口不可用'信息
+                         * 解决方案：进行新端口的生成，并重连
+                         * 原因(猜测)：管理员进程的关闭是个过程，nodejs在kill后的30s才能检测端口可用
+                         */
+                        if (props.credential.Mode === "admin") {
+                            if (props.onAdminPort) props.onAdminPort()
+                        }
                     })
             },
             [autoStartProgress, props.onKeepaliveShouldChange, props.credential],

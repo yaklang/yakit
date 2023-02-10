@@ -63,6 +63,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [engineLink, setEngineLink, getEngineLink] = useGetState<boolean>(false)
     /** 当前引擎模式 */
     const [engineMode, setEngineMode] = useState<YaklangEngineMode>()
+    const cacheEngineMode = useRef<YaklangEngineMode>()
     const isRemoteEngine = engineMode === "remote"
     /** yakit使用状态 */
     const [yakitStatus, setYakitStatus] = useState<YakitStatusType>("")
@@ -92,15 +93,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             switch (val) {
                 case "remote":
                     setEngineMode("remote")
+                    cacheEngineMode.current = "remote"
                     return
                 case "local":
                     setEngineMode("local")
+                    cacheEngineMode.current = "local"
                     return
                 case "admin":
                     setEngineMode("admin")
+                    cacheEngineMode.current = "admin"
                     return
                 default:
                     setEngineMode("local")
+                    cacheEngineMode.current = "local"
                     return
             }
         })
@@ -261,6 +266,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             return
         }
 
+        if (!engineMode && engineMode === cacheEngineMode.current) return
+
         outputToWelcomeConsole(`当前引擎模式为 ${engineMode}`)
         switch (engineMode) {
             case "local":
@@ -312,13 +319,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (type) {
             case "admin":
                 setEngineMode("admin")
+                cacheEngineMode.current = "admin"
                 return
             case "local":
                 setEngineMode("local")
+                cacheEngineMode.current = "local"
                 return
             case "remote":
                 setCredential({Host: "", IsTLS: false, Password: "", PemBytes: undefined, Port: 0, Mode: undefined})
                 setEngineMode("remote")
+                cacheEngineMode.current = "remote"
                 return
         }
     })
@@ -528,6 +538,21 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.invoke("UIOperate", "max").then(() => {})
     }
 
+    /**
+     * 管理员模式补充情况
+     * 连接的管理员进程进行关闭，然后手动触发重连，端口检测接口发出'端口不可用'信息
+     * 解决方案：进行新端口的生成，并重连
+     * 原因(猜测)：管理员进程的关闭是个过程，nodejs在kill后的30s才能检测端口可用
+     */
+    const onAdminPort = useMemoizedFn(() => {
+        getRandomLocalEnginePort((p) => {
+            setAdminPort(p)
+            setCredential({...getCredential(), Port: p})
+            setTimeout(() => {
+                ipcRenderer.invoke("engine-ready-link")
+            }, 300)
+        })
+    })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) setEngineLink(true)
 
@@ -586,6 +611,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         onKeepaliveShouldChange={setKeepalive}
                         onReady={onReady}
                         onFailed={onFailed}
+                        onAdminPort={onAdminPort}
                     />
                     <div id='yakit-header' className={styles["ui-layout-header"]}>
                         {system === "Darwin" ? (
@@ -595,10 +621,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             className={styles["header-border-yakit-mask"]}
                         ></div> */}
 
-                                <div
-                                    className={classnames(styles["yakit-header-title"])}
-                                    onDoubleClick={maxScreen}
-                                >
+                                <div className={classnames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
                                 </div>
 
@@ -798,6 +821,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 engineNotInstalled={!isEngineInstalled.current}
                                 oncancel={() => {
                                     setEngineMode(undefined)
+                                    cacheEngineMode.current = undefined
                                     setYakitStatus("install")
                                     cacheYakitStatus.current = "install"
                                 }}

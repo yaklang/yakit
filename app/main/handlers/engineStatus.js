@@ -186,6 +186,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         subprocess.on("close", async (e) => {
                             if (e) reject(e)
                         })
+                        resolve()
                     } else {
                         const cmd = `${getLocalYaklangEngine()} grpc --port ${port}`
                         sudoExec(
@@ -200,6 +201,7 @@ module.exports = (win, callback, getClient, newClient) => {
                                 }
                             }
                         )
+                        resolve()
                     }
                 } else {
                     toLog("已启动本地引擎进程")

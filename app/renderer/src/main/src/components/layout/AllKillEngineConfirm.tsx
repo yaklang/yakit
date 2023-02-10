@@ -60,14 +60,17 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                         setTimeout(() => setLoading(false), 300)
                     })
                     .finally(() => {
-                        if (getLoading()) callback()
+                        if (getLoading())
+                            setTimeout(() => {
+                                callback()
+                            }, 300)
                     })
             })
     })
 
     const onExecute = useMemoizedFn(async () => {
-        const currentPS = process.filter((item) => item.port === currentPort)[0]
-        const otherPS = process.filter((item) => item.port !== currentPort)
+        const currentPS = process.filter((item) => +item.port === currentPort)[0]
+        const otherPS = process.filter((item) => +item.port !== currentPort)
         /** 关闭是否正常进行标识位 */
         let killFlag: string = ""
 
@@ -85,6 +88,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         }
         if (currentPS) {
             const flag: string = await ipcRenderer.invoke("kill-yak-grpc", currentPS.pid)
+            if (!!flag) return
             info(`KILL yak PROCESS: ${currentPS.pid}`)
         }
         if (process.length === 0) return
