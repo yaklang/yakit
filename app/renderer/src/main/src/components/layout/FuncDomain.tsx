@@ -49,6 +49,7 @@ import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
+import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -343,6 +344,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "adminMode":
                 typeCallback("adminMode")
                 return
+            case "migrateLegacy":
+                migrateLegacyDatabase()
+                return
             default:
                 return
         }
@@ -404,7 +408,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "otherMode",
                     label: "其他操作",
-                    children: [{label: "管理员模式", key: "adminMode"}]
+                    children: [
+                        {label: "管理员模式", key: "adminMode"},
+                        {label: "旧版本迁移", key: "migrateLegacy"},
+                    ]
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
