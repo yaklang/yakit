@@ -1000,13 +1000,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {wait: 400, trailing: true, leading: true}
     )
     // 设置是否自动刷新
-    // useEffect(() => {
-    //     if (props.inViewport) {
-    //         scrollUpdateTop()
-    //         let id = setInterval(scrollUpdateTop, 1000)
-    //         return () => clearInterval(id)
-    //     }
-    // }, [props.inViewport])
+    useEffect(() => {
+        if (props.inViewport) {
+            scrollUpdateTop()
+            let id = setInterval(scrollUpdateTop, 1000)
+            return () => clearInterval(id)
+        }
+    }, [props.inViewport])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
