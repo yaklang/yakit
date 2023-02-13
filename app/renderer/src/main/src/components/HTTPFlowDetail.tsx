@@ -10,13 +10,13 @@ import {
     Row,
     Skeleton,
     Space,
-    Spin,
+    Spin, Table,
     Tabs,
     Tag,
     Tooltip,
     Typography
 } from "antd"
-import {LeftOutlined, RightOutlined, PlusCircleOutlined} from "@ant-design/icons"
+import {LeftOutlined, RightOutlined, PlusCircleOutlined, ChromeFilled} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors"
 import {failed} from "../utils/notification"
@@ -37,6 +37,9 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {AutoCard} from "@/components/AutoCard"
 import {SelectOne} from "@/utils/inputUtil"
 import {useMemoizedFn} from "ahooks"
+import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable";
+import {MonacoEditorActions} from "@/utils/encodec";
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -109,7 +112,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }
 
     if (loading) {
-        return <Spin tip={"正在分析详细参数"} />
+        return <Spin tip={"正在分析详细参数"}/>
     }
 
     return (
@@ -213,7 +216,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isFront}
-                                                icon={<LeftOutlined />}
+                                                icon={<LeftOutlined/>}
                                                 onClick={() => {
                                                     props?.fetchRequest!(1)
                                                 }}
@@ -223,7 +226,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isBehind}
-                                                icon={<RightOutlined />}
+                                                icon={<RightOutlined/>}
                                                 onClick={() => {
                                                     props?.fetchRequest!(2)
                                                 }}
@@ -446,7 +449,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     )
 }
 
-type HTTPFlowInfoType = "domains" | "root-domains" | "json"
+type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
@@ -468,22 +471,35 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .then((i: HTTPFlow) => {
                 setFlow(i)
                 const existedExtraInfos: HTTPFlowInfoType[] = []
-                if ((i.Domains || []).length > 0) {
-                    existedExtraInfos.push("domains")
-                }
+                ipcRenderer.invoke("QueryMITMRuleExtractedData", {
+                    Pagination: {
+                        Order: "asc",
+                        OrderBy: "created_at",
+                        Page: 1, Limit: 1
+                    }, HTTPFlowHash: i.Hash
+                }).then((rsp: { Total: number }) => {
+                    if (rsp.Total > 0) {
+                        existedExtraInfos.push("rules")
+                    }
+                }).catch(e => {
+                    failed("获取规则提取数据失败")
+                }).finally(() => {
+                    if ((i.Domains || []).length > 0 || (i.RootDomains || []).length > 0) {
+                        existedExtraInfos.push("domains")
+                    }
 
-                if ((i.RootDomains || []).length > 0) {
-                    existedExtraInfos.push("root-domains")
-                }
+                    if ((i.JsonObjects || []).length > 0) {
+                        existedExtraInfos.push("json")
+                    }
 
-                if ((i.Domains || []).length > 0) {
-                    existedExtraInfos.push("json")
-                }
-
-                if (existedExtraInfos.length > 0) {
-                    setInfoType(existedExtraInfos[0])
-                    setExistedInfoType([...existedExtraInfos])
-                }
+                    if (existedExtraInfos.length > 0) {
+                        setInfoType(existedExtraInfos[0])
+                        setExistedInfoType([...existedExtraInfos])
+                    } else {
+                        setInfoType(undefined)
+                        setExistedInfoType([])
+                    }
+                })
             })
             .catch((e: any) => {
                 failed(`Query HTTPFlow failed: ${e}`)
@@ -513,10 +529,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     <ResizeBox
                         firstNode={() => {
                             if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录请求"} />
+                                return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
                             }
                             if (flow?.IsWebsocket) {
-                                return <HTTPFlowForWebsocketViewer flow={flow} />
+                                return <HTTPFlowForWebsocketViewer flow={flow}/>
                             }
                             return (
                                 <HTTPPacketEditor
@@ -533,15 +549,15 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     actions={
                                         flow?.RawRequestBodyBase64
                                             ? [
-                                                  {
-                                                      contextMenuGroupId: "auto-suggestion",
-                                                      label: "复制请求Body (Base64)",
-                                                      id: "copy-request-base64-body",
-                                                      run: () => {
-                                                          callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
-                                                      }
-                                                  }
-                                              ]
+                                                {
+                                                    contextMenuGroupId: "auto-suggestion",
+                                                    label: "复制请求Body (Base64)",
+                                                    id: "copy-request-base64-body",
+                                                    run: () => {
+                                                        callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
+                                                    }
+                                                }
+                                            ]
                                             : undefined
                                     }
                                     // 这个为了解决不可见字符的问题
@@ -554,10 +570,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         firstMinSize={300}
                         secondNode={() => {
                             if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录响应"} />
+                                return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
                             }
                             if (flow?.IsWebsocket) {
-                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
+                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""}/>
                             }
                             return (
                                 <HTTPPacketEditor
@@ -575,6 +591,15 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                               ]
                                             : undefined
                                     }
+                                    extra={[
+                                        <Button
+                                            type={"primary"}
+                                            size={"small"} icon={<ChromeFilled/>}
+                                            onClick={()=>{
+                                                showResponseViaResponseRaw(flow?.Response)
+                                            }}
+                                        />
+                                    ]}
                                     isResponse={true}
                                     noHex={true}
                                     noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
@@ -591,7 +616,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         secondMinSize={300}
                     />
                 </Col>
-                {existedInfoType.length > 0 && (
+                {infoType !== 'rules' && existedInfoType.filter(i => i !== "rules").length > 0 && (
                     <Col span={5}>
                         <HTTPPacketEditor
                             title={
@@ -620,16 +645,33 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             originValue={(() => {
                                 switch (infoType) {
                                     case "domains":
-                                        return StringToUint8Array((flow?.Domains || []).join("\r\n"))
+                                        return StringToUint8Array("# 根域 (Root-Domains)\r\n" + ((flow?.RootDomains || []).join("\r\n")) +
+                                            "\r\n\r\n# 域名 (Domain) \r\n" + (flow?.Domains || []).join("\r\n"))
                                     case "json":
                                         return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
-                                    case "root-domains":
-                                        return StringToUint8Array((flow?.RootDomains || []).join("\r\n"))
                                     default:
                                         return new Uint8Array()
                                 }
                             })()}
                         />
+                    </Col>
+                )}
+                {infoType === 'rules' && existedInfoType.filter(i => i === 'rules').length > 0 && (
+                    <Col span={5}>
+                        <HTTPFlowExtractedDataTable httpFlowHash={flow?.Hash || ""} title={<Button.Group size={"small"}>
+                            {existedInfoType.map((i) => {
+                                return (
+                                    <Button
+                                        type={infoType === i ? "primary" : "default"}
+                                        onClick={() => {
+                                            setInfoType(i)
+                                        }}
+                                    >
+                                        {infoTypeVerbose(i)}
+                                    </Button>
+                                )
+                            })}
+                        </Button.Group>}/>
                     </Col>
                 )}
             </Row>
@@ -641,10 +683,10 @@ function infoTypeVerbose(i: HTTPFlowInfoType) {
     switch (i) {
         case "domains":
             return "域名 "
-        case "root-domains":
-            return "根域 "
         case "json":
             return "对象 "
+        case "rules":
+            return "规则 "
         default:
             return "-"
     }
