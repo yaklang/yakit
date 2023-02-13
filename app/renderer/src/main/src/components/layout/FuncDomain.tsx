@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip} from "antd"
+import {Badge, Modal, Tooltip,Form,Input,Button} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -267,6 +267,62 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     )
 })
 
+interface NetworkDetectionProp{
+    onClose:()=>void
+}
+
+const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
+    const [form] = Form.useForm()
+    const {onClose} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [result,setResult] = useState<string>()
+    const onFinish = (values) => {
+        const {url} = values
+        setResult(undefined)
+        ipcRenderer
+            .invoke("try-network-detection", url)
+            .then((value: boolean) => {
+                // console.log("value",value)
+                let str:string = value?"网络连接正常":"网络无法连接"
+                setResult(str)
+            })
+            .catch(() => {})
+            // .finally(() => setTimeout(() => onClose(), 300))
+    }
+    const layout = {
+        labelCol: {span: 5},
+        wrapperCol: {span: 16}
+    }
+    // 判断是否为网址
+    const judgeUrl = () =>[ 
+        {
+            validator: (_, value) => {
+                let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
+                if (re.test(value)) {
+                    return Promise.resolve()
+                } else {
+                    return Promise.reject("请输入符合要求的地址")
+                }
+            }
+        }
+    ]
+    return(
+        <div>
+            <Form {...layout} form={form} onFinish={onFinish}>
+                <Form.Item name='url' label='地址' rules={[{required: true, message: "该项为必填"},...judgeUrl()]}>
+                    <Input placeholder='请输入地址' allowClear />
+                </Form.Item>
+                <div style={{textAlign: "center"}}>
+                    <Button type='primary' htmlType='submit' loading={loading}>
+                        确认
+                    </Button>
+                    {result&&<div style={{marginTop:10}}>检测结果：{result}</div>}  
+                </div>
+            </Form>
+        </div>
+    )
+})
+
 interface UIOpSettingProp {
     /** 当前引擎模式 */
     engineMode: YaklangEngineMode
@@ -347,6 +403,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "migrateLegacy":
                 migrateLegacyDatabase()
                 return
+            case "network-detection":
+                const n = showModal({
+                    title: "网络检测",
+                    content: <NetworkDetection onClose={() => n.destroy()}/>
+                })
+                return n
             default:
                 return
         }
@@ -412,6 +474,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                         {label: "管理员模式", key: "adminMode"},
                         {label: "旧版本迁移", key: "migrateLegacy"}
                     ]
+                },
+                {
+                    key: "network-detection",
+                    label: "网络检测"
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
