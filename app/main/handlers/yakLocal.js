@@ -155,13 +155,13 @@ module.exports = {
                 if (process.platform === 'win32') {
                     childProcess.exec(`taskkill /F /PID ${pid}`, error => {
                         if (!error) {
-                            resolve(true)
+                            resolve("")
                         } else {
                             sudoExec(
                                 generateWindowsSudoCommand("taskkill", `/F /PID ${pid}`), undefined,
                                 error => {
                                     if (!error) {
-                                        resolve(true)
+                                        resolve("")
                                     } else {
                                         reject(`${error}`)
                                     }
@@ -172,13 +172,13 @@ module.exports = {
                 } else {
                     childProcess.exec(`kill -9 ${pid}`, error => {
                         if (!error) {
-                            resolve(true)
+                            resolve("")
                         } else {
                             sudoExec(`kill -9 ${pid}`, {
                                 name: `kill SIGKILL PID ${pid}`
                             }, error => {
                                 if (!error) {
-                                    resolve(true)
+                                    resolve("")
                                 } else {
                                     reject(`${error}`)
                                 }
@@ -192,7 +192,7 @@ module.exports = {
             try {
                 return await asyncKillYakGRPC(pid)
             } catch (e) {
-                return ""
+                return "failed"
             }
         })
 

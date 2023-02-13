@@ -108,7 +108,9 @@ const singletonRoute: Route[] = [
     // 插件权限
     Route.PlugInAdminPage,
     // 获取引擎输出
-    Route.AttachEngineCombinedOutput
+    Route.AttachEngineCombinedOutput,
+    // 首页
+    Route.NewHome
 ]
 /** 不需要首页组件安全边距的页面 */
 const noPaddingPage = [
@@ -119,7 +121,8 @@ const noPaddingPage = [
     Route.ModManager,
     Route.ICMPSizeLog,
     Route.TCPPortLog,
-    Route.DNSLog
+    Route.DNSLog,
+    Route.NewHome
 ]
 
 export const defaultUserInfo: UserInfoProps = {
@@ -143,6 +146,8 @@ export interface MainProp {
     tlsGRPC?: boolean
     addr?: string
     onErrorConfirmed?: () => any
+    isShowHome?: boolean
+    setJudgeLicense?: (v: boolean) => void
 }
 
 export interface MenuItem {
@@ -175,7 +180,7 @@ export interface multipleNodeInfo {
     time?: string
 }
 
-interface PageCache {
+export interface PageCache {
     verbose: string
     route: Route
     singleNode: ReactNode | any
@@ -194,6 +199,10 @@ export interface fuzzerInfoProp {
     actualHost?: string
     timeout?: number
     request?: string
+    /**
+     * @param 二级菜单修改了名称后保存的字段，目前仅仅webFuzzer二级支持
+     */
+    verbose?: string
 }
 
 export interface MenuItemType {
@@ -324,19 +333,20 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 })
 
 const Main: React.FC<MainProp> = React.memo((props) => {
+    const {setJudgeLicense} = props
     const [loading, setLoading] = useState(false)
 
     const [notification, setNotification] = useState("")
 
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
         {
-            verbose: "MITM",
-            route: Route.HTTPHacker,
-            singleNode: ContentByRoute(Route.HTTPHacker),
+            verbose: "首页",
+            route: Route.NewHome,
+            singleNode: ContentByRoute(Route.NewHome),
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.HTTPHacker)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.NewHome)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -380,6 +390,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             ipcRenderer.removeAllListeners("refresh-token")
         }
     }, [])
+
+    // useEffect(()=>{
+    //     if(selectItemPage&&setSelectItemPage){
+    //         goRouterPage(selectItemPage)
+    //         setSelectItemPage(undefined)
+    //     }
+    // },[selectItemPage])
+
     // yakit页面关闭是否二次确认提示
     const [winCloseFlag, setWinCloseFlag] = useState<boolean>(true)
     const [winCloseShow, setWinCloseShow] = useState<boolean>(false)
@@ -459,6 +477,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 node: ReactNode
                 isRecord?: boolean
                 hideAdd?: boolean
+                verbose?: string
             }
         ) => {
             const filterPage = pageCache.filter((i) => i.route === route)
@@ -472,7 +491,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     setPageCache([
                         ...pageCache,
                         {
-                            verbose: tabName,
+                            verbose: nodeParams?.verbose || tabName,
                             route: route,
                             singleNode: ContentByRoute(route),
                             multipleNode: []
@@ -487,7 +506,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
                         id: tabId,
-                        verbose: `${tabName}-[${filterPage[0].multipleNode.length + 1}]`,
+                        verbose: nodeParams?.verbose || `${tabName}-[${filterPage[0].multipleNode.length + 1}]`,
                         node: nodeParams && nodeParams.node ? nodeParams?.node || <></> : ContentByRoute(route),
                         time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
                     }
@@ -508,7 +527,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     const time = new Date().getTime().toString()
                     const node: multipleNodeInfo = {
                         id: tabId,
-                        verbose: `${tabName}-[1]`,
+                        verbose: nodeParams?.verbose || `${tabName}-[1]`,
                         node: nodeParams && nodeParams.node ? nodeParams?.node || <></> : ContentByRoute(route),
                         time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
                     }
@@ -646,6 +665,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         const indexNode = pageCache[index].multipleNode.findIndex((ele) => ele.id === key)
         if (indexNode < 0) return
         pageCache[index].multipleNode[indexNode].verbose = verbose
+        // webFuzzer
+        if (tabType === "httpFuzzer") {
+            const currentTimeKey: string = pageCache[index].multipleNode[indexNode].time
+            const newFuzzerItem = {...fuzzerList.current.get(currentTimeKey)}
+            updateFuzzerList(currentTimeKey, {...newFuzzerItem, time: currentTimeKey, verbose})
+        }
         setPageCache([...pageCache])
     })
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
@@ -694,6 +719,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnterprise) {
+                setJudgeLicense && setJudgeLicense(true)
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
             } else {
@@ -771,7 +797,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         // ctrl + w 关闭tab页面
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-            if (pageCache.length === 0) return
+            if (pageCache.length === 0 || currentTabKey === Route.NewHome) return
 
             setLoading(true)
             removePage(`${currentTabKey}`)
@@ -788,7 +814,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const saveFuzzerList = debounce(() => {
         const historys: fuzzerInfoProp[] = []
         fuzzerList.current.forEach((value) => historys.push(value))
-        historys.sort((a, b) => +a.time - +b.time)
+        // historys.sort((a, b) => +a.time - +b.time)
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
@@ -806,6 +832,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     fuzzerList.current.set(time, {...item, time: time})
                     addTabPage(Route.HTTPFuzzer, {
                         time: time,
+                        verbose: item.verbose, // webFuzzer 保存的修改后的菜单二级tab名字
                         node: ContentByRoute(Route.HTTPFuzzer, undefined, {
                             isHttps: item.isHttps || false,
                             request: item.request || "",
@@ -822,8 +849,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    const addFuzzerList = (key: string, request?: string, isHttps?: boolean) => {
-        fuzzerList.current.set(key, {request, isHttps, time: key})
+    const addFuzzerList = (key: string, request?: string, isHttps?: boolean, verbose?: string) => {
+        fuzzerList.current.set(key, {request, isHttps, time: key, verbose})
     }
     const delFuzzerList = (type: number, key?: string) => {
         if (type === 1) fuzzerList.current.clear()
@@ -842,7 +869,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         saveFuzzerList()
     }
     useEffect(() => {
-        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => updateFuzzerList(res.key, JSON.parse(res.param)))
+        setPageCache([
+            {
+                verbose: "首页",
+                route: Route.NewHome,
+                singleNode: ContentByRoute(Route.NewHome),
+                multipleNode: []
+            }
+        ])
+        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
+            try {
+                updateFuzzerList(res.key, {...(fuzzerList.current.get(res.key) || {}), ...JSON.parse(res.param)})
+            } catch (error) {
+                failed("webFuzzer数据缓存失败：" + error)
+            }
+        })
         // 开发环境不展示fuzzer缓存
         ipcRenderer
             .invoke("is-dev")
@@ -930,7 +971,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             // 区分新建对比页面还是别的页面请求对比的情况
             ipcRenderer.invoke("created-data-compare")
         })
+        // if(getPageCache().length===0){
 
+        // }
         return () => {
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
@@ -1143,7 +1186,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache([])
+                setPageCache([
+                    {
+                        verbose: "首页",
+                        route: Route.NewHome,
+                        singleNode: ContentByRoute(Route.NewHome),
+                        multipleNode: []
+                    }
+                ])
+                setCurrentTabKey(Route.NewHome)
             }
         })
     })
@@ -1153,7 +1204,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                setPageCache(arr)
+                setPageCache([
+                    {
+                        verbose: "首页",
+                        route: Route.NewHome,
+                        singleNode: ContentByRoute(Route.NewHome),
+                        multipleNode: []
+                    },
+                    ...arr
+                ])
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })
@@ -1319,10 +1378,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 >
                                                                     <EditOutlined className='main-container-cion' />
                                                                 </Popover> */}
-                                                                <CloseOutlined
-                                                                    className='main-container-cion'
-                                                                    onClick={() => removePage(`${i.route}`)}
-                                                                />
+                                                                {i.verbose !== "首页" && (
+                                                                    <CloseOutlined
+                                                                        className='main-container-cion'
+                                                                        onClick={() => removePage(`${i.route}`)}
+                                                                    />
+                                                                )}
                                                             </Space>
                                                         }
                                                     >
@@ -1341,7 +1402,17 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             }}
                                                         >
                                                             {i.singleNode ? (
-                                                                i.singleNode
+                                                                <>
+                                                                    {i.verbose === "首页" ? (
+                                                                        currentTabKey === Route.NewHome ? (
+                                                                            i.singleNode
+                                                                        ) : (
+                                                                            <></>
+                                                                        )
+                                                                    ) : (
+                                                                        i.singleNode
+                                                                    )}
+                                                                </>
                                                             ) : (
                                                                 <MainTabs
                                                                     currentTabKey={currentTabKey}

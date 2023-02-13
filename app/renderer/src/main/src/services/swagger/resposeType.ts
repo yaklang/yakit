@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  */
 
- export declare namespace API {
+export declare namespace API {
   export interface YakitSearchData {
     value: string;
     count: number;
@@ -234,6 +234,19 @@
     id: number;
     script_name: string;
   }
+  export interface PluginTopSearchResponse {
+    data: PluginTopSearch[];
+  }
+  export interface PluginTopSearch {
+    member: string;
+    score: number;
+  }
+  export interface PluginIncreResponse {
+    day_incre_num: number;
+    yesterday_incre_num: number;
+    week_incre_num: number;
+    lastWeek_incre_num: number;
+  }
   export interface PluginGroupListResponse {
     data: PluginGroupList[];
   }
@@ -313,6 +326,10 @@
     tags?: string;
     user_id?: number;
     user_name?: string;
+    /**
+     * 当天 day, 本周 week
+     */
+    time_search?: string;
   }
   export interface Paging {
     pagemeta: PageMeta;
@@ -426,6 +443,10 @@
     recycle: boolean;
     user_name?: string;
     user_id?: number;
+    /**
+     * 当天 day, 本周 week
+     */
+    time_search?: string;
   }
   export interface GetPluginUnloggedWhere {
     keywords?: string;
@@ -433,6 +454,10 @@
     tags?: string;
     user_name?: string;
     user_id?: number;
+    /**
+     * 当天 day, 本周 week
+     */
+    time_search?: string;
   }
   export interface ExtractResponse {
     extract_content: string;

@@ -24,7 +24,7 @@ export interface ProjectDescription {
     DatabasePath: string
 }
 
-interface ProjectsResponse {
+export interface ProjectsResponse {
     Pagination: { Page: number, Limit: number },
     Projects: ProjectDescription[],
     Total: number
@@ -251,7 +251,7 @@ interface ExportProjectProp {
     onClose: () => any
 }
 
-interface ProjectIOProgress {
+export interface ProjectIOProgress {
     TargetPath: string
     Percent: number
     Verbose: string

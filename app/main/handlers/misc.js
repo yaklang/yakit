@@ -395,4 +395,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("PromotePermissionForUserPcap", async (e, params) => {
         return await asyncPromotePermissionForUserPcap(params)
     })
+
+    // asyncMigrateLegacyDatabase wrapper
+    const asyncMigrateLegacyDatabase = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().MigrateLegacyDatabase(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("MigrateLegacyDatabase", async (e, params) => {
+        return await asyncMigrateLegacyDatabase(params)
+    })
 }

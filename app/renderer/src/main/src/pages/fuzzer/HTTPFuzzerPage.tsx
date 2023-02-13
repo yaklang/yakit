@@ -76,6 +76,7 @@ import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
+import {editor} from "monaco-editor";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -139,7 +140,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: {Header: string; Value: string}[]
+    Headers: { Header: string; Value: string }[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -222,10 +223,10 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
     )
 }
 
-function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
+function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: {Url: string}) => {
+        .then((data: { Url: string }) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -428,7 +429,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
-                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
+                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -613,7 +614,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {}
+                } catch (error) {
+                }
             }, 500)
         )
     }
@@ -664,7 +666,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = rsp!.Reason
-        } catch (e) {}
+        } catch (e) {
+        }
         return (
             <HTTPPacketEditor
                 title={
@@ -684,7 +687,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             value={affixSearch}
                             placeholder={"搜索定位响应"}
                             suffixNode={
-                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined />} />
+                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined/>}/>
                             }
                             setValue={(value) => {
                                 setAffixSearch(value)
@@ -740,7 +743,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 extra={
                     <Space size={0}>
-                        {loading && <Spin size={"small"} spinning={loading} />}
+                        {loading && <Spin size={"small"} spinning={loading}/>}
                         {onlyOneResponse ? (
                             <Space size={0}>
                                 {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
@@ -757,7 +760,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             })
                                         }}
                                         type={"primary"}
-                                        icon={<ProfileOutlined />}
+                                        icon={<ProfileOutlined/>}
                                     />
                                     {/*    详情*/}
                                     {/*</Button>*/}
@@ -770,7 +773,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             setFailedFuzzer([])
                                         }}
                                         danger={true}
-                                        icon={<DeleteOutlined />}
+                                        icon={<DeleteOutlined/>}
                                     />
                                 </Space>
                             </Space>
@@ -844,80 +847,80 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
     })
 
-    useEffect(() => {
-        if (!props.request) {
-            return
-        }
-
-        setLoading(true)
-        getRemoteValue(ALLOW_MULTIPART_DATA_ALERT)
-            .then((e) => {
-                if (e === "1") {
-                    setLoading(false)
-                    return
-                }
-                ipcRenderer
-                    .invoke("IsMultipartFormDataRequest", {
-                        Request: StringToUint8Array(props.request || "", "utf8")
-                    })
-                    .then((e: {IsMultipartFormData: boolean}) => {
-                        if (e.IsMultipartFormData) {
-                            const notify = showModal({
-                                title: "潜在的数据包编码问题提示",
-                                content: (
-                                    <Space direction={"vertical"}>
-                                        <Space>
-                                            <Typography>
-                                                <Text>当前数据包包含一个</Text>
-                                                <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
-                                                <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
-                                            </Typography>
-                                        </Space>
-                                        <Typography>
-                                            <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
-                                        </Typography>
-                                        <Typography>
-                                            <Text>如果上传文件内容包含图片，将有可能导致</Text>
-                                            <Text mark={true}>PNG 格式的图片被异常编码，</Text>
-                                            <Text>破坏图片格式，导致</Text>
-                                            <Text mark={true}>图片马</Text>
-                                            <Text>上传失败</Text>
-                                        </Typography>
-                                        <br />
-                                        <Space>
-                                            <Typography>
-                                                <Text>如需要插入具体文件内容，可右键</Text>
-                                                <Text mark={true}>插入文件</Text>
-                                            </Typography>
-                                        </Space>
-                                        <br />
-                                        <Checkbox
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
-                                                    notify.destroy()
-                                                } else {
-                                                    setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
-                                                }
-                                            }}
-                                        >
-                                            一周内不提醒
-                                        </Checkbox>
-                                        <Button type={"primary"} onClick={() => notify.destroy()}>
-                                            我知道了
-                                        </Button>
-                                    </Space>
-                                ),
-                                width: "40%"
-                            })
-                        }
-                    })
-                    .finally(() => setLoading(false))
-            })
-            .catch((e) => {
-                setLoading(false)
-            })
-    }, [props.request])
+    // useEffect(() => {
+    //     if (!props.request) {
+    //         return
+    //     }
+    //
+    //     setLoading(true)
+    //     getRemoteValue(ALLOW_MULTIPART_DATA_ALERT)
+    //         .then((e) => {
+    //             if (e === "1") {
+    //                 setLoading(false)
+    //                 return
+    //             }
+    //             ipcRenderer
+    //                 .invoke("IsMultipartFormDataRequest", {
+    //                     Request: StringToUint8Array(props.request || "", "utf8")
+    //                 })
+    //                 .then((e: { IsMultipartFormData: boolean }) => {
+    //                     if (e.IsMultipartFormData) {
+    //                         const notify = showModal({
+    //                             title: "潜在的数据包编码问题提示",
+    //                             content: (
+    //                                 <Space direction={"vertical"}>
+    //                                     <Space>
+    //                                         <Typography>
+    //                                             <Text>当前数据包包含一个</Text>
+    //                                             <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
+    //                                             <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
+    //                                         </Typography>
+    //                                     </Space>
+    //                                     <Typography>
+    //                                         <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
+    //                                     </Typography>
+    //                                     <Typography>
+    //                                         <Text>如果上传文件内容包含图片，将有可能导致</Text>
+    //                                         <Text mark={true}>PNG 格式的图片被异常编码，</Text>
+    //                                         <Text>破坏图片格式，导致</Text>
+    //                                         <Text mark={true}>图片马</Text>
+    //                                         <Text>上传失败</Text>
+    //                                     </Typography>
+    //                                     <br/>
+    //                                     <Space>
+    //                                         <Typography>
+    //                                             <Text>如需要插入具体文件内容，可右键</Text>
+    //                                             <Text mark={true}>插入文件</Text>
+    //                                         </Typography>
+    //                                     </Space>
+    //                                     <br/>
+    //                                     <Checkbox
+    //                                         onChange={(e) => {
+    //                                             if (e.target.checked) {
+    //                                                 setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
+    //                                                 notify.destroy()
+    //                                             } else {
+    //                                                 setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
+    //                                             }
+    //                                         }}
+    //                                     >
+    //                                         一周内不提醒
+    //                                     </Checkbox>
+    //                                     <Button type={"primary"} onClick={() => notify.destroy()}>
+    //                                         我知道了
+    //                                     </Button>
+    //                                 </Space>
+    //                             ),
+    //                             width: "40%"
+    //                         })
+    //                     }
+    //                 })
+    //                 .finally(() => setLoading(false))
+    //         })
+    //         .catch((e) => {
+    //             setLoading(false)
+    //         })
+    // }, [props.request])
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
             isHttps,
@@ -964,7 +967,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: pageInt, Limit: 1}
             })
-            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
+            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
@@ -992,6 +995,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setCurrentPage(currentPage + 1)
         getList(currentPage + 1)
     })
+
+    useEffect(() => {
+        try {
+            if (!reqEditor) {
+                return
+            }
+            reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
+        }catch (e) {
+            failed("初始化 EOL CRLF 失败")
+        }
+    }, [reqEditor])
+
     return (
         <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <Row gutter={8} style={{marginBottom: 8}}>
@@ -1036,7 +1051,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             setValue={setAdvancedConfig}
                             size={"small"}
                         />
-                        <ShareData module='fuzzer' getShareContent={getShareContent} />
+                        <ShareData module='fuzzer' getShareContent={getShareContent}/>
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
@@ -1053,7 +1068,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <Button size={"small"} type={"link"} icon={<HistoryOutlined />}>
+                            <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}>
                                 历史
                             </Button>
                         </Popover>
@@ -1090,7 +1105,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                         {loading && (
                             <Space>
-                                <Spin size={"small"} />
+                                <Spin size={"small"}/>
                                 <div style={{color: "#3a8be3"}}>sending packets</div>
                             </Space>
                         )}
@@ -1505,7 +1520,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 refreshRequest()
                                                             }
                                                         })
-                                                        .finally(() => {})
+                                                        .finally(() => {
+                                                        })
                                                 }}
                                                 size={"small"}
                                             >
@@ -1660,7 +1676,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setUrlPacketShow(false)
                                 }
                             })
-                            .finally(() => {})
+                            .finally(() => {
+                            })
                     }}
                     size={"small"}
                 >

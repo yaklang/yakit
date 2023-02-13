@@ -27,7 +27,7 @@ import "./yakitSwitchAnimation.scss"
 
 const showExtraSize: string[] = ["large", "middle"]
 export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
-    const {size = "middle", showInnerText, showInnerIcon, className = "", wrapperClassName = ""} = props
+    const {size = "middle", showInnerText, showInnerIcon, className = "", wrapperClassName = "",...reset} = props
     let children = {}
     if (showInnerText && showExtraSize.findIndex((ele) => ele === size) !== -1) {
         children = {
@@ -69,7 +69,7 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
             )}
         >
             <Switch
-                {...props}
+                {...reset}
                 {...children}
                 size='default'
                 className={classNames(styles["yakit-switch-item"], {

@@ -24,4 +24,20 @@ module.exports = (win, getClient) => {
         // })
         return res
     })
+
+    ipcMain.handle("upload-project", async (event, params) => {
+        const {path} = params
+        // 创建数据流
+        const readerStream = fs.createReadStream(path)// 可以像使用同步接口一样使用它。
+        const formData = new FormData()
+        formData.append("projectFile", readerStream)
+        const res=httpApi(
+            "post",
+            "import/project",
+            formData,
+            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            false
+        )
+        return res
+    })
 }

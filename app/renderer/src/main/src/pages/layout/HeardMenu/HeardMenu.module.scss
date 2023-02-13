@@ -1,8 +1,51 @@
 .heard-menu-body {
     background-color: var(--yakit-card-background-color);
     border-bottom: 1px solid var(--yakit-border-color);
+    display: flex;
+    flex-direction: column;
+}
+.heard-menu-home{
+    width: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 
+.heard-menu-main{
+    flex: 1;
+}
+.heard-menu-main-no-expand{
+    display: flex;
+}
+.heard-menu-home-icon-box{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.heard-menu-home-small-icon{
+    width: 20px;
+    height: 24px;
+    background: #F0F1F3;
+    cursor: pointer;
+
+border-width: 1px 1px 1px 0px;
+border-style: solid;
+border-color: #EAECF3;
+border-radius: 0px 4px 4px 0px;
+
+}
+.heard-menu-home-title{
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    color: var(--yakit-header-color);
+    text-align: center;
+}
 .heard-menu {
     display: flex;
     font-size: 12px;
@@ -176,7 +219,9 @@
 .heard-menu-expand {
     padding-bottom: 4px;
 }
-
+.heard-menu-no-expand{
+    flex: 1;
+}
 .popover-content {
     :global {
         .ant-popover-inner-content {

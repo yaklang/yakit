@@ -70,7 +70,8 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
             <Dragger
                 {...restDragger}
                 className={`file-upload-dragger ${DraggerClassName || ""}`}
-                accept={restDragger.accept || "text/plain"}
+                // accept={restDragger.accept || "text/plain"}
+                accept={restDragger.accept || ""}
             >
                 <TextArea
                     {...restTextarea}
@@ -105,7 +106,8 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
                     <Dragger
                         {...restDragger}
                         className={`file-upload-dragger ${DraggerClassName || ""}`}
-                        accept={restDragger.accept || "text/plain"}
+                        // accept={restDragger.accept || "text/plain"}
+                        accept={restDragger.accept || ""}
                     >
                         <TextArea
                             {...restTextarea}

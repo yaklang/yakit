@@ -51,6 +51,10 @@ module.exports = (win, getClient) => {
         return app.getVersion()
     })
 
+    /** 以更新引擎但未关闭内存中的老版本引擎进程(mac) */
+    ipcMain.handle("kill-old-engine-process", (e, type) => {
+        win.webContents.send("kill-old-engine-process-callback", type)
+    })
     /** 激活 yaklang 或 yakit 的下载更新组件 */
     ipcMain.handle("receive-download-yaklang-or-yakit", (e, type) => {
         win.webContents.send("activate-download-yaklang-or-yakit", type)
@@ -59,8 +63,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("download-update-wait", (e, type) => {
         win.webContents.send("download-update-wait-callback", type)
     })
-    /** 更新成功后重启并连接 yaklang 引擎 */
-    ipcMain.handle("update-yaklang-reconnect", (e, version) => {
-        win.webContents.send("update-yaklang-reconnect-callback", version)
+    /** 连接引擎的指令 */
+    ipcMain.handle("engine-ready-link", () => {
+        win.webContents.send("engine-ready-link-callback")
     })
 }

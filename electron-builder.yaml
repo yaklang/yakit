@@ -32,7 +32,7 @@ linux:
 
 win:
   artifactName: ${productName}-${version}-windows-amd64.${ext}
-  requestedExecutionLevel: requireAdministrator
+  # requestedExecutionLevel: requireAdministrator
   target:
     - target: nsis
       arch:
