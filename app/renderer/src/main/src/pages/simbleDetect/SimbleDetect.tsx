@@ -86,7 +86,11 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                             rows: 1,
                             placeholder: "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
                         }}
-                        otherHelpNode={<span onClick={()=>{}} className={styles["help-hint-title"]}>未完成任务</span>}
+                        otherHelpNode={
+                            <span onClick={() => {}} className={styles["help-hint-title"]}>
+                                未完成任务
+                            </span>
+                        }
                         suffixNode={
                             loading ? (
                                 <Button type='primary' danger onClick={(e) => {}}>
@@ -114,40 +118,40 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     const [tableContentHeight, setTableContentHeight] = useState<number>(0)
     return (
         <div className={styles["simble-detect-table"]}>
-            <div className='result-notice-body'>
-                <div className='notice-body'>
-                    <div className='notice-body-header notice-font-in-progress'>执行中状态</div>
+            <div className={styles["result-notice-body"]}>
+                <div className={styles["notice-body"]}>
+                    <div className={styles["notice-body-header notice-font-in-progress"]}>执行中状态</div>
                     {/* <div className="notice-body-counter">{progressRunning}进程 / {scanTaskExecutingCount}任务</div> */}
                 </div>
-                <Divider type='vertical' className='notice-divider' />
-                <div className='notice-body'>
-                    <div className='notice-body-header notice-font-completed'>已结束/总进程</div>
+                <Divider type='vertical' className={styles["notice-divider"]} />
+                <div className={styles["notice-body"]}>
+                    <div className={styles["notice-body-header notice-font-completed"]}>已结束/总进程</div>
                     {/* <div className="notice-body-counter">{progressFinished}/{progressTotal}</div> */}
                 </div>
-                <Divider type='vertical' className='notice-divider' />
-                <div className='notice-body'>
-                    <div className='notice-body-header notice-font-vuln'>命中风险/漏洞</div>
+                <Divider type='vertical' className={styles["notice-divider"]} />
+                <div className={styles["notice-body"]}>
+                    <div className={styles["notice-body-header notice-font-vuln"]}>命中风险/漏洞</div>
                     {/* <div className="notice-body-counter">{jsonRisks.length}</div> */}
-                </div>
-
-                <div className='result-table-body'>
-                    <div style={{width: "100%", height: "100%"}}>
-                        <ReactResizeDetector
-                            onResize={(width, height) => {
-                                if (!width || !height) return
-                                setTableContentHeight(height - 4)
-                            }}
-                            handleWidth={true}
-                            handleHeight={true}
-                            refreshMode={"debounce"}
-                            refreshRate={50}
-                        />
-                        <RisksViewer risks={[]} tableContentHeight={tableContentHeight} />
-                    </div>
                 </div>
             </div>
 
             <Divider style={{margin: 4}} />
+
+            <div className={styles["result-table-body"]}>
+                <div style={{width: "100%", height: "100%"}}>
+                    <ReactResizeDetector
+                        onResize={(width, height) => {
+                            if (!width || !height) return
+                            setTableContentHeight(height - 4)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
+                    <RisksViewer risks={[]} tableContentHeight={tableContentHeight} />
+                </div>
+            </div>
         </div>
     )
 }

@@ -6,5 +6,47 @@
     }
 }
 .simble-detect-table{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .result-table-body{
+        flex: 1;
+        overflow: hidden;
+    }
+    .result-notice-body {
+        height: 70px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .result-notice-body .notice-body {
+        height: 60px;
+        padding: 2px;
+    }
+    .result-notice-body .notice-body .notice-body-header {
+        height: 38px;
+        line-height: 38px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    .result-notice-body .notice-body .notice-font-in-progress {
+        color: #ffd666;
+    }
+    .result-notice-body .notice-body .notice-font-completed {
+        color: #bae637;
+    }
+    .result-notice-body .notice-body .notice-font-vuln {
+        color: #a8071a;
+    }
     
+    .result-notice-body .notice-body .notice-body-counter {
+        height: 18px;
+        line-height: 18px;
+        text-align: center;
+        font-weight: 500;
+    }
+    .result-notice-body .notice-divider{
+        height: 100%;
+        margin: 4px;
+    }
 }
