@@ -143,6 +143,22 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryYakScriptLocalAndUser", async (e, params) => {
         return await asyncQueryYakScriptLocalAndUser(params)
     })
+ 
+    const asyncQueryYakScriptByOnlineGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptByOnlineGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //通过OnlineGroup查询
+    ipcMain.handle("QueryYakScriptByOnlineGroup", async (e, params) => {
+        return await asyncQueryYakScriptByOnlineGroup(params)
+    })
 
     const asyncGetYakScriptTagsAndType = (params) => {
         return new Promise((resolve, reject) => {

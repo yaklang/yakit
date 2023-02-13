@@ -69,7 +69,7 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
     return result
 }
 
-const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string, fromRecover?: boolean, baseProgress?: number) => {
+export const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string, fromRecover?: boolean, baseProgress?: number) => {
     const params = {
         Target: target.target,
         Proxy: target.proxy,
@@ -218,7 +218,7 @@ interface BatchExecutorResultByFilterProp {
     recoverUid?: string
 }
 
-interface TaskResultLog extends ExecResultLog {
+export interface TaskResultLog extends ExecResultLog {
     key: number
 }
 
