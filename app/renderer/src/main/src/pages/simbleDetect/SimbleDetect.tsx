@@ -83,7 +83,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                             isBubbing: true,
                             setValue: (Targets) => {},
                             value: "",
-                            rows: 1,
+                            rows: 2,
                             placeholder: "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
                         }}
                         otherHelpNode={
@@ -120,17 +120,17 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         <div className={styles["simble-detect-table"]}>
             <div className={styles["result-notice-body"]}>
                 <div className={styles["notice-body"]}>
-                    <div className={styles["notice-body-header notice-font-in-progress"]}>执行中状态</div>
+                    <div className={classNames(styles["notice-body-header"],styles["notice-font-in-progress"])}>执行中状态</div>
                     {/* <div className="notice-body-counter">{progressRunning}进程 / {scanTaskExecutingCount}任务</div> */}
                 </div>
                 <Divider type='vertical' className={styles["notice-divider"]} />
                 <div className={styles["notice-body"]}>
-                    <div className={styles["notice-body-header notice-font-completed"]}>已结束/总进程</div>
+                    <div className={classNames(styles["notice-body-header"],styles["notice-font-completed"])}>已结束/总进程</div>
                     {/* <div className="notice-body-counter">{progressFinished}/{progressTotal}</div> */}
                 </div>
                 <Divider type='vertical' className={styles["notice-divider"]} />
                 <div className={styles["notice-body"]}>
-                    <div className={styles["notice-body-header notice-font-vuln"]}>命中风险/漏洞</div>
+                    <div className={classNames(styles["notice-body-header"],styles["notice-font-vuln"])}>命中风险/漏洞</div>
                     {/* <div className="notice-body-counter">{jsonRisks.length}</div> */}
                 </div>
             </div>
