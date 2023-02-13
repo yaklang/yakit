@@ -2758,6 +2758,149 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     )
 }
 
+export const PluginGroup = (props) => {
+    const {size} = props
+    const onChange = (checkedValues) => {
+        console.log('checked = ', checkedValues);
+    }
+    const menuData = [
+        {
+            title: "加入分组",
+            number: 10,
+            onClickBatch: () => {
+                showModal({
+                    width: "40%",
+                    content: (
+                        <div>
+                            <div>加入分组</div>
+                            <div style={{fontSize:12,color:"gray"}}>可选择加入多个分组</div>
+                            <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
+                                    <div style={{display:"flex",flexDirection:"row",marginTop:10}}>
+                                        <div style={{paddingRight:16}}>扫描模式</div>
+                                        <div style={{flex:1}}>
+                                          <Row>
+                                        <Col span={8}>
+                                            <Checkbox value="B1">B</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="B2">B</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="B3">B</Checkbox>
+                                        </Col>
+                                        </Row>  
+                                        </div>
+                                        
+                                    </div>
+                                    <div style={{display:"flex",flexDirection:"row",marginTop:10}}>
+                            <div style={{paddingRight:16}}>功能类型</div>
+                                        <Row>
+                                        <Col span={8}>
+                                            <Checkbox value="A">B</Checkbox>
+                                        </Col>
+                                        </Row>
+                                    </div>
+                                
+                                
+                            </Checkbox.Group>
+                            <div style={{textAlign:"center",marginTop:10}}>
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                    type="primary"
+                                >
+                                    加入
+                                </Button>
+                            </div>
+                            
+                        </div>
+                    )
+                })
+            }
+        },
+        {
+            title: "移出分组",
+            number: 10,
+            onClickBatch: () => {
+                showModal({
+                    width: "40%",
+                    content: (
+                        <div>
+                            <div>移出分组</div>
+                            <div style={{fontSize:12,color:"gray",marginBottom:10}}>选择要移出的分组，可多选</div>
+                            <div style={{position:"relative",margin:"0 20px 10px 0",padding:"10px 20px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
+                                基础扫描
+                                <SelectIcon
+                    //  @ts-ignore
+                    className={`icon-select  ${
+                        true && "icon-select-active"
+                    }`}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                     
+                    }}
+                />
+                            </div>
+
+                            <div style={{textAlign:"center",marginTop:10}}>
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                    type="primary"
+                                >
+                                    移出
+                                </Button>
+                            </div>
+                        </div>
+                    )
+                })
+            }
+        },
+    ]
+    return(
+        <div style={{}}>
+        <Popover
+                            overlayClassName={style["http-history-table-drop-down-popover"]}
+                            content={
+                                <Menu className={style["http-history-table-drop-down-batch"]}>
+                                    {menuData.map((m) => {
+                                        return (
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    m.onClickBatch()
+                                                }}
+                                                key={m.title}
+                                            >
+                                                {m.title}
+                                            </Menu.Item>
+                                        )
+                                    })}
+                                </Menu>
+                            }
+                            trigger='click'
+                            placement='bottomLeft'
+                        >
+                            {size === "small" ? (
+                                <SettingOutlined className='operation-icon' />
+                            ) : (
+                                <Button
+                                    style={{margin:"0 12px 0 0"}}
+                                    size='small'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    插件分组
+                                    <ChevronDownIcon style={{color: "#85899E"}} />
+                                </Button>
+                            )}
+                        </Popover>
+                        </div>
+    )
+}
+
 interface AddAllPluginProps {
     setListLoading: (a: boolean) => void
     selectedRowKeysRecord: API.YakitPluginDetail[]
@@ -3340,6 +3483,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     </YakitTag>}
                 </Col>
                 <Col span={8} className='col-flex-end'>
+                    {IsEnterprise&&<PluginGroup size={size}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
