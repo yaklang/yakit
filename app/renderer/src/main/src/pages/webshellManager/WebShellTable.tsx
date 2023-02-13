@@ -260,7 +260,7 @@ const NewShell: React.FC<NewShellProp> = (props) => {
         <InputItem label={`加密模式`} value={enc_mode} setValue={setEncMode}/>
 
         <Form.Item colon={false} label={" "}>
-            <Button type="primary" htmlType="submit"> 导入当前项目 </Button>
+            <Button type="primary" htmlType="submit"> 新增 </Button>
         </Form.Item>
     </Form>
 };
@@ -799,14 +799,17 @@ export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
                                                 )
                                             })
                                         } else if (key === "ping_shell") {
-                                            console.log("xxxx")
                                             ipcRenderer.invoke("Ping", {
                                                 Id: record.Id
                                             }).then(e => {
                                                 console.log(e)
                                                 success(e.Data)
+                                            }).catch((e: any) => {
+                                                console.log(e.message)
+                                                failed(e.message)
                                             })
                                         }
+
                                     }
                                 })
                             }

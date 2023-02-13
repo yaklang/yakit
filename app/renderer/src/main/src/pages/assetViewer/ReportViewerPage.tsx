@@ -126,7 +126,8 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
 
     return (
         <AutoCard
-            title={<Space>报告列表</Space>}
+            title={<Space>
+                报告列表</Space>}
             size={"small"}
             loading={loading}
             bordered={false}
