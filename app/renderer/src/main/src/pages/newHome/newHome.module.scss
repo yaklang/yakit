@@ -1,0 +1,258 @@
+.new-home-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    // overflow: auto;
+    min-height:700px;
+}
+.home-top-block {
+    flex: 4;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+.home-bottom-block {
+    flex: 3;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+.top-small-block {
+    flex: 1;
+    padding: 16px;
+}
+.top-big-block {
+    flex: 1.27;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.top-in {
+    flex: 1;
+    padding: 16px;
+}
+.bottom-in {
+    flex: 1;
+    padding: 16px;
+}
+.bottom-big-block {
+    flex: 3;
+    padding: 16px;
+}
+.bottom-small-block {
+    flex: 2;
+    padding: 16px;
+}
+.home-page-title {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    color: #31343f;
+}
+.border-right-box {
+    border-right: 1px solid #eaecf3;
+}
+.border-bottom-box {
+    border-bottom: 1px solid #eaecf3;
+}
+.icon-box {
+    display: flex;
+    justify-content: space-between;
+    height: 32px;
+}
+.route-item {
+    padding: 16px;
+    border-radius: 4px;
+    height: 100%;
+}
+.route-item-active{
+    cursor: pointer;
+}
+.route-item-active:hover {
+    background: rgba(242, 139, 68, 0.06);
+    .right-arrow {
+        color: #f28b44;
+    }
+}
+.control-opacity{
+    opacity: .3;
+}
+.right-arrow {
+    font-size: 12px;
+    color: #b4bbca;
+    position: relative;
+    top: 8px;
+}
+.right-arrow-text{
+    font-size: 12px;
+    color: #F28B44;
+    cursor: pointer;
+}
+.item-label {
+    margin-top: 8px;
+
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #31343f;
+}
+.item-describe {
+    margin-top: 8px;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: justify;
+    color: #85899e;
+}
+.list-box {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.list-content {
+    flex: 1;
+    position: relative;
+}
+.set-ant-row{
+    flex-flow: column;
+}
+.list-content-col2 {
+    height: 50%;
+}
+.list-content-col3 {
+    height: 33.33%;
+}
+.menu-icon::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 14px;
+    left: 26px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 182, 96, 0.2);
+    backdrop-filter: blur(2px);
+}
+.plug-in-main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.plug-in-shop {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0 16px;
+}
+.show-top-box {
+    flex: 2;
+    border-bottom: 1px solid rgb(234, 236, 243);
+    position: relative;
+}
+.add-count-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: 100%;
+}
+.common-count {
+    padding-left: 15px;
+    border-radius: 2px;
+}
+.common-count:hover{
+    background: #F0F1F3;
+}
+.keep-border-left{
+    border-left: 2px solid #B4BBCA;
+}
+.add-border-left{
+    border-left: 2px solid #f4736b;
+}
+.reduce-border-left{
+    border-left: 2px solid rgb(86, 201, 145);
+}
+.add-title {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #31343f;
+}
+.add-content {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 32px;
+    color: #31343f;
+}
+.add-box-show {
+    width: 30%;
+    height: 100%;
+    display: inline-block;
+    position: absolute;
+    left: 0px;
+}
+.add-box-hidden{
+    width: 0%;
+    display: none;
+}
+.chart-box-show {
+    width: 70%;
+    height: 100%;
+    display: inline-block;
+    position: absolute;
+    right: 0px;
+}
+.chart-box-hidden{
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+    position: absolute;
+    right: 0px;
+}
+.show-bottom-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+.label-item {
+    display: inline-block;
+    margin-top: 8px;
+    margin-right: 8px;
+    padding: 4px 8px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #85899e;
+    background: #f8f8f8;
+    border: 1px solid #eaecf3;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.label-item:hover {
+    background: rgba(242, 139, 68, 0.06);
+    border: 1px solid #fbc6a1;
+    border-radius: 4px;
+    color: #F28B44;
+}
+.bottom-box-title {
+    margin-top: 16px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #31343f;
+}
+.label-box {
+    flex: 1;
+}
+.echarts-box{
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+}
+.echarts-box-show{
+    opacity: 1;
+}

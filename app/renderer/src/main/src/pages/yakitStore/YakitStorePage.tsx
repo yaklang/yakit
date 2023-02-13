@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, memo, ReactNode} from "react"
+import React, {useEffect, useState, useRef, memo, ReactNode, useLayoutEffect} from "react"
 import {
     Alert,
     Button,
@@ -54,9 +54,9 @@ import {failed, success, warn, info} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
 import {PluginOperator} from "./PluginOperator"
-import {YakScriptCreatorForm} from "../invoker/YakScriptCreator"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoCard} from "../../components/AutoCard"
-import {UserInfoProps, useStore} from "@/store"
+import {UserInfoProps, useStore,YakitStoreParams} from "@/store"
 import "./YakitStorePage.scss"
 import {getLocalValue, setLocalValue} from "../../utils/kv"
 import {
@@ -136,7 +136,7 @@ interface GetYakScriptTagsAndTypeResponse {
     Tag: TagsAndType[]
 }
 
-interface PluginSearchStatisticsRequest {
+export interface PluginSearchStatisticsRequest {
     bind_me: boolean
 }
 
@@ -153,7 +153,8 @@ export const defQueryOnline: SearchPluginOnlineRequest = {
     is_private: "",
     tags: "",
     recycle: false,
-    user_id: 0
+    user_id: 0,
+    time_search:""
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
@@ -194,14 +195,53 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     const [userPlugin, setUserPlugin] = useState<API.YakitPluginDetail>()
     const [fullScreen, setFullScreen] = useState<boolean>(false)
-    const [isRefList, setIsRefList] = useState(false)
+    const [isRefList, setIsRefList,getIsRefList] = useGetState(false)
 
     // 监听是否点击编辑插件 用于控制插件仓库是否刷新
     const [isEdit, setMonitorEdit] = useState<boolean>(false)
     // 全局登录状态
     const {userInfo} = useStore()
+    // 插件仓库参数及页面状态
+    const {storeParams, setYakitStoreParams} = YakitStoreParams()
+
+    const [publicKeyword, setPublicKeyword,getPublicKeyword] = useGetState<string>(storeParams.keywords)
+
+    const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
+    // 统计查询
+    const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
+    const [statisticsQueryOnline, setStatisticsQueryOnline,getStatisticsQueryOnline] = useGetState<SearchPluginOnlineRequest>({...defQueryOnline,keywords:storeParams.keywords,plugin_type:storeParams.plugin_type,time_search:storeParams.time_search})
+    const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
+    // 统计数据
+    const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
+    const [statisticsDataOnlineOrUser, setStatisticsDataOnlineOrUser] = useState<API.YakitSearch>()
+    const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
+    const [statisticsIsNull, setStatisticsIsNull] = useState<boolean>(false)
+    const [typeStatistics, setTypeStatistics] = useState<string[]>([])
+    // 是否第一次渲染页面 
+    const isFirstRendergraphPage = useRef<boolean>(true)
+    const paramsParamsOperation = (res) => {
+        if(res){
+            setPlugSource("online")
+            if(res.keywords&&res.keywords.length>0){
+                setPublicKeyword(res.keywords)
+                setStatisticsQueryOnline({...defQueryOnline,keywords:res.keywords,plugin_type:typeOnline,time_search:""})
+            }else if(res.plugin_type){
+                setPublicKeyword("")
+                setStatisticsQueryOnline({...defQueryOnline,plugin_type:res.plugin_type,keywords:"",time_search:""}) 
+            }else if(res.time_search){
+                setPublicKeyword("")
+                setStatisticsQueryOnline({...defQueryOnline,plugin_type:typeOnline,keywords:"",time_search:res.time_search}) 
+            }
+        }
+    }
+
+    // 参数动态更改
     useEffect(() => {
-        ipcRenderer
+        if(storeParams.keywords.length>0||storeParams.plugin_type!==typeOnline||storeParams.time_search.length>0){
+            setPlugSource("online")
+        }
+        else{
+            ipcRenderer
             .invoke("fetch-local-cache", userInitUse)
             .then((value: boolean) => {
                 if (value) {
@@ -213,11 +253,27 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             })
             .catch(() => {})
             .finally(() => {})
-    }, [])
-    useEffect(() => {
-        if (!isEdit) {
-            onRefList(false)
         }
+        setYakitStoreParams({...storeParams, isShowYakitStorePage:true})
+        ipcRenderer.on("get-yakit-store-params", (e, res) => {
+            paramsParamsOperation(res)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("get-yakit-store-params")
+            setYakitStoreParams({
+                keywords: "",
+                time_search:"",
+                plugin_type:typeOnline,
+                isShowYakitStorePage:false,
+            })
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!isEdit&&!isFirstRendergraphPage.current) {
+            onRefList()
+        }
+        isFirstRendergraphPage.current = false
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn((clearFilter = true) => {
         if(clearFilter){
@@ -235,7 +291,6 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             setIsRefList(!isRefList)
         }, 200)
     })
-    const [publicKeyword, setPublicKeyword] = useState<string>("")
     const onFullScreen = useMemoizedFn(() => {
         setFullScreen(!fullScreen)
     })
@@ -344,17 +399,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setIsFull(!(script || userPlugin || plugin))
     }, [script, userPlugin, plugin])
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-    const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
-    // 统计查询
-    const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
-    const [statisticsQueryOnline, setStatisticsQueryOnline] = useState<SearchPluginOnlineRequest>(defQueryOnline)
-    const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
-    // 统计数据
-    const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
-    const [statisticsDataOnlineOrUser, setStatisticsDataOnlineOrUser] = useState<API.YakitSearch>()
-    const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
-    const [statisticsIsNull, setStatisticsIsNull] = useState<boolean>(false)
-    const [typeStatistics, setTypeStatistics] = useState<string[]>([])
+   
     useEffect(() => {
         if (plugSource === "user" && !userInfo.isLogin) {
             setIsShowFilter(true)
@@ -666,14 +711,14 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                             <YakModuleOnline
                                 isShowFilter={isShowFilter}
                                 setStatisticsQueryOnline={setStatisticsQueryOnline}
-                                statisticsQueryOnline={statisticsQueryOnline}
+                                statisticsQueryOnline={getStatisticsQueryOnline()}
                                 numberOnline={numberOnline}
                                 setNumberOnline={setNumberOnline}
                                 size={isFull ? "middle" : "small"}
                                 plugin={plugin}
                                 setPlugin={onSetPluginAndGetLocal}
                                 userInfo={userInfo}
-                                publicKeyword={publicKeyword}
+                                publicKeyword={getPublicKeyword()}
                                 isRefList={isRefList}
                                 deletePluginRecordOnline={deletePluginRecordOnline}
                                 setListLoading={setListLoading}
@@ -2307,7 +2352,7 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         </div>
     )
 }
-const PluginType = {
+export const PluginType = {
     yak: "YAK 插件",
     mitm: "MITM 插件",
     "packet-hack": "数据包扫描",
@@ -2732,6 +2777,7 @@ interface DownloadOnlinePluginByTokenRequest {
     IsPrivate?: string
     UserName?: string
     UserId?: number
+    TimeSearch?: string
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
@@ -2781,7 +2827,8 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     Status: query?.status,
                     IsPrivate: query?.is_private,
                     UserId: query?.user_id,
-                    UserName: query?.user_name
+                    UserName: query?.user_name,
+                    TimeSearch:query?.time_search
                 }
             }
 
@@ -3278,6 +3325,12 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             </div>
                         </div>
                     )}
+                    {statisticsQueryOnline.time_search&&statisticsQueryOnline.time_search?.length>0&&
+                    <YakitTag closable color='blue' onClose={()=>{
+                        setStatisticsQueryOnline({...statisticsQueryOnline,time_search:""})
+                    }}>
+                        {statisticsQueryOnline.time_search==="week"?"本周新增":"今日新增"}
+                    </YakitTag>}
                 </Col>
                 <Col span={8} className='col-flex-end'>
                     {isShowFilter && (

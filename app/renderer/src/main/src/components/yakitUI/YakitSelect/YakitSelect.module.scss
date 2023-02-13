@@ -83,15 +83,34 @@
             color: var(--select-primary-font-color);
         }
 
-        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            font-weight: 400;
-            background-color: var(--select-background-color);
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+            background-color: transparent;
         }
 
         .ant-select-item {
             border-radius: 4px;
             padding: 4px 8px;
+
+            &:hover {
+                background-color: #f5f5f5;
+            }
         }
+
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+            font-weight: 400;
+            background-color: var(--select-background-color);
+        }
+
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+            font-weight: 400;
+            background-color: var(--select-background-color);
+        }
+
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+            font-weight: 400;
+            background-color: var(--select-background-color);
+        }
+
     }
 }
 

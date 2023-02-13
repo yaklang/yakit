@@ -60,8 +60,8 @@ export interface TableVirtualResizeProps<T> {
     query?: object
     onSetCurrentRow?: (record: T) => void
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
-    enableDragSort?:boolean
-    onMoveRowEnd?:()=>void
+    enableDragSort?: boolean
+    onMoveRowEnd?: () => void
 }
 
 export interface SortProps {
@@ -87,7 +87,8 @@ export interface SortProps {
  * @property {SorterProps} sorterProps：表格排序配置 
  * @property {boolean} enableDrag：表格排序配置 
  * @property {string} tip :提示 
- * @property {ReactNode} extra :右边 
+ * @property {ReactNode} beforeIconExtra :在排序/搜索icon前 
+ * @property {ReactNode} afterIconExtra :在排序/搜索icon前 
  */
 export interface ColumnsTypeProps {
     title: string
@@ -102,13 +103,15 @@ export interface ColumnsTypeProps {
     /** @access private */
     right?: number // 外面不需要传，不接收，紧作为固定列使用
     /** @access private 是否有默认宽度*/
-    isDefWidth?:boolean
+    isDefWidth?: boolean
     render?: (text, record, index) => ReactNode
     filterProps?: FilterProps
     sorterProps?: SorterProps
     enableDrag?: boolean
     tip?: string
-    extra?: ReactNode
+    // extra?: ReactNode
+    beforeIconExtra?: ReactNode
+    afterIconExtra?: ReactNode
 }
 
 interface FilterSearchInputProps extends SearchProps {

@@ -65,4 +65,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("open-customize-menu", (e, params) => {
         win.webContents.send("fetch-open-customize-menu", params)
     })
+    /** 顶部菜单拖拽开启通信 */
+    ipcMain.handle("update-yakit-header-title-drop", (e, params) => {
+        win.webContents.send("fetch-yakit-header-title-drop", params)
+    })
 }

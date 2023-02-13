@@ -112,7 +112,7 @@ import {WebShellPage} from "@/pages/webshellManager/WebShellPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
-
+const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 export enum Route {
     MITM = "mitm",
     YakScript = "yakScript",
@@ -190,7 +190,10 @@ export enum Route {
     TrustListPage = "trust-list-admin-page", // 信任用户管理
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
-    AttachEngineCombinedOutput = "attach-engine-combined-output"
+    AttachEngineCombinedOutput = "attach-engine-combined-output",
+
+    // 首页
+    NewHome = "new-home"
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -211,6 +214,8 @@ export function RouteNameToVerboseName(r: string) {
             return "Payload"
         case "yakScript":
             return "Yak Runner"
+        case "httpFuzzer":
+            return "Web Fuzzer"
         default:
             return r
     }
@@ -344,6 +349,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     shareContent={params?.shareContent}
                 />
             )
+        case Route.NewHome:
+            return <NewHome />
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest}/>
         case Route.Codec:
@@ -438,7 +445,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
 export const DefaultRouteMenuData: MenuDataProps[] = [
     {
         id: "1",
-        label: "手工渗测",
+        label: "手工渗透",
         subMenuData: [
             {
                 id: "1-1",
@@ -709,5 +716,60 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 />
             },
         ]
+    }
+]
+
+/**
+ * @description: 隐藏的菜单
+ */
+export const HiddenMenuData: MenuDataProps[] = [
+    {
+        id: "Route.BatchExecutorRecover",
+        key: Route.BatchExecutorRecover,
+        label: "继续任务：批量执行插件",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.AccountAdminPage",
+        key: Route.AccountAdminPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.RoleAdminPage",
+        key: Route.RoleAdminPage,
+        label: "角色管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.LicenseAdminPage",
+        key: Route.LicenseAdminPage,
+        label: "License管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.TrustListPage",
+        key: Route.TrustListPage,
+        label: "用户管理",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.PlugInAdminPage",
+        key: Route.PlugInAdminPage,
+        label: "插件权限",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.NewHome",
+        key: Route.NewHome,
+        label: "首页",
+        disabled: true,
+        hidden: true
     }
 ]
