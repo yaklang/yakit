@@ -556,7 +556,7 @@ export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
             render: (_, i: WebShell) => <Tag>{i.CreatedAt > 0 ? formatTimestamp(i.CreatedAt) : "-"}</Tag>
         },
         {
-            title: "存活",
+            title: "是否存活",
             dataIndex: "State",
             render: (_, i: WebShell) => i.State ? "✅" :
                 "❌",
