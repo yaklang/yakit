@@ -2795,6 +2795,7 @@ export const PluginGroup = (props) => {
     const onChange = (checkedValues) => {
         console.log('checked = ', checkedValues);
     }
+    const typeList = ["基础扫描","深度扫描","弱口令","漏洞扫描","合规检测"]
     const menuData = [
         {
             title: "加入分组",
@@ -2812,13 +2813,10 @@ export const PluginGroup = (props) => {
                                         <div style={{flex:1}}>
                                           <Row>
                                         <Col span={8}>
-                                            <Checkbox value="B1">B</Checkbox>
+                                            <Checkbox value="基础扫描">基础扫描</Checkbox>
                                         </Col>
                                         <Col span={8}>
-                                            <Checkbox value="B2">B</Checkbox>
-                                        </Col>
-                                        <Col span={8}>
-                                            <Checkbox value="B3">B</Checkbox>
+                                            <Checkbox value="深度扫描">深度扫描</Checkbox>
                                         </Col>
                                         </Row>  
                                         </div>
@@ -2826,11 +2824,19 @@ export const PluginGroup = (props) => {
                                     </div>
                                     <div style={{display:"flex",flexDirection:"row",marginTop:10}}>
                             <div style={{paddingRight:16}}>功能类型</div>
+                            <div style={{flex:1}}>
                                         <Row>
                                         <Col span={8}>
-                                            <Checkbox value="A">B</Checkbox>
+                                            <Checkbox value="弱口令">弱口令</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="漏洞扫描">漏洞扫描</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="合规检测">合规检测</Checkbox>
                                         </Col>
                                         </Row>
+                                        </div>
                                     </div>
                                 
                                 
@@ -2861,8 +2867,8 @@ export const PluginGroup = (props) => {
                         <div>
                             <div>移出分组</div>
                             <div style={{fontSize:12,color:"gray",marginBottom:10}}>选择要移出的分组，可多选</div>
-                            <div style={{position:"relative",margin:"0 20px 10px 0",padding:"10px 20px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
-                                基础扫描
+                            {typeList.map((item)=><div style={{position:"relative",margin:"0 20px 10px 0",padding:"10px 20px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
+                                {item}
                                 <SelectIcon
                     //  @ts-ignore
                     className={`icon-select  ${
@@ -2873,7 +2879,7 @@ export const PluginGroup = (props) => {
                      
                     }}
                 />
-                            </div>
+                            </div>)}
 
                             <div style={{textAlign:"center",marginTop:10}}>
                                 <Button
