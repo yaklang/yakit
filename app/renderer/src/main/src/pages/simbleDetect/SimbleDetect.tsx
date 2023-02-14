@@ -4,7 +4,7 @@ import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
 import classNames from "classnames"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, warn} from "@/utils/notification"
 import ReactResizeDetector from "react-resize-detector"
 import {RisksViewer} from "@/pages/risks/RisksViewer"
 import {randomString} from "@/utils/randomUtil"
@@ -18,6 +18,8 @@ import {ExecBatchYakScriptResult} from "../invoker/batch/YakBatchExecutorLegacy"
 import {showUnfinishedBatchTaskList, UnfinishedBatchTask} from "../invoker/batch/UnfinishedBatchTaskList"
 import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks"
 import {Risk} from "../risks/schema"
+import {showDrawer, showModal} from "../../utils/showModal"
+import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
 interface Option {
@@ -62,16 +64,79 @@ interface SimbleDetectFormProps {
     setExecuting: (v: boolean) => void
     token: string
     setToken: (v: string) => void
+    sendTarget?: string
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
-    const {setPercent, setExecuting, token, setToken} = props
+    const {setPercent, setExecuting, token, setToken, sendTarget} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
 
     const [target, setTarget] = useState<TargetRequest>(defTargetRequest)
-    const onFinish = () => {
-        setPercent(0)
 
+    const [params, setParams, getParams] = useGetState<PortScanParams>({
+        Ports: defaultPorts,
+        Mode: "fingerprint",
+        Targets: sendTarget ? JSON.parse(sendTarget || "[]").join(",") : "",
+        Active: true,
+        Concurrent: 50,
+        FingerprintMode: "all",
+        Proto: ["tcp"],
+        SaveClosedPorts: false,
+        SaveToDB: true,
+        Proxy: [],
+        ProbeTimeout: 7,
+        ScriptNames: [],
+        ProbeMax: 100,
+        EnableCClassScan: false,
+        HostAlivePorts: "22,80,443",
+        EnableBasicCrawler: true,
+        BasicCrawlerRequestMax: 5,
+        SynConcurrent: 1000
+    })
+
+    // 指纹服务是否已经设置
+    const [alreadySet, setAlreadySet] = useState<boolean>(false)
+
+    const onFinish = useMemoizedFn((values) => {
+        console.log("value", values)
+        const {scan_type} = values
+        const scan_deep = values.scan_deep || "slow"
+        if (!Array.isArray(scan_type)||scan_type.length===0) {
+            warn("请选择扫描模式")
+            return
+        }
+        const OnlineGroup:string = scan_type.map((item)=>item[item.length-1]).join(",")
+        console.log("OnlineGroup",OnlineGroup)
+        switch (scan_deep) {
+            case "slow":
+                alreadySet
+                    ? setParams({...getParams(), Mode: "fingerprint", SynConcurrent: 1000})
+                    : setParams({...getParams(), Mode: "fingerprint", ProbeMax: 100, SynConcurrent: 1000})
+                break
+            case "middle":
+                alreadySet
+                    ? setParams({...getParams(), Mode: "all", SynConcurrent: 1000})
+                    : setParams({...getParams(), Mode: "all", ProbeMax: 7, SynConcurrent: 1000})
+                break
+            case "fast":
+                alreadySet
+                    ? setParams({...getParams(), Mode: "all", SynConcurrent: 2000})
+                    : setParams({...getParams(), Mode: "all", ProbeMax: 3, SynConcurrent: 2000})
+                break
+        }
+
+        console.log("第二接口所需数据，getParams():", getParams())
+        ipcRenderer
+        .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
+        .then((data) => {
+            console.log("data", data)
+        })
+        .catch((e) => {
+            failed(`查询扫描模式错误:${e}`)
+        })
+        .finally(() => {})
+        return
+        setPercent(0)
         const tokens = randomString(40)
         setToken(tokens)
         StartExecBatchYakScriptWithFilter(
@@ -96,26 +161,26 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             .catch((e) => {
                 failed(`启动批量安全检测失败：${e}`)
             })
-    }
+    })
 
     const onCancel = () => {}
 
     const scanType = (arr: any[]) => {
-        console.log("e", arr)
-        // if (Array.isArray(arr) && arr.length > 0) {
-        //     const OnlineGroup = [arr[arr.length - 1]]
-            
-        //     ipcRenderer
-        //         .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-        //         .then((data) => {
-        //             console.log("data", data)
-        //         })
-        //         .catch((e) => {
-        //             failed(`查询扫描模式错误:${e}`)
-        //         })
-        //         .finally(() => {})
-        // } else {
-        // }
+        if (arr.length > 0) {
+            let endItem: any[] = arr[arr.length - 1]
+            let lastArr: any[] = arr.length<=1?[]:[...arr].slice(0,arr.length-1)
+            endItem.length > 1 && (lastArr.length === 0 || lastArr[lastArr.length - 1].length > 1)
+                ? form.setFieldsValue({
+                      scan_type: [...lastArr, endItem]
+                  })
+                : form.setFieldsValue({
+                      scan_type: [endItem]
+                  })
+        } else {
+            form.setFieldsValue({
+                scan_type: []
+            })
+        }
     }
 
     useEffect(() => {
@@ -177,19 +242,44 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         }}
                         otherHelpNode={
                             <>
-                            <span onClick={() => {}} className={styles["help-hint-title"]}>
-                                更多参数
-                            </span>
-                            <span onClick={() => {
-                                showUnfinishedBatchTaskList((task: UnfinishedBatchTask) => {
-                                    ipcRenderer.invoke("send-to-tab", {
-                                        type: "batch-exec-recover",
-                                        data: task
-                                    })
-                                })
-                            }} className={styles["help-hint-title"]}>
-                                未完成任务
-                            </span>
+                                <span
+                                    onClick={() => {
+                                        showDrawer({
+                                            title: "设置高级参数",
+                                            width: "60%",
+                                            content: (
+                                                <>
+                                                    <ScanPortForm
+                                                        isLimitShow={true}
+                                                        defaultParams={params}
+                                                        setParams={(value) => {
+                                                            if (value?.ProbeMax !== getParams().ProbeMax) {
+                                                                setAlreadySet(true)
+                                                            }
+                                                            setParams(value)
+                                                        }}
+                                                    />
+                                                </>
+                                            )
+                                        })
+                                    }}
+                                    className={styles["help-hint-title"]}
+                                >
+                                    更多参数
+                                </span>
+                                <span
+                                    onClick={() => {
+                                        showUnfinishedBatchTaskList((task: UnfinishedBatchTask) => {
+                                            ipcRenderer.invoke("send-to-tab", {
+                                                type: "batch-exec-recover",
+                                                data: task
+                                            })
+                                        })
+                                    }}
+                                    className={styles["help-hint-title"]}
+                                >
+                                    未完成任务
+                                </span>
                             </>
                         }
                         suffixNode={
@@ -205,15 +295,23 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                <Form.Item name='user_name1' label='扫描模式'>
-                    <Cascader multiple={true} options={options} placeholder='请选择扫描模式' style={{width: 400}} onChange={scanType} />
+                <Form.Item name='scan_type' label='扫描模式'>
+                    <Cascader
+                        multiple={true}
+                        options={options}
+                        placeholder='请选择扫描模式'
+                        style={{width: 400}}
+                        onChange={scanType}
+                        showCheckedStrategy='SHOW_CHILD'
+                        dropdownClassName={"simble-detect-dropdown-box"}
+                    />
                 </Form.Item>
 
-                <Form.Item name='user_name2' label='扫描速度'>
-                    <Radio.Group defaultValue={"large"}>
-                        <Radio.Button value='large'>慢</Radio.Button>
-                        <Radio.Button value='default'>中</Radio.Button>
-                        <Radio.Button value='small'>快</Radio.Button>
+                <Form.Item name='scan_deep' label='扫描速度'>
+                    <Radio.Group defaultValue={"slow"}>
+                        <Radio.Button value='slow'>慢</Radio.Button>
+                        <Radio.Button value='middle'>中</Radio.Button>
+                        <Radio.Button value='fast'>快</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
             </Form>
