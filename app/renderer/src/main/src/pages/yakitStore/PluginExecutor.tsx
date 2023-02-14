@@ -1,13 +1,13 @@
-import React, {useState} from "react"
-import {YakExecutorParam} from "../invoker/YakExecutorParams"
-import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter"
-import {YakScript} from "../invoker/schema"
-import {Divider, PageHeader} from "antd"
-import {randomString} from "../../utils/randomUtil"
-import {xtermClear} from "../../utils/xtermUtils"
-import {PluginResultUI} from "./viewers/base"
+import React, { useState } from "react"
+import { YakExecutorParam } from "../invoker/YakExecutorParams"
+import { YakScriptParamsSetter } from "../invoker/YakScriptParamsSetter"
+import { YakScript } from "../invoker/schema"
+import { Divider, PageHeader } from "antd"
+import { randomString } from "../../utils/randomUtil"
+import { xtermClear } from "../../utils/xtermUtils"
+import { PluginResultUI } from "./viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
-import {useMemoizedFn} from "ahooks"
+import { useMemoizedFn } from "ahooks"
 import "./PluginExecutor.scss"
 
 export interface PluginExecutorProp {
@@ -21,15 +21,15 @@ export interface PluginExecutorProp {
     extraYakExecutorParams?: YakExecutorParam[]
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
-    const {script, settingShow, settingNode} = props
+    const { script, settingShow, settingNode } = props
 
     const [token, setToken] = useState(randomString(40))
     const [loading, setLoading] = useState(false)
 
-    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
+    const [infoState, { reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
         script.ScriptName,
         "exec-yak-script",
         token,
@@ -40,12 +40,13 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
 
     const executeByParams = useMemoizedFn((p: YakExecutorParam[]) => {
         setLoading(true)
-
         setTimeout(() => {
             ipcRenderer.invoke(
                 "exec-yak-script",
                 {
-                    Params: [...p, ...(props.extraYakExecutorParams || [])],
+                    Params: [...p.filter((param: YakExecutorParam) => {
+                        return param.Value !== 'false'
+                    }), ...(props.extraYakExecutorParams || [])],
                     YakScriptId: props.script.Id
                 },
                 token
@@ -57,7 +58,7 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
         <div className='plugin-executor'>
             <PageHeader
                 title={script.ScriptName}
-                style={{marginBottom: 0, paddingBottom: 0}}
+                style={{ marginBottom: 0, paddingBottom: 0 }}
                 subTitle={props.subTitle}
                 extra={props.extraNode}
             >
