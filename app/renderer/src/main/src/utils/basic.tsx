@@ -586,7 +586,6 @@ const StartToExecYakScriptViewer = React.memo((props: {
         verbose, "ExecYakCode",
         token, () => setTimeout(() => setLoading(false), 300),
         () => {
-            console.log("参数:",script)
             ipcRenderer.invoke("ExecYakCode", script, token).then(() => {
                 info(`执行 ${verbose} 成功`)
             }).catch(e => {
