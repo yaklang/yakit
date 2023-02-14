@@ -64,7 +64,7 @@ const ScanKind: { [key: string]: string } = {
 }
 const ScanKindKeys: string[] = Object.keys(ScanKind)
 
-const defaultPorts =
+export const defaultPorts =
     "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
 
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
@@ -451,9 +451,12 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 interface ScanPortFormProp {
     defaultParams: PortScanParams
     setParams: (p: PortScanParams) => any
+    // 是否限制显示
+    isLimitShow?:boolean
 }
 
-const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
+export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
+    const isLimitShow = props.isLimitShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
 
     useEffect(() => {
@@ -469,6 +472,8 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             labelCol={{span: 5}}
             wrapperCol={{span: 14}}
         >
+            {!isLimitShow&&
+            <>
             <SelectOne
                 label={"扫描模式"}
                 data={ScanKindKeys.map((item) => {
@@ -487,7 +492,10 @@ const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 setValue={(i) => setParams({...params, Proto: [i]})}
                 value={(params.Proto || []).length > 0 ? params.Proto[0] : "tcp"}
             />
-            {(params.Mode === "all" || params.Mode === "syn") && (
+            </>
+            }
+            
+            {!isLimitShow && (params.Mode === "all" || params.Mode === "syn") && (
                 <>
                     <Divider orientation={"left"}>SYN 配置</Divider>
                     <InputInteger
