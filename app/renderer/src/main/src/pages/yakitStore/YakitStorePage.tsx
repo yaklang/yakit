@@ -2790,10 +2790,57 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     )
 }
 
-export const PluginGroup = (props) => {
-    const {size} = props
+interface PluginGroupProps{
+    size:"small" | "middle"
+    selectedRowKeysRecordOnline:API.YakitPluginDetail[]
+    isSelectAllOnline:boolean
+    queryOnline:API.GetPluginWhere
+}
+
+interface PluginGroupPostProps{
+    groupName:string[]
+    pluginUuid?:string[]
+    pluginWhere?:API.GetPluginWhere
+}
+
+export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
+    const {size,selectedRowKeysRecordOnline,isSelectAllOnline,queryOnline} = props
+    const [_,setGroupName,getGroupName] = useGetState<string[]>([])
+    const submit = () => {
+        if(getGroupName().length===0){
+            warn("请选择分组")
+            return
+        }
+        let obj:PluginGroupPostProps = {
+            groupName:[]
+        }
+        // 全选
+        if(isSelectAllOnline){
+            obj.groupName = [...getGroupName()]
+            obj.pluginWhere = {...queryOnline,bind_me:false}
+        }
+        // 点击选择
+        else{
+            obj.groupName = [...getGroupName()]
+            obj.pluginUuid=selectedRowKeysRecordOnline.map((item)=>item.uuid)
+        }
+        console.log("obj",obj)
+        NetWorkApi<PluginGroupPostProps, API.ActionSucceeded>({
+            method: "post",
+            url: "yakit/plugin/group",
+            data: obj
+        })
+            .then((res) => {
+               console.log("jjj",res)
+            })
+            .catch((err) => {
+                console.log("ee",err)
+            })
+    }
+
     const onChange = (checkedValues) => {
-        console.log('checked = ', checkedValues);
+        console.log('checked = ', checkedValues,selectedRowKeysRecordOnline);
+        setGroupName(checkedValues)
     }
     const typeList = ["基础扫描","深度扫描","弱口令","漏洞扫描","合规检测"]
     const menuData = [
@@ -2845,6 +2892,7 @@ export const PluginGroup = (props) => {
                                 <Button
                                     onClick={(e) => {
                                         e.stopPropagation()
+                                        submit()
                                     }}
                                     type="primary"
                                 >
@@ -2898,43 +2946,57 @@ export const PluginGroup = (props) => {
         },
     ]
     return(
-        <div style={{}}>
-        <Popover
-                            overlayClassName={style["http-history-table-drop-down-popover"]}
-                            content={
-                                <Menu className={style["http-history-table-drop-down-batch"]}>
-                                    {menuData.map((m) => {
-                                        return (
-                                            <Menu.Item
-                                                onClick={() => {
-                                                    m.onClickBatch()
-                                                }}
-                                                key={m.title}
-                                            >
-                                                {m.title}
-                                            </Menu.Item>
-                                        )
-                                    })}
-                                </Menu>
-                            }
-                            trigger='click'
-                            placement='bottomLeft'
-                        >
-                            {size === "small" ? (
-                                <SettingOutlined className='operation-icon' />
-                            ) : (
-                                <Button
-                                    style={{margin:"0 12px 0 0"}}
-                                    size='small'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                    }}
-                                >
-                                    插件分组
-                                    <ChevronDownIcon style={{color: "#85899E"}} />
-                                </Button>
-                            )}
-                        </Popover>
+        <div>
+            {
+                selectedRowKeysRecordOnline.length===0?<Button
+                style={{margin:"0 12px 0 0"}}
+                size='small'
+                onClick={(e) => {
+                    e.stopPropagation()
+                }}
+                disabled={true}
+            >
+                插件分组
+                <ChevronDownIcon style={{color: "#85899E"}} />
+            </Button>:
+               <Popover
+               overlayClassName={style["http-history-table-drop-down-popover"]}
+               content={
+                   <Menu className={style["http-history-table-drop-down-batch"]}>
+                       {menuData.map((m) => {
+                           return (
+                               <Menu.Item
+                                   onClick={() => {
+                                       m.onClickBatch()
+                                   }}
+                                   key={m.title}
+                               >
+                                   {m.title}
+                               </Menu.Item>
+                           )
+                       })}
+                   </Menu>
+               }
+               trigger='click'
+               placement='bottomLeft'
+           >
+               {size === "small" ? (
+                   <SettingOutlined className='operation-icon' />
+               ) : (
+                   <Button
+                       style={{margin:"0 12px 0 0"}}
+                       size='small'
+                       onClick={(e) => {
+                           e.stopPropagation()
+                       }}
+                       
+                   >
+                       插件分组
+                       <ChevronDownIcon style={{color: "#85899E"}} />
+                   </Button>
+               )}
+           </Popover>
+            }
                         </div>
     )
 }
@@ -3526,7 +3588,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
-                    {IsEnterprise&&<PluginGroup size={size}/>}
+                    {IsEnterprise&&<PluginGroup size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
