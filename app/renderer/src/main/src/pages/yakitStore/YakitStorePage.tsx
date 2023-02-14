@@ -750,6 +750,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 setListLoading={setListLoading}
                                 updatePluginRecordOnline={updatePluginRecordOnline}
                                 searchType={searchType}
+                                onRefList={onRefList}
                             />
                         )}
                     </Spin>
@@ -2790,68 +2791,110 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     )
 }
 
-interface PluginGroupProps{
-    size:"small" | "middle"
-    selectedRowKeysRecordOnline:API.YakitPluginDetail[]
-    isSelectAllOnline:boolean
-    queryOnline:API.GetPluginWhere
+const setPluginGroup = (obj,onRefList,onClose,msg) => {
+    NetWorkApi<PluginGroupPostProps, API.ActionSucceeded>({
+        method: "post",
+        url: "yakit/plugin/group",
+        data: obj
+    })
+        .then((res) => {
+            if(res.ok){
+                success(msg)
+                onRefList()
+                onClose()
+            }
+        })
+        .catch((err) => {
+        })
 }
 
-interface PluginGroupPostProps{
-    groupName:string[]
-    pluginUuid?:string[]
-    pluginWhere?:API.GetPluginWhere
-}
+const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
+    const {selectedRowKeysRecordOnline,onRefList,onClose,queryOnline,isSelectAllOnline} = props
 
-export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
-    const {size,selectedRowKeysRecordOnline,isSelectAllOnline,queryOnline} = props
-    const [_,setGroupName,getGroupName] = useGetState<string[]>([])
+    const selectItemType:string[] = Array.from(new Set(selectedRowKeysRecordOnline.map((item)=>item.group?JSON.parse(item.group):[]).reduce((pre,current)=>{
+        return [...pre,...current]
+    },[])))
+
+    const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
+
+    const [_,setSelectItem,getSelectItem] = useGetState<string[]>(selectItemType)
+
+    const typeList = ["基础扫描","深度扫描","弱口令","漏洞扫描","合规检测"]
     const submit = () => {
-        if(getGroupName().length===0){
-            warn("请选择分组")
-            return
-        }
         let obj:PluginGroupPostProps = {
             groupName:[]
         }
+        obj.groupName = [...getSelectItem()]
+        obj.pluginWhere = {...queryOnline,bind_me:false}
         // 全选
-        if(isSelectAllOnline){
-            obj.groupName = [...getGroupName()]
-            obj.pluginWhere = {...queryOnline,bind_me:false}
-        }
-        // 点击选择
-        else{
-            obj.groupName = [...getGroupName()]
+        if(!isSelectAllOnline){
             obj.pluginUuid=selectedRowKeysRecordOnline.map((item)=>item.uuid)
         }
-        console.log("obj",obj)
-        NetWorkApi<PluginGroupPostProps, API.ActionSucceeded>({
-            method: "post",
-            url: "yakit/plugin/group",
-            data: obj
-        })
-            .then((res) => {
-               console.log("jjj",res)
-            })
-            .catch((err) => {
-                console.log("ee",err)
-            })
+        setPluginGroup(obj,onRefList,onClose,"编辑分组成功")
     }
+    return(
+<div>
+                            <div>移出分组</div>
+                            <div style={{fontSize:12,color:"gray",marginBottom:10}}>选择要移出的分组，可多选</div>
+                            <div style={{display:"flex",justifyContent:"flex-start",flexWrap:"wrap"}}>
+                            {typeList.map((item)=><div style={{width:108,position:"relative",margin:"0 20px 10px 0",padding:"10px 22px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
+                                {item}
+                                <SelectIcon
+                    //  @ts-ignore
+                    className={`icon-select  ${
+                        getSelectItem().includes(item) && "icon-select-active"
+                    }`}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectItem(filterNonUnique([...getSelectItem(),item]))
+                    }}
+                />
+                            </div>)}
+</div>
+                            <div style={{textAlign:"center",marginTop:10}}>
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        submit()
+                                    }}
+                                    type="primary"
+                                >
+                                    确定
+                                </Button>
+                            </div>
+                        </div>
+    )
+}
 
+interface SetPluginGroupProps{
+    selectedRowKeysRecordOnline:API.YakitPluginDetail[]
+    isSelectAllOnline:boolean
+    queryOnline:API.GetPluginWhere
+    onClose:()=>void
+    onRefList:()=>void
+}
+
+const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
+    const {selectedRowKeysRecordOnline,isSelectAllOnline,queryOnline,onClose,onRefList} = props
+    const [_,setGroupName,getGroupName] = useGetState<string[]>([])
+    
+    const submit = () => {
+        let obj:PluginGroupPostProps = {
+            groupName:[]
+        }
+        obj.groupName = [...getGroupName()]
+        obj.pluginWhere = {...queryOnline,bind_me:false}
+        // 全选
+        if(!isSelectAllOnline){
+            obj.pluginUuid=selectedRowKeysRecordOnline.map((item)=>item.uuid)
+        }
+        setPluginGroup(obj,onRefList,onClose,"加入分组成功")
+    }
     const onChange = (checkedValues) => {
-        console.log('checked = ', checkedValues,selectedRowKeysRecordOnline);
         setGroupName(checkedValues)
     }
-    const typeList = ["基础扫描","深度扫描","弱口令","漏洞扫描","合规检测"]
-    const menuData = [
-        {
-            title: "加入分组",
-            number: 10,
-            onClickBatch: () => {
-                showModal({
-                    width: "40%",
-                    content: (
-                        <div>
+    return(
+<div>
                             <div>加入分组</div>
                             <div style={{fontSize:12,color:"gray"}}>可选择加入多个分组</div>
                             <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
@@ -2895,53 +2938,58 @@ export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
                                         submit()
                                     }}
                                     type="primary"
+                                    disabled={getGroupName().length===0}
                                 >
-                                    加入
+                                    确定
                                 </Button>
                             </div>
                             
                         </div>
+    )
+}
+
+interface PluginGroupProps{
+    size:"small" | "middle"
+    selectedRowKeysRecordOnline:API.YakitPluginDetail[]
+    isSelectAllOnline:boolean
+    queryOnline:API.GetPluginWhere
+    onRefList:()=>void
+}
+
+interface PluginGroupPostProps{
+    groupName:string[]
+    pluginUuid?:string[]
+    pluginWhere?:API.GetPluginWhere
+}
+
+export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
+    const {size,selectedRowKeysRecordOnline,isSelectAllOnline,queryOnline,onRefList} = props
+
+    const menuData = [
+        {
+            title: "加入分组",
+            number: 10,
+            onClickBatch: () => {
+                const m = showModal({
+                    width: "40%",
+                    content: (
+                        <AddPluginGroup onRefList={onRefList} onClose={() => m.destroy()} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline} queryOnline={queryOnline}/>
                     )
                 })
+                return m
             }
         },
         {
-            title: "移出分组",
+            title: "编辑分组",
             number: 10,
             onClickBatch: () => {
-                showModal({
-                    width: "40%",
+                const n = showModal({
+                    width: "30%",
                     content: (
-                        <div>
-                            <div>移出分组</div>
-                            <div style={{fontSize:12,color:"gray",marginBottom:10}}>选择要移出的分组，可多选</div>
-                            {typeList.map((item)=><div style={{position:"relative",margin:"0 20px 10px 0",padding:"10px 20px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
-                                {item}
-                                <SelectIcon
-                    //  @ts-ignore
-                    className={`icon-select  ${
-                        true && "icon-select-active"
-                    }`}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                     
-                    }}
-                />
-                            </div>)}
-
-                            <div style={{textAlign:"center",marginTop:10}}>
-                                <Button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                    }}
-                                    type="primary"
-                                >
-                                    移出
-                                </Button>
-                            </div>
-                        </div>
+                        <RemovePluginGroup onRefList={onRefList} onClose={() => n.destroy()} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline} queryOnline={queryOnline}/>
                     )
                 })
+                return n
             }
         },
     ]
@@ -3431,6 +3479,7 @@ interface YakModuleOnlineProps {
     statisticsQueryOnline: SearchPluginOnlineRequest
     isShowFilter: boolean
     searchType: "userName" | "keyword"
+    onRefList:()=>void
 }
 
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
@@ -3449,7 +3498,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         statisticsQueryOnline,
         setStatisticsQueryOnline,
         isShowFilter,
-        searchType
+        searchType,
+        onRefList
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...statisticsQueryOnline
@@ -3588,7 +3638,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
-                    {IsEnterprise&&<PluginGroup size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
+                    {IsEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
