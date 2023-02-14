@@ -1,7 +1,7 @@
-import React, {useEffect, useRef, useState} from "react"
-import {Button, Divider, Dropdown, Empty, Input, Menu, Modal, Popover, Space, Tabs, Typography, Upload} from "antd"
+import React, { useEffect, useRef, useState } from "react"
+import { Button, Divider, Dropdown, Empty, Input, Menu, Modal, Popover, Space, Tabs, Typography, Upload } from "antd"
 import "./xtermjs-yak-executor.css"
-import {YakEditor} from "../../utils/editors"
+import { YakEditor } from "../../utils/editors"
 import {
     CaretRightOutlined,
     DeleteOutlined,
@@ -16,39 +16,41 @@ import {
     EditOutlined,
     SaveOutlined
 } from "@ant-design/icons"
-import {YakScriptManagerPage} from "./YakScriptManager"
-import {getRandomInt} from "../../utils/randomUtil"
-import {showDrawer} from "../../utils/showModal"
-import {failed, info, success} from "../../utils/notification"
-import {ExecResult} from "./schema"
-import {SelectOne} from "../../utils/inputUtil"
-import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
-import {AutoCard} from "../../components/AutoCard"
-import {AutoSpin} from "../../components/AutoSpin"
+import { YakScriptManagerPage } from "./YakScriptManager"
+import { getRandomInt } from "../../utils/randomUtil"
+import { showDrawer } from "../../utils/showModal"
+import { failed, info, success } from "../../utils/notification"
+import { ExecResult } from "./schema"
+import { SelectOne } from "../../utils/inputUtil"
+import { writeExecResultXTerm, xtermClear } from "../../utils/xtermUtils"
+import { AutoCard } from "../../components/AutoCard"
+import { AutoSpin } from "../../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
-import {Terminal} from "./Terminal"
-import {useMemoizedFn} from "ahooks"
-import {ResizeBox} from "../../components/ResizeBox"
+import { Terminal } from "./Terminal"
+import { useMemoizedFn } from "ahooks"
+import { ResizeBox } from "../../components/ResizeBox"
 import { CVXterm } from "../../components/CVXterm"
 
 import "./YakExecutor.css"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 const RecentFileList = "recent-file-list"
 
-const {TabPane} = Tabs
-const {Text, Paragraph} = Typography
+const { TabPane } = Tabs
+const { Text, Paragraph } = Typography
 
 const tabMenu: CustomMenuProps[] = [
-    {key: "own", value: "关闭当前页"},
-    {key: "other", value: "关闭其他页"},
-    {key: "all", value: "关闭全部页"}
+    { key: "own", value: "关闭当前页" },
+    { key: "other", value: "关闭其他页" },
+    { key: "all", value: "关闭全部页" }
 ]
 const fileMenu: CustomMenuProps[] = [
-    {key: "rename", value: "重命名"},
-    {key: "remove", value: "移除"},
-    {key: "delete", value: "删除"}
+    { key: "open-in-finder", value: "打开文件位置" },
+    { key: "copy-path", value: "复制路径" },
+    { key: "rename", value: "重命名" },
+    { key: "remove", value: "移除" },
+    { key: "delete", value: "删除" }
 ]
 
 const CustomMenu = (
@@ -58,7 +60,7 @@ const CustomMenu = (
     onClick: (key: string, id: string, isFileList: boolean) => void
 ) => {
     return (
-        <Menu onClick={({key}) => onClick(key, id, isFileList)}>
+        <Menu onClick={({ key }) => onClick(key, id, isFileList)}>
             {menus.map((item, index) => {
                 return (
                     <Menu.Item key={item.key} disabled={!!item.disabled}>
@@ -70,7 +72,7 @@ const CustomMenu = (
     )
 }
 
-export interface YakExecutorProp {}
+export interface YakExecutorProp { }
 
 interface tabCodeProps {
     tab: string
@@ -119,7 +121,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const [triggerForUpdatingHistory, setTriggerForUpdatingHistory] = useState<any>(0)
 
     const addFileTab = useMemoizedFn((res: any) => {
-        const {name, code} = res
+        const { name, code } = res
 
         const tab: tabCodeProps = {
             tab: `${name}.yak`,
@@ -180,7 +182,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     setUnTitleCount(unTitleCount + 1)
                 }
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
                 time = setInterval(() => {
@@ -404,7 +406,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     // 重命名文件
     const renameFile = useMemoizedFn(
         (index: number, rename: string, oldRoute: string, newRoute: string, callback?: () => void) => {
-            ipcRenderer.invoke("rename-file", {old: oldRoute, new: newRoute}).then(() => {
+            ipcRenderer.invoke("rename-file", { old: oldRoute, new: newRoute }).then(() => {
                 const suffix = rename.split(".").pop()
 
                 var files = cloneDeep(fileList)
@@ -484,6 +486,15 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 }
                 setActiveTab("")
                 setTabList([])
+                return
+            case "copy-path":
+                ipcRenderer.invoke("set-copy-clipboard", fileList[index]?.route)
+                return
+            case "open-in-finder":
+                ipcRenderer.invoke("fetch-code-path")
+                    .then((path: string) => {
+                        ipcRenderer.invoke("shell-open-abs-file", path)
+                    })
                 return
             case "remove":
                 closeCode(index, isFileList)
@@ -581,11 +592,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         <AutoCard
             className={"yak-executor-body"}
             // title={"Yak Runner"}
-            headStyle={{minHeight: 0}}
-            bodyStyle={{padding: 0, overflow: "hidden"}}
+            headStyle={{ minHeight: 0 }}
+            bodyStyle={{ padding: 0, overflow: "hidden" }}
         >
             <div
-                style={{width: "100%", height: "100%", display: "flex", backgroundColor: "#E8E9E8"}}
+                style={{ width: "100%", height: "100%", display: "flex", backgroundColor: "#E8E9E8" }}
                 tabIndex={0}
                 onKeyDown={(e) => {
                     if (e.keyCode === 78 && (e.ctrlKey || e.metaKey)) {
@@ -596,7 +607,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     }
                 }}
             >
-                <div style={{width: `${fullScreen ? 0 : 15}%`}}>
+                <div style={{ width: `${fullScreen ? 0 : 15}%` }}>
                     <AutoSpin spinning={loading}>
                         <ExecutorFileList
                             lists={fileList}
@@ -612,14 +623,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                         />
                     </AutoSpin>
                 </div>
-                <div style={{width: `${fullScreen ? 100 : 85}%`}} className='executor-right-body'>
+                <div style={{ width: `${fullScreen ? 100 : 85}%` }} className='executor-right-body'>
                     {tabList.length > 0 && (
                         <ResizeBox
                             isVer
                             firstNode={
                                 <Tabs
                                     className={"right-editor"}
-                                    style={{height: "100%"}}
+                                    style={{ height: "100%" }}
                                     type='editable-card'
                                     activeKey={activeTab}
                                     hideAdd={true}
@@ -638,9 +649,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                     }}
                                     tabBarExtraContent={
                                         tabList.length && (
-                                            <Space style={{marginRight: 5}} size={0}>
+                                            <Space style={{ marginRight: 5 }} size={0}>
                                                 <Button
-                                                    style={{height: 25}}
+                                                    style={{ height: 25 }}
                                                     type={"link"}
                                                     size={"small"}
                                                     disabled={
@@ -681,14 +692,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 <Button
                                                     icon={
                                                         fullScreen ? (
-                                                            <FullscreenExitOutlined style={{fontSize: 15}} />
+                                                            <FullscreenExitOutlined style={{ fontSize: 15 }} />
                                                         ) : (
-                                                            <FullscreenOutlined style={{fontSize: 15}} />
+                                                            <FullscreenOutlined style={{ fontSize: 15 }} />
                                                         )
                                                     }
                                                     type={"link"}
                                                     size={"small"}
-                                                    style={{width: 30, height: 25}}
+                                                    style={{ width: 30, height: 25 }}
                                                     onClick={() => setFullScreen(!fullScreen)}
                                                 />
                                                 <Popover
@@ -696,11 +707,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                     title={"设置命令行额外参数"}
                                                     placement="bottomRight"
                                                     content={
-                                                        <Space style={{width: 400}}>
+                                                        <Space style={{ width: 400 }}>
                                                             <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
                                                             <Divider type={"vertical"} />
                                                             <Paragraph
-                                                                style={{width: 200, marginBottom: 0}}
+                                                                style={{ width: 200, marginBottom: 0 }}
                                                                 editable={{
                                                                     icon: <Space>
                                                                         <EditOutlined />
@@ -708,9 +719,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                             e.stopPropagation()
                                                                             tabList[+activeTab].extraParams = extraParams
                                                                             setTabList(tabList)
-                                                                            if(tabList[+activeTab].isFile){
+                                                                            if (tabList[+activeTab].isFile) {
                                                                                 const files = fileList.map(item => {
-                                                                                    if(item.route === tabList[+activeTab].route){
+                                                                                    if (item.route === tabList[+activeTab].route) {
                                                                                         item.extraParams = extraParams
                                                                                         return item
                                                                                     }
@@ -719,8 +730,8 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                                 setFileList(files)
                                                                             }
                                                                             success("保存成功")
-                                                                        }} 
-                                                                    /></Space>,
+                                                                        }}
+                                                                        /></Space>,
                                                                     tooltip: '编辑/保存为该文件默认参数',
                                                                     onChange: setExtraParams
                                                                 }}
@@ -736,20 +747,20 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 </Popover>
                                                 {executing ? (
                                                     <Button
-                                                        icon={<PoweroffOutlined style={{fontSize: 15}} />}
+                                                        icon={<PoweroffOutlined style={{ fontSize: 15 }} />}
                                                         type={"link"}
                                                         danger={true}
                                                         size={"small"}
-                                                        style={{width: 30, height: 25}}
+                                                        style={{ width: 30, height: 25 }}
                                                         onClick={() => ipcRenderer.invoke("cancel-yak")}
                                                     />
                                                 ) : (
                                                     <Button
-                                                        icon={<CaretRightOutlined style={{fontSize: 15}} />}
+                                                        icon={<CaretRightOutlined style={{ fontSize: 15 }} />}
                                                         type={"link"}
                                                         ghost={true}
                                                         size={"small"}
-                                                        style={{width: 30, height: 25}}
+                                                        style={{ width: 30, height: 25 }}
                                                         disabled={
                                                             tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
                                                         }
@@ -770,10 +781,10 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                 >
                                     {tabList.map((item, index) => {
                                         return (
-                                            <TabPane tab={item.isFile?item.tab:`(未保存)${item.tab}`} key={`${index}`}>
-                                                <div style={{height: "100%"}}>
+                                            <TabPane tab={item.isFile ? item.tab : `(未保存)${item.tab}`} key={`${index}`}>
+                                                <div style={{ height: "100%" }}>
                                                     <AutoSpin spinning={executing}>
-                                                        <div style={{height: "100%"}}>
+                                                        <div style={{ height: "100%" }}>
                                                             <YakEditor
                                                                 type={item.suffix}
                                                                 value={item.code}
@@ -801,19 +812,19 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                     }}
                                 >
                                     <Tabs
-                                        style={{height: "100%"}}
+                                        style={{ height: "100%" }}
                                         className={"right-xterm"}
                                         size={"small"}
                                         tabBarExtraContent={
                                             <Space>
                                                 <SelectOne
-                                                    formItemStyle={{marginBottom: 0}}
+                                                    formItemStyle={{ marginBottom: 0 }}
                                                     value={outputEncoding}
                                                     setValue={setOutputEncoding}
                                                     size={"small"}
                                                     data={[
-                                                        {text: "GBxxx编码", value: "latin1"},
-                                                        {text: "UTF-8编码", value: "utf8"}
+                                                        { text: "GBxxx编码", value: "latin1" },
+                                                        { text: "UTF-8编码", value: "utf8" }
                                                     ]}
                                                 />
                                                 <Button
@@ -828,10 +839,10 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                         }
                                     >
                                         <TabPane
-                                            tab={<div style={{width: 50, textAlign: "center"}}>输出</div>}
+                                            tab={<div style={{ width: 50, textAlign: "center" }}>输出</div>}
                                             key={"output"}
                                         >
-                                            <div style={{width: "100%", height: "100%"}}>
+                                            <div style={{ width: "100%", height: "100%" }}>
                                                 <CVXterm
                                                     ref={xtermRef}
                                                     options={{
@@ -871,7 +882,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                         </TabPane>
                                         <TabPane
                                             tab={
-                                                <div style={{width: 50, textAlign: "center"}} key={"terminal"}>
+                                                <div style={{ width: 50, textAlign: "center" }} key={"terminal"}>
                                                     终端(监修中)
                                                 </div>
                                             }
@@ -905,11 +916,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                         </Button>
                     ]}
                 >
-                    <div style={{height: 40}}>
-                        <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
-                        <span style={{fontSize: 18, marginLeft: 15}}>文件未保存</span>
+                    <div style={{ height: 40 }}>
+                        <ExclamationCircleOutlined style={{ fontSize: 22, color: "#faad14" }} />
+                        <span style={{ fontSize: 18, marginLeft: 15 }}>文件未保存</span>
                     </div>
-                    <p style={{fontSize: 15, marginLeft: 37}}>{`是否要保存${hintFile}里面的内容吗？`}</p>
+                    <p style={{ fontSize: 15, marginLeft: 37 }}>{`是否要保存${hintFile}里面的内容吗？`}</p>
                 </Modal>
 
                 <Modal
@@ -939,11 +950,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                         </Button>
                     ]}
                 >
-                    <div style={{height: 40}}>
-                        <ExclamationCircleOutlined style={{fontSize: 22, color: "#faad14"}} />
-                        <span style={{fontSize: 18, marginLeft: 15}}>文件已存在</span>
+                    <div style={{ height: 40 }}>
+                        <ExclamationCircleOutlined style={{ fontSize: 22, color: "#faad14" }} />
+                        <span style={{ fontSize: 18, marginLeft: 15 }}>文件已存在</span>
                     </div>
-                    <p style={{fontSize: 15, marginLeft: 37}}>{`是否要覆盖已存在的文件吗？`}</p>
+                    <p style={{ fontSize: 15, marginLeft: 37 }}>{`是否要覆盖已存在的文件吗？`}</p>
                 </Modal>
             </div>
         </AutoCard>
@@ -983,7 +994,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
     return (
         <AutoCard
             className={"executor-file-list"}
-            title={<span style={{color: "#000", fontWeight: 400}}>近期文件</span>}
+            title={<span style={{ color: "#000", fontWeight: 400 }}>近期文件</span>}
             headStyle={{
                 minHeight: 0,
                 fontSize: 14,
@@ -992,7 +1003,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                 backgroundColor: "#e8e9e8",
                 borderBottom: "2px solid #d7d7d7"
             }}
-            bodyStyle={{padding: 0, paddingTop: 7, backgroundColor: "#efefef"}}
+            bodyStyle={{ padding: 0, paddingTop: 7, backgroundColor: "#efefef" }}
             extra={
                 <>
                     <Upload multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f: any) => addFile(f)}>
@@ -1013,8 +1024,8 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                             >
                                 <div
                                     className={`list-opt ${activeFile === item.route ? "selected" : ""}`}
-                                    style={{top: `${index * 22}px`}}
-                                    onClick={() => openFile({name: item.tab, path: item.route, extraParams: item.extraParams})}
+                                    style={{ top: `${index * 22}px` }}
+                                    onClick={() => openFile({ name: item.tab, path: item.route, extraParams: item.extraParams })}
                                 >
                                     <div>
                                         {renameFlag && renameIndex === index ? (
@@ -1029,7 +1040,7 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                                             </div>
                                         ) : (
                                             <div className='name'>
-                                                <Text ellipsis={{tooltip: item.tab}} style={{width: "100%"}}>
+                                                <Text ellipsis={{ tooltip: item.tab }} style={{ width: "100%" }}>
                                                     {item.tab}
                                                 </Text>
                                             </div>
@@ -1044,11 +1055,11 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
             {lists.length === 0 && (
                 <Empty
                     className='file-empty '
-                    imageStyle={{display: "none"}}
+                    imageStyle={{ display: "none" }}
                     description={
-                        <div style={{marginTop: 90}}>
-                            <Button type='link' icon={<FileAddOutlined style={{fontSize: 30}} />} onClick={newFile} />
-                            <p style={{marginTop: 10}}>新建文件</p>
+                        <div style={{ marginTop: 90 }}>
+                            <Button type='link' icon={<FileAddOutlined style={{ fontSize: 30 }} />} onClick={newFile} />
+                            <p style={{ marginTop: 10 }}>新建文件</p>
                         </div>
                     }
                 />
