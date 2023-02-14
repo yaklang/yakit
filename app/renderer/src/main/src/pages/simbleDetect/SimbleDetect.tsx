@@ -395,7 +395,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-in-progress"])}>
                         执行中状态
                     </div>
-                    <div className='notice-body-counter'>
+                    <div className={classNames(styles['notice-body-counter'])}>
                         {progressRunning}进程 / {scanTaskExecutingCount}任务
                     </div>
                 </div>
@@ -404,7 +404,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-completed"])}>
                         已结束/总进程
                     </div>
-                    <div className='notice-body-counter'>
+                    <div className={classNames(styles['notice-body-counter'])}>
                         {progressFinished}/{progressTotal}
                     </div>
                 </div>
@@ -413,7 +413,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-vuln"])}>
                         命中风险/漏洞
                     </div>
-                    <div className='notice-body-counter'>{jsonRisks.length}</div>
+                    <div className={classNames(styles['notice-body-counter'])}>{jsonRisks.length}</div>
                 </div>
             </div>
 
