@@ -177,7 +177,8 @@ const queryTitle = {
     Tag: "TAG",
     tags: "TAG",
     plugin_type: "插件类型",
-    status: "审核状态"
+    status: "审核状态",
+    group: "插件分组"
 }
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
