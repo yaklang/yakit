@@ -883,7 +883,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        const statisticsList = item[1]
+                                        const statisticsList = queryName==="group"?item[1].replaceAll('"',''):item[1]
                                         const title = queryTitle[queryName]
                                         let current: string | string[] = ""
                                         if (plugSource === "local") {

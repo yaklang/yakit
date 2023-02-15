@@ -353,7 +353,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.NewHome:
             return <NewHome/>
         case Route.SimbleDetect:
-            return <SimbleDetect/>
+            return <SimbleDetect Uid={params?.recoverUid}
+            BaseProgress={params?.recoverBaseProgress}/>
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case Route.Codec:
