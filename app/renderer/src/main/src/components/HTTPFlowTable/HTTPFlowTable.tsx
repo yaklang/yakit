@@ -1,8 +1,7 @@
-import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
+import React, { Ref, useEffect, useMemo, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
-    Col,
     Divider,
     Empty,
     Form,
@@ -10,31 +9,25 @@ import {
     PageHeader,
     Popconfirm,
     Popover,
-    Row,
     Select,
     Space,
-    Switch,
     Tag,
     Tooltip,
     Badge,
     Menu,
     InputNumber,
-    Spin,
     Dropdown,
-    Alert,
-    Radio
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
-import {showDrawer, showModal} from "../../utils/showModal"
+import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
-import {CheckOutlined, ReloadOutlined, SearchOutlined} from "@ant-design/icons"
-import {InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {ReloadOutlined} from "@ant-design/icons"
+import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {failed, info, success, warn} from "../../utils/notification"
+import {failed, info, warn} from "../../utils/notification"
 import "../style.css"
 import style from "./HTTPFlowTable.module.scss"
-import {TableResizableColumn} from "../TableResizableColumn"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useClickAway, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useVirtualList} from "ahooks"
@@ -57,12 +50,14 @@ import {
     SearchIcon,
     StatusOfflineIcon,
     ColorSwatchIcon,
-    ChevronDownIcon
+    ChevronDownIcon,
+    ArrowCircleRightSvgIcon,
+    ChromeSvgIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
+import {showResponseViaHTTPFlowID, showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 
@@ -1350,16 +1345,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 render: (_, rowData) => {
                     if (!rowData.Hash) return <></>
                     return (
-                        <a
-                            onClick={(e) => {
-                                let m = showDrawer({
-                                    width: "80%",
-                                    content: onExpandHTTPFlow(rowData, () => m.destroy())
-                                })
-                            }}
-                        >
-                            详情
-                        </a>
+                        <div className={style["action-btn-group"]}>
+                            <a
+                                onClick={(e) => {
+                                    let m = showDrawer({
+                                        width: "80%",
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy())
+                                    })
+                                }}
+                            >
+                                <ArrowCircleRightSvgIcon />
+                            </a>
+                            <a
+                                onClick={(e) => {
+                                    ipcRenderer
+                                        .invoke("GetHTTPFlowById", {Id: rowData?.Id})
+                                        .then((i: HTTPFlow) => {
+                                            showResponseViaResponseRaw(i?.Response)
+                                        })
+                                        .catch((e: any) => {
+                                            failed(`Query HTTPFlow failed: ${e}`)
+                                        })
+                                }}
+                            >
+                                <ChromeSvgIcon />
+                            </a>
+                        </div>
                     )
                 }
             }

@@ -715,3 +715,11 @@
         margin-left: 4px;
     }
 }
+
+.action-btn-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    
+}

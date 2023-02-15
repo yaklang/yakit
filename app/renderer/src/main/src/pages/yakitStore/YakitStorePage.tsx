@@ -2676,7 +2676,13 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             )}
             {loadMode === "local" && (
                 <div style={{position: "relative"}}>
-                    <InputItem style={{width: "calc(100% - 20px)"}} label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
+                    <InputItem
+                        style={{width: "calc(100% - 20px)"}}
+                        label={"本地仓库地址"}
+                        value={localPath}
+                        setValue={setLocalPath}
+                        help={"本地仓库地址需设置在yak-projects项目文件下"}
+                    />
                     <Tooltip title={"选择导入路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
@@ -2686,8 +2692,8 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
-                                        if(data.filePaths.length){
-                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                        if (data.filePaths.length) {
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                                             setLocalPath(absolutePath)
                                         }
                                     })
