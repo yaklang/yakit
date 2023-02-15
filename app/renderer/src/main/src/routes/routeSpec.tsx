@@ -75,11 +75,8 @@ import {
     MenuSubDomainCollectionIcon,
     MenuVulnerabilityRiskIcon,
     MenuWebsocketFuzzerIcon,
-<<<<<<< HEAD
     MenuDefaultPluginIcon
-=======
-    MenuYakRunnerIcon
->>>>>>> 4f281dd5 (电信菜单)
+    // MenuYakRunnerIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
 import {

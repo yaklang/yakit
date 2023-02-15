@@ -1,5 +1,20 @@
 import React, {forwardRef, ReactNode, useEffect, useRef, useState} from "react"
-import {Button, Input, Layout, Menu, Modal, Popover, Space, Spin, Tabs, Typography, Upload, Avatar, Alert} from "antd"
+import {
+    Button,
+    Input,
+    Layout,
+    Menu,
+    Modal,
+    Popover,
+    Space,
+    Spin,
+    Tabs,
+    Typography,
+    Upload,
+    Avatar,
+    Alert,
+    Checkbox
+} from "antd"
 import {
     ContentByRoute,
     DefaultRouteMenuData,
@@ -8,7 +23,13 @@ import {
     Route,
     RouteNameToVerboseName
 } from "../routes/routeSpec"
-import {CloseOutlined, EditOutlined, EllipsisOutlined, CameraOutlined} from "@ant-design/icons"
+import {
+    CloseOutlined,
+    EditOutlined,
+    EllipsisOutlined,
+    CameraOutlined,
+    ExclamationCircleOutlined
+} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 // import {YakLogoBanner} from "../utils/logo"
@@ -227,7 +248,7 @@ export const judgeAvatar = (userInfo) => {
     return companyHeadImg && !!companyHeadImg.length ? (
         <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
     ) : (
-        <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
+        <Avatar size={38} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
         </Avatar>
     )
@@ -716,6 +737,22 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             ipcRenderer.send("company-refresh-in")
         }
     }, [])
+
+    // 关闭 tab
+    const onCloseTab = useMemoizedFn(() => {
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.AccountAdminPage,
+            singleNode: true
+        })
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.RoleAdminPage,
+            singleNode: true
+        })
+        ipcRenderer.invoke("send-close-tab", {
+            router: Route.LicenseAdminPage,
+            singleNode: true
+        })
+    })
 
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
@@ -1288,374 +1325,154 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
                 {isShowCustomizeMenu && (
-                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />)
-                }
-                <Header className='main-laytou-header'>
-                    <Row>
-                        <Col span={8}>
-                            <Space>
-                                <div className='img-banner'>
-                                    <Image src={TelecomBanner} preview={false} width={130} style={{marginTop: 6}} />
-                                </div>
-                                <Divider type={"vertical"} />
-                                {/* <YakVersion/>
-                                <YakitVersion/> */}
-                                <Button
-                                    style={{marginLeft: 4, color: "#207ee8"}}
-                                    type={"ghost"}
-                                    ghost={true}
-                                    onClick={(e) => {
-                                        updateMenuItems()
-                                    }}
-                                    icon={<ReloadOutlined />}
-                                />
-                            </Space>
-                        </Col>
-                        <Col span={16} style={{textAlign: "right", paddingRight: 28}}>
-                            <PerformanceDisplay />
-                            <RiskStatsTag professionalMode={true} />
-                            <Space>
-                                {/* {status?.isTLS ? <Tag color={"green"}>TLS:通信已加密</Tag> : <Tag color={"red"}>通信未加密</Tag>} */}
-                                {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
-                                {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
-                                <ReversePlatformStatus />
-                                <Dropdown
-                                    overlayClassName='setting-menu'
-                                    forceRender={true}
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item
-                                                key={"update"}
-                                                onClick={() => {
-                                                    showModal({
-                                                        title: "更新插件源",
-                                                        width: 800,
-                                                        content: (
-                                                            <div style={{width: 800}}>
-                                                                <LoadYakitPluginForm
-                                                                    onFinished={() => {
-                                                                        info("更新进程执行完毕")
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        )
-                                                    })
-                                                }}
-                                            >
-                                                <Button type={"link"}>更新 Yakit 插件源</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"reverse-global"}
-                                                onClick={() => {
-                                                    showModal({
-                                                        title: "配置全局反连",
-                                                        width: 800,
-                                                        content: (
-                                                            <div style={{width: 800}}>
-                                                                <ConfigGlobalReverse />
-                                                            </div>
-                                                        )
-                                                    })
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置全局反连</Button>
-                                                {/*<ConfigGlobalReverseButton/>*/}
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-system-proxy"}
-                                                onClick={() => {
-                                                    showConfigSystemProxyForm()
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置系统代理</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-engine-proxy"}
-                                                onClick={() => {
-                                                    showConfigEngineProxyForm()
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置引擎扫描代理</Button>
-                                            </Menu.Item>
-                                            <Menu.Item key={"config-menu"} onClick={() => showConfigMenuItems()}>
-                                                <Button type={"link"}>配置菜单栏</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-yaklang-env-variable"}
-                                                onClick={() => {
-                                                    showConfigYaklangEnvironment()
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置引擎环境变量</Button>
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key={"config-private-domain"}
-                                                onClick={() => {
-                                                    const m = showModal({
-                                                        title: "配置私有域",
-                                                        content: <ConfigPrivateDomain onClose={() => m.destroy()} />
-                                                    })
-                                                    return m
-                                                }}
-                                            >
-                                                <Button type={"link"}>配置私有域</Button>
-                                            </Menu.Item>
-                                        </Menu>
-                                    }
-                                    trigger={["click"]}
-                                >
-                                    <Button icon={<SettingOutlined />}>配置</Button>
-                                </Dropdown>
-                                {userInfo.isLogin ? (
-                                    <div>
-                                        <DropdownMenu
-                                            menu={{
-                                                data: userMenu
-                                            }}
-                                            dropdown={{
-                                                placement: "bottomCenter",
-                                                trigger: ["click"]
-                                            }}
-                                            onClick={(key) => {
-                                                if (key === "sign-out") {
-                                                    setStoreUserInfo(defaultUserInfo)
-                                                    loginOut(userInfo)
-                                                    setTimeout(() => success("已成功退出账号"), 500)
-                                                }
-                                                if (key === "trust-list") {
-                                                    const key = Route.TrustListPage
-                                                    goRouterPage(key)
-                                                }
-                                                if (key === "set-password") setPasswordShow(true)
-                                                if (key === "role-admin") {
-                                                    const key = Route.RoleAdminPage
-                                                    goRouterPage(key)
-                                                }
-                                                if (key === "account-admin") {
-                                                    const key = Route.AccountAdminPage
-                                                    goRouterPage(key)
-                                                }
-                                                if(key === "license-admin"){
-                                                    const key = Route.LicenseAdminPage
-                                                    goRouterPage(key)
-                                                }
-                                            }}
-                                        >
-                                            {userInfo.platform === "company" ? (
-                                                judgeAvatar(userInfo)
-                                            ) : (
-                                                <img
-                                                    src={
-                                                        (userInfo &&
-                                                            userInfo[UserPlatformType[userInfo.platform || ""]?.img]) ||
-                                                        yakitImg
-                                                    }
-                                                    style={{
-                                                        width: 32,
-                                                        height: 32,
-                                                        borderRadius: "50%",
-                                                        cursor: "pointer"
-                                                    }}
-                                                />
-                                            )}
-                                        </DropdownMenu>
-                                    </div>
-                                ) : (
-                                    <Button type='link' onClick={() => setLoginShow(true)}>
-                                        登录
-                                    </Button>
-                                )}
-                                <Button
-                                    type={"link"}
-                                    danger={true}
-                                    icon={<PoweroffOutlined />}
-                                    onClick={() => {
-                                        if (winCloseFlag) {
-                                            setWinCloseShow(true)
-                                        } else {
-                                            refreshToken(userInfo)
-                                            success("退出当前 Yak 服务器成功")
-                                            setEngineStatus("error")
-                                        }
-                                    }}
-                                />
-                            </Space>
-                        </Col>
-                    </Row>
-                </Header>
-                {IsNewUI && (
-                    <HeardMenu
-                        routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
-                        menuItemGroup={menuItems}
-                        onRouteMenuSelect={menuAddPage}
-                    />
+                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
                 )}
-                <div style={{display: isShowCustomizeMenu ? "none" : "flex", flexDirection: "column", height: "100%"}}>
-                    <HeardMenu
-                        onRouteMenuSelect={onRouteMenuSelect}
-                        setRouteKeyToLabel={(val) => {
-                            val.forEach((value, key) => {
-                                routeKeyToLabel.current.set(key, value)
-                            })
-                        }}
-                    />
-                    <Content
-                        style={{
-                            margin: 0,
-                            backgroundColor: "#fff",
-                            overflow: "auto",
-                            flex: 1
-                            // marginTop: 0
-                        }}
-                    >
-                        <Layout style={{height: "100%", overflow: "hidden"}}>
-                            <Content
+                <HeardMenu
+                    routeMenuData={(routeMenuData || []).filter((e) => !e.hidden)}
+                    menuItemGroup={menuItems}
+                    onRouteMenuSelect={menuAddPage}
+                />
+                <Content
+                    style={{
+                        margin: 0,
+                        backgroundColor: "#fff",
+                        overflow: "auto"
+                        // marginTop: 0
+                    }}
+                >
+                    <Layout style={{height: "100%", overflow: "hidden"}}>
+                        <Content
+                            style={{
+                                overflow: "hidden",
+                                backgroundColor: "#fff",
+                                height: "100%",
+                                display: "flex",
+                                flexFlow: "column",
+                                marginLeft: 0
+                            }}
+                        >
+                            <div
                                 style={{
+                                    padding: 16,
+                                    paddingTop: 8,
                                     overflow: "hidden",
-                                    backgroundColor: "#fff",
-                                    height: "100%",
+                                    flex: "1",
                                     display: "flex",
-                                    flexFlow: "column",
-                                    marginLeft: 0
+                                    flexFlow: "column"
                                 }}
                             >
-                                <div
-                                    style={{
-                                        padding: 0,
-                                        overflow: "hidden",
-                                        flex: "1",
-                                        display: "flex",
-                                        flexFlow: "column"
-                                    }}
-                                >
-                                    {pageCache.length > 0 ? (
-                                        <Tabs
-                                            style={{display: "flex", flex: "1"}}
-                                            // tabBarStyle={{marginBottom: 8}}
-                                            className='main-content-tabs yakit-layout-tabs'
-                                            activeKey={currentTabKey}
-                                            onChange={setCurrentTabKey}
-                                            size={"small"}
-                                            type={"editable-card"}
-                                            renderTabBar={(props, TabBarDefault) => {
-                                                return bars(props, TabBarDefault)
-                                            }}
-                                            hideAdd={true}
-                                            onTabClick={(key, e) => {
-                                                const divExisted = document.getElementById("yakit-cursor-menu")
-                                                if (divExisted) {
-                                                    const div: HTMLDivElement = divExisted as HTMLDivElement
-                                                    const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                                                    if (unmountResult && div.parentNode) {
-                                                        div.parentNode.removeChild(div)
-                                                    }
+                                {pageCache.length > 0 ? (
+                                    <Tabs
+                                        style={{display: "flex", flex: "1"}}
+                                        // tabBarStyle={{marginBottom: 8}}
+                                        className='main-content-tabs yakit-layout-tabs'
+                                        activeKey={currentTabKey}
+                                        onChange={setCurrentTabKey}
+                                        size={"small"}
+                                        type={"editable-card"}
+                                        renderTabBar={(props, TabBarDefault) => {
+                                            return bars(props, TabBarDefault)
+                                        }}
+                                        // hideAdd={true}
+                                        onTabClick={(key, e) => {
+                                            const divExisted = document.getElementById("yakit-cursor-menu")
+                                            if (divExisted) {
+                                                const div: HTMLDivElement = divExisted as HTMLDivElement
+                                                const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                                                if (unmountResult && div.parentNode) {
+                                                    div.parentNode.removeChild(div)
                                                 }
-                                            }}
-                                        >
-                                            {pageCache.map((i) => {
-                                                return (
-                                                    <Tabs.TabPane
-                                                        forceRender={true}
-                                                        key={i.route}
-                                                        tab={i.verbose}
-                                                        closeIcon={
-                                                            <Space>
-                                                                {/* <Popover
-                                                                    trigger={"click"}
-                                                                    title={"修改名称"}
-                                                                    content={
-                                                                        <>
-                                                                            <Input
-                                                                                size={"small"}
-                                                                                defaultValue={i.verbose}
-                                                                                onBlur={(e) =>
-                                                                                    updateCacheVerbose(
-                                                                                        `${i.route}`,
-                                                                                        e.target.value
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </>
-                                                                    }
-                                                                >
-                                                                    <EditOutlined className='main-container-cion' />
-                                                                </Popover> */}
-                                                                {i.verbose !== "首页" && (
-                                                                    <CloseOutlined
-                                                                        className='main-container-cion'
-                                                                        onClick={() => removePage(`${i.route}`)}
-                                                                    />
-                                                                )}
-                                                            </Space>
-                                                        }
+                                            }
+                                        }}
+                                        addIcon={
+                                            <Tooltip title='导入协作资源'>
+                                                <ShareImportIcon
+                                                    // @ts-ignore
+                                                    className='share-import-icon'
+                                                    onClick={() => onImportShare()}
+                                                />
+                                            </Tooltip>
+                                        }
+                                    >
+                                        {pageCache.map((i) => {
+                                            return (
+                                                <Tabs.TabPane
+                                                    forceRender={true}
+                                                    key={i.route}
+                                                    tab={i.verbose}
+                                                    closeIcon={
+                                                        <Space>
+                                                            <Popover
+                                                                trigger={"click"}
+                                                                title={"修改名称"}
+                                                                content={
+                                                                    <>
+                                                                        <Input
+                                                                            size={"small"}
+                                                                            defaultValue={i.verbose}
+                                                                            onBlur={(e) =>
+                                                                                updateCacheVerbose(
+                                                                                    `${i.route}`,
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </>
+                                                                }
+                                                            >
+                                                                <EditOutlined className='main-container-cion' />
+                                                            </Popover>
+                                                            <CloseOutlined
+                                                                className='main-container-cion'
+                                                                onClick={() => removePage(`${i.route}`)}
+                                                            />
+                                                        </Space>
+                                                    }
+                                                >
+                                                    <div
+                                                        style={{
+                                                            overflowY: NoScrollRoutes.includes(i.route)
+                                                                ? "hidden"
+                                                                : "auto",
+                                                            overflowX: "hidden",
+                                                            height: "100%",
+                                                            maxHeight: "100%"
+                                                        }}
                                                     >
-                                                        <div
-                                                            style={{
-                                                                overflowY: NoScrollRoutes.includes(i.route)
-                                                                    ? "hidden"
-                                                                    : "auto",
-                                                                overflowX: "hidden",
-                                                                height: "100%",
-                                                                maxHeight: "100%",
-                                                                padding:
-                                                                    !i.singleNode || noPaddingPage.includes(i.route)
-                                                                        ? 0
-                                                                        : "8px 16px 13px 16px"
-                                                            }}
-                                                        >
-                                                            {i.singleNode ? (
-                                                                <>
-                                                                    {i.verbose === "首页" ? (
-                                                                        currentTabKey === Route.NewHome ? (
-                                                                            i.singleNode
-                                                                        ) : (
-                                                                            <></>
-                                                                        )
-                                                                    ) : (
-                                                                        i.singleNode
-                                                                    )}
-                                                                </>
-                                                            ) : (
-                                                                <MainTabs
-                                                                    currentTabKey={currentTabKey}
-                                                                    tabType={i.route}
-                                                                    pages={i.multipleNode}
-                                                                    currentKey={i.multipleCurrentKey || ""}
-                                                                    isShowAdd={!i.hideAdd}
-                                                                    setCurrentKey={(key, type) => {
-                                                                        setMultipleCurrentKey(key, type as Route)
-                                                                    }}
-                                                                    removePage={(key, type) => {
-                                                                        removeMultipleNodePage(key, type as Route)
-                                                                    }}
-                                                                    removeOtherPage={(key, type) => {
-                                                                        removeOtherMultipleNodePage(key, type as Route)
-                                                                    }}
-                                                                    onAddTab={() => menuAddPage(i.route)}
-                                                                    updateCacheVerbose={
-                                                                        updateCacheVerboseMultipleNodePage
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    </Tabs.TabPane>
-                                                )
-                                            })}
-                                        </Tabs>
-                                    ) : (
-                                        <></>
-                                    )}
-                                    {isShowBaseConsole && (
-                                        <BaseConsole
-                                            setIsShowBaseConsole={setIsShowBaseConsole}
-                                            directionBaseConsole={directionBaseConsole}
-                                        />
-                                    )}
-                                </div>
-                            </Content>
-                        </Layout>
-                    </Content>
-                </div>
+                                                        {i.singleNode ? (
+                                                            i.singleNode
+                                                        ) : (
+                                                            <MainTabs
+                                                                currentTabKey={currentTabKey}
+                                                                tabType={i.route}
+                                                                pages={i.multipleNode}
+                                                                currentKey={i.multipleCurrentKey || ""}
+                                                                isShowAdd={!i.hideAdd}
+                                                                setCurrentKey={(key, type) => {
+                                                                    setMultipleCurrentKey(key, type as Route)
+                                                                }}
+                                                                removePage={(key, type) => {
+                                                                    removeMultipleNodePage(key, type as Route)
+                                                                }}
+                                                                removeOtherPage={(key, type) => {
+                                                                    removeOtherMultipleNodePage(key, type as Route)
+                                                                }}
+                                                                onAddTab={() => menuAddPage(i.route)}
+                                                                updateCacheVerbose={updateCacheVerboseMultipleNodePage}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </Tabs.TabPane>
+                                            )
+                                        })}
+                                    </Tabs>
+                                ) : (
+                                    <></>
+                                )}
+                            </div>
+                        </Content>
+                    </Layout>
+                </Content>
             </AutoSpin>
             <Modal
                 visible={bugTestShow}
