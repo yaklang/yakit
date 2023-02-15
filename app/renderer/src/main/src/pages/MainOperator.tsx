@@ -1130,6 +1130,16 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
     })
 
+    const addSimbleBatchExecRecover = useMemoizedFn((task: UnfinishedBatchTask) => {
+        addTabPage(Route.SimbleDetect, {
+            hideAdd: true,
+            node: ContentByRoute(Route.SimbleDetect, undefined, {
+                recoverUid: task.Uid,
+                recoverBaseProgress: task.Percent
+            })
+        })
+    })
+
     const addPacketScan = useMemoizedFn(
         (httpFlows: number[], https: boolean, request?: Uint8Array, keyword?: string) => {
             addTabPage(Route.PacketScanPage, {
@@ -1155,6 +1165,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
+            if (type === "simble-batch-exec-recover") addSimbleBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "exec-packet-scan")
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)

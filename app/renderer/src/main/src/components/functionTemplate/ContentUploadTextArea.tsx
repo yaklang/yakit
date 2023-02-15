@@ -13,10 +13,11 @@ export interface ContentUploadInputProps extends ItemDraggerTextAreaProps, ItemD
     type?: "input" | "textarea"
     beforeUpload?: (f: any) => any
     otherHelpNode?:ReactNode
+    uploadHelpText?:string
 }
 
 export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => {
-    const {type = "input", beforeUpload, dragger, item, textarea, input,otherHelpNode, ...restProps} = props
+    const {type = "input", beforeUpload, dragger, item, textarea, input,otherHelpNode,uploadHelpText, ...restProps} = props
 
     if (type === "input") {
         return (
@@ -25,7 +26,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 item={{
                     help: (
                         <div className='content-upload-input-help'>
-                            可将TXT文件拖入框内或
+                            {uploadHelpText||"可将TXT文件拖入框内或"}
                             <Upload
                                 // accept={"text/plain"}
                                 multiple={false}
@@ -57,7 +58,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 item={{
                     help: (
                         <div className='content-upload-input-help'>
-                            可将TXT、Excel文件拖入框内或
+                            {uploadHelpText||"可将TXT、Excel文件拖入框内或"}
                             <Upload
                                 // accept={"text/plain"}
                                 multiple={false}
