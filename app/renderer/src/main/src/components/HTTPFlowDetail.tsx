@@ -588,7 +588,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     }
                                     extra={[
                                         <Button
-                                            type={"primary"}
+                                            className={styles['extra-chrome-btn']}
+                                            type={"text"}
                                             size={"small"} icon={<ChromeSvgIcon />}
                                             onClick={()=>{
                                                 showResponseViaResponseRaw(flow?.Response)
