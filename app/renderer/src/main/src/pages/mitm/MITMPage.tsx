@@ -309,7 +309,13 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                     <PlusCircleIcon className={style["plus-circle"]} />
                 </YakitButton>
             </div>
-            <YakitEmpty />
+            <div className={style["mitm-plugin-empty"]}>
+                <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
+                <div className={style["mitm-plugin-buttons"]}>
+                    <YakitButton>获取云端插件</YakitButton>
+                    <YakitButton>导入插件源</YakitButton>
+                </div>
+            </div>
             {/* <YakModuleList
                 queryLocal={{
                     Tag: tag,
