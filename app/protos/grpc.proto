@@ -288,6 +288,7 @@ service Yak {
   rpc ResetRiskTableStats(Empty) returns (Empty);
   rpc QueryAvailableTarget(Empty) returns (Fields);
   rpc QueryNewRisk(QueryNewRiskRequest) returns (QueryNewRiskResponse);
+  rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
 
   // Report
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
@@ -1359,6 +1360,12 @@ message NewRisk {
   int64 UpdatedAt = 4;
   string Verbose = 5;
   string TitleVerbose = 6;
+  bool IsRead = 7;
+}
+
+message NewRiskReadRequest {
+  int64 AfterId = 1;
+  repeated int64 Ids = 2;
 }
 
 message VerifyTunnelServerDomainParams {
