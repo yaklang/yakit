@@ -13,13 +13,14 @@ import {
     simpleQueryToFull,
     TaskResultLog
 } from "../invoker/batch/BatchExecuteByFilter"
-import {defTargetRequest, TargetRequest} from "../invoker/batch/BatchExecutorPage"
+import {defTargetRequest, TargetRequest,CancelBatchYakScript} from "../invoker/batch/BatchExecutorPage"
 import {ExecBatchYakScriptResult} from "../invoker/batch/YakBatchExecutorLegacy"
 import {showUnfinishedBatchTaskList, UnfinishedBatchTask} from "../invoker/batch/UnfinishedBatchTaskList"
 import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks"
 import {Risk} from "../risks/schema"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
+import {YakScript} from "../invoker/schema"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
 interface Option {
@@ -65,9 +66,10 @@ interface SimbleDetectFormProps {
     token: string
     setToken: (v: string) => void
     sendTarget?: string
+    executing: boolean
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
-    const {setPercent, setExecuting, token, setToken, sendTarget} = props
+    const {setPercent, setExecuting, token, setToken, sendTarget, executing} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -101,12 +103,16 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         console.log("value", values)
         const {scan_type} = values
         const scan_deep = values.scan_deep || "slow"
-        if (!Array.isArray(scan_type)||scan_type.length===0) {
+        if (!Array.isArray(scan_type) || scan_type.length === 0) {
             warn("请选择扫描模式")
             return
         }
-        const OnlineGroup:string = scan_type.map((item)=>item[item.length-1]).join(",")
-        console.log("OnlineGroup",OnlineGroup)
+        if (!target.target && !target.targetFile) {
+            warn("请输入目标或上传目标文件夹绝对路径!")
+            return
+        }
+        const OnlineGroup: string = scan_type.map((item) => item[item.length - 1]).join(",")
+        console.log("OnlineGroup", OnlineGroup)
         switch (scan_deep) {
             case "slow":
                 alreadySet
@@ -127,48 +133,50 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
         console.log("第二接口所需数据，getParams():", getParams())
         ipcRenderer
-        .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-        .then((data) => {
-            console.log("data", data)
-        })
-        .catch((e) => {
-            failed(`查询扫描模式错误:${e}`)
-        })
-        .finally(() => {})
-        return
-        setPercent(0)
-        const tokens = randomString(40)
-        setToken(tokens)
-        StartExecBatchYakScriptWithFilter(
-            target,
-            simpleQueryToFull(
-                false,
-                {
-                    exclude: [],
-                    include: [],
-                    tags: "",
-                    type: "mitm,port-scan,nuclei"
-                },
-                []
-            ),
-            tokens,
-            undefined,
-            undefined
-        )
-            .then(() => {
-                setExecuting(true)
+            .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
+            .then((data: {Data: YakScript[]}) => {
+                const include: string[] = data.Data.map((item) => item.OnlineScriptName)
+                setPercent(0)
+                const tokens = randomString(40)
+                setToken(tokens)
+                console.log("data", target, include)
+                StartExecBatchYakScriptWithFilter(
+                    target,
+                    simpleQueryToFull(
+                        false,
+                        {
+                            exclude: [],
+                            include: include,
+                            tags: "",
+                            type: "mitm,port-scan,nuclei"
+                        },
+                        []
+                    ),
+                    tokens,
+                    undefined,
+                    undefined
+                )
+                    .then(() => {
+                        setExecuting(true)
+                    })
+                    .catch((e) => {
+                        failed(`启动批量安全检测失败：${e}`)
+                    })
             })
             .catch((e) => {
-                failed(`启动批量安全检测失败：${e}`)
+                failed(`查询扫描模式错误:${e}`)
             })
+            .finally(() => {})
     })
 
-    const onCancel = () => {}
+    const onCancel = useMemoizedFn(() => {
+        CancelBatchYakScript(token).then()
+    })
 
     const scanType = (arr: any[]) => {
         if (arr.length > 0) {
             let endItem: any[] = arr[arr.length - 1]
-            let lastArr: any[] = arr.length<=1?[]:[...arr].slice(0,arr.length-1)
+            let lastArr: any[] = arr.length <= 1 ? [] : [...arr].slice(0, arr.length - 1)
             endItem.length > 1 && (lastArr.length === 0 || lastArr[lastArr.length - 1].length > 1)
                 ? form.setFieldsValue({
                       scan_type: [...lastArr, endItem]
@@ -216,17 +224,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         beforeUpload={(f) => {
                             const typeArr: string[] = [
                                 "text/plain",
-                                ".csv",
-                                ".xls",
-                                ".xlsx",
-                                "application/vnd.ms-excel",
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             ]
                             if (!typeArr.includes(f.type)) {
-                                failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                                failed(`${f.name}非txt文件，请上传txt格式文件！`)
                                 return false
                             }
 
+                            setTarget({...target, target: "",targetFile:f?.path||""})
                             return false
                         }}
                         item={{
@@ -235,10 +239,12 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         }}
                         textarea={{
                             isBubbing: true,
-                            setValue: (Targets) => {},
-                            value: "",
+                            setValue: (Targets) => {
+                                setTarget({...target, target: Targets,targetFile:""})
+                            },
+                            value: target.target.length>0?target.target:target.targetFile,
                             rows: 2,
-                            placeholder: "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
+                            // placeholder: "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割"
                         }}
                         otherHelpNode={
                             <>
@@ -283,12 +289,18 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                             </>
                         }
                         suffixNode={
-                            loading ? (
-                                <Button type='primary' danger onClick={(e) => {}}>
+                            executing ? (
+                                <Button type='primary' danger disabled={!executing}
+                                onClick={onCancel}>
                                     立即停止任务
                                 </Button>
                             ) : (
-                                <Button type='primary' htmlType='submit'>
+                                <Button
+                                    type='primary'
+                                    htmlType='submit'
+                                    disabled={executing}
+                                    loading={loading}
+                                >
                                     开始检测
                                 </Button>
                             )
@@ -395,7 +407,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-in-progress"])}>
                         执行中状态
                     </div>
-                    <div className={classNames(styles['notice-body-counter'])}>
+                    <div className={classNames(styles["notice-body-counter"])}>
                         {progressRunning}进程 / {scanTaskExecutingCount}任务
                     </div>
                 </div>
@@ -404,7 +416,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-completed"])}>
                         已结束/总进程
                     </div>
-                    <div className={classNames(styles['notice-body-counter'])}>
+                    <div className={classNames(styles["notice-body-counter"])}>
                         {progressFinished}/{progressTotal}
                     </div>
                 </div>
@@ -413,7 +425,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-vuln"])}>
                         命中风险/漏洞
                     </div>
-                    <div className={classNames(styles['notice-body-counter'])}>{jsonRisks.length}</div>
+                    <div className={classNames(styles["notice-body-counter"])}>{jsonRisks.length}</div>
                 </div>
             </div>
 
@@ -463,7 +475,13 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
             }
             bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
         >
-            <SimbleDetectForm setPercent={setPercent} setExecuting={setExecuting} token={token} setToken={setToken} />
+            <SimbleDetectForm
+                executing={executing}
+                setPercent={setPercent}
+                setExecuting={setExecuting}
+                token={token}
+                setToken={setToken}
+            />
             <Divider style={{margin: 4}} />
             <div style={{flex: "1", overflow: "hidden"}}>
                 <SimbleDetectTable token={token} setPercent={setPercent} />

@@ -12,6 +12,7 @@ export declare namespace API {
     plugin_type: YakitSearchData[];
     tags: YakitSearchData[];
     status: YakitSearchData[];
+    group?: YakitSearchData[];
   }
   export interface YakitPluginResponse {
     id: number;
