@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react"
-import { Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal } from "antd"
+import React, { useEffect, useState } from "react"
+import { Button, Checkbox, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal } from "antd"
 import { InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem } from "../../utils/inputUtil"
 import { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam } from "./schema"
 import { YakCodeEditor, YakEditor } from "../../utils/editors"
@@ -65,14 +65,15 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
 const { ipcRenderer } = window.require("electron")
 
 const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
+    const yakScriptParams: YakScript = cloneDeep(data)
     const exec = (extraParams?: YakExecutorParam[]) => {
-        if (data.Params.length <= 0) {
+        if (yakScriptParams.Params.length <= 0) {
             showModal({
                 title: "立即执行",
                 width: 1000,
                 content: (
                     <>
-                        <YakScriptRunner debugMode={true} script={data} params={[...(extraParams || [])]} />
+                        <YakScriptRunner debugMode={true} script={yakScriptParams} params={[...(extraParams || [])]} />
                     </>
                 )
             })
@@ -83,7 +84,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
                 content: (
                     <>
                         <YakScriptParamsSetter
-                            {...data}
+                            {...yakScriptParams}
                             saveDebugParams={saveDebugParams}
                             onParamsConfirm={(params) => {
                                 m.destroy()
@@ -94,7 +95,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
                                         <>
                                             <YakScriptRunner
                                                 debugMode={true}
-                                                script={data}
+                                                script={yakScriptParams}
                                                 params={[...params, ...(extraParams || [])]}
                                             />
                                         </>
@@ -107,9 +108,9 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
             })
         }
     }
-    if (data.EnablePluginSelector) {
+    if (yakScriptParams.EnablePluginSelector) {
         queryYakScriptList(
-            data.PluginSelectorTypes || "mitm,port-scan",
+            yakScriptParams.PluginSelectorTypes || "mitm,port-scan",
             (i) => {
                 exec([{ Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: i.map((i) => i.ScriptName).join("|") }])
             },
