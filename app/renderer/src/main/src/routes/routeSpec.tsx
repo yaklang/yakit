@@ -296,6 +296,9 @@ interface ComponentParams {
     facadeServerParams?: StartFacadeServerParams
     classGeneraterParams?: {[key: string]: any}
     classType?: string
+
+    // 简易企业版 - 安全检测
+    recoverOnlineGroup?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -354,7 +357,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <NewHome/>
         case Route.SimbleDetect:
             return <SimbleDetect Uid={params?.recoverUid}
-            BaseProgress={params?.recoverBaseProgress}/>
+            BaseProgress={params?.recoverBaseProgress}
+            YakScriptOnlineGroup={params?.recoverOnlineGroup}
+            />
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case Route.Codec:
