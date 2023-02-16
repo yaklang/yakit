@@ -9,12 +9,12 @@ import {NetWorkApi} from "@/services/fetch"
 import {Interaction, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend, getTheme} from "bizcharts"
 import {useStore, YakitStoreParams} from "@/store"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn, useSize} from "ahooks"
+import {useGetState, useMemoizedFn, useSize, useInViewport} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
 import {PluginSearchStatisticsRequest, PluginType} from "@/pages/yakitStore/YakitStorePage"
-import { DownloadOnlinePluginByScriptNamesResponse } from "@/pages/layout/HeardMenu/HeardMenuType";
+import {DownloadOnlinePluginByScriptNamesResponse} from "@/pages/layout/HeardMenu/HeardMenuType"
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -84,27 +84,27 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
             })
     }
 
-    const addMenuLab = (name:string) => {
+    const addMenuLab = (name: string) => {
         ipcRenderer
-                .invoke("DownloadOnlinePluginByScriptNames", {
-                    ScriptNames: [name],
-                    Token: userInfo.token
-                })
-                .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
-                    if(rsp.Data.length>0){
-                        success("添加菜单成功")
-                        ipcRenderer.invoke("change-main-menu")
-                    }
-                })
-                .catch((e) => {
-                    failed(`添加菜单失败:${e}`)
-                })
-                .finally(() => {
-                    getCustomizeMenus && getCustomizeMenus()
-                })
+            .invoke("DownloadOnlinePluginByScriptNames", {
+                ScriptNames: [name],
+                Token: userInfo.token
+            })
+            .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                if (rsp.Data.length > 0) {
+                    success("添加菜单成功")
+                    ipcRenderer.invoke("change-main-menu")
+                }
+            })
+            .catch((e) => {
+                failed(`添加菜单失败:${e}`)
+            })
+            .finally(() => {
+                getCustomizeMenus && getCustomizeMenus()
+            })
     }
     const addMenu = (name: string) => {
-        if (name === "基础爬虫"||name === "综合目录扫描与爆破") {
+        if (name === "基础爬虫" || name === "综合目录扫描与爆破") {
             addMenuLab(name)
         }
     }
@@ -127,7 +127,7 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
                             <div className={styles["right-arrow-text"]} onClick={() => addMenu(dataSource.label)}>
                                 获取菜单
                             </div>
-                         )} 
+                        )}
                     </div>
                     <div className={classNames(styles["item-label"], !dataSource.isShow && styles["control-opacity"])}>
                         {dataSource.label}
@@ -996,12 +996,14 @@ export const getDescribe = (name: string) => {
 
 export interface NewHomeProps {}
 const NewHome: React.FC<NewHomeProps> = (props) => {
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     // 加载是否完成
     const [load, setLoad] = useState<boolean>(false)
     useEffect(() => {
         getCustomizeMenus()
-    }, [])
+    }, [inViewport])
 
     const setOpenPage = (v) => {
         ipcRenderer.invoke("open-user-manage", v.route)
@@ -1016,7 +1018,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 Type: "yak"
             } as QueryYakScriptRequest)
             .then((data: QueryYakScriptsResponse) => {
-                const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
+                const deepList: newHomeListData[] = cloneDeep(newHomeList)
                 data.Data.map((i) => {
                     if (i.ScriptName === "基础爬虫") {
                         deepList[0].subMenuData[1].isShow = true
@@ -1035,40 +1037,44 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
     }
 
     return (
-        <div className={classNames(styles["new-home-page"])}>
-            <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
-                <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
-                </div>
-                <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
-                    <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
-                        <RouteList data={newHomeData[1]} colLimit={2} setOpenPage={setOpenPage} />
+        <div className={classNames(styles["new-home-page"])} ref={ref}>
+            {inViewport && (
+                <>
+                    <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
+                        <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
+                            <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
+                        </div>
+                        <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
+                            <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
+                                <RouteList data={newHomeData[1]} colLimit={2} setOpenPage={setOpenPage} />
+                            </div>
+                            <div className={styles["bottom-in"]}>
+                                <RouteList data={newHomeData[2]} colLimit={2} setOpenPage={setOpenPage} />
+                            </div>
+                        </div>
+                        <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
+                            <RouteList
+                                data={newHomeData[0]}
+                                setOpenPage={setOpenPage}
+                                load={load}
+                                getCustomizeMenus={getCustomizeMenus}
+                            />
+                        </div>
+                        <div className={styles["top-small-block"]}>
+                            <RouteList data={newHomeData[4]} setOpenPage={setOpenPage} />
+                        </div>
                     </div>
-                    <div className={styles["bottom-in"]}>
-                        <RouteList data={newHomeData[2]} colLimit={2} setOpenPage={setOpenPage} />
+                    <div className={styles["home-bottom-block"]}>
+                        <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
+                            <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
+                        </div>
+                        <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
+                            <RouteTitle title='插件商店' />
+                            <PlugInShop setOpenPage={setOpenPage} />
+                        </div>
                     </div>
-                </div>
-                <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                    <RouteList
-                        data={newHomeData[0]}
-                        setOpenPage={setOpenPage}
-                        load={load}
-                        getCustomizeMenus={getCustomizeMenus}
-                    />
-                </div>
-                <div className={styles["top-small-block"]}>
-                    <RouteList data={newHomeData[4]} setOpenPage={setOpenPage} />
-                </div>
-            </div>
-            <div className={styles["home-bottom-block"]}>
-                <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
-                    <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
-                </div>
-                <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
-                    <RouteTitle title='插件商店' />
-                    <PlugInShop setOpenPage={setOpenPage} />
-                </div>
-            </div>
+                </>
+            )}
         </div>
     )
 }
