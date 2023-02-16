@@ -69,7 +69,7 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
     return result
 }
 
-export const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string, fromRecover?: boolean, baseProgress?: number) => {
+export const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter: QueryYakScriptRequest, token: string, fromRecover?: boolean, baseProgress?: number,YakScriptOnlineGroup?:string) => {
     const params = {
         Target: target.target,
         Proxy: target.proxy,
@@ -80,6 +80,7 @@ export const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter:
         TotalTimeoutSeconds: target.totalTimeout || 3600 * 2,
         FromRecover: fromRecover,
         BaseProgress: baseProgress,
+        YakScriptOnlineGroup,
     };
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };

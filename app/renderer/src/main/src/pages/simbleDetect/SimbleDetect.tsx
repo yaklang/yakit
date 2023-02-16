@@ -100,7 +100,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     // 指纹服务是否已经设置
     const [alreadySet, setAlreadySet] = useState<boolean>(false)
 
-    const run = (include: string[]) => {
+    const run = (include: string[],OnlineGroup:string) => {
         setPercent(0)
         const tokens = randomString(40)
         setToken(tokens)
@@ -118,7 +118,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             ),
             tokens,
             undefined,
-            undefined
+            undefined,
+            OnlineGroup
         )
             .then(() => {
                 setExecuting(true)
@@ -164,13 +165,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
         // 当为跳转带参
         if (Array.isArray(openScriptNames)) {
-            run(openScriptNames)
+            run(openScriptNames,OnlineGroup)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const include: string[] = data.Data.map((item) => item.OnlineScriptName)
-                    run(include)
+                    run(include,OnlineGroup)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)

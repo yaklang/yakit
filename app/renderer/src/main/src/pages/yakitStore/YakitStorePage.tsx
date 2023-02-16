@@ -2835,8 +2835,8 @@ const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
     }
     return(
 <div>
-                            <div>移出分组</div>
-                            <div style={{fontSize:12,color:"gray",marginBottom:10}}>选择要移出的分组，可多选</div>
+                            <div>编辑分组</div>
+                            <div style={{fontSize:12,color:"gray",marginBottom:10}}>已勾选的分组为当前所在分组</div>
                             <div style={{display:"flex",justifyContent:"flex-start",flexWrap:"wrap"}}>
                             {typeList.map((item)=><div style={{width:108,position:"relative",margin:"0 20px 10px 0",padding:"10px 22px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
                                 {item}
