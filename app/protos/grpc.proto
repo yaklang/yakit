@@ -410,6 +410,30 @@ service Yak {
   rpc ImportProject(ImportProjectRequest) returns (stream ProjectIOProgress);
   // 迁移旧数据库
   rpc MigrateLegacyDatabase(Empty) returns (Empty);
+
+  // 从规则中提取数据
+  rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+}
+
+message MITMRuleExtractedData {
+  int64 Id = 1;
+  int64 CreatedAt = 2;
+  string SourceType = 3;
+  string TraceId = 4;
+  string Regexp = 5;
+  string RuleName = 6;
+  string Data = 7;
+}
+
+message QueryMITMRuleExtractedDataResponse {
+  repeated MITMRuleExtractedData Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+}
+
+message QueryMITMRuleExtractedDataRequest {
+  Paging Pagination = 1;
+  string HTTPFlowHash = 2;
 }
 
 message ExportProjectRequest {

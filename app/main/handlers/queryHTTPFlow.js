@@ -192,4 +192,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetHTTPPacketBody", async (e, params) => {
         return await asyncGetHTTPPacketBody(params)
     })
+
+    // asyncQueryMITMRuleExtractedData wrapper
+    const asyncQueryMITMRuleExtractedData = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryMITMRuleExtractedData(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryMITMRuleExtractedData", async (e, params) => {
+        return await asyncQueryMITMRuleExtractedData(params)
+    })
 }
