@@ -14,6 +14,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
 import {PluginSearchStatisticsRequest, PluginType} from "@/pages/yakitStore/YakitStorePage"
+import { DownloadOnlinePluginByScriptNamesResponse } from "@/pages/layout/HeardMenu/HeardMenuType";
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -71,6 +72,8 @@ interface RouteItemProps {
 
 const RouteItem: React.FC<RouteItemProps> = (props) => {
     const {dataSource, setOpenPage, load, getCustomizeMenus} = props
+    // 全局登录状态
+    const {userInfo} = useStore()
     const goRoute = () => {
         dataSource.key &&
             setOpenPage({
@@ -80,32 +83,29 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
                 multipleNode: []
             })
     }
-    const addLocalLab = useMemoizedFn((params) => {
+
+    const addMenuLab = (name:string) => {
         ipcRenderer
-            .invoke("DownloadOnlinePluginById", params)
-            .then(() => {
-                success("添加菜单成功")
-                ipcRenderer.invoke("change-main-menu")
-            })
-            .catch((e) => {
-                failed(`添加菜单失败:${e}`)
-            })
-            .finally(() => {
-                getCustomizeMenus && getCustomizeMenus()
-            })
-    })
+                .invoke("DownloadOnlinePluginByScriptNames", {
+                    ScriptNames: [name],
+                    Token: userInfo.token
+                })
+                .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                    if(rsp.Data.length>0){
+                        success("添加菜单成功")
+                        ipcRenderer.invoke("change-main-menu")
+                    }
+                })
+                .catch((e) => {
+                    failed(`添加菜单失败:${e}`)
+                })
+                .finally(() => {
+                    getCustomizeMenus && getCustomizeMenus()
+                })
+    }
     const addMenu = (name: string) => {
-        if (name === "基础爬虫") {
-            addLocalLab({
-                OnlineID: 4104,
-                UUID: "eb77ddbc-e703-4e95-b59f-41b3b172ce3d"
-            })
-        }
-        if (name === "综合目录扫描与爆破") {
-            addLocalLab({
-                OnlineID: 4125,
-                UUID: "33d0b3c7-d417-4bb0-a23c-cb5965c6cbb9"
-            })
+        if (name === "基础爬虫"||name === "综合目录扫描与爆破") {
+            addMenuLab(name)
         }
     }
     return (
@@ -127,7 +127,7 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
                             <div className={styles["right-arrow-text"]} onClick={() => addMenu(dataSource.label)}>
                                 获取菜单
                             </div>
-                        )}
+                         )} 
                     </div>
                     <div className={classNames(styles["item-label"], !dataSource.isShow && styles["control-opacity"])}>
                         {dataSource.label}
