@@ -285,7 +285,8 @@ const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
     const {onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [result,setResult] = useState<string>()
-    const onFinish = (values) => {
+    const onFinish = useMemoizedFn((values) => {
+        setLoading(true)
         const {url} = values
         setResult(undefined)
         ipcRenderer
@@ -296,8 +297,8 @@ const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
                 setResult(str)
             })
             .catch(() => {})
-            // .finally(() => setTimeout(() => onClose(), 300))
-    }
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
     const layout = {
         labelCol: {span: 5},
         wrapperCol: {span: 16}
@@ -306,7 +307,7 @@ const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
     const judgeUrl = () =>[ 
         {
             validator: (_, value) => {
-                let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
+                let re = /([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
                 if (re.test(value)) {
                     return Promise.resolve()
                 } else {
