@@ -4,12 +4,14 @@ import "./ConfigPrivateDomain.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success} from "@/utils/notification"
 import {loginOut} from "@/utils/login"
-import {useDebounceFn, useMemoizedFn,useGetState} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useStore} from "@/store"
 import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
-import { Route } from "@/routes/routeSpec"
+import {Route} from "@/routes/routeSpec"
+import TelecomSmallLogo from "@/assets/img/telecom_logo_small.png"
+
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -24,22 +26,22 @@ const layout = {
 }
 
 interface ConfigPrivateDomainProps {
-    onClose?: () => void,
-    onSuccee?:() => void,
+    onClose?: () => void
+    onSuccee?: () => void
     // 是否为企业登录
-    enterpriseLogin?:boolean|undefined
+    enterpriseLogin?: boolean | undefined
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,onSuccee,enterpriseLogin = false} = props
+    const {onClose, onSuccee, enterpriseLogin = false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
     const defaultHttpUrl = useRef<string>("")
-    const [formValue,setFormValue,getFormValue] = useGetState<OnlineProfileProps>({
+    const [formValue, setFormValue, getFormValue] = useGetState<OnlineProfileProps>({
         BaseUrl: "",
         user_name: "",
-        pwd: "",
+        pwd: ""
     })
     useEffect(() => {
         getHttpSetting()
@@ -51,32 +53,31 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     }
     // 企业登录
     const loginUser = useMemoizedFn(() => {
-        const {user_name,pwd} = getFormValue()
-            NetWorkApi<API.UrmLoginRequest, API.UserData>({
-                method: "post",
-                url: "urm/login",
-                data: {
-                    user_name,
-                    pwd
-                }
+        const {user_name, pwd} = getFormValue()
+        NetWorkApi<API.UrmLoginRequest, API.UserData>({
+            method: "post",
+            url: "urm/login",
+            data: {
+                user_name,
+                pwd
+            }
+        })
+            .then((res: API.UserData) => {
+                console.log("返回结果：", res)
+                ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
+                    if (data?.next) {
+                        success("企业登录成功")
+                        onCloseTab()
+                        onClose && onClose()
+                        onSuccee && onSuccee()
+                    }
+                })
             })
-                .then((res:API.UserData) => {
-                    console.log("返回结果：", res)
-                    ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
-                        if(data?.next){
-                            success("企业登录成功")
-                            onCloseTab()
-                            onClose&&onClose()
-                            onSuccee&&onSuccee()
-                        }
-                    })
-                })
-                .catch((err) => {
-                    setTimeout(() => setLoading(false), 300)
-                    failed("企业登录失败：" + err)
-
-                })
-                .finally(() => {})
+            .catch((err) => {
+                setTimeout(() => setLoading(false), 300)
+                failed("企业登录失败：" + err)
+            })
+            .finally(() => {})
     })
     // 关闭 tab
     const onCloseTab = useMemoizedFn(() => {
@@ -85,37 +86,35 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 router: Route.YakitPluginJournalDetails,
                 singleNode: true
             })
-            .then(() => {
-            })
+            .then(() => {})
     })
     const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
         setLoading(true)
         ipcRenderer
-        .invoke("SetOnlineProfile", {
-            ...values
-        })
-        .then((data) => {
-            syncLoginOut()
-            ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
-            setRemoteValue("httpSetting", JSON.stringify(values))
-            addHttpHistoryList(values.BaseUrl)
-            setFormValue(values)
-            if(!enterpriseLogin){
-                success("私有域设置成功")
-                onCloseTab()
-                onClose&&onClose()
-            }
-        })
-        .catch((e: any) => {
-            !enterpriseLogin&&setTimeout(() => setLoading(false), 300)
-            failed("设置私有域失败:" + e)
-        })
-        .finally(() => {})
-
+            .invoke("SetOnlineProfile", {
+                ...values
+            })
+            .then((data) => {
+                syncLoginOut()
+                ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
+                setRemoteValue("httpSetting", JSON.stringify(values))
+                addHttpHistoryList(values.BaseUrl)
+                setFormValue(values)
+                if (!enterpriseLogin) {
+                    success("私有域设置成功")
+                    onCloseTab()
+                    onClose && onClose()
+                }
+            })
+            .catch((e: any) => {
+                !enterpriseLogin && setTimeout(() => setLoading(false), 300)
+                failed("设置私有域失败:" + e)
+            })
+            .finally(() => {})
     })
     useEffect(() => {
         ipcRenderer.on("edit-baseUrl-status", (e, res: any) => {
-            enterpriseLogin&&loginUser()
+            enterpriseLogin && loginUser()
         })
         return () => {
             ipcRenderer.removeAllListeners("edit-baseUrl-status")
@@ -154,7 +153,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const judgePass = () => [
         {
             validator: (_, value) => {
-                let re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.<>?;:\[\]{}~!@#$%^&*()_+-="])[A-Za-z\d.<>?;:\[\]{}~!@#$%^&*()_+-="]{8,20}/
+                let re =
+                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.<>?;:\[\]{}~!@#$%^&*()_+-="])[A-Za-z\d.<>?;:\[\]{}~!@#$%^&*()_+-="]{8,20}/
                 if (re.test(value)) {
                     return Promise.resolve()
                 } else {
@@ -164,7 +164,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         }
     ]
     // 判断是否为网址
-    const judgeUrl = () =>[ 
+    const judgeUrl = () => [
         {
             validator: (_, value) => {
                 let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
@@ -178,29 +178,43 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     ]
     return (
         <div className='private-domain'>
-            {enterpriseLogin&&<div className="login-title-show">
-                <div className="icon-box">
-                    <img src={yakitImg} className="type-icon-img"/>
+            {enterpriseLogin && (
+                <div className='login-title-show'>
+                    <div className='icon-box'>
+                        <img src={TelecomSmallLogo} className='type-icon-img' />
+                    </div>
+                    <div className='title-box'>企业登录</div>
                 </div>
-                <div className="title-box">企业登录</div>
-            </div>}
+            )}
             <Form {...layout} form={form} name='control-hooks' onFinish={onFinish}>
-                <Form.Item name='BaseUrl' label='私有域地址' rules={[{required: true, message: "该项为必填"},...judgeUrl()]}>
+                <Form.Item
+                    name='BaseUrl'
+                    label='私有域地址'
+                    rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}
+                >
                     <AutoComplete
                         options={httpHistoryList.map((item) => ({value: item}))}
                         placeholder='请输入你的私有域地址'
                         defaultOpen={!enterpriseLogin}
                     />
                 </Form.Item>
-                {enterpriseLogin&&<Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入你的用户名' allowClear />
-                </Form.Item>}
-                {enterpriseLogin&&<Form.Item name='pwd' label='密码' rules={[{required: true, message: "该项为必填"}, ...judgePass()]}>
-                    <Input.Password placeholder='请输入你的密码' allowClear />
-                </Form.Item>}
-                <div className="form-item-submit">
-                    <Button type='primary' htmlType='submit' style={{width:120}} loading={loading}>
-                        {enterpriseLogin?"登录":"确定"}
+                {enterpriseLogin && (
+                    <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
+                        <Input placeholder='请输入你的用户名' allowClear />
+                    </Form.Item>
+                )}
+                {enterpriseLogin && (
+                    <Form.Item
+                        name='pwd'
+                        label='密码'
+                        rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
+                    >
+                        <Input.Password placeholder='请输入你的密码' allowClear />
+                    </Form.Item>
+                )}
+                <div className='form-item-submit'>
+                    <Button type='primary' htmlType='submit' style={{width: 120}} loading={loading}>
+                        {enterpriseLogin ? "登录" : "确定"}
                     </Button>
                 </div>
             </Form>

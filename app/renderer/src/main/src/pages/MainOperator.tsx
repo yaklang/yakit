@@ -1414,10 +1414,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             >
                                                                 <EditOutlined className='main-container-cion' />
                                                             </Popover> */}
-                                                            <CloseOutlined
-                                                                className='main-container-cion'
-                                                                onClick={() => removePage(`${i.route}`)}
-                                                            />
+                                                            {i.verbose !== "首页" && (
+                                                                <CloseOutlined
+                                                                    className='main-container-cion'
+                                                                    onClick={() => removePage(`${i.route}`)}
+                                                                />
+                                                            )}
                                                         </Space>
                                                     }
                                                 >

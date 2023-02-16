@@ -638,10 +638,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 })}
                                                 onClick={() => changeYakitMode("soft")}
                                             >
-                                                {yakitMode === "soft" ? (
+                                                {/* {yakitMode === "soft" ? (
                                                     <YakitThemeSvgIcon style={{fontSize: 20}} />
                                                 ) : (
                                                     <YakitGraySvgIcon style={{fontSize: 20}} />
+                                                )} */}
+                                                {yakitMode === "soft" ? (
+                                                    <img src={TelecomSmallLogo} alt='logo' style={{width:20}}/>
+                                                ) : (
+                                                    <img src={TelecomSmallLogo} alt='logo' style={{width:20,opacity:0.2}}/>
                                                 )}
                                             </div>
 
@@ -723,10 +728,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 })}
                                                 onClick={() => changeYakitMode("soft")}
                                             >
-                                                {yakitMode === "soft" ? (
+                                                {/* yakit */}
+                                                {/* {yakitMode === "soft" ? (
                                                     <YakitThemeSvgIcon style={{fontSize: 20}} />
                                                 ) : (
                                                     <YakitGraySvgIcon style={{fontSize: 20}} />
+                                                )} */}
+                                                {/* 电信 */}
+                                                {yakitMode === "soft" ? (
+                                                    <img src={TelecomSmallLogo} alt='logo' style={{width:20}}/>
+                                                ) : (
+                                                    <img src={TelecomSmallLogo} alt='logo' style={{width:20,opacity:0.2}}/>
                                                 )}
                                             </div>
 
