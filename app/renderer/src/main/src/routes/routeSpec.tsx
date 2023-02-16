@@ -475,6 +475,20 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 icon: <MenuPortScanningIcon />,
                 hoverIcon: <MenuSolidPortScanningIcon />,
                 describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+            },
+            {
+                id: "2-5",
+                key: undefined,
+                label: "基础爬虫",
+                icon: <MenuBasicCrawlerIcon />,
+                hoverIcon: <MenuSolidBasicCrawlerIcon />
+            },
+            {
+                id: "2-6",
+                key: undefined,
+                label: "综合目录扫描与爆破",
+                icon: <MenuComprehensiveCatalogScanningAndBlastingIcon />,
+                hoverIcon: <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />
             }
         ]
     },

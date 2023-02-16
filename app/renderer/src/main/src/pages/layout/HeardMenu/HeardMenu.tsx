@@ -356,6 +356,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             setSubMenuData(data[0].subMenuData || [])
             setMenuId(data[0].id)
         }
+        if (callBack) callBack()
         // const menuLists = getMenuListBySort(data, menuMode)
         // ipcRenderer
         //     .invoke("AddMenus", {Data: menuLists})

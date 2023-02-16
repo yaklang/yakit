@@ -1434,7 +1434,17 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                         }}
                                                     >
                                                         {i.singleNode ? (
-                                                            i.singleNode
+                                                            <>
+                                                                {i.verbose === "首页" ? (
+                                                                    currentTabKey === Route.NewHome ? (
+                                                                        i.singleNode
+                                                                    ) : (
+                                                                        <></>
+                                                                    )
+                                                                ) : (
+                                                                    i.singleNode
+                                                                )}
+                                                            </>
                                                         ) : (
                                                             <MainTabs
                                                                 currentTabKey={currentTabKey}
