@@ -37,7 +37,7 @@ import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
-
+import TelecomSmallLogo from "@/assets/img/telecom_logo_small.png"
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
 // 是否为企业版
@@ -987,7 +987,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             <Spin spinning={loading}>
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
-                        <YakitThemeSvgIcon style={{fontSize: 64}} />
+                        {/* <YakitThemeSvgIcon style={{fontSize: 64}} /> */}
+                        <img style={{width: 64}} src={TelecomSmallLogo} alt='logo' />
                         <div className={styles["title-style"]}>Yakit 远程连接模式</div>
                         <div className={styles["remote-history"]}>
                             <div className={styles["select-title"]}>连接历史</div>

@@ -184,58 +184,60 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("QueryAllMenuItem", {Mode: menuMode})
                     .then((rsp: MenuByGroupProps) => {
-                        if (rsp.Groups.length === 0) {
-                            // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
-                            onInitMenuData(menuMode, oldMenuData)
-                        } else {
-                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除
-                            let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData]
-                            if (menuMode == "new") {
-                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.isNovice)
-                            }
-                            const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
-                            const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
-                            for (let i = 0; i < rsp.Groups.length; i++) {
-                                const onlineMenuItem = rsp.Groups[i]
-                                const localMenuItem = currentMenuList.find((ele) => ele.label === onlineMenuItem.Group)
-                                if (localMenuItem && localMenuItem.subMenuData) {
-                                    for (let j = 0; j < localMenuItem.subMenuData.length; j++) {
-                                        const item = localMenuItem.subMenuData[j]
-                                        if (!item.key) continue
-                                        const index = onlineMenuItem.Items.findIndex((o) => o.Verbose === item.label)
-                                        if (index === -1) {
-                                            if (!item.key || item.key.includes("plugin")) {
-                                                // 新增的默认插件菜单
-                                                addMenuScripName.push(item.yakScripName || item.label)
-                                            }
-                                            const newMenuItem: MenuItem = {
-                                                Group: onlineMenuItem.Group,
-                                                GroupSort: rsp.Groups[i].Items.length + 1,
-                                                Verbose: item.label,
-                                                YakScriptId: 0,
-                                                YakScriptName: item.key ? "" : item.yakScripName
-                                            }
-                                            newMenuList.push(newMenuItem)
-                                            rsp.Groups[i].Items.push(newMenuItem)
-                                        }
-                                    }
-                                }
-                            }
-                            const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
-                            if (newMenuList.length > 0) {
-                                onDownPluginByScriptNames(routerList, addMenuScripName, menuMode)
-                            }
-                            setRouteMenu(routerList)
-                            if ((updateSubMenu || !menuId) && routerList.length > 0) {
-                                let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
-                                if (menuId) {
-                                    firstMenu = routerList.find((i) => i.id === menuId) || {id: "", label: ""}
-                                }
-                                setSubMenuData(firstMenu.subMenuData || [])
-                                setMenuId(firstMenu.id)
-                            }
-                            setTimeout(() => setLoading(false), 300)
-                        }
+                        // 电信版本暂不需要自定义，所以屏蔽下方的自定义菜单的逻辑
+                        onInitMenuData(menuMode, oldMenuData.concat(rsp.Groups || []))
+                        // if (rsp.Groups.length === 0) {
+                        //     // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
+                        //     onInitMenuData(menuMode, oldMenuData)
+                        // } else {
+                        //     // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除
+                        //     let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData]
+                        //     if (menuMode == "new") {
+                        //         currentMenuList = [...DefaultRouteMenuData].filter((item) => item.isNovice)
+                        //     }
+                        //     const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
+                        //     const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
+                        //     for (let i = 0; i < rsp.Groups.length; i++) {
+                        //         const onlineMenuItem = rsp.Groups[i]
+                        //         const localMenuItem = currentMenuList.find((ele) => ele.label === onlineMenuItem.Group)
+                        //         if (localMenuItem && localMenuItem.subMenuData) {
+                        //             for (let j = 0; j < localMenuItem.subMenuData.length; j++) {
+                        //                 const item = localMenuItem.subMenuData[j]
+                        //                 if (!item.key) continue
+                        //                 const index = onlineMenuItem.Items.findIndex((o) => o.Verbose === item.label)
+                        //                 if (index === -1) {
+                        //                     if (!item.key || item.key.includes("plugin")) {
+                        //                         // 新增的默认插件菜单
+                        //                         addMenuScripName.push(item.yakScripName || item.label)
+                        //                     }
+                        //                     const newMenuItem: MenuItem = {
+                        //                         Group: onlineMenuItem.Group,
+                        //                         GroupSort: rsp.Groups[i].Items.length + 1,
+                        //                         Verbose: item.label,
+                        //                         YakScriptId: 0,
+                        //                         YakScriptName: item.key ? "" : item.yakScripName
+                        //                     }
+                        //                     newMenuList.push(newMenuItem)
+                        //                     rsp.Groups[i].Items.push(newMenuItem)
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        //     const routerList: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
+                        //     if (newMenuList.length > 0) {
+                        //         onDownPluginByScriptNames(routerList, addMenuScripName, menuMode)
+                        //     }
+                        //     setRouteMenu(routerList)
+                        //     if ((updateSubMenu || !menuId) && routerList.length > 0) {
+                        //         let firstMenu: MenuDataProps = routerList[0] || {id: "", label: ""}
+                        //         if (menuId) {
+                        //             firstMenu = routerList.find((i) => i.id === menuId) || {id: "", label: ""}
+                        //         }
+                        //         setSubMenuData(firstMenu.subMenuData || [])
+                        //         setMenuId(firstMenu.id)
+                        //     }
+                        //     setTimeout(() => setLoading(false), 300)
+                        // }
                     })
                     .catch((err) => {
                         failed("获取菜单失败：" + err)
@@ -348,26 +350,32 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      * @description: 保存最新的菜单数据
      */
     const onAddMenus = useMemoizedFn((data: MenuDataProps[], menuMode: string, callBack?: () => void) => {
-        const menuLists = getMenuListBySort(data, menuMode)
-        ipcRenderer
-            .invoke("AddMenus", {Data: menuLists})
-            .then((rsp) => {
-                setRouteMenu(data)
-                if (!menuId && data.length > 0) {
-                    setSubMenuData(data[0].subMenuData || [])
-                    setMenuId(data[0].id)
-                }
-                onRemoveEmpty()
-                if (callBack) callBack()
-            })
-            .catch((err) => {
-                failed("保存菜单失败：" + err)
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 300)
-            })
+        // 电信版本暂不支持自定义菜单，所以注释下方保存自定义菜单的逻辑
+        setRouteMenu(data)
+        if (!menuId && data.length > 0) {
+            setSubMenuData(data[0].subMenuData || [])
+            setMenuId(data[0].id)
+        }
+        // const menuLists = getMenuListBySort(data, menuMode)
+        // ipcRenderer
+        //     .invoke("AddMenus", {Data: menuLists})
+        //     .then((rsp) => {
+        //         setRouteMenu(data)
+        //         if (!menuId && data.length > 0) {
+        //             setSubMenuData(data[0].subMenuData || [])
+        //             setMenuId(data[0].id)
+        //         }
+        //         onRemoveEmpty()
+        //         if (callBack) callBack()
+        //     })
+        //     .catch((err) => {
+        //         failed("保存菜单失败：" + err)
+        //     })
+        //     .finally(() => {
+        //         setTimeout(() => {
+        //             setLoading(false)
+        //         }, 300)
+        //     })
     })
 
     useEffect(() => {
@@ -677,13 +685,16 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     </YakitButton>
                     <YakitButton
                         type='secondary2'
-                        className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}
+                        className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"], {
+                            [style["margin-right-0"]]: isExpand
+                        })}
                         onClick={() => onRouteMenuSelect(Route.YakScript)}
                         icon={<MenuYakRunnerIcon />}
                     >
                         Yak Runner
                     </YakitButton>
-                    <Dropdown
+                    {/* 电信版本暂不需要 自定义菜单*/}
+                    {/* <Dropdown
                         overlayClassName={style["customize-drop-menu"]}
                         overlay={
                             <>
@@ -748,7 +759,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
                             </div>
                         </YakitButton>
-                    </Dropdown>
+                    </Dropdown> */}
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}

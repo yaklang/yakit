@@ -31,7 +31,7 @@ import {loginOut} from "@/utils/login"
 import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import SelectUpload from "@/pages/SelectUpload";
+import SelectUpload from "@/pages/SelectUpload"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
@@ -49,7 +49,7 @@ import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
-import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase";
+import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -77,7 +77,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 上传数据弹框 */
-    const [uploadModalShow,setUploadModalShow] = useState<boolean>(false)
+    const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
     useEffect(() => {
         const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
@@ -261,7 +261,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 onCancel={() => setUploadModalShow(false)}
                 footer={null}
             >
-                <SelectUpload onCancel={() => setUploadModalShow(false)}/>
+                <SelectUpload onCancel={() => setUploadModalShow(false)} />
             </Modal>
         </div>
     )
@@ -410,7 +410,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     label: "其他操作",
                     children: [
                         {label: "管理员模式", key: "adminMode"},
-                        {label: "旧版本迁移", key: "migrateLegacy"},
+                        {label: "旧版本迁移", key: "migrateLegacy"}
                     ]
                 }
             ]}
