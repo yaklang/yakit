@@ -70,9 +70,21 @@ interface SimbleDetectFormProps {
     target: TargetRequest
     setTarget: (v: TargetRequest) => void
     openScriptNames: string[] | undefined
+    YakScriptOnlineGroup?: string
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
-    const {setPercent, setExecuting, token, setToken, sendTarget, executing, target, setTarget, openScriptNames} = props
+    const {
+        setPercent,
+        setExecuting,
+        token,
+        setToken,
+        sendTarget,
+        executing,
+        target,
+        setTarget,
+        openScriptNames,
+        YakScriptOnlineGroup
+    } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -97,10 +109,36 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         SynConcurrent: 1000
     })
 
+    useEffect(() => {
+        if (YakScriptOnlineGroup) {
+            let arr: string[] = YakScriptOnlineGroup.split(",")
+            let selectArr: any[] = []
+            arr.map((item) => {
+                switch (item) {
+                    case "弱口令":
+                        selectArr.push(["自定义", "弱口令"])
+                        break
+                    case "漏洞扫描":
+                        selectArr.push(["自定义", "漏洞扫描"])
+                        break
+                    case "合规检测":
+                        selectArr.push(["自定义", "合规检测"])
+                        break
+                    default:
+                        selectArr.push([item])
+                        break
+                }
+            })
+            form.setFieldsValue({
+                scan_type: selectArr
+            })
+        }
+    }, [YakScriptOnlineGroup])
+
     // 指纹服务是否已经设置
     const [alreadySet, setAlreadySet] = useState<boolean>(false)
 
-    const run = (include: string[],OnlineGroup:string) => {
+    const run = (include: string[], OnlineGroup: string) => {
         setPercent(0)
         const tokens = randomString(40)
         setToken(tokens)
@@ -130,7 +168,6 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     }
 
     const onFinish = useMemoizedFn((values) => {
-        console.log("value", values)
         const {scan_type} = values
         const scan_deep = values.scan_deep || "slow"
         if (!target.target && !target.targetFile) {
@@ -142,7 +179,6 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             return
         }
         const OnlineGroup: string = scan_type.map((item) => item[item.length - 1]).join(",")
-        console.log("OnlineGroup", OnlineGroup)
         switch (scan_deep) {
             case "slow":
                 alreadySet
@@ -165,13 +201,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
         // 当为跳转带参
         if (Array.isArray(openScriptNames)) {
-            run(openScriptNames,OnlineGroup)
+            run(openScriptNames, OnlineGroup)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const include: string[] = data.Data.map((item) => item.OnlineScriptName)
-                    run(include,OnlineGroup)
+                    run(include, OnlineGroup)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
@@ -458,11 +494,12 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 export interface SimbleDetectProps {
     Uid?: string
     BaseProgress?: number
+    YakScriptOnlineGroup?: string
 }
 
 export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
-    const {Uid, BaseProgress} = props
-    console.log("Uid-BaseProgress", Uid, BaseProgress)
+    const {Uid, BaseProgress, YakScriptOnlineGroup} = props
+    console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup)
     const [percent, setPercent] = useState(0)
     const [executing, setExecuting] = useState<boolean>(false)
     const [token, setToken] = useState(randomString(20))
@@ -486,7 +523,6 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 })
                 .then((req: {ScriptNames: string[]; Target: string}) => {
                     const {Target, ScriptNames} = req
-                    console.log("req", req)
                     // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
                     setTarget({...target, target: Target})
                     setOpenScriptNames(ScriptNames)
@@ -530,6 +566,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 target={target}
                 setTarget={setTarget}
                 openScriptNames={openScriptNames}
+                YakScriptOnlineGroup={YakScriptOnlineGroup}
             />
             <Divider style={{margin: 4}} />
             <div style={{flex: "1", overflow: "hidden"}}>
