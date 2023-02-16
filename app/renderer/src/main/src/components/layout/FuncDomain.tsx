@@ -110,7 +110,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             setUserMenu([
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "upload-data", title: "上传数据"},
+                // {key: "upload-data", title: "上传数据"},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
@@ -122,7 +122,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         else if (userInfo.role !== "admin" && userInfo.platform === "company") {
             setUserMenu([
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "upload-data", title: "上传数据"},
+                // {key: "upload-data", title: "上传数据"},
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ])
