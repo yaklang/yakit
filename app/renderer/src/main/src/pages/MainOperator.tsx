@@ -170,7 +170,6 @@ export interface MainProp {
     addr?: string
     onErrorConfirmed?: () => any
     isShowHome?: boolean
-    setJudgeLicense?: (v: boolean) => void
 }
 
 export interface MenuItem {
@@ -356,7 +355,6 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 })
 
 const Main: React.FC<MainProp> = React.memo((props) => {
-    const {setJudgeLicense} = props
     const [loading, setLoading] = useState(false)
 
     const [notification, setNotification] = useState("")
@@ -758,7 +756,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnterprise) {
-                setJudgeLicense && setJudgeLicense(true)
+                ipcRenderer.invoke("update-judge-license", true)
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
             } else {
