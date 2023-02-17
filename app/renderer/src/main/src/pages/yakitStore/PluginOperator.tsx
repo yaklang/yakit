@@ -844,7 +844,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                         width: "40%",
                         content: (
                             <>
-                                <OutputPluginForm YakScriptId={script.Id} />
+                                <OutputPluginForm YakScriptId={script.Id} YakScriptName={script.ScriptName} />
                             </>
                         )
                     })
@@ -923,6 +923,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
 
 export interface OutputPluginFormProp {
     YakScriptId?: number
+    YakScriptName?: string
     YakScriptIds?: number[]
     isSelectAll?: boolean
 }
@@ -936,9 +937,9 @@ interface ParamsProps {
 }
 
 export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((props) => {
-    const {YakScriptId, YakScriptIds, isSelectAll} = props
+    const {YakScriptId, YakScriptName, YakScriptIds, isSelectAll} = props
     const [_, setLocalPath, getLocalPath] = useGetState("")
-    const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState("")
+    const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState(YakScriptName || "")
     const [cachePath, setCachePath, getCachePath] = useGetState<string[]>([])
     useEffect(() => {
         getLocalValue("YAKIT_DEFAULT_LOAD_LOCAL_PATH").then((e) => {
