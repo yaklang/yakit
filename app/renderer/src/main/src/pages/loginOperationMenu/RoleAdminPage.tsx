@@ -42,7 +42,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     const {onCancel, refresh, editInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const [treeLoadedKeys,setTreeLoadedKeys] = useState<any>([])
+    const [treeLoadedKeys, setTreeLoadedKeys] = useState<any>([])
     const PluginType = {
         yak: "YAK 插件",
         mitm: "MITM 插件",
@@ -73,8 +73,10 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         })
     ]
     const [selectedAll, setSelectedAll] = useState<boolean>(false)
-     // 受控模式控制浮层
-     const [open, setOpen] = useState(false)
+    // 受控模式控制浮层
+    const [open, setOpen] = useState(false)
+    // TreeSelect已动态加载数组
+    const [_, setAlreadyLoad, getAlreadyLoad] = useGetState<any[]>([])
 
     useEffect(() => {
         if (editInfo) {
@@ -88,9 +90,12 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             })
                 .then((res: API.NewRoleRequest) => {
                     let {
-                        checkPlugin, 
-                        // deletePlugin, 
-                         name, plugin, pluginType = ""} = res
+                        checkPlugin,
+                        // deletePlugin,
+                        name,
+                        plugin,
+                        pluginType = ""
+                    } = res
                     const pluginArr = (plugin || []).map((item) => ({label: item.script_name, value: item.id}))
                     const pluginTypeArr: string[] = pluginType.split(",").filter((item) => item.length > 0)
                     const value = {
@@ -100,10 +105,11 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         treeSelect: [...pluginTypeArr, ...pluginArr]
                         // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
-                    if(checkPlugin)setTreeData(NoTreePluginType)
+                    if (checkPlugin) setTreeData(NoTreePluginType)
                     if (
                         pluginTypeArr.length === PluginTypeKeyArr.length &&
-                        pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
+                        pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length ===
+                            PluginTypeKeyArr.length
                     ) {
                         setSelectedAll(true)
                     }
@@ -125,10 +131,12 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     // 保留数组中重复元素
     const filterUnique = (arr) => arr.filter((i) => arr.indexOf(i) !== arr.lastIndexOf(i))
     const onFinish = useMemoizedFn((values) => {
-        const {name, 
-            // deletePlugin, 
+        const {
+            name,
+            // deletePlugin,
             checkPlugin,
-             treeSelect} = values
+            treeSelect
+        } = values
         setLoading(true)
         let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
         let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
@@ -167,31 +175,37 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     const onLoadData: TreeSelectProps["loadData"] = ({id}) => {
         return new Promise((resolve) => {
             const pId = id
-            NetWorkApi<LoadDataProps, API.PluginTypeListResponse>({
-                method: "get",
-                url: "plugin/type",
-                params: {
-                    type: id
-                }
-            })
-                .then((res: API.PluginTypeListResponse) => {
-                    if (Array.isArray(res.data)) {
-                        const AddTreeData = res.data.map((item) => ({
-                            id: item.id,
-                            pId,
-                            value: item.id,
-                            title: item.script_name,
-                            isLeaf: true
-                        }))
-                        setTreeData([...treeData, ...AddTreeData])
+            if (!getAlreadyLoad().includes(pId)) {
+                setAlreadyLoad(pId)
+                NetWorkApi<LoadDataProps, API.PluginTypeListResponse>({
+                    method: "get",
+                    url: "plugin/type",
+                    params: {
+                        type: id
                     }
                 })
-                .catch((err) => {
-                    failed("失败：" + err)
-                })
-                .finally(() => {
-                    resolve(undefined)
-                })
+                    .then((res: API.PluginTypeListResponse) => {
+                        if (Array.isArray(res.data)) {
+                            const AddTreeData = res.data.map((item) => ({
+                                id: item.id,
+                                pId,
+                                value: item.id,
+                                title: item.script_name,
+                                isLeaf: true
+                            }))
+                            setTreeData([...treeData, ...AddTreeData])
+                        }
+                    })
+                    .catch((err) => {
+                        failed("失败：" + err)
+                    })
+                    .finally(() => {
+                        resolve(undefined)
+                    })
+            }
+            else{
+                resolve(undefined)
+            }
         })
     }
 
@@ -210,15 +224,14 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         }
     }
 
-    const setTreeSelect = (value:boolean) => {
-        if(value){
+    const setTreeSelect = (value: boolean) => {
+        if (value) {
             setTreeData(NoTreePluginType)
-        }
-        else{
+        } else {
             setTreeData([...TreePluginType])
         }
         form.setFieldsValue({
-            treeSelect:[]
+            treeSelect: []
         })
         setTreeLoadedKeys([])
         setSelectedAll(false)
@@ -312,19 +325,21 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         allowClear
                         showCheckedStrategy='SHOW_PARENT'
                         maxTagCount={selectedAll ? 0 : 10}
-                        maxTagPlaceholder={(omittedValues)=>selectedAll ? "全部" : <>+ {omittedValues.length} ...</>}
+                        maxTagPlaceholder={(omittedValues) =>
+                            selectedAll ? "全部" : <>+ {omittedValues.length} ...</>
+                        }
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                         open={open}
                         onDropdownVisibleChange={(visible) => setOpen(visible)}
                         treeLoadedKeys={treeLoadedKeys}
                         treeExpandedKeys={treeLoadedKeys}
-                        onTreeExpand={(expandedKeys)=>{
+                        onTreeExpand={(expandedKeys) => {
                             // console.log("expandedKeys",expandedKeys)
                             setTreeLoadedKeys(expandedKeys)
                         }}
                     />
                 </Form.Item>
-                
+
                 <div style={{textAlign: "center"}}>
                     <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                         确认
@@ -449,7 +464,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                 <Space>
                     <Button
                         size='small'
-                        type="link"
+                        type='link'
                         onClick={() => {
                             setEditInfo(i)
                             setRoleFormShow(true)
@@ -462,9 +477,9 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                         onConfirm={() => {
                             onRemove([i.id])
                         }}
-                        placement="right"
+                        placement='right'
                     >
-                        <Button size={"small"} danger={true} type="link">
+                        <Button size={"small"} danger={true} type='link'>
                             删除
                         </Button>
                     </Popconfirm>
