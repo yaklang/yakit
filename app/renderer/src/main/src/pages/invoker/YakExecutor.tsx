@@ -392,7 +392,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
         if (!tabInfo.route) return
         const flagStr = tabInfo.route?.indexOf("/") > -1 ? "/" : "\\"
-        const routes = tabInfo.route?.split(flagStr)
+        const routes = (tabInfo.route || "").split(`${flagStr}`)
         routes?.pop()
         ipcRenderer
             .invoke("is-exists-file", routes?.concat([renameCache]).join(flagStr))
@@ -490,7 +490,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 setTabList([])
                 return
             case "copy-path":
-                fileList[index] ? callCopyToClipboard(fileList[index]?.route) : ""
+                if (!!fileList[index]) {
+                    callCopyToClipboard(fileList[index]?.route)
+                }
                 return
             case "open-in-finder":
                 openABSFile(codePath)
