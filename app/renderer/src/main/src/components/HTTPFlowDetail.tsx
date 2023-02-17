@@ -8,25 +8,22 @@ import {
     Empty,
     PageHeader,
     Row,
-    Skeleton,
     Space,
-    Spin, Table,
+    Spin,
     Tabs,
     Tag,
     Tooltip,
     Typography
 } from "antd"
-import {LeftOutlined, RightOutlined, PlusCircleOutlined, ChromeFilled} from "@ant-design/icons"
+import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {HTTPPacketEditor, YakEditor, YakHTTPPacketViewer} from "../utils/editors"
+import {HTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
-import {randomString} from "../utils/randomUtil"
 import {HTTPPacketFuzzable} from "./HTTPHistory"
 import {AutoSpin} from "./AutoSpin"
 import {ResizeBox} from "./ResizeBox"
-import ReactResizeDetector from "react-resize-detector"
 import {Buffer} from "buffer"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
@@ -34,12 +31,10 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
-import {AutoCard} from "@/components/AutoCard"
-import {SelectOne} from "@/utils/inputUtil"
 import {useMemoizedFn} from "ahooks"
 import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable";
-import {MonacoEditorActions} from "@/utils/encodec";
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser";
+import { ChromeSvgIcon } from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -593,8 +588,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     }
                                     extra={[
                                         <Button
-                                            type={"primary"}
-                                            size={"small"} icon={<ChromeFilled/>}
+                                            className={styles['extra-chrome-btn']}
+                                            type={"text"}
+                                            size={"small"} icon={<ChromeSvgIcon />}
                                             onClick={()=>{
                                                 showResponseViaResponseRaw(flow?.Response)
                                             }}

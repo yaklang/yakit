@@ -820,3 +820,70 @@ const HomeSvg = () => (
 export const HomeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={HomeSvg} {...props} />
 }
+
+const ChromeSvg = () => (
+    <svg
+        className='icon'
+        viewBox='0 0 1024 1024'
+        version='1.1'
+        xmlns='http://www.w3.org/2000/svg'
+        p-id='1473'
+        width='14'
+        height='14'
+    >
+        <path
+            d='M123.648 178.346667C361.642667-98.602667 802.986667-43.946667 967.936 279.68h-396.501333c-71.424 0-117.546667-1.621333-167.509334 24.661333-58.709333 30.933333-102.997333 88.234667-118.485333 155.52L123.648 178.389333z'
+            fill='#EA4335'
+            p-id='1474'
+        ></path>
+        <path
+            d='M341.674667 512c0 93.866667 76.330667 170.24 170.154666 170.24 93.866667 0 170.154667-76.373333 170.154667-170.24s-76.330667-170.24-170.154667-170.24c-93.866667 0-170.154667 76.373333-170.154666 170.24z'
+            fill='#4285F4'
+            p-id='1475'
+        ></path>
+        <path
+            d='M577.877333 734.848c-95.530667 28.373333-207.274667-3.114667-268.501333-108.8-46.762667-80.64-170.24-295.765333-226.346667-393.557333-196.565333 301.226667-27.136 711.808 329.685334 781.866666l165.12-279.509333z'
+            fill='#34A853'
+            p-id='1476'
+        ></path>
+        <path
+            d='M669.866667 341.76a233.130667 233.130667 0 0 1 43.008 286.634667c-40.576 69.973333-170.154667 288.682667-232.96 394.581333 367.658667 22.656 635.733333-337.664 514.645333-681.258667H669.866667z'
+            fill='#FBBC05'
+            p-id='1477'
+        ></path>
+    </svg>
+)
+/** @name Chrome彩色图标 */
+export const ChromeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={ChromeSvg} {...props} />
+}
+
+const ChromeFrameSvg = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8 5.6C6.67452 5.6 5.6 6.67452 5.6 8C5.6 9.32548 6.67452 10.4 8 10.4C9.32548 10.4 10.4 9.32548 10.4 8C10.4 6.67452 9.32548 5.6 8 5.6ZM8 5.6H13.4M5.6 8.6L3.2 4.4M7.4 13.8766L10.1 9.20001M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name Chrome边框图标 */
+export const ChromeFrameSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={ChromeFrameSvg} {...props} />
+}
+
+const ArrowCircleRightSvg = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.66667 6L10.6667 8M10.6667 8L8.66667 10M10.6667 8L5.33333 8M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name 带圆形边框的向右箭头图标 */
+export const ArrowCircleRightSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={ArrowCircleRightSvg} {...props} />
+}
