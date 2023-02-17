@@ -1428,7 +1428,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 : "auto",
                                                             overflowX: "hidden",
                                                             height: "100%",
-                                                            maxHeight: "100%"
+                                                            maxHeight: "100%",
+                                                            padding:
+                                                                    !i.singleNode || noPaddingPage.includes(i.route)
+                                                                        ? 0
+                                                                        : "8px 16px 13px 16px"
                                                         }}
                                                     >
                                                         {i.singleNode ? (
