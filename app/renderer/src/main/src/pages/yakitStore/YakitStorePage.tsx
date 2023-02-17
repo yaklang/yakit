@@ -99,6 +99,7 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
 import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import {isSimbleEnterprise} from "@/utils/envfile"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -883,7 +884,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        const statisticsList = queryName==="group"?item[1].map((item)=>({...item,value:item.value.replaceAll('"','')})):item[1]
+                                        if(!isSimbleEnterprise && queryName==="group"){
+                                            return <></>
+                                        }
+                                        
+                                        const statisticsList = queryName==="group"&&Array.isArray(item[1])?
+                                        item[1].map((item)=> ({...item,value:item.value.replaceAll('"','')})):item[1]
+
                                         const title = queryTitle[queryName]
                                         let current: string | string[] = ""
                                         if (plugSource === "local") {
@@ -915,6 +922,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
                                         }
+
                                         return (
                                             statisticsList &&
                                             statisticsList.length > 0 && (
@@ -3639,7 +3647,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
-                    {IsEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
+                    {isSimbleEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
