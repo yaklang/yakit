@@ -1,4 +1,4 @@
-import React, { Ref, useEffect, useMemo, useRef, useState} from "react"
+import React, {Ref, useEffect, useMemo, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -16,7 +16,7 @@ import {
     Badge,
     Menu,
     InputNumber,
-    Dropdown,
+    Dropdown
 } from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showByCursorMenu} from "../../utils/showByCursor"
@@ -52,7 +52,7 @@ import {
     ColorSwatchIcon,
     ChevronDownIcon,
     ArrowCircleRightSvgIcon,
-    ChromeSvgIcon
+    ChromeFrameSvgIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
@@ -1340,22 +1340,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "操作",
                 dataKey: "action",
-                width: 64,
+                width: 80,
                 fixed: "right",
                 render: (_, rowData) => {
                     if (!rowData.Hash) return <></>
                     return (
                         <div className={style["action-btn-group"]}>
-                            <a
-                                onClick={(e) => {
-                                    let m = showDrawer({
-                                        width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy())
-                                    })
-                                }}
-                            >
-                                <ArrowCircleRightSvgIcon />
-                            </a>
                             <a
                                 onClick={(e) => {
                                     ipcRenderer
@@ -1368,7 +1358,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         })
                                 }}
                             >
-                                <ChromeSvgIcon />
+                                <ChromeFrameSvgIcon className={style["icon-style"]} />
+                            </a>
+                            <div className={style['divider-style']}></div>
+                            <a
+                                onClick={(e) => {
+                                    let m = showDrawer({
+                                        width: "80%",
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy())
+                                    })
+                                }}
+                            >
+                                <ArrowCircleRightSvgIcon className={style["icon-style"]} />
                             </a>
                         </div>
                     )

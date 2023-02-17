@@ -858,11 +858,26 @@ export const ChromeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={ChromeSvg} {...props} />
 }
 
+const ChromeFrameSvg = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8 5.6C6.67452 5.6 5.6 6.67452 5.6 8C5.6 9.32548 6.67452 10.4 8 10.4C9.32548 10.4 10.4 9.32548 10.4 8C10.4 6.67452 9.32548 5.6 8 5.6ZM8 5.6H13.4M5.6 8.6L3.2 4.4M7.4 13.8766L10.1 9.20001M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name Chrome边框图标 */
+export const ChromeFrameSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={ChromeFrameSvg} {...props} />
+}
+
 const ArrowCircleRightSvg = () => (
     <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
             d='M8.66667 6L10.6667 8M10.6667 8L8.66667 10M10.6667 8L5.33333 8M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8Z'
-            stroke='#F28B44'
+            stroke='currentColor'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
