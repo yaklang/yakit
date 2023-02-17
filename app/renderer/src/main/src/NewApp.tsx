@@ -89,6 +89,7 @@ function NewApp() {
     /** 将渲染进程的环境变量传入主进程 */
     useEffect(() => {
         ipcRenderer.invoke("callback-process-env", fetchEnv())
+        ipcRenderer.invoke("callback-process-envs", fetchEnv())
     }, [])
 
     /** 全局拦截快捷键(补全内容) */

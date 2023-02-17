@@ -19,6 +19,7 @@ fs.open(engineLog, "a", (err, fd) => {
     }
 })
 
+let dbFile =  undefined
 
 /** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
 let engineCount = 0
@@ -171,7 +172,7 @@ module.exports = (win, callback, getClient, newClient) => {
                 if (sudo) {
                     if (isWindows) {
                         const subprocess = childProcess.exec(
-                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}`),
+                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile?" --profile-db "+dbFile:""}`),
                             {
                                 maxBuffer: 1000 * 1000 * 1000,
                                 stdio: "pipe",
@@ -188,7 +189,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         })
                         resolve()
                     } else {
-                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}`
+                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile?` --profile-db ${dbFile}`:""}`
                         sudoExec(
                             cmd,
                             {
@@ -207,7 +208,10 @@ module.exports = (win, callback, getClient, newClient) => {
                     toLog("已启动本地引擎进程")
                     const log = out ? out : "ignore"
 
-                    const subprocess = childProcess.spawn(getLocalYaklangEngine(), ["grpc", "--port", `${port}`], {
+                    const grpcPort = ["grpc", "--port", `${port}`]
+                    const extraParams = dbFile?[...grpcPort,"--profile-db", dbFile]:grpcPort
+
+                    const subprocess = childProcess.spawn(getLocalYaklangEngine(), extraParams, {
                         // stdio: ["ignore", "ignore", "ignore"]
                         detached: false, windowsHide: true,
                         stdio: ["ignore", log, log]
@@ -331,4 +335,8 @@ module.exports = (win, callback, getClient, newClient) => {
     })
 
 
+    ipcMain.handle("callback-process-envs",(e,type)=>{
+        dbFile = ["enterprise","simble-enterprise"].includes(type) ?  "company-default-yakit.db" : undefined
+        return""
+    })
 }
