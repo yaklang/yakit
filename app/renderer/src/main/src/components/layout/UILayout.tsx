@@ -40,6 +40,7 @@ import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
+import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin";
 // 是否为企业版
 const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
@@ -598,6 +599,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
+    // 企业版-连接引擎后验证license=>展示企业登录
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterprise)
+    useEffect(()=>{
+        // 监听是否退出登录 重新打开License控件验证身份
+        ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
+            setJudgeLicense(v)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-judge-license")
+        }
+    },[])
+
+
     // outputToWelcomeConsole("UILayout 刷新")
     return (
         <div className={styles["ui-layout-wrapper"]}>
@@ -793,7 +807,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         )}
                     </div>
                     <div className={styles["ui-layout-body"]}>
-                        {engineLink && props.children}
+                        {engineLink && (isJudgeLicense?<EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />:props.children)}
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}
