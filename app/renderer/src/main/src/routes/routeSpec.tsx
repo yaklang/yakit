@@ -217,6 +217,8 @@ export function RouteNameToVerboseName(r: string) {
             return "Yak Runner"
         case "httpFuzzer":
             return "Web Fuzzer"
+        case "simbleDetect":
+            return "安全检测"
         default:
             return r
     }
