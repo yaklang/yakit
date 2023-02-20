@@ -14,7 +14,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
 import {PluginSearchStatisticsRequest, PluginType} from "@/pages/yakitStore/YakitStorePage"
-import { DownloadOnlinePluginByScriptNamesResponse } from "@/pages/layout/HeardMenu/HeardMenuType";
+import {DownloadOnlinePluginByScriptNamesResponse} from "@/pages/layout/HeardMenu/HeardMenuType"
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -84,27 +84,27 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
             })
     }
 
-    const addMenuLab = (name:string) => {
+    const addMenuLab = (name: string) => {
         ipcRenderer
-                .invoke("DownloadOnlinePluginByScriptNames", {
-                    ScriptNames: [name],
-                    Token: userInfo.token
-                })
-                .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
-                    if(rsp.Data.length>0){
-                        success("添加菜单成功")
-                        ipcRenderer.invoke("change-main-menu")
-                    }
-                })
-                .catch((e) => {
-                    failed(`添加菜单失败:${e}`)
-                })
-                .finally(() => {
-                    getCustomizeMenus && getCustomizeMenus()
-                })
+            .invoke("DownloadOnlinePluginByScriptNames", {
+                ScriptNames: [name],
+                Token: userInfo.token
+            })
+            .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                if (rsp.Data.length > 0) {
+                    success("添加菜单成功")
+                    ipcRenderer.invoke("change-main-menu")
+                }
+            })
+            .catch((e) => {
+                failed(`添加菜单失败:${e}`)
+            })
+            .finally(() => {
+                getCustomizeMenus && getCustomizeMenus()
+            })
     }
     const addMenu = (name: string) => {
-        if (name === "基础爬虫"||name === "综合目录扫描与爆破") {
+        if (name === "基础爬虫" || name === "综合目录扫描与爆破") {
             addMenuLab(name)
         }
     }
@@ -127,7 +127,7 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
                             <div className={styles["right-arrow-text"]} onClick={() => addMenu(dataSource.label)}>
                                 获取菜单
                             </div>
-                         )} 
+                        )}
                     </div>
                     <div className={classNames(styles["item-label"], !dataSource.isShow && styles["control-opacity"])}>
                         {dataSource.label}
@@ -609,6 +609,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
+    const [hotLoading,setHotLoading] = useState<boolean>(true)
     const listHeightRef = useRef<any>()
 
     useEffect(() => {
@@ -632,14 +633,18 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         })
             .then((res: API.PluginTopSearchResponse) => {
                 if (res) {
-                    const newArr = res.data.map((item) => item.member).filter((item) => !!item)
-                    setHotArr(newArr)
+                    if (Array.isArray(res.data)) {
+                        const newArr = res.data.map((item) => item.member).filter((item) => !!item)
+                        setHotArr(newArr || [])
+                    }
                 }
             })
             .catch((err) => {
                 failed("失败：" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+                setHotLoading(false)
+            })
     }
 
     const judgeStatus = (v: number, v1: number) => {
@@ -695,6 +700,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         else if (v === "<") return <ReduceCountIcon style={{paddingLeft: 4}} />
         else return <></>
     }
+
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
@@ -768,8 +774,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
-                <div className={styles["label-box"]}>
-                    {hotArr.slice(0, 10).map((item) => {
+                {!hotLoading&&<div className={styles["label-box"]}>
+                    {hotArr.length>0?hotArr.slice(0, 10).map((item) => {
                         return (
                             <div
                                 key={item}
@@ -779,8 +785,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                 {item}
                             </div>
                         )
-                    })}
-                </div>
+                    }):<div className={styles["hot-no-data"]}>暂无数据</div>}
+                </div>}
             </div>
         </div>
     )
