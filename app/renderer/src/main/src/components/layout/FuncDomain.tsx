@@ -47,6 +47,7 @@ import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 
+import {isSimbleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
@@ -418,7 +419,45 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const menu = (
         <YakitMenu
             selectedKeys={[engineMode]}
-            data={[
+            data={isSimbleEnterprise?[
+                {
+                    key: "pcapfix",
+                    label: "网卡权限修复"
+                },
+                {
+                    key: "plugin",
+                    label: "配置插件源",
+                    children: [
+                        {label: "外部", key: "external"},
+                        {label: "插件商店", key: "store"}
+                    ]
+                },
+                {
+                    key: "link",
+                    label: "切换连接模式",
+                    children: [
+                        {label: "本地", key: "local"},
+                        {label: "远程", key: "remote"}
+                    ]
+                },
+                {
+                    key: "refreshMenu",
+                    label: "刷新菜单"
+                },
+                {
+                    key: "settingMenu",
+                    label: "配置菜单栏"
+                },
+                {
+                    key: "system-manager",
+                    label: "进程与缓存管理",
+                    children: [{key: "invalidCache", label: "删除缓存数据"}]
+                },
+                {
+                    key: "network-detection",
+                    label: "网络检测"
+                }
+            ]:[
                 {
                     key: "pcapfix",
                     label: "网卡权限修复"
