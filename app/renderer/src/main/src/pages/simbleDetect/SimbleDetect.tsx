@@ -387,31 +387,22 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 
     const [jsonRisks, setJsonRisks, getJsonRisks] = useGetState<Risk[]>([])
     useEffect(() => {
-        // ipcRenderer.on(`${token}-error`, async (e, exception) => {
-        //     if (`${exception}`.includes("Cancelled on client")) {
-        //         return
-        //     }
-        //     console.info("call exception")
-        //     failed(`批量执行失败：${exception}`)
-        //     console.info(exception)
-        // })
-
         const logs: TaskResultLog[] = []
         let index = 0
         let removed = false
 
         ipcRenderer.on(`${token}-data`, async (e, data: ExecBatchYakScriptResult) => {
             // 处理进度信息
-            if (data.ProgressMessage) {
-                setProgressTotal(data.ProgressTotal || 0)
-                setProgressRunning(data.ProgressRunning || 0)
-                setProgressFinished(data.ProgressCount || 0)
-                setScanTaskExecutingCount(data.ScanTaskExecutingCount || 0)
-                if (!!setPercent) {
-                    setPercent(data.ProgressPercent || 0)
-                }
-                return
-            }
+            // if (data.ProgressMessage) {
+            //     setProgressTotal(data.ProgressTotal || 0)
+            //     setProgressRunning(data.ProgressRunning || 0)
+            //     setProgressFinished(data.ProgressCount || 0)
+            //     setScanTaskExecutingCount(data.ScanTaskExecutingCount || 0)
+            //     if (!!setPercent) {
+            //         setPercent(data.ProgressPercent || 0)
+            //     }
+            //     return
+            // }
 
             if (data.Result && data.Result.IsMessage) {
                 const info: TaskResultLog = JSON.parse(new Buffer(data.Result.Message).toString())?.content
@@ -443,7 +434,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 
     return (
         <div className={styles["simble-detect-table"]}>
-            <div className={styles["result-notice-body"]}>
+            {/* <div className={styles["result-notice-body"]}>
                 <div className={styles["notice-body"]}>
                     <div className={classNames(styles["notice-body-header"], styles["notice-font-in-progress"])}>
                         执行中状态
@@ -470,7 +461,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                 </div>
             </div>
 
-            <Divider style={{margin: 4}} />
+            <Divider style={{margin: 4}} /> */}
 
             <div className={styles["result-table-body"]}>
                 <div style={{width: "100%", height: "100%"}}>
@@ -568,7 +559,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 openScriptNames={openScriptNames}
                 YakScriptOnlineGroup={YakScriptOnlineGroup}
             />
-            <Divider style={{margin: 4}} />
+            {/* <Divider style={{margin: 4}} /> */}
             <div style={{flex: "1", overflow: "hidden"}}>
                 <SimbleDetectTable token={token} setPercent={setPercent} />
             </div>

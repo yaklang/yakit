@@ -336,14 +336,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimbleEnterprise?[
-        {
-                verbose: "安全检测",
-                route: Route.SimbleDetect,
-                singleNode: ContentByRoute(Route.SimbleDetect),
-                multipleNode: []
-        }
-    ]:[
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimbleEnterprise?[]:[
         {
             verbose: "首页",
             route: Route.NewHome,
@@ -351,7 +344,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimbleEnterprise?Route.SimbleDetect:Route.NewHome)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimbleEnterprise?"":Route.NewHome)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -366,6 +359,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
+    // 简易企业版页面控制
+    useEffect(()=>{
+        if(isSimbleEnterprise){
+            addTabPage(Route.SimbleDetect)
+        }
+    },[])
+
     // 监听console方向打开
     useEffect(() => {
         ipcRenderer.on("callback-direction-console-log", (e, res: any) => {
