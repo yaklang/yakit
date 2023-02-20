@@ -542,7 +542,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         value={params.ProbeTimeout}
                         setValue={(ProbeTimeout) => setParams({...params, ProbeTimeout})}
                     />
-                    <ManyMultiSelectForString
+                   {!isLimitShow &&<ManyMultiSelectForString
                         label={"TCP 代理"}
                         help={"支持 HTTP/Sock4/Sock4a/Socks5 协议，例如 http://127.0.0.1:7890  socks5://127.0.0.1:7890"}
                         data={[
@@ -556,7 +556,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         value={(params.Proxy || []).join(",")}
                         mode={"tags"}
                         setValue={(e) => setParams({...params, Proxy: (e || "").split(",").filter((i) => !!i)})}
-                    />
+                    />}
                     <SelectOne
                         label={"高级指纹选项"}
                         data={[
