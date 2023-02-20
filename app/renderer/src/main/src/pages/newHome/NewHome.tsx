@@ -609,6 +609,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
+    const [hotLoading,setHotLoading] = useState<boolean>(true)
     const listHeightRef = useRef<any>()
 
     useEffect(() => {
@@ -632,14 +633,18 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         })
             .then((res: API.PluginTopSearchResponse) => {
                 if (res) {
-                    const newArr = res.data.map((item) => item.member).filter((item) => !!item)
-                    setHotArr(newArr)
+                    if (Array.isArray(res.data)) {
+                        const newArr = res.data.map((item) => item.member).filter((item) => !!item)
+                        setHotArr(newArr || [])
+                    }
                 }
             })
             .catch((err) => {
                 failed("失败：" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+                setHotLoading(false)
+            })
     }
 
     const judgeStatus = (v: number, v1: number) => {
@@ -695,6 +700,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         else if (v === "<") return <ReduceCountIcon style={{paddingLeft: 4}} />
         else return <></>
     }
+
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
@@ -768,8 +774,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
-                <div className={styles["label-box"]}>
-                    {hotArr.slice(0, 10).map((item) => {
+                {!hotLoading&&<div className={styles["label-box"]}>
+                    {hotArr.length>0?hotArr.slice(0, 10).map((item) => {
                         return (
                             <div
                                 key={item}
@@ -779,8 +785,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                 {item}
                             </div>
                         )
-                    })}
-                </div>
+                    }):<div className={styles["hot-no-data"]}>暂无数据</div>}
+                </div>}
             </div>
         </div>
     )
