@@ -1,10 +1,23 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography, Descriptions, Popconfirm, Tooltip, Menu, Select} from "antd"
-import {WebShell} from "./schema"
+import {
+    Button,
+    Space,
+    Table,
+    Tag,
+    Form,
+    Typography,
+    Descriptions,
+    Popconfirm,
+    Tooltip,
+    Menu,
+    Select,
+    PageHeader, Row, Col
+} from "antd"
+import {WebShell, WebShellResponse} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
+import {ArrowsAltOutlined, ReloadOutlined, SearchOutlined, SwapOutlined} from "@ant-design/icons"
 import {failed, success} from "@/utils/notification"
 import {showModal} from "@/utils/showModal"
 import {InputItem, ManyMultiSelectForString} from "@/utils/inputUtil"
@@ -18,10 +31,13 @@ import debugImg from "../../assets/riskDetails/debug.png"
 
 import "./WebSehllTable.css"
 import {ExportExcel} from "../../components/DataExport/DataExport"
-import {HTTPPacketEditor} from "../../utils/editors"
+import {HTTPPacketEditor, YakCodeEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
 import {ColumnType} from "antd/lib/table"
+import {WebShellFileTree} from "@/pages/webshellManager/WebShellFileTree";
+import {AutoSpin} from "@/components/AutoSpin";
+import {Uint8ArrayToString} from "@/utils/str";
 
 export interface WebShellTableProp {
     severity?: string
@@ -167,17 +183,20 @@ const {Option} = Select
 
 const NewShell: React.FC<NewShellProp> = (props) => {
     const [url, setUrl] = useState("");
-    const [shell_type, setShellType] = useState("behinder");
-    const [script_type, setScriptType] = useState("jsp");
+    const [shell_type, setShellType] = useState("Behinder");
+    const [script_type, setScriptType] = useState("JSP");
     const [pass, setPass] = useState("");
     const [secret_key, setSecretKey] = useState("");
-    const [enc_mode, setEncMode] = useState("");
+    const [enc_mode, setEncMode] = useState("Base64");
 
     const onShellTypeChange = (value: string) => {
         setShellType(value)
     };
     const onScriptTypeChange = (value: string) => {
         setScriptType(value)
+    };
+    const onEncModeChange = (value: string) => {
+        setEncMode(value)
     };
 
     return <Form
@@ -236,28 +255,38 @@ const NewShell: React.FC<NewShellProp> = (props) => {
         <InputItem label={`Url`} value={url} setValue={setUrl}/>
         <Form.Item name="shell_type" label={"Shell类型"}>
             <Select
-                defaultValue={"behinder"}
+                defaultValue={"Behinder"}
                 onChange={onShellTypeChange}
             >
-                <Option value="behinder">behinder</Option>
-                <Option value="godzilla">godzilla</Option>
+                <Option value="Behinder">Behinder</Option>
+                <Option value="Godzilla">Godzilla</Option>
             </Select>
         </Form.Item>
+
         <Form.Item name="script_type" label={"脚本类型"}>
             <Select
-                defaultValue={"jsp"}
+                defaultValue={"JSP"}
                 onChange={onScriptTypeChange}
             >
-                <Option value="jsp">jsp</Option>
-                <Option value="jspx">jsp</Option>
-                <Option value="php">php</Option>
-                <Option value="asp">asp</Option>
-                <Option value="aspx">aspx</Option>
+                <Option value="JSP">JSP</Option>
+                <Option value="JSPX">JSPX</Option>
+                <Option value="PHP">PHP</Option>
+                <Option value="ASP">ASP</Option>
+                <Option value="ASPX">ASPX</Option>
             </Select>
         </Form.Item>
-        <InputItem label={`参数`} value={pass} setValue={setPass}/>
+        <InputItem label={`参数`} value={pass} setValue={setPass}
+                   style={{display: shell_type == "Behinder" ? "none" : ""}}/>
         <InputItem label={`密钥`} value={secret_key} setValue={setSecretKey}/>
-        <InputItem label={`加密模式`} value={enc_mode} setValue={setEncMode}/>
+        <Form.Item name="enc_mode" label={"加密模式"} style={{display: shell_type == "Behinder" ? "none" : ""}}>
+            <Select
+                defaultValue={"Base64"}
+                onChange={onEncModeChange}
+            >
+                <Option value="Base64">Base64</Option>
+                <Option value="Raw">Raw</Option>
+            </Select>
+        </Form.Item>
 
         <Form.Item colon={false} label={" "}>
             <Button type="primary" htmlType="submit"> 新增 </Button>
@@ -304,23 +333,23 @@ const EditShell: React.FC<WebShell> = (props) => {
         <InputItem label={`Url`} value={url} setValue={setUrl}/>
         <Form.Item name="shell_type" label={"Shell类型"}>
             <Select
-                defaultValue={"behinder"}
+                defaultValue={"Behinder"}
                 onChange={onShellTypeChange}
             >
-                <Option value="behinder">behinder</Option>
-                <Option value="godzilla">godzilla</Option>
+                <Option value="Behinder">Behinder</Option>
+                <Option value="Godzilla">Godzilla</Option>
             </Select>
         </Form.Item>
         <Form.Item name="script_type" label={"脚本类型"}>
             <Select
-                defaultValue={"jsp"}
+                defaultValue={"JSP"}
                 onChange={onScriptTypeChange}
             >
-                <Option value="jsp">jsp</Option>
-                <Option value="jspx">jspx</Option>
-                <Option value="php">php</Option>
-                <Option value="asp">asp</Option>
-                <Option value="aspx">aspx</Option>
+                <Option value="JSP">JSP</Option>
+                <Option value="JSPX">JSPX</Option>
+                <Option value="PHP">PHP</Option>
+                <Option value="ASP">ASP</Option>
+                <Option value="ASPX">ASPX</Option>
             </Select>
         </Form.Item>
         <InputItem label={`参数`} value={pass} setValue={setPass}/>
@@ -332,6 +361,15 @@ const EditShell: React.FC<WebShell> = (props) => {
         </Form.Item>
     </Form>
 };
+
+const BasicInfo: React.FC<WebShellResponse<any>> = (props) => {
+    const [state, setState] = useState(props.State);
+    const [text, setText] = useState(props.Data);
+    setText(new Buffer(text).toString())
+    return <div>
+        <textarea value={text}></textarea>
+    </div>
+}
 export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<WebShell>>({
         Data: [],
@@ -789,7 +827,9 @@ export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
                                 showByContextMenu({
                                     data: [
                                         {key: "update_shell", title: "编辑数据"},
-                                        {key: "ping_shell", title: "Ping"},
+                                        {key: "ping_shell", title: "验证存活"},
+                                        {key: "get_basic_info", title: "获取信息"},
+                                        {key: "file_opt_shell", title: "文件管理"},
                                     ],
                                     onClick: ({key}) => {
                                         if (key === "update_shell") {
@@ -803,10 +843,40 @@ export const WebShellTable: React.FC<WebShellTableProp> = (props) => {
                                                 Id: record.Id
                                             }).then(e => {
                                                 console.log(e)
-                                                success(e.Data)
+                                                if (e.State) {
+                                                    success("Ping Success!")
+                                                } else {
+                                                    success("Ping Fail!")
+                                                }
                                             }).catch((e: any) => {
                                                 console.log(e.message)
                                                 failed(e.message)
+                                            })
+                                        } else if (key === "get_basic_info") {
+                                            ipcRenderer.invoke("GetBasicInfo", {
+                                                Id: record.Id
+                                            }).then((e: WebShellResponse<any>) => {
+                                                console.log(typeof e)
+                                                if (e.State) {
+                                                    const data = new Buffer(e.Data).toString()
+                                                    showModal({
+                                                        title: record.Url + "-基础信息", width: "60%", content: (
+                                                            <BasicInfo {...e}/>
+                                                        )
+                                                    })
+                                                } else {
+                                                    success("Ping Fail!")
+                                                }
+                                            }).catch((e: any) => {
+                                                console.log(e.message)
+                                                failed(e.message)
+                                            })
+
+                                        } else if (key === "file_opt_shell") {
+                                            showModal({
+                                                title: record.Url + "-文件管理", width: "60%", content: (
+                                                    <WebShellFileTree {...record}/>
+                                                )
                                             })
                                         }
 

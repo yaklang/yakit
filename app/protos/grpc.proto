@@ -164,7 +164,7 @@ service Yak {
   rpc HTTPFlowsFieldGroup (HTTPFlowsFieldGroupRequest) returns (HTTPFlowsFieldGroupResponse);
 
   // 从一个 FuzzerRequest 中提取 Url
-  rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
+  rpc ExtractUrl (FuzzerRequest) returns (ExtractedUrl);
 
   // Fuzzer
   rpc GetHistoryHTTPFuzzerTask (GetHistoryHTTPFuzzerTaskRequest) returns (HistoryHTTPFuzzerTaskDetail);
@@ -219,8 +219,8 @@ service Yak {
   rpc YaklangCompileAndFormat (YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
   // 端口扫描的封装
-  rpc PortScan(PortScanRequest) returns (stream ExecResult);
-  rpc ViewPortScanCode(Empty) returns (SimpleScript);
+  rpc PortScan (PortScanRequest) returns (stream ExecResult);
+  rpc ViewPortScanCode (Empty) returns (SimpleScript);
 
   // 资产管理
   rpc QueryPorts (QueryPortsRequest) returns (QueryPortsResponse);
@@ -289,6 +289,7 @@ service Yak {
   rpc ResetRiskTableStats (Empty) returns (Empty);
   rpc QueryAvailableTarget (Empty) returns (Fields);
   rpc QueryNewRisk (QueryNewRiskRequest) returns (QueryNewRiskResponse);
+  rpc NewRiskRead (NewRiskReadRequest) returns (Empty);
 
   // Report
   rpc QueryReports (QueryReportsRequest) returns (QueryReportsResponse);
@@ -313,6 +314,7 @@ service Yak {
   rpc UpdateWebShellById (UpdateWebShellRequest) returns (Empty);
   rpc QueryWebShells (QueryWebShellsRequest) returns (QueryWebShellsResponse);
   rpc Ping (WebShellRequest) returns (WebShellResponse);
+  rpc GetBasicInfo (WebShellRequest) returns (WebShellResponse);
 
 
   // DNSLog / ICMP / RandomTrigger
@@ -418,10 +420,34 @@ service Yak {
   rpc RemoveProject (RemoveProjectRequest) returns (Empty);
 
   // 导入导出项目，带密码，带进度
-  rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
-  rpc ImportProject(ImportProjectRequest) returns (stream ProjectIOProgress);
+  rpc ExportProject (ExportProjectRequest) returns (stream ProjectIOProgress);
+  rpc ImportProject (ImportProjectRequest) returns (stream ProjectIOProgress);
   // 迁移旧数据库
-  rpc MigrateLegacyDatabase(Empty) returns (Empty);
+  rpc MigrateLegacyDatabase (Empty) returns (Empty);
+
+  // 从规则中提取数据
+  rpc QueryMITMRuleExtractedData (QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+}
+
+message MITMRuleExtractedData {
+  int64 Id = 1;
+  int64 CreatedAt = 2;
+  string SourceType = 3;
+  string TraceId = 4;
+  string Regexp = 5;
+  string RuleName = 6;
+  string Data = 7;
+}
+
+message QueryMITMRuleExtractedDataResponse {
+  repeated MITMRuleExtractedData Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+}
+
+message QueryMITMRuleExtractedDataRequest {
+  Paging Pagination = 1;
+  string HTTPFlowHash = 2;
 }
 
 message ExportProjectRequest {
@@ -1145,8 +1171,8 @@ enum ShellScript {
   PHP = 4;
 }
 enum EncMode {
-  Raw =0 ;
-  Base64 =1;
+  Raw = 0;
+  Base64 = 1;
   AesRaw = 2;
   AesBase64 = 3;
   XorRaw = 4;
@@ -1173,7 +1199,8 @@ message WebShellRequest {
   int64 Id = 1;
 }
 message WebShellResponse {
-  string Data = 1;
+  bool State = 1;
+  bytes Data = 2;
 }
 
 message QueryWebShellsRequest {
@@ -1422,6 +1449,12 @@ message NewRisk {
   int64 UpdatedAt = 4;
   string Verbose = 5;
   string TitleVerbose = 6;
+  bool IsRead = 7;
+}
+
+message NewRiskReadRequest {
+  int64 AfterId = 1;
+  repeated int64 Ids = 2;
 }
 
 message VerifyTunnelServerDomainParams {

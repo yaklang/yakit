@@ -12,3 +12,8 @@ export interface WebShell {
     CreatedAt: number
     UpdatedAt?: number
 }
+
+export interface WebShellResponse<T> {
+    State : boolean
+    Data : T
+}

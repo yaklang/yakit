@@ -77,4 +77,19 @@ module.exports = (win, getClient) => {
         return await asyncPingWebShells(params)
     })
 
+    const asyncGetBasicInfoWebShells = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetBasicInfo(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetBasicInfo", async (e, params) => {
+        return await asyncGetBasicInfoWebShells(params)
+    })
+
 }
