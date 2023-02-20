@@ -31,7 +31,7 @@ import {loginOut} from "@/utils/login"
 import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import SelectUpload from "@/pages/SelectUpload";
+import SelectUpload from "@/pages/SelectUpload"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
@@ -45,11 +45,11 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
+import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
-import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -77,7 +77,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 上传数据弹框 */
-    const [uploadModalShow,setUploadModalShow] = useState<boolean>(false)
+    const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
     useEffect(() => {
         const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
@@ -261,7 +261,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 onCancel={() => setUploadModalShow(false)}
                 footer={null}
             >
-                <SelectUpload onCancel={() => setUploadModalShow(false)}/>
+                <SelectUpload onCancel={() => setUploadModalShow(false)} />
             </Modal>
         </div>
     )
@@ -287,7 +287,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     title: "更新插件源",
                     width: 800,
                     content: (
-                        <div style={{width: 800}}>
+                        <div style={{width: 780}}>
                             <LoadYakitPluginForm onFinished={() => info("更新进程执行完毕")} />
                         </div>
                     )
@@ -410,7 +410,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     label: "其他操作",
                     children: [
                         {label: "管理员模式", key: "adminMode"},
-                        {label: "旧版本迁移", key: "migrateLegacy"},
+                        {label: "旧版本迁移", key: "migrateLegacy"}
                     ]
                 }
             ]}
@@ -914,7 +914,7 @@ interface LatestRiskInfo {
     UpdatedAt: number
     Verbose: string
     TitleVerbose: string
-    Unread: boolean
+    IsRead: boolean
 }
 
 interface RisksProps {
@@ -960,16 +960,10 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     return
                 }
 
-                const infos = [...res.Data]
                 const risksOjb: RisksProps = {
                     Total: res.Total,
                     NewRiskTotal: res.NewRiskTotal,
-                    Data: infos.map((item) => {
-                        const info = risks.Data.filter((el) => el.Id === item.Id && el.Title === item.Title)[0]
-                        if (!!info) item.Unread = info.Unread
-                        else item.Unread = true
-                        return item
-                    })
+                    Data: [...res.Data]
                 }
                 setRisks({...risksOjb})
             })
@@ -983,7 +977,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
             ipcRenderer
                 .invoke("QueryRisks", {
-                    Pagination: {Limit: 1, Page: 1, Order: "desc", OrderBy: "updated_at"}
+                    Pagination: {Limit: 1, Page: 1, Order: "desc", OrderBy: "id"}
                 })
                 .then((res: QueryGeneralResponse<Risk>) => {
                     const {Data} = res
@@ -1011,6 +1005,19 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     /** 单条点击阅读 */
     const singleRead = useMemoizedFn((info: LatestRiskInfo) => {
         ipcRenderer
+            .invoke("set-risk-info-read", {AfterId: fetchNode.current, Ids: [info.Id]})
+            .then((res: Risk) => {
+                setRisks({
+                    ...risks,
+                    NewRiskTotal: info.IsRead ? risks.NewRiskTotal : risks.NewRiskTotal - 1,
+                    Data: risks.Data.map((item) => {
+                        if (item.Id === info.Id && item.Title === info.Title) item.IsRead = true
+                        return item
+                    })
+                })
+            })
+            .catch(() => {})
+        ipcRenderer
             .invoke("QueryRisk", {Id: info.Id})
             .then((res: Risk) => {
                 if (!res) return
@@ -1023,25 +1030,24 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                         </div>
                     )
                 })
-                setRisks({
-                    ...risks,
-                    Data: risks.Data.map((item) => {
-                        if (item.Id === info.Id && item.Title === info.Title) item.Unread = false
-                        return item
-                    })
-                })
             })
             .catch(() => {})
     })
     /** 全部已读 */
     const allRead = useMemoizedFn(() => {
-        setRisks({
-            ...risks,
-            Data: risks.Data.map((item) => {
-                item.Unread = false
-                return item
+        ipcRenderer
+            .invoke("set-risk-info-read", {AfterId: fetchNode.current})
+            .then((res: Risk) => {
+                setRisks({
+                    ...risks,
+                    NewRiskTotal: 0,
+                    Data: risks.Data.map((item) => {
+                        item.IsRead = true
+                        return item
+                    })
+                })
             })
-        })
+            .catch(() => {})
     })
     /** 查看全部 */
     const viewAll = useMemoizedFn(() => {
@@ -1061,7 +1067,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {risks.Total || 0} 条，其中新增 {risks.NewRiskTotal || 0} 条）
+                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.NewRiskTotal || 0} 条）
                     </div>
 
                     <div className={styles["risk-info"]}>
@@ -1079,7 +1085,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                                         >
                                             {item.Verbose}
                                         </div>
-                                        <Badge dot={item.Unread} offset={[3, 0]}>
+                                        <Badge dot={!item.IsRead} offset={[3, 0]}>
                                             <YakitEllipsis text={item.Title} width={type === "info" ? 280 : 310} />
                                         </Badge>
                                     </div>
@@ -1091,7 +1097,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                                         key={item.Id}
                                         onClick={() => singleRead(item)}
                                     >
-                                        <Badge dot={item.Unread} offset={[3, 0]}>
+                                        <Badge dot={!item.IsRead} offset={[3, 0]}>
                                             <YakitEllipsis text={`${item.Title} ${item.Verbose}}`} width={350} />
                                         </Badge>
                                     </div>

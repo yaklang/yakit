@@ -347,10 +347,12 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
         const currentLib = libCompletions[i];
         if (lastWord === currentLib.libName) {
             currentLib.functions.forEach(f => {
+                let compLabel = f.definitionStr.startsWith("func ") ? f.definitionStr.substring(5) : f.definitionStr;
+                compLabel = compLabel.startsWith(currentLib.libName + ".") ? compLabel.substring((currentLib.libName + ".").length) : compLabel;
                 items.push({
                     insertText: f.functionName,
-                    detail: f.definitionStr,
-                    label: f.functionName,
+                    detail: f.document,
+                    label: compLabel,
                     kind: languages.CompletionItemKind.Snippet,
                     insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                     range: insertRange,

@@ -29,7 +29,9 @@ import cloneDeep from "lodash/cloneDeep"
 import {Terminal} from "./Terminal"
 import {useMemoizedFn} from "ahooks"
 import {ResizeBox} from "../../components/ResizeBox"
-import { CVXterm } from "../../components/CVXterm"
+import {CVXterm} from "../../components/CVXterm"
+import {openABSFile} from "@/utils/openWebsite"
+import {callCopyToClipboard} from "@/utils/basic"
 
 import "./YakExecutor.css"
 
@@ -46,6 +48,8 @@ const tabMenu: CustomMenuProps[] = [
     {key: "all", value: "关闭全部页"}
 ]
 const fileMenu: CustomMenuProps[] = [
+    {key: "open-in-finder", value: "打开文件位置"},
+    {key: "copy-path", value: "复制路径"},
     {key: "rename", value: "重命名"},
     {key: "remove", value: "移除"},
     {key: "delete", value: "删除"}
@@ -271,7 +275,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 data: info.code
             })
         } else {
-            ipcRenderer.invoke("show-save-dialog", `${codePath}${codePath ? '/' : ''}${info.tab}`).then((res) => {
+            ipcRenderer.invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${info.tab}`).then((res) => {
                 if (res.canceled) return
 
                 const path = res.filePath
@@ -388,7 +392,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
         if (!tabInfo.route) return
         const flagStr = tabInfo.route?.indexOf("/") > -1 ? "/" : "\\"
-        const routes = tabInfo.route?.split(flagStr)
+        const routes = (tabInfo.route || "").split(`${flagStr}`)
         routes?.pop()
         ipcRenderer
             .invoke("is-exists-file", routes?.concat([renameCache]).join(flagStr))
@@ -485,6 +489,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 setActiveTab("")
                 setTabList([])
                 return
+            case "copy-path":
+                if (!!fileList[index]) {
+                    callCopyToClipboard(fileList[index]?.route)
+                }
+                return
+            case "open-in-finder":
+                openABSFile(codePath)
+                return
             case "remove":
                 closeCode(index, isFileList)
                 return
@@ -504,16 +516,16 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     }
 
     useEffect(() => {
-        ipcRenderer.invoke("fetch-code-path")
-            .then((path: string) => {
-                ipcRenderer.invoke("is-exists-file", path)
-                    .then(() => {
-                        setCodePath("")
-                    })
-                    .catch(() => {
-                        setCodePath(path)
-                    })
-            })
+        ipcRenderer.invoke("fetch-code-path").then((path: string) => {
+            ipcRenderer
+                .invoke("is-exists-file", path)
+                .then(() => {
+                    setCodePath("")
+                })
+                .catch(() => {
+                    setCodePath(path)
+                })
+        })
     }, [])
 
     useEffect(() => {
@@ -694,7 +706,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 <Popover
                                                     trigger={["click"]}
                                                     title={"设置命令行额外参数"}
-                                                    placement="bottomRight"
+                                                    placement='bottomRight'
                                                     content={
                                                         <Space style={{width: 400}}>
                                                             <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
@@ -702,26 +714,38 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                             <Paragraph
                                                                 style={{width: 200, marginBottom: 0}}
                                                                 editable={{
-                                                                    icon: <Space>
-                                                                        <EditOutlined />
-                                                                        <SaveOutlined onClick={(e) => {
-                                                                            e.stopPropagation()
-                                                                            tabList[+activeTab].extraParams = extraParams
-                                                                            setTabList(tabList)
-                                                                            if(tabList[+activeTab].isFile){
-                                                                                const files = fileList.map(item => {
-                                                                                    if(item.route === tabList[+activeTab].route){
-                                                                                        item.extraParams = extraParams
-                                                                                        return item
+                                                                    icon: (
+                                                                        <Space>
+                                                                            <EditOutlined />
+                                                                            <SaveOutlined
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    tabList[+activeTab].extraParams =
+                                                                                        extraParams
+                                                                                    setTabList(tabList)
+                                                                                    if (tabList[+activeTab].isFile) {
+                                                                                        const files = fileList.map(
+                                                                                            (item) => {
+                                                                                                if (
+                                                                                                    item.route ===
+                                                                                                    tabList[+activeTab]
+                                                                                                        .route
+                                                                                                ) {
+                                                                                                    item.extraParams =
+                                                                                                        extraParams
+                                                                                                    return item
+                                                                                                }
+                                                                                                return item
+                                                                                            }
+                                                                                        )
+                                                                                        setFileList(files)
                                                                                     }
-                                                                                    return item
-                                                                                })
-                                                                                setFileList(files)
-                                                                            }
-                                                                            success("保存成功")
-                                                                        }} 
-                                                                    /></Space>,
-                                                                    tooltip: '编辑/保存为该文件默认参数',
+                                                                                    success("保存成功")
+                                                                                }}
+                                                                            />
+                                                                        </Space>
+                                                                    ),
+                                                                    tooltip: "编辑/保存为该文件默认参数",
                                                                     onChange: setExtraParams
                                                                 }}
                                                             >
@@ -730,9 +754,13 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                         </Space>
                                                     }
                                                 >
-                                                    <Button type={"link"} icon={<EllipsisOutlined />} onClick={() => {
-                                                        setExtraParams(tabList[+activeTab]?.extraParams || "")
-                                                    }} />
+                                                    <Button
+                                                        type={"link"}
+                                                        icon={<EllipsisOutlined />}
+                                                        onClick={() => {
+                                                            setExtraParams(tabList[+activeTab]?.extraParams || "")
+                                                        }}
+                                                    />
                                                 </Popover>
                                                 {executing ? (
                                                     <Button
@@ -770,7 +798,10 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                 >
                                     {tabList.map((item, index) => {
                                         return (
-                                            <TabPane tab={item.isFile?item.tab:`(未保存)${item.tab}`} key={`${index}`}>
+                                            <TabPane
+                                                tab={item.isFile ? item.tab : `(未保存)${item.tab}`}
+                                                key={`${index}`}
+                                            >
                                                 <div style={{height: "100%"}}>
                                                     <AutoSpin spinning={executing}>
                                                         <div style={{height: "100%"}}>
@@ -1014,7 +1045,9 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                                 <div
                                     className={`list-opt ${activeFile === item.route ? "selected" : ""}`}
                                     style={{top: `${index * 22}px`}}
-                                    onClick={() => openFile({name: item.tab, path: item.route, extraParams: item.extraParams})}
+                                    onClick={() =>
+                                        openFile({name: item.tab, path: item.route, extraParams: item.extraParams})
+                                    }
                                 >
                                     <div>
                                         {renameFlag && renameIndex === index ? (
