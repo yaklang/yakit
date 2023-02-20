@@ -835,12 +835,12 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
-                            <UIOpUpdateYakit
+                            {/* <UIOpUpdateYakit
                                 version={yakitVersion}
                                 lastVersion={yakitLastVersion}
                                 isUpdateWait={isYakitUpdateWait}
                                 onDownload={onDownload}
-                            />
+                            /> */}
                             <UIOpUpdateYaklang
                                 version={yaklangVersion}
                                 lastVersion={yaklangLastVersion}

@@ -65,10 +65,11 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
-        if (!isShow) return false
-        if (!currentYakit || !latestYakit) return false
-        if (`v${currentYakit}` !== latestYakit) return true
-        else return false
+        // if (!isShow) return false
+        // if (!currentYakit || !latestYakit) return false
+        // if (`v${currentYakit}` !== latestYakit) return true
+        // else return false
+        return false
     }, [currentYakit, latestYakit, isShow])
     const isShowYaklang = useMemo(() => {
         if (!isShow) return false
