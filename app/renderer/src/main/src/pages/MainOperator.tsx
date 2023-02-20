@@ -60,7 +60,7 @@ import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-
+import {isSimbleEnterprise} from "@/utils/envfile"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {ipcRenderer} = window.require("electron")
@@ -336,7 +336,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimbleEnterprise?[
+        {
+                verbose: "安全检测",
+                route: Route.SimbleDetect,
+                singleNode: ContentByRoute(Route.SimbleDetect),
+                multipleNode: []
+        }
+    ]:[
         {
             verbose: "首页",
             route: Route.NewHome,
@@ -344,7 +351,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.NewHome)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimbleEnterprise?Route.SimbleDetect:Route.NewHome)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -871,14 +878,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         saveFuzzerList()
     }
     useEffect(() => {
-        setPageCache([
-            {
-                verbose: "首页",
-                route: Route.NewHome,
-                singleNode: ContentByRoute(Route.NewHome),
-                multipleNode: []
-            }
-        ])
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
             try {
                 updateFuzzerList(res.key, {...(fuzzerList.current.get(res.key) || {}), ...JSON.parse(res.param)})
