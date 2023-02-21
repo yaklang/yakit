@@ -169,7 +169,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
     const onFinish = useMemoizedFn((values) => {
         const {scan_type} = values
-        const scan_deep = values.scan_deep || "slow"
+        const scan_deep = values.scan_deep || "fast"
         if (!target.target && !target.targetFile) {
             warn("请输入目标或上传目标文件夹绝对路径!")
             return
@@ -364,10 +364,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 </Form.Item>
 
                 <Form.Item name='scan_deep' label='扫描速度'>
-                    <Radio.Group defaultValue={"slow"}>
-                        <Radio.Button value='slow'>慢</Radio.Button>
-                        <Radio.Button value='middle'>中</Radio.Button>
-                        <Radio.Button value='fast'>快</Radio.Button>
+                    <Radio.Group defaultValue={"fast"}>
+                        <Radio.Button value='fast'>快速探测</Radio.Button>
+                        <Radio.Button value='middle'>标准扫描</Radio.Button>
+                        <Radio.Button value='slow'>深度扫描</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
             </Form>

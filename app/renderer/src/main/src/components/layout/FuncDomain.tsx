@@ -109,27 +109,33 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
-            setUserMenu([
+            let cacheMenu = [
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "upload-data", title: "上传数据"},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
-            ])
+            ]
+            if(isSimbleEnterprise){
+                cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
+            }
+            setUserMenu(cacheMenu)
         }
         // 企业用户非管理员登录
         else if (userInfo.role !== "admin" && userInfo.platform === "company") {
-            setUserMenu([
+            let cacheMenu = [
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "upload-data", title: "上传数据"},
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
-            ])
+            ]
+            if(isSimbleEnterprise){
+                cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
+            }
+            setUserMenu(cacheMenu)
         } else {
             setUserMenu([
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
         }
