@@ -726,9 +726,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             }
         ]
     },
-    /**
-        * @description: 企业版简易版菜单
-    */
 ]
 
 /**
@@ -785,8 +782,33 @@ export const HiddenMenuData: MenuDataProps[] = [
         hidden: true
     }
 ]
-
+/**
+    * @description: 企业版简易版菜单
+*/
 export const SimbleDataBaseMenu: MenuDataProps[] = [
+    {
+        id: "4",
+        label: "插件",
+        menuPattern: ["novice","expert"],
+        subMenuData: [
+            {
+                id: "4-1",
+                key: Route.ModManager,
+                label: "插件仓库",
+                icon: <MenuPluginWarehouseIcon />,
+                hoverIcon: <MenuSolidPluginWarehouseIcon />,
+                describe: "目前插件为 6 大类型，可根据需要灵活编写插件，支持从 GitHub 加载插件"
+            },
+            {
+                id: "4-2",
+                key: Route.BatchExecutorPage,
+                label: "插件批量执行",
+                icon: <MenuPluginBatchExecutionIcon />,
+                hoverIcon: <MenuSolidPluginBatchExecutionIcon />,
+                describe: "自由选择需要的 POC 进行批量漏洞检测"
+            }
+        ]
+    },
     {
         id: "10",
         label: "安全检测",
