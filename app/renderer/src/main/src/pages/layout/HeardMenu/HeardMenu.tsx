@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route,SimbleDataBaseMenu} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -124,7 +124,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     const [loading, setLoading] = useState<boolean>(true)
 
-    const [patternMenu, setPatternMenu, getPatternMenu] = useGetState<"expert" | "new" | "simple-ee">(isSimbleEnterprise?"simple-ee":"expert")
+    const [patternMenu, setPatternMenu, getPatternMenu] = useGetState<"expert" | "new">("expert")
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [menuDataString, setMenuDataString] = useState<string>("")
     const [fileName, setFileName] = useState<string>("")
@@ -139,10 +139,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     /** 登录用户信息 */
     const {userInfo} = useStore()
     useEffect(() => {
-        // 当为企业简易版且不为admin用户
-        console.log("userInfo.role",userInfo.role)
-        if(isSimbleEnterprise&&userInfo.role!=="admin"){
-            let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData].filter((item)=>item.menuPattern?.includes("simple-ee"))
+        // 当为企业简易版
+        if(isSimbleEnterprise){
+            let currentMenuList: MenuDataProps[] = [...SimbleDataBaseMenu]
             setRouteMenu(currentMenuList)
             setSubMenuData(currentMenuList[0].subMenuData||[])
             setMenuId(currentMenuList[0].id)
@@ -158,14 +157,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         
     }, [])
     useEffect(() => {
-        if(!isSimbleEnterprise||userInfo.role==="admin"){
+        if(!isSimbleEnterprise){
             ipcRenderer.on("fetch-new-main-menu", (e) => {
                 init(getPatternMenu(), true)
             })
         }
         
         return () => {
-            if(!isSimbleEnterprise||userInfo.role==="admin"){
+            if(!isSimbleEnterprise){
                 ipcRenderer.removeAllListeners("fetch-new-main-menu")
             }
         }
@@ -209,10 +208,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         } else {
                             // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除 企业简易版管理员默认展示所有菜单
                             let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData]
-                            // 专业版菜单不要企业版简易版菜单
-                            if(menuMode == "expert"){
-                                currentMenuList = [...DefaultRouteMenuData].filter((item) => !item.menuPattern?.includes("simple-ee"))
-                            }
                             // 新手版菜单-novice
                             if (menuMode == "new") {
                                 currentMenuList = [...DefaultRouteMenuData].filter((item) => item.menuPattern?.includes("novice"))
@@ -681,7 +676,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    <YakitButton
+                    {!isSimbleEnterprise&&<>
+                        <YakitButton
                         type='text'
                         className={style["heard-menu-theme"]}
                         onClick={() => onImportShare()}
@@ -771,6 +767,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             </div>
                         </YakitButton>
                     </Dropdown>
+                    </>}
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}
