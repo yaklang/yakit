@@ -250,6 +250,9 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             }
         })
         ipcRenderer.on(`${token}-error`, async (e, data) => {
+            if(data==="Cancelled on client"){
+                return
+            }
             failed(`批量执行插件遇到问题: ${data}`)
         })
         ipcRenderer.on(`${token}-end`, async (e) => {
