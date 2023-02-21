@@ -37,7 +37,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     const [treeHeight, setTreeHeight] = useState<number>(0)
     const [delUrlArr, setDelUrlArr] = useState<string[]>([])
     const [downLoadUrlArr, setDownLoadUrlArr] = useState<string[]>([])
-    const [downLoadUrlPageSize, setDownLoadUrlPageSize] = useState<number>(100)
     const [checkedAll, setCheckedAll] = useState<boolean>(false)
     const [selectedKeys, setSelectedKeys] = useState<string[]>([])
     const TreeBoxRef = useRef<any>()
@@ -169,7 +168,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                     .invoke("QueryHTTPFlows", {
                         IncludeInUrl: downLoadUrlArr,
                         Pagination: {
-                            ...genDefaultPagination(downLoadUrlPageSize),
                             Page: page,
                             Limit: limit,
                             ...query
@@ -185,7 +183,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         filterVal.push("url")
                         // [["test"],["test1"]]
                         exportData = Data.map((item) => [item.Url])
-                        setDownLoadUrlPageSize(res.Pagination.Limit)
                         resolve({
                             header,
                             exportData,
@@ -310,7 +307,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                             <Menu.Item>
                                                                 <ExportExcel
                                                                     fileName='网站树视角'
-                                                                    pageSize={downLoadUrlPageSize}
                                                                     text='批量导出'
                                                                     showButton={false}
                                                                     getData={getData}
