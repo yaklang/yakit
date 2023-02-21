@@ -142,6 +142,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         // 当为企业简易版
         if(isSimbleEnterprise){
             let currentMenuList: MenuDataProps[] = [...SimbleDataBaseMenu]
+            if(userInfo.role!=="admin"){
+                // 简易企业版非管理员 无需插件权限
+                currentMenuList = currentMenuList.filter((item)=>item.id!=="4")
+            }
             setRouteMenu(currentMenuList)
             setSubMenuData(currentMenuList[0].subMenuData||[])
             setMenuId(currentMenuList[0].id)
