@@ -941,12 +941,12 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
-                            <UIOpUpdateYakit
+                            {!isSimbleEnterprise&&<UIOpUpdateYakit
                                 version={yakitVersion}
                                 lastVersion={yakitLastVersion}
                                 isUpdateWait={isYakitUpdateWait}
                                 onDownload={onDownload}
-                            />
+                            />}
                             <UIOpUpdateYaklang
                                 version={yaklangVersion}
                                 lastVersion={yaklangLastVersion}
@@ -985,6 +985,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdate = useMemo(() => {
         return (
+            isSimbleEnterprise?(yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion):
             (yakitLastVersion !== "" && yakitLastVersion !== yakitVersion) ||
             (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion)
         )

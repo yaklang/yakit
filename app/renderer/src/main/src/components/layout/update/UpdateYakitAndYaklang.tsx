@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-
+import {isSimbleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
@@ -65,6 +65,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
+        if (isSimbleEnterprise) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true
