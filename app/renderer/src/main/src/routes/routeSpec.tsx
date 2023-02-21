@@ -249,7 +249,7 @@ export interface MenuDataProps {
     describe?: string
     yakScriptId?: number
     yakScripName?: string
-    menuPattern?: ("novice"|"expert"|"simple-ee")[]
+    menuPattern?: ("novice"|"expert")[]
     /**
      * @description: 父级的分组名称
      */
@@ -729,21 +729,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
     /**
         * @description: 企业版简易版菜单
     */
-    {
-        id: "10",
-        label: "安全检测",
-        menuPattern: ["simple-ee"],
-        subMenuData: [
-            {
-                id: "10-1",
-                key: Route.SimbleDetect,
-                label: "安全检测",
-                icon: <MenuBatchVulnerabilityDetectionIcon />,
-                hoverIcon: <MenuSolidBatchVulnerabilityDetectionIcon />,
-                describe: ""
-            },
-        ]
-    },
 ]
 
 /**
@@ -801,3 +786,44 @@ export const HiddenMenuData: MenuDataProps[] = [
     }
 ]
 
+export const SimbleDataBaseMenu: MenuDataProps[] = [
+    {
+        id: "10",
+        label: "安全检测",
+        subMenuData: [
+            {
+                id: "10-1",
+                key: Route.SimbleDetect,
+                label: "安全检测",
+                icon: <MenuBatchVulnerabilityDetectionIcon />,
+                hoverIcon: <MenuSolidBatchVulnerabilityDetectionIcon />,
+                describe: ""
+            },
+        ]
+    },{
+    id: "9",
+        label: "数据库",
+        subMenuData: [
+            {
+                id: "9-1",
+                key: Route.DB_Report,
+                label: "报告",
+                icon: <MenuReportIcon />,
+                hoverIcon: <MenuSolidReportIcon />
+            },
+            {
+                id: "9-2",
+                key: Route.DB_ExecResults,
+                label: "插件执行结果",
+                icon: <MenuPlugExecutionResultsIcon />,
+                hoverIcon: <MenuSolidPlugExecutionResultsIcon />
+            },
+            {
+                id: "9-3",
+                key: Route.DB_Ports,
+                label: "端口资产",
+                icon: <MenuPortAssetsIcon />,
+                hoverIcon: <MenuSolidPortAssetsIcon />
+            },
+        ]
+}]
