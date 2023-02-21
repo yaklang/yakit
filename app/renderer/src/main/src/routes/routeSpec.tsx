@@ -834,18 +834,18 @@ export const SimbleDataBaseMenu: MenuDataProps[] = [
                 hoverIcon: <MenuSolidReportIcon />
             },
             {
-                id: "9-2",
-                key: Route.DB_ExecResults,
-                label: "插件执行结果",
-                icon: <MenuPlugExecutionResultsIcon />,
-                hoverIcon: <MenuSolidPlugExecutionResultsIcon />
-            },
-            {
                 id: "9-3",
                 key: Route.DB_Ports,
                 label: "端口资产",
                 icon: <MenuPortAssetsIcon />,
                 hoverIcon: <MenuSolidPortAssetsIcon />
+            },
+            {
+                id: "9-4",
+                key: Route.DB_Risk,
+                label: "漏洞与风险",
+                icon: <MenuVulnerabilityRiskIcon />,
+                hoverIcon: <MenuSolidVulnerabilityRiskIcon />
             },
         ]
 }]
