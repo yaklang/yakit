@@ -3004,6 +3004,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
     ]
     return(
         <div>
+            {size === "middle"&&<>
             {
                 selectedRowKeysRecordOnline.length===0?<Button
                 style={{margin:"0 12px 0 0"}}
@@ -3037,9 +3038,6 @@ export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
                trigger='click'
                placement='bottomLeft'
            >
-               {size === "small" ? (
-                   <SettingOutlined className='operation-icon' />
-               ) : (
                    <Button
                        style={{margin:"0 12px 0 0"}}
                        size='small'
@@ -3051,9 +3049,8 @@ export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
                        插件分组
                        <ChevronDownIcon style={{color: "#85899E"}} />
                    </Button>
-               )}
            </Popover>
-            }
+            }</>}
                         </div>
     )
 }
