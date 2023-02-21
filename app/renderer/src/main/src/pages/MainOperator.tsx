@@ -1199,7 +1199,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache([
+                setPageCache(isSimbleEnterprise?[]:[
                     {
                         verbose: "首页",
                         route: Route.NewHome,
@@ -1207,7 +1207,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         multipleNode: []
                     }
                 ])
-                setCurrentTabKey(Route.NewHome)
+                setCurrentTabKey(isSimbleEnterprise?"":Route.NewHome)
             }
         })
     })
@@ -1217,7 +1217,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                setPageCache([
+                if(isSimbleEnterprise){
+                    setPageCache([...arr])
+                }
+                if(!isSimbleEnterprise){
+                    setPageCache([
                     {
                         verbose: "首页",
                         route: Route.NewHome,
@@ -1226,6 +1230,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     },
                     ...arr
                 ])
+                }
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })
