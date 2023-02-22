@@ -26,8 +26,8 @@ export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
             <ResizeBox
                 isVer={false}
                 firstNode={<ReportList onClick={setReport} selectedId={getReport()?.Id}/>}
-                firstMinSize={"320px"}
-                firstRatio={"320px"}
+                firstMinSize={"330px"}
+                firstRatio={"330px"}
                 secondNode={(() => {
                     return <ReportViewer id={getReport()?.Id || 0}/>
                 })()}
@@ -76,7 +76,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         if (!!limit) {
             pagination.Limit = limit
         }
-        setLoading(true)
+        // setLoading(true)
         ipcRenderer
             .invoke("QueryReports", {
                 ...params,
@@ -92,7 +92,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                 failed("Query Reports Failed")
                 console.info(e)
             })
-            .finally(() => setTimeout(() => setLoading(false), 300))
+            // .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
     const onSelect = useMemoizedFn((item: Report) => {
@@ -190,7 +190,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                                 />
                             </Tooltip>
 
-                            <Space>
+                            <Space wrap={true}>
                                 {item.Id && <Tag color={"red"}>ID:{item.Id}</Tag>}
                                 {item.Owner && <Tag color={"green"}>发起人:{item.Owner}</Tag>}
                                 {item.From && <Tag color={"orange"}>来源:{item.From}</Tag>}
