@@ -1144,3 +1144,26 @@ const CloudPlugin = () => (
 export const CloudPluginIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={CloudPlugin} {...props} />
 }
+
+const Cog = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.88309 2.87821C7.16735 1.70726 8.83265 1.70726 9.11692 2.87821C9.30055 3.63462 10.1672 3.99358 10.8319 3.58857C11.8609 2.96159 13.0384 4.13914 12.4114 5.16812C12.0064 5.83284 12.3654 6.69945 13.1218 6.88308C14.2927 7.16735 14.2927 8.83265 13.1218 9.11692C12.3654 9.30055 12.0064 10.1672 12.4114 10.8319C13.0384 11.8609 11.8609 13.0384 10.8319 12.4114C10.1672 12.0064 9.30055 12.3654 9.11692 13.1218C8.83265 14.2927 7.16735 14.2927 6.88309 13.1218C6.69945 12.3654 5.83284 12.0064 5.16812 12.4114C4.13914 13.0384 2.96159 11.8609 3.58857 10.8319C3.99358 10.1672 3.63462 9.30055 2.87821 9.11692C1.70726 8.83265 1.70726 7.16735 2.87821 6.88308C3.63462 6.69945 3.99358 5.83284 3.58857 5.16812C2.96159 4.13914 4.13914 2.96159 5.16812 3.58857C5.83284 3.99358 6.69945 3.63462 6.88309 2.87821Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: cog 设置
+ */
+export const CogIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={Cog} {...props} />
+}

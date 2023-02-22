@@ -5,7 +5,7 @@
         cursor: pointer;
 
         &:hover {
-            color: #1890ff;
+            color: var(--yakit-primary-5);
         }
     }
 }
@@ -26,15 +26,15 @@
             padding: 4px 6px 4px 8px;
             margin-right: 0;
             display: flex;
-            background: #F8F8F8;
-            border: 1px solid #EAECF3;
+            background: var(--yakit-card-background-color);
+            border: 1px solid var(--yakit-border-color);
             border-radius: 4px;
             font-size: 12px;
             align-items: center;
 
             .yakit-editor-regexp-value {
                 word-break: break-all;
-                color: #31343F;
+                color: var(--yakit-header-color);
                 overflow: hidden;
                 text-overflow: ellipsis;
                 display: -webkit-box;
@@ -48,24 +48,22 @@
                 display: inline-flex;
                 height: 22px;
                 padding-top: 4px;
-                color: #1890ff;
+                color: var(--yakit-primary-5);
 
                 svg {
                     width: 16px;
                     height: 16px;
 
                     &:hover {
-                        color: #40a9ff;
+                        color: var(--yakit-primary-4);
                     }
 
                     &:active {
-                        color: #096dd9;
+                        color: var(--yakit-primary-6);
                     }
                 }
             }
-
         }
-
 
         .yakit-editor-text-area {
             display: flex;
@@ -85,7 +83,7 @@
                 display: flex;
                 font-weight: 400;
                 font-size: 12px;
-                color: #31343F;
+                color: var(--yakit-header-color);
                 align-items: center;
                 height: 24px;
                 user-select: none;
@@ -95,30 +93,29 @@
                     cursor: pointer;
 
                     &:hover {
-                        color: #40a9ff;
+                        color: var(--yakit-primary-4);
                     }
 
                     &:active {
-                        color: #096dd9;
+                        color: var(--yakit-primary-6);
                     }
                 }
 
                 .save-btn {
-                    color: #1890ff;
+                    color: var(--yakit-primary-5);
                     width: 24px;
                     cursor: pointer;
 
                     &:hover {
-                        color: #40a9ff;
+                        color: var(--yakit-primary-4);
                     }
 
                     &:active {
-                        color: #096dd9;
+                        color: var(--yakit-primary-6);
                     }
                 }
             }
         }
-
     }
 }
 
@@ -136,18 +133,18 @@
         }
 
         .extra-tip {
-            color: #B4BBCA;
+            color: var(--yakit-helper-text-color);
             font-weight: 400;
 
             .number {
-                color: #1890ff;
+                color: var(--yakit-primary-5);
                 margin: 0 4px;
             }
         }
     }
 
     .http-tags {
-        border: 1px solid #EAECF3;
+        border: 1px solid var(--yakit-border-color);
         border-radius: 4px;
         padding: 4px;
         padding-bottom: 0;

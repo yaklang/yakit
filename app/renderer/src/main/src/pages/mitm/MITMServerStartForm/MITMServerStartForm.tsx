@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {AutoComplete, Button, Checkbox, Divider, Form, Input, InputNumber, Popconfirm, Space, Tag} from "antd"
 import {SimplePluginList} from "@/components/SimplePluginList"
 import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
@@ -9,9 +9,17 @@ import {PlusSquareOutlined} from "@ant-design/icons/lib"
 import {YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {MITMRuleExport, MITMRuleImport} from "./MITMRule/MITMRuleConfigure/MITMRuleConfigure"
 import {showModal} from "@/utils/showModal"
-import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
+import {MITMRuleExport, MITMRuleImport} from "../MITMRule/MITMRuleConfigure/MITMRuleConfigure"
+import styles from "./MITMServerStartForm.module.scss"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {yakitFailed} from "@/utils/notification"
+import {CogIcon, RefreshIcon} from "@/assets/newIcon"
+import {RuleExportAndImportButton} from "../MITMRule/MITMRule"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
 export interface MITMServerStartFormProp {
@@ -45,8 +53,13 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
     const [certs, setCerts] = useState<ClientCertificate[]>([])
 
-    const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const [importVisible, setImportVisible] = useState<boolean>(false)
+    const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
+
+    const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
+
+    const ruleButtonRef = useRef<any>()
+
+    const [form] = Form.useForm()
 
     useEffect(() => {
         // 设置 MITM 初始启动插件选项
@@ -106,10 +119,30 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
         }
     }, [])
+    useEffect(() => {
+        ipcRenderer
+            .invoke("GetCurrentRules", {})
+            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setRules(newRules)
+            })
+            .catch((e) => yakitFailed("获取规则列表失败:" + e))
+    }, [])
+    useEffect(() => {
+        ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
+            const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
+            setRules(newRules)
+            return
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
+        }
+    }, [])
+
     return (
-        <div style={{height: "100%", width: "100%", position: "relative"}}>
+        <div className={styles["mitm-server-start-form"]}>
             <Form
-                style={{marginTop: 40}}
+                form={form}
                 onSubmitCapture={(e) => {
                     e.preventDefault()
                     props.onStartMITMServer(
@@ -133,29 +166,52 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
                 }}
                 layout={"horizontal"}
-                labelCol={{span: 7}}
+                labelCol={{span: 5}}
                 wrapperCol={{span: 13}}
             >
-                <Item label={"劫持代理监听主机"} help={"远程模式可以修改为 0.0.0.0 以监听主机所有网卡"}>
-                    <AutoComplete
+                <Item
+                    label={"劫持代理监听主机"}
+                    help={"远程模式可以修改为 0.0.0.0 以监听主机所有网卡"}
+                    rules={[{required: true, message: "该项为必填"}]}
+                    name='host'
+                >
+                    {/* <AutoComplete
                         options={hostHistoryList.map((item) => ({value: item}))}
                         placeholder='请输入'
                         value={host}
                         onChange={(value) => setHost(value)}
+                    /> */}
+                    <YakitAutoComplete
+                        options={hostHistoryList.map((item) => ({value: item, label: item}))}
+                        placeholder='请输入'
                     />
                 </Item>
-                <Item label={"劫持代理监听端口"}>
-                    <InputNumber value={port} onChange={(e) => setPort(e as number)} />
+                <Item label={"劫持代理监听端口"} name='port' rules={[{required: true, message: "该项为必填"}]}>
+                    {/* <InputNumber value={port} onChange={(e) => setPort(e as number)} /> */}
+                    <YakitInputNumber
+                        wrapperClassName={styles["form-input-number"]}
+                        style={{width: "100%", maxWidth: "none"}}
+                    />
                 </Item>
-                <SwitchItem
+                <Item
+                    label={"HTTP/2.0 支持"}
+                    name='enableHttp2'
+                    help={
+                        "开启该选项将支持 HTTP/2.0 劫持，关闭后自动降级为 HTTP/1.1，开启后 HTTP2 协商失败也会自动降级"
+                    }
+                >
+                    {/* <SwitchItem
                     label={"HTTP/2.0 支持"}
                     value={enableHttp2}
                     setValue={setEnableHttp2}
                     help={
                         "开启该选项将支持 HTTP/2.0 劫持，关闭后自动降级为 HTTP/1.1，开启后 HTTP2 协商失败也会自动降级"
                     }
-                />
-                <Item label={"选择插件"} colon={true}>
+                /> */}
+                    <YakitSwitch size='large' />
+                </Item>
+
+                {/* <Item label={"选择插件"} colon={true}>
                     <div style={{height: 200, maxWidth: 420}}>
                         <SimplePluginList
                             disabled={!enableInitialPlugin}
@@ -168,8 +224,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             verbose={"插件"}
                         />
                     </div>
-                </Item>
-                <Item
+                </Item> */}
+                {/* <Item
                     label={"下游代理"}
                     help={
                         "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描" +
@@ -177,8 +233,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }
                 >
                     <Input value={downstreamProxy} onChange={(e) => setDownstreamProxy(e.target.value)} />
-                </Item>
-                <Item label={"客户端TLS导入"} help={`用于 mTLS（Mutual TLS）开启客户端验证的 HTTPS 网站抓包`}>
+                </Item> */}
+                {/* <Item label={"客户端TLS导入"} help={`用于 mTLS（Mutual TLS）开启客户端验证的 HTTPS 网站抓包`}>
                     <Space>
                         {certs.length > 0 ? (
                             <Tag color={"orange"}>包含[{certs.length}]个证书对</Tag>
@@ -217,41 +273,56 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             </Button>
                         </Popconfirm>
                     </Space>
+                </Item> */}
+                <Item
+                    label={"内容规则"}
+                    help={
+                        <span className={styles["form-rule-help"]}>
+                            使用规则进行匹配、替换、标记、染色，同时配置生效位置
+                            <span
+                                className={styles["form-rule-help-setting"]}
+                                onClick={() => {
+                                    setIsUseDefRules(true)
+                                    ruleButtonRef.current.onSetImportVisible(true)
+                                }}
+                            >
+                                默认配置&nbsp;
+                                <RefreshIcon />
+                            </span>
+                        </span>
+                    }
+                >
+                    <div className={styles["form-rule-body"]}>
+                        <div className={styles["form-rule"]} onClick={() => props.setVisible(true)}>
+                            <div className={styles["form-rule-text"]}>现有规则共 {rules.length} 条</div>
+                            <div className={styles["form-rule-icon"]}>
+                                <CogIcon />
+                            </div>
+                        </div>
+                    </div>
+                    <div className={styles["form-rule-button"]}>
+                        <RuleExportAndImportButton
+                            ref={ruleButtonRef}
+                            isUseDefRules={isUseDefRules}
+                            setIsUseDefRules={setIsUseDefRules}
+                        />
+                    </div>
                 </Item>
-                <Item label={"内容规则"} help={"使用规则进行匹配、替换、标记、染色，同时配置生效位置"}>
-                    <Space>
-                        <Button
-                            onClick={() => {
-                                props.setVisible(true)
-                            }}
-                        >
-                            已有规则
-                        </Button>
-                        <Button
-                            type={"link"}
-                            onClick={() => {
-                                setImportVisible(true)
-                            }}
-                        >
-                            从 JSON 导入
-                        </Button>
-                        <Button
-                            type={"link"}
-                            onClick={() => {
-                                setExportVisible(true)
-                            }}
-                        >
-                            导出为 JSON
-                        </Button>
-                    </Space>
+                <Item label='禁用插件' name='enableInitialPlugin'>
+                    <YakitSwitch size='large' />
                 </Item>
                 <Item label={" "} colon={false}>
                     <Space>
-                        <Button type={"primary"} htmlType={"submit"}>
+                        <YakitButton type='primary' size='large'>
                             劫持启动
-                        </Button>
-                        <Divider type={"vertical"} />
-                        <Checkbox
+                        </YakitButton>
+                        <YakitButton type='outline2' size='large'>
+                            免配置启动
+                        </YakitButton>
+                        <YakitButton type='text' size='large'>
+                            高级配置
+                        </YakitButton>
+                        {/* <Checkbox
                             checked={enableInitialPlugin}
                             onChange={(node) => {
                                 const e = node.target.checked
@@ -264,12 +335,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             }}
                         >
                             插件自动加载
-                        </Checkbox>
+                        </Checkbox> */}
                     </Space>
                 </Item>
             </Form>
-            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
-            {importVisible && <MITMRuleImport visible={importVisible} setVisible={setImportVisible} />}
         </div>
     )
 })

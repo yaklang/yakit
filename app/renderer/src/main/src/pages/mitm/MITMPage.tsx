@@ -41,7 +41,7 @@ import {MITMPluginLogViewer} from "./MITMPluginLogViewer"
 import {MITMPluginList} from "./MITMPluginList"
 import {saveABSFileToOpen} from "../../utils/openWebsite"
 import {ChromeLauncherButton} from "./MITMChromeLauncher"
-import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm"
+import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
@@ -478,8 +478,6 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                 })
         }
     })
-    console.log("tag,checkList", tag, checkList)
-
     return (
         <div className={style["mitm-plugin-local"]}>
             <div>

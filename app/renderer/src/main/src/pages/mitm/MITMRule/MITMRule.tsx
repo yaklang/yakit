@@ -1,10 +1,11 @@
 import {Button, Checkbox, Divider, Drawer, Modal, Select, Switch, Tag, Tooltip} from "antd"
-import React, {ReactNode, useCallback, useEffect, useMemo, useState} from "react"
+import React, {ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
     ButtonTextProps,
     CloseTipModalProps,
     MITMContentReplacerRule,
     MITMRuleProp,
+    RuleExportAndImportButtonProps,
     YakitCheckboxProps,
     YakitSelectMemoProps,
     YakitSwitchMemoProps
@@ -129,8 +130,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const [modalVisible, setModalVisible] = useState<boolean>(false)
-    const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const [importVisible, setImportVisible] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
@@ -146,7 +145,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         })
     }, [visible])
     useEffect(() => {
-        if (importVisible) return
         setLoading(true)
         ipcRenderer
             .invoke("GetCurrentRules", {})
@@ -156,7 +154,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 setBanAndNoReplace(newRules)
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
-    }, [visible, importVisible])
+    }, [visible])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
             const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
@@ -248,7 +246,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 dataKey: "NoReplace",
                 width: 350,
                 tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                extra: <div className={styles["table-result-extra"]}>开/关</div>,
+                beforeIconExtra: <div className={styles["table-result-extra"]}>开/关</div>,
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitSwitchMemo
                         ExtraCookies={i.ExtraCookies}
@@ -533,7 +531,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
 
     const onOkImport = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
-        setImportVisible(false)
     })
 
     const onClose = useMemoizedFn(() => {
@@ -563,7 +560,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     setVisible(false)
                 },
                 cancelButtonProps: {size: "small", style: {borderRadius: 4}},
-                okButtonProps: {size: "small", style: {borderRadius: 4, backgroundColor: "#1890ff"}}
+                okButtonProps: {size: "small", style: {borderRadius: 4}}
             })
         } else {
             setVisible(false)
@@ -580,25 +577,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 getContainer={getContainer}
                 mask={false}
                 style={(visible && styleDrawer) || {}}
-                className={classNames(styles["mitm-rule-drawer"], "old-theme-html")}
+                className={classNames(styles["mitm-rule-drawer"])}
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={<div className={styles["heard-title"]}>内容规则配置</div>}
                 extra={
                     <div className={styles["heard-right-operation"]}>
-                        <YakitButton type='text' icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
-                            导入配置
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <YakitButton
-                            type='text'
-                            icon={<ExportIcon />}
-                            className={styles["button-export"]}
-                            onClick={() => {
-                                setExportVisible(true)
-                            }}
-                        >
-                            导出配置
-                        </YakitButton>
+                        <RuleExportAndImportButton onOkImport={onOkImport} />
                         <YakitButton
                             type='primary'
                             className={styles["button-save"]}
@@ -659,7 +643,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                         />
                                     }
                                     trigger='hover'
-                                    overlayClassName={classNames(styles["popover-remove"], "old-theme-html")}
+                                    overlayClassName={classNames(styles["popover-remove"])}
                                 >
                                     <YakitButton
                                         type='outline2'
@@ -713,13 +697,65 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     currentItem={currentItem}
                 />
             )}
-            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
-            {importVisible && (
-                <MITMRuleImport visible={importVisible} setVisible={setImportVisible} onOk={onOkImport} />
-            )}
         </>
     )
 }
+
+export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
+    const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props
+    const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [importVisible, setImportVisible] = useState<boolean>(false)
+    const onOk = useMemoizedFn(() => {
+        if (onOkImport) onOkImport()
+        setImportVisible(false)
+    })
+    useImperativeHandle(
+        ref,
+        () => ({
+            // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
+            // 导入
+            onSetImportVisible: (newVal) => {
+                setImportVisible(newVal)
+            },
+            // 导出
+            onSetExportVisible: (newVal) => {
+                setExportVisible(newVal)
+            }
+        }),
+        []
+    )
+    useEffect(() => {
+        if (setIsUseDefRules && !importVisible) setIsUseDefRules(false)
+    }, [importVisible])
+    return (
+        <>
+            {onBeforeNode}
+            <YakitButton type='text' icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
+                导入配置
+            </YakitButton>
+            <Divider type='vertical' style={{margin: "0 4px"}} />
+            <YakitButton
+                type='text'
+                icon={<ExportIcon />}
+                className={styles["button-export"]}
+                onClick={() => {
+                    setExportVisible(true)
+                }}
+            >
+                导出配置
+            </YakitButton>
+            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
+            {importVisible && (
+                <MITMRuleImport
+                    visible={importVisible}
+                    setVisible={setImportVisible}
+                    onOk={onOk}
+                    isUseDefRules={isUseDefRules}
+                />
+            )}
+        </>
+    )
+})
 
 const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
     (props) => {
@@ -731,7 +767,6 @@ const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
                 size='small'
                 wrapperStyle={{width: "100%"}}
                 onSelect={(val) => props.onSelect(val)}
-                dropdownClassName='old-theme-html'
             >
                 {colorSelectNode}
             </YakitSelect>

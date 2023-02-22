@@ -1,0 +1,83 @@
+.mitm-server-start-form {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    padding-top: 36px;
+    :global {
+        .ant-form-item-with-help .ant-form-item-explain {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            line-height: 16px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+        .ant-form-item-control-input {
+            min-height: 28px;
+        }
+    }
+    .form-input-number {
+        width: 100%;
+    }
+    .form-rule-body {
+        display: flex;
+        align-items: center;
+        .form-rule {
+            height: 28px;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            &:hover {
+                border-color: var(--yakit-primary-5);
+            }
+            &:focus,
+            &:active {
+                box-shadow: 0 0 0 2px var(--yakit-primary-2);
+            }
+            .form-rule-text {
+                padding: 6px 12px;
+                flex: 1;
+                font-size: 12px;
+            }
+            .form-rule-icon {
+                width: 33px;
+                height: 26px;
+                background: var(--yakit-card-background-color);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-left: 1px solid var(--yakit-border-color);
+                border-radius: 0px 4px 4px 0px;
+                cursor: pointer;
+                &:hover {
+                    svg {
+                        color: var(--yakit-primary-5);
+                    }
+                }
+                svg {
+                    color: var(--yakit-header-color);
+                }
+            }
+        }
+    }
+    .form-rule-button{
+        position: absolute;
+        top: 2px;
+        right: -185px;
+    }
+    .form-rule-help {
+        .form-rule-help-setting {
+            margin-left: 8px;
+            color: var(--yakit-primary-5);
+            display: inline-flex;
+            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}

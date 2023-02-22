@@ -1918,7 +1918,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ]}
                 />
             )}
-            <div className={style["table-virtual-resize"]}>
+            <div className={classNames(style["table-virtual-resize"],'old-theme-html')}>
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
                     currentIndex={currentIndex}

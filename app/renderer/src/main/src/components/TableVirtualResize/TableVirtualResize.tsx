@@ -1438,8 +1438,7 @@ const CellRenderDrop = React.memo(
         const styleDrag =
             (enableDragSort &&
                 isDragging && {
-                    width,
-                    backgroundColor: "rgb(230 247 255 / 30%)"
+                    width
                 }) ||
             {}
         return (
@@ -1475,12 +1474,18 @@ const CellRenderDrop = React.memo(
                 }}
             >
                 {enableDragSort && isDragging && (
-                    <div style={{height: 28, left: 0, position: "absolute", ...styleDrag}} />
+                    <div
+                        className={classNames({
+                            [style["virtual-table-row-cell-isDragging"]]: isDragging
+                        })}
+                        style={{height: 28, left: 0, position: "absolute", ...styleDrag}}
+                    />
                 )}
                 {enableDragSort && colIndex === 0 && (
                     <DragSortIcon
-                        className={style["drag-sort-icon"]}
-                        style={{color: isSelect || isDragging ? "#1890ff" : ""}}
+                        className={classNames(style["drag-sort-icon"], {
+                            [style["drag-sort-icon-active"]]: isSelect || isDragging
+                        })}
                     />
                 )}
                 {colIndex === 0 && rowSelection && (
