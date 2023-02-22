@@ -50,6 +50,28 @@
         margin: 4px;
     }
 }
+.download-all-plugin {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    .filter-opt-progress {
+        flex: 1;
+        min-width: 100px;
+        max-width: 300px;
+        margin-left: 6px;
+    }
+    .operation-text {
+        font-size: 14px;
+        color: #1890ff;
+        margin-left: 12px;
+        cursor: pointer;
+    }
+}
+.download-all-plugin-modal{
+    .filter-opt-progress-modal{
+        
+    }
+}
 :global {
     .simble-detect-dropdown-box {
         .ant-cascader-menus {
@@ -58,7 +80,7 @@
             }
         }
     }
-    .ant-cascader-menu{
+    .ant-cascader-menu {
         height: 104px;
     }
 }

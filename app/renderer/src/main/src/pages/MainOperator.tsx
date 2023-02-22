@@ -61,6 +61,7 @@ import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {isSimbleEnterprise} from "@/utils/envfile"
+import { DownloadAllPlugin } from "@/pages/simbleDetect/SimbleDetect";
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {ipcRenderer} = window.require("electron")
@@ -359,10 +360,30 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
-    // 简易企业版页面控制
+    
     useEffect(()=>{
         if(isSimbleEnterprise){
+            // 简易企业版页面控制
             addTabPage(Route.SimbleDetect)
+            // 简易企业版判断本地插件数-导入弹窗
+            const newParams = {
+                Type: "yak,mitm,codec,packet-hack,port-scan",
+                Keyword: "",
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                UserId: 0
+            }
+            ipcRenderer
+            .invoke("QueryYakScript", newParams)
+            .then((item: QueryYakScriptsResponse) => {
+                if(item.Data.length===0){
+                    const m = showModal({
+                        title: "导入插件",
+                        content: <DownloadAllPlugin type="modal" onClose={() => m.destroy()} />
+                    })
+                    return m 
+                }
+            })
+            
         }
     },[])
 

@@ -2771,7 +2771,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
     )
 })
 
-interface DownloadOnlinePluginAllResProps {
+export interface DownloadOnlinePluginAllResProps {
     Progress: number
     Log: string
 }
@@ -3060,7 +3060,7 @@ interface DownloadOnlinePluginByIdsRequest {
     UUID: string[]
 }
 
-interface DownloadOnlinePluginByTokenRequest {
+export interface DownloadOnlinePluginByTokenRequest {
     isAddToken: boolean
     BindMe: boolean
     Keywords?: string
