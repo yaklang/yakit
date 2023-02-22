@@ -1000,6 +1000,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         HeadImg: ""
     })
     const SelectedUploadRowKeysRecordLocal = useRef<YakScript[]>([])
+    const StopUpload = useRef<boolean>(false)
     // 获取私有域
     useEffect(() => {
         getRemoteValue("httpSetting").then((setting) => {
@@ -1222,14 +1223,17 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 
     const upOnlineBatch = useMemoizedFn(async(type: number) => {
         setUpLoading(true)
+        StopUpload.current = false
         const realSelectedRowKeysRecordLocal = [...SelectedUploadRowKeysRecordLocal.current]
         const length = realSelectedRowKeysRecordLocal.length
         const errList: any[] = []
         for (let index = 0; index < length; index++) {
-            const element = realSelectedRowKeysRecordLocal[index]
-            const res = await upOnline(element, "yakit/plugin", type)
-            if (res) {
-                errList.push(res)
+            if(!StopUpload.current){
+                const element = realSelectedRowKeysRecordLocal[index]
+                const res = await upOnline(element, "yakit/plugin", type)
+                if (res) {
+                    errList.push(res)
+                }
             }
         }
 
@@ -1241,7 +1245,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 })
             failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
         } else {
-            success("批量上传成功")
+            StopUpload.current?success("批量上传成功"):success("取消上传成功")
         }
         setUpLoading(false)
         setVisibleSyncSelect(false)
@@ -1508,11 +1512,14 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 handleOk={onSyncSelect}
                 handleCancel={() => {
                     if (upLoading) {
-                        warn("请等待插件上传完成后再关闭该modal框")
-                        return
+                       StopUpload.current = true 
+                        //     warn("请等待插件上传完成后再关闭该modal框")
+                        //     return
                     }
-                    setVisibleSyncSelect(false)
-                    onResetList()
+                    else{
+                       setVisibleSyncSelect(false)
+                       onResetList()   
+                    }
                 }}
                 loading={upLoading}
             />
