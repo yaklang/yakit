@@ -440,7 +440,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
 
     useEffect(() => {
         update(1)
-    }, [props.simpleFilter, refresh])
+    }, [props.simpleFilter.tags,props.simpleFilter.type, refresh])
     const loadMoreData = useMemoizedFn(() => {
         update(Number(response.Pagination.Page) + 1)
     })
