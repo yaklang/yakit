@@ -1,9 +1,10 @@
-import {InputProps} from "antd"
+import {InputProps, SelectProps} from "antd"
 import {SizeType} from "antd/lib/config-provider/SizeContext"
 
 import { SearchProps, TextAreaProps } from "antd/lib/input"
 
 import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
+import {YakitSelectProps} from "../YakitSelect/YakitSelectType"
 
 /**
  * @description YakitInputNumberProps 的属性

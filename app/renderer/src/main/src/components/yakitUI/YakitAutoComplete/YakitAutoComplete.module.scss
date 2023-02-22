@@ -1,17 +1,3 @@
-// // ========================== 新UI ==========================
-// .yakit-auto-complete-wrapper-newUI {
-//     --yakit-box-shadow-color: #FBE7D9;
-//     --yakit-border-color: #f69c5d;
-//     --yakit-font-color: #F28B44;
-// }
-
-// // ========================== 老UI ==========================
-// .yakit-auto-complete-wrapper-oldUI {
-//     --yakit-box-shadow-color: #e6f7ff;
-//     --yakit-border-color: #40a9ff;
-//     --yakit-font-color: #1890ff;
-// }
-
 // ========================== disabled ==========================
 .yakit-auto-complete-disabled {
     :global {
@@ -24,7 +10,6 @@
 
 // ========================== middle ==========================
 .yakit-auto-complete-wrapper {
-
     --yakit-box-shadow-color: var(--yakit-primary-2);
     --yakit-border-color: var(--yakit-primary-4);
     --yakit-font-color: var(--yakit-primary-5);
@@ -33,6 +18,9 @@
     width: 100%;
 
     :global {
+        .ant-select {
+            width: 100%;
+        }
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             height: 28px;
             padding: 6px 12px;
@@ -48,14 +36,13 @@
             border-color: var(--yakit-border-color);
             box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
         }
-
-        // .ant-select-focused:not(.ant-select-disabled) .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-        //     border-color: var(--yakit-border-color);
-        //     box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
-        // }
         .ant-select-focused .ant-select-selector {
             border-color: var(--yakit-border-color) !important;
             box-shadow: 0 0 0 2px var(--yakit-box-shadow-color) !important;
+        }
+        .ant-select-single .ant-select-selector .ant-select-selection-item,
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            line-height: 14px;
         }
     }
 }
@@ -75,7 +62,6 @@
     }
 }
 
-
 // ========================== large ==========================
 .yakit-auto-complete-wrapper-large {
     :global {
@@ -87,9 +73,12 @@
             height: 30px;
             font-size: 14px;
         }
+        .ant-select-single .ant-select-selector .ant-select-selection-item,
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            line-height: 18px;
+        }
     }
 }
-
 
 // ========================== popup ==========================
 .yakit-auto-complete-popup {

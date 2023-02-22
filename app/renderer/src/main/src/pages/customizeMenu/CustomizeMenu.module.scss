@@ -182,9 +182,7 @@
             width: 350px;
         }
     }
-
 }
-
 
 .first-menu-list {
     width: 100%;
@@ -414,8 +412,6 @@
                     color: var(--yakit-primary-border-color);
                 }
             }
-
-
         }
     }
 
@@ -423,7 +419,6 @@
         font-weight: 600;
     }
 }
-
 
 .menu-item-drag {
     background: var(--yakit-primary-background-color) !important;
@@ -445,9 +440,7 @@
             color: var(--yakit-danger-color) !important;
         }
     }
-
 }
-
 
 .display-flex {
     display: flex;
@@ -503,7 +496,6 @@
                     color: var(--yakit-primary-color);
                 }
             }
-
         }
 
         .have-add {
@@ -565,48 +557,6 @@
             padding: 0 8px;
         }
 
-        .plugin-local-item-left {
-            display: flex;
-            align-items: center;
-            width: calc(100% - 55px);
-            max-width: calc(100% - 55px);
-        }
-
-
-        .plugin-local-headImg {
-            width: 28px;
-            height: 28px;
-            margin-right: 8px;
-            border-radius: 50%;
-        }
-
-        .plugin-local-scriptName {
-            font-size: 12px;
-            color: var(--yakit-header-color);
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            word-break: break-all;
-            max-width: calc(100% - 140px);
-            margin-right: 8px;
-        }
-
-        .plugin-local-icon {
-            color: var(--yakit-helper-text-color);
-            margin-right: 8px;
-            cursor: pointer;
-
-            svg {
-                width: 16px;
-                height: 16px;
-
-                &:hover {
-                    color: var(--yakit-primary-color);
-                }
-            }
-
-        }
-
         .have-add {
             font-size: 12px;
             color: var(--yakit-disable-text-color);
@@ -629,6 +579,28 @@
         }
     }
 
+    .plugin-local-item-left {
+        display: flex;
+        align-items: center;
+        width: calc(100% - 55px);
+        max-width: calc(100% - 55px);
+        .plugin-local-headImg {
+            width: 28px;
+            height: 28px;
+            margin-right: 8px;
+            border-radius: 50%;
+        }
+        .plugin-local-scriptName {
+            font-size: 12px;
+            color: var(--yakit-header-color);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+            max-width: calc(100% - 140px);
+            margin-right: 8px;
+        }
+    }
     .plugin-local-item-isDragging {
         background-color: var(--yakit-primary-background-color);
         border: 1px solid var(--yakit-primary-color);
@@ -648,7 +620,6 @@
 }
 
 .question-tooltip {
-
     :global {
         .ant-tooltip-arrow {
             right: 3px;
@@ -799,7 +770,6 @@
         line-height: 16px;
         color: var(--yakit-body-text-color);
 
-
         span {
             color: var(--yakit-primary-color);
             margin: 0 4px;
@@ -835,9 +805,23 @@
             color: var(--yakit-header-color);
         }
     }
-
 }
 
 .menu-item-isDragDisabled {
     opacity: 0.3;
+}
+
+.plugin-local-icon {
+    color: var(--yakit-helper-text-color);
+    margin-right: 8px;
+    cursor: pointer;
+
+    svg {
+        width: 16px;
+        height: 16px;
+
+        &:hover {
+            color: var(--yakit-primary-color);
+        }
+    }
 }

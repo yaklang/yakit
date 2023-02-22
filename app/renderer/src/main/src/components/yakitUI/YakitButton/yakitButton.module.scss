@@ -16,6 +16,12 @@
     line-height: 14px;
     display: flex;
     align-items: center;
+    :global {
+        .anticon + span,
+        span + .anticon {
+            margin-left: 2px;
+        }
+    }
 }
 .yakit-button-size {
     height: 24px;
@@ -26,6 +32,12 @@
     line-height: 16px;
     display: flex;
     align-items: center;
+    :global {
+        .anticon + span,
+        span + .anticon {
+            margin-left: 4px;
+        }
+    }
 }
 .yakit-button-large-size {
     height: 28px;

@@ -148,6 +148,7 @@
             // border-width: 0;
             border-right-width: 0;
             border-radius: 4px;
+            border-color: var(--search-border-color);
         }
 
         .ant-btn-primary {
@@ -197,6 +198,7 @@
 .yakit-search-wrapper-focus {
     border-color: var(--search-border-focus-color);
     box-shadow: 0 0 0 2px var(--search-box-shadow-color);
+    border-radius: 4px !important;
 }
 
 // ========================== search-middle ==========================
@@ -286,7 +288,39 @@
 
         .ant-input-group-addon {
             height: 28px;
-            line-height: 28px;
+            // line-height: 28px;
+        }
+    }
+}
+
+// ========================== search-maxLarge ==========================
+.yakit-search-wrapper-maxLarge {
+    height: 32px;
+}
+
+.yakit-search-maxLarge {
+    :global {
+        .ant-input {
+            height: 32px;
+            padding: 7px 8px;
+            font-size: 11px;
+        }
+
+        .ant-input-search-button {
+            width: 32px;
+            height: 32px;
+        }
+
+        .anticon-search {
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .ant-input-group-addon {
+            height: 32px;
+            // line-height: 28px;
         }
     }
 }

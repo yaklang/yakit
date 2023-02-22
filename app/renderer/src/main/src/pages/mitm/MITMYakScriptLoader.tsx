@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import {Button, Card, Checkbox, Col, Descriptions, Popconfirm, Row, Space, Statistic, Tooltip} from "antd"
 import {showModal} from "../../utils/showModal"
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter"
@@ -11,13 +11,40 @@ import {OneLine} from "../../utils/inputUtil"
 import {useMemoizedFn, useThrottle} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {AutoSpin} from "@/components/AutoSpin"
+import style from "./MITMYakScriptLoader.module.scss"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
-    const {hooks, script, onSubmitYakScriptId, onRemoveHook} = p
+    const {hooks, script, onSubmitYakScriptId, onRemoveHook, isBeforeHijacking, defaultPlugins, setDefaultPlugins} = p
     const i = script
     const onCheckboxClicked = useMemoizedFn(() => {
+        if (isBeforeHijacking) {
+            onSelectDefaultPlugins()
+        } else {
+            onLaunchPlugin()
+        }
+    })
+    /**
+     * @description 劫持未开启前,勾选默认插件
+     */
+    const onSelectDefaultPlugins = useMemoizedFn(() => {
+        if (!defaultPlugins || !setDefaultPlugins) return
+        const checked = !!defaultPlugins?.includes(i.ScriptName)
+        if (checked) {
+            const newPluginList = defaultPlugins.filter((ele) => ele !== i.ScriptName)
+            setDefaultPlugins(newPluginList)
+        } else {
+            setDefaultPlugins([...defaultPlugins, i.ScriptName])
+        }
+    })
+    /**
+     * @description 劫持未开启后,勾选启动插件
+     */
+    const onLaunchPlugin = useMemoizedFn(() => {
         const checked = !!hooks.get(i.ScriptName)
         if (checked) {
             ipcRenderer.invoke("mitm-remove-hook", {
@@ -34,117 +61,22 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
 
         clearMITMPluginCache()
         p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
-        // if ((script.Params || []).length > 0 && script.Type !== "port-scan") {
-        //     let m2 = showModal({
-        //         title: `设置 [${script.ScriptName}] 的参数`,
-        //         content: <>
-        //             <YakScriptParamsSetter
-        //                 {...script}
-        //                 onParamsConfirm={(p: YakExecutorParam[]) => {
-        //                     clearMITMPluginCache()
-        //                     onSubmitYakScriptId && onSubmitYakScriptId(script.Id, p)
-        //                     m2.destroy()
-        //                 }}
-        //                 submitVerbose={"设置 MITM 参数"}
-        //             />
-        //         </>, width: "50%",
-        //     })
-        // } else {
-        //
-        // }
     })
-
     return (
-        <Card
-            size={"small"}
-            bodyStyle={{paddingLeft: 12, paddingTop: 8, paddingBottom: 8, paddingRight: 12}}
-            style={{
-                width: "100%",
-                marginBottom: 4
-                // backgroundColor: hooks.get(i.ScriptName) ? "#d6e4ff" : undefined
-            }}
-        >
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    width: "100%",
-                    justifyContent: "flex-end"
-                }}
-            >
-                <div
-                    style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "row",
-                        overflow: "hidden"
-                    }}
-                    onClick={onCheckboxClicked}
-                >
-                    <Checkbox style={{marginRight: 6}} checked={!!hooks.get(i.ScriptName)}></Checkbox>
-                    <div
-                        style={{
-                            // width: cardWidth - 50 - 24,
-                            flex: `1 1 auto`,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap"
-                        }}
-                    >
-                        {!!i.ScriptName ? i.ScriptName : `{hot-patched}`}
-                    </div>
+        <div className={style["mitm-plugin-local-item"]} onClick={() => onCheckboxClicked()}>
+            <YakitCheckbox
+                checked={isBeforeHijacking ? !!defaultPlugins?.includes(i.ScriptName) : !!hooks.get(i.ScriptName)}
+            />
+            <div className={style["mitm-plugin-local-info"]}>
+                <div className={style["mitm-plugin-local-info-left"]}>
+                    <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
+                    <span className={classNames(style["plugin-local-scriptName"])}>{i.ScriptName}</span>
                 </div>
-
-                <div style={{width: "50px", textAlign: "right"}}>
-                    <OneLine>
-                        <a
-                            href={"#"}
-                            onClick={() => {
-                                showModal({
-                                    title: "详情",
-                                    width: "50%",
-                                    content: (
-                                        <Descriptions size={"small"} column={2}>
-                                            <Descriptions.Item label={"作者"} span={2}>
-                                                {i.Author}
-                                            </Descriptions.Item>
-                                            <Descriptions.Item label={"帮助"} span={2}>
-                                                {i.Help}
-                                            </Descriptions.Item>
-                                        </Descriptions>
-                                    )
-                                })
-                            }}
-                        >
-                            <QuestionCircleOutlined />
-                        </a>
-                        {/*{script.Author && <div title={script.Author}>*/}
-                        {/*    <a href={"#"}>*/}
-                        {/*        <UserOutlined/>*/}
-                        {/*    </a>*/}
-                        {/*</div>}*/}
-                        <Popconfirm
-                            disabled={!p.onSendToPatch}
-                            title={"发送到【热加载】中调试代码？"}
-                            onConfirm={() => {
-                                if (!script.Content) {
-                                    warn("暂无数据")
-                                    return
-                                }
-                                let _ = p.onSendToPatch && p.onSendToPatch(script.Content)
-                            }}
-                        >
-                            <Button
-                                disabled={!p.onSendToPatch}
-                                type={"link"}
-                                size={"small"}
-                                icon={<ThunderboltFilled />}
-                            ></Button>
-                        </Popconfirm>
-                    </OneLine>
+                <div className={style["mitm-plugin-local-info-right"]}>
+                    <PluginLocalInfoIcon plugin={i} />
                 </div>
             </div>
-        </Card>
+        </div>
     )
 })
 
@@ -171,6 +103,15 @@ export interface MITMYakScriptLoaderProps {
     onSendToPatch?: (code: string) => any
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
     onRemoveHook?: (name: string) => void
+    /**
+     * @param 是否劫持启动前/未开启劫持启动
+     */
+    isBeforeHijacking?: boolean
+    /**
+     * @param 是否劫持启动前 勾选默认插件
+     */
+    defaultPlugins?: string[]
+    setDefaultPlugins?: (p: string[]) => void
 }
 
 export function clearMITMPluginCache() {

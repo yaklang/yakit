@@ -1074,3 +1074,73 @@ const FolderOpen = () => (
 export const FolderOpenIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={FolderOpen} {...props} />
 }
+
+const CloudDownload = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4.66667 10.6666C3.19391 10.6666 2 9.47268 2 7.99992C2 6.72855 2.88971 5.66499 4.08047 5.39789C4.02779 5.16255 4 4.91781 4 4.66659C4 2.82564 5.49238 1.33325 7.33333 1.33325C8.9462 1.33325 10.2915 2.47875 10.6001 4.00057C10.6223 4.00014 10.6444 3.99992 10.6667 3.99992C12.5076 3.99992 14 5.4923 14 7.33325C14 8.94589 12.8548 10.2911 11.3333 10.5999M6 12.6666L8 14.6666M8 14.6666L10 12.6666M8 14.6666V6.66659'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: folder-open 下载 云
+ */
+export const CloudDownloadIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={CloudDownload} {...props} />
+}
+
+const Import = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.6665 2.66675H4.6665C3.56193 2.66675 2.6665 3.56218 2.6665 4.66675V11.3334C2.6665 12.438 3.56194 13.3334 4.66651 13.3334H11.3332C12.4377 13.3334 13.3332 12.438 13.3332 11.3334V8.00008'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M13.3333 2.66675C11.3333 2.66675 8 5.33341 8 8.66675'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M10 8L8 10L6 8' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+/**
+ * @description: import 导入
+ */
+export const ImportIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={Import} {...props} />
+}
+
+const CloudPlugin = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M3.67173 7.58167L4.2437 7.51952L4.10241 6.96181C4.03557 6.69799 3.9998 6.4204 3.9998 6.13333C3.9998 4.33031 5.40471 2.89999 7.0998 2.89999C8.54228 2.89999 9.77239 3.93308 10.1093 5.3543L10.2145 5.79805L10.6661 5.734C10.824 5.7116 10.9855 5.69999 11.1498 5.69999C13.0934 5.69999 14.6998 7.33925 14.6998 9.39999C14.6998 11.4607 13.0934 13.1 11.1498 13.1H3.9498C2.50323 13.1 1.2998 11.8786 1.2998 10.3333C1.2998 8.88889 2.35349 7.72491 3.67173 7.58167Z'
+            fill='url(#paint0_linear_6675_6238)'
+            stroke='#31343F'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_6675_6238'
+                x1='11.1998'
+                y1='14'
+                x2='5.1998'
+                y2='1.99999'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#2A82F8' />
+                <stop offset='1' stopColor='#8FBFFF' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+/**
+ * @description: 云端插件 菜单
+ */
+export const CloudPluginIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={CloudPlugin} {...props} />
+}

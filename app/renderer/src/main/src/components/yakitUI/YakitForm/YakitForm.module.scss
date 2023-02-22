@@ -10,8 +10,20 @@
 // ========================== form-label-middle ==========================
 .form-label-middle {
     :global {
-        .ant-form-item-label>label {
-            height: 28px
+        .ant-form-item-label > label {
+            height: 28px;
+        }
+        .ant-upload.ant-upload-drag {
+            border: 0;
+            background: transparent;
+        }
+
+        .ant-upload.ant-upload-drag .ant-upload {
+            padding: 0;
+        }
+
+        .ant-upload.ant-upload-drag {
+            text-align: start;
         }
     }
 }
@@ -24,7 +36,6 @@
         }
     }
 }
-
 
 // ========================== dragger-help-middle ==========================
 .dragger-help-middle {
@@ -73,4 +84,10 @@
             text-align: start;
         }
     }
+}
+
+.form-item-help {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
 }

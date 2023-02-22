@@ -11,6 +11,31 @@
     justify-content: space-between;
 }
 
+::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 8px;
+    /*高宽分别对应横竖滚动条的尺寸*/
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 10px;
+    box-shadow: none;
+    background-clip: padding-box;
+    border: 1px solid transparent;
+}
+
+::-webkit-scrollbar-track {
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    border-color: #c1c1c1;
+}
+
 // ========================== monaco ==========================
 .monaco-editor,
 .monaco-editor-background,

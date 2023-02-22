@@ -23,12 +23,15 @@ import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
  * @params {string} className RadioGroup  className
  */
 export const YakitRadioButtons: React.FC<YakitRadioButtonsProps> = (props) => {
-    const {className, size, ...restProps} = props
+    const {className, size, wrapClassName, ...restProps} = props
     return (
         <div
-            className={classNames({
-                [styles["yakit-radio-buttons-solid"]]: props.buttonStyle === "solid"
-            })}
+            className={classNames(
+                {
+                    [styles["yakit-radio-buttons-solid"]]: props.buttonStyle === "solid"
+                },
+                wrapClassName
+            )}
         >
             <Radio.Group
                 {...restProps}

@@ -1551,6 +1551,7 @@ export interface YakModuleListProp {
     tag?: string[]
     onSetUser?: (u: PluginUserInfoLocalProps) => void
     setIsRequest?: (s: boolean) => void
+    emptyNode?: ReactNode
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -1575,7 +1576,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         isGridLayout,
         setIsSelectAll,
         onSetUser,
-        setIsRequest
+        setIsRequest,
+        emptyNode
     } = props
 
     // 全局登录状态
@@ -1714,40 +1716,42 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     })
     return (
         <Spin spinning={listBodyLoading}>
-            <RollingLoadList<YakScript>
-                isGridLayout={isGridLayout}
-                numberRoll={numberLocalRoll}
-                isRef={isRef}
-                recalculation={recalculation}
-                data={response.Data}
-                page={response.Pagination.Page}
-                hasMore={hasMore}
-                loading={loading}
-                loadMoreData={loadMoreData}
-                classNameList='plugin-list-body'
-                defItemHeight={itemHeight}
-                renderRow={(data: YakScript, index) => (
-                    <PluginListLocalItem
-                        plugin={data}
-                        userInfo={userInfo}
-                        onClicked={(info) => {
-                            numberLocal.current = index
-                            props.onClicked(info, index)
-                        }}
-                        onlineProfile={baseUrl}
-                        currentScript={props.currentScript}
-                        onYakScriptRender={props.onYakScriptRender}
-                        maxWidth={maxWidth}
-                        selectedRowKeysRecord={selectedRowKeysRecord || []}
-                        onSelect={onSelect}
-                        setUpdatePluginRecordLocal={(s) => {
-                            if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
-                        }}
-                        onShare={onShare}
-                        onSetUser={onSetUser}
-                    />
-                )}
-            />
+            {(response.Data.length === 0 && emptyNode) || (
+                <RollingLoadList<YakScript>
+                    isGridLayout={isGridLayout}
+                    numberRoll={numberLocalRoll}
+                    isRef={isRef}
+                    recalculation={recalculation}
+                    data={response.Data}
+                    page={response.Pagination.Page}
+                    hasMore={hasMore}
+                    loading={loading}
+                    loadMoreData={loadMoreData}
+                    classNameList='plugin-list-body'
+                    defItemHeight={itemHeight}
+                    renderRow={(data: YakScript, index) => (
+                        <PluginListLocalItem
+                            plugin={data}
+                            userInfo={userInfo}
+                            onClicked={(info) => {
+                                numberLocal.current = index
+                                props.onClicked(info, index)
+                            }}
+                            onlineProfile={baseUrl}
+                            currentScript={props.currentScript}
+                            onYakScriptRender={props.onYakScriptRender}
+                            maxWidth={maxWidth}
+                            selectedRowKeysRecord={selectedRowKeysRecord || []}
+                            onSelect={onSelect}
+                            setUpdatePluginRecordLocal={(s) => {
+                                if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
+                            }}
+                            onShare={onShare}
+                            onSetUser={onSetUser}
+                        />
+                    )}
+                />
+            )}
         </Spin>
     )
 }
@@ -1756,7 +1760,7 @@ export interface YakFilterModuleSelectProps {
     selectedTags: string[]
     setSelectedTags: (v: string[]) => void
 }
-interface TagValue {
+export interface TagValue {
     Name: string
     Total: number
 }
@@ -2379,7 +2383,7 @@ const PluginTypeText = (type) => {
     }
 }
 
-const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
+export const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
 
 log.setLevel("info")
 
@@ -2398,7 +2402,7 @@ if err != nil {
 yakit.Output("更新本地仓库成功")
 `
 
-const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
+export const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
 
 loglevel("info");
 
@@ -2413,7 +2417,7 @@ if err != nil {
 yakit.Info("Update Nuclei PoC Finished")
 `
 
-const loadYakitPluginCode = `yakit.AutoInitYakit()
+export const loadYakitPluginCode = `yakit.AutoInitYakit()
 loglevel("info")
 
 gitUrl = cli.String("giturl")

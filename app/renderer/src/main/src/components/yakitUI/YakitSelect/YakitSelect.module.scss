@@ -12,6 +12,7 @@
     --select-background-disabled-color: var(--yakit-background-color);
     --select-background-white: var(--yakit-neutral10-color);
 
+    --select-primary-icon-color: var(--yakit-primary-5);
 
     font-weight: 400;
     font-size: 12px;
@@ -110,7 +111,6 @@
             font-weight: 400;
             background-color: var(--select-background-color);
         }
-
     }
 }
 
@@ -203,11 +203,13 @@
     }
 }
 
-
 // ========================== mode tags ==========================
 .yakit-select-wrapper-tags {
+    --select-primary-icon-color: var(--yakit-primary-5);
     :global {
-
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-state {
+            color: var(--select-primary-icon-color);
+        }
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             color: var(--select-primary-font-color);
             background: var(--select-background-white);

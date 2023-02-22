@@ -64,6 +64,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
                 {
                     [styles["yakit-search-wrapper-large"]]: size === "large",
                     [styles["yakit-search-wrapper-small"]]: size === "small",
+                    [styles["yakit-search-wrapper-maxLarge"]]: size === "maxLarge",
                     [styles["yakit-search-wrapper-focus"]]: focus,
                     [styles["yakit-search-disabled"]]: !!props.disabled
                 },
@@ -80,6 +81,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
                 className={classNames(styles["yakit-search-middle"], {
                     [styles["yakit-search-large"]]: size === "large",
                     [styles["yakit-search-small"]]: size === "small",
+                    [styles["yakit-search-maxLarge"]]: size === "maxLarge",
                     className
                 })}
             />
