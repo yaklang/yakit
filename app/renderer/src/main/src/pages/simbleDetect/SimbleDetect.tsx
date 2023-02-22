@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Space, Tag, Progress, Divider, Form, Input, Button, Cascader, Spin, Radio} from "antd"
+import {Space, Tag, Progress, Divider, Form, Input, Button, Cascader, Spin, Radio, Popconfirm} from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
 import classNames from "classnames"
@@ -21,6 +21,8 @@ import {Risk} from "../risks/schema"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
 import {YakScript} from "../invoker/schema"
+import {useStore} from "@/store"
+import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
 interface Option {
@@ -71,6 +73,7 @@ interface SimbleDetectFormProps {
     setTarget: (v: TargetRequest) => void
     openScriptNames: string[] | undefined
     YakScriptOnlineGroup?: string
+    isDownloadPlugin: boolean
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const {
@@ -83,7 +86,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         target,
         setTarget,
         openScriptNames,
-        YakScriptOnlineGroup
+        YakScriptOnlineGroup,
+        isDownloadPlugin
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -250,7 +254,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             }
         })
         ipcRenderer.on(`${token}-error`, async (e, data) => {
-            if(data==="Cancelled on client"){
+            if (data === "Cancelled on client") {
                 return
             }
             failed(`批量执行插件遇到问题: ${data}`)
@@ -342,7 +346,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                                     立即停止任务
                                 </Button>
                             ) : (
-                                <Button type='primary' htmlType='submit' disabled={executing} loading={loading}>
+                                <Button type='primary' htmlType='submit' disabled={isDownloadPlugin} loading={loading}>
                                     开始检测
                                 </Button>
                             )
@@ -485,6 +489,130 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     )
 }
 
+interface DownloadAllPluginProps {
+    type?: "modal" | "default"
+    setDownloadPlugin?: (v: boolean) => void
+    onClose?: () => void
+}
+
+export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
+    const {setDownloadPlugin, onClose} = props
+    const type = props.type || "default"
+    // 全局登录状态
+    const {userInfo} = useStore()
+    // 全部添加进度条
+    const [addLoading, setAddLoading] = useState<boolean>(false)
+    // 全部添加进度
+    const [percent, setPercent, getPercent] = useGetState<number>(0)
+    const [taskToken, setTaskToken] = useState(randomString(40))
+    useEffect(() => {
+        if (!taskToken) {
+            return
+        }
+        ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
+            const p = Math.floor(data.Progress * 100)
+            setPercent(p)
+        })
+        ipcRenderer.on(`${taskToken}-end`, () => {
+            setTimeout(() => {
+                type === "default" && setAddLoading(false)
+                setPercent(0)
+                setDownloadPlugin && setDownloadPlugin(false)
+                onClose && onClose()
+            }, 500)
+        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        return () => {
+            ipcRenderer.removeAllListeners(`${taskToken}-data`)
+            ipcRenderer.removeAllListeners(`${taskToken}-error`)
+            ipcRenderer.removeAllListeners(`${taskToken}-end`)
+        }
+    }, [taskToken])
+    const AddAllPlugin = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            warn("我的插件需要先登录才能下载，请先登录")
+            return
+        }
+        // 全部添加
+        setAddLoading(true)
+        setDownloadPlugin && setDownloadPlugin(true)
+        let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
+        ipcRenderer
+            .invoke("DownloadOnlinePluginAll", addParams, taskToken)
+            .then(() => {})
+            .catch((e) => {
+                failed(`添加失败:${e}`)
+            })
+    })
+    const StopAllPlugin = () => {
+        onClose && onClose()
+        setAddLoading(false)
+        ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
+            failed(`停止添加失败:${e}`)
+        })
+    }
+    if (type === "modal") {
+        return (
+            <div className={styles["download-all-plugin-modal"]}>
+                {addLoading ? (
+                    <div>
+                        <div>下载进度</div>
+                        <div className={styles["filter-opt-progress-modal"]}>
+                            <Progress
+                                size='small'
+                                status={!addLoading && percent !== 0 ? "exception" : undefined}
+                                percent={percent}
+                            />
+                        </div>
+                        <div style={{textAlign: "center", marginTop: 10}}>
+                            <Button type='primary' onClick={StopAllPlugin}>
+                                取消
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <div>检测到本地未下载任何插件，无法进行安全检测，请点击“一键导入”进行插件下载</div>
+                        <div style={{textAlign: "center", marginTop: 10}}>
+                            <Button type='primary' onClick={AddAllPlugin}>
+                                一键导入
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        )
+    }
+    return (
+        <div className={styles["download-all-plugin"]}>
+            {addLoading && (
+                <div className={styles["filter-opt-progress"]}>
+                    <Progress
+                        size='small'
+                        status={!addLoading && percent !== 0 ? "exception" : undefined}
+                        percent={percent}
+                    />
+                </div>
+            )}
+            {addLoading ? (
+                <Button style={{marginLeft: 12}} size='small' type='primary' danger onClick={StopAllPlugin}>
+                    停止
+                </Button>
+            ) : (
+                <Popconfirm
+                    title={"确定将插件商店所有数据导入到本地吗?"}
+                    onConfirm={AddAllPlugin}
+                    okText='Yes'
+                    cancelText='No'
+                    placement={"left"}
+                >
+                    <div className={styles["operation-text"]}>一键导入</div>
+                </Popconfirm>
+            )}
+        </div>
+    )
+}
+
 export interface SimbleDetectProps {
     Uid?: string
     BaseProgress?: number
@@ -502,6 +630,9 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
     const [target, setTarget] = useState<TargetRequest>(defTargetRequest)
     // 打开新页面任务参数
     const [openScriptNames, setOpenScriptNames] = useState<string[]>()
+
+    const [isDownloadPlugin, setDownloadPlugin] = useState<boolean>(false)
+
     useEffect(() => {
         if (BaseProgress !== undefined && BaseProgress > 0) {
             setPercent(BaseProgress)
@@ -539,13 +670,15 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
             bordered={false}
             extra={
                 <Space>
-                    {(percent > 0 || executing) && (
+                    {percent > 0 || executing ? (
                         <div style={{width: 200}}>
                             <Progress
                                 status={executing ? "active" : undefined}
                                 percent={parseInt((percent * 100).toFixed(0))}
                             />
                         </div>
+                    ) : (
+                        <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />
                     )}
                 </Space>
             }
@@ -561,6 +694,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 setTarget={setTarget}
                 openScriptNames={openScriptNames}
                 YakScriptOnlineGroup={YakScriptOnlineGroup}
+                isDownloadPlugin={isDownloadPlugin}
             />
             {/* <Divider style={{margin: 4}} /> */}
             <div style={{flex: "1", overflow: "hidden"}}>
