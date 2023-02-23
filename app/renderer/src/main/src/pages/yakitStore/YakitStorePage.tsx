@@ -1272,7 +1272,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 })
             failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
         } else {
-            StopUpload.current?success("批量上传成功"):success("取消上传成功")
+            StopUpload.current?success("取消上传成功"):success("批量上传成功")
         }
         setUpLoading(false)
         setVisibleSyncSelect(false)
