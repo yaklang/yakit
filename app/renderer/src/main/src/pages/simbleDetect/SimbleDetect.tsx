@@ -2,6 +2,7 @@ import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {Space, Tag, Progress, Divider, Form, Input, Button, Cascader, Spin, Radio, Popconfirm} from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
+import {Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
 import {failed, info, success, warn} from "@/utils/notification"
@@ -419,7 +420,9 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                         try {
                             const risk = JSON.parse(info.data) as Risk
                             if (!!risk.RiskType) {
-                                setJsonRisks([...getJsonRisks(), risk])
+                                const cacheJsonRisks = [risk,...getJsonRisks()].slice(0,10)
+                                setJsonRisks(cacheJsonRisks)
+                                // setJsonRisks([...getJsonRisks(), risk])
                             }
                         } catch (e) {}
                     }
@@ -662,7 +665,10 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
     if (loading) {
         return <Spin tip={"正在恢复未完成的任务"} />
     }
-
+    /** 通知软件打开管理页面 */
+    const openMenu = () => {
+        ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
+    }
     return (
         <AutoCard
             title={null}
@@ -697,6 +703,12 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 isDownloadPlugin={isDownloadPlugin}
             />
             {/* <Divider style={{margin: 4}} /> */}
+            <div style={{textAlign: "right"}}>
+                <div className={styles["hole-text"]} onClick={openMenu}>
+                    查看完整漏洞
+                </div>
+            </div>
+
             <div style={{flex: "1", overflow: "hidden"}}>
                 <SimbleDetectTable token={token} setPercent={setPercent} />
             </div>
