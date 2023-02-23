@@ -606,7 +606,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     cancelText='No'
                     placement={"left"}
                 >
-                    <div className={styles["operation-text"]}>一键导入</div>
+                    <div className={styles["operation-text"]}>一键导入插件</div>
                 </Popconfirm>
             )}
         </div>
