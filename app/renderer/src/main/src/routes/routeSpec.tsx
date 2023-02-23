@@ -803,7 +803,6 @@ export const SimbleDataBaseMenu: MenuDataProps[] = [
     {
         id: "4",
         label: "插件",
-        menuPattern: ["novice","expert"],
         subMenuData: [
             {
                 id: "4-1",

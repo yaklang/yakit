@@ -75,6 +75,7 @@ interface SimbleDetectFormProps {
     openScriptNames: string[] | undefined
     YakScriptOnlineGroup?: string
     isDownloadPlugin: boolean
+    baseProgress?: number
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const {
@@ -88,7 +89,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         setTarget,
         openScriptNames,
         YakScriptOnlineGroup,
-        isDownloadPlugin
+        isDownloadPlugin,
+        baseProgress,
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -160,8 +162,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 []
             ),
             tokens,
-            undefined,
-            undefined,
+            baseProgress?true:undefined,
+            baseProgress,
             OnlineGroup
         )
             .then(() => {
@@ -701,6 +703,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 openScriptNames={openScriptNames}
                 YakScriptOnlineGroup={YakScriptOnlineGroup}
                 isDownloadPlugin={isDownloadPlugin}
+                baseProgress={BaseProgress}
             />
             {/* <Divider style={{margin: 4}} /> */}
             <div style={{textAlign: "right"}}>
