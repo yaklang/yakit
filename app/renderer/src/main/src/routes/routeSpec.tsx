@@ -787,6 +787,20 @@ export const HiddenMenuData: MenuDataProps[] = [
 */
 export const SimbleDataBaseMenu: MenuDataProps[] = [
     {
+        id: "10",
+        label: "安全检测",
+        subMenuData: [
+            {
+                id: "10-1",
+                key: Route.SimbleDetect,
+                label: "安全检测",
+                icon: <MenuBatchVulnerabilityDetectionIcon />,
+                hoverIcon: <MenuSolidBatchVulnerabilityDetectionIcon />,
+                describe: ""
+            },
+        ]
+    },
+    {
         id: "4",
         label: "插件",
         menuPattern: ["novice","expert"],
@@ -810,19 +824,6 @@ export const SimbleDataBaseMenu: MenuDataProps[] = [
         ]
     },
     {
-        id: "10",
-        label: "安全检测",
-        subMenuData: [
-            {
-                id: "10-1",
-                key: Route.SimbleDetect,
-                label: "安全检测",
-                icon: <MenuBatchVulnerabilityDetectionIcon />,
-                hoverIcon: <MenuSolidBatchVulnerabilityDetectionIcon />,
-                describe: ""
-            },
-        ]
-    },{
     id: "9",
         label: "数据库",
         subMenuData: [
