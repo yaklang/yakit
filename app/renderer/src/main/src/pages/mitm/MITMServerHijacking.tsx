@@ -33,7 +33,7 @@ import {useHotkeys} from "react-hotkeys-hook"
 import {useGetState, useLatest, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
-import {MITMFilters, MITMFilterSchema} from "@/pages/mitm/MITMFilters"
+import {MITMFilters, MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
 import {ExecResult} from "@/pages/invoker/schema"
 import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
 import {showDrawer, showModal} from "@/utils/showModal"
@@ -60,7 +60,7 @@ export interface MITMServerHijackingProp {
 
 const {ipcRenderer} = window.require("electron")
 
-interface CaCertData {
+export interface CaCertData {
     CaCerts: Uint8Array
     LocalFile: string
 }
@@ -198,19 +198,19 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             setError(`${msg}`)
             setStatus("idle")
         })
-        ipcRenderer.on("client-mitm-filter", (e, msg) => {
-            info("更新 MITM 过滤器状态")
-            setMITMFilter({
-                includeSuffix: msg.includeSuffix,
-                excludeMethod: msg.excludeMethod,
-                excludeSuffix: msg.excludeSuffix,
-                includeHostname: msg.includeHostname,
-                excludeHostname: msg.excludeHostname,
-                excludeContentTypes: msg.excludeContentTypes,
-                excludeUri: msg.excludeUri,
-                includeUri: msg.includeUri
-            })
-        })
+        // ipcRenderer.on("client-mitm-filter", (e, msg) => {
+        //     info("更新 MITM 过滤器状态")
+        //     setMITMFilter({
+        //         includeSuffix: msg.includeSuffix,
+        //         excludeMethod: msg.excludeMethod,
+        //         excludeSuffix: msg.excludeSuffix,
+        //         includeHostname: msg.includeHostname,
+        //         excludeHostname: msg.excludeHostname,
+        //         excludeContentTypes: msg.excludeContentTypes,
+        //         excludeUri: msg.excludeUri,
+        //         includeUri: msg.includeUri
+        //     })
+        // })
 
         const updateLogs = () => {
             if (latestLogs.current.length !== messages.length) {

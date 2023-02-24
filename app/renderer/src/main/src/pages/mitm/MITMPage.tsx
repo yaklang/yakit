@@ -21,7 +21,7 @@ import {
 import {failed, info, success} from "../../utils/notification"
 import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
 import {HTTPPacketEditor, YakEditor} from "../../utils/editors"
-import {MITMFilters, MITMFilterSchema} from "./MITMFilters"
+import {MITMFilters, MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {MITMHTTPFlowMiniTableCard} from "./MITMHTTPFlowMiniTableCard"
 import {ExecResult, YakScript} from "../invoker/schema"
@@ -341,10 +341,8 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
             failed(`更新 MITM 插件状态失败: ${e}`)
         })
     })
-    /**
-     * @description 获取插件组
-     */
     useEffect(() => {
+        // 获取插件组
         getRemoteValue(FILTER_CACHE_LIST_DATA).then((data: string) => {
             try {
                 if (!!data) {

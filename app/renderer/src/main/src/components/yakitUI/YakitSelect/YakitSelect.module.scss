@@ -28,6 +28,10 @@
             align-items: center;
         }
 
+        .ant-select-arrow .anticon:not(.ant-select-suffix){
+            pointer-events:none
+        }
+
         .ant-select-single .ant-select-selector .ant-select-selection-item,
         .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
             display: flex;

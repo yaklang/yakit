@@ -8,6 +8,8 @@ import {TagProps} from "antd"
  * @param {boolean} disable
  * @param {boolean} enableCopy 是否可复制
  * @param {(e:MouseEvent) => void} onAfterCopy 复制文字后得事件 enableCopy为true有效
+ * @param {string} copyText 复制文字
+ * @param {string} iconColor 复制Icon文字
  */
 
 export interface YakitTagProps extends Omit<TagProps, "color"> {
@@ -17,12 +19,16 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
     enableCopy?: boolean
     onAfterCopy?: (e: MouseEvent) => void
     copyText?:string
+    iconColor?: string
 }
 /**
  * @description: 复制文字
  * @param {(e:MouseEvent) => void} onAfterCopy 复制文字后得事件
+ * @param {string} copyText 复制文字
+ * @param {string} iconColor 复制Icon文字
  */
 export interface CopyComponentsProps {
     onAfterCopy: (e: MouseEvent) => void
     copyText:string
+    iconColor?: string
 }

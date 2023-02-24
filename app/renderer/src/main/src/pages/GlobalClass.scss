@@ -92,35 +92,35 @@
 
 // ========================== color ==========================
 .bg-color-red-opacity {
-    background-color: #F4736B;
+    background-color: #f4736b;
 }
 
 .bg-color-green-opacity {
-    background-color: #56C991;
+    background-color: #56c991;
 }
 
 .bg-color-blue-opacity {
-    background-color: #4A94F8;
+    background-color: #4a94f8;
 }
 
 .bg-color-yellow-opacity {
-    background-color: #FFD583;
+    background-color: #ffd583;
 }
 
 .bg-color-orange-opacity {
-    background-color: #FFB660;
+    background-color: #ffb660;
 }
 
 .bg-color-purple-opacity {
-    background-color: #8863F7;
+    background-color: #8863f7;
 }
 
 .bg-color-cyan-opacity {
-    background-color: #35D8EE;
+    background-color: #35d8ee;
 }
 
 .bg-color-grey-opacity {
-    background-color: #B4BBCA;
+    background-color: #b4bbca;
 }
 
 // ========================== notification ==========================
@@ -132,7 +132,7 @@
     .ant-notification-notice-content {
         background: var(--yakit-danger-1);
         border: 1px solid var(--yakit-danger-3);
-        border-radius: 4px;
+
         padding: 16px 12px;
     }
 
@@ -163,4 +163,8 @@
         color: var(--yakit-body-text-color);
         padding-right: 32px;
     }
+}
+
+.ant-notification-notice {
+    border-radius: 4px;
 }
