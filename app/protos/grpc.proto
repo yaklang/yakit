@@ -61,6 +61,8 @@ message ExecBatchYakScriptRequest {
   double BaseProgress = 16;
   // 这个很关键，不然会报错
   bool FromRecover = 17;
+
+  string YakScriptOnlineGroup = 18;
 }
 
 message ExecBatchYakScriptResult {
@@ -118,6 +120,8 @@ service Yak {
 
   // 中间人劫持
   rpc MITM(stream MITMRequest) returns (stream MITMResponse);
+  rpc SetMITMFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
+  rpc GetMITMFilter(Empty) returns (SetMITMFilterRequest);
   rpc DownloadMITMCert(Empty) returns (MITMCert);
 
   // 开启端口
@@ -151,6 +155,7 @@ service Yak {
   rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
   rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
   rpc QueryYakScriptLocalAndUser(QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptByOnlineGroup(QueryYakScriptByOnlineGroupRequest) returns (QueryYakScriptLocalAndUserResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -774,6 +779,7 @@ message DownloadOnlinePluginByTokenRequest {
   string UserName = 8;
   int64  UserId = 9;
   string TimeSearch = 10;
+  string Group = 11;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -856,6 +862,7 @@ message ExecBatchYakScriptUnfinishedTask {
   double Percent = 1;
   int64 CreatedAt = 2;
   string Uid = 3;
+  string YakScriptOnlineGroup = 4;
 }
 
 message GetExecBatchYakScriptUnfinishedTaskResponse {
@@ -909,6 +916,10 @@ message QueryYakScriptLocalAndUserRequest {
 
 message QueryYakScriptLocalAndUserResponse {
   repeated YakScript Data = 1;
+}
+
+message QueryYakScriptByOnlineGroupRequest {
+  string OnlineGroup = 1;
 }
 
 message ExtractDataToFileRequest {
@@ -1961,6 +1972,8 @@ message QueryYakScriptRequest {
   bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
   int64 UserId = 13;
   string UserName = 14;
+
+  bool IgnoreGeneralModuleOrder = 15;
 }
 
 message QueryYakScriptResponse {
@@ -2448,6 +2461,21 @@ message WebsocketFlow {
   string DataVerbose = 10;
   bool IsJson = 11;
   bool IsProtobuf = 12;
+}
+
+message SetMITMFilterRequest {
+  repeated string includeHostname = 7;
+  repeated string excludeHostname = 8;
+  repeated string excludeSuffix = 9;
+  repeated string includeSuffix = 10;
+  repeated string excludeMethod = 11;
+  repeated string excludeContentTypes = 40;
+  repeated string excludeUri = 43;
+  repeated string includeUri = 44;
+}
+
+message SetMITMFilterResponse {
+
 }
 
 // 中间人劫持的问题

@@ -49,7 +49,6 @@ const InterceptKeyword = [
 ]
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
-const EnterpriseJudgeLogin = lazy(() => import("./pages/EnterpriseJudgeLogin"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,7 +64,7 @@ function NewApp() {
     const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
     const agrTimeRef = useRef<any>(null)
     /** 私有域是否设置成功 */
-    const [onlineProfileStatus,setOnlineProfileStatus] = useState<boolean>(false)
+    const [onlineProfileStatus, setOnlineProfileStatus] = useState<boolean>(false)
 
     /** 是否展示用户协议 */
     useEffect(() => {
@@ -86,9 +85,6 @@ function NewApp() {
             })
             .catch(() => {})
     }, [])
-
-    // 企业版-连接引擎后验证license=>展示企业登录
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(IsEnterprise)
 
     /** 将渲染进程的环境变量传入主进程 */
     useEffect(() => {
@@ -133,7 +129,6 @@ function NewApp() {
                     .finally(() => {
                         setOnlineProfileStatus(true)
                     })
-                    
             } else {
                 const values = JSON.parse(setting)
                 ipcRenderer
@@ -283,11 +278,7 @@ function NewApp() {
     return (
         <UILayout linkSuccess={linkSuccess}>
             <Suspense fallback={<div>Loading Main</div>}>
-                {isJudgeLicense ? (
-                    <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
-                ) : (
-                    <Main onErrorConfirmed={() => {}} setJudgeLicense={setJudgeLicense}/>
-                )}
+                <Main onErrorConfirmed={() => {}} />
             </Suspense>
         </UILayout>
     )

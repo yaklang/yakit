@@ -161,7 +161,8 @@ const defQueryLocal: QueryYakScriptRequest = {
     Type: "yak,mitm,codec,packet-hack,port-scan",
     Keyword: "",
     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-    UserId: 0
+    UserId: 0,
+    IgnoreGeneralModuleOrder: true,
 }
 
 const statusType = {
@@ -973,7 +974,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
-        ...statisticsQueryLocal
+        ...statisticsQueryLocal,
     })
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
