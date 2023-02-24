@@ -6,4 +6,5 @@ export interface GraphData {
 export interface GraphProps extends GraphData{
     width?: number | string | any
     height?: number | string | any
+    color?: string[]
 }
