@@ -255,8 +255,12 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                 // borderColor:"#0ba5ff"
             },
             formatter: (name) => {
-                const itemValue = getChartList().filter((item) => item.name === name)[0].value
-                return "{name|" + name + "} " + "{value|" + itemValue + "}"
+                try {
+                    const itemValue = getChartList().filter((item) => item.name === name)[0].value
+                    return "{name|" + name + "} " + "{value|" + itemValue + "}"
+                } catch (error) {
+                    return ""
+                }
             },
             textStyle: {
                 rich: {
