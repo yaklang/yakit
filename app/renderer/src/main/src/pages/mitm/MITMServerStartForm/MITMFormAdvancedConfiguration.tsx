@@ -23,9 +23,14 @@ const {ipcRenderer} = window.require("electron")
 interface MITMFormAdvancedConfigurationProps {
     visible: boolean
     setVisible: (b: boolean) => void
+    onSave: (v: AdvancedConfigurationFromValue) => void
+}
+export interface AdvancedConfigurationFromValue {
+    downstreamProxy: string
+    certs: ClientCertificate[]
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, onSave} = props
     const [certs, setCerts] = useState<ClientCertificate[]>([])
     const [downstreamProxy, setDownstreamProxy] = useState<string>("")
     const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
@@ -109,6 +114,16 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             }
         })
     })
+    /**
+     * @description 保存高级配置
+     */
+    const onSaveSetting = useMemoizedFn(() => {
+        const params: AdvancedConfigurationFromValue = {
+            downstreamProxy,
+            certs
+        }
+        onSave(params)
+    })
     return (
         <YakitDrawer
             className={styles["advanced-configuration-drawer"]}
@@ -122,7 +137,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         <YakitButton type='outline2' onClick={() => setVisible(false)}>
                             取消
                         </YakitButton>
-                        <YakitButton type='primary'>保存</YakitButton>
+                        <YakitButton type='primary' onClick={() => onSaveSetting()}>
+                            保存
+                        </YakitButton>
                     </div>
                 </div>
             }
@@ -215,45 +232,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             证书下载
                         </YakitButton>
                     </div>
-
-                    {/* <Space>
-                        {certs.length > 0 ? (
-                            <Tag color={"orange"}>包含[{certs.length}]个证书对</Tag>
-                        ) : (
-                            <Tag color={"green"}>无 TLS 客户端证书</Tag>
-                        )}
-                        <Button
-                            icon={<PlusSquareOutlined />}
-                            size={"small"}
-                            type={"link"}
-                            onClick={() => {
-                                const m = showModal({
-                                    title: "添加证书",
-                                    width: "70%",
-                                    content: (
-                                        <InputCertificateForm
-                                            onChange={(e) => {
-                                                setCerts([...certs, e])
-                                                m.destroy()
-                                            }}
-                                        />
-                                    )
-                                })
-                            }}
-                        >
-                            添加
-                        </Button>
-                        <Popconfirm
-                            title={"清除证书之后需要重新添加，请谨慎操作！"}
-                            onConfirm={() => {
-                                setCerts([])
-                            }}
-                        >
-                            <Button danger={true} size={"small"} type={"link"}>
-                                删除
-                            </Button>
-                        </Popconfirm>
-                    </Space> */}
                 </Form.Item>
             </Form>
             <React.Suspense fallback={<div>loading...</div>}>
@@ -263,7 +241,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     certs={certs}
                     setCerts={setCerts}
                 />
-                <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} />
+                <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={false} />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
             </React.Suspense>
         </YakitDrawer>

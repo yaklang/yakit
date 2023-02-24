@@ -19,37 +19,45 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 const {ipcRenderer} = window.require("electron")
 
 interface MITMFiltersModalProps {
+    isStartMITM: boolean
     visible: boolean
     setVisible: (b: boolean) => void
 }
 const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, isStartMITM} = props
+    const filtersRef = useRef<any>()
     // filter 过滤器
     const [_mitmFilter, setMITMFilter] = useState<MITMFilterSchema>()
     const onResetFilters = useMemoizedFn(() => {
         ipcRenderer.invoke("mitm-reset-filter").then(() => {
             info("MITM 过滤器重置命令已发送")
-            setVisible(false)
         })
     })
     useEffect(() => {
-        ipcRenderer.on("client-mitm-filter", onSetFilter)
-        return () => {
-            ipcRenderer.removeListener("client-mitm-filter", onSetFilter)
-        }
-    }, [])
-    const onSetFilter = useMemoizedFn((e, msg) => {
-        info("更新 MITM 过滤器状态")
-        setMITMFilter({
-            includeSuffix: msg.includeSuffix,
-            excludeMethod: msg.excludeMethod,
-            excludeSuffix: msg.excludeSuffix,
-            includeHostname: msg.includeHostname,
-            excludeHostname: msg.excludeHostname,
-            excludeContentTypes: msg.excludeContentTypes,
-            excludeUri: msg.excludeUri,
-            includeUri: msg.includeUri
-        })
+        if (visible) getMITMFilter()
+    }, [visible])
+    const onSetFilter = useMemoizedFn(() => {
+        const filter = filtersRef.current.getFormValue()
+        ipcRenderer
+            .invoke("mitm-set-filter", filter)
+            .then(() => {
+                setMITMFilter(filter)
+                setVisible(false)
+                info("更新 MITM 过滤器状态")
+            })
+            .catch((err) => {
+                yakitFailed("更新 MITM 过滤器失败:" + err)
+            })
+    })
+    const getMITMFilter = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("mitm-get-filter")
+            .then((val: MITMFilterSchema) => {
+                setMITMFilter(val)
+            })
+            .catch((err) => {
+                yakitFailed("获取 MITM 过滤器失败:" + err)
+            })
     })
     return (
         <YakitModal
@@ -59,15 +67,18 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             title='过滤器配置'
             width={720}
             subTitle={
-                <div className={styles["mitm-filters-subTitle"]}>
-                    <YakitButton type='text' onClick={() => onResetFilters()}>
-                        重置过滤器
-                    </YakitButton>
-                </div>
+                isStartMITM && (
+                    <div className={styles["mitm-filters-subTitle"]}>
+                        <YakitButton type='text' onClick={() => onResetFilters()}>
+                            重置过滤器
+                        </YakitButton>
+                    </div>
+                )
             }
             className={styles["mitm-filters-modal"]}
+            onOk={() => onSetFilter()}
         >
-            <MITMFilters filter={_mitmFilter} />
+            <MITMFilters filter={_mitmFilter} onFinished={onSetFilter} ref={filtersRef} />
         </YakitModal>
     )
 })

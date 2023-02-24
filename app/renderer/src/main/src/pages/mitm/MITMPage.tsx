@@ -253,28 +253,72 @@ interface MITMServerStartPreProps {
     status: "idle" | "hijacked" | "hijacking"
 }
 const MITMServerStartPre: React.FC<MITMServerStartPreProps> = React.memo((props) => {
-    const {onStartMITMServer, setVisible, status} = props
+    const {setVisible, status} = props
+    /**
+     * @description 插件勾选
+     */
+    const [checkList, setCheckList] = useState<string[]>([])
+    const [enableInitialPlugin, setEnableInitialPlugin] = useState<boolean>(false)
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
         ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
     })
+    const onStartMITMServer = useMemoizedFn(
+        (host, port, downstreamProxy, enableInitialPlugin, enableHttp2, certs: ClientCertificate[]) => {
+            props.onStartMITMServer(
+                host,
+                port,
+                downstreamProxy,
+                enableInitialPlugin,
+                enableInitialPlugin ? checkList : [],
+                enableHttp2,
+                certs
+            )
+        }
+    )
     return (
         <ResizeBox
             firstNode={() => (
                 <div className={style["mitm-server-start-pre-first"]}>
-                    <MITMPluginLocalList onSubmitYakScriptId={onSubmitYakScriptId} status={status} />
+                    <MITMPluginLocalList
+                        onSubmitYakScriptId={onSubmitYakScriptId}
+                        status={status}
+                        checkList={checkList}
+                        setCheckList={(list) => {
+                            if (list.length === 0) {
+                                setEnableInitialPlugin(false)
+                            } else {
+                                setEnableInitialPlugin(true)
+                            }
+                            setCheckList(list)
+                        }}
+                    />
                     <div className={style["mitm-server-start-pre-line"]} />
                 </div>
             )}
             firstRatio='20%'
             firstMinSize={250}
             secondMinSize={600}
-            secondNode={() => <MITMServerStartForm onStartMITMServer={onStartMITMServer} setVisible={setVisible} />}
+            secondNode={() => (
+                <MITMServerStartForm
+                    onStartMITMServer={onStartMITMServer}
+                    setVisible={setVisible}
+                    enableInitialPlugin={enableInitialPlugin}
+                    setEnableInitialPlugin={(checked) => {
+                        if (!checked) {
+                            setCheckList([])
+                        }
+                        setEnableInitialPlugin(checked)
+                    }}
+                />
+            )}
         />
     )
 })
 
 interface MITMPluginLocalListProps {
+    checkList: string[]
+    setCheckList: (s: string[]) => void
     onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
     status: "idle" | "hijacked" | "hijacking"
 }
@@ -284,7 +328,7 @@ export interface YakFilterRemoteObj {
 }
 const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
 const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
-    const {status} = props
+    const {status, checkList, setCheckList} = props
     const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Keyword")
     const [afterModuleType, setAfterModuleType] = useState<"input" | "select">("input")
 
@@ -296,10 +340,6 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
      */
     const [pugGroup, setPlugGroup] = useState<YakFilterRemoteObj[]>([])
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
-    /**
-     * @description 劫持启动前的勾选
-     */
-    const [checkList, setCheckList] = useState<string[]>([])
 
     const [tag, setTag] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
