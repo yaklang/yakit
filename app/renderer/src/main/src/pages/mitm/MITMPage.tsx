@@ -6,6 +6,7 @@ import {
     Col,
     Divider,
     Dropdown,
+    Empty,
     Form,
     Input,
     Modal,
@@ -30,7 +31,7 @@ import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import style from "./MITMPage.module.scss"
 import {CopyableField, SelectOne} from "../../utils/inputUtil"
-import {useGetState, useHover, useInViewport, useLatest, useMap, useMemoizedFn} from "ahooks"
+import {useCreation, useGetState, useHover, useInViewport, useLatest, useMap, useMemoizedFn} from "ahooks"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {useHotkeys} from "react-hotkeys-hook"
 import * as monaco from "monaco-editor"
@@ -355,7 +356,9 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
 
-    const [listNames, setListNames] = useState<string[]>([])
+    const [listNames, setListNames] = useState<string[]>([]) // 存储的全部本地插件
+
+    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
 
     // 设置用户模式
     const userDefined = mode === "hot-patch"
@@ -412,7 +415,8 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
     const onDeletePlugin = useMemoizedFn((deleteItem: YakFilterRemoteObj) => {
         const newArr: YakFilterRemoteObj[] = pugGroup.filter((item) => item.name !== deleteItem.name)
         setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-        setPlugGroup(newArr)
+        setPlugGroup([...newArr])
+        setSelectGroup(selectGroup.filter((item) => item.name !== deleteItem.name))
     })
     /**
      * @description 保存插件组
@@ -452,7 +456,6 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
         queryYakScriptList(
             "mitm,port-scan",
             (data, t) => {
-                setTotal(t || 0)
                 setListNames(data.map((i) => i.ScriptName))
             },
             undefined,
@@ -516,6 +519,17 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                 })
         }
     })
+    useEffect(() => {
+        let newScriptNames: string[] = []
+        selectGroup.forEach((ele) => {
+            newScriptNames = [...newScriptNames, ...ele.value]
+        })
+        setIncludedScriptNames(Array.from(new Set(newScriptNames)))
+
+        setTimeout(() => {
+            setRefresh(!refresh)
+        }, 100)
+    }, [selectGroup])
     return (
         <div className={style["mitm-plugin-local"]}>
             <div>
@@ -713,16 +727,21 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                     queryLocal={{
                         Tag: tag,
                         Type: "mitm,port-scan",
+                        IncludedScriptNames: includedScriptNames,
                         Keyword: searchKeyword,
                         Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
                     }}
                     refresh={refresh}
                     itemHeight={43}
                     onClicked={(script) => {}}
-                    setTotal={getAllSatisfyScript}
+                    setTotal={(t) => {
+                        setTotal(t || 0)
+                        getAllSatisfyScript(t)
+                    }}
                     onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                         return (
                             <MITMYakScriptLoader
+                                key={i.Id}
                                 script={i}
                                 maxWidth={maxWidth}
                                 // 劫持启动后
@@ -784,6 +803,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
 
     return (
         <div className={style["plugin-group-list"]}>
+            {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无数据' />}
             {pugGroup.map((item) => (
                 <div
                     className={classNames(style["plugin-group-item"], {
