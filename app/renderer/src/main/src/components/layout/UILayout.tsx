@@ -130,12 +130,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
         getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
             if (!val) {
-                ipcRenderer.invoke("fetch-yakit-version").then((data: string) => {
-                    setCurrentYakit(data)
-                })
-                ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
-                    setLatestYakit(data)
-                })
+                // 屏蔽 yakit 升级
+                // ipcRenderer.invoke("fetch-yakit-version").then((data: string) => {
+                //     setCurrentYakit(data)
+                // })
+                // ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
+                //     setLatestYakit(data)
+                // })
 
                 ipcRenderer.invoke("get-current-yak").then((data: string) => {
                     setCurrentYaklang(data)
