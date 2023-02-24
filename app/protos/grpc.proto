@@ -1972,6 +1972,8 @@ message QueryYakScriptRequest {
   bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
   int64 UserId = 13;
   string UserName = 14;
+
+  bool IgnoreGeneralModuleOrder = 15;
 }
 
 message QueryYakScriptResponse {
