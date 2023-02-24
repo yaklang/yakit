@@ -4,6 +4,8 @@ import {useMemoizedFn} from "ahooks";
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema";
 import {AutoCard} from "@/components/AutoCard";
 
+import styles from "./WebsocketFrameHistory.module.scss"
+
 export interface WebsocketFrameHistoryProp {
     websocketHash: string
 }
@@ -67,6 +69,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         title={"Websocket 数据帧"} size={"small"} bodyStyle={{overflowY: "auto", padding: 0}}
     >
         <Table
+            className={styles['websocket-table-wrapper']}
             loading={loading}
             size={"small"}
             bordered={false}

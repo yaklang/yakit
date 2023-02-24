@@ -1,0 +1,15 @@
+.websocket-table-wrapper {
+    height: 100%;
+    :global {
+        .ant-spin-nested-loading {
+            height: 100%;
+            .ant-table {
+                flex: 1;
+                overflow: auto;
+            }
+            .ant-table-pagination.ant-pagination {
+                margin: 6px 0;
+            }
+        }
+    }
+}

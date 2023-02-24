@@ -17,6 +17,9 @@
     height: 100%;
     overflow: hidden;
     :global {
+        .ant-col-24 {
+            height: 100%;
+        }
         .ant-col-5 {
             height: 100%;
             .ant-table-wrapper{
