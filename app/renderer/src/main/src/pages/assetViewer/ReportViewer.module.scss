@@ -1,0 +1,8 @@
+.report-viewer{
+    height: 100%;
+    :global {
+        .ant-spin-nested-loading{
+            height: 100%;
+        }
+    }
+}
