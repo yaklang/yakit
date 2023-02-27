@@ -17,6 +17,7 @@ import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
 
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
+const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -112,39 +113,34 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const onSwitchPlugin = useMemoizedFn((checked) => {
         props.setEnableInitialPlugin(checked)
     })
+    const onStartMITM = useMemoizedFn((values) => {
+        let params = {
+            ...values,
+            ...advancedValue
+        }
+        props.onStartMITMServer(
+            params.host,
+            params.port,
+            params.downstreamProxy,
+            params.enableInitialPlugin,
+            params.enableHttp2,
+            params.certs
+        )
+        const index = hostHistoryList.findIndex((ele) => ele === params.host)
+        if (index === -1) {
+            const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
+            setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
+        }
+        setLocalValue(WEB_FUZZ_PROXY, params.downstreamProxy)
+        setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
+        setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
+        setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, params.downstreamProxy)
+        setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(params.certs))
+        setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, values.enableInitialPlugin ? "true" : "")
+    })
     return (
         <div className={styles["mitm-server-start-form"]}>
-            <Form
-                form={form}
-                onFinish={(values) => {
-                    let params = {
-                        ...values,
-                        ...advancedValue
-                    }
-                    props.onStartMITMServer(
-                        params.host,
-                        params.port,
-                        params.downstreamProxy,
-                        params.enableInitialPlugin,
-                        params.enableHttp2,
-                        params.certs
-                    )
-                    const index = hostHistoryList.findIndex((ele) => ele === params.host)
-                    if (index === -1) {
-                        const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
-                        setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
-                    }
-                    setLocalValue(WEB_FUZZ_PROXY, params.downstreamProxy)
-                    setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
-                    setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
-                    setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, params.downstreamProxy)
-                    setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(params.certs))
-                    setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, values.enableInitialPlugin ? "true" : "")
-                }}
-                layout={"horizontal"}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 13}}
-            >
+            <Form form={form} onFinish={onStartMITM} layout={"horizontal"} labelCol={{span: 5}} wrapperCol={{span: 13}}>
                 <Item
                     label={"劫持代理监听主机"}
                     help={"远程模式可以修改为 0.0.0.0 以监听主机所有网卡"}
@@ -214,9 +210,18 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <YakitButton type='primary' size='large' htmlType='submit'>
                             劫持启动
                         </YakitButton>
-                        <YakitButton type='outline2' size='large'>
-                            免配置启动
-                        </YakitButton>
+                        <ChromeLauncherButton
+                            host={form.getFieldValue("host")}
+                            port={form.getFieldValue("port")}
+                            onFished={(host, port) => {
+                                const values = {
+                                    ...form.getFieldsValue(),
+                                    host,
+                                    port
+                                }
+                                onStartMITM(values)
+                            }}
+                        />
                         <YakitButton type='text' size='large' onClick={() => setAdvancedFormVisible(true)}>
                             高级配置
                         </YakitButton>
@@ -227,7 +232,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 <MITMFormAdvancedConfiguration
                     visible={advancedFormVisible}
                     setVisible={setAdvancedFormVisible}
-                    onSave={setAdvancedValue}
+                    onSave={(val) => {
+                        setAdvancedValue(val)
+                        setAdvancedFormVisible(false)
+                    }}
                 />
             </React.Suspense>
         </div>

@@ -16,7 +16,7 @@ import {
     Tooltip,
     Typography
 } from "antd"
-import {ChromeLauncherButton} from "@/pages/mitm/MITMChromeLauncher"
+import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
 import {failed, info, success} from "@/utils/notification"
 import {CopyableField, SelectOne} from "@/utils/inputUtil"

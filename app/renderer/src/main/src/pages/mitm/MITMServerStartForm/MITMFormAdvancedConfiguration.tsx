@@ -144,7 +144,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 </div>
             }
         >
-            <Form>
+            <Form labelCol={{span: 6}} wrapperCol={{span: 18}}>
                 <Form.Item
                     label='下游代理'
                     name='downstreamProxy'

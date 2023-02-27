@@ -271,3 +271,32 @@
     justify-content: space-between;
     margin-right: 8px;
 }
+
+.chrome-input-group {
+    :global {
+        .ant-input-affix-wrapper {
+            border-radius: 0px;
+        }
+    }
+    :first-child {
+        :global {
+            .ant-input-affix-wrapper {
+                border-top-left-radius: 4px;
+                border-bottom-left-radius: 4px;
+                border-right-width: 0;
+                &:hover,
+                &:focus {
+                    border-right-width: 1px;
+                }
+            }
+        }
+    }
+    :last-child {
+        :global {
+            .ant-input-affix-wrapper {
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+            }
+        }
+    }
+}

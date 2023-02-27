@@ -43,7 +43,11 @@
         }
 
         .ant-input:focus,
-        .ant-input-focused {
+        .ant-input-focused,
+        .ant-input-affix-wrapper:hover,
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
+        .ant-input-affix-wrapper-focused,
+        .ant-input-affix-wrapper:focus {
             border-color: var(--input-hover-border-color);
             box-shadow: 0 0 0 2px var(--input-box-shadow-color);
         }

@@ -19,7 +19,7 @@ import {useMemoizedFn} from "ahooks"
  * @augments InputProps 继承antd的Input默认属性
  */
 const InternalInput: React.FC<YakitInputProps> = (props) => {
-    const {size, wrapperClassName, className, ...restProps} = props
+    const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
     return (
         <div
             className={classNames(
@@ -31,6 +31,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
                 },
                 wrapperClassName
             )}
+            style={{...(wrapperStyle || {})}}
         >
             <Input
                 {...restProps}

@@ -22,6 +22,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
             title='添加客户端 TLS'
             visible={visible}
             onCancel={() => setVisible(false)}
+            closable={true}
             onOk={() => {
                 cerFormRef.current.validateFields().then((values) => {
                     const params: ClientCertificate = {
