@@ -198,17 +198,14 @@ const RouteList: React.FC<RouteListProps> = (props) => {
 }
 interface PieChartProps {
     goStoreRoute: (v: any) => void
-}
-interface chartListProps {
-    type: string
-    value: number
+    inViewport?: boolean
 }
 interface echartListProps {
     name: string
     value: number
 }
 const PieEcharts: React.FC<PieChartProps> = (props) => {
-    const {goStoreRoute} = props
+    const {goStoreRoute, inViewport} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     // 全局登录状态
     const {userInfo} = useStore()
@@ -320,6 +317,13 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     }, [width])
 
     useEffect(() => {
+        if (inViewport) {
+            echartsRef.current && echartsRef.current.resize()
+            getPluginSearch()
+        }
+    }, [inViewport])
+
+    useEffect(() => {
         getPluginSearch()
         //先解绑事件，防止事件重复触发
         echartsRef.current.off("click")
@@ -384,8 +388,10 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
     const setEcharts = (options) => {
         const chartDom = document.getElementById("main-home-pie")!
-        echartsRef.current = echarts.init(chartDom)
-        options && echartsRef.current.setOption(options)
+        if (chartDom) {
+            echartsRef.current = echarts.init(chartDom)
+            options && echartsRef.current.setOption(options)
+        }
     }
     return (
         <div
@@ -586,6 +592,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
 interface PlugInShopProps {
     setOpenPage: (v: any) => void
+    inViewport?: boolean
 }
 
 export interface DataParams {
@@ -605,17 +612,19 @@ interface countAddObjProps {
 }
 interface PlugInShopNewIncreProps {}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
-    const {setOpenPage} = props
+    const {setOpenPage, inViewport} = props
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
-    const [hotLoading,setHotLoading] = useState<boolean>(true)
+    const [hotLoading, setHotLoading] = useState<boolean>(true)
     const listHeightRef = useRef<any>()
 
     useEffect(() => {
-        getPlugInShopHot()
-        !IsEnterprise && getPlugInShopNewIncre()
-    }, [])
+        if (inViewport) {
+            getPlugInShopHot()
+            !IsEnterprise && getPlugInShopNewIncre()
+        }
+    }, [inViewport])
 
     useEffect(() => {
         ipcRenderer.on("refresh-new-home", (e, res: any) => {
@@ -769,24 +778,30 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                     ref={listHeightRef}
                 >
                     {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                    <PieEcharts goStoreRoute={goStoreRoute} />
+                    <PieEcharts goStoreRoute={goStoreRoute} inViewport={inViewport} />
                 </div>
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
-                {!hotLoading&&<div className={styles["label-box"]}>
-                    {hotArr.length>0?hotArr.slice(0, 10).map((item) => {
-                        return (
-                            <div
-                                key={item}
-                                className={styles["label-item"]}
-                                onClick={() => goStoreRoute({keywords: item})}
-                            >
-                                {item}
-                            </div>
-                        )
-                    }):<div className={styles["hot-no-data"]}>暂无数据</div>}
-                </div>}
+                {!hotLoading && (
+                    <div className={styles["label-box"]}>
+                        {hotArr.length > 0 ? (
+                            hotArr.slice(0, 10).map((item) => {
+                                return (
+                                    <div
+                                        key={item}
+                                        className={styles["label-item"]}
+                                        onClick={() => goStoreRoute({keywords: item})}
+                                    >
+                                        {item}
+                                    </div>
+                                )
+                            })
+                        ) : (
+                            <div className={styles["hot-no-data"]}>暂无数据</div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -1044,43 +1059,39 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
 
     return (
         <div className={classNames(styles["new-home-page"])} ref={ref}>
-            {inViewport && (
-                <>
-                    <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
-                        <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                            <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
-                        </div>
-                        <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
-                            <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
-                                <RouteList data={newHomeData[1]} colLimit={2} setOpenPage={setOpenPage} />
-                            </div>
-                            <div className={styles["bottom-in"]}>
-                                <RouteList data={newHomeData[2]} colLimit={2} setOpenPage={setOpenPage} />
-                            </div>
-                        </div>
-                        <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
-                            <RouteList
-                                data={newHomeData[0]}
-                                setOpenPage={setOpenPage}
-                                load={load}
-                                getCustomizeMenus={getCustomizeMenus}
-                            />
-                        </div>
-                        <div className={styles["top-small-block"]}>
-                            <RouteList data={newHomeData[4]} setOpenPage={setOpenPage} />
-                        </div>
+            <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
+                <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
+                    <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
+                </div>
+                <div className={classNames(styles["top-big-block"], styles["border-right-box"])}>
+                    <div className={classNames(styles["top-in"], styles["border-bottom-box"])}>
+                        <RouteList data={newHomeData[1]} colLimit={2} setOpenPage={setOpenPage} />
                     </div>
-                    <div className={styles["home-bottom-block"]}>
-                        <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
-                            <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
-                        </div>
-                        <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
-                            <RouteTitle title='插件商店' />
-                            <PlugInShop setOpenPage={setOpenPage} />
-                        </div>
+                    <div className={styles["bottom-in"]}>
+                        <RouteList data={newHomeData[2]} colLimit={2} setOpenPage={setOpenPage} />
                     </div>
-                </>
-            )}
+                </div>
+                <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
+                    <RouteList
+                        data={newHomeData[0]}
+                        setOpenPage={setOpenPage}
+                        load={load}
+                        getCustomizeMenus={getCustomizeMenus}
+                    />
+                </div>
+                <div className={styles["top-small-block"]}>
+                    <RouteList data={newHomeData[4]} setOpenPage={setOpenPage} />
+                </div>
+            </div>
+            <div className={styles["home-bottom-block"]}>
+                <div className={classNames(styles["bottom-big-block"], styles["border-right-box"])}>
+                    <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
+                </div>
+                <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
+                    <RouteTitle title='插件商店' />
+                    <PlugInShop setOpenPage={setOpenPage} inViewport={inViewport} />
+                </div>
+            </div>
         </div>
     )
 }
