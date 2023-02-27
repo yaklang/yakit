@@ -4399,3 +4399,126 @@ const PluginFilter: React.FC<PluginFilterProps> = (props) => {
         </Popconfirm>
     )
 }
+
+const adminUpOnline = async (params: YakScript, url: string, type: number,baseUrl:string,userInfo) => {
+    const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+    if(IsEnterprise&&userInfo.role==="admin"&&params.OnlineBaseUrl===baseUrl){
+        onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    if(!IsEnterprise&&params.OnlineId){
+        onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    return new Promise((resolve) => {
+        NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
+            method: "post",
+            url,
+            data: onlineParams
+        })
+            .then((res) => {
+                resolve(false)
+                // 上传后，先下载最新的然后删除本地旧的
+                ipcRenderer
+                    .invoke("DownloadOnlinePluginById", {
+                        OnlineID: res.id,
+                        UUID: res.uuid
+                    } as DownloadOnlinePluginProps)
+                    .then((res) => {
+                        ipcRenderer
+                            .invoke("delete-yak-script", params.Id)
+                            .then(() => {})
+                            .catch((err) => {
+                                failed("删除本地【" + params.ScriptName + "】失败:" + err)
+                            })
+                    })
+            })
+            .catch((err) => {
+                const errObj = {
+                    script_name: params.ScriptName,
+                    err
+                }
+                resolve(errObj)
+            })
+    })
+}
+
+interface AdminUpOnlineBatchProps {
+    userInfo:any
+    onClose:()=>void
+}
+
+export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => {
+    const {userInfo,onClose} = props
+    const [newSrcipt,setNewSrcipt] = useState<YakScript[]>([])
+    const [loading,setLoading] = useState<boolean>(true)
+    const [percent, setPercent, getPercent] = useGetState<number>(0)
+    const [isUpload,setIsUpload] = useState<boolean>(false)
+    useEffect(()=>{
+        ipcRenderer
+                                            .invoke("QueryYakScriptLocalAll", {})
+                                            .then((newSrcipt: {Data: YakScript[]}) => {
+                                                setNewSrcipt(newSrcipt.Data)
+                                                setLoading(true)
+                                            })
+                                            .catch((e) => {
+                                                failed(`查询所有插件错误:${e}`)
+                                            })
+                                            .finally(() => {
+                                                setTimeout(()=>{
+                                                    setLoading(false)
+                                                },200)
+                                            })
+    },[])
+
+    const submit = () => {
+        setIsUpload(true)
+        getRemoteValue("httpSetting").then(async(setting) => {
+        const values = JSON.parse(setting)
+        const baseUrl: string = values.BaseUrl
+        const realSelectedRowKeysRecordLocal = [...newSrcipt]
+    const length = realSelectedRowKeysRecordLocal.length
+    const errList: any[] = []
+    setPercent(0)
+    for (let index = 0; index < length; index++) {
+        const element = realSelectedRowKeysRecordLocal[index]
+        const res = await adminUpOnline(element, "yakit/plugin", 2,baseUrl,userInfo)
+        if (res) {
+            errList.push(res)
+            const p = Math.floor(index/length * 100)
+            setPercent(p)
+        }
+    }
+
+    if (errList.length > 0) {
+        const errString = errList
+            .filter((_, index) => index < 10)
+            .map((e) => {
+                return `插件名：【${e.script_name}】，失败原因：${e.err}`
+            })
+        failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
+    } else {
+        success("批量上传成功")
+    }
+    onClose()
+    })
+    }
+
+    return <div>
+        <div style={{marginTop:16}}>
+        同步插件是为了初始化插件商店，将本地所有插件一键同步至云端，若是正常插件上传流程，请在插件商店-本地页进行上传
+        </div>
+        <div style={{textAlign:"center",marginTop:10}}>
+            {
+                isUpload?<Progress
+                        size='small'
+                        strokeColor='#F28B44'
+                        trailColor='#F0F2F5'
+                        percent={percent}
+                    />:<Button type="primary" onClick={submit} loading={loading}>
+                        确认
+                    </Button> 
+            }
+           
+        </div>
+        
+    </div>
+}

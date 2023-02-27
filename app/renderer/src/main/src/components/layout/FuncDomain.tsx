@@ -16,7 +16,7 @@ import {YakitEllipsis} from "../basics/YakitEllipsis"
 import {useMemoizedFn} from "ahooks"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
-import {info, success} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YaklangEngineMode} from "@/yakitGVDefine"
@@ -32,7 +32,7 @@ import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
 import SelectUpload from "@/pages/SelectUpload"
-import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {QueryGeneralResponse,YakScript} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -46,6 +46,7 @@ import {LocalGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
+import { AdminUpOnlineBatch } from "@/pages/yakitStore/YakitStorePage";
 
 import {isSimbleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
@@ -111,6 +112,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
             let cacheMenu = [
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                {key: "upload-plugin", title: "同步插件"},
                 {key: "upload-data", title: "上传数据"},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
@@ -223,6 +225,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                     if (key === "plugIn-admin") {
                                         const key = Route.PlugInAdminPage
                                         openMenu(key)
+                                    }
+                                    if(key === "upload-plugin"){
+                                        const m = showModal({
+                                            title: "",
+                                            content: <AdminUpOnlineBatch userInfo={userInfo} onClose={() => m.destroy()}/>
+                                        })
+                                        return m          
                                     }
                                 }}
                             >
