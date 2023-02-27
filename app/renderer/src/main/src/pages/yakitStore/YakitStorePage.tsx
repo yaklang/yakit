@@ -4227,6 +4227,7 @@ export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => 
     const [loading,setLoading] = useState<boolean>(true)
     const [percent, setPercent, getPercent] = useGetState<number>(0)
     const [isUpload,setIsUpload] = useState<boolean>(false)
+    const [nowPligin,setNowPligin] = useState<string>("")
     useEffect(()=>{
         ipcRenderer
                                             .invoke("QueryYakScriptLocalAll", {})
@@ -4254,6 +4255,7 @@ export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => 
     const errList: any[] = []
     setPercent(0)
     for (let index = 0; index < length; index++) {
+        setNowPligin(realSelectedRowKeysRecordLocal[index].ScriptName)
         const element = realSelectedRowKeysRecordLocal[index]
         const res = await adminUpOnline(element, "yakit/plugin", 2,baseUrl,userInfo)
         if (res) {
@@ -4263,30 +4265,29 @@ export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => 
         }
     }
 
-    if (errList.length > 0) {
-        const errString = errList
-            .filter((_, index) => index < 10)
-            .map((e) => {
-                return `插件名：【${e.script_name}】，失败原因：${e.err}`
-            })
-        failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
-    } else {
+    // if (errList.length > 0) {
+    //     const errString = errList
+    //         .filter((_, index) => index < 10)
+    //         .map((e) => {
+    //             return `插件名：【${e.script_name}】，失败原因：${e.err}`
+    //         })
+    //     failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
+    // } else {
+        setNowPligin("")
         success("批量上传成功")
-    }
+    // }
     onClose()
     })
     }
 
     return <div>
-        <div style={{marginTop:16}}>
+        <div>
         同步插件是为了初始化插件商店，将本地所有插件一键同步至云端，若是正常插件上传流程，请在插件商店-本地页进行上传
         </div>
         <div style={{textAlign:"center",marginTop:10}}>
             {
                 isUpload?<Progress
                         size='small'
-                        strokeColor='#F28B44'
-                        trailColor='#F0F2F5'
                         percent={percent}
                     />:<Button type="primary" onClick={submit} loading={loading}>
                         确认
@@ -4294,6 +4295,8 @@ export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => 
             }
            
         </div>
-        
+        <div className="yakit-single-line-ellipsis">
+          {nowPligin}  
+        </div>
     </div>
 }
