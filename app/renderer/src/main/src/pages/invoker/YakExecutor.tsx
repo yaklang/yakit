@@ -1,6 +1,24 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Divider, Dropdown, Empty, Input, Menu, Modal, Popover, Space, Tabs, Typography, Upload} from "antd"
+import {
+    Button,
+    Divider,
+    Dropdown,
+    Empty,
+    Input,
+    Menu,
+    Modal,
+    Popover,
+    Space,
+    Tabs,
+    Typography,
+    Upload,
+    Collapse,
+    Table,
+    Card
+} from "antd"
 import "./xtermjs-yak-executor.css"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {PluginResultUI} from "../yakitStore/viewers/base"
 import {YakEditor, YakInteractiveEditor} from "../../utils/editors"
 import {
     CaretRightOutlined,
@@ -30,12 +48,13 @@ import {Terminal} from "./Terminal"
 import {useMemoizedFn} from "ahooks"
 import {ResizeBox} from "../../components/ResizeBox"
 import {CVXterm} from "../../components/CVXterm"
-
+import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
 import "./YakExecutor.css"
 import {type} from "os"
-
+import {randomString} from "../../utils/randomUtil"
+import {values} from "@antv/util"
 const {ipcRenderer} = window.require("electron")
-
+const {Panel} = Collapse
 const RecentFileList = "recent-file-list"
 
 const {TabPane} = Tabs
@@ -88,7 +107,11 @@ interface CustomMenuProps {
     value: string
     disabled?: boolean
 }
-
+interface VariableTableDataType {
+    key: string
+    varName: string
+    value: string
+}
 export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const [codePath, setCodePath] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
@@ -107,16 +130,23 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const [renameCache, setRenameCache] = useState<string>("")
 
     const [fullScreen, setFullScreen] = useState<boolean>(false)
-
+    const [token, setToken] = useState<string>(randomString(40))
     const [errors, setErrors] = useState<string[]>([])
     const [executing, setExecuting] = useState(false)
     const [outputEncoding, setOutputEncoding] = useState<"utf8" | "latin1">("utf8")
     const xtermAsideRef = useRef(null)
     const xtermRef = useRef(null)
     const timer = useRef<any>(null)
+    const [variableTable, setVariableTable] = useState<VariableTableDataType[]>([])
     const [isInteractive, setIsInteractive] = useState<boolean>(false)
+    const [isStaticExec, setIsStaticExec] = useState<boolean>(false)
 
     const [extraParams, setExtraParams] = useState("")
+    const [infoState, {reset, setXtermRef}, interactiveXtermRef] = useHoldingIPCRStream(
+        "interactive-runner-start",
+        "InteractiveRunYakCode",
+        token
+    )
 
     // trigger for updating
     const [triggerForUpdatingHistory, setTriggerForUpdatingHistory] = useState<any>(0)
@@ -136,12 +166,32 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     })
 
     useEffect(() => {
+        ipcRenderer.on(`${token}-data-scope`, async (e: any, data: {Key: string; Value: Uint8Array}[]) => {
+            let res: VariableTableDataType[] = []
+            data.forEach((v) => {
+                res.push({
+                    key: v.Key,
+                    varName: v.Key,
+                    value: Uint8ArrayToString(v.Value)
+                })
+            })
+            setVariableTable(res)
+        })
+        ipcRenderer.on(`${token}-exec-end`, () => {
+            setTimeout(() => {
+                setExecuting(false)
+            }, 300)
+        })
         ipcRenderer.on("fetch-send-to-yak-running", (e, res: any) => addFileTab(res))
         return () => {
             ipcRenderer.removeAllListeners("fetch-send-to-yak-running")
+            ipcRenderer.removeAllListeners(`${token}-data`)
         }
     }, [])
 
+    const sendRequest = useMemoizedFn((data: {}) => {
+        ipcRenderer.invoke(`InteractiveRunYakCodeWrite`, token, data)
+    })
     // 自动保存
     const autoSave = useMemoizedFn(() => {
         for (let tabInfo of tabList) {
@@ -161,6 +211,12 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         ipcRenderer.invoke("set-local-cache", RecentFileList, files)
     })
 
+    useEffect(() => {
+        ipcRenderer.invoke("InteractiveRunYakCode", token)
+        return () => {
+            ipcRenderer.invoke("cancel-InteractiveRunYakCode", token)
+        }
+    }, [])
     // 获取和保存近期打开文件信息，同时展示打开默认内容
     useEffect(() => {
         let time: any = null
@@ -622,6 +678,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     {tabList.length > 0 &&
                         (isInteractive ? (
                             <ResizeBox
+                                lineStyle={{
+                                    backgroundColor: "#d1d1d1"
+                                }}
                                 isVer={false}
                                 firstNode={
                                     <Tabs
@@ -646,6 +705,19 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                         tabBarExtraContent={
                                             tabList.length && (
                                                 <Space style={{marginRight: 5}} size={0}>
+                                                    <Button
+                                                        style={{height: 25}}
+                                                        type={"link"}
+                                                        size={"small"}
+                                                        disabled={
+                                                            tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
+                                                        }
+                                                        onClick={(e) => {
+                                                            setIsStaticExec(!isStaticExec)
+                                                        }}
+                                                    >
+                                                        {isStaticExec ? "动态执行" : "静态执行"}
+                                                    </Button>
                                                     <Button
                                                         style={{height: 25}}
                                                         type={"link"}
@@ -687,7 +759,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                                     isFile: false
                                                                                 }
                                                                                 info(`加载 Yak 模块：${s.ScriptName}`)
-                                                                                xtermClear(xtermRef)
+                                                                                xtermClear(interactiveXtermRef)
                                                                                 setActiveTab(`${tabList.length}`)
                                                                                 setTabList(tabList.concat([tab]))
                                                                                 setUnTitleCount(unTitleCount + 1)
@@ -784,7 +856,9 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                             danger={true}
                                                             size={"small"}
                                                             style={{width: 30, height: 25}}
-                                                            onClick={() => ipcRenderer.invoke("cancel-yak")}
+                                                            onClick={() => {
+                                                                setExecuting(false)
+                                                            }}
                                                         />
                                                     ) : (
                                                         <Button
@@ -800,10 +874,12 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                             onClick={() => {
                                                                 setErrors([])
                                                                 setExecuting(true)
-                                                                ipcRenderer.invoke("exec-yak", {
-                                                                    Script: tabList[+activeTab].code,
-                                                                    Params: [],
-                                                                    RunnerParamRaw: extraParams
+                                                                sendRequest({
+                                                                    Input: JSON.stringify({
+                                                                        mode: isStaticExec ? "static" : "interactive",
+                                                                        script: tabList[+activeTab].code,
+                                                                        token: token
+                                                                    })
                                                                 })
                                                             }}
                                                         />
@@ -838,7 +914,50 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                 }
                                 firstRatio='70%'
                                 secondNode={
-                                    <div>{/* <ResizeBox firstNode={<div></div>} secondNode={<div></div>} /> */}</div>
+                                    <ResizeBox
+                                        isVer={true}
+                                        // firstRatio={"40%"}
+                                        // secondRatio={"60%"}
+                                        firstNode={
+                                            <div>
+                                                <Table
+                                                    pagination={{position: []}}
+                                                    size='small'
+                                                    rowClassName={"interactive-executor-table"}
+                                                    columns={[
+                                                        {
+                                                            title: "变量",
+                                                            dataIndex: "varName",
+                                                            key: "varName"
+                                                        },
+                                                        {
+                                                            title: "值",
+                                                            dataIndex: "value",
+                                                            key: "value"
+                                                        }
+                                                    ]}
+                                                    dataSource={variableTable}
+                                                />
+                                            </div>
+                                        }
+                                        secondNode={
+                                            <div style={{height: "100%"}}>
+                                                <PluginResultUI
+                                                    loading={false}
+                                                    progress={infoState.processState}
+                                                    results={infoState.messageState}
+                                                    risks={infoState.riskState}
+                                                    featureType={infoState.featureTypeState}
+                                                    feature={infoState.featureMessageState}
+                                                    statusCards={infoState.statusState}
+                                                    onXtermRef={setXtermRef}
+                                                />
+                                            </div>
+                                        }
+                                        lineStyle={{
+                                            backgroundColor: "#d1d1d1"
+                                        }}
+                                    />
                                 }
                                 secondRatio='30%'
                             />
@@ -876,9 +995,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                             tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
                                                         }
                                                         onClick={(e) => {
-                                                            tabList[+activeTab].interactive = !Boolean(
-                                                                tabList[+activeTab].interactive
-                                                            )
+                                                            tabList[+activeTab] = {
+                                                                ...tabList[+activeTab],
+                                                                interactive: !Boolean(tabList[+activeTab]?.interactive)
+                                                            }
+
                                                             setIsInteractive(Boolean(tabList[+activeTab]?.interactive))
                                                         }}
                                                     >

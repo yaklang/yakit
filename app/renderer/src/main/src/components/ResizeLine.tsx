@@ -32,7 +32,6 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
     }
 
     const lineRef = useRef(null)
-    console.log("isvvv", isVer)
 
     const isver = useMemo(() => {
         return isVer
