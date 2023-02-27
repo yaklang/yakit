@@ -237,7 +237,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                     }
                                     if(key === "upload-plugin"){
                                         const m = showModal({
-                                            title: "",
+                                            title: "同步本地插件",
                                             content: <AdminUpOnlineBatch userInfo={userInfo} onClose={() => m.destroy()}/>
                                         })
                                         return m          
