@@ -67,7 +67,7 @@ interface RouteItemProps {
     dataSource: DataItem
     setOpenPage: (v: any) => void
     load: boolean
-    getCustomizeMenus?: () => void
+    getCustomizeMenus?: (s: string[]) => void
 }
 
 const RouteItem: React.FC<RouteItemProps> = (props) => {
@@ -85,23 +85,7 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
     }
 
     const addMenuLab = (name: string) => {
-        ipcRenderer
-            .invoke("DownloadOnlinePluginByScriptNames", {
-                ScriptNames: [name],
-                Token: userInfo.token
-            })
-            .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
-                if (rsp.Data.length > 0) {
-                    success("添加菜单成功")
-                    ipcRenderer.invoke("change-main-menu")
-                }
-            })
-            .catch((e) => {
-                failed(`添加菜单失败:${e}`)
-            })
-            .finally(() => {
-                getCustomizeMenus && getCustomizeMenus()
-            })
+        ipcRenderer.invoke("send-down-by-scriptNames", {names: [name]})
     }
     const addMenu = (name: string) => {
         if (name === "基础爬虫" || name === "综合目录扫描与爆破") {
@@ -609,7 +593,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
-    const [hotLoading,setHotLoading] = useState<boolean>(true)
+    const [hotLoading, setHotLoading] = useState<boolean>(true)
     const listHeightRef = useRef<any>()
 
     useEffect(() => {
@@ -774,19 +758,25 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
-                {!hotLoading&&<div className={styles["label-box"]}>
-                    {hotArr.length>0?hotArr.slice(0, 10).map((item) => {
-                        return (
-                            <div
-                                key={item}
-                                className={styles["label-item"]}
-                                onClick={() => goStoreRoute({keywords: item})}
-                            >
-                                {item}
-                            </div>
-                        )
-                    }):<div className={styles["hot-no-data"]}>暂无数据</div>}
-                </div>}
+                {!hotLoading && (
+                    <div className={styles["label-box"]}>
+                        {hotArr.length > 0 ? (
+                            hotArr.slice(0, 10).map((item) => {
+                                return (
+                                    <div
+                                        key={item}
+                                        className={styles["label-item"]}
+                                        onClick={() => goStoreRoute({keywords: item})}
+                                    >
+                                        {item}
+                                    </div>
+                                )
+                            })
+                        ) : (
+                            <div className={styles["hot-no-data"]}>暂无数据</div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -1012,12 +1002,20 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
     const setOpenPage = (v) => {
         ipcRenderer.invoke("open-user-manage", v.route)
     }
-
+    useEffect(() => {
+        ipcRenderer.on("fetch-new-home-refsh", (e, params) => {
+            getCustomizeMenus()
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-new-home-refsh")
+        }
+    }, [])
     // 获取自定义菜单
     const getCustomizeMenus = () => {
         ipcRenderer
             .invoke("QueryYakScript", {
-                Pagination: genDefaultPagination(1000),
+                // Pagination: genDefaultPagination(1000),
+                IncludedScriptNames:['基础爬虫','综合目录扫描与爆破'],
                 IsGeneralModule: true,
                 Type: "yak"
             } as QueryYakScriptRequest)

@@ -151,6 +151,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners("fetch-new-main-menu")
         }
     }, [])
+    useEffect(() => {
+        ipcRenderer.on("fetch-down-by-scriptNames", (e, params) => {
+            onDownPluginByScriptNames(DefaultRouteMenuData, params.names, "expert")
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-down-by-scriptNames")
+        }
+    }, [])
     useUpdateEffect(() => {
         getRouteKeyToLabel()
     }, [routeMenu])
@@ -356,6 +364,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             setSubMenuData(data[0].subMenuData || [])
             setMenuId(data[0].id)
         }
+        ipcRenderer.invoke("send-new-home-refsh")
         if (callBack) callBack()
         // const menuLists = getMenuListBySort(data, menuMode)
         // ipcRenderer

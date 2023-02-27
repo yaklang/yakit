@@ -73,4 +73,11 @@ module.exports = (win, getClient) => {
     ipcMain.handle("update-judge-license", (e, params) => {
         win.webContents.send("fetch-judge-license", params)
     })
+     /** License验证通信 */
+     ipcMain.handle("send-down-by-scriptNames", (e, params) => {
+        win.webContents.send("fetch-down-by-scriptNames", params)
+    })
+    ipcMain.handle("send-new-home-refsh", (e, params) => {
+        win.webContents.send("fetch-new-home-refsh", params)
+    })
 }
