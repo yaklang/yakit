@@ -142,10 +142,16 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         }
     }, [YakScriptOnlineGroup])
 
+    useEffect(()=>{
+        form.setFieldsValue({
+            TaskName: "漏洞扫描任务"
+        })
+    },[])
+
     // 指纹服务是否已经设置
     const [alreadySet, setAlreadySet] = useState<boolean>(false)
 
-    const run = (include: string[], OnlineGroup: string) => {
+    const run = (include: string[], OnlineGroup: string,TaskName:string) => {
         setPercent(0)
         const tokens = randomString(40)
         setToken(tokens)
@@ -164,7 +170,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             tokens,
             baseProgress?true:undefined,
             baseProgress,
-            OnlineGroup
+            OnlineGroup,
+            TaskName
         )
             .then(() => {
                 setExecuting(true)
@@ -175,7 +182,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     }
 
     const onFinish = useMemoizedFn((values) => {
-        const {scan_type} = values
+        const {scan_type,TaskName} = values
         const scan_deep = values.scan_deep || "fast"
         if (!target.target && !target.targetFile) {
             warn("请输入目标或上传目标文件夹绝对路径!")
@@ -183,6 +190,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         }
         if (!Array.isArray(scan_type) || scan_type.length === 0) {
             warn("请选择扫描模式")
+            return
+        }
+        if(TaskName.length === 0){
+            warn("请输入任务名称")
             return
         }
         const OnlineGroup: string = scan_type.map((item) => item[item.length - 1]).join(",")
@@ -208,13 +219,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
         // 当为跳转带参
         if (Array.isArray(openScriptNames)) {
-            run(openScriptNames, OnlineGroup)
+            run(openScriptNames, OnlineGroup,TaskName)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const include: string[] = data.Data.map((item) => item.OnlineScriptName)
-                    run(include, OnlineGroup)
+                    run(include, OnlineGroup,TaskName)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
@@ -370,6 +381,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                     />
                 </Form.Item>
 
+                <Form.Item name='TaskName' label='任务名称'>
+                    <Input style={{width: 400}} placeholder="请输入任务名称" allowClear/>
+                </Form.Item>
+
                 <Form.Item name='scan_deep' label='扫描速度'>
                     <Radio.Group defaultValue={"fast"}>
                         <Radio.Button value='fast'>快速探测</Radio.Button>
@@ -377,6 +392,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         <Radio.Button value='slow'>深度扫描</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
+
             </Form>
         </div>
     )
