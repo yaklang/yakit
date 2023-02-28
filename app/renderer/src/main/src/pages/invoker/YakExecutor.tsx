@@ -168,13 +168,23 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     useEffect(() => {
         ipcRenderer.on(`${token}-data-scope`, async (e: any, data: {Key: string; Value: Uint8Array}[]) => {
             let res: VariableTableDataType[] = []
+            let lastStackValue
             data.forEach((v) => {
+                if (v.Key == "__last_stack_value__") {
+                    lastStackValue = {
+                        key: v.Key,
+                        varName: v.Key,
+                        value: Uint8ArrayToString(v.Value)
+                    }
+                    return
+                }
                 res.push({
                     key: v.Key,
                     varName: v.Key,
                     value: Uint8ArrayToString(v.Value)
                 })
             })
+            res.unshift(lastStackValue)
             setVariableTable(res)
         })
         ipcRenderer.on(`${token}-exec-end`, () => {
