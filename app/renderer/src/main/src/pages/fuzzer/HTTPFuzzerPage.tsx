@@ -3,7 +3,6 @@ import {
     Button,
     Card,
     Col,
-    Divider,
     Form,
     Input,
     Modal,
@@ -14,8 +13,6 @@ import {
     Spin,
     Tag,
     Typography,
-    Dropdown,
-    Menu,
     Popover,
     Checkbox,
     Tooltip,
@@ -23,37 +20,18 @@ import {
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {monacoEditorReplace, monacoEditorWrite} from "./fuzzerTemplates"
+import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {
-    CopyableField,
-    InputFloat,
-    InputInteger,
-    InputItem,
-    ManyMultiSelectForString,
-    OneLine,
-    SelectOne,
-    SwitchItem
-} from "../../utils/inputUtil"
+import {InputFloat, InputInteger, InputItem, OneLine, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {
-    ColumnWidthOutlined,
-    DeleteOutlined,
-    ProfileOutlined,
-    LeftOutlined,
-    RightOutlined,
-    DownOutlined,
-    HistoryOutlined,
-    DownloadOutlined,
-    QuestionCircleOutlined
-} from "@ant-design/icons"
+import {DeleteOutlined, ProfileOutlined, HistoryOutlined} from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
-import {failed, info, success} from "../../utils/notification"
+import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue, setRemoteValueTTL} from "../../utils/kv"
+import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
@@ -65,18 +43,16 @@ import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {insertFileFuzzTag} from "./InsertFileFuzzTag"
-import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import "./HTTPFuzzerPage.scss"
-import {ShareIcon} from "@/assets/icons"
 import {ShareData} from "./components/ShareData"
 import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {SearchOutlined} from "@ant-design/icons/lib"
-import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {ChevronLeftIcon, ChevronRightIcon, ChromeSvgIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
 import {editor} from "monaco-editor"
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -751,6 +727,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     {rsp.BodyLength}bytes / {rsp.DurationMs}ms
                                 </Tag>
                                 <Space key='single'>
+                                    <Button
+                                        className='extra-chrome-btn'
+                                        type={"text"}
+                                        size={"small"}
+                                        icon={<ChromeSvgIcon />}
+                                        onClick={() => {
+                                            showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                                        }}
+                                    />
                                     <Button
                                         size={"small"}
                                         onClick={() => {
