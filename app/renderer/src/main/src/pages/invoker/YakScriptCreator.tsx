@@ -277,7 +277,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })
             showButton&&getPluginDetail(props.modified?.OnlineId,props.modified?.UUID)
         }
-    }, [props.modified])
+    }, [props.modified, userInfo])
     const getPluginDetail = useMemoizedFn((pluginId,uuid) => {
         if (!userInfo.isLogin) return
         if (pluginId as number == 0) return
