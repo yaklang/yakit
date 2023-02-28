@@ -92,7 +92,20 @@ const defaultEnterpriseReport: ReportItem[] = [
         type:"bar-graph",
         content: `
 [{\"key\":\"严重漏洞\",\"value\":0},{\"key\":\"高危漏洞\",\"value\":0},{\"key\":\"中危漏洞\",\"value\":0},{\"key\":\"低危漏洞\",\"value\":123}]
-        `
+        `,
+        direction:false
+    },
+    {
+        type:"markdown",
+        content: `
+## 3.2 端口扫描统计
+`
+    },
+    {
+        type:"json-table",
+        content: `
+{\"data\":[[\"8.210.89.159\",\"80\",\"http/nginx[1.20.1]\",\"Yu \\u0026 Mo\"],[\"8.210.89.159\",\"3306\",\"mysql/mysql[5.7.36]\",\"\"],[\"8.210.89.159\",\"22\",\"openssh[7.4]/ssh\",\"\"]],\"header\":[\"地址\",\"端口\",\"指纹\",\"网站标题\"]}
+`
     }
 ]
 

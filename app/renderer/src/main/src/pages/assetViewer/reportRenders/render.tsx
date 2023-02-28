@@ -31,7 +31,7 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
             }
         case "bar-graph":
             try {
-                return <BarGraph type={"bar"} width={450}
+                return <BarGraph type={"bar"} width={450} direction={props.item?.direction}
                                  data={JSON.parse(props.item.content) as { key: string, value: number }[]}/>
             } catch (e) {
                 console.info("渲染图失败")
