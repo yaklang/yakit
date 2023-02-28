@@ -5,6 +5,7 @@ import {GraphProps} from "./base";
 export const BarGraph: React.FC<GraphProps> = (g) => {
     const color = g.color||[]
     const barData = g.data;
+    const direction:boolean = g.direction??true
     return <div>
         <Chart
             padding={{
@@ -13,7 +14,7 @@ export const BarGraph: React.FC<GraphProps> = (g) => {
             height={g.height || 400} width={g.width || 400}
             data={barData || []} forceFit
         >
-            <Coord/>
+            <Coord transpose={direction}/>
             <Axis
                 name="key"
                 label={{
