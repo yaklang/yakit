@@ -1156,7 +1156,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             node: ContentByRoute(Route.SimbleDetect, undefined, {
                 recoverUid: task.Uid,
                 recoverBaseProgress: task.Percent,
-                recoverOnlineGroup: task.YakScriptOnlineGroup
+                recoverOnlineGroup: task.YakScriptOnlineGroup,
+                recoverTaskName: task.TaskName
             })
         })
     })
