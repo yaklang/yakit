@@ -41,7 +41,7 @@ import {useStore} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {YakitLogFormatter} from "../invoker/YakitLogFormatter"
 import moment from "moment"
-import CreatReportScript from "./CreatReportScript";
+import CreatReportScript from "./CreatReportScript"
 const {ipcRenderer} = window.require("electron")
 interface Option {
     value: string | number
@@ -94,6 +94,9 @@ interface SimbleDetectFormProps {
     isDownloadPlugin: boolean
     baseProgress?: number
     TaskName?: string
+    setRunTaskName: (v: string) => void
+    setRunTimeStamp: (v: number) => void
+    setRunPluginCount: (v: number) => void
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const {
@@ -109,7 +112,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         YakScriptOnlineGroup,
         isDownloadPlugin,
         baseProgress,
-        TaskName
+        TaskName,
+        setRunTaskName,
+        setRunTimeStamp,
+        setRunPluginCount
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -176,6 +182,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         setPercent(0)
         const tokens = randomString(40)
         setToken(tokens)
+        // 时间戳生成
+        const timeStamp: number = moment(new Date()).unix()
+        setRunTimeStamp(timeStamp)
+        setRunPluginCount(include.length)
         StartExecBatchYakScriptWithFilter(
             target,
             simpleQueryToFull(
@@ -196,6 +206,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         )
             .then(() => {
                 setExecuting(true)
+                setRunTaskName(TaskName)
             })
             .catch((e) => {
                 failed(`启动批量安全检测失败：${e}`)
@@ -422,17 +433,20 @@ export interface SimbleDetectTableProps {
     setPercent: (v: number) => void
     token: string
     executing: boolean
+    runTaskName?: string
+    runTimeStamp?: number
+    runPluginCount?: number
 }
 
 export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
-    const {token, setPercent, executing} = props
+    const {token, setPercent, executing, runTaskName, runTimeStamp, runPluginCount} = props
     const [tableContentHeight, setTableContentHeight] = useState<number>(0)
     const [progressFinished, setProgressFinished] = useState(0)
     const [progressTotal, setProgressTotal] = useState(0)
     const [progressRunning, setProgressRunning] = useState(0)
     const [scanTaskExecutingCount, setScanTaskExecutingCount] = useState(0)
     const [taskLog, setTaskLog, getTaskLog] = useGetState<TaskResultLog[]>([])
-    const [activeKey, setActiveKey] = useState<string>("executing")
+    const [activeKey, setActiveKey] = useState<string>("hitTable")
 
     const [jsonRisks, setJsonRisks, getJsonRisks] = useGetState<Risk[]>([])
     useEffect(() => {
@@ -505,12 +519,12 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     }
     /** 通知生成报告 */
     const creatReport = () => {
-        // 时间戳生成
-        const timeStamp: number = moment(new Date()).unix()
-        console.log("时间戳",timeStamp)
         // 脚本数据
         const scriptData = CreatReportScript()
-        console.log("脚本数据",scriptData)
+        console.log("脚本数据", scriptData)
+        console.log("TaskName", runTaskName)
+        console.log("include数量", runPluginCount)
+        console.log("时间戳", runTimeStamp)
         Modal.success({
             content: "报告生成成功，请跳转至报告页查看"
         })
@@ -568,15 +582,38 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                 onChange={setActiveKey}
                 tabBarExtraContent={
                     <div>
-                        <div className={styles["hole-text"]} onClick={creatReport}>
-                            生成报告
-                        </div>
+                        {runTimeStamp && (
+                            <>
+                                {!executing ? (
+                                    <div className={styles["hole-text"]} onClick={creatReport}>
+                                        生成报告
+                                    </div>
+                                ) : (
+                                    <div className={styles["disable-hole-text"]}>生成报告</div>
+                                )}
+                            </>
+                        )}
                         <div className={styles["hole-text"]} onClick={openMenu}>
                             查看完整漏洞
                         </div>
                     </div>
                 }
             >
+                <Tabs.TabPane tab='命中风险与漏洞' key={"hitTable"}>
+                    <div style={{width: "100%", height: "100%"}}>
+                        <ReactResizeDetector
+                            onResize={(width, height) => {
+                                if (!width || !height) return
+                                setTableContentHeight(height - 4)
+                            }}
+                            handleWidth={true}
+                            handleHeight={true}
+                            refreshMode={"debounce"}
+                            refreshRate={50}
+                        />
+                        <RisksViewer risks={jsonRisks} tableContentHeight={tableContentHeight} />
+                    </div>
+                </Tabs.TabPane>
                 <Tabs.TabPane tab='任务日志' key={"executing"}>
                     <div className={classNames(styles["div-width-height-100"])} style={{overflow: "hidden"}}>
                         <Timeline className={classNames(styles["body-time-line"])} pending={executing} reverse={true}>
@@ -594,21 +631,6 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                                 )
                             })}
                         </Timeline>
-                    </div>
-                </Tabs.TabPane>
-                <Tabs.TabPane tab='命中风险与漏洞' key={"hitTable"}>
-                    <div style={{width: "100%", height: "100%"}}>
-                        <ReactResizeDetector
-                            onResize={(width, height) => {
-                                if (!width || !height) return
-                                setTableContentHeight(height - 4)
-                            }}
-                            handleWidth={true}
-                            handleHeight={true}
-                            refreshMode={"debounce"}
-                            refreshRate={50}
-                        />
-                        <RisksViewer risks={jsonRisks} tableContentHeight={tableContentHeight} />
                     </div>
                 </Tabs.TabPane>
             </Tabs>
@@ -761,6 +783,13 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
 
     const [isDownloadPlugin, setDownloadPlugin] = useState<boolean>(false)
 
+    // 点击运行任务的最新TaskName
+    const [runTaskName, setRunTaskName] = useState<string>()
+    // 获取运行任务时间戳
+    const [runTimeStamp, setRunTimeStamp] = useState<number>()
+    // 获取运行任务插件数
+    const [runPluginCount, setRunPluginCount] = useState<number>()
+
     useEffect(() => {
         if (BaseProgress !== undefined && BaseProgress > 0) {
             setPercent(BaseProgress)
@@ -824,11 +853,21 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 isDownloadPlugin={isDownloadPlugin}
                 baseProgress={BaseProgress}
                 TaskName={TaskName}
+                setRunTaskName={setRunTaskName}
+                setRunTimeStamp={setRunTimeStamp}
+                setRunPluginCount={setRunPluginCount}
             />
             <Divider style={{margin: 4}} />
 
             <div style={{flex: "1", overflow: "hidden"}}>
-                <SimbleDetectTable token={token} setPercent={setPercent} executing={executing} />
+                <SimbleDetectTable
+                    token={token}
+                    setPercent={setPercent}
+                    executing={executing}
+                    runTaskName={runTaskName}
+                    runTimeStamp={runTimeStamp}
+                    runPluginCount={runPluginCount}
+                />
             </div>
         </AutoCard>
     )
