@@ -4,6 +4,7 @@ import {AutoCard} from "../../../components/AutoCard";
 import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
 import {ExecResult, genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
 import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks";
+import {Route} from "@/routes/routeSpec"
 import {randomString} from "../../../utils/randomUtil";
 import {
     CancelBatchYakScript,
@@ -278,7 +279,8 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                         try {
                             const risk = JSON.parse(info.data) as Risk;
                             if (!!risk.RiskType) {
-                                setJsonRisks([...getJsonRisks(), risk])
+                                const cacheJsonRisks = [risk,...getJsonRisks()].slice(0,10)
+                                setJsonRisks(cacheJsonRisks)
                             }
                         } catch (e) {
 
@@ -316,7 +318,9 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
             clearInterval(id)
         }
     }, [props.token])
-
+    const openMenu = () => {
+        ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
+    }
     return <div className="batch-executor-result">
         <div className="result-notice-body">
             <div className="notice-body">
@@ -336,9 +340,12 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
         </div>
 
         <Divider style={{margin: 4}}/>
-
         <div className="result-table-body">
-            <Tabs className="div-width-height-100 no-theme-tabs" activeKey={activeKey} onChange={setActiveKey}>
+            <Tabs className="div-width-height-100 no-theme-tabs" activeKey={activeKey} onChange={setActiveKey} tabBarExtraContent={<div style={{textAlign: "right"}}>
+                <div className={"notice-hole-text"} onClick={openMenu}>
+                    查看完整漏洞
+                </div>
+            </div>}>
                 <Tabs.TabPane tab="任务日志" key={"executing"}>
                     <div className="div-width-height-100" style={{overflow: "hidden"}}>
                         <Timeline className="body-time-line" pending={props.executing} reverse={true}>

@@ -71,3 +71,10 @@
     position: absolute;
     margin-top: -65px;
 }
+.notice-hole-text{
+    font-size: 14px;
+    color: #1890ff;
+    margin-left: 12px;
+    cursor: pointer;
+    display: inline-block;
+}
