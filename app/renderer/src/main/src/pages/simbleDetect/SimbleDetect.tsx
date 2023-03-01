@@ -41,6 +41,7 @@ import {useStore} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {YakitLogFormatter} from "../invoker/YakitLogFormatter"
 import moment from "moment"
+import CreatReportScript from "./CreatReportScript";
 const {ipcRenderer} = window.require("electron")
 interface Option {
     value: string | number
@@ -507,6 +508,9 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         // 时间戳生成
         const timeStamp: number = moment(new Date()).unix()
         console.log("时间戳",timeStamp)
+        // 脚本数据
+        const scriptData = CreatReportScript()
+        console.log("脚本数据",scriptData)
         Modal.success({
             content: "报告生成成功，请跳转至报告页查看"
         })
