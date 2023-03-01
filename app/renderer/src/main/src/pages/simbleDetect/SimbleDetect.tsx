@@ -12,7 +12,8 @@ import {
     Radio,
     Popconfirm,
     Tabs,
-    Timeline
+    Timeline,
+    Modal
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
@@ -39,7 +40,7 @@ import {YakScript} from "../invoker/schema"
 import {useStore} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {YakitLogFormatter} from "../invoker/YakitLogFormatter"
-const {TextArea} = Input
+import moment from "moment"
 const {ipcRenderer} = window.require("electron")
 interface Option {
     value: string | number
@@ -501,6 +502,15 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     const openMenu = () => {
         ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
     }
+    /** 通知生成报告 */
+    const creatReport = () => {
+        // 时间戳生成
+        const timeStamp: number = moment(new Date()).unix()
+        console.log("时间戳",timeStamp)
+        Modal.success({
+            content: "报告生成成功，请跳转至报告页查看"
+        })
+    }
     return (
         <div className={styles["simble-detect-table"]}>
             {/* <div className={styles["result-notice-body"]}>
@@ -553,7 +563,10 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                 activeKey={activeKey}
                 onChange={setActiveKey}
                 tabBarExtraContent={
-                    <div style={{textAlign: "right"}}>
+                    <div>
+                        <div className={styles["hole-text"]} onClick={creatReport}>
+                            生成报告
+                        </div>
                         <div className={styles["hole-text"]} onClick={openMenu}>
                             查看完整漏洞
                         </div>
