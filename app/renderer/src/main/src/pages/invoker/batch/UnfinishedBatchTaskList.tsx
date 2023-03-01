@@ -23,6 +23,7 @@ export interface SimbleDetectBatchTask {
     CreatedAt: number
     Percent: number
     YakScriptOnlineGroup: string
+    TaskName: string
 }
 
 const {ipcRenderer} = window.require("electron");

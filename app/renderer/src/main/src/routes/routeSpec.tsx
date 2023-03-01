@@ -300,6 +300,7 @@ interface ComponentParams {
 
     // 简易企业版 - 安全检测
     recoverOnlineGroup?: string
+    recoverTaskName?: string
 }
 
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
@@ -360,6 +361,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <SimbleDetect Uid={params?.recoverUid}
             BaseProgress={params?.recoverBaseProgress}
             YakScriptOnlineGroup={params?.recoverOnlineGroup}
+            TaskName={params?.recoverTaskName}
             />
         case Route.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
