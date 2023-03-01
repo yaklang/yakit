@@ -1,5 +1,19 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Space, Tag, Progress, Divider, Form, Input, Button, Cascader, Spin, Radio, Popconfirm} from "antd"
+import {
+    Space,
+    Tag,
+    Progress,
+    Divider,
+    Form,
+    Input,
+    Button,
+    Cascader,
+    Spin,
+    Radio,
+    Popconfirm,
+    Tabs,
+    Timeline
+} from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
 import {Route} from "@/routes/routeSpec"
@@ -24,6 +38,7 @@ import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPa
 import {YakScript} from "../invoker/schema"
 import {useStore} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
+import {YakitLogFormatter} from "../invoker/YakitLogFormatter"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
 interface Option {
@@ -90,7 +105,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         openScriptNames,
         YakScriptOnlineGroup,
         isDownloadPlugin,
-        baseProgress,
+        baseProgress
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -142,16 +157,16 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         }
     }, [YakScriptOnlineGroup])
 
-    useEffect(()=>{
+    useEffect(() => {
         form.setFieldsValue({
             TaskName: "漏洞扫描任务"
         })
-    },[])
+    }, [])
 
     // 指纹服务是否已经设置
     const [alreadySet, setAlreadySet] = useState<boolean>(false)
 
-    const run = (include: string[], OnlineGroup: string,TaskName:string) => {
+    const run = (include: string[], OnlineGroup: string, TaskName: string) => {
         setPercent(0)
         const tokens = randomString(40)
         setToken(tokens)
@@ -168,7 +183,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 []
             ),
             tokens,
-            baseProgress?true:undefined,
+            baseProgress ? true : undefined,
             baseProgress,
             OnlineGroup,
             TaskName
@@ -182,7 +197,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     }
 
     const onFinish = useMemoizedFn((values) => {
-        const {scan_type,TaskName} = values
+        const {scan_type, TaskName} = values
         const scan_deep = values.scan_deep || "fast"
         if (!target.target && !target.targetFile) {
             warn("请输入目标或上传目标文件夹绝对路径!")
@@ -192,7 +207,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             warn("请选择扫描模式")
             return
         }
-        if(TaskName.length === 0){
+        if (TaskName.length === 0) {
             warn("请输入任务名称")
             return
         }
@@ -219,13 +234,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
         // 当为跳转带参
         if (Array.isArray(openScriptNames)) {
-            run(openScriptNames, OnlineGroup,TaskName)
+            run(openScriptNames, OnlineGroup, TaskName)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const include: string[] = data.Data.map((item) => item.OnlineScriptName)
-                    run(include, OnlineGroup,TaskName)
+                    run(include, OnlineGroup, TaskName)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
@@ -382,7 +397,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 </Form.Item>
 
                 <Form.Item name='TaskName' label='任务名称'>
-                    <Input style={{width: 400}} placeholder="请输入任务名称" allowClear/>
+                    <Input style={{width: 400}} placeholder='请输入任务名称' allowClear />
                 </Form.Item>
 
                 <Form.Item name='scan_deep' label='扫描速度'>
@@ -392,7 +407,6 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         <Radio.Button value='slow'>深度扫描</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
-
             </Form>
         </div>
     )
@@ -401,15 +415,18 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 export interface SimbleDetectTableProps {
     setPercent: (v: number) => void
     token: string
+    executing: boolean
 }
 
 export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
-    const {token, setPercent} = props
+    const {token, setPercent, executing} = props
     const [tableContentHeight, setTableContentHeight] = useState<number>(0)
     const [progressFinished, setProgressFinished] = useState(0)
     const [progressTotal, setProgressTotal] = useState(0)
     const [progressRunning, setProgressRunning] = useState(0)
     const [scanTaskExecutingCount, setScanTaskExecutingCount] = useState(0)
+    const [taskLog, setTaskLog, getTaskLog] = useGetState<TaskResultLog[]>([])
+    const [activeKey, setActiveKey] = useState<string>("executing")
 
     const [jsonRisks, setJsonRisks, getJsonRisks] = useGetState<Risk[]>([])
     useEffect(() => {
@@ -438,7 +455,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                         try {
                             const risk = JSON.parse(info.data) as Risk
                             if (!!risk.RiskType) {
-                                const cacheJsonRisks = [risk,...getJsonRisks()].slice(0,10)
+                                const cacheJsonRisks = [risk, ...getJsonRisks()].slice(0, 10)
                                 setJsonRisks(cacheJsonRisks)
                                 // setJsonRisks([...getJsonRisks(), risk])
                             }
@@ -452,14 +469,34 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                 }
             }
         })
+        const syncLogs = () => {
+            const shownLogs = getTaskLog() || []
+            if (shownLogs.length === 0 && logs.length > 0) {
+                setTaskLog([...logs])
+                return
+            }
 
+            if (shownLogs.length > 0 && shownLogs[shownLogs.length - 1].key + 1 < index) {
+                setTaskLog([...logs])
+            }
+        }
+        let id = setInterval(() => {
+            syncLogs()
+        }, 500)
         return () => {
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-end`)
             ipcRenderer.removeAllListeners(`${token}-error`)
+            setTaskLog([])
+            setActiveKey("executing")
+            clearInterval(id)
         }
     }, [token])
 
+    /** 通知软件打开管理页面 */
+    const openMenu = () => {
+        ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
+    }
     return (
         <div className={styles["simble-detect-table"]}>
             {/* <div className={styles["result-notice-body"]}>
@@ -506,6 +543,54 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                     <RisksViewer risks={jsonRisks} tableContentHeight={tableContentHeight} />
                 </div>
             </div>
+
+            <Tabs
+                className={classNames(styles["div-width-height-100"], styles["no-theme-tabs"])}
+                activeKey={activeKey}
+                onChange={setActiveKey}
+                tabBarExtraContent={
+                    <div style={{textAlign: "right"}}>
+                        <div className={styles["hole-text"]} onClick={openMenu}>
+                            查看完整漏洞
+                        </div>
+                    </div>
+                }
+            >
+                <Tabs.TabPane tab='任务日志' key={"executing"}>
+                    <div className={classNames(styles["div-width-height-100"])} style={{overflow: "hidden"}}>
+                        <Timeline className={classNames(styles["body-time-line"])} pending={executing} reverse={true}>
+                            {taskLog.map((item) => {
+                                return (
+                                    <Timeline.Item key={item.key}>
+                                        <YakitLogFormatter
+                                            data={item.data}
+                                            level={item.level}
+                                            timestamp={item.timestamp}
+                                            onlyTime={true}
+                                            isCollapsed={true}
+                                        />
+                                    </Timeline.Item>
+                                )
+                            })}
+                        </Timeline>
+                    </div>
+                </Tabs.TabPane>
+                <Tabs.TabPane tab='命中风险与漏洞' key={"hitTable"}>
+                    <div style={{width: "100%", height: "100%"}}>
+                        <ReactResizeDetector
+                            onResize={(width, height) => {
+                                if (!width || !height) return
+                                setTableContentHeight(height - 4)
+                            }}
+                            handleWidth={true}
+                            handleHeight={true}
+                            refreshMode={"debounce"}
+                            refreshRate={50}
+                        />
+                        <RisksViewer risks={jsonRisks} tableContentHeight={tableContentHeight} />
+                    </div>
+                </Tabs.TabPane>
+            </Tabs>
         </div>
     )
 }
@@ -683,10 +768,6 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
     if (loading) {
         return <Spin tip={"正在恢复未完成的任务"} />
     }
-    /** 通知软件打开管理页面 */
-    const openMenu = () => {
-        ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
-    }
     return (
         <AutoCard
             title={null}
@@ -721,15 +802,10 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 isDownloadPlugin={isDownloadPlugin}
                 baseProgress={BaseProgress}
             />
-            {/* <Divider style={{margin: 4}} /> */}
-            <div style={{textAlign: "right"}}>
-                <div className={styles["hole-text"]} onClick={openMenu}>
-                    查看完整漏洞
-                </div>
-            </div>
+            <Divider style={{margin: 4}} />
 
             <div style={{flex: "1", overflow: "hidden"}}>
-                <SimbleDetectTable token={token} setPercent={setPercent} />
+                <SimbleDetectTable token={token} setPercent={setPercent} executing={executing} />
             </div>
         </AutoCard>
     )
