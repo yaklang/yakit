@@ -91,6 +91,7 @@ interface SimbleDetectFormProps {
     YakScriptOnlineGroup?: string
     isDownloadPlugin: boolean
     baseProgress?: number
+    TaskName?: string
 }
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const {
@@ -105,7 +106,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         openScriptNames,
         YakScriptOnlineGroup,
         isDownloadPlugin,
-        baseProgress
+        baseProgress,
+        TaskName
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -158,10 +160,12 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     }, [YakScriptOnlineGroup])
 
     useEffect(() => {
-        form.setFieldsValue({
-            TaskName: "漏洞扫描任务"
-        })
-    }, [])
+        if (TaskName) {
+            form.setFieldsValue({
+                TaskName: TaskName || "漏洞扫描任务"
+            })
+        }
+    }, [TaskName])
 
     // 指纹服务是否已经设置
     const [alreadySet, setAlreadySet] = useState<boolean>(false)
@@ -723,11 +727,12 @@ export interface SimbleDetectProps {
     Uid?: string
     BaseProgress?: number
     YakScriptOnlineGroup?: string
+    TaskName?: string
 }
 
 export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
-    const {Uid, BaseProgress, YakScriptOnlineGroup} = props
-    console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup)
+    const {Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
+    // console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup, TaskName)
     const [percent, setPercent] = useState(0)
     const [executing, setExecuting] = useState<boolean>(false)
     const [token, setToken] = useState(randomString(20))
@@ -801,6 +806,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 YakScriptOnlineGroup={YakScriptOnlineGroup}
                 isDownloadPlugin={isDownloadPlugin}
                 baseProgress={BaseProgress}
+                TaskName={TaskName}
             />
             <Divider style={{margin: 4}} />
 
