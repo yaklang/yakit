@@ -87,6 +87,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** 数据库权限由usestate改为useref(数据不影响渲染) */
     const databaseError = useRef<boolean>(false)
 
+
+    /* 内置二进制文件的话，需要通过自检 */
+    useEffect(() => {
+        ipcRenderer.invoke("IsBinsExisted").then(e => {
+            if (e) {
+                info("引擎内置自检成功！")
+            } else {
+                info("引擎内置自检：无内置引擎标识")
+            }
+        }).catch(e => {
+            info("引擎内置自检：无内置引擎")
+        })
+    }, [])
+
     const getCacheEngineMode = useMemoizedFn(() => {
         setEngineMode(undefined)
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
@@ -536,7 +550,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** MACOS 上双击放大窗口(不是最大化) */
     const maxScreen = () => {
-        ipcRenderer.invoke("UIOperate", "max").then(() => {})
+        ipcRenderer.invoke("UIOperate", "max").then(() => {
+        })
     }
 
     /**
@@ -601,7 +616,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 企业版-连接引擎后验证license=>展示企业登录
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterprise)
-    useEffect(()=>{
+    useEffect(() => {
         // 监听是否退出登录 重新打开License控件验证身份
         ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
             setJudgeLicense(v)
@@ -609,7 +624,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         return () => {
             ipcRenderer.removeAllListeners("fetch-judge-license")
         }
-    },[])
+    }, [])
 
 
     // outputToWelcomeConsole("UILayout 刷新")
@@ -641,7 +656,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-left"]}>
                                     <div>
-                                        <MacUIOp />
+                                        <MacUIOp/>
                                     </div>
 
                                     {engineLink && (
@@ -653,9 +668,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 onClick={() => changeYakitMode("soft")}
                                             >
                                                 {yakitMode === "soft" ? (
-                                                    <YakitThemeSvgIcon style={{fontSize: 20}} />
+                                                    <YakitThemeSvgIcon style={{fontSize: 20}}/>
                                                 ) : (
-                                                    <YakitGraySvgIcon style={{fontSize: 20}} />
+                                                    <YakitGraySvgIcon style={{fontSize: 20}}/>
                                                 )}
                                             </div>
 
@@ -669,7 +684,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div> */}
 
                                             <div className={styles["divider-wrapper"]}></div>
-                                            <YakitGlobalHost isEngineLink={engineLink} />
+                                            <YakitGlobalHost isEngineLink={engineLink}/>
                                         </>
                                     )}
                                     <div className={styles["short-divider-wrapper"]}>
@@ -677,7 +692,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
 
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback}/>
                                     </div>
                                 </div>
                                 <div
@@ -695,7 +710,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     >
                                         <div className={styles["op-btn-body"]}>
                                             <Tooltip placement='bottom' title='官方网站'>
-                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]}/>
                                             </Tooltip>
                                         </div>
                                     </div>
@@ -710,7 +725,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 typeCallback={typeCallback}
                                             />
                                             <div className={styles["divider-wrapper"]}></div>
-                                            <GlobalReverseState isEngineLink={engineLink} />
+                                            <GlobalReverseState isEngineLink={engineLink}/>
                                         </>
                                     )}
                                 </div>
@@ -729,7 +744,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 <div className={styles["header-left"]}>
                                     {engineLink && (
                                         <>
-                                            <GlobalReverseState isEngineLink={engineLink} />
+                                            <GlobalReverseState isEngineLink={engineLink}/>
 
                                             <div
                                                 className={classnames(styles["yakit-mode-icon"], {
@@ -738,9 +753,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 onClick={() => changeYakitMode("soft")}
                                             >
                                                 {yakitMode === "soft" ? (
-                                                    <YakitThemeSvgIcon style={{fontSize: 20}} />
+                                                    <YakitThemeSvgIcon style={{fontSize: 20}}/>
                                                 ) : (
-                                                    <YakitGraySvgIcon style={{fontSize: 20}} />
+                                                    <YakitGraySvgIcon style={{fontSize: 20}}/>
                                                 )}
                                             </div>
 
@@ -775,7 +790,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     >
                                         <div className={styles["op-btn-body"]}>
                                             <Tooltip placement='bottom' title='官方网站'>
-                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]}/>
                                             </Tooltip>
                                         </div>
                                     </div>
@@ -790,24 +805,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback}/>
                                     </div>
                                     <div className={styles["short-divider-wrapper"]}>
                                         <div className={styles["divider-style"]}></div>
                                     </div>
                                     {engineLink && (
                                         <>
-                                            <YakitGlobalHost isEngineLink={engineLink} />
+                                            <YakitGlobalHost isEngineLink={engineLink}/>
                                             <div className={styles["divider-wrapper"]}></div>
                                         </>
                                     )}
-                                    <WinUIOp />
+                                    <WinUIOp/>
                                 </div>
                             </div>
                         )}
                     </div>
                     <div className={styles["ui-layout-body"]}>
-                        {engineLink && (isJudgeLicense?<EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />:props.children)}
+                        {engineLink && (isJudgeLicense ?
+                            <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {
+                            }}/> : props.children)}
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}
@@ -855,7 +872,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     }}
                                 />
 
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
+                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload}/>
                             </div>
                         )}
                         {engineLink && __killOldEngine && (
@@ -886,10 +903,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     [styles["uilayout-noshow-log"]]: engineLink
                 })}
             >
-                <EngineLog visible={engineLink} setVisible={setShowEngineLog} />
+                <EngineLog visible={engineLink} setVisible={setShowEngineLog}/>
             </div>
 
-            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole} />
+            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole}/>
         </div>
     )
 }
@@ -903,6 +920,7 @@ interface RemoteYaklangEngineProps {
     engineNotInstalled?: boolean
     oncancel?: () => any
 }
+
 /** @name 远程连接配置参数 */
 interface RemoteLinkInfo {
     /** 是否保存为历史连接 */
@@ -919,12 +937,14 @@ interface RemoteLinkInfo {
     caPem?: string
     password?: string
 }
+
 const DefaultRemoteLink: RemoteLinkInfo = {
     allowSave: false,
     host: "127.0.0.1",
     port: "8087",
     tls: false
 }
+
 /** @name 本地缓存远程连接配置信息 */
 interface YakitAuthInfo {
     name: string
@@ -934,6 +954,7 @@ interface YakitAuthInfo {
     tls: boolean
     password: string
 }
+
 /** @name 远程连接UI */
 const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((props) => {
     const {loading, onSubmit, onEngineModeChange, oncancel} = props
@@ -959,7 +980,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                     })
                 )
             })
-            .catch(() => {})
+            .catch(() => {
+            })
 
         getLocalValue(LocalGV.YaklangRemoteEngineCredential).then((result: RemoteLinkInfo) => {
             try {
@@ -967,7 +989,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                     return
                 }
                 setRemote({...result})
-            } catch (e) {}
+            } catch (e) {
+            }
         })
     }, [])
 
@@ -1001,8 +1024,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             <Spin spinning={loading}>
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
-                        <YakitThemeSvgIcon style={{fontSize: 64}} />
-                        <div className={styles["title-style"]}>Yakit 远程连接模式</div>
+                        <YakitThemeSvgIcon style={{fontSize: 64}}/>
+                        <div className={styles["title-style"]}>远程模式</div>
                         <div className={styles["remote-history"]}>
                             <div className={styles["select-title"]}>连接历史</div>
                             <Select
@@ -1202,10 +1225,12 @@ Mx5C8WSoRFWx5H0afXDHptF4rq5bI/djg04VM5ibI5GJ3i1EybBpbGj3rRBY+sF9
 FRmP2Nx+zifhMNe300xfHzqNeN3D+Uix6+GOkBoYI65KNPGqwi8uy9HlJVx3Jkht
 WOG+9PGLcr4IRJx5LUEZ5FB1
 -----END CERTIFICATE-----`
+
 interface PEMExampleProps {
     children?: any
     setShow?: (flag: boolean) => any
 }
+
 /** @name PEM示例弹窗 */
 const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
     const {children, setShow} = props
@@ -1215,11 +1240,11 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
             <div className={styles["title-style"]}>需要 PEM 格式的证书</div>
             在通过 <div className={styles["content-code"]}>yak grpc --tls</div> 启动核心服务器的时候，会把 RootCA
             打印到屏幕上，复制到该输入框即可：
-            <br />
+            <br/>
             例如如下内容：
-            <br />
+            <br/>
             <div className={styles["code-pem"]}>
-                <YakEditor readOnly={true} value={PemPlaceHolder} />
+                <YakEditor readOnly={true} value={PemPlaceHolder}/>
             </div>
         </div>
     )
@@ -1251,14 +1276,14 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
     const content = (
         <div style={{width: 430}} className={styles["pem-wrapper"]}>
             注意：Yakit 并不会把历史记录上传到互联网
-            <br />
+            <br/>
             你可以在你的本地目录（客户端目录）下找到远程登录信息
-            <br />
+            <br/>
             <div className={styles["path-wrapper"]}>
                 <div className={styles["link-wrapper"]}>
                     {CodeGV.RemoteLinkPath}
                     <div className={styles["copy-icon"]} onClick={copyCommand}>
-                        <YakitCopySvgIcon />
+                        <YakitCopySvgIcon/>
                     </div>
                 </div>
                 <div className={styles["link-open"]} onClick={openFile}>
@@ -1286,6 +1311,7 @@ interface DownloadYakitProps {
     visible: boolean
     setVisible: (flag: boolean) => any
 }
+
 /** @name Yakit软件更新下载弹窗 */
 const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
     const {system, visible, setVisible} = props
@@ -1413,7 +1439,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
+                                    <YaklangInstallHintSvgIcon/>
                                 </div>
                                 <div
                                     className={styles["qs-icon"]}
@@ -1423,7 +1449,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                                         setIsTop(2)
                                     }}
                                 >
-                                    <HelpSvgIcon style={{fontSize: 20}} />
+                                    <HelpSvgIcon style={{fontSize: 20}}/>
                                 </div>
                             </div>
 
@@ -1477,6 +1503,7 @@ interface AgrAndQSModalProps {
     visible: boolean
     setVisible: (flag: boolean) => any
 }
+
 /** @name Yakit-常见问题弹窗 */
 const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
     const {isTop, setIsTop, system, visible, setVisible} = props
@@ -1534,7 +1561,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                                     onClick={() => setVisible(false)}
                                 >
                                     {show ? (
-                                        <MacUIOpCloseSvgIcon />
+                                        <MacUIOpCloseSvgIcon/>
                                     ) : (
                                         <div className={styles["close-btn"]}>
                                             <div className={styles["btn-icon"]}></div>
@@ -1554,7 +1581,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                             >
                                 <span className={styles["header-title"]}>Yakit 软件官网下载链接</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
-                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
+                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]}/>
                                 </div>
                             </div>
                         )}
@@ -1566,7 +1593,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                                 <div className={styles["link-wrapper"]}>
                                     {CodeGV.HomeWebsite}
                                     <div className={styles["copy-icon"]} onClick={copyCommand}>
-                                        <YakitCopySvgIcon />
+                                        <YakitCopySvgIcon/>
                                     </div>
                                 </div>
                             </div>
@@ -1593,7 +1620,7 @@ const KillOldEngineProcess: React.FC<KillOldEngineProcessProps> = React.memo((pr
                 <div className={styles["yaklang-engine-hint-wrapper"]}>
                     <div className={styles["hint-left-wrapper"]}>
                         <div className={styles["hint-icon"]}>
-                            <YaklangInstallHintSvgIcon />
+                            <YaklangInstallHintSvgIcon/>
                         </div>
                     </div>
 
@@ -1635,7 +1662,7 @@ const StartAdminEngineHint: React.FC<KillOldEngineProcessProps> = React.memo((pr
                 <div className={styles["yaklang-engine-hint-wrapper"]}>
                     <div className={styles["hint-left-wrapper"]}>
                         <div className={styles["hint-icon"]}>
-                            <YaklangInstallHintSvgIcon />
+                            <YaklangInstallHintSvgIcon/>
                         </div>
                     </div>
 
@@ -1643,7 +1670,7 @@ const StartAdminEngineHint: React.FC<KillOldEngineProcessProps> = React.memo((pr
                         <div className={styles["hint-right-title"]}>启动管理员权限引擎</div>
                         <div className={styles["hint-right-content"]}>
                             是否启动并连接管理员权限引擎
-                            <br />
+                            <br/>
                             <span className={styles["warning-content"]}>
                                 由于后续功能规划，管理员权限将逐步进行下架，建议使用本地模式，如出现问题，使用“设置-网卡权限修复”即可
                             </span>

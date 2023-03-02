@@ -2,6 +2,10 @@ appId: 'io.yaklang.yakit'
 productName: 'Yakit'
 copyright: Copyright © 2021 v1ll4n
 
+extraFiles:
+  - from: "bins"
+    to: "bins"
+
 directories:
   buildResources: resources
   output: release/
