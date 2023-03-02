@@ -154,7 +154,34 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
 
             ipcRenderer.invoke("is-yaklang-engine-installed").then((flag: boolean) => {
+                if (isEngineInstalled.current === flag) return
+
                 isEngineInstalled.current = flag
+                if (!isEngineInstalled.current) {
+                    setEngineMode(undefined)
+                    outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+                    setTimeout(() => {
+                        setYakitStatus("install")
+                        cacheYakitStatus.current = "install"
+                    }, 300)
+                    return
+                } else {
+                    outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
+                    /** 引擎已安装的情况下，优先检查数据库权限 */
+                    ipcRenderer
+                        .invoke("check-local-database")
+                        .then((e) => {
+                            if (e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
+                            databaseError.current = e === "not allow to write"
+                        })
+                        .finally(() => {
+                            // 这里只有两种状态，数据库(有|无)权限情况
+                            if (databaseError.current && getSystem() !== "Windows_NT") {
+                                setYakitStatus("database")
+                                cacheYakitStatus.current = "database"
+                            } else getCacheEngineMode()
+                        })
+                }
             })
         }, 3000)
         return () => {
