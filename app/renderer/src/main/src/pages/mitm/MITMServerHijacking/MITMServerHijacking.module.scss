@@ -56,11 +56,12 @@
 }
 
 .mitm-hijacked-content {
-    height: 100%;
+    height: calc(100% - 20px);
     .mitm-hijacked-heard {
         display: flex;
         align-items: center;
         margin-bottom: 16px;
+        justify-content: space-between;
         .mitm-hijacked-heard-left {
             display: flex;
             align-items: center;
