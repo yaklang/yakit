@@ -264,12 +264,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     }, [hijackAllResponse, currentPacketId])
 
-    useEffect(() => {
-        ipcRenderer.on("client-mitm-hijacked", forwardHandler)
-        return () => {
-            ipcRenderer.removeAllListeners("client-mitm-hijacked")
-        }
-    }, [autoForward])
+    // useEffect(() => {
+    //     ipcRenderer.on("client-mitm-hijacked", forwardHandler)
+    //     return () => {
+    //         ipcRenderer.removeAllListeners("client-mitm-hijacked")
+    //     }
+    // }, [autoForward])
 
     useEffect(() => {
         ipcRenderer.invoke("mitm-auto-forward", !isManual).finally(() => {
@@ -309,58 +309,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     }, [])
 
     // const addr = `http://${host}:${port}`;
-
-    // 自动转发劫持，进行的操作
-    const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
-        if (msg?.RemoteAddr) {
-            setIpInfo(msg?.RemoteAddr)
-        } else {
-            setIpInfo("")
-        }
-        setCurrentIsWebsocket(!!msg?.isWebsocket)
-        setCurrentIsForResponse(!!msg?.forResponse)
-
-        if (msg.forResponse) {
-            if (!msg.response || !msg.responseId) {
-                failed("BUG: MITM 错误，未能获取到正确的 Response 或 Response ID")
-                return
-            }
-            if (!isManual) {
-                forwardResponse(msg.responseId || 0)
-                if (!!currentPacket) {
-                    clearCurrentPacket()
-                }
-            } else {
-                setForResponse(true)
-                setStatus("hijacked")
-                setCurrentPacketInfo({
-                    currentPacket: msg.response,
-                    currentPacketId: msg.responseId,
-                    isHttp: msg.isHttps
-                })
-            }
-        } else {
-            if (msg.request) {
-                if (!isManual) {
-                    forwardRequest(msg.id)
-                    if (!!currentPacket) {
-                        clearCurrentPacket()
-                    }
-                    // setCurrentPacket(String.fromCharCode.apply(null, msg.request))
-                } else {
-                    setStatus("hijacked")
-                    setForResponse(false)
-                    // setCurrentPacket(msg.request)
-                    // setCurrentPacketId(msg.id)
-                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id, isHttp: msg.isHttps})
-                    setUrlInfo(msg.url)
-                    // ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
-                    //     setIpInfo(res)
-                    // })
-                }
-            }
-        }
-    })
 
     // 这个 Forward 主要用来转发修改后的内容，同时可以转发请求和响应
     const forward = useMemoizedFn(() => {

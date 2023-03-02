@@ -28,7 +28,7 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
  * @param {string} iconColor 复制Icon文字
  */
 export interface CopyComponentsProps {
-    onAfterCopy: (e: MouseEvent) => void
+    onAfterCopy?: (e: MouseEvent) => void
     copyText:string
     iconColor?: string
 }

@@ -341,7 +341,7 @@
 
                     &:first-child {
                         z-index: 2;
-                        box-shadow: none;
+                        // box-shadow: none;
                     }
                 }
 
@@ -563,7 +563,7 @@
         .select-item {
             display: flex;
             flex-direction: row;
-            align-items: flex-start;
+            align-items: center;
             padding: 6px 12px;
             cursor: pointer;
 

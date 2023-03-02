@@ -3,7 +3,7 @@ import styles from "./MITMServerStartForm.module.scss"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakEditor} from "@/utils/editors"
-import {CaCertData} from "../MITMServerHijacking"
+import {CaCertData} from "../MITMServerHijacking/MITMServerHijacking"
 import {useMemoizedFn} from "ahooks"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 

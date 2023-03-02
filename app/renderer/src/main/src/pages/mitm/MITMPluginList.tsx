@@ -16,7 +16,7 @@ import {failed, info} from "../../utils/notification"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "@/pages/mitm/MITMPage"
 import "./MITMPluginList.scss"
 import {queryYakScriptList} from "../yakitStore/network"
-import {enableMITMPluginMode} from "./MITMServerHijacking"
+import {enableMITMPluginMode} from "./MITMServerHijacking/MITMServerHijacking"
 
 export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 

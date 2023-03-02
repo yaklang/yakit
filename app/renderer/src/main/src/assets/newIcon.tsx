@@ -822,7 +822,7 @@ const HomeSvg = () => (
         />
     </svg>
 )
-export const HomeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const HomeSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={HomeSvg} {...props} />
 }
 
@@ -859,7 +859,7 @@ const ChromeSvg = () => (
     </svg>
 )
 /** @name Chrome彩色图标 */
-export const ChromeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ChromeSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChromeSvg} {...props} />
 }
 
@@ -874,7 +874,7 @@ const ChromeFrameSvg = () => (
     </svg>
 )
 /** @name Chrome边框图标 */
-export const ChromeFrameSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ChromeFrameSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChromeFrameSvg} {...props} />
 }
 
@@ -889,7 +889,7 @@ const ArrowCircleRightSvg = () => (
     </svg>
 )
 /** @name 带圆形边框的向右箭头图标 */
-export const ArrowCircleRightSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ArrowCircleRightSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={ArrowCircleRightSvg} {...props} />
 }
 
@@ -1071,7 +1071,7 @@ const FolderOpen = () => (
 /**
  * @description: folder-open 文件夹
  */
-export const FolderOpenIcon = (props: Partial<CustomIconComponentProps>) => {
+export const FolderOpenIcon = (props: Partial<IconProps>) => {
     return <Icon component={FolderOpen} {...props} />
 }
 
@@ -1088,7 +1088,7 @@ const CloudDownload = () => (
 /**
  * @description: folder-open 下载 云
  */
-export const CloudDownloadIcon = (props: Partial<CustomIconComponentProps>) => {
+export const CloudDownloadIcon = (props: Partial<IconProps>) => {
     return <Icon component={CloudDownload} {...props} />
 }
 
@@ -1112,7 +1112,7 @@ const Import = () => (
 /**
  * @description: import 导入
  */
-export const ImportIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ImportIcon = (props: Partial<IconProps>) => {
     return <Icon component={Import} {...props} />
 }
 
@@ -1141,7 +1141,7 @@ const CloudPlugin = () => (
 /**
  * @description: 云端插件 菜单
  */
-export const CloudPluginIcon = (props: Partial<CustomIconComponentProps>) => {
+export const CloudPluginIcon = (props: Partial<IconProps>) => {
     return <Icon component={CloudPlugin} {...props} />
 }
 
@@ -1164,6 +1164,57 @@ const Cog = () => (
 /**
  * @description: cog 设置
  */
-export const CogIcon = (props: Partial<CustomIconComponentProps>) => {
+export const CogIcon = (props: Partial<IconProps>) => {
     return <Icon component={Cog} {...props} />
+}
+
+const Quit = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.66667 3.33333C6.37783 3.47633 6.09956 3.63733 5.83333 3.81486C3.82336 5.15522 2.5 7.43782 2.5 10.0283C2.5 14.1548 5.85786 17.5 10 17.5C14.1421 17.5 17.5 14.1548 17.5 10.0283C17.5 7.43782 16.1766 5.15522 14.1667 3.81486C13.9004 3.63733 13.6222 3.47633 13.3333 3.33333M10 1.66667V8.33333'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+    </svg>
+)
+/**
+ * @description: Quit 退出
+ */
+export const QuitIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Quit} {...props} />
+}
+
+const ArrowsExpand = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M2.66675 5.33333V2.66667M2.66675 2.66667H5.33341M2.66675 2.66667L6.00008 6M13.3334 5.33333V2.66667M13.3334 2.66667H10.6667M13.3334 2.66667L10.0001 6M2.66675 10.6667V13.3333M2.66675 13.3333H5.33341M2.66675 13.3333L6.00008 10M13.3334 13.3333L10.0001 10M13.3334 13.3333V10.6667M13.3334 13.3333H10.6667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: arrows-expand 全屏 展开
+ */
+export const ArrowsExpandIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ArrowsExpand} {...props} />
+}
+
+const ArrowsRetract = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M2.66675 5.33333V2.66667M2.66675 2.66667H5.33341M2.66675 2.66667L6.00008 6M13.3334 5.33333V2.66667M13.3334 2.66667H10.6667M13.3334 2.66667L10.0001 6M2.66675 10.6667V13.3333M2.66675 13.3333H5.33341M2.66675 13.3333L6.00008 10M13.3334 13.3333L10.0001 10M13.3334 13.3333V10.6667M13.3334 13.3333H10.6667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: arrows-expand 全屏 收起
+ */
+export const ArrowsRetractIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ArrowsRetract} {...props} />
 }

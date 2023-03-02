@@ -82,3 +82,38 @@ export const showFullScreenMask = (
 
     return {destroy: destory}
 }
+
+interface ShowByCustomProps {
+    reactNode: ReactNode
+}
+export const showByCustom = (props: ShowByCustomProps, x?: number, y?: number) => {
+    const divExisted = document.getElementById(ContextMenuId)
+    const div: HTMLDivElement = divExisted ? (divExisted as HTMLDivElement) : document.createElement("div")
+    div.style.left = `${x || coordinate.clientX}px`
+    div.style.top = `${y || coordinate.clientY}px`
+    div.style.position = "absolute"
+    div.style.zIndex = "9999"
+    div.id = ContextMenuId
+    div.className = "popup"
+    document.body.appendChild(div)
+
+    const destory = () => {
+        const unmountResult = ReactDOM.unmountComponentAtNode(div)
+        if (unmountResult && div.parentNode) {
+            div.parentNode.removeChild(div)
+        }
+    }
+
+    const render = () => {
+        setTimeout(() => {
+            document.addEventListener("click", function onClickOutsize() {
+                destory()
+                document.removeEventListener("click", onClickOutsize)
+            })
+            ReactDOM.render(<>{props.reactNode}</>, div)
+        })
+    }
+    render()
+
+    return {destroy: destory}
+}

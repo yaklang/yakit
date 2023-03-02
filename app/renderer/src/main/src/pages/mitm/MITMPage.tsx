@@ -42,7 +42,7 @@ import {MITMPluginLogViewer} from "./MITMPluginLogViewer"
 import {MITMPluginList} from "./MITMPluginList"
 import {saveABSFileToOpen} from "../../utils/openWebsite"
 import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
-import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking"
+import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
 import ReactResizeDetector from "react-resize-detector"
@@ -84,6 +84,7 @@ import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAut
 import {queryYakScriptList} from "../yakitStore/network"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {Test} from "@/components/baseTemplate/BaseTags"
+import MITMHijackedContent, {MITMStatus} from "./MITMServerHijacking/MITMHijackedContent"
 
 const {Text} = Typography
 const {Item} = Form
@@ -212,14 +213,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-
                 {/* status === "idle" 在没有开始的时候，渲染任务表单 */}
                 {(status === "idle" && (
-                    // <YakitInput.Search size="large"/>
-                    <MITMServerStartPre
+                    <MITMServer
                         onStartMITMServer={startMITMServerHandler}
                         setVisible={setVisible}
                         status={status}
+                        setStatus={setStatus}
                     />
                 )) || (
                     <MITMServerHijacking
@@ -239,8 +239,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     )
 }
 
-interface MITMServerStartPreProps {
-    onStartMITMServer: (
+interface MITMServerProps {
+    onStartMITMServer?: (
         host: string,
         port: number,
         downstreamProxy: string,
@@ -249,37 +249,74 @@ interface MITMServerStartPreProps {
         enableHttp2: boolean,
         clientCertificates: ClientCertificate[]
     ) => any
-    setVisible: (b: boolean) => void
+    setVisible?: (b: boolean) => void
     status: "idle" | "hijacked" | "hijacking"
+    // 开启劫持后
+    setStatus: (status: MITMStatus) => any
 }
-const MITMServerStartPre: React.FC<MITMServerStartPreProps> = React.memo((props) => {
-    const {setVisible, status} = props
+export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
+    const {setVisible, status, setStatus} = props
     /**
      * @description 插件勾选
      */
     const [checkList, setCheckList] = useState<string[]>([])
     const [enableInitialPlugin, setEnableInitialPlugin] = useState<boolean>(false)
+    const [isFullScreenSecondNode, setIsFullScreenSecondNode] = useState<boolean>(false)
+    const [isFullScreenFirstNode, setIsFullScreenFirstNode] = useState<boolean>(false)
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
         ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
     })
     const onStartMITMServer = useMemoizedFn(
         (host, port, downstreamProxy, enableInitialPlugin, enableHttp2, certs: ClientCertificate[]) => {
-            props.onStartMITMServer(
-                host,
-                port,
-                downstreamProxy,
-                enableInitialPlugin,
-                enableInitialPlugin ? checkList : [],
-                enableHttp2,
-                certs
-            )
+            if (props.onStartMITMServer)
+                props.onStartMITMServer(
+                    host,
+                    port,
+                    downstreamProxy,
+                    enableInitialPlugin,
+                    enableInitialPlugin ? checkList : [],
+                    enableHttp2,
+                    certs
+                )
         }
     )
+    const onRenderContent = useMemoizedFn(() => {
+        switch (status) {
+            case "idle":
+                return (
+                    <MITMServerStartForm
+                        onStartMITMServer={onStartMITMServer}
+                        setVisible={(v) => {
+                            if (setVisible) setVisible(v)
+                        }}
+                        enableInitialPlugin={enableInitialPlugin}
+                        setEnableInitialPlugin={(checked) => {
+                            if (!checked) {
+                                setCheckList([])
+                            }
+                            setEnableInitialPlugin(checked)
+                        }}
+                    />
+                )
+            default:
+                return (
+                    <MITMHijackedContent
+                        setStatus={setStatus}
+                        status={status}
+                        isFullScreen={isFullScreenSecondNode}
+                        setIsFullScreen={setIsFullScreenSecondNode}
+                    />
+                )
+        }
+    })
     return (
         <ResizeBox
             firstNode={() => (
-                <div className={style["mitm-server-start-pre-first"]}>
+                <div
+                    className={style["mitm-server-start-pre-first"]}
+                    style={{display: isFullScreenSecondNode ? "none" : ""}}
+                >
                     <MITMPluginLocalList
                         onSubmitYakScriptId={onSubmitYakScriptId}
                         status={status}
@@ -296,22 +333,11 @@ const MITMServerStartPre: React.FC<MITMServerStartPreProps> = React.memo((props)
                     <div className={style["mitm-server-start-pre-line"]} />
                 </div>
             )}
-            firstRatio='20%'
+            lineStyle={{display: isFullScreenSecondNode ? "none" : ""}}
+            firstRatio={isFullScreenSecondNode ? "0%" : "20%"}
             firstMinSize={250}
             secondMinSize={600}
-            secondNode={() => (
-                <MITMServerStartForm
-                    onStartMITMServer={onStartMITMServer}
-                    setVisible={setVisible}
-                    enableInitialPlugin={enableInitialPlugin}
-                    setEnableInitialPlugin={(checked) => {
-                        if (!checked) {
-                            setCheckList([])
-                        }
-                        setEnableInitialPlugin(checked)
-                    }}
-                />
-            )}
+            secondNode={() => onRenderContent()}
         />
     )
 })

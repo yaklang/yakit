@@ -90,7 +90,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
             {(loading && <LoadingOutlined />) || (
                 <>
                     {(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || (
-                        <CopyOutlined style={{color: iconColor}} />
+                        <CopyOutlined style={{color: iconColor || "var(--yakit-primary-5)"}} />
                     )}
                 </>
             )}

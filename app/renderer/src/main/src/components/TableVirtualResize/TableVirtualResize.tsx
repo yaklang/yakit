@@ -464,7 +464,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         const left = e.clientX - tablePosition.current.left
         const moveLeftX = lineStartX.current - e.clientX
         const changeWidth = (columns[lineIndex].width || 0) - moveLeftX
-        if (changeWidth < (columns[lineIndex].minWidth || 0)) {
+        if (Math.abs(changeWidth) < (columns[lineIndex].minWidth || 0)) {
             // 拖拽值最小宽度不在移动拖拽线
             return
         }
@@ -1334,7 +1334,7 @@ const CellRender = React.memo(
         if (preProps.isSelect !== nextProps.isSelect) {
             return false
         }
-        if (preProps.rowSelection.selectedRowKeys !== nextProps.rowSelection.selectedRowKeys) {
+        if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
             return false
         }
         if (preProps.mouseCellId !== nextProps.mouseCellId) {
@@ -1528,7 +1528,7 @@ const CellRenderDrop = React.memo(
         if (preProps.isSelect !== nextProps.isSelect) {
             return false
         }
-        if (preProps.rowSelection.selectedRowKeys !== nextProps.rowSelection.selectedRowKeys) {
+        if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
             return false
         }
         if (preProps.mouseCellId !== nextProps.mouseCellId) {
