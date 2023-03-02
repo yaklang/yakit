@@ -577,6 +577,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
+        if (route === Route.AddYakitScript && !isClose) {
+            setCurrentTabKey(Route.ModManager)
+        }
+
         setPageCache(getPageCache().filter((i) => i.route !== route))
 
         if (route === Route.HTTPFuzzer) delFuzzerList(1)
