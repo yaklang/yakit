@@ -33,6 +33,7 @@ import {showByContextMenu, showByCustom} from "@/components/functionTemplate/sho
 import {showByCursorMenu} from "@/utils/showByCursor"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
+import {setRemoteValue} from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -201,6 +202,23 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             setTotal(res.Total)
         })
     }
+    useEffect(() => {
+        // 持久化存储
+        setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(shieldData))
+        let idArr: number[] = []
+        let urlArr: string[] = []
+        shieldData.data.map((item) => {
+            if (typeof item === "string") {
+                urlArr = [...urlArr, item]
+            } else {
+                idArr = [...idArr, item]
+            }
+        })
+        setParams({...params, ExcludeId: idArr, ExcludeInUrl: urlArr})
+        setTimeout(() => {
+            update()
+        }, 100)
+    }, [shieldData])
     const updateThrottle = useDebounceFn(update, {leading: true, wait: 200})
 
     useEffect(() => {
