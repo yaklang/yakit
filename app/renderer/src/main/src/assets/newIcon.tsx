@@ -907,3 +907,96 @@ const ShieldExclamationSvg = () => (
 export const ShieldExclamationSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={ShieldExclamationSvg} {...props} />
 }
+
+const DesktopComputerSvg = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.125 14.1694L7.5 16.6694L6.66667 17.5027H13.3333L12.5 16.6694L11.875 14.1694M2.5 10.836H17.5M4.16667 14.1694H15.8333C16.7538 14.1694 17.5 13.4232 17.5 12.5027V4.16935C17.5 3.24888 16.7538 2.50269 15.8333 2.50269H4.16667C3.24619 2.50269 2.5 3.24888 2.5 4.16935V12.5027C2.5 13.4232 3.24619 14.1694 4.16667 14.1694Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name 电脑图标 */
+export const DesktopComputerSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={DesktopComputerSvg} {...props} />
+}
+
+const DotsVerticalSvg = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M9.99992 4.16671L9.99992 4.17504M9.99992 10L9.99992 10.0084M9.99992 15.8334L9.99992 15.8417M9.99992 5.00004C9.53968 5.00004 9.16659 4.62694 9.16659 4.16671C9.16659 3.70647 9.53968 3.33337 9.99992 3.33337C10.4602 3.33337 10.8333 3.70647 10.8333 4.16671C10.8333 4.62694 10.4602 5.00004 9.99992 5.00004ZM9.99992 10.8334C9.53968 10.8334 9.16659 10.4603 9.16659 10C9.16659 9.5398 9.53968 9.16671 9.99992 9.16671C10.4602 9.16671 10.8333 9.5398 10.8333 10C10.8333 10.4603 10.4602 10.8334 9.99992 10.8334ZM9.99992 16.6667C9.53968 16.6667 9.16658 16.2936 9.16659 15.8334C9.16659 15.3731 9.53968 15 9.99992 15C10.4602 15 10.8333 15.3731 10.8333 15.8334C10.8333 16.2936 10.4602 16.6667 9.99992 16.6667Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name 省略纵向图标 */
+export const DotsVerticalSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={DotsVerticalSvg} {...props} />
+}
+
+const ImportSvg = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.33337 3.33337H5.33337C4.2288 3.33337 3.33337 4.2288 3.33337 5.33337V14.6667C3.33337 15.7713 4.2288 16.6667 5.33337 16.6667H14.6667C15.7713 16.6667 16.6667 15.7713 16.6667 14.6667V10'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M16.6667 3.33337C14.1667 3.33337 10 6.66671 10 10.8334'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M12.5 10L10 12.5L7.5 10'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name 导入图标 */
+export const ImportSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={ImportSvg} {...props} />
+}
+
+const PlusBoldSvg = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M10 3.33337V16.6667M16.6667 10L3.33337 10'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name 加号图标(加粗) */
+export const PlusBoldSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PlusBoldSvg} {...props} />
+}
+
+const DocumentDuplicateSvg = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M5.33335 4.66667V10C5.33335 10.7364 5.93031 11.3333 6.66669 11.3333H10.6667M5.33335 4.66667V3.33333C5.33335 2.59695 5.93031 2 6.66669 2H9.72388C9.90069 2 10.0703 2.07024 10.1953 2.19526L13.1381 5.13807C13.2631 5.2631 13.3334 5.43266 13.3334 5.60948V10C13.3334 10.7364 12.7364 11.3333 12 11.3333H10.6667M5.33335 4.66667H4.66669C3.56212 4.66667 2.66669 5.5621 2.66669 6.66667V12.6667C2.66669 13.403 3.26364 14 4.00002 14H8.66669C9.77126 14 10.6667 13.1046 10.6667 12V11.3333'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/** @name 复制图标(document-duplicate) */
+export const DocumentDuplicateSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={DocumentDuplicateSvg} {...props} />
+}

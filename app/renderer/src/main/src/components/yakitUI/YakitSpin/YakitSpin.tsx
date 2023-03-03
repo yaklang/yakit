@@ -1,5 +1,5 @@
-import {AutoComplete, Spin} from "antd"
-import React, {useState} from "react"
+import {Spin} from "antd"
+import React from "react"
 import {YakitSpinProps} from "./YakitSpinType"
 import styles from "./YakitSpin.module.scss"
 import classNames from "classnames"
@@ -16,5 +16,5 @@ import classNames from "classnames"
  * @param {"small" | "middle" | "large" } size  默认middle
  */
 export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
-    return <Spin {...props} className={classNames(styles["yakit-spin"], props.className)}></Spin>
+    return <Spin {...props} wrapperClassName={classNames(styles["yakit-spin"], props.wrapperClassName)}></Spin>
 }

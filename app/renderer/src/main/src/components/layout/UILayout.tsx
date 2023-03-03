@@ -23,12 +23,12 @@ import {YakitGlobalHost} from "./YakitGlobalHost"
 import {DownloadingState, YakitStatusType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
-import {CodeGV, LocalGV} from "@/yakitGV"
+import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {getLocalValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
@@ -37,6 +37,8 @@ import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
+import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
+import {HomeSvgIcon} from "@/assets/newIcon"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -574,9 +576,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
-    const [yakitMode, setYakitMode] = useState<"soft" | "store">("soft")
+    const [yakitMode, setYakitMode] = useState<"soft" | "store" | "">("")
     const changeYakitMode = useMemoizedFn((type: "soft" | "store") => {
-        setYakitMode(type)
+        if (type === "soft" && yakitMode !== "soft") {
+            setYakitMode(type)
+            setLinkDatabase(true)
+        }
+    })
+    /** 软件配置界面完成事件回调 */
+    const softwareSettingFinish = useMemoizedFn(() => {
+        setYakitMode("")
+        setLinkDatabase(false)
     })
 
     /** MACOS 上双击放大窗口(不是最大化) */
@@ -584,6 +594,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ipcRenderer.invoke("UIOperate", "max").then(() => {
         })
     }
+
+    const [linkDatabase, setLinkDatabase] = useState<boolean>(false)
 
     /**
      * 管理员模式补充情况
@@ -601,7 +613,32 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
     })
     const onReady = useMemoizedFn(() => {
-        if (!getEngineLink()) setEngineLink(true)
+        if (!getEngineLink()) {
+            if (engineMode === "remote") {
+                setLinkDatabase(true)
+                setYakitMode("soft")
+                setEngineLink(true)
+            } else {
+                getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
+                    if (id) {
+                        ipcRenderer
+                            .invoke("SetCurrentProject", {
+                                ProjectName: `${id}`
+                            })
+                            .then((e) => {
+                                info("已切换数据库")
+                            })
+                            .catch((e) => {
+                                failed("切换数据库失败：" + `${e}`)
+                            })
+                    } else {
+                        setLinkDatabase(true)
+                        setYakitMode("soft")
+                    }
+                    setTimeout(() => setEngineLink(true), 100)
+                })
+            }
+        }
 
         if (latestYakit) setLatestYakit("")
         if (latestYaklang) setLatestYaklang("")
@@ -676,10 +713,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     <div id='yakit-header' className={styles["ui-layout-header"]}>
                         {system === "Darwin" ? (
                             <div className={classnames(styles["header-body"], styles["mac-header-body"])}>
-                                {/* <div
-                            style={{left: yakitMode === "soft" ? 76 : 120}}
-                            className={styles["header-border-yakit-mask"]}
-                        ></div> */}
+                                <div
+                                    style={{left: yakitMode === "soft" ? 76 : 120}}
+                                    className={styles["header-border-yakit-mask"]}
+                                ></div>
 
                                 <div className={classnames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
@@ -694,15 +731,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <>
                                             <div
                                                 className={classnames(styles["yakit-mode-icon"], {
-                                                    [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
+                                                    [styles["yakit-mode-selected"]]: yakitMode === "soft"
                                                 })}
                                                 onClick={() => changeYakitMode("soft")}
                                             >
-                                                {yakitMode === "soft" ? (
-                                                    <YakitThemeSvgIcon style={{fontSize: 20}}/>
-                                                ) : (
-                                                    <YakitGraySvgIcon style={{fontSize: 20}}/>
-                                                )}
+                                                <HomeSvgIcon
+                                                    className={yakitMode === "soft" ? styles["mode-icon-selected"] : ""}
+                                                />
                                             </div>
 
                                             {/* <div
@@ -763,10 +798,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         ) : (
                             <div className={classnames(styles["header-body"], styles["win-header-body"])}>
-                                {/* <div
-                            style={{left: yakitMode === "soft" ? 44 : 88}}
-                            className={styles["header-border-yakit-mask"]}
-                        ></div> */}
+                                <div
+                                    style={{left: yakitMode === "soft" ? 44 : 88}}
+                                    className={styles["header-border-yakit-mask"]}
+                                ></div>
 
                                 <div className={classnames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
                                     Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
@@ -783,11 +818,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 })}
                                                 onClick={() => changeYakitMode("soft")}
                                             >
-                                                {yakitMode === "soft" ? (
-                                                    <YakitThemeSvgIcon style={{fontSize: 20}}/>
-                                                ) : (
-                                                    <YakitGraySvgIcon style={{fontSize: 20}}/>
-                                                )}
+                                                <HomeSvgIcon
+                                                    className={yakitMode === "soft" ? styles["mode-icon-selected"] : ""}
+                                                />
                                             </div>
 
                                             {/* <div
@@ -852,10 +885,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         )}
                     </div>
+
                     <div className={styles["ui-layout-body"]}>
-                        {engineLink && (isJudgeLicense ?
-                            <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {
-                            }}/> : props.children)}
+                        {engineLink && !linkDatabase &&(isJudgeLicense?<EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />:props.children)}
+                        {engineLink && linkDatabase && (
+                            <SoftwareSettings
+                                engineMode={engineMode || "local"}
+                                onEngineModeChange={changeEngineMode}
+                                onFinish={softwareSettingFinish}
+                            />
+                        )}
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}
