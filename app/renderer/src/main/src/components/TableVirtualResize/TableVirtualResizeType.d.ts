@@ -30,6 +30,7 @@ import {SelectProps} from "antd"
  * @event (dragIndex: number, hoverIndex: number) => void onMoveRow:拖拽
  * @property {boolean} enableDragSort 是否拖拽排序
  * @event   onMoveRowEnd 拖拽结束
+ * @property {boolean}  useUpAndDown 是否启用上下建
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
@@ -62,6 +63,7 @@ export interface TableVirtualResizeProps<T> {
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
+    useUpAndDown?: boolean
 }
 
 export interface SortProps {

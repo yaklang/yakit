@@ -130,7 +130,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         onSetCurrentRow,
         onMoveRow,
         enableDragSort,
-        onMoveRowEnd
+        onMoveRowEnd,
+        useUpAndDown
     } = props
 
     const [currentRow, setCurrentRow] = useState<T>()
@@ -191,6 +192,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useHotkeys(
         "up",
         () => {
+            if (!useUpAndDown) return
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
@@ -251,6 +253,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useHotkeys(
         "down",
         () => {
+            if (!useUpAndDown) return
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {

@@ -153,6 +153,10 @@
         .ant-select-selection-overflow-item {
             height: 24px;
         }
+        .ant-select-multiple .ant-select-selection-item {
+            height: 24px;
+            line-height: 24px;
+        }
     }
 }
 
@@ -175,6 +179,10 @@
 
         .ant-select-selection-overflow-item {
             height: 20px;
+        }
+        .ant-select-multiple .ant-select-selection-item {
+            height: 20px;
+            line-height: 20px;
         }
     }
 }
@@ -202,6 +210,10 @@
         }
 
         .ant-select-multiple .ant-select-selector::after {
+            line-height: 16px;
+        }
+        .ant-select-multiple .ant-select-selection-item {
+            height: 16px;
             line-height: 16px;
         }
     }

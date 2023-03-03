@@ -1218,3 +1218,37 @@ const ArrowsRetract = () => (
 export const ArrowsRetractIcon = (props: Partial<IconProps>) => {
     return <Icon component={ArrowsRetract} {...props} />
 }
+
+const LightningBolt = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M9.04042 0.83701C9.37344 0.941986 9.5999 1.25082 9.5999 1.6V5.6L12.7999 5.6C13.0982 5.6 13.3717 5.76597 13.5095 6.03055C13.6472 6.29514 13.6264 6.61439 13.4553 6.85877L7.85529 14.8588C7.65505 15.1448 7.29242 15.268 6.95939 15.163C6.62637 15.058 6.39991 14.7492 6.39991 14.4V10.4H3.1999C2.9016 10.4 2.62808 10.234 2.49032 9.96945C2.35256 9.70486 2.37346 9.38561 2.54452 9.14123L8.14452 1.14123C8.34476 0.855174 8.70739 0.732034 9.04042 0.83701Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:lightning-bolt 闪电
+ */
+export const LightningBoltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LightningBolt} {...props} />
+}
+
+const Play = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8.00001 14.4C11.5346 14.4 14.4 11.5346 14.4 8C14.4 4.46538 11.5346 1.6 8.00001 1.6C4.46538 1.6 1.60001 4.46538 1.60001 8C1.60001 11.5346 4.46538 14.4 8.00001 14.4ZM7.64377 5.73436C7.39828 5.5707 7.08265 5.55544 6.82252 5.69466C6.56239 5.83388 6.40001 6.10496 6.40001 6.4V9.6C6.40001 9.89504 6.56239 10.1661 6.82252 10.3053C7.08265 10.4446 7.39828 10.4293 7.64377 10.2656L10.0438 8.66564C10.2663 8.51727 10.4 8.26748 10.4 8C10.4 7.73252 10.2663 7.48273 10.0438 7.33436L7.64377 5.73436Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:play
+ */
+export const PlayIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Play} {...props} />
+}

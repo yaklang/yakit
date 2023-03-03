@@ -85,6 +85,16 @@ import {queryYakScriptList} from "../yakitStore/network"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {Test} from "@/components/baseTemplate/BaseTags"
 import MITMHijackedContent, {MITMStatus} from "./MITMServerHijacking/MITMHijackedContent"
+import {MITMPluginHijackContent} from "./MITMServerHijacking/MITMPluginHijackContent"
+import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
+import {
+    MITMPluginLocalList,
+    PluginGroup,
+    PluginSearch,
+    YakFilterRemoteObj,
+    YakModuleListHeard
+} from "./MITMServerHijacking/MITMPluginLocalList"
+import tag from "antd/lib/tag"
 
 const {Text} = Typography
 const {Item} = Form
@@ -263,6 +273,20 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [enableInitialPlugin, setEnableInitialPlugin] = useState<boolean>(false)
     const [isFullScreenSecondNode, setIsFullScreenSecondNode] = useState<boolean>(false)
     const [isFullScreenFirstNode, setIsFullScreenFirstNode] = useState<boolean>(false)
+
+    const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
+    const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
+    const [tags, setTags] = useState<string[]>([])
+    const [searchKeyword, setSearchKeyword] = useState<string>("")
+
+    const [total, setTotal] = useState<number>(0)
+    /**
+     * 选中的插件组
+     */
+    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+
+    const [listNames, setListNames] = useState<string[]>([]) // 存储的全部本地插件
+
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
         ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
@@ -281,220 +305,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 )
         }
     )
-    const onRenderContent = useMemoizedFn(() => {
-        switch (status) {
-            case "idle":
-                return (
-                    <MITMServerStartForm
-                        onStartMITMServer={onStartMITMServer}
-                        setVisible={(v) => {
-                            if (setVisible) setVisible(v)
-                        }}
-                        enableInitialPlugin={enableInitialPlugin}
-                        setEnableInitialPlugin={(checked) => {
-                            if (!checked) {
-                                setCheckList([])
-                            }
-                            setEnableInitialPlugin(checked)
-                        }}
-                    />
-                )
-            default:
-                return (
-                    <MITMHijackedContent
-                        setStatus={setStatus}
-                        status={status}
-                        isFullScreen={isFullScreenSecondNode}
-                        setIsFullScreen={setIsFullScreenSecondNode}
-                    />
-                )
-        }
-    })
-    return (
-        <ResizeBox
-            firstNode={() => (
-                <div
-                    className={style["mitm-server-start-pre-first"]}
-                    style={{display: isFullScreenSecondNode ? "none" : ""}}
-                >
-                    <MITMPluginLocalList
-                        onSubmitYakScriptId={onSubmitYakScriptId}
-                        status={status}
-                        checkList={checkList}
-                        setCheckList={(list) => {
-                            if (list.length === 0) {
-                                setEnableInitialPlugin(false)
-                            } else {
-                                setEnableInitialPlugin(true)
-                            }
-                            setCheckList(list)
-                        }}
-                    />
-                    <div className={style["mitm-server-start-pre-line"]} />
-                </div>
-            )}
-            lineStyle={{display: isFullScreenSecondNode ? "none" : ""}}
-            firstRatio={isFullScreenSecondNode ? "0%" : "20%"}
-            firstMinSize={250}
-            secondMinSize={600}
-            secondNode={() => onRenderContent()}
-        />
-    )
-})
-
-interface MITMPluginLocalListProps {
-    checkList: string[]
-    setCheckList: (s: string[]) => void
-    onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
-    status: "idle" | "hijacked" | "hijacking"
-}
-export interface YakFilterRemoteObj {
-    name: string
-    value: string[]
-}
-const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
-const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
-    const {status, checkList, setCheckList} = props
-    const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Keyword")
-    const [afterModuleType, setAfterModuleType] = useState<"input" | "select">("input")
-
-    const [vlistHeigth, setVListHeight] = useState(600)
-    const [visible, setVisible] = useState<boolean>(false)
-    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
-    /**
-     * @description 插件组
-     */
-    const [pugGroup, setPlugGroup] = useState<YakFilterRemoteObj[]>([])
-    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
-
-    const [tag, setTag] = useState<string[]>([])
-    const [searchKeyword, setSearchKeyword] = useState<string>("")
-    const [refresh, setRefresh] = useState<boolean>(true)
-    const [total, setTotal] = useState<number>(0)
-    const [visibleImport, setVisibleImport] = useState<boolean>(false)
-    const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
-
-    const [allTag, setAllTag] = useState<TagValue[]>([])
-    /**
-     * @description 劫持启动后,成功启动的插件
-     */
-    const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
-    const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
-
-    const [listNames, setListNames] = useState<string[]>([]) // 存储的全部本地插件
-
-    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
-
-    // 设置用户模式
-    const userDefined = mode === "hot-patch"
-    let hooksItem: {name: string}[] = []
-    hooks.forEach((value, key) => {
-        if (value) {
-            hooksItem.push({name: key})
-        }
-    })
-    hooksItem = hooksItem.sort((a, b) => a.name.localeCompare(b.name))
-    // 初始化加载 hooks，设置定时更新 hooks 状态
-    useEffect(() => {
-        updateHooks()
-        const id = setInterval(() => {
-            updateHooks()
-        }, 1000)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
-    const updateHooks = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-get-current-hook").catch((e) => {
-            failed(`更新 MITM 插件状态失败: ${e}`)
-        })
-    })
-    useEffect(() => {
-        // 获取插件组
-        getRemoteValue(FILTER_CACHE_LIST_DATA).then((data: string) => {
-            try {
-                if (!!data) {
-                    const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                    setPlugGroup(cacheData)
-                }
-            } catch (error) {
-                failed("获取插件组失败:" + error)
-            }
-        })
-    }, [])
-    /**
-     * @description 获取Tags
-     */
-    useEffect(() => {
-        ipcRenderer
-            .invoke("GetYakScriptTags", {})
-            .then((res) => {
-                setAllTag(res.Tag.map((item) => ({Name: item.Value, Total: item.Total})))
-            })
-            .catch((e) => failed("获取插件组失败:" + e))
-            .finally(() => {})
-    }, [])
-    /**
-     * @description 删除插件组
-     */
-    const onDeletePlugin = useMemoizedFn((deleteItem: YakFilterRemoteObj) => {
-        const newArr: YakFilterRemoteObj[] = pugGroup.filter((item) => item.name !== deleteItem.name)
-        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-        setPlugGroup([...newArr])
-        setSelectGroup(selectGroup.filter((item) => item.name !== deleteItem.name))
-    })
-    /**
-     * @description 保存插件组
-     */
-    const onSavePluginGroup = useMemoizedFn((value: YakFilterRemoteObj) => {
-        getRemoteValue(FILTER_CACHE_LIST_DATA)
-            .then((data: string) => {
-                let obj = {
-                    name: value.name,
-                    value: checkList
-                }
-                if (!!data) {
-                    const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                    const index: number = cacheData.findIndex((item) => item.name === value.name)
-                    // 本地中存在插件组名称
-                    if (index >= 0) {
-                        cacheData[index].value = Array.from(new Set([...cacheData[index].value, ...checkList]))
-                        setPlugGroup([...cacheData])
-                        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(cacheData))
-                    } else {
-                        const newArr = [...cacheData, obj]
-                        setPlugGroup(newArr)
-                        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-                    }
-                } else {
-                    setPlugGroup([obj])
-                    setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify([obj]))
-                }
-                setAddGroupVisible(false)
-                info("添加插件组成功")
-            })
-            .catch((err) => {
-                failed("获取插件组失败:" + err)
-            })
-    })
-    const getAllSatisfyScript = useMemoizedFn((limit: number) => {
-        queryYakScriptList(
-            "mitm,port-scan",
-            (data, t) => {
-                setListNames(data.map((i) => i.ScriptName))
-            },
-            undefined,
-            limit || 300,
-            undefined,
-            searchKeyword,
-            {
-                Tag: tag,
-                Type: "mitm,port-scan",
-                Keyword: "",
-                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-            }
-        )
-    })
     /**
      * @description 插件全选 启动  批量执行最多200条
      */
@@ -544,313 +354,168 @@ const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((prop
                 })
         }
     })
-    useEffect(() => {
-        let newScriptNames: string[] = []
-        selectGroup.forEach((ele) => {
-            newScriptNames = [...newScriptNames, ...ele.value]
-        })
-        setIncludedScriptNames(Array.from(new Set(newScriptNames)))
 
-        setTimeout(() => {
-            setRefresh(!refresh)
-        }, 100)
-    }, [selectGroup])
-    return (
-        <div className={style["mitm-plugin-local"]}>
-            <div>
-                <ReactResizeDetector
-                    onResize={(width, height) => {
-                        if (!width || !height) {
-                            return
-                        }
-                        setVListHeight(height)
-                    }}
-                    handleWidth={true}
-                    handleHeight={true}
-                    refreshMode={"debounce"}
-                    refreshRate={50}
-                />
-                <div className={style["mitm-plugin-group"]}>
-                    <Dropdown
-                        overlay={
-                            <PluginGroupList
-                                pugGroup={pugGroup}
-                                selectGroup={selectGroup}
-                                setSelectGroup={setSelectGroup}
-                                onDeletePlugin={onDeletePlugin}
-                            />
-                        }
-                        onVisibleChange={setVisible}
-                        overlayStyle={{borderRadius: 4, width: 200}}
-                    >
-                        <div
-                            className={classNames(style["mitm-plugin-group-left"], {
-                                [style["mitm-plugin-group-left-open"]]: visible
-                            })}
-                        >
-                            <FolderOpenIcon />
-                            <span>插件组</span>
-                            <div className={style["mitm-plugin-group-number"]}>{pugGroup.length}</div>
-                            {(visible && <ChevronUpIcon className={style["chevron-down"]} />) || (
-                                <ChevronDownIcon className={style["chevron-down"]} />
-                            )}
-                        </div>
-                    </Dropdown>
-                    <YakitButton
-                        type='text'
-                        onClick={() => {
-                            if (checkList.length === 0) {
-                                info("选中数据未获取")
-                                return
-                            }
-                            setAddGroupVisible(true)
-                        }}
-                        disabled={isSelectAll}
-                    >
-                        添加至组
-                        <PlusCircleIcon className={style["plus-circle"]} />
-                    </YakitButton>
-                </div>
-
-                <YakitCombinationSearch
-                    afterModuleType={afterModuleType}
-                    valueBeforeOption={searchType}
-                    onSelectBeforeOption={(o) => {
-                        if (o === "Keyword") {
-                            setTag([])
-                            setAfterModuleType("input")
-                        }
-                        if (o === "Tags") {
-                            setSearchKeyword("")
-                            setAfterModuleType("select")
-                        }
-                        setSearchType(o as "Tags" | "Keyword")
-                    }}
-                    addonBeforeOption={[
-                        {
-                            label: "关键字",
-                            value: "Keyword"
-                        },
-                        {
-                            label: "tag",
-                            value: "Tags"
-                        }
-                    ]}
-                    inputSearchModuleTypeProps={{
-                        value: searchKeyword,
-                        onChange: (e) => setSearchKeyword(e.target.value),
-                        onSearch: () => setRefresh(!refresh)
-                    }}
-                    selectModuleTypeProps={{
-                        data: allTag,
-                        value: tag,
-                        optValue: "Name",
-                        optionLabelProp: "Name",
-                        maxTagCount: "responsive",
-                        renderOpt: (info: TagValue) => {
-                            return (
-                                <div className={style["mitm-plugin-local-tag-select-item"]}>
-                                    <span>{info.Name}</span>
-                                    <span>{info.Total}</span>
-                                </div>
-                            )
-                        },
-                        onSelect: (item) => {
-                            const checked = tag.includes(item)
-                            if (checked) {
-                                setTag([...tag.filter((ele) => ele !== item)])
-                            } else {
-                                setTag([...tag, item])
-                            }
-                        },
-                        onDeselect: (i) => {
-                            const arr = tag.filter((element) => i !== element)
-                            setTag([...arr])
-                        }
-                    }}
-                />
-                <div className={style["mitm-plugin-list-heard"]}>
-                    <div className={style["mitm-plugin-list-check"]}>
-                        <YakitCheckbox value={isSelectAll} onChange={onSelectAll} />
-                        <span className={style["mitm-plugin-list-check-text"]}>全选</span>
-                    </div>
-                    <div className={style["mitm-plugin-list-tip"]}>
-                        <div>
-                            Total<span>&nbsp;{total}</span>
-                        </div>
-                        <Divider type='vertical' style={{margin: "0 8px", height: 12, top: 0}} />
-                        <div>
-                            Selected<span>&nbsp;{checkList.length}</span>
-                        </div>
-                    </div>
-                </div>
-                {(tag.length > 0 || selectGroup.length > 0) && (
-                    <div className={style["mitm-plugin-query-show"]}>
-                        {tag.map((i) => {
-                            return (
-                                <YakitTag
-                                    key={i}
-                                    style={{marginBottom: 2}}
-                                    onClose={() => {
-                                        const arr = tag.filter((element) => i !== element)
-                                        setTag([...arr])
-                                    }}
-                                    closable={true}
-                                    size='small'
-                                >
-                                    {i}
-                                </YakitTag>
-                            )
-                        })}
-                        {selectGroup.map((i) => {
-                            return (
-                                <YakitTag
-                                    key={i.name}
-                                    style={{marginBottom: 2}}
-                                    onClose={() => {
-                                        const arr = selectGroup.filter((element) => i.name !== element.name)
-                                        setSelectGroup([...arr])
-                                    }}
-                                    closable={true}
-                                    size='small'
-                                    className={classNames(style["mitm-plugin-query-plugin-group"])}
-                                >
-                                    <FolderOpenIcon />
-                                    <span
-                                        className={classNames(
-                                            style["mitm-plugin-query-plugin-group-name"],
-                                            "content-ellipsis"
-                                        )}
-                                    >
-                                        {i.name}
-                                    </span>
-                                </YakitTag>
-                            )
-                        })}
-                    </div>
-                )}
-            </div>
-            <div className={style["mitm-plugin-list"]} style={{height: `calc(100% - ${vlistHeigth + 12}px)`}}>
-                <YakModuleList
-                    emptyNode={
-                        <div className={style["mitm-plugin-empty"]}>
-                            <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
-                            <div className={style["mitm-plugin-buttons"]}>
-                                <YakitButton type='outline1' icon={<CloudDownloadIcon />}>
-                                    获取云端插件
-                                </YakitButton>
-                                <YakitButton
-                                    type='outline1'
-                                    icon={<ImportIcon />}
-                                    onClick={() => setVisibleImport(true)}
-                                >
-                                    导入插件源
-                                </YakitButton>
-                            </div>
-                        </div>
-                    }
-                    queryLocal={{
-                        Tag: tag,
-                        Type: "mitm,port-scan",
-                        IncludedScriptNames: includedScriptNames,
-                        Keyword: searchKeyword,
-                        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-                    }}
-                    refresh={refresh}
-                    itemHeight={43}
-                    onClicked={(script) => {}}
-                    setTotal={(t) => {
-                        setTotal(t || 0)
-                        getAllSatisfyScript(t)
-                    }}
-                    onYakScriptRender={(i: YakScript, maxWidth?: number) => {
-                        return (
-                            <MITMYakScriptLoader
-                                key={i.Id}
-                                script={i}
-                                maxWidth={maxWidth}
-                                // 劫持启动后
-                                hooks={hooks}
-                                onSendToPatch={(code) => {
-                                    // setScript(code)
-                                    // setMode("hot-patch")
-                                }}
-                                onSubmitYakScriptId={props.onSubmitYakScriptId}
-                                onRemoveHook={(name: string) => {
-                                    // if (hooks.get(name)) {
-                                    //     setCheckAll(false)
-                                    // }
-                                }}
-                                // 劫持启动前
-                                isBeforeHijacking={true}
-                                defaultPlugins={checkList}
-                                setDefaultPlugins={setCheckList}
-                            />
-                        )
-                    }}
-                />
-            </div>
-            <ImportLocalPlugin
-                visible={visibleImport}
-                setVisible={(v) => {
-                    setVisibleImport(v)
-                    setRefresh(!refresh)
-                }}
-            />
-            <AddPluginGroup
-                pugGroup={pugGroup}
-                visible={addGroupVisible}
-                setVisible={setAddGroupVisible}
-                checkList={checkList}
-                onOk={onSavePluginGroup}
-            />
-        </div>
-    )
-})
-
-interface PluginGroupListProps {
-    pugGroup: YakFilterRemoteObj[]
-    selectGroup: YakFilterRemoteObj[]
-    setSelectGroup: (p: YakFilterRemoteObj[]) => void
-    onDeletePlugin: (p: YakFilterRemoteObj) => void
-}
-const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
-    const {pugGroup, selectGroup, setSelectGroup, onDeletePlugin} = props
-    const onSelect = useMemoizedFn((selectItem: YakFilterRemoteObj) => {
-        const checked = selectGroup.findIndex((l) => l.name === selectItem.name) === -1
-        if (checked) {
-            setSelectGroup([...selectGroup, selectItem])
-        } else {
-            const newSelectGroup = selectGroup.filter((m) => m.name !== selectItem.name)
-            setSelectGroup(newSelectGroup)
-        }
+    const getAllSatisfyScript = useMemoizedFn((limit: number) => {
+        queryYakScriptList(
+            "mitm,port-scan",
+            (data, t) => {
+                setListNames(data.map((i) => i.ScriptName))
+            },
+            undefined,
+            limit || 200,
+            undefined,
+            searchKeyword,
+            {
+                Tag: tags,
+                Type: "mitm,port-scan",
+                Keyword: "",
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+            }
+        )
     })
-
-    return (
-        <div className={style["plugin-group-list"]}>
-            {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无数据' />}
-            {pugGroup.map((item) => (
-                <div
-                    className={classNames(style["plugin-group-item"], {
-                        [style["plugin-group-item-select"]]: selectGroup.findIndex((l) => l.name === item.name) !== -1
-                    })}
-                    onClick={() => onSelect(item)}
-                >
-                    <div className={classNames(style["plugin-group-item-name"], "content-ellipsis")} title={item.name}>
-                        {item.name}
-                    </div>
-                    <div className={style["plugin-group-item-right"]}>
-                        <span className={style["plugin-group-item-length"]}>{item.value.length}</span>
-                        <TrashIcon
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onDeletePlugin(item)
+    const onRenderFirstNode = useMemoizedFn(() => {
+        switch (status) {
+            case "idle":
+                return (
+                    <>
+                        <PluginGroup
+                            checkList={checkList}
+                            selectGroup={selectGroup}
+                            setSelectGroup={setSelectGroup}
+                            isSelectAll={isSelectAll}
+                        />
+                        <PluginSearch
+                            tag={tags}
+                            searchKeyword={searchKeyword}
+                            setTag={setTags}
+                            setSearchKeyword={setSearchKeyword}
+                            onSearch={() => {
+                                setTriggerSearch(!triggerSearch)
                             }}
                         />
-                    </div>
+                        <YakModuleListHeard
+                            onSelectAll={onSelectAll}
+                            isSelectAll={isSelectAll}
+                            total={total}
+                            length={checkList.length}
+                        />
+                        <MITMPluginLocalList
+                            height='calc(100% - 100px)'
+                            onSubmitYakScriptId={onSubmitYakScriptId}
+                            status={status}
+                            checkList={checkList}
+                            setCheckList={(list) => {
+                                if (list.length === 0) {
+                                    setEnableInitialPlugin(false)
+                                } else {
+                                    setEnableInitialPlugin(true)
+                                }
+                                setCheckList(list)
+                            }}
+                            tags={tags}
+                            setTags={setTags}
+                            searchKeyword={searchKeyword}
+                            triggerSearch={triggerSearch}
+                            selectGroup={selectGroup}
+                            setSelectGroup={setSelectGroup}
+                            setIsSelectAll={setIsSelectAll}
+                            isSelectAll={isSelectAll}
+                            setTotal={(t) => {
+                                setTotal(t)
+                                getAllSatisfyScript(t)
+                            }}
+                        />
+                    </>
+                )
+
+            default:
+                return (
+                    <MITMPluginHijackContent
+                        onSubmitYakScriptId={onSubmitYakScriptId}
+                        status={status}
+                        checkList={checkList}
+                        setCheckList={(list) => {
+                            if (list.length === 0) {
+                                setEnableInitialPlugin(false)
+                            } else {
+                                setEnableInitialPlugin(true)
+                            }
+                            setCheckList(list)
+                        }}
+                        isFullScreen={isFullScreenFirstNode}
+                        setIsFullScreen={setIsFullScreenFirstNode}
+                        onSelectAll={onSelectAll}
+                    />
+                )
+        }
+    })
+    const onRenderSecondNode = useMemoizedFn(() => {
+        switch (status) {
+            case "idle":
+                return (
+                    <MITMServerStartForm
+                        onStartMITMServer={onStartMITMServer}
+                        setVisible={(v) => {
+                            if (setVisible) setVisible(v)
+                        }}
+                        enableInitialPlugin={enableInitialPlugin}
+                        setEnableInitialPlugin={(checked) => {
+                            if (!checked) {
+                                setCheckList([])
+                            }
+                            setEnableInitialPlugin(checked)
+                        }}
+                    />
+                )
+            default:
+                return (
+                    <MITMHijackedContent
+                        setStatus={setStatus}
+                        status={status}
+                        isFullScreen={isFullScreenSecondNode}
+                        setIsFullScreen={setIsFullScreenSecondNode}
+                    />
+                )
+        }
+    })
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "410px",
+            secondRatio: "50%"
+        }
+        if (isFullScreenSecondNode) {
+            p.firstRatio = "0%"
+        }
+        if (isFullScreenFirstNode) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [isFullScreenSecondNode, isFullScreenFirstNode])
+    return (
+        <ResizeBox
+            firstNode={() => (
+                <div
+                    className={style["mitm-server-start-pre-first"]}
+                    style={{display: isFullScreenSecondNode ? "none" : ""}}
+                >
+                    {onRenderFirstNode()}
+                    <div className={style["mitm-server-start-pre-line"]} />
                 </div>
-            ))}
-        </div>
+            )}
+            lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
+            firstMinSize={410}
+            secondMinSize={600}
+            secondNode={() => (
+                <div
+                    className={style["mitm-server-start-pre-second"]}
+                    style={{display: isFullScreenFirstNode ? "none" : ""}}
+                >
+                    {onRenderSecondNode()}
+                </div>
+            )}
+            {...ResizeBoxProps}
+        />
     )
 })
 

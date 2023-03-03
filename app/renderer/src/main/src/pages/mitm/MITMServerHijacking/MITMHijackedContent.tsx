@@ -1,20 +1,10 @@
 import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {HTTPPacketEditor} from "@/utils/editors"
 import {yakitFailed} from "@/utils/notification"
-import {useCreation, useFullscreen, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
-import {Divider} from "antd"
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
-import {MITMHTTPFlowMiniTableCard} from "../MITMHTTPFlowMiniTableCard"
+import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
+import React, {useEffect, useRef, useState} from "react"
 import {MITMResponse} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
-import ReactResizeDetector from "react-resize-detector"
-
-import {showDrawer} from "@/utils/showModal"
 import {MITMManualHeardExtra, MITMManualEditor} from "./MITMManual"
 import {MITMLog, MITMLogHeardExtra} from "./MITMLog"
 import {ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
@@ -261,7 +251,15 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     />
                 )
             case "log":
-                return <MITMLog shieldData={shieldData} setShieldData={setShieldData} />
+                return (
+                    <MITMLog
+                        shieldData={shieldData}
+                        setShieldData={(lists) => {
+                            setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(lists))
+                            setShieldData(lists)
+                        }}
+                    />
+                )
             case "passive":
                 return (
                     <div style={{height: "calc(100% - 40px)"}}>

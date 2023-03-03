@@ -1,4 +1,5 @@
 import {TagProps} from "antd"
+import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
  * @description YakitTagProps 的属性
@@ -13,7 +14,7 @@ import {TagProps} from "antd"
  */
 
 export interface YakitTagProps extends Omit<TagProps, "color"> {
-    size?: "small" | "middle" | "large"
+    size?: YakitSizeType
     color?: "danger" | "info" | "success" | "warning" | "purple" | "blue" | "cyan" | "bluePurple"
     disable?: boolean
     enableCopy?: boolean

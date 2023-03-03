@@ -699,7 +699,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [compareState, setCompareState] = useState(0)
 
     // 屏蔽数据
-    const [shieldData, setShieldData, getShieldData] = useGetState<ShieldData>({
+    const [shieldData, setShieldData] = useState<ShieldData>({
         data: []
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
@@ -722,7 +722,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const sortRef = useRef<SortProps>(defSort)
 
     const tableRef = useRef<any>(null)
-
     const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
     const ref = useHotkeys("ctrl+r, enter", (e) => {
@@ -760,25 +759,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useEffect(() => {
         // 判断是否第一次加载页面
         if (isOneceLoading.current) {
-            getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
-                .then((data) => {
-                    if (!data) return
-                    try {
-                        const cacheData = JSON.parse(data)
-                        setShieldData({
-                            data: cacheData?.data || []
-                        })
-                    } catch (e) {
-                        update(1)
-                        failed(`加载屏蔽参数失败: ${e}`)
-                    }
-                })
-                .finally(() => {
-                    isOneceLoading.current = false
-                })
+            getShieldList()
         } else {
             // 持久化存储
-            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(getShieldData()))
+            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
             // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
             //     data:[],
             // }))
@@ -795,6 +779,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [shieldData])
     useEffect(() => {
+        getShieldList()
+    }, [props.inViewport])
+    useEffect(() => {
         getNewData()
         getHTTPFlowsFieldGroup(false)
     }, [])
@@ -802,6 +789,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // 刷新
         getHTTPFlowsFieldGroup(true)
     }, [total])
+    const getShieldList = useMemoizedFn(() => {
+        getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
+            .then((data) => {
+                if (!data) return
+                try {
+                    const cacheData = JSON.parse(data)
+                    setShieldData({
+                        data: cacheData?.data || []
+                    })
+                } catch (e) {
+                    update(1)
+                    failed(`加载屏蔽参数失败: ${e}`)
+                }
+            })
+            .finally(() => {
+                isOneceLoading.current = false
+            })
+    })
     const onTableChange = useDebounceFn(
         (page: number, limit: number, sort: SortProps, filter: any) => {
             if (sort.order === "none") {
@@ -1011,7 +1016,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 取消屏蔽筛选
     const cancleFilter = (value) => {
-        const newArr = filterNonUnique([...getShieldData().data, value])
+        const newArr = filterNonUnique([...shieldData.data, value])
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     }
@@ -2194,6 +2199,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }}
                     onChange={onTableChange}
                     onSetCurrentRow={onSetCurrentRow}
+                    useUpAndDown={true}
                 />
             </div>
         </div>

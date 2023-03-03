@@ -203,8 +203,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         })
     }
     useEffect(() => {
-        // 持久化存储
-        setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(shieldData))
         let idArr: number[] = []
         let urlArr: string[] = []
         shieldData.data.map((item) => {

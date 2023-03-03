@@ -1,25 +1,29 @@
-import React, {useEffect, useState} from "react"
-import {Button, Card, Checkbox, Col, Descriptions, Popconfirm, Row, Space, Statistic, Tooltip} from "antd"
-import {showModal} from "../../utils/showModal"
-import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter"
+import React from "react"
+import {Card, Col, Popconfirm, Row, Statistic} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
-import {QuestionCircleOutlined, ThunderboltFilled, UserOutlined} from "@ant-design/icons"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
-import {failed, warn} from "../../utils/notification"
-import {OneLine} from "../../utils/inputUtil"
-import {useMemoizedFn, useThrottle} from "ahooks"
-import ReactResizeDetector from "react-resize-detector"
-import {AutoSpin} from "@/components/AutoSpin"
+import {failed} from "../../utils/notification"
+import {useMemoizedFn} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 import classNames from "classnames"
+import {LightningBoltIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
-    const {hooks, script, onSubmitYakScriptId, onRemoveHook, isBeforeHijacking, defaultPlugins, setDefaultPlugins} = p
+    const {
+        hooks,
+        script,
+        onSubmitYakScriptId,
+        onRemoveHook,
+        isBeforeHijacking,
+        defaultPlugins,
+        setDefaultPlugins,
+        status
+    } = p
     const i = script
     const onCheckboxClicked = useMemoizedFn(() => {
         if (isBeforeHijacking) {
@@ -63,19 +67,33 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
     })
     return (
-        <div className={style["mitm-plugin-local-item"]} onClick={() => onCheckboxClicked()}>
-            <YakitCheckbox
-                checked={isBeforeHijacking ? !!defaultPlugins?.includes(i.ScriptName) : !!hooks.get(i.ScriptName)}
-            />
-            <div className={style["mitm-plugin-local-info"]}>
-                <div className={style["mitm-plugin-local-info-left"]}>
-                    <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
-                    <span className={classNames(style["plugin-local-scriptName"])}>{i.ScriptName}</span>
-                </div>
-                <div className={style["mitm-plugin-local-info-right"]}>
-                    <PluginLocalInfoIcon plugin={i} />
+        <div className={style["mitm-plugin-local-item"]}>
+            <div className={style["mitm-plugin-local-left"]}>
+                <YakitCheckbox
+                    checked={isBeforeHijacking ? !!defaultPlugins?.includes(i.ScriptName) : !!hooks.get(i.ScriptName)}
+                    onChange={() => onCheckboxClicked()}
+                />
+                <div className={style["mitm-plugin-local-info"]}>
+                    <div className={style["mitm-plugin-local-info-left"]}>
+                        <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
+                        <span className={classNames(style["plugin-local-scriptName"])}>{i.ScriptName}</span>
+                    </div>
+                    <div className={style["mitm-plugin-local-info-right"]}>
+                        <PluginLocalInfoIcon plugin={i} />
+                    </div>
                 </div>
             </div>
+            {status !== "idle" && (
+                <Popconfirm
+                    title='发送到【热加载】中调试代码？'
+                    // onConfirm={confirm}
+                    // onCancel={cancel}
+                    okText='OK'
+                    cancelText='Cancel'
+                >
+                    <LightningBoltIcon className={style["lightning-bolt-icon"]} />
+                </Popconfirm>
+            )}
         </div>
     )
 })
@@ -97,6 +115,7 @@ export const StatusCardViewer = React.memo((p: {status: StatusCardProps[]}) => {
 })
 
 export interface MITMYakScriptLoaderProps {
+    status?: "idle" | "hijacked" | "hijacking"
     script: YakScript
     hooks: Map<string, boolean>
     maxWidth?: number

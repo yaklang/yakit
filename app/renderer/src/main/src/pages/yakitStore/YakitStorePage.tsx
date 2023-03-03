@@ -98,7 +98,7 @@ import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
-import {YakFilterRemoteObj} from "../mitm/MITMPage"
+import { YakFilterRemoteObj } from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input

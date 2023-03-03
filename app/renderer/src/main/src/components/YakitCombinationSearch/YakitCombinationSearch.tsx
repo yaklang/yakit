@@ -57,8 +57,8 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
     const onRenderInput = useMemoizedFn(() => {
         return (
             <YakitInput.Search
-                size='large'
                 {...inputSearchModuleTypeProps}
+                size={inputSearchModuleTypeProps.size || "large"}
                 style={{
                     ...inputSearchModuleTypeProps.wrapperStyle,
                     width: `calc(100% - ${beforeOptionWidth}px`,
@@ -84,9 +84,9 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
         } = selectModuleTypeProps || {}
         return (
             <YakitSelect
-                size='middle'
                 mode='tags'
                 {...resSelectModuleTypeProps}
+                size={resSelectModuleTypeProps.size || "middle"}
                 onFocus={onFocusSelect}
                 onBlur={onBlurSelect}
                 wrapperStyle={{
@@ -127,8 +127,8 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
         <div className={classNames(styles["yakit-combination-search"], {wrapperClassName})}>
             <Input.Group compact>
                 <YakitSelect
-                    size='middle'
                     {...selectProps}
+                    size={selectProps.size || "middle"}
                     value={valueBeforeOption}
                     onSelect={onSelectBeforeOption}
                     wrapperStyle={{
