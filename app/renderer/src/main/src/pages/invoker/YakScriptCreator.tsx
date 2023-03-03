@@ -35,6 +35,8 @@ export interface YakScriptCreatorFormProp {
     noClose?: boolean
     showButton?: boolean
     setScript?: (i: YakScript) => any
+    /** 是否是新建插件 */
+    isCreate?: boolean
 }
 
 /*
@@ -159,7 +161,7 @@ const defParams = {
 }
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
-    const {showButton=true} = props
+    const {showButton=true, isCreate} = props
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
             labelCol: { span: 5 },
@@ -275,7 +277,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })
             showButton&&getPluginDetail(props.modified?.OnlineId,props.modified?.UUID)
         }
-    }, [props.modified])
+    }, [props.modified, userInfo])
     const getPluginDetail = useMemoizedFn((pluginId,uuid) => {
         if (!userInfo.isLogin) return
         if (pluginId as number == 0) return
@@ -331,7 +333,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .then((data) => {
                 info("创建 / 保存 Yak 脚本成功")
                 setParams(data)
-                if (visible) {
+                if (visible || isCreate) {
                     // model提示保存后的处理
                     onCloseTab()
                     setVisible(false)
@@ -529,6 +531,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                     props.onCreated && props.onCreated(newSrcipt)
                                     props.onChanged && props.onChanged(newSrcipt)
                                 }}
+                                isCreate={isCreate}
                             >
                                 <Button>同步至云端</Button>
                             </SyncCloudButton>

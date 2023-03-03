@@ -1,18 +1,17 @@
 import React, {useEffect, useState} from "react"
-import {Button, Form, Popconfirm, Checkbox, Space, Table, Tag, Typography, Tooltip, Row, Col} from "antd"
+import {Button, Popconfirm, Checkbox, Space, Table, Tag, Typography, Tooltip, Row, Col} from "antd"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
 import {TableFilterDropdownString} from "../risks/RiskTable"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {showModal} from "../../utils/showModal"
-import {InputItem} from "../../utils/inputUtil"
-import {startExecYakCode} from "../../utils/basic"
-import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {onRemoveToolFC} from "../../utils/deleteTool"
+
+import styles from "./DomainAssetPage.module.scss"
+
 export interface Domain {
     ID?: number
     DomainName: string
@@ -133,8 +132,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             title: "域名",
             dataIndex: "DomainName",
             filteredValue: (getParams()["DomainKeyword"] && ["DomainName"]) || null,
+            width: 400,
             render: (_, i: Domain) => (
-                <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
+                <Text style={{maxWidth: 400}} ellipsis={{tooltip: true}}>
                     {i.DomainName}
                 </Text>
             ),
@@ -161,7 +161,12 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         {
             title: "IP",
             dataIndex: "IPAddr",
-            width: 160,
+            width: 470,
+            render: (_, i: Domain) => (
+                <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
+                    {i.IPAddr || '-'}
+                </Text>
+            ),
             filteredValue: (getParams()["Network"] && ["IPAddr"]) || null,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
@@ -186,6 +191,12 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
         {
             title: "HTMLTitle",
             dataIndex: "HTTPTitle",
+            width: 470,
+            render: (_, i: Domain) => (
+                <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
+                    {i.HTTPTitle || '-'}
+                </Text>
+            ),
             filteredValue: (getParams()["Title"] && ["HTTPTitle"]) || null,
             filterIcon: (filtered) => {
                 return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
@@ -293,6 +304,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     })
     return (
         <Table<Domain>
+            className={styles['table-wrapper']}
             loading={loading}
             pagination={{
                 size: "small",

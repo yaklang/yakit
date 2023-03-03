@@ -1,0 +1,7 @@
+.table-wrapper {
+    :global {
+        .ant-table-content {
+            overflow-y: auto;
+        }
+    }
+}

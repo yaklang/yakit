@@ -519,7 +519,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     return (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
-            <Row style={{height: "100%"}} gutter={8}>
+            <Row className={styles['http-history-detail-wrapper']} gutter={8}>
                 <Col span={existedInfoType.length > 0 ? 19 : 24}>
                     <ResizeBox
                         firstNode={() => {
