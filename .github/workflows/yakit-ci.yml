@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: 16.10.0
       - run: echo ${{ github.ref }}
+      - run: brew install wget
+      - id: "Download Yak Engine via wget"
+        run: wget -O bins/yak_darwin_
       # Enterprise
       - name: Extract Version
         id: extract_version
