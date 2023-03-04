@@ -879,6 +879,12 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
 
             {!shrink && (
                 <>
+                    <Descriptions.Item label='漏洞描述' span={3}>
+                        <div>{info.Description || "-"}</div>
+                    </Descriptions.Item>
+                    <Descriptions.Item label='解决方案' span={3}>
+                        <div>{info.Solution || "-"}</div>
+                    </Descriptions.Item>
                     <Descriptions.Item label='Parameter' span={3}>
                         <div>{info.Parameter || "-"}</div>
                     </Descriptions.Item>

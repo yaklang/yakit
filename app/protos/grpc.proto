@@ -1334,6 +1334,8 @@ message Risk {
   string RuntimeId = 22;
 
   string CVE = 23;
+  string Description =24;
+  string Solution =25;
 }
 
 message QueryRisksRequest {
