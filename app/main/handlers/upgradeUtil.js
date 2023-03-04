@@ -417,7 +417,7 @@ module.exports = {
                     }
 
                     console.info("we will extract file to: " + buildInPath)
-                    const extractedFile = (()=>{
+                    const extractedFile = (() => {
                         switch (os.platform()) {
                             case "darwin":
                                 return "bins/yak_darwin_amd64"
@@ -470,15 +470,10 @@ module.exports = {
         ipcMain.handle("GetBuildInEngineVersion"
             /*"IsBinsExisted"*/,
             async (e) => {
-                try {
-                    if (!fs.existsSync("bins/yak.zip")) {
-                        return ""
-                    }
-                    return fs.readFileSync("bins/engine-version.txt").toString("utf8")
-                } catch (e) {
-                    console.info(e)
-                    return ""
+                if (!fs.existsSync("bins/yak.zip")) {
+                    throw Error(`Cannot found yak.zip, __dirname: ${__dirname}`)
                 }
+                return fs.readFileSync("bins/engine-version.txt").toString("utf8")
             })
     },
 }

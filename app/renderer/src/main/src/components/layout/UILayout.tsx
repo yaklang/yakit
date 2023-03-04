@@ -98,10 +98,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             if (e !== "") {
                 info(`引擎内置自检成功！内置引擎：${e}`)
             } else {
-                info("引擎内置自检：无内置引擎标识")
+                info(`引擎内置自检：无内置引擎标识 ${e}`)
             }
         }).catch(e => {
-            info("引擎内置自检：无内置引擎")
+            info(`引擎内置自检：无内置引擎: ${e}`)
         })
     }, [])
 
