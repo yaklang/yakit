@@ -471,13 +471,10 @@ module.exports = {
             /*"IsBinsExisted"*/,
             async (e) => {
                 try {
-                    if (!fs.existsSync("./bins/yak.zip")) {
+                    if (!fs.existsSync("bins/yak.zip")) {
                         return ""
                     }
-                    const fd = fs.openSync("bins/engine-version.txt", "r")
-                    const content = fs.readFileSync(fd).toString("utf8")
-                    fs.closeSync(fd);
-                    return content
+                    return fs.readFileSync("bins/engine-version.txt").toString("utf8")
                 } catch (e) {
                     console.info(e)
                     return ""
