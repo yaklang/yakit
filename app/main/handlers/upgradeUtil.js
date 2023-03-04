@@ -485,7 +485,7 @@ module.exports = {
             /*"IsBinsExisted"*/,
             async (e) => {
                 if (!fs.existsSync(loadExtraFilePath("bins/yak.zip"))) {
-                    throw Error(`Cannot found yak.zip, bins: ${bDir}`)
+                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(`bins/yak.zip`)}`)
                 }
                 return fs.readFileSync(loadExtraFilePath("bins/engine-version.txt")).toString("utf8")
             })
