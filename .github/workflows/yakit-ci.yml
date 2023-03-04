@@ -24,11 +24,14 @@ jobs:
           node-version: 16.10.0
       - run: echo ${{ github.ref }}
       - run: brew install wget curl zip
-      - id: "Download Yak Engine via wget(MacOS)"
+      - name: "Download Yak Engine via wget(MacOS)"
+        id: download-darwin-engine
         run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
-      - id: "Download Yak Engine via wget(Linux)"
+      - name: "Download Yak Engine via wget(Linux)"
+        id: download-linux-engine
         run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
-      - id: "Download Yak Engine via wget(MacOS)"
+      - name: "Download Yak Engine via wget(Windows)"
+        id: download-windows-engine
         run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
       # Enterprise
       - name: Extract Version
