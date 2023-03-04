@@ -33,6 +33,9 @@ jobs:
       - name: "Download Yak Engine via wget(Windows)"
         id: download-windows-engine
         run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+      - name: "Fetch Latest EngineVersion"
+        id: fetch-version-engine
+        run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
       # Enterprise
       - name: Extract Version
         id: extract_version
