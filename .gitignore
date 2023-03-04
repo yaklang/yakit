@@ -1,6 +1,9 @@
+bins/yak_linux_amd64.zip
 bins/yak_linux_amd64
+bins/yak_darwin_amd64.zip
 bins/yak_darwin_amd64
-bins/yak_windows_amd64
+bins/yak_windows_amd64.zip
+bins/yak_windows_amd64.exe
 *~
 *.un~
 .idea/
