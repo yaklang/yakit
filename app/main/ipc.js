@@ -1,4 +1,4 @@
-const {ipcMain, nativeImage, Notification} = require("electron")
+const {ipcMain, nativeImage, Notification, app} = require("electron")
 const path = require("path")
 const fs = require("fs")
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
@@ -108,6 +108,11 @@ module.exports = {
         require("./handlers/yakLocal").clearing()
     },
     registerIPC: (win) => {
+        ipcMain.handle("relaunch", ()=>{
+            app.relaunch({})
+            app.exit(0)
+        })
+
         ipcMain.handle("yakit-connect-status", () => {
             return {
                 addr: global.defaultYakGRPCAddr,

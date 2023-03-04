@@ -8,6 +8,7 @@ const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
 const zip = require('node-stream-zip');
+const {defaultMaxListeners} = require("form-data");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
@@ -395,25 +396,65 @@ module.exports = {
         // asyncInitBuildInEngine wrapper
         const asyncInitBuildInEngine = (params) => {
             return new Promise((resolve, reject) => {
-                if (!fs.existsSync("bin/yak.zip")) {
+                if (!fs.existsSync("bins/yak.zip")) {
                     reject("BuildIn Engine Not Found!")
                     return
                 }
+
+                console.info("Start to Extract yak.zip")
                 const zipHandler = new zip({
-                    file: "bin/yak.zip",
-                    storeEntries: false,
+                    file: "bins/yak.zip",
+                    storeEntries: true,
                 })
+                console.info("Start to Extract yak.zip: Set `ready`")
                 zipHandler.on("ready", () => {
                     const buildInPath = path.join(yakEngineDir, "yak.build-in");
-                    zipHandler.extract("yak_darwin_amd64", buildInPath, err => {
-                        if (!!err) {
-                            reject(err)
-                        } else {
-                            resolve()
+
+                    console.log('Entries read: ' + zipHandler.entriesCount);
+                    for (const entry of Object.values(zipHandler.entries())) {
+                        const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
+                        console.log(`Entry ${entry.name}: ${desc}`);
+                    }
+
+                    console.info("we will extract file to: " + buildInPath)
+                    const extractedFile = (()=>{
+                        switch (os.platform()) {
+                            case "darwin":
+                                return "bins/yak_darwin_amd64"
+                            case "win32":
+                                return "bins/yak_windows_amd64.exe"
+                            case "linux":
+                                return "bins/yak_linux_amd64"
+                            default:
+                                return ""
                         }
+                    })()
+                    zipHandler.extract(extractedFile, buildInPath, (err, res) => {
+                        if (!fs.existsSync(buildInPath)) {
+                            reject(`Extract BuildIn Engine Failed`)
+                        } else {
+
+                            /**
+                             * 复制引擎到真实地址
+                             * */
+                            try {
+                                let targetEngine = path.join(yakEngineDir, isWindows ? "yak.exe" : "yak")
+                                if (!isWindows) {
+                                    fs.copyFileSync(buildInPath, targetEngine)
+                                    fs.chmodSync(targetEngine, 0o755)
+                                } else {
+                                    fs.copyFileSync(buildInPath, targetEngine)
+                                }
+                                resolve()
+                            } catch (e) {
+                                reject(e)
+                            }
+                        }
+                        console.info("zipHandler closing...")
                         zipHandler.close();
                     })
                 })
+                console.info("Start to Extract yak.zip: Set `error`")
                 zipHandler.on("error", err => {
                     console.info(err)
                     reject(`${err}`)

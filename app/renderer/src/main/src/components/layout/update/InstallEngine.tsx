@@ -12,10 +12,12 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {DownloadingState, YakitSystem} from "@/yakitGVDefine"
-import {failed, success} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 
 import classnames from "classnames"
 import styles from "./InstallEngine.module.scss"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
+import {showModal} from "@/utils/showModal";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,8 +31,10 @@ export interface InstallEngineProps {
 export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) => {
     const {system, visible, onSuccess, onRemoreLink} = props
 
+
     const [buildInEngineVersion, setBuildInEngineVersion] = useState("");
     const haveBuildInEngine = buildInEngineVersion !== "";
+    const [extractingBuildInEngine, setExtractingBuildInEngine] = useState(false)
 
     /** 是否弹窗置顶 */
     const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
@@ -170,12 +174,20 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         fetchEngineLatestVersion(() => downloadEngine())
     })
 
-    const initBuildInEngine = useMemoizedFn(()=>{
-        ipcRenderer.invoke("InitBuildInEngine", ()=>{
-
+    const initBuildInEngine = useMemoizedFn(() => {
+        setExtractingBuildInEngine(true)
+        ipcRenderer.invoke("InitBuildInEngine", {}).then(() => {
+            info(`解压内置引擎成功`)
+            showModal({title: "引擎解压成功，需要重启", content: (
+                <div><YakitButton onClick={()=>{
+                    ipcRenderer.invoke("relaunch").then(()=>{}).catch(e => {
+                        failed(`重启失败: ${e}`)
+                    })
+                }}>点此立即重启</YakitButton></div>
+                ), closable: false, maskClosable: false})
         }).catch(e => {
             failed(`初始化内置引擎失败：${e}`)
-        })
+        }).finally(() => setTimeout(() => setExtractingBuildInEngine(false), 300))
     })
 
     /** 取消事件 */
@@ -333,6 +345,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 >
                                                     《用户协议》
                                                 </span>
+                                                以使用系统
                                             </span>
                                         </div>
 
@@ -355,7 +368,9 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                     一键安装
                                                 </YakitButton>}
                                                 <>{/* 无内置引擎 */}</>
-                                                {haveBuildInEngine && <YakitButton size='max' onClick={initBuildInEngine}>
+                                                {haveBuildInEngine &&
+                                                <YakitButton size='max' loading={extractingBuildInEngine}
+                                                             disabled={!agrCheck} onClick={initBuildInEngine}>
                                                     初始化引擎
                                                 </YakitButton>}
                                             </div>
