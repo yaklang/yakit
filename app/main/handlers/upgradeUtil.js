@@ -1,4 +1,4 @@
-const {ipcMain, shell, dialog} = require("electron");
+const {ipcMain, shell} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const path = require("path");
@@ -7,6 +7,7 @@ const fs = require("fs");
 const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
+const zip = require('node-stream-zip');
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
@@ -390,5 +391,56 @@ module.exports = {
         ipcMain.handle("open-specified-file", async (e, path) => {
             return shell.showItemInFolder(path)
         })
+
+        // asyncInitBuildInEngine wrapper
+        const asyncInitBuildInEngine = (params) => {
+            return new Promise((resolve, reject) => {
+                if (!fs.existsSync("bin/yak.zip")) {
+                    reject("BuildIn Engine Not Found!")
+                    return
+                }
+                const zipHandler = new zip({
+                    file: "bin/yak.zip",
+                    storeEntries: false,
+                })
+                zipHandler.on("ready", () => {
+                    const buildInPath = path.join(yakEngineDir, "yak.build-in");
+                    zipHandler.extract("yak_darwin_amd64", buildInPath, err => {
+                        if (!!err) {
+                            reject(err)
+                        } else {
+                            resolve()
+                        }
+                        zipHandler.close();
+                    })
+                })
+                zipHandler.on("error", err => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+        ipcMain.handle("InitBuildInEngine", async (e, params) => {
+            return await asyncInitBuildInEngine(params)
+        })
+
+        // 获取内置引擎版本
+        ipcMain.handle("GetBuildInEngineVersion"
+            /*"IsBinsExisted"*/,
+            async (e) => {
+                try {
+                    if (!fs.existsSync("./bins/yak.zip")) {
+                        return ""
+                    }
+                    const fd = fs.openSync("bins/engine-version.txt", "r")
+                    const content = fs.readFileSync(fd).toString("utf8")
+                    fs.closeSync(fd);
+                    return content
+                } catch (e) {
+                    console.info(e)
+                    return ""
+                }
+            })
     },
 }

@@ -412,16 +412,5 @@ module.exports = (win, getClient) => {
     ipcMain.handle("MigrateLegacyDatabase", async (e, params) => {
         return await asyncMigrateLegacyDatabase(params)
     })
-
-    ipcMain.handle("IsBinsExisted", async(e) => {
-        try {
-            const fd = fs.openSync("./bins/flag.txt")
-            console.info(fs.readFileSync(fd).toString("utf8"))
-            fs.closeSync(fd);
-            return true
-        }catch (e) {
-            console.info(e)
-            return false
-        }
-    })
+    
 }

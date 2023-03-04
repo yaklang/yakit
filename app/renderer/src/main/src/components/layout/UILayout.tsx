@@ -74,6 +74,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [adminPort, setAdminPort] = useState<number>(0)
     const [keepalive, setKeepalive] = useState<boolean>(false)
 
+    /** 内置引擎版本 */
+    const [buildInEngineVersion, setBuildInEngineVersion] = useState("");
+    const haveBuildInEngine = buildInEngineVersion !== ""
+
     /** 认证信息 */
     const [credential, setCredential, getCredential] = useGetState<YaklangEngineWatchDogCredential>({
         Host: "127.0.0.1",
@@ -90,9 +94,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /* 内置二进制文件的话，需要通过自检 */
     useEffect(() => {
-        ipcRenderer.invoke("IsBinsExisted").then(e => {
-            if (e) {
-                info("引擎内置自检成功！")
+        ipcRenderer.invoke("GetBuildInEngineVersion").then(e => {
+            if (e !== "") {
+                info(`引擎内置自检成功！内置引擎：${e}`)
             } else {
                 info("引擎内置自检：无内置引擎标识")
             }
