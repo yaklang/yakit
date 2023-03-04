@@ -161,7 +161,8 @@ const defQueryLocal: QueryYakScriptRequest = {
     Type: "yak,mitm,codec,packet-hack,port-scan",
     Keyword: "",
     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-    UserId: 0
+    UserId: 0,
+    IgnoreGeneralModuleOrder: true,
 }
 
 const statusType = {
@@ -973,7 +974,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
-        ...statisticsQueryLocal
+        ...statisticsQueryLocal,
     })
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
@@ -2676,7 +2677,13 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             )}
             {loadMode === "local" && (
                 <div style={{position: "relative"}}>
-                    <InputItem style={{width: "calc(100% - 20px)"}} label={"本地仓库地址"} value={localPath} setValue={setLocalPath} />
+                    <InputItem
+                        style={{width: "calc(100% - 20px)"}}
+                        label={"本地仓库地址"}
+                        value={localPath}
+                        setValue={setLocalPath}
+                        help={"本地仓库地址需设置在yak-projects项目文件下"}
+                    />
                     <Tooltip title={"选择导入路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
@@ -2686,8 +2693,8 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
-                                        if(data.filePaths.length){
-                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                        if (data.filePaths.length) {
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                                             setLocalPath(absolutePath)
                                         }
                                     })

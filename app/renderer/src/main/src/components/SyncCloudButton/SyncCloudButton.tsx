@@ -11,6 +11,7 @@ import {showModal} from "@/utils/showModal"
 import {useMemoizedFn, useGetState} from "ahooks"
 import {Button, Modal, Radio, Space, Form, Input} from "antd"
 import React, {ReactNode, useRef, useState} from "react"
+import { Route } from "@/routes/routeSpec"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -159,10 +160,11 @@ interface SyncCloudButtonProps {
     setParams: (s: YakScript) => void
     children: ReactNode
     uploadLoading?: (boolean) => void
+    isCreate?: boolean
 }
 
 export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
-    const {params, setParams, children, uploadLoading} = props
+    const {params, setParams, children, uploadLoading, isCreate} = props
     const {userInfo} = useStore()
     // 登录框状态
     const [loginshow, setLoginShow] = useState<boolean>(false)
@@ -203,6 +205,16 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                                     .then(() => {})
                                     .catch((err) => {
                                         failed("删除本地失败:" + err)
+                                    })
+                                    .finally(() => {
+                                        if (isCreate) {
+                                            ipcRenderer
+                                                .invoke("send-close-tab", {
+                                                    router: Route.AddYakitScript,
+                                                    singleNode: true
+                                                })
+                                                .finally(() => ipcRenderer.invoke("send-local-script-list"))
+                                        }
                                     })
                             })
                             .catch((e) => {

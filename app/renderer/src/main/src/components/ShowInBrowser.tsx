@@ -9,14 +9,14 @@ import {openExternalWebsite} from "@/utils/openWebsite";
 const {ipcRenderer} = window.require("electron");
 
 export const showResponseViaHTTPFlowID = (v: HTTPFlow) => {
-    showResponse(v)
+    showResponse(v, undefined, true)
 }
 
 export const showResponseViaResponseRaw = (v: Uint8Array, url?: string) => {
-    showResponse(v, url)
+    showResponse(v, url, true)
 }
 
-const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string) => {
+const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm?: boolean) => {
     let params: {
         HTTPFlowID?: number
         Url?: string,
@@ -37,6 +37,11 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string) => {
     }
 
     ipcRenderer.invoke("RegisterFacadesHTTP", params).then((res: { FacadesUrl: string }) => {
+        if (!!noConfirm) {
+            openExternalWebsite(res.FacadesUrl)
+            return
+        }
+
         let m = showModal({
             title: "确认在浏览器中打开",
             width: "50%",

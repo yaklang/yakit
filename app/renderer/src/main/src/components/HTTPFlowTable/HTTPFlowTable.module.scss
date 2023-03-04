@@ -715,3 +715,23 @@
         margin-left: 4px;
     }
 }
+
+.action-btn-group {
+    height: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3px;
+
+    .divider-style{
+        height: 100%;
+        border-left: 1px solid var(--yakit-border-color);
+    }
+
+    .icon-style{
+        color: var(--yakit-body-text-color); 
+    }
+    .icon-style:hover{
+        color: var(--yakit-primary-5); 
+    }
+}

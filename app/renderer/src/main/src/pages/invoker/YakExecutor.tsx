@@ -49,6 +49,9 @@ import {useMemoizedFn} from "ahooks"
 import {ResizeBox} from "../../components/ResizeBox"
 import {CVXterm} from "../../components/CVXterm"
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
+import {openABSFile} from "@/utils/openWebsite"
+import {callCopyToClipboard} from "@/utils/basic"
+
 import "./YakExecutor.css"
 import {type} from "os"
 import {randomString} from "../../utils/randomUtil"
@@ -66,6 +69,8 @@ const tabMenu: CustomMenuProps[] = [
     {key: "all", value: "关闭全部页"}
 ]
 const fileMenu: CustomMenuProps[] = [
+    {key: "open-in-finder", value: "打开文件位置"},
+    {key: "copy-path", value: "复制路径"},
     {key: "rename", value: "重命名"},
     {key: "remove", value: "移除"},
     {key: "delete", value: "删除"}
@@ -457,7 +462,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
 
         if (!tabInfo.route) return
         const flagStr = tabInfo.route?.indexOf("/") > -1 ? "/" : "\\"
-        const routes = tabInfo.route?.split(flagStr)
+        const routes = (tabInfo.route || "").split(`${flagStr}`)
         routes?.pop()
         ipcRenderer
             .invoke("is-exists-file", routes?.concat([renameCache]).join(flagStr))
@@ -553,6 +558,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 }
                 setActiveTab("")
                 setTabList([])
+                return
+            case "copy-path":
+                if (!!fileList[index]) {
+                    callCopyToClipboard(fileList[index]?.route)
+                }
+                return
+            case "open-in-finder":
+                openABSFile(codePath)
                 return
             case "remove":
                 closeCode(index, isFileList)
@@ -745,6 +758,79 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                         常规编辑
                                                     </Button>
 
+                                                <Button
+                                                    icon={
+                                                        fullScreen ? (
+                                                            <FullscreenExitOutlined style={{fontSize: 15}} />
+                                                        ) : (
+                                                            <FullscreenOutlined style={{fontSize: 15}} />
+                                                        )
+                                                    }
+                                                    type={"link"}
+                                                    size={"small"}
+                                                    style={{width: 30, height: 25}}
+                                                    onClick={() => setFullScreen(!fullScreen)}
+                                                />
+                                                <Popover
+                                                    trigger={["click"]}
+                                                    title={"设置命令行额外参数"}
+                                                    placement='bottomRight'
+                                                    content={
+                                                        <Space style={{width: 400}}>
+                                                            <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
+                                                            <Divider type={"vertical"} />
+                                                            <Paragraph
+                                                                style={{width: 200, marginBottom: 0}}
+                                                                editable={{
+                                                                    icon: (
+                                                                        <Space>
+                                                                            <EditOutlined />
+                                                                            <SaveOutlined
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    tabList[+activeTab].extraParams =
+                                                                                        extraParams
+                                                                                    setTabList(tabList)
+                                                                                    if (tabList[+activeTab].isFile) {
+                                                                                        const files = fileList.map(
+                                                                                            (item) => {
+                                                                                                if (
+                                                                                                    item.route ===
+                                                                                                    tabList[+activeTab]
+                                                                                                        .route
+                                                                                                ) {
+                                                                                                    item.extraParams =
+                                                                                                        extraParams
+                                                                                                    return item
+                                                                                                }
+                                                                                                return item
+                                                                                            }
+                                                                                        )
+                                                                                        setFileList(files)
+                                                                                    }
+                                                                                    success("保存成功")
+                                                                                }}
+                                                                            />
+                                                                        </Space>
+                                                                    ),
+                                                                    tooltip: "编辑/保存为该文件默认参数",
+                                                                    onChange: setExtraParams
+                                                                }}
+                                                            >
+                                                                {extraParams}
+                                                            </Paragraph>
+                                                        </Space>
+                                                    }
+                                                >
+                                                    <Button
+                                                        type={"link"}
+                                                        icon={<EllipsisOutlined />}
+                                                        onClick={() => {
+                                                            setExtraParams(tabList[+activeTab]?.extraParams || "")
+                                                        }}
+                                                    />
+                                                </Popover>
+                                                {executing ? (
                                                     <Button
                                                         style={{height: 25}}
                                                         type={"link"}
@@ -1163,6 +1249,71 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                     )}
                                                 </Space>
                                             )
+                                                )}
+                                            </Space>
+                                        )
+                                    }
+                                >
+                                    {tabList.map((item, index) => {
+                                        return (
+                                            <TabPane
+                                                tab={item.isFile ? item.tab : `(未保存)${item.tab}`}
+                                                key={`${index}`}
+                                            >
+                                                <div style={{height: "100%"}}>
+                                                    <AutoSpin spinning={executing}>
+                                                        <div style={{height: "100%"}}>
+                                                            <YakEditor
+                                                                type={item.suffix}
+                                                                value={item.code}
+                                                                setValue={(value) => {
+                                                                    modifyCode(value, index)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </AutoSpin>
+                                                </div>
+                                            </TabPane>
+                                        )
+                                    })}
+                                </Tabs>
+                            }
+                            firstRatio='70%'
+                            secondNode={
+                                <div
+                                    ref={xtermAsideRef}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        overflow: "hidden",
+                                        borderTop: "1px solid #dfdfdf"
+                                    }}
+                                >
+                                    <Tabs
+                                        style={{height: "100%"}}
+                                        className={"right-xterm"}
+                                        size={"small"}
+                                        tabBarExtraContent={
+                                            <Space>
+                                                <SelectOne
+                                                    formItemStyle={{marginBottom: 0}}
+                                                    value={outputEncoding}
+                                                    setValue={setOutputEncoding}
+                                                    size={"small"}
+                                                    data={[
+                                                        {text: "GBxxx编码", value: "latin1"},
+                                                        {text: "UTF-8编码", value: "utf8"}
+                                                    ]}
+                                                />
+                                                <Button
+                                                    size={"small"}
+                                                    icon={<DeleteOutlined />}
+                                                    type={"link"}
+                                                    onClick={(e) => {
+                                                        xtermClear(xtermRef)
+                                                    }}
+                                                />
+                                            </Space>
                                         }
                                     >
                                         {tabList.map((item, index) => {

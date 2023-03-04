@@ -5,9 +5,9 @@ import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from ".
 import {useGetState, useMemoizedFn} from "ahooks"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
-import {failed, success} from "../../utils/notification"
+import {failed} from "../../utils/notification"
 import {showModal} from "../../utils/showModal"
-import {InputItem, ManyMultiSelectForString} from "../../utils/inputUtil"
+import {InputItem} from "../../utils/inputUtil"
 
 import infoImg from "../../assets/riskDetails/info.png"
 import highImg from "../../assets/riskDetails/high.png"
@@ -16,12 +16,12 @@ import middleImg from "../../assets/riskDetails/middle.png"
 import lowImg from "../../assets/riskDetails/low.png"
 import debugImg from "../../assets/riskDetails/debug.png"
 
-import "./RiskTable.css"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
-import {ColumnType} from "antd/lib/table"
+
+import "./RiskTable.css"
 
 export interface RiskTableProp {
     severity?: string
@@ -166,8 +166,6 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const [types, setTypes] = useState<FieldNameSelectItem[]>([])
     const [severities, setSeverities] = useState<FieldNameSelectItem[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-
-    const [selected, setSelected, getSelected] = useGetState<Risk>()
 
     const time = useRef<any>(null)
 
@@ -423,7 +421,16 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                 )
             }
         },
-        {title: "Token", dataIndex: "ReverseToken", render: (_, i: Risk) => i?.ReverseToken || "-"},
+        {
+            title: "Token",
+            dataIndex: "ReverseToken",
+            render: (_, i: Risk) => (
+                <Paragraph style={{maxWidth: 400, marginBottom: 0}} ellipsis={{tooltip: true}}>
+                    {i?.ReverseToken || "-"}
+                </Paragraph>
+            ),
+            width: 400
+        },
         {
             title: "发现时间",
             dataIndex: "CreatedAt",
@@ -872,6 +879,12 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
 
             {!shrink && (
                 <>
+                    <Descriptions.Item label='漏洞描述' span={3}>
+                        <div>{info.Description || "-"}</div>
+                    </Descriptions.Item>
+                    <Descriptions.Item label='解决方案' span={3}>
+                        <div>{info.Solution || "-"}</div>
+                    </Descriptions.Item>
                     <Descriptions.Item label='Parameter' span={3}>
                         <div>{info.Parameter || "-"}</div>
                     </Descriptions.Item>

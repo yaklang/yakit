@@ -147,7 +147,6 @@ export interface MainProp {
     addr?: string
     onErrorConfirmed?: () => any
     isShowHome?: boolean
-    setJudgeLicense?: (v: boolean) => void
 }
 
 export interface MenuItem {
@@ -333,7 +332,6 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 })
 
 const Main: React.FC<MainProp> = React.memo((props) => {
-    const {setJudgeLicense} = props
     const [loading, setLoading] = useState(false)
 
     const [notification, setNotification] = useState("")
@@ -579,6 +577,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
+        if (route === Route.AddYakitScript && !isClose) {
+            setCurrentTabKey(Route.ModManager)
+        }
+
         setPageCache(getPageCache().filter((i) => i.route !== route))
 
         if (route === Route.HTTPFuzzer) delFuzzerList(1)
@@ -719,7 +721,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnterprise) {
-                setJudgeLicense && setJudgeLicense(true)
+                ipcRenderer.invoke("update-judge-license", true)
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
             } else {
@@ -1402,17 +1404,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             }}
                                                         >
                                                             {i.singleNode ? (
-                                                                <>
-                                                                    {i.verbose === "首页" ? (
-                                                                        currentTabKey === Route.NewHome ? (
-                                                                            i.singleNode
-                                                                        ) : (
-                                                                            <></>
-                                                                        )
-                                                                    ) : (
                                                                         i.singleNode
-                                                                    )}
-                                                                </>
                                                             ) : (
                                                                 <MainTabs
                                                                     currentTabKey={currentTabKey}

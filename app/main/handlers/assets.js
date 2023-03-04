@@ -209,6 +209,22 @@ module.exports = (win, getClient) => {
         return await asyncFetchLatestRisk(params)
     })
 
+    const asyncSetRiskInfoRead = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().NewRiskRead(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    /** 将单条/全部风险未读数据设置为已读 */
+    ipcMain.handle("set-risk-info-read", async (e, params) => {
+        return await asyncSetRiskInfoRead(params)
+    })
+
     // asyncDeleteHistoryHTTPFuzzerTask wrapper
     const asyncDeleteHistoryHTTPFuzzerTask = (params) => {
         return new Promise((resolve, reject) => {

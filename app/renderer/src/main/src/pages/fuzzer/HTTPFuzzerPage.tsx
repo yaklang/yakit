@@ -3,7 +3,6 @@ import {
     Button,
     Card,
     Col,
-    Divider,
     Form,
     Input,
     Modal,
@@ -14,8 +13,6 @@ import {
     Spin,
     Tag,
     Typography,
-    Dropdown,
-    Menu,
     Popover,
     Checkbox,
     Tooltip,
@@ -23,37 +20,18 @@ import {
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {monacoEditorReplace, monacoEditorWrite} from "./fuzzerTemplates"
+import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {
-    CopyableField,
-    InputFloat,
-    InputInteger,
-    InputItem,
-    ManyMultiSelectForString,
-    OneLine,
-    SelectOne,
-    SwitchItem
-} from "../../utils/inputUtil"
+import {InputFloat, InputInteger, InputItem, OneLine, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {
-    ColumnWidthOutlined,
-    DeleteOutlined,
-    ProfileOutlined,
-    LeftOutlined,
-    RightOutlined,
-    DownOutlined,
-    HistoryOutlined,
-    DownloadOutlined,
-    QuestionCircleOutlined
-} from "@ant-design/icons"
+import {DeleteOutlined, ProfileOutlined, HistoryOutlined} from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
-import {failed, info, success} from "../../utils/notification"
+import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue, setRemoteValueTTL} from "../../utils/kv"
+import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
@@ -65,18 +43,16 @@ import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {insertFileFuzzTag} from "./InsertFileFuzzTag"
-import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import "./HTTPFuzzerPage.scss"
-import {ShareIcon} from "@/assets/icons"
 import {ShareData} from "./components/ShareData"
 import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {SearchOutlined} from "@ant-design/icons/lib"
-import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {ChevronLeftIcon, ChevronRightIcon, ChromeSvgIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
-import {editor} from "monaco-editor";
+import {editor} from "monaco-editor"
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -140,7 +116,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: { Header: string; Value: string }[]
+    Headers: {Header: string; Value: string}[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -158,6 +134,7 @@ export interface FuzzerResponse {
     HeaderSimilarity?: number
     BodySimilarity?: number
     MatchedByFilter?: boolean
+    Url?: string
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -223,10 +200,10 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
     )
 }
 
-function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: { Url: string }) => {
+        .then((data: {Url: string}) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -429,7 +406,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
-                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -562,7 +539,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 IsHTTPS: data.IsHTTPS,
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
-                HeaderSimilarity: data.HeaderSimilarity
+                HeaderSimilarity: data.HeaderSimilarity,
+                Url: data.Url
             } as FuzzerResponse
 
             // 设置第一个 response
@@ -614,8 +592,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {
-                }
+                } catch (error) {}
             }, 500)
         )
     }
@@ -666,8 +643,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = rsp!.Reason
-        } catch (e) {
-        }
+        } catch (e) {}
         return (
             <HTTPPacketEditor
                 title={
@@ -687,7 +663,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             value={affixSearch}
                             placeholder={"搜索定位响应"}
                             suffixNode={
-                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined/>}/>
+                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined />} />
                             }
                             setValue={(value) => {
                                 setAffixSearch(value)
@@ -743,7 +719,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 extra={
                     <Space size={0}>
-                        {loading && <Spin size={"small"} spinning={loading}/>}
+                        {loading && <Spin size={"small"} spinning={loading} />}
                         {onlyOneResponse ? (
                             <Space size={0}>
                                 {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
@@ -751,6 +727,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     {rsp.BodyLength}bytes / {rsp.DurationMs}ms
                                 </Tag>
                                 <Space key='single'>
+                                    <Button
+                                        className='extra-chrome-btn'
+                                        type={"text"}
+                                        size={"small"}
+                                        icon={<ChromeSvgIcon />}
+                                        onClick={() => {
+                                            showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                                        }}
+                                    />
                                     <Button
                                         size={"small"}
                                         onClick={() => {
@@ -760,7 +745,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             })
                                         }}
                                         type={"primary"}
-                                        icon={<ProfileOutlined/>}
+                                        icon={<ProfileOutlined />}
                                     />
                                     {/*    详情*/}
                                     {/*</Button>*/}
@@ -773,7 +758,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             setFailedFuzzer([])
                                         }}
                                         danger={true}
-                                        icon={<DeleteOutlined/>}
+                                        icon={<DeleteOutlined />}
                                     />
                                 </Space>
                             </Space>
@@ -967,7 +952,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: pageInt, Limit: 1}
             })
-            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
@@ -1002,7 +987,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
-        }catch (e) {
+        } catch (e) {
             failed("初始化 EOL CRLF 失败")
         }
     }, [reqEditor])
@@ -1051,7 +1036,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             setValue={setAdvancedConfig}
                             size={"small"}
                         />
-                        <ShareData module='fuzzer' getShareContent={getShareContent}/>
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
@@ -1068,7 +1053,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}>
+                            <Button size={"small"} type={"link"} icon={<HistoryOutlined />}>
                                 历史
                             </Button>
                         </Popover>
@@ -1105,7 +1090,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                         {loading && (
                             <Space>
-                                <Spin size={"small"}/>
+                                <Spin size={"small"} />
                                 <div style={{color: "#3a8be3"}}>sending packets</div>
                             </Space>
                         )}
@@ -1520,8 +1505,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 refreshRequest()
                                                             }
                                                         })
-                                                        .finally(() => {
-                                                        })
+                                                        .finally(() => {})
                                                 }}
                                                 size={"small"}
                                             >
@@ -1676,8 +1660,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setUrlPacketShow(false)
                                 }
                             })
-                            .finally(() => {
-                            })
+                            .finally(() => {})
                     }}
                     size={"small"}
                 >

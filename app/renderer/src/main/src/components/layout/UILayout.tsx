@@ -40,6 +40,7 @@ import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
+import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin";
 // 是否为企业版
 const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
@@ -153,7 +154,34 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
 
             ipcRenderer.invoke("is-yaklang-engine-installed").then((flag: boolean) => {
+                if (isEngineInstalled.current === flag) return
+
                 isEngineInstalled.current = flag
+                if (!isEngineInstalled.current) {
+                    setEngineMode(undefined)
+                    outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+                    setTimeout(() => {
+                        setYakitStatus("install")
+                        cacheYakitStatus.current = "install"
+                    }, 300)
+                    return
+                } else {
+                    outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
+                    /** 引擎已安装的情况下，优先检查数据库权限 */
+                    ipcRenderer
+                        .invoke("check-local-database")
+                        .then((e) => {
+                            if (e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
+                            databaseError.current = e === "not allow to write"
+                        })
+                        .finally(() => {
+                            // 这里只有两种状态，数据库(有|无)权限情况
+                            if (databaseError.current && getSystem() !== "Windows_NT") {
+                                setYakitStatus("database")
+                                cacheYakitStatus.current = "database"
+                            } else getCacheEngineMode()
+                        })
+                }
             })
         }, 3000)
         return () => {
@@ -598,6 +626,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
+    // 企业版-连接引擎后验证license=>展示企业登录
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterprise)
+    useEffect(()=>{
+        // 监听是否退出登录 重新打开License控件验证身份
+        ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
+            setJudgeLicense(v)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-judge-license")
+        }
+    },[])
+
+
     // outputToWelcomeConsole("UILayout 刷新")
     return (
         <div className={styles["ui-layout-wrapper"]}>
@@ -793,7 +834,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         )}
                     </div>
                     <div className={styles["ui-layout-body"]}>
-                        {engineLink && props.children}
+                        {engineLink && (isJudgeLicense?<EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />:props.children)}
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}

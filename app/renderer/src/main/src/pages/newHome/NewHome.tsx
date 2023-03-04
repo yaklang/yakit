@@ -9,11 +9,12 @@ import {NetWorkApi} from "@/services/fetch"
 import {Interaction, Annotation, Chart, Coordinate, Tooltip, Axis, Interval, Legend, getTheme} from "bizcharts"
 import {useStore, YakitStoreParams} from "@/store"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn, useSize} from "ahooks"
+import {useGetState, useMemoizedFn, useSize, useInViewport} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, success} from "@/utils/notification"
 import {MenuItemGroup} from "@/pages//MainOperator"
 import {PluginSearchStatisticsRequest, PluginType} from "@/pages/yakitStore/YakitStorePage"
+import {DownloadOnlinePluginByScriptNamesResponse} from "@/pages/layout/HeardMenu/HeardMenuType"
 import {
     MenuComprehensiveCatalogScanningAndBlastingDeepIcon,
     MenuPluginBatchExecutionDeepIcon,
@@ -71,6 +72,8 @@ interface RouteItemProps {
 
 const RouteItem: React.FC<RouteItemProps> = (props) => {
     const {dataSource, setOpenPage, load, getCustomizeMenus} = props
+    // 全局登录状态
+    const {userInfo} = useStore()
     const goRoute = () => {
         dataSource.key &&
             setOpenPage({
@@ -80,12 +83,18 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
                 multipleNode: []
             })
     }
-    const addLocalLab = useMemoizedFn((params) => {
+
+    const addMenuLab = (name: string) => {
         ipcRenderer
-            .invoke("DownloadOnlinePluginById", params)
-            .then(() => {
-                success("添加菜单成功")
-                ipcRenderer.invoke("change-main-menu")
+            .invoke("DownloadOnlinePluginByScriptNames", {
+                ScriptNames: [name],
+                Token: userInfo.token
+            })
+            .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                if (rsp.Data.length > 0) {
+                    success("添加菜单成功")
+                    ipcRenderer.invoke("change-main-menu")
+                }
             })
             .catch((e) => {
                 failed(`添加菜单失败:${e}`)
@@ -93,19 +102,10 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
             .finally(() => {
                 getCustomizeMenus && getCustomizeMenus()
             })
-    })
+    }
     const addMenu = (name: string) => {
-        if (name === "基础爬虫") {
-            addLocalLab({
-                OnlineID: 4104,
-                UUID: "eb77ddbc-e703-4e95-b59f-41b3b172ce3d"
-            })
-        }
-        if (name === "综合目录扫描与爆破") {
-            addLocalLab({
-                OnlineID: 4125,
-                UUID: "33d0b3c7-d417-4bb0-a23c-cb5965c6cbb9"
-            })
+        if (name === "基础爬虫" || name === "综合目录扫描与爆破") {
+            addMenuLab(name)
         }
     }
     return (
@@ -198,17 +198,14 @@ const RouteList: React.FC<RouteListProps> = (props) => {
 }
 interface PieChartProps {
     goStoreRoute: (v: any) => void
-}
-interface chartListProps {
-    type: string
-    value: number
+    inViewport?: boolean
 }
 interface echartListProps {
     name: string
     value: number
 }
 const PieEcharts: React.FC<PieChartProps> = (props) => {
-    const {goStoreRoute} = props
+    const {goStoreRoute, inViewport} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     // 全局登录状态
     const {userInfo} = useStore()
@@ -320,6 +317,13 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     }, [width])
 
     useEffect(() => {
+        if (inViewport) {
+            echartsRef.current && echartsRef.current.resize()
+            getPluginSearch()
+        }
+    }, [inViewport])
+
+    useEffect(() => {
         getPluginSearch()
         //先解绑事件，防止事件重复触发
         echartsRef.current.off("click")
@@ -384,8 +388,10 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
     const setEcharts = (options) => {
         const chartDom = document.getElementById("main-home-pie")!
-        echartsRef.current = echarts.init(chartDom)
-        options && echartsRef.current.setOption(options)
+        if (chartDom) {
+            echartsRef.current = echarts.init(chartDom)
+            options && echartsRef.current.setOption(options)
+        }
     }
     return (
         <div
@@ -586,6 +592,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
 interface PlugInShopProps {
     setOpenPage: (v: any) => void
+    inViewport?: boolean
 }
 
 export interface DataParams {
@@ -605,16 +612,19 @@ interface countAddObjProps {
 }
 interface PlugInShopNewIncreProps {}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
-    const {setOpenPage} = props
+    const {setOpenPage, inViewport} = props
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
+    const [hotLoading, setHotLoading] = useState<boolean>(true)
     const listHeightRef = useRef<any>()
 
     useEffect(() => {
-        getPlugInShopHot()
-        !IsEnterprise && getPlugInShopNewIncre()
-    }, [])
+        if (inViewport) {
+            getPlugInShopHot()
+            !IsEnterprise && getPlugInShopNewIncre()
+        }
+    }, [inViewport])
 
     useEffect(() => {
         ipcRenderer.on("refresh-new-home", (e, res: any) => {
@@ -632,14 +642,18 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         })
             .then((res: API.PluginTopSearchResponse) => {
                 if (res) {
-                    const newArr = res.data.map((item) => item.member).filter((item) => !!item)
-                    setHotArr(newArr)
+                    if (Array.isArray(res.data)) {
+                        const newArr = res.data.map((item) => item.member).filter((item) => !!item)
+                        setHotArr(newArr || [])
+                    }
                 }
             })
             .catch((err) => {
                 failed("失败：" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+                setHotLoading(false)
+            })
     }
 
     const judgeStatus = (v: number, v1: number) => {
@@ -695,6 +709,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         else if (v === "<") return <ReduceCountIcon style={{paddingLeft: 4}} />
         else return <></>
     }
+
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
@@ -763,24 +778,30 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                     ref={listHeightRef}
                 >
                     {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                    <PieEcharts goStoreRoute={goStoreRoute} />
+                    <PieEcharts goStoreRoute={goStoreRoute} inViewport={inViewport} />
                 </div>
             </div>
             <div className={styles["show-bottom-box"]}>
                 <div className={styles["bottom-box-title"]}>热搜词</div>
-                <div className={styles["label-box"]}>
-                    {hotArr.slice(0, 10).map((item) => {
-                        return (
-                            <div
-                                key={item}
-                                className={styles["label-item"]}
-                                onClick={() => goStoreRoute({keywords: item})}
-                            >
-                                {item}
-                            </div>
-                        )
-                    })}
-                </div>
+                {!hotLoading && (
+                    <div className={styles["label-box"]}>
+                        {hotArr.length > 0 ? (
+                            hotArr.slice(0, 10).map((item) => {
+                                return (
+                                    <div
+                                        key={item}
+                                        className={styles["label-item"]}
+                                        onClick={() => goStoreRoute({keywords: item})}
+                                    >
+                                        {item}
+                                    </div>
+                                )
+                            })
+                        ) : (
+                            <div className={styles["hot-no-data"]}>暂无数据</div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -996,12 +1017,14 @@ export const getDescribe = (name: string) => {
 
 export interface NewHomeProps {}
 const NewHome: React.FC<NewHomeProps> = (props) => {
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
     const [newHomeData, setNewHomeData, getNewHomeData] = useGetState(newHomeList)
     // 加载是否完成
     const [load, setLoad] = useState<boolean>(false)
     useEffect(() => {
         getCustomizeMenus()
-    }, [])
+    }, [inViewport])
 
     const setOpenPage = (v) => {
         ipcRenderer.invoke("open-user-manage", v.route)
@@ -1016,7 +1039,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 Type: "yak"
             } as QueryYakScriptRequest)
             .then((data: QueryYakScriptsResponse) => {
-                const deepList: newHomeListData[] = cloneDeep(getNewHomeData())
+                const deepList: newHomeListData[] = cloneDeep(newHomeList)
                 data.Data.map((i) => {
                     if (i.ScriptName === "基础爬虫") {
                         deepList[0].subMenuData[1].isShow = true
@@ -1035,7 +1058,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
     }
 
     return (
-        <div className={classNames(styles["new-home-page"])}>
+        <div className={classNames(styles["new-home-page"])} ref={ref}>
             <div className={classNames(styles["home-top-block"], styles["border-bottom-box"])}>
                 <div className={classNames(styles["top-small-block"], styles["border-right-box"])}>
                     <RouteList data={newHomeData[3]} setOpenPage={setOpenPage} />
@@ -1066,7 +1089,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                 </div>
                 <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
                     <RouteTitle title='插件商店' />
-                    <PlugInShop setOpenPage={setOpenPage} />
+                    <PlugInShop setOpenPage={setOpenPage} inViewport={inViewport} />
                 </div>
             </div>
         </div>
