@@ -36,6 +36,7 @@ jobs:
       - name: "Fetch Latest EngineVersion"
         id: fetch-version-engine
         run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+      - run: ls ./bins && cat bins/engine-version.txt
       # Enterprise
       - name: Extract Version
         id: extract_version

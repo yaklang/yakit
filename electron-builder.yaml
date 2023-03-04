@@ -5,6 +5,8 @@ copyright: Copyright © 2021 v1ll4n
 extraFiles:
   - from: "bins/flag.txt"
     to: "bins/flag.txt"
+  - from: "bins/engine-version.txt"
+    to: "bins/engine-version.txt"
 
 directories:
   buildResources: resources
