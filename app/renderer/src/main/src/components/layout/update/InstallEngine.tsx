@@ -7,7 +7,7 @@ import {
     YakitCopySvgIcon,
     YaklangInstallHintSvgIcon
 } from "../icons"
-import {Checkbox, Progress} from "antd"
+import {Button, Checkbox, Popconfirm, Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
@@ -178,13 +178,16 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         setExtractingBuildInEngine(true)
         ipcRenderer.invoke("InitBuildInEngine", {}).then(() => {
             info(`解压内置引擎成功`)
-            showModal({title: "引擎解压成功，需要重启", content: (
-                <div><YakitButton onClick={()=>{
-                    ipcRenderer.invoke("relaunch").then(()=>{}).catch(e => {
-                        failed(`重启失败: ${e}`)
-                    })
-                }}>点此立即重启</YakitButton></div>
-                ), closable: false, maskClosable: false})
+            showModal({
+                title: "引擎解压成功，需要重启", content: (
+                    <div><YakitButton onClick={() => {
+                        ipcRenderer.invoke("relaunch").then(() => {
+                        }).catch(e => {
+                            failed(`重启失败: ${e}`)
+                        })
+                    }}>点此立即重启</YakitButton></div>
+                ), closable: false, maskClosable: false
+            })
         }).catch(e => {
             failed(`初始化内置引擎失败：${e}`)
         }).finally(() => setTimeout(() => setExtractingBuildInEngine(false), 300))
@@ -296,7 +299,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                             haveBuildInEngine ? "本地引擎未初始化" : "未安装引擎"
                                         }</div>
                                         <div className={styles["hint-right-content"]}>
-                                            {haveBuildInEngine ? `授权使用内置引擎: ${buildInEngineVersion}，或远程连接启动` : "你可选择安装 Yak 引擎启动软件，或远程连接启动"}
+                                            {haveBuildInEngine ? `授权使用内置引擎: ${buildInEngineVersion}，或远程连接启动` : "你可选择安装 Yak 引擎启动软件，或远程连接"}
                                         </div>
 
                                         {platformArch === "darwin-arm64" && (
@@ -345,7 +348,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 >
                                                     《用户协议》
                                                 </span>
-                                                以使用系统
+                                                以继续使用
                                             </span>
                                         </div>
 
@@ -354,6 +357,12 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 <YakitButton size='max' type='outline2' onClick={remoteLink}>
                                                     远程连接
                                                 </YakitButton>
+                                                {haveBuildInEngine &&
+                                                <Popconfirm title={"网络安装需要公网环境，请知晓，请优先使用内置引擎（初始化引擎）"} onConfirm={installEngine}>
+                                                    <Button type={"link"} size='small' style={{fontSize: 12}} disabled={!agrCheck}>
+                                                        联网安装
+                                                    </Button>
+                                                </Popconfirm>}
                                             </div>
                                             <div className={styles["btn-group-wrapper"]}>
                                                 <YakitButton
