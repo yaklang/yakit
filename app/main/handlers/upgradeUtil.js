@@ -27,6 +27,10 @@ const loadExtraFilePath = (s) => {
     switch (os.platform()){
         case "darwin":
             return path.join(app.getAppPath(), "../..", s)
+        case "linux":
+            return path.join(app.getAppPath(), "../..", s)
+        case "win32":
+            return path.join(app.getAppPath(), "../..", s)
         default:
             // ..../Contents/Resources/app.asar/...
             return path.join(app.getAppPath(), s)
