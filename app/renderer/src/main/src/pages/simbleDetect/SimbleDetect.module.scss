@@ -12,6 +12,17 @@
     .result-table-body {
         flex: 1;
         overflow: hidden;
+        :global {
+            .scan-port-tabs{
+                .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+                color: #1890ff !important;
+            }
+            .ant-tabs-tabpane{
+                padding: 0px !important;
+            }
+            }
+            
+        }
     }
     .result-notice-body {
         height: 70px;
@@ -96,15 +107,6 @@
     }
     .ant-cascader-menu {
         height: 104px;
-    }
-}
-.div-width-height-100{
-    width: 100%;
-    height: 100%;
-    :global {
-        .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-            color: #1890ff !important;
-        }
     }
 }
 .body-time-line{
