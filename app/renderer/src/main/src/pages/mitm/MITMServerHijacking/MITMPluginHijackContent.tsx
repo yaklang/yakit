@@ -1,12 +1,17 @@
 import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {MITMPluginTemplateShort} from "@/pages/invoker/data/MITMPluginTamplate"
+import {YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
-import {useMemoizedFn} from "ahooks"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {info, yakitFailed} from "@/utils/notification"
+import {useMap, useMemoizedFn} from "ahooks"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {
     MITMPluginLocalList,
     PluginGroup,
@@ -14,6 +19,7 @@ import {
     YakFilterRemoteObj,
     YakModuleListHeard
 } from "./MITMPluginLocalList"
+import {enableMITMPluginMode} from "./MITMServerHijacking"
 import styles from "./MITMServerHijacking.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -25,16 +31,29 @@ interface MITMPluginHijackContentProps {
     status: "idle" | "hijacked" | "hijacking"
     isFullScreen: boolean
     setIsFullScreen: (b: boolean) => void
-    onSelectAll: (e: CheckboxChangeEvent) => void
+    onSelectAll: (e: boolean) => void
+    setInitialed?: (b: boolean) => void
+    setTotal: (b: number) => void
+    total: number
 }
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (props) => {
-    const {onSubmitYakScriptId, status, checkList, setCheckList, isFullScreen, setIsFullScreen, onSelectAll} = props
+    const {
+        onSubmitYakScriptId,
+        status,
+        checkList,
+        setCheckList,
+        isFullScreen,
+        setIsFullScreen,
+        onSelectAll,
+        setInitialed,
+        total,
+        setTotal
+    } = props
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
     const [tags, setTags] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
     const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
     const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
-    const [total, setTotal] = useState<number>(0)
     const [refreshCode, setRefreshCode] = useState<boolean>(false)
     /**
      * 选中的插件组
@@ -43,6 +62,92 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     const [script, setScript] = useState(MITMPluginTemplateShort)
 
+    const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
+    const [loading, setLoading] = useState(false)
+
+    // 是否允许获取默认勾选值
+    const isDefaultCheck = useRef<boolean>(false)
+
+    // 初始化加载 hooks，设置定时更新 hooks 状态
+    useEffect(() => {
+        updateHooks()
+        const id = setInterval(() => {
+            updateHooks()
+        }, 1000)
+        return () => {
+            clearInterval(id)
+        }
+    }, [])
+
+    useEffect(() => {
+        // 加载状态(从服务端加载)
+        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
+            setLoading(flag)
+        })
+        const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
+        getRemoteValue(CHECK_CACHE_LIST_DATA)
+            .then((data: string) => {
+                getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+                    if (!!data && !!is) {
+                        const cacheData: string[] = JSON.parse(data)
+                        if (cacheData.length) {
+                            multipleMitm(cacheData)
+                        }
+                    }
+                })
+            })
+            .finally(() => {
+                isDefaultCheck.current = true
+            })
+        let cacheTmp: string[] = []
+        // 用于 MITM 的 查看当前 Hooks
+        ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
+            if (isDefaultCheck.current) {
+                const tmp = new Map<string, boolean>()
+                cacheTmp = []
+                data.forEach((i) => {
+                    i.Hooks.map((hook) => {
+                        tmp.set(hook.YakScriptName, true)
+                        cacheTmp = [...cacheTmp, hook.YakScriptName]
+                    })
+                })
+                handlers.setAll(tmp)
+                setCheckList(cacheTmp)
+            }
+        })
+        updateHooks()
+        setTimeout(() => {
+            if (setInitialed) setInitialed(true)
+        }, 500)
+        return () => {
+            // 组价销毁时进行本地缓存 用于后续页面进入默认选项
+            const localSaveData = Array.from(new Set(cacheTmp))
+            // console.log("本地缓存",localSaveData)
+            setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(localSaveData))
+            ipcRenderer.removeAllListeners("client-mitm-hooks")
+        }
+    }, [])
+    let hooksItem: {name: string}[] = []
+    hooks.forEach((value, key) => {
+        if (value) {
+            hooksItem.push({name: key})
+        }
+    })
+    hooksItem = hooksItem.sort((a, b) => a.name.localeCompare(b.name))
+    /**
+     * @description 多选插件
+     * @param checkList
+     */
+    const multipleMitm = (checkList: string[]) => {
+        enableMITMPluginMode(checkList).then(() => {
+            info("启动 MITM 插件成功")
+        })
+    }
+    const updateHooks = useMemoizedFn(() => {
+        ipcRenderer.invoke("mitm-get-current-hook").catch((e) => {
+            yakitFailed(`更新 MITM 插件状态失败: ${e}`)
+        })
+    })
     const onRefresh = useMemoizedFn(() => {
         setRefreshCode(!refreshCode)
     })
@@ -91,6 +196,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 )
         }
     })
+    /**
+     * @description 发送到【热加载】中调试代码
+     */
+    const onSendToPatch = useMemoizedFn((code: string) => {
+        setScript(code)
+        setMode("hot-patch")
+    })
     const onRenderContent = useMemoizedFn(() => {
         switch (mode) {
             case "hot-patch":
@@ -114,6 +226,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     </div>
                 )
             case "loaded":
+                // 已启用
                 return (
                     <div className={styles["plugin-loaded-list"]}>
                         <div className={styles["plugin-loaded-list-heard"]}>
@@ -139,6 +252,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
                             setTotal={setTotal}
+                            hooks={hooks}
+                            onSelectAll={onSelectAll}
+                            onSendToPatch={onSendToPatch}
                         />
                     </div>
                 )
@@ -158,24 +274,29 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             total={total}
                             length={checkList.length}
                         />
-                        <MITMPluginLocalList
-                            height='calc(100% - 92px)'
-                            onSubmitYakScriptId={onSubmitYakScriptId}
-                            status={status}
-                            checkList={checkList}
-                            setCheckList={(list) => {
-                                setCheckList(list)
-                            }}
-                            tags={tags}
-                            setTags={setTags}
-                            searchKeyword={searchKeyword}
-                            triggerSearch={triggerSearch}
-                            setIsSelectAll={setIsSelectAll}
-                            isSelectAll={isSelectAll}
-                            selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
-                            setTotal={setTotal}
-                        />
+                        <YakitSpin spinning={loading}>
+                            <MITMPluginLocalList
+                                height='calc(100% - 92px)'
+                                onSubmitYakScriptId={onSubmitYakScriptId}
+                                status={status}
+                                checkList={checkList}
+                                setCheckList={(list) => {
+                                    setCheckList(list)
+                                }}
+                                tags={tags}
+                                setTags={setTags}
+                                searchKeyword={searchKeyword}
+                                triggerSearch={triggerSearch}
+                                setIsSelectAll={setIsSelectAll}
+                                isSelectAll={isSelectAll}
+                                selectGroup={selectGroup}
+                                setSelectGroup={setSelectGroup}
+                                setTotal={setTotal}
+                                hooks={hooks}
+                                onSelectAll={onSelectAll}
+                                onSendToPatch={onSendToPatch}
+                            />
+                        </YakitSpin>
                     </div>
                 )
         }

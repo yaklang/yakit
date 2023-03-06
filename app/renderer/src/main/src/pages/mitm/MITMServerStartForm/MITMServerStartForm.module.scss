@@ -171,6 +171,11 @@
 
 .input-certificate-form {
     padding: 24px 16px;
+    :global {
+        .ant-form-item-explain-error {
+            font-size: 12px;
+        }
+    }
 }
 
 .mitm-filters-modal {

@@ -134,8 +134,34 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
 
-    // 检测当前劫持状态
+    const [initialed, setInitialed] = useState(false)
+    const [error, setError] = useState("")
+
+    // yakit log message
+    const [logs, setLogs] = useState<ExecResultLog[]>([])
+    const latestLogs = useLatest<ExecResultLog[]>(logs)
+    const [_, setLatestStatusHash, getLatestStatusHash] = useGetState("")
+    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
+
+    // 用于接受后端传回的信息
     useEffect(() => {
+        setInitialed(false)
+        // 用于前端恢复状态
+        ipcRenderer
+            .invoke("mitm-have-current-stream")
+            .then((data) => {
+                const {haveStream, host, port} = data
+                if (haveStream) {
+                    setStatus("hijacking")
+                    setHost(host)
+                    setPort(port)
+                }
+            })
+            .finally(() => {
+                recover()
+                setTimeout(() => setInitialed(true), 500)
+            })
+
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
         ipcRenderer.on("client-mitm-start-success", () => {
             setStatus("hijacking")
@@ -144,24 +170,116 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             }, 300)
         })
 
-        // 加载状态(从服务端加载)
-        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
-            setLoading(flag)
+        // 用于 MITM 的 Message （YakitLog）
+        const messages: ExecResultLog[] = []
+        const statusMap = new Map<string, StatusCardProps>()
+        let lastStatusHash = ""
+        ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
+            let msg = ExtractExecResultMessage(data)
+            if (msg !== undefined) {
+                // logHandler.logs.push(msg as ExecResultLog)
+                // if (logHandler.logs.length > 25) {
+                //     logHandler.logs.shift()
+                // }
+                const currentLog = msg as ExecResultLog
+                if (currentLog.level === "feature-status-card-data") {
+                    lastStatusHash = `${currentLog.timestamp}-${currentLog.data}`
+
+                    try {
+                        // 解析 Object
+                        const obj = JSON.parse(currentLog.data)
+                        const {id, data} = obj
+                        if (!data) {
+                            statusMap.delete(`${id}`)
+                        } else {
+                            statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
+                        }
+                    } catch (e) {}
+                    return
+                }
+                messages.push(currentLog)
+                if (messages.length > 25) {
+                    messages.shift()
+                }
+            }
         })
 
-        ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
-            try {
-                info(Uint8ArrayToString(i))
-            } catch (e) {}
+        // let currentFlow: HTTPFlow[] = []
+        ipcRenderer.on("client-mitm-history-update", (e: any, data: any) => {
+            // currentFlow.push(data.historyHTTPFlow as HTTPFlow)
+            //
+            // if (currentFlow.length > 30) {
+            //     currentFlow = [...currentFlow.slice(0, 30)]
+            // }
+            // setFlows([...currentFlow])
         })
+
+        ipcRenderer.on("client-mitm-error", (e, msg) => {
+            if (!msg) {
+                info("MITM 劫持服务器已关闭")
+            } else {
+                failed("MITM 劫持服务器异常或被关闭")
+                Modal.error({
+                    mask: true,
+                    title: "启动 MITM 服务器 ERROR!",
+                    content: <>{msg}</>
+                })
+            }
+            ipcRenderer.invoke("mitm-stop-call")
+            setError(`${msg}`)
+            setStatus("idle")
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
+        })
+        ipcRenderer.on("client-mitm-filter", (e, msg) => {
+            // console.info("client-mitm-filter recv message")
+        })
+
+        const updateLogs = () => {
+            if (latestLogs.current.length !== messages.length) {
+                setLogs([...messages])
+                return
+            }
+
+            if (latestLogs.current.length > 0 && messages.length > 0) {
+                if (latestLogs.current[0].data !== messages[0].data) {
+                    setLogs([...messages])
+                    return
+                }
+            }
+
+            if (getLatestStatusHash() !== lastStatusHash) {
+                setLatestStatusHash(lastStatusHash)
+
+                const tmpCurrent: StatusCardProps[] = []
+                statusMap.forEach((value, key) => {
+                    tmpCurrent.push(value)
+                })
+                setStatusCards(tmpCurrent.sort((a, b) => a.Id.localeCompare(b.Id)))
+            }
+        }
+        updateLogs()
+        let id = setInterval(() => {
+            updateLogs()
+        }, 1000)
 
         return () => {
-            ipcRenderer.removeAllListeners("client-mitm-start-success")
-            ipcRenderer.removeAllListeners("client-mitm-loading")
-            ipcRenderer.removeAllListeners("client-mitm-notification")
+            clearInterval(id)
+            ipcRenderer.removeAllListeners("client-mitm-error")
+            ipcRenderer.removeAllListeners("client-mitm-filter")
+            ipcRenderer.removeAllListeners("client-mitm-history-update")
+            ipcRenderer.removeAllListeners("mitm-have-current-stream")
+            ipcRenderer.removeAllListeners("client-mitm-message")
+            // ipcRenderer.invoke("mitm-close-stream")
         }
     }, [])
 
+    const recover = useMemoizedFn(() => {
+        ipcRenderer.invoke("mitm-recover").then(() => {
+            // success("恢复 MITM 会话成功")
+        })
+    })
     // 通过 gRPC 调用，启动 MITM 劫持
     const startMITMServer = useMemoizedFn(
         (targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[]) => {
@@ -170,6 +288,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs)
                 .catch((e: any) => {
                     notification["error"]({message: `启动中间人劫持失败：${e}`})
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
                 })
         }
     )
@@ -230,6 +353,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setVisible={setVisible}
                         status={status}
                         setStatus={setStatus}
+                        setInitialed={setInitialed}
                     />
                 )) || (
                     <MITMServerHijacking
@@ -241,6 +365,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         defaultPlugins={defaultPlugins}
                         enableInitialMITMPlugin={enableInitialMITMPlugin}
                         setVisible={setVisible}
+                        setInitialed={setInitialed}
                     />
                 )}
             </div>
@@ -263,9 +388,10 @@ interface MITMServerProps {
     status: "idle" | "hijacked" | "hijacking"
     // 开启劫持后
     setStatus: (status: MITMStatus) => any
+    setInitialed?: (b: boolean) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {setVisible, status, setStatus} = props
+    const {setVisible, status, setStatus, setInitialed} = props
     /**
      * @description 插件勾选
      */
@@ -308,8 +434,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     /**
      * @description 插件全选 启动  批量执行最多200条
      */
-    const onSelectAll = useMemoizedFn((e) => {
-        const {checked} = e.target
+    const onSelectAll = useMemoizedFn((checked: boolean) => {
         switch (status) {
             case "idle":
                 onSelectAllIdle(checked)
@@ -333,6 +458,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             setCheckList([])
         }
         setIsSelectAll(checked)
+        setEnableInitialPlugin(checked)
     })
     /**
      * @description 劫持开启后的全选 启动插件
@@ -424,6 +550,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 setTotal(t)
                                 getAllSatisfyScript(t)
                             }}
+                            hooks={new Map<string, boolean>()}
+                            onSelectAll={onSelectAll}
                         />
                     </>
                 )
@@ -445,6 +573,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         isFullScreen={isFullScreenFirstNode}
                         setIsFullScreen={setIsFullScreenFirstNode}
                         onSelectAll={onSelectAll}
+                        setInitialed={setInitialed}
+                        total={total}
+                        setTotal={(t) => {
+                            setTotal(t)
+                            getAllSatisfyScript(t)
+                        }}
                     />
                 )
         }

@@ -3,7 +3,7 @@ import {Card, Col, Popconfirm, Row, Statistic} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
-import {failed} from "../../utils/notification"
+import {failed, warn} from "../../utils/notification"
 import {useMemoizedFn} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -14,19 +14,10 @@ import {LightningBoltIcon} from "@/assets/newIcon"
 const {ipcRenderer} = window.require("electron")
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
-    const {
-        hooks,
-        script,
-        onSubmitYakScriptId,
-        onRemoveHook,
-        isBeforeHijacking,
-        defaultPlugins,
-        setDefaultPlugins,
-        status
-    } = p
+    const {hooks, script, onSubmitYakScriptId, onRemoveHook, defaultPlugins, setDefaultPlugins, status} = p
     const i = script
     const onCheckboxClicked = useMemoizedFn(() => {
-        if (isBeforeHijacking) {
+        if (status === "idle") {
             onSelectDefaultPlugins()
         } else {
             onLaunchPlugin()
@@ -70,7 +61,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         <div className={style["mitm-plugin-local-item"]}>
             <div className={style["mitm-plugin-local-left"]}>
                 <YakitCheckbox
-                    checked={isBeforeHijacking ? !!defaultPlugins?.includes(i.ScriptName) : !!hooks.get(i.ScriptName)}
+                    checked={status === "idle" ? !!defaultPlugins?.includes(i.ScriptName) : !!hooks.get(i.ScriptName)}
                     onChange={() => onCheckboxClicked()}
                 />
                 <div className={style["mitm-plugin-local-info"]}>
@@ -85,9 +76,15 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             </div>
             {status !== "idle" && (
                 <Popconfirm
+                    disabled={!p.onSendToPatch}
                     title='发送到【热加载】中调试代码？'
-                    // onConfirm={confirm}
-                    // onCancel={cancel}
+                    onConfirm={() => {
+                        if (!script.Content) {
+                            warn("暂无数据")
+                            return
+                        }
+                        let _ = p.onSendToPatch && p.onSendToPatch(script.Content)
+                    }}
                     okText='OK'
                     cancelText='Cancel'
                 >

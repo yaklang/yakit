@@ -46,7 +46,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                 <Form.Item label='包含 Hostname'>
                     <YakitSelect
                         mode='tags'
-                        value={params?.includeHostname || undefined}
+                        value={params?.includeHostname}
                         onChange={(value, _) => {
                             setParams({...params, includeHostname: value})
                         }}

@@ -204,6 +204,11 @@
     }
     .plugin-hijack-content-list {
         height: 100%;
+        :global {
+            .ant-spin-nested-loading {
+                height: 100%;
+            }
+        }
         .plugin-group {
             margin-bottom: 0;
             margin-top: 8px;

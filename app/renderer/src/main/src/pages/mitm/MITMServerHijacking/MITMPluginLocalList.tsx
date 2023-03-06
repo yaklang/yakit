@@ -48,6 +48,9 @@ interface MITMPluginLocalListProps {
     height: string | number
     renderTitle?: ReactNode
     setTotal: (n: number) => void
+    hooks: Map<string, boolean>
+    onSelectAll: (b: boolean) => void
+    onSendToPatch?: (b: string) => void
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -66,7 +69,10 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         selectGroup,
         setSelectGroup,
         height,
-        setTotal
+        setTotal,
+        hooks,
+        onSelectAll,
+        onSendToPatch
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -74,41 +80,12 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     const [refresh, setRefresh] = useState<boolean>(true)
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
 
-    /**
-     * @description 劫持启动后,成功启动的插件
-     */
-    const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
-    const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
-
     const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
 
-    // 设置用户模式
-    const userDefined = mode === "hot-patch"
-    let hooksItem: {name: string}[] = []
-    hooks.forEach((value, key) => {
-        if (value) {
-            hooksItem.push({name: key})
-        }
-    })
-    hooksItem = hooksItem.sort((a, b) => a.name.localeCompare(b.name))
-    // 初始化加载 hooks，设置定时更新 hooks 状态
-    useEffect(() => {
-        updateHooks()
-        const id = setInterval(() => {
-            updateHooks()
-        }, 1000)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
     useEffect(() => {
         setRefresh(!refresh)
     }, [triggerSearch])
-    const updateHooks = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-get-current-hook").catch((e) => {
-            yakitFailed(`更新 MITM 插件状态失败: ${e}`)
-        })
-    })
+
     useUpdateEffect(() => {
         let newScriptNames: string[] = []
         selectGroup.forEach((ele) => {
@@ -187,18 +164,14 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                 maxWidth={maxWidth}
                                 // 劫持启动后
                                 hooks={hooks}
-                                onSendToPatch={(code) => {
-                                    // setScript(code)
-                                    // setMode("hot-patch")
-                                }}
+                                onSendToPatch={onSendToPatch}
                                 onSubmitYakScriptId={props.onSubmitYakScriptId}
                                 onRemoveHook={(name: string) => {
-                                    // if (hooks.get(name)) {
-                                    //     setCheckAll(false)
-                                    // }
+                                    if (hooks.get(name)) {
+                                        onSelectAll(false)
+                                    }
                                 }}
                                 // 劫持启动前
-                                isBeforeHijacking={true}
                                 defaultPlugins={checkList}
                                 setDefaultPlugins={setCheckList}
                             />
@@ -219,7 +192,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
 
 interface YakModuleListHeardProps {
     isSelectAll: boolean
-    onSelectAll: (e: CheckboxChangeEvent) => void
+    onSelectAll: (e: boolean) => void
     total: number
     length: number
 }
@@ -228,7 +201,7 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
     return (
         <div className={style["mitm-plugin-list-heard"]}>
             <div className={style["mitm-plugin-list-check"]}>
-                <YakitCheckbox value={isSelectAll} onChange={onSelectAll} />
+                <YakitCheckbox value={isSelectAll} onChange={(e) => onSelectAll(e.target.checked)} />
                 <span className={style["mitm-plugin-list-check-text"]}>全选</span>
             </div>
             <div className={style["mitm-plugin-list-tip"]}>
