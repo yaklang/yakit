@@ -13,7 +13,7 @@ import {Risk} from "@/pages/risks/schema";
 
 const {ipcRenderer} = window.require("electron")
 
-interface InfoState {
+export interface InfoState {
     messageState: ExecResultLog[]
     processState: ExecResultProgress[]
     statusState: StatusCardInfoProps[]
