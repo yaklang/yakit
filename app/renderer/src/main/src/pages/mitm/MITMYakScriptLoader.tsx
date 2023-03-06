@@ -10,6 +10,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 import classNames from "classnames"
 import {LightningBoltIcon} from "@/assets/newIcon"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -75,7 +76,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 </div>
             </div>
             {status !== "idle" && (
-                <Popconfirm
+                <YakitPopconfirm
                     disabled={!p.onSendToPatch}
                     title='发送到【热加载】中调试代码？'
                     onConfirm={() => {
@@ -85,11 +86,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         }
                         let _ = p.onSendToPatch && p.onSendToPatch(script.Content)
                     }}
-                    okText='OK'
-                    cancelText='Cancel'
                 >
                     <LightningBoltIcon className={style["lightning-bolt-icon"]} />
-                </Popconfirm>
+                </YakitPopconfirm>
             )}
         </div>
     )
