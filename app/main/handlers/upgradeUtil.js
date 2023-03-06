@@ -1,4 +1,4 @@
-const {ipcMain, shell, dialog} = require("electron");
+const {app, ipcMain, shell} = require("electron");
 const childProcess = require("child_process");
 const process = require("process");
 const path = require("path");
@@ -7,6 +7,8 @@ const fs = require("fs");
 const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
+const zip = require('node-stream-zip');
+const electronIsDev = require("electron-is-dev");
 
 const homeDir = path.join(os.homedir(), "yakit-projects");
 const secretDir = path.join(homeDir, "auth");
@@ -16,6 +18,24 @@ const codeDir = path.join(homeDir, "code");
 const cacheDir = path.join(homeDir, "base");
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
+
+const loadExtraFilePath = (s) => {
+    if (electronIsDev){
+        return s
+    }
+
+    switch (os.platform()){
+        case "darwin":
+            return path.join(app.getAppPath(), "../..", s)
+        case "linux":
+            return path.join(app.getAppPath(), "../..", s)
+        case "win32":
+            return path.join(app.getAppPath(), "../..", s)
+        default:
+            // ..../Contents/Resources/app.asar/...
+            return path.join(app.getAppPath(), s)
+    }
+}
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
@@ -390,5 +410,88 @@ module.exports = {
         ipcMain.handle("open-specified-file", async (e, path) => {
             return shell.showItemInFolder(path)
         })
+
+        // asyncInitBuildInEngine wrapper
+        const asyncInitBuildInEngine = (params) => {
+            return new Promise((resolve, reject) => {
+                if (!fs.existsSync(loadExtraFilePath("bins/yak.zip"))) {
+                    reject("BuildIn Engine Not Found!")
+                    return
+                }
+
+                console.info("Start to Extract yak.zip")
+                const zipHandler = new zip({
+                    file: loadExtraFilePath("bins/yak.zip"),
+                    storeEntries: true,
+                })
+                console.info("Start to Extract yak.zip: Set `ready`")
+                zipHandler.on("ready", () => {
+                    const buildInPath = path.join(yakEngineDir, "yak.build-in");
+
+                    console.log('Entries read: ' + zipHandler.entriesCount);
+                    for (const entry of Object.values(zipHandler.entries())) {
+                        const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
+                        console.log(`Entry ${entry.name}: ${desc}`);
+                    }
+
+                    console.info("we will extract file to: " + buildInPath)
+                    const extractedFile = (() => {
+                        switch (os.platform()) {
+                            case "darwin":
+                                return "bins/yak_darwin_amd64"
+                            case "win32":
+                                return "bins/yak_windows_amd64.exe"
+                            case "linux":
+                                return "bins/yak_linux_amd64"
+                            default:
+                                return ""
+                        }
+                    })()
+                    zipHandler.extract(extractedFile, buildInPath, (err, res) => {
+                        if (!fs.existsSync(buildInPath)) {
+                            reject(`Extract BuildIn Engine Failed`)
+                        } else {
+
+                            /**
+                             * 复制引擎到真实地址
+                             * */
+                            try {
+                                let targetEngine = path.join(yakEngineDir, isWindows ? "yak.exe" : "yak")
+                                if (!isWindows) {
+                                    fs.copyFileSync(buildInPath, targetEngine)
+                                    fs.chmodSync(targetEngine, 0o755)
+                                } else {
+                                    fs.copyFileSync(buildInPath, targetEngine)
+                                }
+                                resolve()
+                            } catch (e) {
+                                reject(e)
+                            }
+                        }
+                        console.info("zipHandler closing...")
+                        zipHandler.close();
+                    })
+                })
+                console.info("Start to Extract yak.zip: Set `error`")
+                zipHandler.on("error", err => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+        ipcMain.handle("InitBuildInEngine", async (e, params) => {
+            return await asyncInitBuildInEngine(params)
+        })
+
+        // 获取内置引擎版本
+        ipcMain.handle("GetBuildInEngineVersion"
+            /*"IsBinsExisted"*/,
+            async (e) => {
+                if (!fs.existsSync(loadExtraFilePath("bins/yak.zip"))) {
+                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(`bins/yak.zip`)}`)
+                }
+                return fs.readFileSync(loadExtraFilePath("bins/engine-version.txt")).toString("utf8")
+            })
     },
 }

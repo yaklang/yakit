@@ -2,6 +2,12 @@ appId: 'io.yaklang.yakit'
 productName: 'Yakit'
 copyright: Copyright © 2021 v1ll4n
 
+extraFiles:
+  - from: "bins/flag.txt"
+    to: "bins/flag.txt"
+  - from: "bins/engine-version.txt"
+    to: "bins/engine-version.txt"
+
 directories:
   buildResources: resources
   output: release/
@@ -16,6 +22,11 @@ publish:
 
 mac:
   artifactName: ${productName}-${version}-darwin-${arch}.${ext}
+  extraFiles:
+    - from: "bins/flag.darwin.txt"
+      to: "bins/flag.darwin.txt"
+    - from: "bins/yak_darwin_amd64.zip"
+      to: "bins/yak.zip"
   target:
     - target: dmg
       arch:
@@ -25,6 +36,11 @@ mac:
 
 linux:
   artifactName: ${productName}-${version}-linux-amd64.${ext}
+  extraFiles:
+    - from: "bins/flag.linux.txt"
+      to: "bins/flag.linux.txt"
+    - from: "bins/yak_linux_amd64.zip"
+      to: "bins/yak.zip"
   target:
     - target: AppImage
       arch:
@@ -32,6 +48,11 @@ linux:
 
 win:
   artifactName: ${productName}-${version}-windows-amd64.${ext}
+  extraFiles:
+    - from: "bins/flag.windows.txt"
+      to: "bins/flag.windows.txt"
+    - from: "bins/yak_windows_amd64.zip"
+      to: "bins/yak.zip"
   # requestedExecutionLevel: requireAdministrator
   target:
     - target: nsis

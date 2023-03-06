@@ -1,4 +1,5 @@
 const {ipcMain} = require("electron")
+const fs = require("fs")
 
 module.exports = (win, getClient) => {
     // asyncYsoDump wrapper
@@ -411,4 +412,5 @@ module.exports = (win, getClient) => {
     ipcMain.handle("MigrateLegacyDatabase", async (e, params) => {
         return await asyncMigrateLegacyDatabase(params)
     })
+    
 }
