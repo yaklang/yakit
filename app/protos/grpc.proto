@@ -416,6 +416,8 @@ service Yak {
   rpc RemoveProject(RemoveProjectRequest) returns (Empty);
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
+  rpc GetDefaultProject(Empty) returns (ProjectDescription);
+  rpc QueryProjectDetail(QueryProjectDetailRequest) returns (QueryProjectDetailResponse);
 
   // 导入导出项目，带密码，带进度
   rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
@@ -545,6 +547,7 @@ message ProjectDescription {
   int64 FolderId = 6;
   int64 ChildFolderId = 7;
   string Type = 8;
+  int64 UpdateAt = 9;
 }
 
 message GetProjectsResponse {
@@ -564,6 +567,28 @@ message SetCurrentProjectRequest {
 message DeleteProjectRequest {
   int64 Id = 1;
   bool IsDeleteLocal = 2;
+}
+
+message QueryProjectDetailRequest {
+  int64 Id = 1;
+}
+
+message QueryProjectDetailResponse {
+  string ProjectName = 1;
+  string Description = 2;
+
+  int64 Id = 3;
+  string DatabasePath = 4;
+
+  // 创建时间
+  int64 CreatedAt = 5;
+
+  int64 FolderId = 6;
+  int64 ChildFolderId = 7;
+  string Type = 8;
+  int64 UpdateAt = 9;
+  string FolderName = 10;
+  string ChildFolderName = 11;
 }
 
 message AttachCombinedOutputRequest {
