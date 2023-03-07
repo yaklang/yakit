@@ -63,10 +63,16 @@
         display: flex;
         align-items: center;
         margin-bottom: 16px;
-        justify-content: space-between;
         .mitm-hijacked-heard-left {
             display: flex;
             align-items: center;
+            margin-right: 8px;
+            width: 240px;
+        }
+        .mitm-hijacked-heard-right {
+            display: flex;
+            justify-content: flex-end;
+            width: calc(100% - 248px);
         }
     }
 }
@@ -86,30 +92,13 @@
 .autoForward-manual {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex: 1;
-    .autoForward-manual-left {
-        display: flex;
-        align-items: center;
-        flex: 1;
-        .manual-url-info {
-            font-size: 11px;
-            line-height: 16px;
-            margin-left: 8px;
-            color: var(--yakit-body-text-color);
-        }
-        .manual-ip-info {
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 16px;
-            color: var(--yakit-header-color);
-        }
-    }
+    justify-content: flex-end;
+    width: calc(100% - 24px);
     .autoForward-manual-right {
-        flex: 1;
         display: flex;
         gap: 8px;
         justify-content: flex-end;
+        width: 310px;
         .manual-select {
             display: flex;
             align-items: center;
@@ -146,6 +135,25 @@
             --button-press-color: var(--yakit-danger-6);
             --button-press-border-color: var(--yakit-danger-6);
         }
+    }
+}
+.autoForward-manual-urlInfo {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    width: calc(100% - 310px);
+    .manual-url-info {
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--yakit-body-text-color);
+        max-width: calc(100% - 220px);
+    }
+    .manual-ip-info {
+        display: inline-flex;
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--yakit-header-color);
     }
 }
 .mitm-log-heard {
@@ -253,9 +261,25 @@
 .hot-patch-heard-extra {
     display: flex;
     align-items: center;
+    gap: 4px;
 }
 
 .hot-patch-code {
     margin-top: 12px;
     height: calc(100% - 36px);
+}
+
+.mitm-hijacked-manual-content {
+    height: calc(100% - 40px);
+    width: 100%;
+    .mitm-hijacked-manual-content-url {
+        margin-bottom: 16px;
+        width: 100%;
+    }
+    .mitm-hijacked-manual-content-editor {
+        height: 100%;
+    }
+    .mitm-hijacked-manual-content-editor-sm {
+        height: calc(100% - 32px);
+    }
 }

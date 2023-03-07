@@ -8,17 +8,17 @@
             box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
             border-radius: 4px;
         }
+        .ant-popover-arrow-content {
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+        }
         .ant-popover-inner-content {
             padding: 16px 12px;
         }
         .ant-popover-message {
             padding: 0;
         }
-        // ========================== arrow ==========================
-        .ant-popover-placement-top .ant-popover-arrow,
-        .ant-popover-placement-topLeft .ant-popover-arrow,
-        .ant-popover-placement-topRight .ant-popover-arrow {
-            bottom: 1px;
+        .ant-popover-message > .anticon {
+            top: 4px;
         }
     }
     .yakit-popconfirm-title {
@@ -29,6 +29,74 @@
             align-items: center;
             margin-top: 8px;
             gap: 8px;
+        }
+    }
+}
+
+.yakit-popconfirm-top-wrapper {
+    :global {
+        .ant-popover-arrow {
+            bottom: 1px;
+
+            .ant-popover-arrow-content {
+                border: 1px solid #eaecf3 !important;
+                background-color: #fff;
+            }
+
+            .ant-popover-arrow-content::before {
+                opacity: 0;
+            }
+        }
+    }
+}
+
+.yakit-popconfirm-left-wrapper {
+    :global {
+        .ant-popover-arrow {
+            right: 1px;
+
+            .ant-popover-arrow-content {
+                border: 1px solid #eaecf3 !important;
+                background-color: #fff;
+            }
+
+            .ant-popover-arrow-content::before {
+                opacity: 0;
+            }
+        }
+    }
+}
+
+.yakit-popconfirm-right-wrapper {
+    :global {
+        .ant-popover-arrow {
+            left: 1px;
+
+            .ant-popover-arrow-content {
+                border: 1px solid #eaecf3 !important;
+                background-color: #fff;
+            }
+
+            .ant-popover-arrow-content::before {
+                opacity: 0;
+            }
+        }
+    }
+}
+
+.yakit-popconfirm-bottom-wrapper {
+    :global {
+        .ant-popover-arrow {
+            top: 1px;
+
+            .ant-popover-arrow-content {
+                border: 1px solid #eaecf3 !important;
+                background-color: #fff;
+            }
+
+            .ant-popover-arrow-content::before {
+                opacity: 0;
+            }
         }
     }
 }

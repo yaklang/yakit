@@ -19,7 +19,7 @@ import {
     Tooltip,
     Typography
 } from "antd"
-import {failed, info, success} from "../../utils/notification"
+import {failed, info, success, yakitFailed} from "../../utils/notification"
 import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
 import {HTTPPacketEditor, YakEditor} from "../../utils/editors"
 import {MITMFilters, MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
@@ -123,7 +123,7 @@ export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL
 
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
-    const [status, setStatus] = useState<"idle" | "hijacked" | "hijacking">("idle")
+    const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
 
     const [loading, setLoading] = useState(false)
 
@@ -365,7 +365,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         defaultPlugins={defaultPlugins}
                         enableInitialMITMPlugin={enableInitialMITMPlugin}
                         setVisible={setVisible}
-                        setInitialed={setInitialed}
                     />
                 )}
             </div>
@@ -465,15 +464,19 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      */
     const onSelectAllHijacking = useMemoizedFn((checked: boolean) => {
         if (checked) {
-            enableMITMPluginMode(listNames).then(() => {
-                setIsSelectAll(checked)
-                info("启动 MITM 插件成功")
-            })
+            enableMITMPluginMode(listNames)
+                .then(() => {
+                    setIsSelectAll(checked)
+                    info("启动 MITM 插件成功")
+                })
+                .catch((err) => {
+                    yakitFailed("启动 MITM 插件失败:" + err)
+                })
         } else {
             ipcRenderer
                 .invoke("mitm-remove-hook", {
                     HookName: [],
-                    RemoveHookID: listNames
+                    RemoveHookID: listNames.concat(checkList)
                 } as any)
                 .then(() => {
                     setIsSelectAll(checked)
@@ -521,6 +524,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         />
                         <YakModuleListHeard
                             onSelectAll={onSelectAll}
+                            setIsSelectAll={setIsSelectAll}
                             isSelectAll={isSelectAll}
                             total={total}
                             length={checkList.length}
@@ -572,7 +576,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         }}
                         isFullScreen={isFullScreenFirstNode}
                         setIsFullScreen={setIsFullScreenFirstNode}
+                        isSelectAll={isSelectAll}
                         onSelectAll={onSelectAll}
+                        setIsSelectAll={setIsSelectAll}
                         setInitialed={setInitialed}
                         total={total}
                         setTotal={(t) => {
@@ -596,6 +602,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setEnableInitialPlugin={(checked) => {
                             if (!checked) {
                                 setCheckList([])
+                                setIsSelectAll(false)
                             }
                             setEnableInitialPlugin(checked)
                         }}
@@ -612,6 +619,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 )
         }
     })
+
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "410px",

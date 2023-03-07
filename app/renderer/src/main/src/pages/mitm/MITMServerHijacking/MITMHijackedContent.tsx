@@ -1,17 +1,19 @@
 import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {yakitFailed} from "@/utils/notification"
+import {info, yakitFailed} from "@/utils/notification"
 import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import React, {useEffect, useRef, useState} from "react"
 import {MITMResponse} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
-import {MITMManualHeardExtra, MITMManualEditor} from "./MITMManual"
+import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
 import {MITMLog, MITMLogHeardExtra} from "./MITMLog"
 import {ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
+import ReactResizeDetector from "react-resize-detector"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -31,8 +33,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
-    const [hijackAllResponse, setHijackAllResponse] = useState(false) // 劫持所有请求
-    const [allowHijackCurrentResponse, setAllowHijackCurrentResponse] = useState(false) // 仅劫持一个请求
+    const [hijackResponseType, setHijackResponseType] = useState<"onlyOne" | "all" | "never">("never") // 劫持类型
 
     const [forResponse, setForResponse] = useState(false)
     const [urlInfo, setUrlInfo] = useState("监听中...")
@@ -63,6 +64,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const latestLogs = useLatest<ExecResultLog[]>(logs)
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
 
+    const [width, setWidth] = useState<number>(0)
+
     const hijackedContentRef = useRef<any>()
     const [inViewport] = useInViewport(hijackedContentRef)
 
@@ -82,10 +85,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         })
     }, [autoForward])
     useEffect(() => {
-        if (hijackAllResponse && currentPacketId > 0) {
+        if (hijackResponseType === "all" && currentPacketId > 0) {
             allowHijackedResponseByRequest(currentPacketId)
         }
-    }, [hijackAllResponse, currentPacketId])
+    }, [hijackResponseType, currentPacketId])
     useEffect(() => {
         //获取屏蔽数据
         getRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA")
@@ -159,7 +162,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
         try {
             if (!isManual) {
-                setHijackAllResponse(false)
+                setHijackResponseType("never")
             }
             setAutoForward(e)
             if (currentPacket && currentPacketId) {
@@ -180,7 +183,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
         // setLoading(true);
         setStatus("hijacking")
-        setAllowHijackCurrentResponse(false)
+        setHijackResponseType("never")
         setForResponse(false)
 
         if (forResponse) {
@@ -214,6 +217,47 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         // 持久化存储
         setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(newObj))
     })
+    /**
+     * @description 切换劫持类型
+     */
+    const onSetHijackResponseType = useMemoizedFn((val) => {
+        switch (val) {
+            case "onlyOne":
+                allowHijackedResponseByRequest(currentPacketId)
+                break
+            case "all":
+                if (currentPacketId > 0) {
+                    allowHijackedResponseByRequest(currentPacketId)
+                }
+                info("劫持所有响应内容")
+                break
+            case "never":
+                info("仅劫持请求")
+                break
+            default:
+                break
+        }
+        setHijackResponseType(val)
+    })
+    /**
+     * @description 丢弃请求
+     */
+    const onDiscardRequest = useMemoizedFn(() => {
+        hijacking()
+        if (forResponse) {
+            dropResponse(currentPacketId).finally(() => {
+                setTimeout(() => {
+                    // setLoading(false)
+                }, 300)
+            })
+        } else {
+            dropRequest(currentPacketId).finally(() => {
+                // setTimeout(() => setLoading(false), 300)
+            })
+        }
+        setUrlInfo("监听中...")
+        setIpInfo("")
+    })
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (autoForward) {
             case "manual":
@@ -224,6 +268,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         status={status}
                         currentIsWebsocket={currentIsWebsocket}
                         currentIsForResponse={currentIsForResponse}
+                        hijackResponseType={hijackResponseType}
+                        setHijackResponseType={onSetHijackResponseType}
+                        onDiscardRequest={onDiscardRequest}
+                        onSubmitData={forward}
+                        width={width}
                     />
                 )
             case "log":
@@ -235,21 +284,41 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const onRenderContent = useMemoizedFn(() => {
         switch (autoForward) {
+            // 手动劫持
             case "manual":
                 return (
-                    <MITMManualEditor
-                        currentPacket={currentPacket}
-                        setModifiedPacket={setModifiedPacket}
-                        forResponse={forResponse}
-                        currentPacketId={currentPacketId}
-                        handleAutoForward={handleAutoForward}
-                        autoForward={autoForward}
-                        forward={forward}
-                        hijacking={hijacking}
-                        execFuzzer={execFuzzer}
-                        status={status}
-                    />
+                    <div className={styles["mitm-hijacked-manual-content"]}>
+                        {width < 900 && (
+                            <ManualUrlInfo
+                                urlInfo={urlInfo}
+                                ipInfo={ipInfo}
+                                status={status}
+                                currentIsWebsocket={currentIsWebsocket}
+                                currentIsForResponse={currentIsForResponse}
+                                className={styles["mitm-hijacked-manual-content-url"]}
+                            />
+                        )}
+                        <div
+                            className={classNames(styles["mitm-hijacked-manual-content-editor"], {
+                                [styles["mitm-hijacked-manual-content-editor-sm"]]: width < 900
+                            })}
+                        >
+                            <MITMManualEditor
+                                currentPacket={currentPacket}
+                                setModifiedPacket={setModifiedPacket}
+                                forResponse={forResponse}
+                                currentPacketId={currentPacketId}
+                                handleAutoForward={handleAutoForward}
+                                autoForward={autoForward}
+                                forward={forward}
+                                hijacking={hijacking}
+                                execFuzzer={execFuzzer}
+                                status={status}
+                            />
+                        </div>
+                    </div>
                 )
+            // 自动放行
             case "log":
                 return (
                     <MITMLog
@@ -260,6 +329,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         }}
                     />
                 )
+            // 被动日志
             case "passive":
                 return (
                     <div style={{height: "calc(100% - 40px)"}}>
@@ -272,6 +342,18 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
     return (
         <div className={styles["mitm-hijacked-content"]} ref={hijackedContentRef}>
+            <ReactResizeDetector
+                onResize={(w, h) => {
+                    if (!w) {
+                        return
+                    }
+                    setWidth(w)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <div className={styles["mitm-hijacked-heard"]}>
                 <div className={styles["mitm-hijacked-heard-left"]}>
                     <YakitRadioButtons
@@ -285,17 +367,19 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         onChange={(e) => setAutoForward(e.target.value)}
                     />
                 </div>
-                {onRenderHeardExtra()}
-                {isFullScreen ? (
-                    <ArrowsRetractIcon className={styles["expand-icon"]} onClick={() => setIsFullScreen(false)} />
-                ) : (
-                    <ArrowsExpandIcon
-                        className={styles["expand-icon"]}
-                        onClick={() => {
-                            setIsFullScreen(true)
-                        }}
-                    />
-                )}
+                <div className={styles["mitm-hijacked-heard-right"]}>
+                    {onRenderHeardExtra()}
+                    {isFullScreen ? (
+                        <ArrowsRetractIcon className={styles["expand-icon"]} onClick={() => setIsFullScreen(false)} />
+                    ) : (
+                        <ArrowsExpandIcon
+                            className={styles["expand-icon"]}
+                            onClick={() => {
+                                setIsFullScreen(true)
+                            }}
+                        />
+                    )}
+                </div>
             </div>
             {onRenderContent()}
         </div>

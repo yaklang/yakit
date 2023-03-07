@@ -7,7 +7,18 @@ import {YakitButton} from "../YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 
 export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props) => {
-    const {children, okText, cancelText, title, onConfirm, onVisibleChange, onCancel, ...resePopover} = props
+    const {
+        children,
+        okText,
+        cancelText,
+        title,
+        onConfirm,
+        onVisibleChange,
+        onCancel,
+        placement = "left",
+        overlayClassName,
+        ...resePopover
+    } = props
     const [visible, setVisible] = useState<boolean>(false)
     const onOk = useMemoizedFn((e) => {
         setVisible(false)
@@ -18,11 +29,23 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
         setVisible(false)
         if (onCancel) onCancel(e)
     })
+    const direction = useMemo(() => {
+        if (!placement) return "top"
+        if (["top", "topLeft", "topRight"].includes(placement)) return "top"
+        if (["left", "leftTop", "leftBottom"].includes(placement)) return "left"
+        if (["right", "rightTop", "rightBottom"].includes(placement)) return "right"
+        if (["bottom", "bottomLeft", "bottomRight"].includes(placement)) return "bottom"
+    }, [placement])
     return (
         <Popconfirm
             visible={visible}
             {...resePopover}
-            overlayClassName={classnames(styles["yakit-popconfirm-wrapper"])}
+            placement={placement}
+            overlayClassName={classnames(
+                styles["yakit-popconfirm-wrapper"],
+                styles[`yakit-popconfirm-${direction}-wrapper`],
+                overlayClassName
+            )}
             title={
                 <div className={styles["yakit-popconfirm-title"]}>
                     {title}

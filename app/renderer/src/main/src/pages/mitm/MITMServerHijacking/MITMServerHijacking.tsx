@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {Ref, useEffect, useState} from "react"
 import {Divider, Modal, notification, Typography} from "antd"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info} from "@/utils/notification"
@@ -29,7 +29,6 @@ export interface MITMServerHijackingProp {
     setStatus: (status: MITMStatus) => any
     onLoading?: (loading: boolean) => any
     setVisible: (b: boolean) => void
-    setInitialed: (b: boolean) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -43,7 +42,7 @@ const MITMFiltersModal = React.lazy(() => import("../MITMServerStartForm/MITMFil
 const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStartForm/MITMCertificateDownloadModal"))
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus, setVisible, setInitialed} = props
+    const {host, port, addr, status, setStatus, setVisible} = props
 
     const [caCerts, setCaCerts] = useState<CaCertData>({
         CaCerts: new Buffer(""),
@@ -247,8 +246,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             )
     })
 
-    useEffect(() => {}, [props])
-
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
         try {
             if (!isManual) {
@@ -263,29 +260,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     })
 
-    const execFuzzer = useMemoizedFn((value: string) => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "fuzzer",
-            data: {isHttps: currentPacketInfo.isHttp, request: value}
-        })
-    })
-    const execPlugin = useMemoizedFn((value: string) => {
-        ipcRenderer.invoke("send-to-packet-hack", {
-            request: currentPacketInfo.currentPacket,
-            ishttps: currentPacketInfo.isHttp
-        })
-    })
-
     // 快捷键切换模式
     const shiftAutoForwardHotkey = useHotkeys(
         "ctrl+t",
         () => {
+            console.log(isManual)
+
             handleAutoForward(isManual ? "manual" : "log")
         },
         [autoForward]
     )
     return (
-        <div className={style["mitm-server"]}>
+        <div className={style["mitm-server"]} ref={shiftAutoForwardHotkey as Ref<any>}>
             <div className={style["mitm-server-heard"]}>
                 <div className={style["mitm-server-title"]}>
                     <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
@@ -293,7 +279,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 </div>
                 <div className={style["mitm-server-extra"]}>
                     <div className={style["mitm-server-spans"]}>
-                        <span onClick={() => props.setVisible(true)}>规则配置</span>
+                        <span onClick={() => setVisible(true)}>规则配置</span>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <span onClick={() => setFiltersVisible(true)}>过滤器</span>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
@@ -317,10 +303,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             </div>
             <Divider style={{margin: "8px 0"}} />
             <div className={style["mitm-server-body"]}>
-                <MITMServer status={"hijacking"} setStatus={setStatus} />
+                <MITMServer status={status} setStatus={setStatus} />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
-                <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={false} />
+                <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
             </React.Suspense>
         </div>

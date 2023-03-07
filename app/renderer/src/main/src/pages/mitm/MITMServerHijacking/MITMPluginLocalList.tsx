@@ -193,15 +193,19 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
 interface YakModuleListHeardProps {
     isSelectAll: boolean
     onSelectAll: (e: boolean) => void
+    setIsSelectAll: (e: boolean) => void
     total: number
     length: number
 }
 export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo((props) => {
-    const {isSelectAll, onSelectAll, total, length} = props
+    const {isSelectAll, onSelectAll, setIsSelectAll, total, length} = props
+    useEffect(() => {
+        setIsSelectAll(length == total)
+    }, [total, length])
     return (
         <div className={style["mitm-plugin-list-heard"]}>
             <div className={style["mitm-plugin-list-check"]}>
-                <YakitCheckbox value={isSelectAll} onChange={(e) => onSelectAll(e.target.checked)} />
+                <YakitCheckbox checked={isSelectAll} onChange={(e) => onSelectAll(e.target.checked)} />
                 <span className={style["mitm-plugin-list-check-text"]}>全选</span>
             </div>
             <div className={style["mitm-plugin-list-tip"]}>

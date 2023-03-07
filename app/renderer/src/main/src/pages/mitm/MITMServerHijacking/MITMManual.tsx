@@ -7,6 +7,8 @@ import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 import {allowHijackedResponseByRequest, MITMStatus} from "./MITMHijackedContent"
 import styles from "./MITMServerHijacking.module.scss"
 import * as monaco from "monaco-editor"
+import classNames from "classnames"
+import {useResponsive} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -16,75 +18,130 @@ interface MITMManualHeardExtraProps {
     status: MITMStatus
     currentIsWebsocket: boolean
     currentIsForResponse: boolean
+    hijackResponseType: "onlyOne" | "all" | "never"
+    setHijackResponseType: (v: "onlyOne" | "all" | "never") => void
+    onDiscardRequest: () => void
+    onSubmitData: () => void
+    width: number
 }
 export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.memo((props) => {
-    const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse} = props
+    const {
+        urlInfo,
+        ipInfo,
+        status,
+        currentIsWebsocket,
+        currentIsForResponse,
+        hijackResponseType,
+        setHijackResponseType,
+        onDiscardRequest,
+        onSubmitData,
+        width
+    } = props
     return (
         <div className={styles["autoForward-manual"]}>
-            <div className={styles["autoForward-manual-left"]}>
-                <div className={styles["manual-url-info"]}>
-                    {status === "hijacking" ? "目标：监听中..." : `目标：${urlInfo}`}
-                </div>
-                {ipInfo && status !== "hijacking" && (
-                    <>
-                        <Divider type='vertical' style={{margin: "0 8px"}} />
-                        <span className={styles["manual-ip-info"]}>
-                            {ipInfo} <CopyComponents copyText={ipInfo} />
-                        </span>
-                    </>
-                )}
-                {currentIsWebsocket && status !== "hijacking" ? (
-                    <YakitTag
-                        color='danger'
-                        style={{
-                            marginLeft: 8,
-                            alignSelf: "center",
-                            maxWidth: 140,
-                            cursor: "pointer"
-                        }}
-                    >
-                        Websocket {currentIsForResponse ? "响应" : "请求"}
-                    </YakitTag>
-                ) : currentIsForResponse && status !== "hijacking" ? (
-                    <YakitTag
-                        color='success'
-                        style={{
-                            marginLeft: 8,
-                            alignSelf: "center",
-                            maxWidth: 140,
-                            cursor: "pointer"
-                        }}
-                    >
-                        HTTP 响应
-                    </YakitTag>
-                ) : (
-                    <YakitTag
-                        color='success'
-                        style={{
-                            marginLeft: 8,
-                            alignSelf: "center",
-                            maxWidth: 140,
-                            cursor: "pointer"
-                        }}
-                    >
-                        HTTP 请求
-                    </YakitTag>
-                )}
-            </div>
+            {width > 900 && (
+                <ManualUrlInfo
+                    urlInfo={urlInfo}
+                    ipInfo={ipInfo}
+                    status={status}
+                    currentIsWebsocket={currentIsWebsocket}
+                    currentIsForResponse={currentIsForResponse}
+                />
+            )}
             <div className={styles["autoForward-manual-right"]}>
                 <div className={styles["manual-select"]}>
                     <div className={styles["manual-select-label"]}>劫持响应</div>
-                    <YakitSelect defaultValue='onlyOne' wrapperStyle={{width: 88}} size='small'>
+                    <YakitSelect
+                        value={hijackResponseType}
+                        wrapperStyle={{width: 88}}
+                        size='small'
+                        onSelect={setHijackResponseType}
+                    >
                         <YakitSelect.Option value='onlyOne'>仅一次</YakitSelect.Option>
-                        <YakitSelect.Option value='forever'>永久</YakitSelect.Option>
+                        <YakitSelect.Option value='all'>永久</YakitSelect.Option>
                         <YakitSelect.Option value='never'>从不</YakitSelect.Option>
                     </YakitSelect>
                 </div>
-                <YakitButton type='outline2' className={styles["manual-discard-request"]}>
+                <YakitButton
+                    type='outline2'
+                    disabled={status === "hijacking"}
+                    className={styles["manual-discard-request"]}
+                    onClick={() => onDiscardRequest()}
+                >
                     丢弃请求
                 </YakitButton>
-                <YakitButton>提交数据</YakitButton>
+                <YakitButton disabled={status === "hijacking"} onClick={() => onSubmitData()}>
+                    提交数据
+                </YakitButton>
             </div>
+        </div>
+    )
+})
+
+interface ManualUrlInfoProps {
+    urlInfo: string
+    ipInfo: string
+    status: MITMStatus
+    currentIsWebsocket: boolean
+    currentIsForResponse: boolean
+    className?: string
+}
+export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
+    const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className} = props
+    return (
+        <div className={classNames(styles["autoForward-manual-urlInfo"], className)}>
+            <div className={classNames(styles["manual-url-info"], "content-ellipsis")}>
+                {status === "hijacking" ? "目标：监听中..." : `目标：${urlInfo}`}
+            </div>
+            {ipInfo && status !== "hijacking" && (
+                <>
+                    <Divider type='vertical' style={{margin: "0 8px", top: 0}} />
+                    <span className={styles["manual-ip-info"]}>
+                        {ipInfo} <CopyComponents copyText={ipInfo} />
+                    </span>
+                </>
+            )}
+
+            {currentIsWebsocket && status !== "hijacking" ? (
+                <YakitTag
+                    color='danger'
+                    style={{
+                        marginLeft: 8,
+                        alignSelf: "center",
+                        maxWidth: 140,
+                        cursor: "pointer"
+                    }}
+                    size='small'
+                >
+                    Websocket {currentIsForResponse ? "响应" : "请求"}
+                </YakitTag>
+            ) : currentIsForResponse && status !== "hijacking" ? (
+                <YakitTag
+                    color='success'
+                    style={{
+                        marginLeft: 8,
+                        alignSelf: "center",
+                        maxWidth: 140,
+                        cursor: "pointer"
+                    }}
+                    size='small'
+                >
+                    HTTP 响应
+                </YakitTag>
+            ) : (
+                <YakitTag
+                    color='success'
+                    style={{
+                        marginLeft: 8,
+                        alignSelf: "center",
+                        maxWidth: 140,
+                        cursor: "pointer"
+                    }}
+                    size='small'
+                >
+                    HTTP 请求
+                </YakitTag>
+            )}
         </div>
     )
 })

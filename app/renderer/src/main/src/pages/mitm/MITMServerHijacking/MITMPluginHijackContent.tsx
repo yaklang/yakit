@@ -1,5 +1,6 @@
-import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {MITMPluginTemplateShort} from "@/pages/invoker/data/MITMPluginTamplate"
@@ -8,10 +9,12 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed} from "@/utils/notification"
-import {useMap, useMemoizedFn} from "ahooks"
+import {useCreation, useMap, useMemoizedFn} from "ahooks"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import React, {useEffect, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
+import {MITM_HOTPATCH_CODE} from "../MITMPluginList"
+import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
     MITMPluginLocalList,
     PluginGroup,
@@ -35,6 +38,8 @@ interface MITMPluginHijackContentProps {
     setInitialed?: (b: boolean) => void
     setTotal: (b: number) => void
     total: number
+    isSelectAll: boolean
+    setIsSelectAll: (e: boolean) => void
 }
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (props) => {
     const {
@@ -47,13 +52,14 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         onSelectAll,
         setInitialed,
         total,
-        setTotal
+        setTotal,
+        isSelectAll,
+        setIsSelectAll
     } = props
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
     const [tags, setTags] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
     const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
-    const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
     const [refreshCode, setRefreshCode] = useState<boolean>(false)
     /**
      * 选中的插件组
@@ -112,7 +118,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     })
                 })
                 handlers.setAll(tmp)
-                setCheckList(cacheTmp)
+                setCheckList(Array.from(new Set(cacheTmp)))
             }
         })
         updateHooks()
@@ -127,13 +133,16 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             ipcRenderer.removeAllListeners("client-mitm-hooks")
         }
     }, [])
-    let hooksItem: {name: string}[] = []
-    hooks.forEach((value, key) => {
-        if (value) {
-            hooksItem.push({name: key})
-        }
-    })
-    hooksItem = hooksItem.sort((a, b) => a.name.localeCompare(b.name))
+    const hooksItem: {name: string}[] = useCreation(() => {
+        let tmpItem: {name: string}[] = []
+        hooks.forEach((value, key) => {
+            if (value) {
+                tmpItem.push({name: key})
+            }
+        })
+        return tmpItem.sort((a, b) => a.name.localeCompare(b.name))
+    }, [hooks])
+
     /**
      * @description 多选插件
      * @param checkList
@@ -160,7 +169,34 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             case "hot-patch":
                 return (
                     <div className={styles["hot-patch-heard-extra"]}>
-                        <YakitButton type='outline1'>
+                        <YakitPopconfirm
+                            title={"确认重置热加载代码？"}
+                            onConfirm={() => {
+                                setScript(MITMPluginTemplateShort)
+                                onRefresh()
+                            }}
+                            placement='top'
+                        >
+                            <YakitButton type='text'>
+                                <RefreshIcon />
+                            </YakitButton>
+                        </YakitPopconfirm>
+                        <YakitButton
+                            type='outline1'
+                            onClick={() => {
+                                if (!!script) {
+                                    setRemoteValue(MITM_HOTPATCH_CODE, script)
+                                }
+                                ipcRenderer
+                                    .invoke("mitm-exec-script-content", script)
+                                    .then(() => {
+                                        info("加载成功")
+                                    })
+                                    .catch((e) => {
+                                        yakitFailed("加载失败：" + e)
+                                    })
+                            }}
+                        >
                             <PlayIcon />
                             热加载
                         </YakitButton>
@@ -231,11 +267,19 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     <div className={styles["plugin-loaded-list"]}>
                         <div className={styles["plugin-loaded-list-heard"]}>
                             <div className={styles["plugin-loaded-list-heard-total"]}>
-                                Total<span>&nbsp;{total}</span>
+                                Total<span>&nbsp;{hooksItem.length}</span>
                             </div>
-                            <div className={styles["plugin-loaded-list-heard-empty"]}>清空</div>
+                            <div
+                                className={styles["plugin-loaded-list-heard-empty"]}
+                                onClick={() => onSelectAll(false)}
+                            >
+                                清&nbsp;空
+                            </div>
                         </div>
-                        <MITMPluginLocalList
+                        {hooksItem.map((i) => {
+                            return <div>{i.name}</div>
+                        })}
+                        {/* <MITMPluginLocalList
                             height='calc(100% - 52px)'
                             onSubmitYakScriptId={onSubmitYakScriptId}
                             status={status}
@@ -255,7 +299,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             hooks={hooks}
                             onSelectAll={onSelectAll}
                             onSendToPatch={onSendToPatch}
-                        />
+                        /> */}
                     </div>
                 )
             default:
@@ -270,6 +314,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         />
                         <YakModuleListHeard
                             onSelectAll={onSelectAll}
+                            setIsSelectAll={setIsSelectAll}
                             isSelectAll={isSelectAll}
                             total={total}
                             length={checkList.length}
