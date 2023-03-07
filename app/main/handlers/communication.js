@@ -86,4 +86,9 @@ module.exports = (win, getClient) => {
             })
         })
     })
+
+    /** 刷新tabs颜色展示 */
+    ipcMain.handle("refresh-tabs-color", async (e,params) => {
+        win.webContents.send("fetch-new-tabs-color",params)
+    })
 }

@@ -28,12 +28,12 @@ import {TaskResultLog} from "../invoker/batch/BatchExecuteByFilter"
 import {defTargetRequest, TargetRequest, CancelBatchYakScript} from "../invoker/batch/BatchExecutorPage"
 import {ExecBatchYakScriptResult} from "../invoker/batch/YakBatchExecutorLegacy"
 import {showUnfinishedBatchTaskList, UnfinishedBatchTask} from "../invoker/batch/UnfinishedBatchTaskList"
-import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {Risk} from "../risks/schema"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
 import {ExecResult, YakScript} from "../invoker/schema"
-import {useStore} from "@/store"
+import {useStore, simbleDetectTabsParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
 import {PluginResultUI} from "../yakitStore/viewers/base"
@@ -709,6 +709,13 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
+    // 获取tabId用于变色
+    const [tabId, setTabId, getTabId] = useGetState<string>()
+
+    useEffect(() => {
+        setTabId(simbleDetectTabsParams.tabId)
+    }, [])
+
     useEffect(() => {
         if (BaseProgress !== undefined && BaseProgress > 0) {
             setPercent(BaseProgress)
@@ -737,6 +744,27 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
                 .finally(() => setTimeout(() => setLoading(false), 600))
         }
     }, [Uid])
+
+    useEffect(() => {
+        if (getTabId()) {
+            let status = ""
+            if (executing) {
+                // console.log("percent-executing", getTabId(), percent, executing)
+                status = "run"
+            }
+            if (percent > 0 && percent < 1 && !executing) {
+                status = "stop"
+            }
+            if (percent === 1 && !executing) {
+                status = "success"
+            }
+            !!status &&
+                ipcRenderer.invoke("refresh-tabs-color", {
+                    tabId: getTabId(),
+                    status
+                })
+        }
+    }, [percent, executing, getTabId()])
 
     if (loading) {
         return <Spin tip={"正在恢复未完成的任务"} />
