@@ -23,13 +23,15 @@ interface MITMHijackedContentProps {
     setStatus: (status: MITMStatus) => any
     isFullScreen: boolean
     setIsFullScreen: (f: boolean) => void
+    logs:ExecResultLog[]
+    statusCards:StatusCardProps[]
 }
 
 // 保留数组中非重复数据
 const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-    const {status, setStatus, isFullScreen, setIsFullScreen} = props
+    const {status, setStatus, isFullScreen, setIsFullScreen,logs,statusCards} = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
@@ -58,11 +60,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [shieldData, setShieldData] = useState<ShieldData>({
         data: []
     })
-
-    // yakit log message
-    const [logs, setLogs] = useState<ExecResultLog[]>([])
-    const latestLogs = useLatest<ExecResultLog[]>(logs)
-    const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
 
     const [width, setWidth] = useState<number>(0)
 
@@ -332,7 +329,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             // 被动日志
             case "passive":
                 return (
-                    <div style={{height: "calc(100% - 40px)"}}>
+                    <div className={styles["mitm-hijacked-passive-content"]}>
                         <MITMPluginLogViewer messages={logs} status={statusCards} />
                     </div>
                 )

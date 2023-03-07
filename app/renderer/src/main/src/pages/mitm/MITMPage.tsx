@@ -177,10 +177,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
             let msg = ExtractExecResultMessage(data)
             if (msg !== undefined) {
-                // logHandler.logs.push(msg as ExecResultLog)
-                // if (logHandler.logs.length > 25) {
-                //     logHandler.logs.shift()
-                // }
                 const currentLog = msg as ExecResultLog
                 if (currentLog.level === "feature-status-card-data") {
                     lastStatusHash = `${currentLog.timestamp}-${currentLog.data}`
@@ -331,6 +327,39 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         const client = mitmPageRef.current.getBoundingClientRect()
         setTop(client.top)
     }, [height])
+    const onRenderMITM = useMemoizedFn(() => {
+        switch (status) {
+            case "idle":
+                // status === "idle" 在没有开始的时候，渲染任务表单
+                return (
+                    <MITMServer
+                        onStartMITMServer={startMITMServerHandler}
+                        setVisible={setVisible}
+                        status={status}
+                        setStatus={setStatus}
+                        setInitialed={setInitialed}
+                        logs={[]}
+                        statusCards={[]}
+                    />
+                )
+
+            default:
+                return (
+                    <MITMServerHijacking
+                        port={port}
+                        addr={addr}
+                        host={host}
+                        status={status}
+                        setStatus={setStatus}
+                        defaultPlugins={defaultPlugins}
+                        enableInitialMITMPlugin={enableInitialMITMPlugin}
+                        setVisible={setVisible}
+                        logs={logs}
+                        statusCards={statusCards}
+                    />
+                )
+        }
+    })
     return (
         <>
             <div className={style["mitm-page"]} ref={mitmPageRef}>
@@ -346,27 +375,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-                {/* status === "idle" 在没有开始的时候，渲染任务表单 */}
-                {(status === "idle" && (
-                    <MITMServer
-                        onStartMITMServer={startMITMServerHandler}
-                        setVisible={setVisible}
-                        status={status}
-                        setStatus={setStatus}
-                        setInitialed={setInitialed}
-                    />
-                )) || (
-                    <MITMServerHijacking
-                        port={port}
-                        addr={addr}
-                        host={host}
-                        status={status}
-                        setStatus={setStatus}
-                        defaultPlugins={defaultPlugins}
-                        enableInitialMITMPlugin={enableInitialMITMPlugin}
-                        setVisible={setVisible}
-                    />
-                )}
+                {onRenderMITM()}
             </div>
             <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} top={top} />
         </>
@@ -388,9 +397,11 @@ interface MITMServerProps {
     // 开启劫持后
     setStatus: (status: MITMStatus) => any
     setInitialed?: (b: boolean) => void
+    logs: ExecResultLog[]
+    statusCards: StatusCardProps[]
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {setVisible, status, setStatus, setInitialed} = props
+    const {setVisible, status, setStatus, setInitialed, logs, statusCards} = props
     /**
      * @description 插件勾选
      */
@@ -615,6 +626,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         status={status}
                         isFullScreen={isFullScreenSecondNode}
                         setIsFullScreen={setIsFullScreenSecondNode}
+                        logs={logs}
+                        statusCards={statusCards}
                     />
                 )
         }

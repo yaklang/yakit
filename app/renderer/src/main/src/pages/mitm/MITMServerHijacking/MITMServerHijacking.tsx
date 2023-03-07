@@ -29,6 +29,8 @@ export interface MITMServerHijackingProp {
     setStatus: (status: MITMStatus) => any
     onLoading?: (loading: boolean) => any
     setVisible: (b: boolean) => void
+    logs: ExecResultLog[]
+    statusCards: StatusCardProps[]
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -42,7 +44,7 @@ const MITMFiltersModal = React.lazy(() => import("../MITMServerStartForm/MITMFil
 const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStartForm/MITMCertificateDownloadModal"))
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus, setVisible} = props
+    const {host, port, addr, status, setStatus, setVisible, logs, statusCards} = props
 
     const [caCerts, setCaCerts] = useState<CaCertData>({
         CaCerts: new Buffer(""),
@@ -303,7 +305,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             </div>
             <Divider style={{margin: "8px 0"}} />
             <div className={style["mitm-server-body"]}>
-                <MITMServer status={status} setStatus={setStatus} />
+                <MITMServer status={status} setStatus={setStatus} logs={logs} statusCards={statusCards} />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
                 <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />
