@@ -524,6 +524,7 @@ message NewProjectRequest {
   int64 FolderId = 3;
   int64 ChildFolderId = 4;
   string Type = 5;
+  int64  Id = 6;
 }
 
 message GetProjectsRequest {
