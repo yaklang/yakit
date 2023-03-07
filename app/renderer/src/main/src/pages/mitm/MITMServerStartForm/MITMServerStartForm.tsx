@@ -92,6 +92,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         form.setFieldsValue({enableInitialPlugin: props.enableInitialPlugin})
     }, [props.enableInitialPlugin])
     useEffect(() => {
+        getRules()
+    }, [])
+    const getRules = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
@@ -99,17 +102,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 setRules(newRules)
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
-    }, [])
-    useEffect(() => {
-        ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-            const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
-            setRules(newRules)
-            return
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
-        }
-    }, [])
+    })
     const onSwitchPlugin = useMemoizedFn((checked) => {
         props.setEnableInitialPlugin(checked)
     })
@@ -199,6 +192,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             ref={ruleButtonRef}
                             isUseDefRules={isUseDefRules}
                             setIsUseDefRules={setIsUseDefRules}
+                            onOkImport={() => getRules()}
                         />
                     </div>
                 </Item>
