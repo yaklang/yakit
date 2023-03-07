@@ -23,15 +23,15 @@ interface MITMHijackedContentProps {
     setStatus: (status: MITMStatus) => any
     isFullScreen: boolean
     setIsFullScreen: (f: boolean) => void
-    logs:ExecResultLog[]
-    statusCards:StatusCardProps[]
+    logs: ExecResultLog[]
+    statusCards: StatusCardProps[]
 }
 
 // 保留数组中非重复数据
 const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-    const {status, setStatus, isFullScreen, setIsFullScreen,logs,statusCards} = props
+    const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards} = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
@@ -180,7 +180,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
         // setLoading(true);
         setStatus("hijacking")
-        setHijackResponseType("never")
+        // setHijackResponseType("never")
         setForResponse(false)
 
         if (forResponse) {

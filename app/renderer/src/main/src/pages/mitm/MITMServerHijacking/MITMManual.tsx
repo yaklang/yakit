@@ -97,7 +97,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                 <>
                     <Divider type='vertical' style={{margin: "0 8px", top: 0}} />
                     <span className={styles["manual-ip-info"]}>
-                        {ipInfo} <CopyComponents copyText={ipInfo} />
+                        <span>{ipInfo}</span> <CopyComponents copyText={ipInfo} />
                     </span>
                 </>
             )}
