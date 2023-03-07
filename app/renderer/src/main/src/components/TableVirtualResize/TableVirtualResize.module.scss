@@ -337,16 +337,18 @@
                     position: sticky;
                     left: 0;
                     z-index: 1;
-                    box-shadow: 4px 0px 6px rgba(133, 137, 158, 0.1);
+                    box-shadow: none;
 
-                    &:first-child {
+                    &:nth-child(n-1) {
                         z-index: 2;
-                        // box-shadow: none;
+                        box-shadow: 4px 0px 6px rgba(133, 137, 158, 0.1);
                     }
                 }
 
                 .virtual-table-row-fixed-left-box-show-none {
-                    box-shadow: none;
+                    &:nth-child(n-1) {
+                        box-shadow: none;
+                    }
                 }
 
                 .virtual-table-row-fixed-right {

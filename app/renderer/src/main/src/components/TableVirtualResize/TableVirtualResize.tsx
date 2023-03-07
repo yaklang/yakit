@@ -1750,7 +1750,9 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
                                         <YakitCheckbox checked={checked} />
-                                        <span className={style["select-item-text"]}>{item.data.label}</span>
+                                        <span className={classNames(style["select-item-text"], "content-ellipsis")}>
+                                            {item.data.label}
+                                        </span>
                                     </div>
                                 )
                             })) || <div className={classNames(style["no-data"])}>暂无数据</div>}
