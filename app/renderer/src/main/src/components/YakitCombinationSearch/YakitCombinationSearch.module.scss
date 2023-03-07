@@ -5,6 +5,10 @@
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
         }
+        .ant-input-group > .ant-input:first-child,
+        .ant-input-group-addon:first-child {
+            border-radius: 0;
+        }
     }
     .yakit-combination-search-select {
         :global {

@@ -1252,3 +1252,19 @@ const Play = () => (
 export const PlayIcon = (props: Partial<IconProps>) => {
     return <Icon component={Play} {...props} />
 }
+const InformationCircle = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8 2.5C4.96243 2.5 2.5 4.96243 2.5 8C2.5 11.0376 4.96243 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8C13.5 4.96243 11.0376 2.5 8 2.5ZM1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8ZM7.5 5.33333C7.5 5.05719 7.72386 4.83333 8 4.83333H8.00667C8.28281 4.83333 8.50667 5.05719 8.50667 5.33333C8.50667 5.60948 8.28281 5.83333 8.00667 5.83333H8C7.72386 5.83333 7.5 5.60948 7.5 5.33333ZM6.83333 8C6.83333 7.72386 7.05719 7.5 7.33333 7.5H8C8.27614 7.5 8.5 7.72386 8.5 8V10.1667H8.66667C8.94281 10.1667 9.16667 10.3905 9.16667 10.6667C9.16667 10.9428 8.94281 11.1667 8.66667 11.1667H8C7.72386 11.1667 7.5 10.9428 7.5 10.6667V8.5H7.33333C7.05719 8.5 6.83333 8.27614 6.83333 8Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:information-circle
+ */
+export const InformationCircleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={InformationCircle} {...props} />
+}

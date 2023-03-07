@@ -19,7 +19,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {HTTPFlowMiniTable} from "@/components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {yakitFailed} from "@/utils/notification"
@@ -52,7 +52,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     })
     const [data, setData] = useState<HTTPFlow[]>([])
     const [loading, setLoading] = useState(false)
-    const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
+    const [statusCode, setStatusCode,getStatusCode] = useGetState<FiltersItemProps[]>([])
 
     const [selected, setSelected] = useState<HTTPFlow>()
 
@@ -117,7 +117,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                             <span>{item.total}</span>
                         </div>
                     ),
-                    filters: statusCode
+                    filters: getStatusCode()
                 },
                 render: (text) => <div className={styles["status-code"]}>{text}</div>
             },
@@ -191,7 +191,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 }
             }
         ]
-    }, [statusCode])
+    }, [])
     const update = () => {
         if (!inViewport) {
             return
