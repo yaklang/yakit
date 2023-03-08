@@ -705,8 +705,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
     const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "k" | "M">("B")
     const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
-    const [tags, setTags,getTags] = useGetState<FiltersItemProps[]>([])
-    const [statusCode, setStatusCode,getStatusCode] = useGetState<FiltersItemProps[]>([])
+    const [tags, setTags, getTags] = useGetState<FiltersItemProps[]>([])
+    const [statusCode, setStatusCode, getStatusCode] = useGetState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
@@ -716,7 +716,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetState<number>()
     const [isReset, setIsReset] = useState<boolean>(false)
 
-    const [checkBodyLength, setCheckBodyLength,getCheckBodyLength] = useGetState<boolean>(false) // 查询BodyLength大于0
+    const [checkBodyLength, setCheckBodyLength, getCheckBodyLength] = useGetState<boolean>(false) // 查询BodyLength大于0
 
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
@@ -1194,7 +1194,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 minWidth: 140,
                 beforeIconExtra: (
                     <div className={classNames(style["body-length-checkbox"], "old-theme-html")}>
-                        <YakitCheckbox checked={getCheckBodyLength()} onChange={(e) => onCheckThan0(e.target.checked)} />
+                        <YakitCheckbox
+                            checked={getCheckBodyLength()}
+                            onChange={(e) => onCheckThan0(e.target.checked)}
+                        />
                         <span className={style["tip"]}>大于0</span>
                     </div>
                 ),
@@ -1955,7 +1958,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         <div className={style["http-history-table-right-label"]}>协议类型</div>
                                         <YakitSelect
                                             size='small'
-                                            value={params.IsWebsocket||''}
+                                            value={params.IsWebsocket || ""}
                                             dropdownClassName='old-theme-html'
                                             wrapperStyle={{width: 150}}
                                             onSelect={(val) => {
