@@ -31,8 +31,27 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const onResetFilters = useMemoizedFn(() => {
         ipcRenderer.invoke("mitm-reset-filter").then(() => {
             info("MITM 过滤器重置命令已发送")
+            setVisible(false)
         })
     })
+    useEffect(() => {
+        ipcRenderer.on("client-mitm-filter", (e, msg) => {
+            info("更新 MITM 过滤器状态")
+            setMITMFilter({
+                includeSuffix: msg.includeSuffix,
+                excludeMethod: msg.excludeMethod,
+                excludeSuffix: msg.excludeSuffix,
+                includeHostname: msg.includeHostname,
+                excludeHostname: msg.excludeHostname,
+                excludeContentTypes: msg.excludeContentTypes,
+                excludeUri: msg.excludeUri,
+                includeUri: msg.includeUri
+            })
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-filter")
+        }
+    }, [])
     useEffect(() => {
         if (visible) getMITMFilter()
     }, [visible])
@@ -78,7 +97,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             className={styles["mitm-filters-modal"]}
             onOk={() => onSetFilter()}
         >
-            <MITMFilters filter={_mitmFilter} onFinished={onSetFilter} ref={filtersRef} />
+            <MITMFilters filter={_mitmFilter} onFinished={() => onSetFilter()} ref={filtersRef} />
         </YakitModal>
     )
 })

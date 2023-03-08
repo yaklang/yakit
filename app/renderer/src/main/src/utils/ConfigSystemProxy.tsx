@@ -48,9 +48,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
         update()
     }, [])
     useEffect(() => {
-        if (proxy !== current.CurrentProxy) {
-            setEnable(!enable)
-        }
+        setEnable(proxy === current.CurrentProxy)
     }, [proxy])
     const onSetSystemProxy = useMemoizedFn(() => {
         ipcRenderer
@@ -102,11 +100,11 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
                             取消
                         </YakitButton>
                         <YakitButton
-                            type={!enable ? "primary" : "danger"}
+                            type={enable ? "danger" : "primary"}
                             size='large'
                             onClick={() => onSetSystemProxy()}
                         >
-                            {!enable ? "启用" : "停用"}
+                            {enable ? "停用" : "启用"}
                         </YakitButton>
                     </div>
                 </Form>

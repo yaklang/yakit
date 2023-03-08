@@ -13,10 +13,10 @@ import {useCreation, useMap, useMemoizedFn} from "ahooks"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import React, {useEffect, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
-import {MITM_HOTPATCH_CODE} from "../MITMPluginList"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
     MITMPluginLocalList,
+    MITM_HOTPATCH_CODE,
     PluginGroup,
     PluginSearch,
     YakFilterRemoteObj,
@@ -131,6 +131,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             // console.log("本地缓存",localSaveData)
             setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(localSaveData))
             ipcRenderer.removeAllListeners("client-mitm-hooks")
+            ipcRenderer.removeAllListeners("client-mitm-loading")
         }
     }, [])
     const hooksItem: {name: string}[] = useCreation(() => {
@@ -279,27 +280,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         {hooksItem.map((i) => {
                             return <div>{i.name}</div>
                         })}
-                        {/* <MITMPluginLocalList
-                            height='calc(100% - 52px)'
-                            onSubmitYakScriptId={onSubmitYakScriptId}
-                            status={status}
-                            checkList={checkList}
-                            setCheckList={(list) => {
-                                setCheckList(list)
-                            }}
-                            tags={tags}
-                            setTags={setTags}
-                            searchKeyword={searchKeyword}
-                            triggerSearch={triggerSearch}
-                            setIsSelectAll={setIsSelectAll}
-                            isSelectAll={isSelectAll}
-                            selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
-                            setTotal={setTotal}
-                            hooks={hooks}
-                            onSelectAll={onSelectAll}
-                            onSendToPatch={onSendToPatch}
-                        /> */}
                     </div>
                 )
             default:

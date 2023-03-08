@@ -2,7 +2,7 @@ import React from "react";
 import {Button, Card, Col, List, Popconfirm, Row, Space} from "antd";
 import {genDefaultPagination, YakScriptHookItem, YakScriptHooks} from "../invoker/schema";
 import {HTTPFlowMiniTable} from "../../components/HTTPFlowMiniTable";
-import {MITMPluginListProp} from "./MITMPluginList";
+import { MITMPluginListProp } from "./MITMServerHijacking/MITMPluginLocalList";
 
 
 export interface MITMPluginCardProp extends MITMPluginListProp {

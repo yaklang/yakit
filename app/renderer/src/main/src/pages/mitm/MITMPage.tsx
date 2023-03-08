@@ -1,92 +1,34 @@
-import React, {Ref, useEffect, useRef, useState} from "react"
-import {
-    Alert,
-    Button,
-    Checkbox,
-    Col,
-    Divider,
-    Dropdown,
-    Empty,
-    Form,
-    Input,
-    Modal,
-    notification,
-    PageHeader,
-    Row,
-    Space,
-    Spin,
-    Tag,
-    Tooltip,
-    Typography
-} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Form, Modal, notification, Typography} from "antd"
 import {failed, info, success, yakitFailed} from "../../utils/notification"
-import {CheckOutlined, CopyOutlined, PoweroffOutlined, ReloadOutlined} from "@ant-design/icons"
-import {HTTPPacketEditor, YakEditor} from "../../utils/editors"
-import {MITMFilters, MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
-import {showDrawer, showModal} from "../../utils/showModal"
-import {MITMHTTPFlowMiniTableCard} from "./MITMHTTPFlowMiniTableCard"
-import {ExecResult, YakScript} from "../invoker/schema"
+import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
+import {ExecResult} from "../invoker/schema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import style from "./MITMPage.module.scss"
-import {CopyableField, SelectOne} from "../../utils/inputUtil"
-import {useCreation, useGetState, useHover, useInViewport, useLatest, useMap, useMemoizedFn} from "ahooks"
+import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import {StatusCardProps} from "../yakitStore/viewers/base"
-import {useHotkeys} from "react-hotkeys-hook"
-import * as monaco from "monaco-editor"
-import CopyToClipboard from "react-copy-to-clipboard"
-import {AutoCard} from "../../components/AutoCard"
 import {ResizeBox} from "../../components/ResizeBox"
-import {MITMPluginLogViewer} from "./MITMPluginLogViewer"
-import {MITMPluginList} from "./MITMPluginList"
-import {saveABSFileToOpen} from "../../utils/openWebsite"
-import {ClientCertificate, MITMServerStartForm} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
 import ReactResizeDetector from "react-resize-detector"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {
-    ChevronDownIcon,
-    ChevronUpIcon,
-    CloudDownloadIcon,
-    FolderOpenIcon,
-    ImportIcon,
-    PlusCircleIcon,
-    RemoveIcon,
-    SaveIcon,
-    SearchIcon,
-    TrashIcon
-} from "@/assets/newIcon"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import classNames from "classnames"
-import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {RemoveIcon} from "@/assets/newIcon"
+import {setLocalValue} from "@/utils/kv"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    loadLocalYakitPluginCode,
-    loadNucleiPoCFromLocal,
-    loadYakitPluginCode,
-    TagValue,
-    YakModuleList
-} from "../yakitStore/YakitStorePage"
+import {loadLocalYakitPluginCode, loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitStorePage"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {startExecYakCode} from "@/utils/basic"
 import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {MITMYakScriptLoader} from "./MITMYakScriptLoader"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {queryYakScriptList} from "../yakitStore/network"
-import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
-import {Test} from "@/components/baseTemplate/BaseTags"
 import MITMHijackedContent, {MITMStatus} from "./MITMServerHijacking/MITMHijackedContent"
 import {MITMPluginHijackContent} from "./MITMServerHijacking/MITMPluginHijackContent"
-import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {
     MITMPluginLocalList,
     PluginGroup,
@@ -94,7 +36,7 @@ import {
     YakFilterRemoteObj,
     YakModuleListHeard
 } from "./MITMServerHijacking/MITMPluginLocalList"
-import tag from "antd/lib/tag"
+import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
 
 const {Text} = Typography
 const {Item} = Form
@@ -142,7 +84,33 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const latestLogs = useLatest<ExecResultLog[]>(logs)
     const [_, setLatestStatusHash, getLatestStatusHash] = useGetState("")
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
+    // 检测当前劫持状态
+    useEffect(() => {
+        // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
+        ipcRenderer.on("client-mitm-start-success", () => {
+            setStatus("hijacking")
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
+        })
 
+        // 加载状态(从服务端加载)
+        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
+            setLoading(flag)
+        })
+
+        ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
+            try {
+                info(Uint8ArrayToString(i))
+            } catch (e) {}
+        })
+
+        return () => {
+            ipcRenderer.removeAllListeners("client-mitm-start-success")
+            ipcRenderer.removeAllListeners("client-mitm-loading")
+            ipcRenderer.removeAllListeners("client-mitm-notification")
+        }
+    }, [])
     // 用于接受后端传回的信息
     useEffect(() => {
         setInitialed(false)
@@ -161,14 +129,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 recover()
                 setTimeout(() => setInitialed(true), 500)
             })
-
-        // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
-        ipcRenderer.on("client-mitm-start-success", () => {
-            setStatus("hijacking")
-            setTimeout(() => {
-                setLoading(false)
-            }, 300)
-        })
 
         // 用于 MITM 的 Message （YakitLog）
         const messages: ExecResultLog[] = []
@@ -227,9 +187,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setTimeout(() => {
                 setLoading(false)
             }, 300)
-        })
-        ipcRenderer.on("client-mitm-filter", (e, msg) => {
-            // console.info("client-mitm-filter recv message")
         })
 
         const updateLogs = () => {

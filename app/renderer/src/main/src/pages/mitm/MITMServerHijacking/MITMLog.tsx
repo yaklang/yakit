@@ -19,7 +19,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useRafInterval} from "ahooks"
 import {HTTPFlowMiniTable} from "@/components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {yakitFailed} from "@/utils/notification"
@@ -51,8 +51,8 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         Pagination: {...genDefaultPagination(), OrderBy: "created_at", Page: 1, Limit: 50}
     })
     const [data, setData] = useState<HTTPFlow[]>([])
-    const [loading, setLoading] = useState(false)
-    const [statusCode, setStatusCode,getStatusCode] = useGetState<FiltersItemProps[]>([])
+    const [loading, setLoading] = useState(true)
+    const [statusCode, setStatusCode, getStatusCode] = useGetState<FiltersItemProps[]>([])
 
     const [selected, setSelected] = useState<HTTPFlow>()
 
@@ -196,11 +196,18 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (!inViewport) {
             return
         }
-        ipcRenderer.invoke("QueryHTTPFlows", {...params}).then((res: QueryGeneralResponse<HTTPFlow>) => {
-            const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
-            setData(newData)
-            setTotal(res.Total)
-        })
+        ipcRenderer
+            .invoke("QueryHTTPFlows", {...params})
+            .then((res: QueryGeneralResponse<HTTPFlow>) => {
+                const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
+                setData(newData)
+                setTotal(res.Total)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
     }
     useEffect(() => {
         let idArr: number[] = []
@@ -217,17 +224,14 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             update()
         }, 100)
     }, [shieldData])
-    const updateThrottle = useDebounceFn(update, {leading: true, wait: 200})
 
-    useEffect(() => {
-        updateThrottle.run()
-        const id = setInterval(() => {
-            updateThrottle.run()
-        }, 1000)
-        return () => {
-            clearInterval(id)
-        }
-    }, [])
+    useRafInterval(
+        () => {
+            update()
+        },
+        1000,
+        {immediate: true}
+    )
     useEffect(() => {
         getHTTPFlowsFieldGroup(false)
     }, [])
@@ -479,20 +483,10 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 ...params,
                 ...filter
             })
+            setLoading(true)
             setTimeout(() => {
-                setLoading(true)
-                ipcRenderer
-                    .invoke("QueryHTTPFlows", {...params})
-                    .then((res: QueryGeneralResponse<HTTPFlow>) => {
-                        setData(res.Data)
-                        setTotal(res.Total)
-                    })
-                    .finally(() =>
-                        setTimeout(() => {
-                            setLoading(false)
-                        }, 200)
-                    )
-            }, 10)
+                setLoading(false)
+            }, 1000)
         },
         {wait: 500}
     ).run

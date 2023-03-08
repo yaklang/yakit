@@ -32,6 +32,17 @@ import {CheckboxChangeEvent} from "antd/lib/checkbox"
 
 const {ipcRenderer} = window.require("electron")
 
+export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
+export interface MITMPluginListProp {
+    proxy?: string
+    downloadCertNode?: () => React.ReactNode
+    setFilterNode?: () => React.ReactNode
+    onSubmitScriptContent?: (script: string) => any
+    onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
+    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    onExit?: () => any
+}
+
 interface MITMPluginLocalListProps {
     checkList: string[]
     setCheckList: (s: string[]) => void
@@ -56,6 +67,7 @@ export interface YakFilterRemoteObj {
     name: string
     value: string[]
 }
+
 const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
     const {
