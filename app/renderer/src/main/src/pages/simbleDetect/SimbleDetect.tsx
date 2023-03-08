@@ -173,7 +173,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         }
     }, [TaskName])
 
-    const run = (OnlineGroup: string, TaskName: string) => {
+    const run = (OnlineGroup: string, TaskName: string, scan_deep: string) => {
         setPercent(0)
         // 时间戳生成
         const timeStamp: number = moment(new Date()).unix()
@@ -184,7 +184,17 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         console.log("params11----", getParams())
         setRunTaskName(TaskName)
         setExecuting(true)
-        ipcRenderer.invoke("PortScan", params, token)
+        let newParams: PortScanParams = {...params}
+        switch (scan_deep) {
+            case "fast":
+                newParams.Concurrent = 888
+                break
+            case "middle":
+                break
+            case "slow":
+                break
+        }
+        ipcRenderer.invoke("PortScan", newParams, token)
 
         // StartExecBatchYakScriptWithFilter(
         //     target,
@@ -232,14 +242,14 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
         // 当为跳转带参
         if (Array.isArray(openScriptNames)) {
-            run(OnlineGroup, TaskName)
+            run(OnlineGroup, TaskName, scan_deep)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
-                    run(OnlineGroup, TaskName)
+                    run(OnlineGroup, TaskName, scan_deep)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
