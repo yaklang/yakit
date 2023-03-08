@@ -63,6 +63,7 @@ message ExecBatchYakScriptRequest {
   bool FromRecover = 17;
 
   string YakScriptOnlineGroup = 18;
+  string TaskName = 19;
 }
 
 message ExecBatchYakScriptResult {
@@ -156,6 +157,7 @@ service Yak {
   rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
   rpc QueryYakScriptLocalAndUser(QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptByOnlineGroup(QueryYakScriptByOnlineGroupRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -301,6 +303,8 @@ service Yak {
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
   rpc QueryAvailableReportFrom(Empty) returns (Fields);
 
+  rpc DownloadReport(DownloadReportRequest) returns (Empty);
+
   //Yso
   rpc GetAllYsoGadgetOptions(Empty) returns (YsoOptionsWithVerbose);
   rpc GetAllYsoClassOptions(YsoOptionsRequerstWithVerbose) returns (YsoOptionsWithVerbose);
@@ -419,6 +423,33 @@ service Yak {
 
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+
+  // CVE
+  rpc IsCVEDatabaseReady(IsCVEDatabaseReadyRequest) returns (IsCVEDatabaseReadyResponse);
+  rpc UpdateCVEDatabase(UpdateCVEDatabaseRequest) returns (stream ExecResult);
+  rpc ExportsProfileDatabase(ExportsProfileDatabaseRequest) returns (stream ExecResult);
+  rpc ImportsProfileDatabase(ImportsProfileDatabaseRequest) returns (stream ExecResult);
+}
+
+message ImportsProfileDatabaseRequest {
+  string LocalProfileFile = 1;
+}
+
+message ExportsProfileDatabaseRequest {
+  string LocalProfileFile = 1;
+}
+
+message UpdateCVEDatabaseRequest {
+  string Proxy = 1;
+}
+
+message IsCVEDatabaseReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message IsCVEDatabaseReadyRequest {
+
 }
 
 message MITMRuleExtractedData {
@@ -863,6 +894,7 @@ message ExecBatchYakScriptUnfinishedTask {
   int64 CreatedAt = 2;
   string Uid = 3;
   string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
 }
 
 message GetExecBatchYakScriptUnfinishedTaskResponse {
@@ -1561,6 +1593,12 @@ message Host {
   int64 IPInteger = 3;
   bool IsInPublicNet = 4;
   repeated string Domains = 5;
+}
+
+message DownloadReportRequest {
+  string FileData = 1;
+  string FileName = 2;
+  string FileDir = 3;
 }
 
 message DeleteYakScriptExecResultRequest {
