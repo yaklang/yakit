@@ -265,6 +265,9 @@
     display: flex;
     justify-content: space-between;
     margin-right: 8px;
+    .tag-select-item-name {
+        margin-right: 8px;
+    }
 }
 
 .chrome-input-group {

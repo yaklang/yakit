@@ -135,7 +135,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                 />
             </div>
 
-            <div className={style["mitm-plugin-list"]} style={{height: `calc(100% - ${vlistHeigth + 2}px)`}}>
+            <div className={style["mitm-plugin-list"]} style={{height: `calc(100% - ${vlistHeigth + 12}px)`}}>
                 <YakModuleList
                     emptyNode={
                         <div className={style["mitm-plugin-empty"]}>
@@ -492,8 +492,10 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
                 maxTagCount: "responsive",
                 renderOpt: (info: TagValue) => {
                     return (
-                        <div className={style["mitm-plugin-local-tag-select-item"]}>
-                            <span>{info.Name}</span>
+                        <div className={classNames(style["mitm-plugin-local-tag-select-item"])}>
+                            <span className={classNames(style["tag-select-item-name"], "content-ellipsis")}>
+                                {info.Name}
+                            </span>
                             <span>{info.Total}</span>
                         </div>
                     )
