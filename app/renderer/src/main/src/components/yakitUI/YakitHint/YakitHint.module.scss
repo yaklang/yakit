@@ -12,6 +12,9 @@
         position: relative;
     }
 }
+.yakit-hint-hidden-wrapper {
+    display: none;
+}
 .yakit-hint-mask-wrapper {
     background: rgba(49, 52, 63, 0.3);
 }

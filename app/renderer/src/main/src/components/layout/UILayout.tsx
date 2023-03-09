@@ -622,9 +622,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
                     if (id) {
                         ipcRenderer
-                            .invoke("SetCurrentProject", {
-                                ProjectName: `${id}`
-                            })
+                            .invoke("SetCurrentProject", {Id: +id})
                             .then((e) => {
                                 info("已切换数据库")
                             })

@@ -159,6 +159,45 @@
             }
         }
 
+        .project-search {
+            height: 16px;
+            font-size: 12px;
+            line-height: 16px;
+            color: var(--yakit-header-color);
+            .total-style {
+                color: var(--yakit-primary-5);
+            }
+        }
+
+        .project-path-wrapper {
+            height: 16px;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 8px;
+
+            font-size: 12px;
+            line-height: 16px;
+            color: var(--yakit-header-color);
+
+            .path-style {
+                cursor: pointer;
+            }
+            .path-style:hover {
+                color: var(--yakit-primary-5);
+            }
+
+            .icon-style {
+                color: var(--yakit-body-text-color);
+                :global {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+            }
+        }
+
         .project-table-wrapper {
             width: 100%;
             flex: 1;
@@ -269,6 +308,14 @@
                     .table-opt-selected {
                         background: var(--yakit-primary-1) !important;
                         border-radius: 4px;
+                    }
+
+                    .table-loading-more {
+                        width: 100%;
+                        height: 20px;
+                        line-height: 20px;
+                        text-align: center;
+                        color: var(--yakit-body-text-color);
                     }
                 }
             }
@@ -405,6 +452,22 @@
 
     .required-form-item-wrapper {
         border: 1px solid var(--yakit-danger-4) !important;
+    }
+
+    :global {
+        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+        }
+        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+            border-color: var(--yakit-primary-4);
+        }
+        .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border-color: var(--yakit-primary-4);
+            box-shadow: 0 0 0 2px rgba(246, 156, 93, 0.2);
+            border-right-width: 1px;
+            outline: 0;
+        }
     }
 
     .form-btn-wrapper {

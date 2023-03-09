@@ -1,10 +1,11 @@
 import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMemoizedFn, useVirtualList} from "ahooks"
+import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryGeneralRequest} from "../invoker/schema"
 import {failed, info} from "@/utils/notification"
 import {
     ChevronDownIcon,
+    ChevronRightIcon,
     ChevronUpIcon,
     DocumentDuplicateSvgIcon,
     DotsVerticalSvgIcon,
@@ -29,7 +30,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {Dropdown, DropdownProps, Form, Popconfirm, Progress, Upload} from "antd"
+import {Cascader, Dropdown, DropdownProps, Form, Progress, Upload} from "antd"
 import {YakitMenu, YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -39,6 +40,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YaklangEngineMode} from "@/yakitGVDefine"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 import classnames from "classnames"
 import styles from "./ProjectManage.module.scss"
@@ -50,25 +52,43 @@ export interface ProjectManageProp {
     onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
     onFinish: () => any
 }
-
+/** (新建|编辑)项目|文件夹参数 */
+interface ProjectParamsProps {
+    Id?: number
+    ProjectName: string
+    Description?: string
+    Type: string
+    FolderId?: number
+    ChildFolderId?: number
+}
+/** 项目列表查询条件 */
 interface ProjectParamsProp extends QueryGeneralRequest {
     ProjectName?: string
     Description?: string
-    ProjectType?: string
+    Type: string
+    FolderId?: number
+    ChildFolderId?: number
 }
 /** 单条项目数据 */
 interface ProjectDescription {
     Id: number
     ProjectName: string
     Description: string
-    CreatedAt: number
     DatabasePath: string
-    isFolder?: boolean
+    CreatedAt: number
+    UpdateAt: number
+    FolderId: number
+    FolderName: string
+    ChildFolderId: number
+    ChildFolderName: string
+    Type: string
 }
 interface ProjectsResponse {
     Pagination: {Page: number; Limit: number}
     Projects: ProjectDescription[]
     Total: number
+    TotalPage: number
+    ProjectToTal: number
 }
 /** 表头描述数据对象 */
 interface HeaderProp<T> {
@@ -95,7 +115,7 @@ const typeFilter: FilterInfoProps[] = [
         itemIcon: <ProjectDocumentTextSvgIcon className={styles["type-filter-icon-style"]} />
     },
     {
-        key: "folder",
+        key: "file",
         label: "文件夹",
         itemIcon: <ProjectFolderOpenSvgIcon className={styles["type-filter-icon-style"]} />
     }
@@ -117,29 +137,73 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const {engineMode, onFinish} = props
 
     const [loading, setLoading] = useState<boolean>(false)
-    const [params, setParams] = useState<ProjectParamsProp>({
-        ProjectType: "all",
-        Pagination: {Page: 1, Limit: 10, Order: "desc", OrderBy: "created_at"}
+    const [params, setParams, getParams] = useGetState<ProjectParamsProp>({
+        Type: "all",
+        Pagination: {Page: 1, Limit: 20, Order: "desc", OrderBy: "updated_at"}
     })
     const [__data, setData, getData] = useGetState<ProjectsResponse>({
-        Pagination: {Page: 1, Limit: 10},
+        Pagination: {Page: 1, Limit: 20},
         Projects: [],
-        Total: 0
+        Total: 0,
+        TotalPage: 0,
+        ProjectToTal: 0
     })
-    const [__lists, setLists, getLists] = useGetState<ProjectDescription[]>([])
+
+    const [files, setFiles] = useState<{Id: number; name: string}[]>([])
+    const [search, setSearch] = useState<{name: string; total: number}>({name: "", total: 0})
+
     const [latestProject, setLatestProject] = useState<ProjectDescription>()
+    const [defaultProject, setDefaultProject] = useState<ProjectDescription>()
 
     const [vlistHeigth, setVListHeight] = useState(600)
-    const containerRef = useRef()
-    const wrapperRef = useRef()
-    const [list] = useVirtualList(getLists(), {
+    const containerRef = useRef<any>(null)
+    const wrapperRef = useRef<any>(null)
+    const [list] = useVirtualList(getData().Projects, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 48 + 1,
         overscan: 5
     })
 
+    const [loadMore, setLoadMore] = useState<boolean>(false)
+    const position = useScroll(containerRef, ({top}) => {
+        if (containerRef.current) {
+            const clientHeight = containerRef.current?.clientHeight
+            const scrollHeight = containerRef.current?.scrollHeight
+
+            if (loadMore) return false
+            if (top + clientHeight > scrollHeight - 10) {
+                if (getData().Projects.length === +getData().Total) return false
+                setLoadMore(true)
+                update(getParams().Pagination.Page + 1)
+            }
+        }
+
+        return false
+    })
+
     const [headerShow, setHeaderShow] = useState<boolean>(false)
+
+    useDebounceEffect(
+        () => {
+            if (!containerRef || !wrapperRef) return
+            // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
+            const containerHeight = containerRef.current?.clientHeight
+            const wrapperHeight = wrapperRef.current?.clientHeight
+
+            if (wrapperHeight && wrapperHeight <= containerHeight) {
+                if (getData().Projects.length < +getData().Total) {
+                    setParams({
+                        ...getParams(),
+                        Pagination: {...getParams().Pagination, Page: getParams().Pagination.Page + 1}
+                    })
+                    setTimeout(() => update(), 300)
+                }
+            }
+        },
+        [wrapperRef.current?.clientHeight],
+        {wait: 200}
+    )
 
     const [typeShow, setTypeShow] = useState<boolean>(false)
     const [timeShow, setTimeShow] = useState<boolean>(false)
@@ -163,7 +227,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 className: styles["dropdown-menu-body"],
                                 onClick: ({key}) => {
                                     setTypeShow(false)
-                                    if (params.ProjectType !== key) setParams({...params, ProjectType: key})
+                                    if (params.Type !== key)
+                                        setParams({...params, Pagination: {...params.Pagination, Page: 1}, Type: key})
+                                    setTimeout(() => update(), 300)
                                 }
                             }}
                         >
@@ -172,7 +238,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     [styles["project-table-filter-dropdown"]]: typeShow
                                 })}
                             >
-                                {typeToName[params.ProjectType || "all"]}
+                                {typeToName[params.Type || "all"]}
                                 {typeShow ? (
                                     <ChevronUpIcon className={styles["icon-style"]} />
                                 ) : (
@@ -187,7 +253,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div
                             className={classnames(styles["project-table-body-wrapper"], styles["project-name-wrapper"])}
                         >
-                            <ProjectDocumentTextSvgIcon />
+                            {!data.Type || data.Type === "project" ? (
+                                <ProjectDocumentTextSvgIcon />
+                            ) : (
+                                <ProjectFolderOpenSvgIcon />
+                            )}
                             <div className={styles["project-style"]} title={data.ProjectName}>
                                 {data.ProjectName === "[default]" ? "[默认项目]" : data.ProjectName}
                             </div>
@@ -210,9 +280,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className={styles["project-style"]} title={data.DatabasePath}>
-                                {data.DatabasePath}
+                                {data.DatabasePath || "-"}
                             </div>
-                            <CopyComponents copyText={data.DatabasePath} onAfterCopy={() => {}} />
+                            {data.DatabasePath && (
+                                <CopyComponents copyText={data.DatabasePath} onAfterCopy={() => {}} />
+                            )}
                         </div>
                     )
                 }
@@ -235,7 +307,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 onClick: ({key}) => {
                                     setTimeShow(false)
                                     if (params.Pagination.OrderBy !== key)
-                                        setParams({...params, Pagination: {...params.Pagination, OrderBy: key}})
+                                        setParams({
+                                            ...params,
+                                            Pagination: {...params.Pagination, Page: 1, OrderBy: key}
+                                        })
+                                    setTimeout(() => update(), 300)
                                 }
                             }}
                         >
@@ -255,7 +331,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 },
                 render: (data, index) => {
-                    return formatTimestamp(data.CreatedAt)
+                    return params.Pagination.OrderBy === "created_at"
+                        ? formatTimestamp(data.CreatedAt)
+                        : formatTimestamp(data.UpdateAt)
                 }
             }
         ]
@@ -263,11 +341,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
     const [operateShow, setOperateShow] = useState<number>(-1)
     const projectOperate = useMemoizedFn((info: ProjectDescription) => {
-        const {Id, isFolder} = info
+        const {Id, Type} = info
 
         return (
             <div className={styles["project-operate-wrapper"]} onClick={(e) => e.stopPropagation()}>
-                {isFolder ? (
+                {Type === "file" ? (
                     <DropdownMenu
                         dropdown={{
                             trigger: ["click"],
@@ -343,14 +421,16 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {info.ProjectName !== "[default]" && (
                     <>
                         <div className={styles["divider-style"]}></div>
-                        <Popconfirm
-                            title={<div style={{width: 140}}>确定要删除该项目？</div>}
-                            onConfirm={() => operateFunc("delete", info)}
+
+                        <div
+                            className={styles["btn-wrapper"]}
+                            onClick={() => {
+                                setDelId(+info.Id)
+                                setDelShow(true)
+                            }}
                         >
-                            <div className={styles["btn-wrapper"]}>
-                                <TrashIcon className={styles["del-style"]} />
-                            </div>
-                        </Popconfirm>
+                            <TrashIcon className={styles["del-style"]} />
+                        </div>
                     </>
                 )}
             </div>
@@ -359,27 +439,41 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
     useEffect(() => {
         ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
+        ipcRenderer.invoke("GetDefaultProject").then((rsp: ProjectDescription) => setDefaultProject(rsp || undefined))
 
         update()
     }, [])
 
-    const update = useMemoizedFn((page?: number, limit?: number) => {
+    const update = useMemoizedFn((page?: number) => {
         const param: ProjectParamsProp = {
-            ...params,
+            ...getParams(),
             Pagination: {
-                ...params.Pagination,
-                Page: page || params.Pagination.Page,
-                Limit: limit || params.Pagination.Limit
+                ...getParams().Pagination,
+                Page: page || getParams().Pagination.Page,
+                Limit: getParams().Pagination.Limit
             }
         }
+        if (page) setParams({...param, Pagination: {...param.Pagination, Page: page}})
+
+        // @ts-ignore
+        if (param.Type === "all") delete param.Type
+        if (param.ProjectName) param.Type = "project"
+
+        console.log("param", JSON.stringify(param))
 
         setLoading(true)
         ipcRenderer
             .invoke("GetProjects", param)
             .then((rsp: ProjectsResponse) => {
+                console.log("rsp", rsp)
+
                 try {
-                    setData(rsp)
-                    setLists(rsp.Projects)
+                    if (param.Pagination.Page > 1) {
+                        setData({...rsp, Projects: getData().Projects.concat(rsp.Projects)})
+                    } else {
+                        setData(rsp)
+                    }
+                    setSearch({name: param.ProjectName || "", total: +rsp.Total})
                 } catch (e) {
                     failed("处理项目数据失败: " + `${e}`)
                 }
@@ -387,79 +481,131 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .catch((e) => {
                 failed(`查询 Projects 失败：${e}`)
             })
-            .finally(() => setTimeout(() => setLoading(false), 300))
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                    setLoadMore(false)
+                }, 300)
+            })
+    })
+
+    const [delShow, setDelShow] = useState<boolean>(false)
+    const [delId, setDelId] = useState<number>(-1)
+    const delProjectFolder = useMemoizedFn((isDel: boolean) => {
+        if (delId === -1) {
+            failed("该条项目无数据或无关键信息，无法删除!")
+            return
+        }
+
+        setLoading(true)
+        if (defaultProject && latestProject && delId === +latestProject?.Id) {
+            ipcRenderer
+                .invoke("SetCurrentProject", {
+                    Id: +defaultProject.Id
+                })
+                .then((e) => {
+                    ipcRenderer
+                        .invoke("DeleteProject", {Id: delId, IsDeleteLocal: isDel})
+                        .then((e) => {
+                            info("删除成功")
+                            setData({...getData(), Projects: getData().Projects.filter((item) => +item.Id !== delId)})
+                            ipcRenderer
+                                .invoke("GetCurrentProject")
+                                .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
+                        })
+                        .catch((e) => {
+                            failed(`删除失败: ${e}`)
+                        })
+                        .finally(() => {
+                            setDelId(-1)
+                            setDelShow(false)
+                            setTimeout(() => setLoading(false), 300)
+                        })
+                })
+                .catch(() => {
+                    failed("删除失败，没有可以切换的默认数据库")
+                    setDelId(-1)
+                    setDelShow(false)
+                    setTimeout(() => setLoading(false), 300)
+                })
+        } else {
+            ipcRenderer
+                .invoke("DeleteProject", {Id: delId, IsDeleteLocal: isDel})
+                .then((e) => {
+                    info("删除成功")
+                    setData({...getData(), Projects: getData().Projects.filter((item) => +item.Id !== delId)})
+                    ipcRenderer
+                        .invoke("GetCurrentProject")
+                        .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
+                })
+                .catch((e) => {
+                    failed(`删除失败: ${e}`)
+                })
+                .finally(() => {
+                    setDelId(-1)
+                    setDelShow(false)
+                    setTimeout(() => setLoading(false), 300)
+                })
+        }
     })
 
     const operateFunc = useMemoizedFn((type: string, data?: ProjectDescription) => {
         switch (type) {
-            case "openRecent":
-                return
             case "newProject":
-                setModalInfo({show: true})
+                setModalInfo(data ? {visible: true, parentNode: data} : {visible: true})
                 return
             case "newFolder":
-                setModalInfo({show: true, isFolder: true})
+                setModalInfo(data ? {visible: true, isFolder: true, parentNode: data} : {visible: true, isFolder: true})
                 return
             case "import":
-                setModalInfo({show: true, isNew: false, isImport: true})
+                setModalInfo({visible: true, isNew: false, isImport: true})
                 return
             case "encryption":
                 if (!data || !data.Id) {
-                    failed("该条项目无数据或无关键信息，无法导出!")
+                    failed("该条项目无关键信息，无法导出!")
                     return
                 }
-                setModalProject(data)
-                setTimeout(() => {
-                    setModalInfo({show: true, isNew: false, isExport: true})
-                }, 100)
+
+                setModalInfo({visible: true, isNew: false, isExport: true, project: data})
                 return
             case "plaintext":
                 if (!data || !data.Id) {
-                    failed("该条项目无数据或无关键信息，无法导出!")
+                    failed("该条项目无关键信息，无法导出!")
                     return
                 }
                 setTransferShow({
                     visible: true,
                     isExport: true,
                     data: {
-                        id: data.Id,
-                        name: data.ProjectName,
-                        password: ""
+                        Id: data.Id,
+                        ProjectName: data.ProjectName,
+                        Password: ""
                     }
                 })
                 return
             case "edit":
-                return
-            case "delete":
-                if (!data || !data.ProjectName) {
-                    failed("该条项目无数据或无关键信息，无法删除!")
+                if (!data || !data.Id) {
+                    failed("该条项目无关键信息，请刷新列表后重试!")
                     return
                 }
-                ipcRenderer
-                    .invoke("RemoveProject", {ProjectName: data?.ProjectName})
-                    .then((e) => {
-                        info("删除成功")
-                        setLists(getLists().filter((item) => item.Id !== data.Id))
-                    })
-                    .catch((e) => {
-                        failed(`删除失败: ${e}`)
-                    })
+                setModalInfo({visible: true, isFolder: data?.Type === "file", project: data})
                 return
             case "copyPath":
                 if (!data || !data.DatabasePath) {
-                    failed("该条项目无数据或无关键信息，无法删除!")
+                    failed("该条项目无数据或无关键信息，复制失败!")
                     return
                 }
                 ipcRenderer.invoke("set-copy-clipboard", data.DatabasePath)
                 info("复制成功")
                 return
             case "setCurrent":
-                if (!data || !data.ProjectName) return
+                if (!data || !data.Id) {
+                    failed("该条项目无数据或无关键信息，无法连接!")
+                    return
+                }
                 setLoading(true)
                 ipcRenderer
-                    .invoke("SetCurrentProject", {
-                        ProjectName: data?.ProjectName
-                    })
+                    .invoke("SetCurrentProject", {Id: data.Id})
                     .then((e) => {
                         info("已切换数据库")
                         setRemoteValue(RemoteGV.LinkDatabase, `${data.Id}`)
@@ -474,73 +620,177 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         }, 500)
                     })
                 return
-
+            case "openFile":
+                if (!data || !data?.Id || !data?.ProjectName) {
+                    failed("该条文件夹无数据或无关键信息，无法打开!")
+                    return
+                }
+                if (files.length === 2) return
+                setLoading(true)
+                setFiles(files.concat([{Id: +data?.Id, name: data?.ProjectName}]))
+                if (files.length > 0) {
+                    setParams({
+                        Type: params.Type,
+                        Pagination: {...params.Pagination, Page: 1},
+                        FolderId: +files[0].Id,
+                        ChildFolderId: +data.Id
+                    })
+                } else {
+                    setParams({Type: params.Type, Pagination: {...params.Pagination, Page: 1}, FolderId: +data.Id})
+                }
+                setTimeout(() => {
+                    update()
+                }, 300)
+                return
             default:
                 return
         }
     })
 
     const [modalInfo, setModalInfo] = useState<{
-        show: boolean
+        visible: boolean
         isNew?: boolean
         isFolder?: boolean
         isExport?: boolean
         isImport?: boolean
-    }>({show: false})
+        project?: ProjectDescription
+        parentNode?: ProjectDescription
+    }>({visible: false})
     const [modalLoading, setModalLoading] = useState<boolean>(false)
-    const [modalProject, setModalProject] = useState<ProjectDescription>()
 
     /** 弹窗确认事件的回调 */
     const onModalSubmit = useMemoizedFn(
         (type: string, value: ProjectFolderInfoProps | ExportProjectProps | ImportProjectProps) => {
             switch (type) {
                 case "isNewProject":
-                    const newProject: ProjectFolderInfoProps = value as any
-                    ipcRenderer
-                        .invoke("IsProjectNameValid", {
-                            ProjectName: newProject.name
-                        })
-                        .then((e) => {
-                            ipcRenderer
-                                .invoke("NewProject", {
-                                    ProjectName: newProject.name,
-                                    Description: newProject.notes
-                                })
-                                .then(() => {
-                                    info("创建新项目成功")
-                                    setModalInfo({show: false})
-                                    update(1)
-                                })
-                                .catch((e) => {
-                                    info(`创建新项目失败：${e}`)
-                                })
-                                .finally(() => {
-                                    setTimeout(() => {
-                                        setModalLoading(false)
-                                    }, 300)
-                                })
-                        })
-                        .catch((e) => {
-                            info("创建新项目失败，项目名校验不通过：" + `${e}`)
-                            setTimeout(() => {
-                                setModalLoading(false)
-                            }, 300)
-                        })
+                    let projectInfo: ProjectFolderInfoProps = {...(value as any)}
+                    const newProject: ProjectParamsProps = {
+                        ProjectName: projectInfo.ProjectName,
+                        Description: projectInfo.Description || "",
+                        FolderId: projectInfo.FolderId ? +projectInfo.FolderId : 0,
+                        ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
+                        Type: "project"
+                    }
+                    if (newProject.ProjectName === projectInfo.oldName) {
+                        if (projectInfo.Id) newProject.Id = +projectInfo.Id
+                        ipcRenderer
+                            .invoke("NewProject", newProject)
+                            .then(() => {
+                                info(projectInfo.Id ? "编辑项目成功" : "创建新项目成功")
+                                setModalInfo({visible: false})
+                                setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                setTimeout(() => update(), 300)
+                            })
+                            .catch((e) => {
+                                failed(`${projectInfo.Id ? "编辑" : "创建新"}项目失败：${e}`)
+                            })
+                            .finally(() => {
+                                setTimeout(() => {
+                                    setModalLoading(false)
+                                }, 300)
+                            })
+                    } else {
+                        ipcRenderer
+                            .invoke("IsProjectNameValid", newProject)
+                            .then((e) => {
+                                if (projectInfo.Id) newProject.Id = +projectInfo.Id
+                                ipcRenderer
+                                    .invoke("NewProject", newProject)
+                                    .then(() => {
+                                        info(projectInfo.Id ? "编辑项目成功" : "创建新项目成功")
+                                        setModalInfo({visible: false})
+                                        setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                        setTimeout(() => update(), 300)
+                                    })
+                                    .catch((e) => {
+                                        failed(`${projectInfo.Id ? "编辑" : "创建新"}项目失败：${e}`)
+                                    })
+                                    .finally(() => {
+                                        setTimeout(() => {
+                                            setModalLoading(false)
+                                        }, 300)
+                                    })
+                            })
+                            .catch((e) => {
+                                info(`${projectInfo.Id ? "编辑" : "创建新"}项目失败，项目名校验不通过：${e}`)
+                                setTimeout(() => {
+                                    setModalLoading(false)
+                                }, 300)
+                            })
+                    }
+
                     return
                 case "isNewFolder":
-                    const newFolder: ProjectFolderInfoProps = value as any
+                    let folderInfo: ProjectFolderInfoProps = {...(value as any)}
+                    const newFolder: ProjectParamsProps = {
+                        ProjectName: folderInfo.ProjectName,
+                        Description: folderInfo.Description || "",
+                        FolderId: folderInfo.FolderId ? +folderInfo.FolderId : 0,
+                        ChildFolderId: folderInfo.ChildFolderId ? +folderInfo.ChildFolderId : 0,
+                        Type: "file"
+                    }
+
+                    if (newFolder.ProjectName === folderInfo.oldName) {
+                        if (folderInfo.Id) newFolder.Id = +folderInfo.Id
+                        ipcRenderer
+                            .invoke("NewProject", newFolder)
+                            .then(() => {
+                                info(folderInfo.Id ? "编辑文件夹成功" : "创建新文件夹成功")
+                                setModalInfo({visible: false})
+                                setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                setTimeout(() => update(), 300)
+                            })
+                            .catch((e) => {
+                                info(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败：${e}`)
+                            })
+                            .finally(() => {
+                                setTimeout(() => {
+                                    setModalLoading(false)
+                                }, 300)
+                            })
+                    } else {
+                        ipcRenderer
+                            .invoke("IsProjectNameValid", newFolder)
+                            .then((e) => {
+                                if (folderInfo.Id) newFolder.Id = +folderInfo.Id
+                                ipcRenderer
+                                    .invoke("NewProject", newFolder)
+                                    .then(() => {
+                                        info(folderInfo.Id ? "编辑文件夹成功" : "创建新文件夹成功")
+                                        setModalInfo({visible: false})
+                                        setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                        setTimeout(() => update(), 300)
+                                    })
+                                    .catch((e) => {
+                                        info(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败：${e}`)
+                                    })
+                                    .finally(() => {
+                                        setTimeout(() => {
+                                            setModalLoading(false)
+                                        }, 300)
+                                    })
+                            })
+                            .catch((e) => {
+                                info(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败，文件夹名校验不通过：${e}`)
+                                setTimeout(() => {
+                                    setModalLoading(false)
+                                }, 300)
+                            })
+                    }
+
                     return
                 case "isImport":
-                    setModalInfo({show: false})
-                    update(1)
+                    setModalInfo({visible: false})
+                    setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                     setTimeout(() => {
-                        setLoading(false)
+                        update()
+                        setModalLoading(false)
                     }, 300)
                     return
                 case "isExport":
-                    setModalInfo({show: false})
+                    setModalInfo({visible: false})
                     setTimeout(() => {
-                        setLoading(false)
+                        setModalLoading(false)
                     }, 300)
                     return
                 default:
@@ -569,16 +819,25 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     <div className={styles["header-title"]}>
                         <div className={styles["title-style"]}>项目管理</div>
                         <div className={styles["total-style"]}>
-                            Total <span className={styles["total-number"]}>{__data.Total}</span>
+                            Total <span className={styles["total-number"]}>{__data.ProjectToTal}</span>
                         </div>
                     </div>
                     <YakitInput.Search
                         size='large'
                         placeholder='请输入项目名称'
                         value={params.ProjectName}
-                        onChange={(e) => setParams({...params, ProjectName: e.target.value})}
+                        onChange={(e) =>
+                            setParams({
+                                Type: "all",
+                                Pagination: {...params.Pagination, Page: 1},
+                                ProjectName: e.target.value
+                            })
+                        }
                         style={{width: 288}}
-                        onSearch={() => update(1)}
+                        onSearch={() => {
+                            setFiles([])
+                            update(1)
+                        }}
                     />
                 </div>
 
@@ -587,7 +846,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         className={classnames(styles["open-recent-wrapper"], {
                             [styles["open-recent-focus-wrapper"]]: headerShow
                         })}
-                        onClick={() => operateFunc("openRecent", latestProject)}
                     >
                         <div
                             className={styles["open-recent-body"]}
@@ -597,9 +855,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 <DocumentTextSvgIcon />
                                 <div>
                                     <div className={styles["title-style"]}>
-                                        {latestProject?.ProjectName || "[default]"}
+                                        {latestProject?.ProjectName === "[default]"
+                                            ? "[默认项目]"
+                                            : latestProject?.ProjectName || "[default]"}
                                     </div>
-                                    <div className={styles["subtitle-style"]}>{`最近打开时间：${
+                                    <div className={styles["subtitle-style"]}>{`最近操作时间：${
                                         latestProject ? formatTimestamp(latestProject?.CreatedAt) : "- -"
                                     }`}</div>
                                 </div>
@@ -618,7 +878,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             data: [
                                                 {
                                                     key: "export",
-                                                    label: "加密导出",
+                                                    label: "导出",
                                                     itemIcon: (
                                                         <ExportIcon className={styles["type-filter-icon-style"]} />
                                                     ),
@@ -654,7 +914,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             popupClassName: styles["dropdown-menu-filter-wrapper"],
                                             onClick: ({key}) => {
                                                 setHeaderShow(false)
-                                                operateFunc(key, latestProject)
+                                                if (key === "delete") {
+                                                    if (latestProject) {
+                                                        setDelId(+latestProject.Id)
+                                                        setDelShow(true)
+                                                    }
+                                                } else operateFunc(key, latestProject)
                                             }
                                         }}
                                     >
@@ -719,6 +984,59 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )}
                 </div>
 
+                {search.name && (
+                    <div className={styles["project-search"]}>
+                        搜索到 <span className={styles["total-style"]}>{search.total}</span> 条“{search.name}”相关内容
+                    </div>
+                )}
+
+                {files.length > 0 && (
+                    <div className={styles["project-path-wrapper"]}>
+                        <div
+                            className={styles["path-style"]}
+                            onClick={() => {
+                                setParams({
+                                    Type: "all",
+                                    Pagination: {Page: 1, Limit: 20, Order: "desc", OrderBy: "updated_at"}
+                                })
+
+                                setTimeout(() => {
+                                    setFiles([])
+                                    update()
+                                }, 500)
+                            }}
+                        >
+                            本地文件
+                        </div>
+                        <ChevronRightIcon className={styles["icon-style"]} />
+                        <div
+                            className={styles["path-style"]}
+                            onClick={() => {
+                                if (files.length > 1) {
+                                    setLoading(true)
+                                    setParams({
+                                        Type: params.Type,
+                                        Pagination: {...params.Pagination, Page: 1},
+                                        FolderId: +files[0].Id
+                                    })
+                                    setTimeout(() => {
+                                        setFiles([files[0]])
+                                        update()
+                                    }, 500)
+                                }
+                            }}
+                        >
+                            {files[0].name}
+                        </div>
+                        {files.length > 1 && (
+                            <>
+                                <ChevronRightIcon className={styles["icon-style"]} />
+                                <div className={styles["path-style"]}>{files[1].name}</div>
+                            </>
+                        )}
+                    </div>
+                )}
+
                 <div className={styles["project-table-wrapper"]}>
                     <YakitSpin tip='Loading...' spinning={loading}>
                         <div className={styles["project-table-body"]}>
@@ -770,7 +1088,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                         [styles["table-opt-selected"]]:
                                                             operateShow >= 0 && operateShow === +i.data.Id
                                                     })}
-                                                    onClick={(e) => operateFunc("setCurrent", i.data)}
+                                                    onClick={(e) => {
+                                                        if (!i.data.Type || i.data.Type === "project") {
+                                                            operateFunc("setCurrent", i.data)
+                                                        }
+                                                        if (i.data.Type === "file") {
+                                                            operateFunc("openFile", i.data)
+                                                        }
+                                                    }}
                                                 >
                                                     <div className={styles["opt-content"]}>
                                                         <div className={styles["content-body"]}>
@@ -807,6 +1132,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 </div>
                                             )
                                         })}
+                                        {loadMore && <div className={styles["table-loading-more"]}>正在加载中...</div>}
                                     </div>
                                 </div>
                             </div>
@@ -816,16 +1142,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             </div>
 
             <NewProjectAndFolder
-                isNew={modalInfo.isNew}
-                isFolder={modalInfo.isFolder}
-                isExport={modalInfo.isExport}
-                isImport={modalInfo.isImport}
-                project={modalProject}
-                visible={modalInfo.show}
-                setVisible={(open: boolean) => {
-                    setModalProject(undefined)
-                    setModalInfo({...modalInfo, show: open})
-                }}
+                {...modalInfo}
+                setVisible={(open: boolean) => setModalInfo({visible: open})}
                 loading={modalLoading}
                 setLoading={setModalLoading}
                 onModalSubmit={onModalSubmit}
@@ -834,7 +1152,29 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             <TransferProject
                 {...transferShow}
                 onSuccess={onTransferProjectHint}
-                setVisible={(open: boolean) => setTransferShow({...transferShow, visible: open})}
+                setVisible={(open: boolean) => setTransferShow({visible: open})}
+            />
+
+            <YakitHint
+                visible={delShow}
+                title='删除文件'
+                content='是否同时清除本地文件?'
+                okButtonText='保留'
+                cancelButtonText='清除'
+                footerExtra={
+                    <YakitButton
+                        size='max'
+                        type='outline2'
+                        onClick={() => {
+                            setDelShow(false)
+                            setDelId(-1)
+                        }}
+                    >
+                        取消
+                    </YakitButton>
+                }
+                onOk={() => delProjectFolder(false)}
+                onCancel={() => delProjectFolder(true)}
             />
         </div>
     )
@@ -842,33 +1182,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
 export default ProjectManage
 
-/** 可能准备写成基础组件 */
-interface DropdownMenuProps {
-    dropdown?: Omit<DropdownProps, "overlay">
-    menu: YakitMenuProp
-    children?: ReactNode
-}
-/** 可能准备写成基础组件 */
-const DropdownMenu: React.FC<DropdownMenuProps> = memo((props) => {
-    const {dropdown = {}, menu, children} = props
-
-    const overlay = useMemo(() => {
-        return <YakitMenu {...menu} />
-    }, [menu])
-
-    return (
-        <Dropdown {...dropdown} overlay={overlay}>
-            {children}
-        </Dropdown>
-    )
-})
-
 interface NewProjectAndFolderProps {
     isNew?: boolean
     isFolder?: boolean
     isExport?: boolean
     isImport?: boolean
     project?: ProjectDescription
+    parentNode?: ProjectDescription
     visible: boolean
     setVisible: (open: boolean) => any
     loading: boolean
@@ -876,19 +1196,30 @@ interface NewProjectAndFolderProps {
     onModalSubmit: (type: string, value: ProjectFolderInfoProps | ExportProjectProps | ImportProjectProps) => any
 }
 interface ProjectFolderInfoProps {
-    name: string
-    folder?: string
-    notes?: string
+    Id?: number
+    oldName?: string
+    ProjectName: string
+    Description?: string
+    FolderId?: number
+    ChildFolderId?: number
 }
 interface ExportProjectProps {
-    id: number
-    name: string
-    password: string
+    Id: number
+    ProjectName: string
+    Password: string
 }
 interface ImportProjectProps {
-    path: string
-    name?: string
-    password?: string
+    ProjectFilePath: string
+    LocalProjectName?: string
+    Password?: string
+    FolderId?: number
+    ChildFolderId?: number
+}
+/** 文件夹级联组件节点属性 */
+interface FileProjectInfoProps extends ProjectDescription {
+    children?: ProjectDescription[]
+    isLeaf?: boolean
+    loading?: boolean
 }
 
 const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
@@ -898,6 +1229,7 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
         isExport,
         isImport,
         project,
+        parentNode,
         visible,
         setVisible,
         loading,
@@ -905,38 +1237,136 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
         onModalSubmit
     } = props
 
+    const [data, setData, getData] = useGetState<FileProjectInfoProps[]>([])
+
+    const fetchChildNode = useMemoizedFn((selectedOptions: FileProjectInfoProps[]) => {
+        const targetOption = selectedOptions[selectedOptions.length - 1]
+        targetOption.loading = true
+
+        ipcRenderer
+            .invoke("GetProjects", {
+                FolderId: +targetOption.Id,
+                Type: "file",
+                Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
+            })
+            .then((rsp: ProjectsResponse) => {
+                try {
+                    setTimeout(() => {
+                        targetOption.children = [...rsp.Projects]
+                        targetOption.loading = false
+                        setData([...getData()])
+                    }, 300)
+                } catch (e) {
+                    failed("处理项目数据失败: " + `${e}`)
+                }
+            })
+            .catch((e) => {
+                failed(`查询 Projects 失败：${e}`)
+            })
+    })
+
+    const fetchFirstList = useMemoizedFn(() => {
+        const param: ProjectParamsProp = {
+            Type: "file",
+            Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
+        }
+
+        ipcRenderer
+            .invoke("GetProjects", param)
+            .then((rsp: ProjectsResponse) => {
+                try {
+                    setData(
+                        rsp.Projects.map((item) => {
+                            const info: FileProjectInfoProps = {...item}
+                            info.isLeaf = false
+                            return info
+                        })
+                    )
+                } catch (e) {
+                    failed("处理项目数据失败: " + `${e}`)
+                }
+            })
+            .catch((e) => {
+                failed(`查询 Projects 失败：${e}`)
+            })
+    })
+
     const [info, setInfo] = useState<ProjectFolderInfoProps>({
-        name: ""
+        ProjectName: ""
     })
     const [exportInfo, setExportInfo] = useState<ExportProjectProps>({
-        id: 0,
-        name: "",
-        password: ""
+        Id: 0,
+        ProjectName: "",
+        Password: ""
     })
     const [importInfo, setImportInfo] = useState<ImportProjectProps>({
-        path: ""
+        ProjectFilePath: ""
     })
 
     useEffect(() => {
-        if (isExport && project) setExportInfo({id: project.Id, name: project.ProjectName, password: ""})
-    }, [isExport, project])
+        if (visible) {
+            fetchFirstList()
+        }
+        if (visible && isNew && project) {
+            setInfo({
+                Id: +project.Id,
+                oldName: project.ProjectName,
+                ProjectName: project.ProjectName,
+                Description: project.Description,
+                FolderId: +project.FolderId,
+                ChildFolderId: +project.ChildFolderId
+            })
+        }
+        if (visible && isExport && project) {
+            setExportInfo({
+                Id: project.Id,
+                ProjectName: project.ProjectName,
+                Password: ""
+            })
+        }
+        if (!visible) {
+            setIsCheck(false)
+            setInfo({ProjectName: ""})
+            setExportInfo({
+                Id: 0,
+                ProjectName: "",
+                Password: ""
+            })
+            setImportInfo({
+                ProjectFilePath: ""
+            })
+        }
+    }, [visible, isNew, isExport, project])
+
+    const cascaderValue = useMemo(() => {
+        if (project) {
+            const first = project.FolderName || ""
+            const second = project.ChildFolderName || ""
+            if (first && !second) return [first]
+            if (first && second) return [first, second]
+            return []
+        }
+        return []
+    }, [project])
 
     const [isCheck, setIsCheck] = useState<boolean>(false)
 
     const headerTitle = useMemo(() => {
         if (isNew && isFolder) return "新建文件夹"
         if (isNew && !isFolder) return "新建项目"
+        if (isNew && isFolder && project && project.Id) return "编辑文件夹"
+        if (isNew && !isFolder && project && project.Id) return "编辑项目"
         if (isExport) return "导出项目"
         if (isImport) return "导入项目"
         return "未知情况"
-    }, [isNew, isFolder, isExport, isImport])
+    }, [isNew, isFolder, isExport, isImport, project])
 
     const submitTitle = useMemo(() => {
-        if (isNew) return "创建"
+        if (isNew && !project) return "创建"
         if (isExport) return "导出"
         if (isImport) return "导入"
         return "确定"
-    }, [isNew, isExport, isImport])
+    }, [isNew, isExport, isImport, project])
 
     const [transferShow, setTransferShow] = useState<{
         isExport?: boolean
@@ -951,19 +1381,38 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
         if (!isCheck) setIsCheck(true)
         setLoading(true)
         if (isNew) {
-            if (!info.name) {
+            if (!info.ProjectName) {
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            onModalSubmit(isFolder ? "isNewFolder" : "isNewProject", {...info})
+            const data = {...info}
+            if (parentNode && !data.Id) {
+                // @ts-ignore
+                if (parentNode.FolderId === "0") {
+                    data.FolderId = +parentNode.Id
+                } else {
+                    data.FolderId = +parentNode.FolderId
+                    // @ts-ignore
+                    if (parentNode.ChildFolderId === "0") {
+                        data.FolderId = +parentNode.Id
+                    } else {
+                        data.FolderId = +parentNode.ChildFolderId
+                    }
+                }
+            }
+            onModalSubmit(isFolder ? "isNewFolder" : "isNewProject", {...data})
         }
         if (isExport) {
-            if (!exportInfo.id) {
-                failed("数据获取错误，请关闭弹窗后重试!")
+            if (!exportInfo.Id) {
+                failed("未获取到数据ID，请关闭弹窗后重试!")
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            if (exportInfo.password.length > 15) {
+            if (!exportInfo.Password) {
+                setTimeout(() => setLoading(false), 300)
+                return
+            }
+            if (exportInfo.Password.length > 15) {
                 failed("密码最多15位")
                 setTimeout(() => setLoading(false), 300)
                 return
@@ -975,33 +1424,76 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
             })
         }
         if (isImport) {
-            if (!importInfo.path) {
+            if (!importInfo.ProjectFilePath) {
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            ipcRenderer.invoke("fetch-path-file-name", importInfo.path).then((fileName: string) => {
-                setTransferShow({
-                    isImport: true,
-                    visible: true,
-                    data: {...importInfo, name: importInfo.name || fileName}
-                })
-            })
+
+            const newProject: ProjectParamsProps = {
+                ProjectName: "",
+                Description: "",
+                FolderId: importInfo.FolderId ? +importInfo.FolderId : 0,
+                ChildFolderId: importInfo.ChildFolderId ? +importInfo.ChildFolderId : 0,
+                Type: "project"
+            }
+
+            if (importInfo.LocalProjectName) {
+                newProject.ProjectName = importInfo.LocalProjectName
+                ipcRenderer
+                    .invoke("IsProjectNameValid", newProject)
+                    .then((e) => {
+                        setTransferShow({
+                            isImport: true,
+                            visible: true,
+                            data: {...importInfo, LocalProjectName: importInfo.LocalProjectName}
+                        })
+                    })
+                    .catch((e) => {
+                        failed("创建新项目失败，项目名校验不通过：" + `${e}`)
+                        setTimeout(() => {
+                            setLoading(false)
+                        }, 300)
+                    })
+            } else {
+                ipcRenderer
+                    .invoke("fetch-path-file-name", importInfo.ProjectFilePath)
+                    .then((fileName: string) => {
+                        if (!fileName) {
+                            failed(`解析路径内文件名为空`)
+                            setTimeout(() => {
+                                setLoading(false)
+                            }, 300)
+                            return
+                        }
+
+                        newProject.ProjectName = fileName
+                        ipcRenderer
+                            .invoke("IsProjectNameValid", newProject)
+                            .then((e) => {
+                                setTransferShow({
+                                    isImport: true,
+                                    visible: true,
+                                    data: {...importInfo, LocalProjectName: fileName}
+                                })
+                            })
+                            .catch((e) => {
+                                failed("创建新项目失败，项目名校验不通过：" + `${e}`)
+                                setTimeout(() => {
+                                    setLoading(false)
+                                }, 300)
+                            })
+                    })
+                    .catch((e) => {
+                        failed(`无法解析路径内的文件名 ${e}`)
+                        setTimeout(() => {
+                            setLoading(false)
+                        }, 300)
+                    })
+            }
         }
     })
 
-    const onClose = useMemoizedFn(() => {
-        setIsCheck(false)
-        setInfo({name: ""})
-        setExportInfo({
-            id: 0,
-            name: "",
-            password: ""
-        })
-        setImportInfo({
-            path: ""
-        })
-        setVisible(false)
-    })
+    const onClose = useMemoizedFn(() => setVisible(false))
 
     return (
         <YakitModal
@@ -1037,14 +1529,30 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                             <YakitInput
                                 size='large'
                                 placeholder='未命名'
-                                className={classnames({[styles["required-form-item-wrapper"]]: isCheck && !info.name})}
-                                value={info.name}
-                                onChange={(e) => setInfo({...info, name: e.target.value})}
+                                className={classnames({
+                                    [styles["required-form-item-wrapper"]]: isCheck && !info.ProjectName
+                                })}
+                                value={info.ProjectName}
+                                onChange={(e) => setInfo({...info, ProjectName: e.target.value})}
                             />
                         </Form.Item>
-                        {!isFolder && (
+                        {!isFolder && !parentNode && (
                             <Form.Item label={"所属文件夹 :"}>
-                                <YakitInput />
+                                <Cascader
+                                    className={styles["form-item-cascader"]}
+                                    defaultValue={cascaderValue}
+                                    options={data}
+                                    fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
+                                    changeOnSelect={true}
+                                    loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
+                                    onChange={(value, selectedOptions) => {
+                                        if (value) {
+                                            setInfo({...info, FolderId: +value[0] || 0, ChildFolderId: +value[1] || 0})
+                                        } else {
+                                            setInfo({...info, FolderId: 0, ChildFolderId: 0})
+                                        }
+                                    }}
+                                />
                             </Form.Item>
                         )}
                         <Form.Item label={"备注 :"}>
@@ -1053,6 +1561,8 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                                 showCount
                                 maxLength={100}
                                 placeholder='请输入描述与备注'
+                                value={info.Description}
+                                onChange={(e) => setInfo({...info, Description: e.target.value})}
                             />
                         </Form.Item>
                     </>
@@ -1060,7 +1570,7 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                 {isExport && (
                     <>
                         <Form.Item label={"项目名称 :"}>
-                            <YakitInput disabled={true} size='large' value={exportInfo.name} />
+                            <YakitInput disabled={true} size='large' value={exportInfo.ProjectName} />
                         </Form.Item>
                         <Form.Item
                             label={
@@ -1072,11 +1582,11 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                         >
                             <YakitInput.Password
                                 className={classnames({
-                                    [styles["required-form-item-wrapper"]]: isCheck && !exportInfo.password
+                                    [styles["required-form-item-wrapper"]]: isCheck && !exportInfo.Password
                                 })}
                                 placeholder='为项目设置打开密码'
-                                value={exportInfo.password}
-                                onChange={(e) => setExportInfo({...exportInfo, password: e.target.value})}
+                                value={exportInfo.Password}
+                                onChange={(e) => setExportInfo({...exportInfo, Password: e.target.value})}
                             />
                         </Form.Item>
                     </>
@@ -1091,13 +1601,13 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                             }
                             help={
                                 <div className={styles["import-form-item-help-wrapper"]}>
-                                    可将文件拖入框内或点击此处
+                                    点击此处
                                     <Upload
                                         multiple={false}
                                         maxCount={1}
                                         showUploadList={false}
                                         beforeUpload={(f: any) => {
-                                            setImportInfo({...importInfo, path: f?.path || ""})
+                                            setImportInfo({...importInfo, ProjectFilePath: f?.path || ""})
                                             return false
                                         }}
                                     >
@@ -1110,12 +1620,12 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                         >
                             <YakitInput
                                 className={classnames({
-                                    [styles["required-form-item-wrapper"]]: isCheck && !importInfo.path
+                                    [styles["required-form-item-wrapper"]]: isCheck && !importInfo.ProjectFilePath
                                 })}
                                 size='large'
                                 placeholder='请输入绝对路径'
-                                value={importInfo.path}
-                                onChange={(e) => setImportInfo({...importInfo, path: e.target.value})}
+                                value={importInfo.ProjectFilePath}
+                                onChange={(e) => setImportInfo({...importInfo, ProjectFilePath: e.target.value})}
                             />
                         </Form.Item>
                         <Form.Item
@@ -1129,15 +1639,35 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                             <YakitInput
                                 size='large'
                                 placeholder='请输入项目名'
-                                value={importInfo.name}
-                                onChange={(e) => setImportInfo({...importInfo, name: e.target.value})}
+                                value={importInfo.LocalProjectName}
+                                onChange={(e) => setImportInfo({...importInfo, LocalProjectName: e.target.value})}
                             />
                         </Form.Item>
-                        <Form.Item label={"项目名称 :"} className={styles["export-form-item-password-wrapper"]}>
+                        <Form.Item label={"密码 :"} className={styles["export-form-item-password-wrapper"]}>
                             <YakitInput.Password
                                 placeholder='如无密码则不填'
-                                value={importInfo.password}
-                                onChange={(e) => setImportInfo({...importInfo, password: e.target.value})}
+                                value={importInfo.Password}
+                                onChange={(e) => setImportInfo({...importInfo, Password: e.target.value})}
+                            />
+                        </Form.Item>
+                        <Form.Item label={"所属文件夹 :"}>
+                            <Cascader
+                                className={styles["form-item-cascader"]}
+                                options={data}
+                                fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
+                                changeOnSelect={true}
+                                loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
+                                onChange={(value, selectedOptions) => {
+                                    if (value) {
+                                        setImportInfo({
+                                            ...importInfo,
+                                            FolderId: +value[0] || 0,
+                                            ChildFolderId: +value[1] || 0
+                                        })
+                                    } else {
+                                        setImportInfo({...importInfo, FolderId: 0, ChildFolderId: 0})
+                                    }
+                                }}
                             />
                         </Form.Item>
                     </>
@@ -1162,7 +1692,10 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                         setTransferShow({visible: false})
                     }, 500)
                 }}
-                setVisible={(open: boolean) => setTransferShow({...transferShow, visible: open})}
+                setVisible={(open: boolean) => {
+                    setLoading(false)
+                    setTransferShow({...transferShow, visible: open})
+                }}
             />
         </YakitModal>
     )
@@ -1192,7 +1725,13 @@ const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
 
     useEffect(() => {
         const infos: string[] = []
-        if (!visible) return
+        if (!visible) {
+            setToken(randomString(40))
+            setPercent(0)
+            setInfos([])
+            pathRef.current = ""
+            return
+        }
         if ((!isExport && !isImport) || !data) {
             failed("数据出错，请点击取消后再次尝试!")
             return
@@ -1205,20 +1744,23 @@ const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
             ipcRenderer.invoke(
                 "ExportProject",
                 {
-                    ProjectName: exportData.name,
-                    Password: exportData.password || ""
+                    Id: exportData.Id,
+                    Password: exportData.Password || ""
                 },
                 token
             )
         }
         if (isImport) {
             const importData: ImportProjectProps = {...(data as any)}
+
             ipcRenderer.invoke(
                 `ImportProject`,
                 {
-                    LocalProjectName: importData.name,
-                    ProjectFilePath: importData.path,
-                    Password: importData?.password || ""
+                    LocalProjectName: importData.LocalProjectName,
+                    ProjectFilePath: importData.ProjectFilePath,
+                    Password: importData?.Password || "",
+                    FolderId: importData.FolderId || 0,
+                    ChildFolderId: importData.ChildFolderId || 0
                 },
                 token
             )
@@ -1241,12 +1783,15 @@ const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         })
         ipcRenderer.on(`${token}-end`, (e) => {
             info(`${hintTitle} finished`)
-            if (isImport) onSuccess("isImport")
-            if (isExport) {
-                onSuccess("isExport")
-                setTimeout(() => {
-                    if (pathRef.current) openABSFileLocated(pathRef.current)
-                }, 500)
+            const isError = infos.filter((item) => item.indexOf("error") > -1).length > 0
+            if (!isError) {
+                if (isImport) onSuccess("isImport")
+                if (isExport) {
+                    onSuccess("isExport")
+                    setTimeout(() => {
+                        if (pathRef.current) openABSFileLocated(pathRef.current)
+                    }, 500)
+                }
             }
         })
 
@@ -1263,13 +1808,7 @@ const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         }
     }, [visible])
 
-    const onClose = useMemoizedFn(() => {
-        setToken(randomString(40))
-        setPercent(0)
-        setInfos([])
-        pathRef.current = ""
-        setVisible(false)
-    })
+    const onClose = useMemoizedFn(() => setVisible(false))
 
     return (
         <div className={visible ? styles["transfer-project-mask"] : styles["transfer-project-hidden-mask"]}>
@@ -1330,5 +1869,26 @@ const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                 </div>
             </div>
         </div>
+    )
+})
+
+/** 可能准备写成基础组件 */
+interface DropdownMenuProps {
+    dropdown?: Omit<DropdownProps, "overlay">
+    menu: YakitMenuProp
+    children?: ReactNode
+}
+/** 可能准备写成基础组件 */
+const DropdownMenu: React.FC<DropdownMenuProps> = memo((props) => {
+    const {dropdown = {}, menu, children} = props
+
+    const overlay = useMemo(() => {
+        return <YakitMenu {...menu} />
+    }, [menu])
+
+    return (
+        <Dropdown {...dropdown} overlay={overlay}>
+            {children}
+        </Dropdown>
     )
 })
