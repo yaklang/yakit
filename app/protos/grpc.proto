@@ -411,7 +411,7 @@ service Yak {
   rpc SetCurrentProject(SetCurrentProjectRequest) returns (Empty);
   rpc GetCurrentProject(Empty) returns (ProjectDescription);
   rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
-  rpc NewProject(NewProjectRequest) returns (Empty);
+  rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
   rpc RemoveProject(RemoveProjectRequest) returns (Empty);
 
@@ -525,6 +525,10 @@ message NewProjectRequest {
   int64 ChildFolderId = 4;
   string Type = 5;
   int64  Id = 6;
+}
+
+message NewProjectResponse {
+  int64 Id = 1;
 }
 
 message GetProjectsRequest {
@@ -1402,6 +1406,8 @@ message Risk {
   string RuntimeId = 22;
 
   string CVE = 23;
+  string Description =24;
+  string Solution =25;
 }
 
 message QueryRisksRequest {
