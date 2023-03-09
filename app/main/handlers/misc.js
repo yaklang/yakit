@@ -412,5 +412,29 @@ module.exports = (win, getClient) => {
     ipcMain.handle("MigrateLegacyDatabase", async (e, params) => {
         return await asyncMigrateLegacyDatabase(params)
     })
-    
+
+    // asyncIsCVEDatabaseReady wrapper
+    const asyncIsCVEDatabaseReady = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsCVEDatabaseReady(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IsCVEDatabaseReady", async (e, params) => {
+        return await asyncIsCVEDatabaseReady(params)
+    })
+
+    const handlerHelper = require("./handleStreamWithContext");
+
+    const streamUpdateCVEDatabaseMap = new Map();
+    ipcMain.handle("cancel-UpdateCVEDatabase", handlerHelper.cancelHandler(streamUpdateCVEDatabaseMap));
+    ipcMain.handle("UpdateCVEDatabase", (e, params, token) => {
+        let stream = getClient().UpdateCVEDatabase(params);
+        handlerHelper.registerHandler(win, stream, streamUpdateCVEDatabaseMap, token)
+    })
 }
