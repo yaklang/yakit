@@ -167,4 +167,5 @@ export interface PluginLocalItemProps {
 export interface PluginLocalInfoProps {
     plugin: YakScript
     wrapperClassName?: string
+    getScriptInfo?: (YakScript) => void
 }

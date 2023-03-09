@@ -371,6 +371,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
     const [tags, setTags] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
+    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
 
     const [total, setTotal] = useState<number>(0)
     /**
@@ -465,7 +466,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             {
                 Tag: tags,
                 Type: "mitm,port-scan",
-                Keyword: "",
+                Keyword: searchKeyword,
+                IncludedScriptNames: includedScriptNames,
                 Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
             }
         )
@@ -524,6 +526,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             }}
                             hooks={new Map<string, boolean>()}
                             onSelectAll={onSelectAll}
+                            includedScriptNames={includedScriptNames}
+                            setIncludedScriptNames={setIncludedScriptNames}
                         />
                     </>
                 )
@@ -531,6 +535,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             default:
                 return (
                     <MITMPluginHijackContent
+                        setTags={setTags}
+                        tags={tags}
+                        searchKeyword={searchKeyword}
+                        setSearchKeyword={setSearchKeyword}
                         onSubmitYakScriptId={onSubmitYakScriptId}
                         status={status}
                         checkList={checkList}
@@ -553,6 +561,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             setTotal(t)
                             getAllSatisfyScript(t)
                         }}
+                        includedScriptNames={includedScriptNames}
+                        setIncludedScriptNames={setIncludedScriptNames}
                     />
                 )
         }

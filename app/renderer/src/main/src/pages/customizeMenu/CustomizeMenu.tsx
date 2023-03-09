@@ -1238,7 +1238,7 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
 })
 
 export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((props) => {
-    const {plugin} = props
+    const {plugin, getScriptInfo} = props
     const renderIcon = useMemoizedFn(() => {
         if (plugin.OnlineOfficial) {
             return <OfficialPluginIcon className={style["plugin-local-icon"]} />
@@ -1259,6 +1259,11 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
                 title={plugin.Help || "No Description about it."}
                 placement='topRight'
                 overlayClassName={style["question-tooltip"]}
+                onVisibleChange={(v) => {
+                    if (v && !plugin.Help) {
+                        if (getScriptInfo) getScriptInfo(plugin)
+                    }
+                }}
             >
                 <QuestionMarkCircleIcon className={style["plugin-local-icon"]} />
             </Tooltip>
@@ -1266,6 +1271,11 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
                 placement='topRight'
                 overlayClassName={style["terminal-popover"]}
                 content={<YakEditor type={"yak"} value={plugin.Content} readOnly={true} />}
+                onVisibleChange={(v) => {
+                    if (v && !plugin.Content) {
+                        if (getScriptInfo) getScriptInfo(plugin)
+                    }
+                }}
             >
                 <TerminalIcon className={style["plugin-local-icon"]} />
             </YakitPopover>

@@ -14,6 +14,7 @@ import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
+import {useHotkeys} from "react-hotkeys-hook"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -255,6 +256,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setUrlInfo("监听中...")
         setIpInfo("")
     })
+    useHotkeys(
+        "ctrl+t",
+        () => {
+            handleAutoForward(isManual ? "manual" : "log")
+        },
+        [autoForward]
+    )
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (autoForward) {
             case "manual":

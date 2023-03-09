@@ -205,6 +205,7 @@
         align-items: center;
         justify-content: space-between;
         padding-right: 4px;
+        height: 28px;
     }
     .search-plugin-hijack-content {
         flex: 1;
@@ -254,6 +255,9 @@
                     color: var(--yakit-danger-6);
                 }
             }
+        }
+        .plugin-loaded-hooks-list {
+            height: calc(100% - 56px);
         }
     }
 }

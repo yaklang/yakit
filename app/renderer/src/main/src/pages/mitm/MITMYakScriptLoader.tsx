@@ -1,4 +1,4 @@
-import React from "react"
+import React, {useEffect, useState} from "react"
 import {Card, Col, Popconfirm, Row, Statistic} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
@@ -16,7 +16,10 @@ const {ipcRenderer} = window.require("electron")
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const {hooks, script, onSubmitYakScriptId, onRemoveHook, defaultPlugins, setDefaultPlugins, status} = p
-    const i = script
+    const [i, setI] = useState(script)
+    useEffect(() => {
+        setI(script)
+    }, [script])
     const onCheckboxClicked = useMemoizedFn(() => {
         if (status === "idle") {
             onSelectDefaultPlugins()
@@ -58,6 +61,21 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         clearMITMPluginCache()
         p.onSubmitYakScriptId && p.onSubmitYakScriptId(script.Id, [])
     })
+    const getScriptInfo = useMemoizedFn((s: YakScript, isSendToPatch?: boolean) => {
+        if (!s.ScriptName) return
+        ipcRenderer.invoke("GetYakScriptByName", {Name: s.ScriptName}).then((res: YakScript) => {
+            setI({
+                ...res,
+                HeadImg: "",
+                OnlineOfficial: false,
+                OnlineIsPrivate: false,
+                UUID: ""
+            })
+            if (isSendToPatch) {
+                p.onSendToPatch && p.onSendToPatch(res.Content)
+            }
+        })
+    })
     return (
         <div className={style["mitm-plugin-local-item"]}>
             <div className={style["mitm-plugin-local-left"]}>
@@ -67,11 +85,13 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 />
                 <div className={style["mitm-plugin-local-info"]}>
                     <div className={style["mitm-plugin-local-info-left"]}>
-                        <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
+                        {i.HeadImg && (
+                            <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
+                        )}
                         <span className={classNames(style["plugin-local-scriptName"])}>{i.ScriptName}</span>
                     </div>
                     <div className={style["mitm-plugin-local-info-right"]}>
-                        <PluginLocalInfoIcon plugin={i} />
+                        <PluginLocalInfoIcon plugin={i} getScriptInfo={getScriptInfo} />
                     </div>
                 </div>
             </div>
@@ -80,11 +100,11 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     disabled={!p.onSendToPatch}
                     title='发送到【热加载】中调试代码？'
                     onConfirm={() => {
-                        if (!script.Content) {
-                            warn("暂无数据")
+                        if (!i.Content) {
+                            getScriptInfo(i, true)
                             return
                         }
-                        let _ = p.onSendToPatch && p.onSendToPatch(script.Content)
+                        p.onSendToPatch && p.onSendToPatch(i.Content)
                     }}
                 >
                     <LightningBoltIcon className={style["lightning-bolt-icon"]} />

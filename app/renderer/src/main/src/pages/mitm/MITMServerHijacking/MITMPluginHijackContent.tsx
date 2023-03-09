@@ -1,10 +1,12 @@
 import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {MITMPluginTemplateShort} from "@/pages/invoker/data/MITMPluginTamplate"
-import {YakScriptHooks} from "@/pages/invoker/schema"
+import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -40,6 +42,12 @@ interface MITMPluginHijackContentProps {
     total: number
     isSelectAll: boolean
     setIsSelectAll: (e: boolean) => void
+    includedScriptNames: string[]
+    setIncludedScriptNames: (s: string[]) => void
+    tags: string[]
+    searchKeyword: string
+    setTags: (s: string[]) => void
+    setSearchKeyword: (s: string) => void
 }
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (props) => {
     const {
@@ -54,12 +62,18 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         total,
         setTotal,
         isSelectAll,
-        setIsSelectAll
+        setIsSelectAll,
+        includedScriptNames,
+        setIncludedScriptNames,
+        tags,
+        searchKeyword,
+        setTags,
+        setSearchKeyword
     } = props
     const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
-    const [tags, setTags] = useState<string[]>([])
-    const [searchKeyword, setSearchKeyword] = useState<string>("")
+    const [hookScriptNameSearch, setHookScriptNameSearch] = useState<string>("")
     const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
+    const [isHooksSearch, setIsHooksSearch] = useState<boolean>(false)
     const [refreshCode, setRefreshCode] = useState<boolean>(false)
     /**
      * 选中的插件组
@@ -134,15 +148,33 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             ipcRenderer.removeAllListeners("client-mitm-loading")
         }
     }, [])
-    const hooksItem: {name: string}[] = useCreation(() => {
-        let tmpItem: {name: string}[] = []
+    const hooksItem: YakScript[] = useCreation(() => {
+        let tmpItem: YakScript[] = []
         hooks.forEach((value, key) => {
+            if (!key.includes(hookScriptNameSearch)) return
             if (value) {
-                tmpItem.push({name: key})
+                tmpItem.push({
+                    Id: 0,
+                    ScriptName: key,
+                    Content: "",
+                    Type: "",
+                    Params: [],
+                    CreatedAt: 0,
+                    Help: "",
+                    Level: "",
+                    Author: "",
+                    Tags: "",
+                    IsHistory: false,
+                    OnlineId: 0,
+                    OnlineScriptName: "",
+                    OnlineContributors: "",
+                    UserId: 0,
+                    UUID: ""
+                })
             }
         })
-        return tmpItem.sort((a, b) => a.name.localeCompare(b.name))
-    }, [hooks])
+        return tmpItem.sort((a, b) => a.ScriptName.localeCompare(b.ScriptName))
+    }, [hooks, isHooksSearch])
 
     /**
      * @description 多选插件
@@ -164,6 +196,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     const onSearch = useMemoizedFn(() => {
         setTriggerSearch(!triggerSearch)
+    })
+    /**
+     * @description 发送到【热加载】中调试代码
+     */
+    const onSendToPatch = useMemoizedFn((code: string) => {
+        setScript(code)
+        setMode("hot-patch")
     })
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (mode) {
@@ -216,6 +255,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         )}
                     </div>
                 )
+            case "loaded":
+                return (
+                    <YakitInput.Search
+                        placeholder='请输入插件名称搜索'
+                        value={hookScriptNameSearch}
+                        onChange={(e) => setHookScriptNameSearch(e.target.value)}
+                        style={{maxWidth: 200}}
+                        onSearch={() => setIsHooksSearch(!isHooksSearch)}
+                        onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
+                    />
+                )
             default:
                 return (
                     <div className={styles["search-plugin-hijack-content"]}>
@@ -233,13 +283,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 )
         }
     })
-    /**
-     * @description 发送到【热加载】中调试代码
-     */
-    const onSendToPatch = useMemoizedFn((code: string) => {
-        setScript(code)
-        setMode("hot-patch")
-    })
+
     const onRenderContent = useMemoizedFn(() => {
         switch (mode) {
             case "hot-patch":
@@ -277,9 +321,36 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 清&nbsp;空
                             </div>
                         </div>
-                        {hooksItem.map((i) => {
-                            return <div>{i.name}</div>
-                        })}
+                        <div className={styles["plugin-loaded-hooks-list"]}>
+                            <RollingLoadList<YakScript>
+                                data={hooksItem}
+                                page={1}
+                                hasMore={false}
+                                loadMoreData={() => {}}
+                                loading={false}
+                                rowKey='ScriptName'
+                                defItemHeight={44}
+                                renderRow={(data: YakScript, index: number) => (
+                                    <MITMYakScriptLoader
+                                        status={status}
+                                        key={data.ScriptName}
+                                        script={data}
+                                        // 劫持启动后
+                                        hooks={hooks}
+                                        onSendToPatch={onSendToPatch}
+                                        onSubmitYakScriptId={props.onSubmitYakScriptId}
+                                        onRemoveHook={(name: string) => {
+                                            if (hooks.get(name)) {
+                                                setIsSelectAll(false)
+                                            }
+                                        }}
+                                        // 劫持启动前
+                                        defaultPlugins={checkList}
+                                        setDefaultPlugins={setCheckList}
+                                    />
+                                )}
+                            />
+                        </div>
                     </div>
                 )
             default:
@@ -301,7 +372,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         />
                         <YakitSpin spinning={loading}>
                             <MITMPluginLocalList
-                                height='calc(100% - 92px)'
+                                height='calc(100% - 96px)'
                                 onSubmitYakScriptId={onSubmitYakScriptId}
                                 status={status}
                                 checkList={checkList}
@@ -320,6 +391,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 hooks={hooks}
                                 onSelectAll={onSelectAll}
                                 onSendToPatch={onSendToPatch}
+                                includedScriptNames={includedScriptNames}
+                                setIncludedScriptNames={setIncludedScriptNames}
                             />
                         </YakitSpin>
                     </div>

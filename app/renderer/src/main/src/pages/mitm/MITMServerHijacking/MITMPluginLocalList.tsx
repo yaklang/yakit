@@ -62,6 +62,8 @@ interface MITMPluginLocalListProps {
     hooks: Map<string, boolean>
     onSelectAll: (b: boolean) => void
     onSendToPatch?: (b: string) => void
+    includedScriptNames: string[]
+    setIncludedScriptNames: (s: string[]) => void
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -84,15 +86,15 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setTotal,
         hooks,
         onSelectAll,
-        onSendToPatch
+        onSendToPatch,
+        includedScriptNames,
+        setIncludedScriptNames
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
 
     const [refresh, setRefresh] = useState<boolean>(true)
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
-
-    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
 
     useEffect(() => {
         setRefresh(!refresh)
