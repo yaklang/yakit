@@ -149,8 +149,7 @@
 
     :global {
         .ant-input {
-            // border-width: 0;
-            border-right-width: 0;
+            border-right: 0;
             border-radius: 4px;
             border-color: var(--search-border-color);
         }
@@ -176,7 +175,7 @@
         }
 
         .ant-input-group .ant-input:hover {
-            border-right-width: 0;
+            border-right: 1px solid var(--input-border-color);
         }
 
         .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button {

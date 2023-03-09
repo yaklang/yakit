@@ -119,10 +119,10 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             <div>
                 <ReactResizeDetector
                     onResize={(width, height) => {
-                        if (!width || !height) {
+                        if (!height) {
                             return
                         }
-                        setVListHeight(height)
+                        setVListHeight(height > 0 ? height + 12 : 0)
                     }}
                     handleWidth={true}
                     handleHeight={true}
@@ -137,7 +137,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                 />
             </div>
 
-            <div className={style["mitm-plugin-list"]} style={{height: `calc(100% - ${vlistHeigth + 12}px)`}}>
+            <div className={style["mitm-plugin-list"]} style={{height: `calc(100% - ${vlistHeigth}px)`}}>
                 <YakModuleList
                     emptyNode={
                         <div className={style["mitm-plugin-empty"]}>

@@ -1,6 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import styles from "./MITMServerHijacking.module.scss"
-import * as monaco from "monaco-editor"
 import {
     availableColors,
     CalloutColor,
@@ -9,7 +8,6 @@ import {
     HTTPFlow,
     HTTPFlowsFieldGroupResponse,
     HTTPFlowShield,
-    HTTPFlowTable,
     onExpandHTTPFlow,
     onRemoveCalloutColor,
     onSendToTab,
@@ -20,7 +18,6 @@ import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useRafInterval} from "ahooks"
-import {HTTPFlowMiniTable} from "@/components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {yakitFailed} from "@/utils/notification"
 import {callCopyToClipboard} from "@/utils/basic"
@@ -29,11 +26,9 @@ import {showResponseViaHTTPFlowID, showResponseViaResponseRaw} from "@/component
 import {GetPacketScanByCursorMenuItem, packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {ArrowCircleRightSvgIcon, ChromeFrameSvgIcon} from "@/assets/newIcon"
 import {showDrawer} from "@/utils/showModal"
-import {showByContextMenu, showByCustom} from "@/components/functionTemplate/showByContext"
-import {showByCursorMenu} from "@/utils/showByCursor"
+import {showByCustom} from "@/components/functionTemplate/showByContext"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
-import {setRemoteValue} from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -462,8 +457,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 reactNode: (
                     <div className={styles["context-menu-custom"]}>
                         <YakitMenu
-                            // selectedKeys={["数据包扫描", "Log4j"]}
-                            // openKeys={["数据包扫描", "Log4j"]}
                             data={menuData}
                             width={150}
                             onClick={({key}) => {
@@ -471,7 +464,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                             }}
                         />
                     </div>
-                )
+                ),
+                height: 266,
+                width: 158,
             },
             event.clientX,
             event.clientY

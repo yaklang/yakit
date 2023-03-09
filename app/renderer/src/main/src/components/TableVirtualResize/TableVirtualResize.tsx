@@ -893,7 +893,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 </div>
                             </DndProvider>
                         </div>
-                        <div className={classNames(style["virtual-table-list-pagination"])}>
+                        <div className={classNames(style["virtual-table-list-pagination"])} style={{display:scroll.scrollBottom < 10?'':'none'}}>
                             {loading && !(pagination?.total == data.length) && (
                                 <div className={classNames(style["pagination-loading"])}>
                                     <LoadingOutlined />

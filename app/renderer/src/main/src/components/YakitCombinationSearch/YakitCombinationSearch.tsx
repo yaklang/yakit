@@ -62,7 +62,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
                 style={{
                     ...inputSearchModuleTypeProps.wrapperStyle,
                     width: `calc(100% - ${beforeOptionWidth}px`,
-                    marginLeft: focus ? 2 : 0
+                    position: "relative"
                 }}
                 onFocus={onFocus}
                 onBlur={onBlur}
@@ -91,8 +91,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
                 onBlur={onBlurSelect}
                 wrapperStyle={{
                     ...wrapperStyle,
-                    width: `calc(100% - ${beforeOptionWidth}px`,
-                    marginLeft: focus ? 2 : 0
+                    width: `calc(100% - ${beforeOptionWidth}px`
                 }}
                 wrapperClassName={classNames(styles["yakit-combination-search-right-select"], wrapperClassName)}
             >
@@ -132,7 +131,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
                     value={valueBeforeOption}
                     onSelect={onSelectBeforeOption}
                     wrapperStyle={{
-                        width: focus ? beforeOptionWidth - 2 : beforeOptionWidth,
+                        width: beforeOptionWidth,
                         ...selectProps.wrapperStyle
                     }}
                     wrapperClassName={classNames(
