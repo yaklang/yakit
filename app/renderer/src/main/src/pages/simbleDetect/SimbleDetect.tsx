@@ -403,7 +403,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                <Form.Item name='scan_type' label='扫描模式'>
+                <Form.Item name='scan_type' label='扫描模式' initialValue={[["基础扫描"]]}>
                     <Cascader
                         multiple={true}
                         options={options}
@@ -447,6 +447,13 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
+
+    useEffect(()=>{
+        if(executing){
+            openPort.current = []
+            executing&&setOpenPorts([])
+        }
+    },[executing])
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
