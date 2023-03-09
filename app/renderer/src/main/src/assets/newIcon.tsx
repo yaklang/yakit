@@ -341,7 +341,12 @@ export const QuestionMarkCircleIcon = (props: Partial<IconProps>) => {
 
 const Plus = () => (
     <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <path d='M8 4V8M8 8V12M8 8H12M8 8L4 8' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M7.99984 2.66669V13.3334M13.3332 8.00002L2.6665 8.00002'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
     </svg>
 )
 
