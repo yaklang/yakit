@@ -466,7 +466,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                     </div>
                 ),
                 height: 266,
-                width: 158,
+                width: 158
             },
             event.clientX,
             event.clientY

@@ -37,7 +37,6 @@ interface MITMPluginHijackContentProps {
     isFullScreen: boolean
     setIsFullScreen: (b: boolean) => void
     onSelectAll: (e: boolean) => void
-    setInitialed?: (b: boolean) => void
     setTotal: (b: number) => void
     total: number
     isSelectAll: boolean
@@ -58,7 +57,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         isFullScreen,
         setIsFullScreen,
         onSelectAll,
-        setInitialed,
         total,
         setTotal,
         isSelectAll,
@@ -136,9 +134,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             }
         })
         updateHooks()
-        setTimeout(() => {
-            if (setInitialed) setInitialed(true)
-        }, 500)
         return () => {
             // 组价销毁时进行本地缓存 用于后续页面进入默认选项
             const localSaveData = Array.from(new Set(cacheTmp))

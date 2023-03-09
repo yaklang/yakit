@@ -67,17 +67,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
     const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
 
-    const [loading, setLoading] = useState(false)
-
     // 通过启动表单的内容
     const [addr, setAddr] = useState("")
     const [host, setHost] = useState("127.0.0.1")
     const [port, setPort] = useState(8083)
     const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
-
-    const [initialed, setInitialed] = useState(false)
-    const [error, setError] = useState("")
 
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([])
@@ -89,14 +84,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
         ipcRenderer.on("client-mitm-start-success", () => {
             setStatus("hijacking")
-            setTimeout(() => {
-                setLoading(false)
-            }, 300)
-        })
-
-        // 加载状态(从服务端加载)
-        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
-            setLoading(flag)
         })
 
         ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
@@ -107,13 +94,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         return () => {
             ipcRenderer.removeAllListeners("client-mitm-start-success")
-            ipcRenderer.removeAllListeners("client-mitm-loading")
             ipcRenderer.removeAllListeners("client-mitm-notification")
         }
     }, [])
     // 用于接受后端传回的信息
     useEffect(() => {
-        setInitialed(false)
         // 用于前端恢复状态
         ipcRenderer
             .invoke("mitm-have-current-stream")
@@ -127,7 +112,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             })
             .finally(() => {
                 recover()
-                setTimeout(() => setInitialed(true), 500)
             })
 
         // 用于 MITM 的 Message （YakitLog）
@@ -182,11 +166,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 })
             }
             ipcRenderer.invoke("mitm-stop-call")
-            setError(`${msg}`)
             setStatus("idle")
-            setTimeout(() => {
-                setLoading(false)
-            }, 300)
         })
 
         const updateLogs = () => {
@@ -220,11 +200,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         return () => {
             clearInterval(id)
             ipcRenderer.removeAllListeners("client-mitm-error")
-            ipcRenderer.removeAllListeners("client-mitm-filter")
             ipcRenderer.removeAllListeners("client-mitm-history-update")
             ipcRenderer.removeAllListeners("mitm-have-current-stream")
             ipcRenderer.removeAllListeners("client-mitm-message")
-            // ipcRenderer.invoke("mitm-close-stream")
         }
     }, [])
 
@@ -236,16 +214,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 通过 gRPC 调用，启动 MITM 劫持
     const startMITMServer = useMemoizedFn(
         (targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[]) => {
-            setLoading(true)
             return ipcRenderer
                 .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs)
                 .catch((e: any) => {
                     notification["error"]({message: `启动中间人劫持失败：${e}`})
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
                 })
         }
     )
@@ -256,24 +228,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setAddr(`https://${host}:${port}`)
             setHost(host)
             setPort(port)
-            setLoading(true)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
             startMITMServer(host, port, downstreamProxy, enableHttp2, certs)
         }
     )
 
-    // 开始渲染组件
-    // if (!initialed) {
-    //     return <div style={{textAlign: "center", paddingTop: 120}}>
-    //         <Spin spinning={true} tip={"正在初始化 MITM"}/>
-    //     </div>
-    // }
-
-    // 在没有开始的时候，渲染任务表单
-    // if (status === "idle") {
-    //     return <MITMServerStartForm onStartMITMServer={startMITMServerHandler} />
-    // }
     const [visible, setVisible] = useState<boolean>(false)
     const [top, setTop] = useState<number>(0)
     const [height, setHeight] = useState<number>(0)
@@ -294,7 +254,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setVisible={setVisible}
                         status={status}
                         setStatus={setStatus}
-                        setInitialed={setInitialed}
                         logs={[]}
                         statusCards={[]}
                     />
@@ -353,12 +312,11 @@ interface MITMServerProps {
     status: "idle" | "hijacked" | "hijacking"
     // 开启劫持后
     setStatus: (status: MITMStatus) => any
-    setInitialed?: (b: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {setVisible, status, setStatus, setInitialed, logs, statusCards} = props
+    const {setVisible, status, setStatus, logs, statusCards} = props
     /**
      * @description 插件勾选
      */
@@ -555,7 +513,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         isSelectAll={isSelectAll}
                         onSelectAll={onSelectAll}
                         setIsSelectAll={setIsSelectAll}
-                        setInitialed={setInitialed}
                         total={total}
                         setTotal={(t) => {
                             setTotal(t)
