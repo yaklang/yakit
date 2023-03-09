@@ -12,10 +12,11 @@ import {
     Radio,
     Popconfirm,
     Tabs,
-    Timeline,
+    Checkbox,
     Modal,
     Row,
-    Col
+    Col,
+    Slider
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
@@ -24,12 +25,10 @@ import classNames from "classnames"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
 import {failed, info, success, warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {TaskResultLog} from "../invoker/batch/BatchExecuteByFilter"
 import {defTargetRequest, TargetRequest, CancelBatchYakScript} from "../invoker/batch/BatchExecutorPage"
-import {ExecBatchYakScriptResult} from "../invoker/batch/YakBatchExecutorLegacy"
 import {showUnfinishedBatchTaskList, UnfinishedBatchTask} from "../invoker/batch/UnfinishedBatchTaskList"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {Risk} from "../risks/schema"
+import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
 import {ExecResult, YakScript} from "../invoker/schema"
@@ -41,43 +40,25 @@ import moment from "moment"
 import CreatReportScript from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
+import type {CheckboxValueType} from "antd/es/checkbox/Group"
 const {ipcRenderer} = window.require("electron")
-interface Option {
-    value: string | number
-    label: string
-    children?: Option[]
-}
-const options: Option[] = [
-    {
-        value: "基础扫描",
-        label: "基础扫描"
-    },
-    {
-        value: "深度扫描",
-        label: "深度扫描"
-    },
-    {
-        value: "自定义",
-        label: "自定义",
-        children: [
-            {
-                value: "弱口令",
-                label: "弱口令"
-            },
-            {
-                value: "漏洞扫描",
-                label: "漏洞扫描"
-            },
-            {
-                value: "合规检测",
-                label: "合规检测"
-            }
-        ]
-    }
-]
+const CheckboxGroup = Checkbox.Group
+
+const plainOptions = ["弱口令", "漏洞扫描", "合规检测"]
 const layout = {
     labelCol: {span: 6},
     wrapperCol: {span: 16}
+}
+const marks: SliderMarks = {
+    1: {
+        label: <div>慢速</div>
+    },
+    2: {
+        label: <div>适中</div>
+    },
+    3: {
+        label: <div>快速</div>
+    },
 }
 interface SimbleDetectFormProps {
     setPercent: (v: number) => void
@@ -139,6 +120,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         SynConcurrent: 1000
     })
 
+    const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
+    const [checkedList, setCheckedList] = useState<CheckboxValueType[]>([])
+    const [__,setScanDeep,getScanDeep] = useGetState<number>(3)
+
     useEffect(() => {
         if (YakScriptOnlineGroup) {
             let arr: string[] = YakScriptOnlineGroup.split(",")
@@ -146,22 +131,23 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             arr.map((item) => {
                 switch (item) {
                     case "弱口令":
-                        selectArr.push(["自定义", "弱口令"])
+                        selectArr.push("弱口令")
                         break
                     case "漏洞扫描":
-                        selectArr.push(["自定义", "漏洞扫描"])
+                        selectArr.push("漏洞扫描")
                         break
                     case "合规检测":
-                        selectArr.push(["自定义", "合规检测"])
+                        selectArr.push("合规检测")
                         break
                     default:
-                        selectArr.push([item])
+                        setScanType(item)
                         break
                 }
             })
-            form.setFieldsValue({
-                scan_type: selectArr
-            })
+            setCheckedList(selectArr)
+            // form.setFieldsValue({
+            //     scan_type: selectArr
+            // })
         }
     }, [YakScriptOnlineGroup])
 
@@ -173,7 +159,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         }
     }, [TaskName])
 
-    const run = (OnlineGroup: string, TaskName: string, scan_deep: string) => {
+    const run = (OnlineGroup: string, TaskName: string) => {
         setPercent(0)
         // 时间戳生成
         const timeStamp: number = moment(new Date()).unix()
@@ -185,13 +171,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         setRunTaskName(TaskName)
         setExecuting(true)
         let newParams: PortScanParams = {...params}
-        switch (scan_deep) {
-            case "fast":
+        switch (getScanDeep()) {
+            case 1:
                 newParams.Concurrent = 888
                 break
-            case "middle":
+            case 2:
                 break
-            case "slow":
+            case 3:
                 break
         }
         ipcRenderer.invoke("PortScan", newParams, token)
@@ -224,32 +210,27 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     }
 
     const onFinish = useMemoizedFn((values) => {
-        const {scan_type, TaskName} = values
-        const scan_deep = values.scan_deep || "fast"
+        const {TaskName} = values
         if (!params.Targets && !params.TargetsFile) {
             warn("需要设置扫描目标")
-            return
-        }
-        if (!Array.isArray(scan_type) || scan_type.length === 0) {
-            warn("请选择扫描模式")
             return
         }
         if (TaskName.length === 0) {
             warn("请输入任务名称")
             return
         }
-        const OnlineGroup: string = scan_type.map((item) => item[item.length - 1]).join(",")
 
+        const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         // 当为跳转带参
         if (Array.isArray(openScriptNames)) {
-            run(OnlineGroup, TaskName, scan_deep)
+            run(OnlineGroup, TaskName)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
-                    run(OnlineGroup, TaskName, scan_deep)
+                    run(OnlineGroup, TaskName)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
@@ -261,51 +242,6 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const onCancel = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-PortScan", token)
     })
-
-    const scanType = (arr: any[]) => {
-        if (arr.length > 0) {
-            let endItem: any[] = arr[arr.length - 1]
-            let lastArr: any[] = arr.length <= 1 ? [] : [...arr].slice(0, arr.length - 1)
-            endItem.length > 1 && (lastArr.length === 0 || lastArr[lastArr.length - 1].length > 1)
-                ? form.setFieldsValue({
-                      scan_type: [...lastArr, endItem]
-                  })
-                : form.setFieldsValue({
-                      scan_type: [endItem]
-                  })
-        } else {
-            form.setFieldsValue({
-                scan_type: []
-            })
-        }
-    }
-
-    // useEffect(() => {
-    //     ipcRenderer.on(`${token}-data`, async (e, data: any) => {
-    //         try {
-    //             if (data.ProgressMessage) {
-    //                 setPercent(data.ProgressPercent)
-    //                 return
-    //             }
-    //         } catch (e) {
-    //             console.info(e)
-    //         }
-    //     })
-    //     ipcRenderer.on(`${token}-error`, async (e, data) => {
-    //         if (data === "Cancelled on client") {
-    //             return
-    //         }
-    //         failed(`批量执行插件遇到问题: ${data}`)
-    //     })
-    //     ipcRenderer.on(`${token}-end`, async (e) => {
-    //         setTimeout(() => setExecuting(false), 300)
-    //     })
-    //     return () => {
-    //         ipcRenderer.removeAllListeners(`${token}-data`)
-    //         ipcRenderer.removeAllListeners(`${token}-error`)
-    //         ipcRenderer.removeAllListeners(`${token}-end`)
-    //     }
-    // }, [token])
 
     return (
         <div className={styles["simble-detect-form"]} style={{marginTop: 20}}>
@@ -403,29 +339,40 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                <Form.Item name='scan_type' label='扫描模式' initialValue={[["基础扫描"]]}>
-                    <Cascader
-                        multiple={true}
-                        options={options}
-                        placeholder='请选择扫描模式'
-                        style={{width: 400}}
-                        onChange={scanType}
-                        showCheckedStrategy='SHOW_CHILD'
-                        dropdownClassName={"simble-detect-dropdown-box"}
-                        disabled={Array.isArray(openScriptNames)}
-                    />
+                <Form.Item name='scan_type' label='扫描模式'>
+                    <Radio.Group
+                        defaultValue={"基础扫描"}
+                        onChange={(e) => {
+                            setScanType(e.target.value)
+                        }}
+                        value={getScanType()}
+                    >
+                        <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
+                        <Radio.Button value='深度扫描'>深度扫描</Radio.Button>
+                        <Radio.Button value='自定义'>自定义</Radio.Button>
+                    </Radio.Group>
+                    {getScanType() === "自定义" && (
+                        <CheckboxGroup
+                            style={{paddingLeft: 18}}
+                            options={plainOptions}
+                            value={checkedList}
+                            onChange={(list) => setCheckedList(list)}
+                        />
+                    )}
                 </Form.Item>
 
                 <Form.Item name='TaskName' label='任务名称'>
                     <Input style={{width: 400}} placeholder='请输入任务名称' allowClear />
                 </Form.Item>
 
-                <Form.Item name='scan_deep' label='扫描速度'>
-                    <Radio.Group defaultValue={"fast"}>
+                <Form.Item name='scan_deep' label='扫描速度' style={{position:"relative"}}>
+                    {/* <Radio.Group defaultValue={"fast"}>
                         <Radio.Button value='fast'>快速探测</Radio.Button>
                         <Radio.Button value='middle'>标准扫描</Radio.Button>
                         <Radio.Button value='slow'>深度扫描</Radio.Button>
-                    </Radio.Group>
+                    </Radio.Group> */}
+                    <Slider tipFormatter={null} value={getScanDeep()} onChange={(value)=>setScanDeep(value)} style={{width: 400}} min={1} max={3} marks={marks} />
+                    <div style={{position:"absolute",top:26,fontSize:12,color:"gray"}}>扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择</div>
                 </Form.Item>
             </Form>
         </div>
@@ -448,12 +395,12 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
 
-    useEffect(()=>{
-        if(executing){
+    useEffect(() => {
+        if (executing) {
             openPort.current = []
-            executing&&setOpenPorts([])
+            executing && setOpenPorts([])
         }
-    },[executing])
+    }, [executing])
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {

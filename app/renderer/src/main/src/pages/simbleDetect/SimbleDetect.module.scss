@@ -4,6 +4,11 @@
         cursor: pointer;
         margin-left: 18px;
     }
+    :global {
+        .ant-slider-mark-text{
+            top: -38px;
+        }
+    }
 }
 .simble-detect-table {
     height: 100%;
@@ -95,18 +100,6 @@
 
 .download-all-plugin-modal {
     .filter-opt-progress-modal {
-    }
-}
-:global {
-    .simble-detect-dropdown-box {
-        .ant-cascader-menus {
-            ul:first-child > li .ant-cascader-checkbox {
-                display: none;
-            }
-        }
-    }
-    .ant-cascader-menu {
-        height: 104px;
     }
 }
 .body-time-line{
