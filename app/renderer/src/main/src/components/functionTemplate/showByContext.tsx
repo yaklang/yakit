@@ -1,4 +1,3 @@
-import {useSize} from "ahooks"
 import {CSSProperties, ReactNode} from "react"
 import ReactDOM from "react-dom"
 import {coordinate} from "../../pages/globalVariable"
