@@ -331,12 +331,17 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <Tabs.TabPane tab={`漏洞与风险[${props.risks.length}]`} key={"risk"}>
                     <AutoCard bodyStyle={{overflowY: "auto"}}>
                         <Space direction={"vertical"} style={{width: "100%"}} size={12}>
-                            {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
+                            {
+                                props.risks.slice(0,10).map(i => {
+                                    return <RiskDetails info={i} shrink={true}/>
+                                })
+                            }
+                            {/* {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
                                 return <RiskDetails info={i} shrink={true}/>
                             })}
                             {props.risks.length>10&&<div style={{textAlign:"right"}}>
                                 <Pagination simple current={pageCode} onChange={(page)=>setPageCode(page)} total={props.risks.length} />  
-                            </div>}
+                            </div>} */}
                         </Space>
                     </AutoCard>
                 </Tabs.TabPane>}
