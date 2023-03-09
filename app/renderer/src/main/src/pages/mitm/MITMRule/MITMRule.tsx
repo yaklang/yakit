@@ -559,8 +559,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 onCancel: () => {
                     setVisible(false)
                 },
-                cancelButtonProps: {size: "small", style: {borderRadius: 4}},
-                okButtonProps: {size: "small", style: {borderRadius: 4}}
+                cancelButtonProps: {size: "small", className: styles["cancel-button"]},
+                okButtonProps: {size: "small", className: styles["ok-button"]}
             })
         } else {
             setVisible(false)
