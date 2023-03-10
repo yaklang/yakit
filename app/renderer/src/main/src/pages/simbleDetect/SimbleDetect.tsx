@@ -341,6 +341,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 </Spin>
                 <Form.Item name='scan_type' label='扫描模式'>
                     <Radio.Group
+                        buttonStyle="solid"
                         defaultValue={"基础扫描"}
                         onChange={(e) => {
                             setScanType(e.target.value)
