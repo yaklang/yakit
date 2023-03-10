@@ -211,7 +211,7 @@
                 .table-header-wrapper {
                     width: 100%;
                     height: 33px;
-                    padding: 4px 7px 4px 4px;
+                    padding: 4px 0px 4px 4px;
                     display: flex;
                     gap: 4px;
 
@@ -317,6 +317,20 @@
                         text-align: center;
                         color: var(--yakit-body-text-color);
                     }
+
+                    .table-empty-wrapper {
+                        padding: 100px;
+                        .title-style {
+                            margin-top: 24px;
+                            height: 16px;
+                            font-size: 12px;
+                            line-height: 16px;
+                            color: var(--yakit-helper-text-color);
+                            .file-style {
+                                color: var(--yakit-header-color);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -331,7 +345,7 @@
 
 // 表头过滤选项图标样式
 .type-filter-icon-style {
-    color: var(--yakit-body-text-color);
+    color: var(--yakit-body-text-color) !important;
     :global {
         svg {
             width: 16px;
@@ -339,6 +353,16 @@
         }
     }
 }
+.type-filter-icon-disabled-style {
+    color: var(--yakit-disable-text-color) !important;
+    :global {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
 .project-table-filter {
     height: 100%;
     padding: 4px 8px 4px 0;
@@ -415,7 +439,12 @@
     .divider-style {
         width: 1px;
         height: 100%;
-        border-left: 1px solid var(--yakit-border-color);
+        padding: 6px 0;
+        .boder-style {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid var(--yakit-border-color);
+        }
     }
     .btn-style {
         color: var(--yakit-body-text-color);
@@ -430,9 +459,13 @@
     border-radius: 4px;
     --yakit-primary-5: var(--yakit-background-color);
     --yakit-neutral10-color: var(--yakit-header-color);
+
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
 }
 .dropdown-menu-body {
     border-radius: 4px;
+    padding: 8px 4px;
     :global {
         .ant-dropdown-menu-item {
             color: var(--yakit-header-color);
@@ -454,8 +487,17 @@
         border: 1px solid var(--yakit-danger-4) !important;
     }
 
+    .form-item-cascader {
+        width: 399px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .hint-style {
+            color: var(--yakit-body-text-color);
+        }
+    }
     :global {
-        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             border: 1px solid var(--yakit-border-color);
             border-radius: 4px;
         }
@@ -511,6 +553,24 @@
         }
     }
 }
+
+// cascader组件下拉框
+.cascader-dropdown-body {
+    width: 400px;
+}
+
+// .cascader-dropdown-wrapper {
+//     padding: 4px 12px 0;
+//     width: 100%;
+//     display: flex;
+//     align-items: center;
+//     gap: 4px;
+
+//     .input-wrapper {
+//         flex: 1;
+//         overflow: hidden;
+//     }
+// }
 
 // 传输项目文件弹窗
 .transfer-project-mask {

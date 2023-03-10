@@ -147,6 +147,9 @@
                         color: var(--yakit-primary-5);
                     }
                 }
+                .yakit-mode-icon:hover {
+                    background-color: var(--yakit-background-color);
+                }
 
                 .yakit-mode-selected {
                     background: var(--yakit-card-background-color);

@@ -5,6 +5,9 @@
         .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
             background-color: unset;
         }
+        .ant-dropdown-menu {
+            box-shadow: none;
+        }
     }
 }
 
@@ -98,6 +101,18 @@
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+
+            span.anticon {
+                color: var(--menu-color);
+            }
+        }
+
+        .ant-dropdown-menu-item-disabled {
+            color: var(--yakit-disable-text-color) !important;
+
+            span.anticon {
+                color: var(--yakit-disable-text-color);
+            }
         }
 
         .ant-dropdown-menu-item-selected {
@@ -153,6 +168,7 @@
 
 // 暂时css效果只考虑两层结构菜单，多层结构菜单暂未考虑
 .yakit-menu-submenu {
+    padding: 0px;
     :global {
         .ant-menu {
             padding: 6px 4px 8px 4px;
@@ -209,10 +225,18 @@
             }
         }
 
+        ul {
+            margin: 0;
+        }
+
         .ant-dropdown-menu-item-active {
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+
+            span.anticon {
+                color: var(--menu-color);
+            }
         }
 
         .ant-dropdown-menu-vertical.ant-menu-sub {
@@ -242,7 +266,7 @@
     .yakit-submenu-item-content {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
         height: 16px;
         max-width: calc(100% - 16px);
     }
@@ -250,7 +274,7 @@
     .yakit-menu-item-content {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
         height: 16px;
         max-width: 100%;
         flex: 1;

@@ -41,6 +41,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 import classnames from "classnames"
 import styles from "./ProjectManage.module.scss"
@@ -133,6 +134,20 @@ const timeFilter: FilterInfoProps[] = [
 const timeToName: {[key: string]: string} = {}
 for (let item of timeFilter) timeToName[item.key] = item.label
 
+const DefaultProjectInfo: ProjectDescription = {
+    Id: 0,
+    ProjectName: "",
+    Description: "",
+    DatabasePath: "",
+    CreatedAt: 0,
+    UpdateAt: 0,
+    FolderId: 0,
+    FolderName: "",
+    ChildFolderId: 0,
+    ChildFolderName: "",
+    Type: ""
+}
+
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const {engineMode, onFinish} = props
 
@@ -149,7 +164,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         ProjectToTal: 0
     })
 
-    const [files, setFiles] = useState<{Id: number; name: string}[]>([])
+    const [files, setFiles] = useState<ProjectDescription[]>([])
     const [search, setSearch] = useState<{name: string; total: number}>({name: "", total: 0})
 
     const [latestProject, setLatestProject] = useState<ProjectDescription>()
@@ -202,7 +217,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             }
         },
         [wrapperRef.current?.clientHeight],
-        {wait: 200}
+        {wait: 500}
     )
 
     const [typeShow, setTypeShow] = useState<boolean>(false)
@@ -259,7 +274,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 <ProjectFolderOpenSvgIcon />
                             )}
                             <div className={styles["project-style"]} title={data.ProjectName}>
-                                {data.ProjectName === "[default]" ? "[默认项目]" : data.ProjectName}
+                                {data.ProjectName}
                             </div>
                         </div>
                     )
@@ -279,7 +294,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className={styles["project-style"]} title={data.DatabasePath}>
+                            <div
+                                className={styles["project-style"]}
+                                title={data.DatabasePath}
+                                onClick={() => {
+                                    if (data.DatabasePath) openABSFileLocated(data.DatabasePath)
+                                }}
+                            >
                                 {data.DatabasePath || "-"}
                             </div>
                             {data.DatabasePath && (
@@ -413,19 +434,27 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     </DropdownMenu>
                 )}
 
-                <div className={styles["divider-style"]}></div>
-                <div className={styles["btn-wrapper"]} onClick={() => operateFunc("edit", info)}>
-                    <PencilAltIcon className={styles["btn-style"]} />
-                </div>
+                {info.ProjectName !== "[default]" && (
+                    <>
+                        <div className={styles["divider-style"]}>
+                            <div className={styles["boder-style"]}></div>
+                        </div>
+                        <div className={styles["btn-wrapper"]} onClick={() => operateFunc("edit", info)}>
+                            <PencilAltIcon className={styles["btn-style"]} />
+                        </div>
+                    </>
+                )}
 
                 {info.ProjectName !== "[default]" && (
                     <>
-                        <div className={styles["divider-style"]}></div>
+                        <div className={styles["divider-style"]}>
+                            <div className={styles["boder-style"]}></div>
+                        </div>
 
                         <div
                             className={styles["btn-wrapper"]}
                             onClick={() => {
-                                setDelId(+info.Id)
+                                setDelId({Id: +info.Id, Type: info.Type})
                                 setDelShow(true)
                             }}
                         >
@@ -459,14 +488,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         if (param.Type === "all") delete param.Type
         if (param.ProjectName) param.Type = "project"
 
-        console.log("param", JSON.stringify(param))
-
         setLoading(true)
         ipcRenderer
             .invoke("GetProjects", param)
             .then((rsp: ProjectsResponse) => {
-                console.log("rsp", rsp)
-
                 try {
                     if (param.Pagination.Page > 1) {
                         setData({...rsp, Projects: getData().Projects.concat(rsp.Projects)})
@@ -490,15 +515,15 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     })
 
     const [delShow, setDelShow] = useState<boolean>(false)
-    const [delId, setDelId] = useState<number>(-1)
+    const [delId, setDelId] = useState<{Id: number; Type: string}>({Id: -1, Type: "project"})
     const delProjectFolder = useMemoizedFn((isDel: boolean) => {
-        if (delId === -1) {
+        if (delId.Id === -1) {
             failed("该条项目无数据或无关键信息，无法删除!")
             return
         }
 
         setLoading(true)
-        if (defaultProject && latestProject && delId === +latestProject?.Id) {
+        if (defaultProject && latestProject && delId.Id === +latestProject?.Id) {
             ipcRenderer
                 .invoke("SetCurrentProject", {
                     Id: +defaultProject.Id
@@ -508,7 +533,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         .invoke("DeleteProject", {Id: delId, IsDeleteLocal: isDel})
                         .then((e) => {
                             info("删除成功")
-                            setData({...getData(), Projects: getData().Projects.filter((item) => +item.Id !== delId)})
+                            setData({
+                                ...getData(),
+                                Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
+                                Total: getData().Total == 0 ? 0 : getData().Total - 1
+                            })
                             ipcRenderer
                                 .invoke("GetCurrentProject")
                                 .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -517,14 +546,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             failed(`删除失败: ${e}`)
                         })
                         .finally(() => {
-                            setDelId(-1)
+                            setDelId({Id: -1, Type: "project"})
                             setDelShow(false)
                             setTimeout(() => setLoading(false), 300)
                         })
                 })
                 .catch(() => {
                     failed("删除失败，没有可以切换的默认数据库")
-                    setDelId(-1)
+                    setDelId({Id: -1, Type: "project"})
                     setDelShow(false)
                     setTimeout(() => setLoading(false), 300)
                 })
@@ -533,7 +562,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 .invoke("DeleteProject", {Id: delId, IsDeleteLocal: isDel})
                 .then((e) => {
                     info("删除成功")
-                    setData({...getData(), Projects: getData().Projects.filter((item) => +item.Id !== delId)})
+                    setData({
+                        ...getData(),
+                        Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
+                        Total: getData().Total == 0 ? 0 : getData().Total - 1
+                    })
                     ipcRenderer
                         .invoke("GetCurrentProject")
                         .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -542,7 +575,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     failed(`删除失败: ${e}`)
                 })
                 .finally(() => {
-                    setDelId(-1)
+                    setDelId({Id: -1, Type: "project"})
                     setDelShow(false)
                     setTimeout(() => setLoading(false), 300)
                 })
@@ -627,7 +660,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 if (files.length === 2) return
                 setLoading(true)
-                setFiles(files.concat([{Id: +data?.Id, name: data?.ProjectName}]))
+                setFiles(files.concat([{...data}]))
                 if (files.length > 0) {
                     setParams({
                         Type: params.Type,
@@ -755,10 +788,32 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 if (folderInfo.Id) newFolder.Id = +folderInfo.Id
                                 ipcRenderer
                                     .invoke("NewProject", newFolder)
-                                    .then(() => {
+                                    .then(({Id, ProjectName}: {Id: number; ProjectName: string}) => {
                                         info(folderInfo.Id ? "编辑文件夹成功" : "创建新文件夹成功")
                                         setModalInfo({visible: false})
-                                        setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                        if (folderInfo.Id) {
+                                            setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                        } else {
+                                            if (folderInfo.parent) {
+                                                setFiles([
+                                                    {...folderInfo.parent},
+                                                    {...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}
+                                                ])
+                                                setParams({
+                                                    Type: "all",
+                                                    FolderId: +folderInfo.parent.Id,
+                                                    ChildFolderId: +Id,
+                                                    Pagination: {...params.Pagination, Page: 1}
+                                                })
+                                            } else {
+                                                setFiles([{...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}])
+                                                setParams({
+                                                    Type: "all",
+                                                    FolderId: +Id,
+                                                    Pagination: {...params.Pagination, Page: 1}
+                                                })
+                                            }
+                                        }
                                         setTimeout(() => update(), 300)
                                     })
                                     .catch((e) => {
@@ -849,15 +904,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     >
                         <div
                             className={styles["open-recent-body"]}
-                            onClick={() => operateFunc("setCurrent", latestProject)}
+                            onDoubleClick={() => operateFunc("setCurrent", latestProject)}
                         >
                             <div className={styles["body-title"]}>
                                 <DocumentTextSvgIcon />
                                 <div>
                                     <div className={styles["title-style"]}>
-                                        {latestProject?.ProjectName === "[default]"
-                                            ? "[默认项目]"
-                                            : latestProject?.ProjectName || "[default]"}
+                                        {latestProject?.ProjectName || "[default]"}
                                     </div>
                                     <div className={styles["subtitle-style"]}>{`最近操作时间：${
                                         latestProject ? formatTimestamp(latestProject?.CreatedAt) : "- -"
@@ -890,8 +943,15 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 {
                                                     key: "edit",
                                                     label: "编辑",
+                                                    disabled: latestProject?.ProjectName === "[default]",
                                                     itemIcon: (
-                                                        <PencilAltIcon className={styles["type-filter-icon-style"]} />
+                                                        <PencilAltIcon
+                                                            className={
+                                                                latestProject?.ProjectName === "[default]"
+                                                                    ? styles["type-filter-icon-disabled-style"]
+                                                                    : styles["type-filter-icon-style"]
+                                                            }
+                                                        />
                                                     )
                                                 },
                                                 {
@@ -916,7 +976,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 setHeaderShow(false)
                                                 if (key === "delete") {
                                                     if (latestProject) {
-                                                        setDelId(+latestProject.Id)
+                                                        setDelId({Id: +latestProject.Id, Type: latestProject.Type})
                                                         setDelShow(true)
                                                     }
                                                 } else operateFunc(key, latestProject)
@@ -1026,12 +1086,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 }
                             }}
                         >
-                            {files[0].name}
+                            {files[0].ProjectName}
                         </div>
                         {files.length > 1 && (
                             <>
                                 <ChevronRightIcon className={styles["icon-style"]} />
-                                <div className={styles["path-style"]}>{files[1].name}</div>
+                                <div className={styles["path-style"]}>{files[1].ProjectName}</div>
                             </>
                         )}
                     </div>
@@ -1061,7 +1121,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         })}
                                     </div>
                                 </div>
-                                {engineMode !== "remote" && <div style={{width: 112}}>操作</div>}
+                                {engineMode !== "remote" && <div style={{width: 120}}>操作</div>}
                             </div>
 
                             <div className={styles["table-content-wrapper"]}>
@@ -1077,61 +1137,93 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     refreshMode={"debounce"}
                                     refreshRate={50}
                                 />
-                                <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto"}}>
+                                <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto overlay"}}>
                                     <div ref={wrapperRef as any}>
-                                        {list.map((i) => {
-                                            return (
-                                                <div
-                                                    key={i.index}
-                                                    style={{height: 48 + 1}}
-                                                    className={classnames(styles["table-opt"], {
-                                                        [styles["table-opt-selected"]]:
-                                                            operateShow >= 0 && operateShow === +i.data.Id
-                                                    })}
-                                                    onClick={(e) => {
-                                                        if (!i.data.Type || i.data.Type === "project") {
-                                                            operateFunc("setCurrent", i.data)
-                                                        }
-                                                        if (i.data.Type === "file") {
-                                                            operateFunc("openFile", i.data)
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className={styles["opt-content"]}>
-                                                        <div className={styles["content-body"]}>
-                                                            {projectHeader.map((item) => {
-                                                                return (
-                                                                    <div
-                                                                        key={`${i.index}-${item.key}`}
-                                                                        style={{
-                                                                            flex: `0 0 ${item.width}`,
-                                                                            width: item.width
-                                                                        }}
-                                                                        className={styles["content-opt"]}
-                                                                    >
-                                                                        {item.render ? (
-                                                                            item.render(i.data, i.index)
-                                                                        ) : (
-                                                                            <div
-                                                                                className={styles["content-style"]}
-                                                                                title={i.data[item.key] || ""}
-                                                                            >
-                                                                                {i.data[item.key] || "-"}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                )
-                                                            })}
-                                                        </div>
+                                        {__data.Projects.length === 0 ? (
+                                            <>
+                                                {files.length > 0 && (
+                                                    <div className={styles["table-empty-wrapper"]}>
+                                                        <YakitEmpty
+                                                            descriptionReactNode={
+                                                                <div className={styles["title-style"]}>
+                                                                    <span className={styles["file-style"]}>
+                                                                        {files[files.length - 1].ProjectName}
+                                                                    </span>{" "}
+                                                                    内暂无项目内容
+                                                                </div>
+                                                            }
+                                                        />
                                                     </div>
-                                                    {engineMode !== "remote" && (
-                                                        <div style={{width: 112}} className={styles["opt-operate"]}>
-                                                            {projectOperate(i.data)}
+                                                )}
+                                                {params.ProjectName && (
+                                                    <div className={styles["table-empty-wrapper"]}>
+                                                        <YakitEmpty
+                                                            descriptionReactNode={
+                                                                <div className={styles["title-style"]}>
+                                                                    搜索结果“空”
+                                                                </div>
+                                                            }
+                                                        />
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            list.map((i) => {
+                                                return (
+                                                    <div
+                                                        key={i.index}
+                                                        style={{height: 48 + 1}}
+                                                        className={classnames(styles["table-opt"], {
+                                                            [styles["table-opt-selected"]]:
+                                                                operateShow >= 0 && operateShow === +i.data.Id
+                                                        })}
+                                                        onClick={(e) => {
+                                                            if (i.data.Type === "file") {
+                                                                operateFunc("openFile", i.data)
+                                                            }
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            if (!i.data.Type || i.data.Type === "project") {
+                                                                operateFunc("setCurrent", i.data)
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className={styles["opt-content"]}>
+                                                            <div className={styles["content-body"]}>
+                                                                {projectHeader.map((item) => {
+                                                                    return (
+                                                                        <div
+                                                                            key={`${i.index}-${item.key}`}
+                                                                            style={{
+                                                                                flex: `0 0 ${item.width}`,
+                                                                                width: item.width
+                                                                            }}
+                                                                            className={styles["content-opt"]}
+                                                                        >
+                                                                            {item.render ? (
+                                                                                item.render(i.data, i.index)
+                                                                            ) : (
+                                                                                <div
+                                                                                    className={styles["content-style"]}
+                                                                                    title={i.data[item.key] || ""}
+                                                                                >
+                                                                                    {i.data[item.key] || "-"}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )
+                                                                })}
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        })}
+                                                        {engineMode !== "remote" && (
+                                                            <div style={{width: 120}} className={styles["opt-operate"]}>
+                                                                {projectOperate(i.data)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })
+                                        )}
                                         {loadMore && <div className={styles["table-loading-more"]}>正在加载中...</div>}
                                     </div>
                                 </div>
@@ -1157,8 +1249,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
             <YakitHint
                 visible={delShow}
-                title='删除文件'
-                content='是否同时清除本地文件?'
+                title={delId.Type === "file" ? "删除文件夹" : "删除项目"}
+                content={
+                    delId.Type === "file" ? "删除文件夹是否同时清除文件夹里所有本地文件?" : "是否同时清除本地文件?"
+                }
                 okButtonText='保留'
                 cancelButtonText='清除'
                 footerExtra={
@@ -1167,7 +1261,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         type='outline2'
                         onClick={() => {
                             setDelShow(false)
-                            setDelId(-1)
+                            setDelId({Id: -1, Type: "project"})
                         }}
                     >
                         取消
@@ -1202,6 +1296,7 @@ interface ProjectFolderInfoProps {
     Description?: string
     FolderId?: number
     ChildFolderId?: number
+    parent?: ProjectDescription
 }
 interface ExportProjectProps {
     Id: number
@@ -1352,10 +1447,10 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
     const [isCheck, setIsCheck] = useState<boolean>(false)
 
     const headerTitle = useMemo(() => {
-        if (isNew && isFolder) return "新建文件夹"
-        if (isNew && !isFolder) return "新建项目"
-        if (isNew && isFolder && project && project.Id) return "编辑文件夹"
-        if (isNew && !isFolder && project && project.Id) return "编辑项目"
+        if (isNew && isFolder && !project) return "新建文件夹"
+        if (isNew && !isFolder && !project) return "新建项目"
+        if (isNew && isFolder && project) return "编辑文件夹"
+        if (isNew && !isFolder && project) return "编辑项目"
         if (isExport) return "导出项目"
         if (isImport) return "导入项目"
         return "未知情况"
@@ -1385,8 +1480,14 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                 setTimeout(() => setLoading(false), 300)
                 return
             }
+            if (info.ProjectName.length > 100) {
+                failed("名称长度应小于100!")
+                setTimeout(() => setLoading(false), 300)
+                return
+            }
             const data = {...info}
             if (parentNode && !data.Id) {
+                data.parent = {...parentNode}
                 // @ts-ignore
                 if (parentNode.FolderId === "0") {
                     data.FolderId = +parentNode.Id
@@ -1495,6 +1596,8 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
 
     const onClose = useMemoizedFn(() => setVisible(false))
 
+    const [dropShow, setDropShow] = useState<boolean>(false)
+
     return (
         <YakitModal
             title={headerTitle}
@@ -1537,9 +1640,21 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                             />
                         </Form.Item>
                         {!isFolder && !parentNode && (
-                            <Form.Item label={"所属文件夹 :"}>
+                            <Form.Item
+                                label={
+                                    !!project ? (
+                                        <div className={styles["form-item-cascader"]}>
+                                            <div>{`所属文件夹 :`}</div>
+                                            {dropShow && (
+                                                <div className={styles["hint-style"]}>{cascaderValue.join("/")}</div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        "所属文件夹 :"
+                                    )
+                                }
+                            >
                                 <Cascader
-                                    className={styles["form-item-cascader"]}
                                     defaultValue={cascaderValue}
                                     options={data}
                                     fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
@@ -1552,6 +1667,10 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                                             setInfo({...info, FolderId: 0, ChildFolderId: 0})
                                         }
                                     }}
+                                    dropdownClassName={styles["cascader-dropdown-body"]}
+                                    open={dropShow}
+                                    onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
+                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
                                 />
                             </Form.Item>
                         )}
@@ -1632,7 +1751,7 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                             label={"项目名称 :"}
                             help={
                                 <div className={styles["import-form-item-help-wrapper"]}>
-                                    项目名如果为空，则集成项目文件中的名字
+                                    项目名如果为空，则使用项目文件中的名字
                                 </div>
                             }
                         >
@@ -1652,7 +1771,6 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                         </Form.Item>
                         <Form.Item label={"所属文件夹 :"}>
                             <Cascader
-                                className={styles["form-item-cascader"]}
                                 options={data}
                                 fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
                                 changeOnSelect={true}
@@ -1668,6 +1786,8 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                                         setImportInfo({...importInfo, FolderId: 0, ChildFolderId: 0})
                                     }
                                 }}
+                                dropdownClassName={styles["cascader-dropdown-body"]}
+                                suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
                             />
                         </Form.Item>
                     </>
@@ -1788,9 +1908,7 @@ const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                 if (isImport) onSuccess("isImport")
                 if (isExport) {
                     onSuccess("isExport")
-                    setTimeout(() => {
-                        if (pathRef.current) openABSFileLocated(pathRef.current)
-                    }, 500)
+                    if (pathRef.current) openABSFileLocated(pathRef.current)
                 }
             }
         })

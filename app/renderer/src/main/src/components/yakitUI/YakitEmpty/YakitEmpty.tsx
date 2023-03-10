@@ -2,7 +2,6 @@ import {Empty} from "antd"
 import React from "react"
 import {YakitEmptyProps} from "./YakitEmptyType"
 import styles from "./YakitEmpty.module.scss"
-import classNames from "classnames"
 import Icon from "@ant-design/icons"
 import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 
@@ -55,7 +54,9 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
             }
             {...props}
             description={
-                !props.descriptionReactNode && (
+                props.descriptionReactNode ? (
+                    props.descriptionReactNode
+                ) : (
                     <div className={styles["yakit-empty"]}>
                         <div className={styles["yakit-empty-title"]}>{props.title || "暂无数据"}</div>
                         <div className={styles["yakit-empty-description"]}>{props.description}</div>

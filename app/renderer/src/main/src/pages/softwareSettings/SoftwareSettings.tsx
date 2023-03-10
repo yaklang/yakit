@@ -1,15 +1,14 @@
 import React, {memo, ReactNode, Suspense, useEffect, useState} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {DesktopComputerSvgIcon} from "@/assets/newIcon"
+import {DesktopComputerSvgIcon, YakitLogoSvgIcon} from "@/assets/newIcon"
 import {Typography} from "antd"
 import {useMemoizedFn} from "ahooks"
 import {SoftwareRemoteSvgIcon} from "./icon"
 import {YaklangEngineMode} from "@/yakitGVDefine"
+import {ProjectManageProp} from "./ProjectManage"
 
 import classnames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
-import yakitLogoImg from "@/assets/SoftwareSettings/yakitLogo.png"
-import {ProjectManageProp} from "./ProjectManage"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
@@ -95,7 +94,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                     })}
                 >
                     <div className={styles["navbar-logo"]}>
-                        <img src={yakitLogoImg} className={styles["img-style"]} />
+                        <YakitLogoSvgIcon />
                     </div>
 
                     <div className={styles["navbar-list-wrapper"]}>
