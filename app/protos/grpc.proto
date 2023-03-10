@@ -529,6 +529,7 @@ message NewProjectRequest {
 
 message NewProjectResponse {
   int64 Id = 1;
+  string ProjectName = 2;
 }
 
 message GetProjectsRequest {
