@@ -17,7 +17,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useRafInterval} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useRafInterval} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {yakitFailed} from "@/utils/notification"
 import {callCopyToClipboard} from "@/utils/basic"
@@ -215,9 +215,10 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             }
         })
         setParams({...params, ExcludeId: idArr, ExcludeInUrl: urlArr})
+        setLoading(true)
         setTimeout(() => {
-            update()
-        }, 100)
+            setLoading(false)
+        }, 1000)
     }, [shieldData])
 
     useRafInterval(

@@ -408,10 +408,6 @@ module.exports = (win, getClient) => {
         })
     }
 
-
-
-
-
     ipcMain.handle("mitm-set-filter", async (e, params) => {
         return await asyncSetMITMFilter(params)
     })

@@ -1,13 +1,11 @@
-import React, {ReactNode, Ref, useEffect, useRef, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
-import {useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {failed, info, yakitFailed} from "@/utils/notification"
-import {queryYakScriptList} from "@/pages/yakitStore/network"
-import {enableMITMPluginMode} from "./MITMServerHijacking"
+import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {failed, info} from "@/utils/notification"
 import style from "../MITMPage.module.scss"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Divider, Dropdown, Empty} from "antd"
+import {Divider, Dropdown, Empty, Progress} from "antd"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
 import {
@@ -17,9 +15,15 @@ import {
     FolderOpenIcon,
     ImportIcon,
     PlusCircleIcon,
+    SolidCloudDownloadIcon,
     TrashIcon
 } from "@/assets/newIcon"
-import {TagValue, YakModuleList} from "@/pages/yakitStore/YakitStorePage"
+import {
+    DownloadOnlinePluginAllResProps,
+    DownloadOnlinePluginByTokenRequest,
+    TagValue,
+    YakModuleList
+} from "@/pages/yakitStore/YakitStorePage"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
@@ -29,6 +33,8 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ImportLocalPlugin, AddPluginGroup} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {randomString} from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -85,6 +91,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         height,
         setTotal,
         hooks,
+        setIsSelectAll,
         onSelectAll,
         onSendToPatch,
         includedScriptNames,
@@ -95,6 +102,10 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
 
     const [refresh, setRefresh] = useState<boolean>(true)
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+
+    const listRef = useRef(null)
+    const [inViewport] = useInViewport(listRef)
 
     useEffect(() => {
         setRefresh(!refresh)
@@ -113,16 +124,16 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     }, [selectGroup])
     useUpdateEffect(() => {
         setRefresh(!refresh)
-    }, [tags])
+    }, [tags, inViewport])
     return (
-        <div className={style["mitm-plugin-local"]} style={{height}}>
+        <div className={style["mitm-plugin-local"]} style={{height}} ref={listRef}>
             <div>
                 <ReactResizeDetector
                     onResize={(width, height) => {
                         if (!height) {
                             return
                         }
-                        setVListHeight(height > 0 ? height + 12 : 0)
+                        setVListHeight(height)
                     }}
                     handleWidth={true}
                     handleHeight={true}
@@ -137,13 +148,20 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                 />
             </div>
 
-            <div className={style["mitm-plugin-list"]} style={{height: `calc(100% - ${vlistHeigth}px)`}}>
+            <div
+                className={style["mitm-plugin-list"]}
+                style={{height: `calc(100% - ${tags.length > 0 ? vlistHeigth + 8 : 0}px)`}}
+            >
                 <YakModuleList
                     emptyNode={
                         <div className={style["mitm-plugin-empty"]}>
                             <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
                             <div className={style["mitm-plugin-buttons"]}>
-                                <YakitButton type='outline1' icon={<CloudDownloadIcon />}>
+                                <YakitButton
+                                    type='outline1'
+                                    icon={<CloudDownloadIcon />}
+                                    onClick={() => setVisibleOnline(true)}
+                                >
                                     获取云端插件
                                 </YakitButton>
                                 <YakitButton
@@ -182,7 +200,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                 onSubmitYakScriptId={props.onSubmitYakScriptId}
                                 onRemoveHook={(name: string) => {
                                     if (hooks.get(name)) {
-                                        onSelectAll(false)
+                                        setIsSelectAll(false)
                                     }
                                 }}
                                 // 劫持启动前
@@ -200,7 +218,85 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                     setRefresh(!refresh)
                 }}
             />
+            <YakitGetOnlinePlugin
+                visible={visibleOnline}
+                setVisible={(v) => {
+                    setVisibleOnline(v)
+                    setRefresh(!refresh)
+                }}
+            />
         </div>
+    )
+})
+
+interface YakitGetOnlinePluginProps {
+    visible: boolean
+    setVisible: (b: boolean) => void
+}
+const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
+    const {visible, setVisible} = props
+    const taskToken = useMemo(() => randomString(40), [])
+    const [percent, setPercent] = useState<number>(0)
+    useEffect(() => {
+        if (!taskToken) {
+            return
+        }
+        ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
+            const p = Math.floor(data.Progress * 100)
+            setPercent(p)
+        })
+        ipcRenderer.on(`${taskToken}-end`, () => {
+            setTimeout(() => {
+                setPercent(0)
+                setVisible(false)
+                ipcRenderer.invoke("change-main-menu")
+            }, 500)
+        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        return () => {
+            ipcRenderer.removeAllListeners(`${taskToken}-data`)
+            ipcRenderer.removeAllListeners(`${taskToken}-error`)
+            ipcRenderer.removeAllListeners(`${taskToken}-end`)
+        }
+    }, [taskToken])
+    useEffect(() => {
+        if (visible) {
+            const addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
+            ipcRenderer
+                .invoke("DownloadOnlinePluginAll", addParams, taskToken)
+                .then(() => {})
+                .catch((e) => {
+                    failed(`添加失败:${e}`)
+                })
+        }
+    }, [visible])
+    const StopAllPlugin = () => {
+        ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
+            failed(`停止添加失败:${e}`)
+        })
+    }
+    return (
+        <YakitHint
+            visible={visible}
+            title='Yakit 云端插件下载中...'
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            onCancel={() => {
+                StopAllPlugin()
+                setVisible(false)
+            }}
+            okButtonProps={{style: {display: "none"}}}
+            isDrag={true}
+            mask={false}
+        >
+            <div className={style["download-progress"]}>
+                <Progress
+                    strokeColor='#F28B44'
+                    trailColor='#F0F2F5'
+                    percent={percent}
+                    format={(percent) => `已下载 ${percent}%`}
+                />
+            </div>
+        </YakitHint>
     )
 })
 
@@ -214,7 +310,7 @@ interface YakModuleListHeardProps {
 export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo((props) => {
     const {isSelectAll, onSelectAll, setIsSelectAll, total, length} = props
     useEffect(() => {
-        setIsSelectAll(length == total)
+        if (length > 0) setIsSelectAll(length == total)
     }, [total, length])
     return (
         <div className={style["mitm-plugin-list-heard"]}>

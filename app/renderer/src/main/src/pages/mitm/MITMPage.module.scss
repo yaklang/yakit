@@ -50,11 +50,21 @@
     }
 
     .mitm-plugin-list {
-        // height: calc(100% - 72px);
         height: 100%;
         :global {
             .ant-spin-nested-loading {
                 height: 100%;
+            }
+            .ant-spin {
+                color: var(--yakit-primary-color);
+            }
+
+            .ant-spin-text {
+                color: var(--yakit-primary-color);
+            }
+
+            .ant-spin-dot-item {
+                background-color: var(--yakit-primary-color);
             }
         }
     }
@@ -316,6 +326,16 @@
         svg {
             height: 12px;
             width: 12px;
+        }
+    }
+}
+
+.download-progress {
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
         }
     }
 }

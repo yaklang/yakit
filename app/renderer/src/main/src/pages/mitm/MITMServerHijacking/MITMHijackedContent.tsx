@@ -181,7 +181,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
         // setLoading(true);
         setStatus("hijacking")
-        // setHijackResponseType("never")
+        if (hijackResponseType !== "all") {
+            setHijackResponseType("never")
+        }
         setForResponse(false)
 
         if (forResponse) {

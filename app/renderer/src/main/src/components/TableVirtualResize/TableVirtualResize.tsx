@@ -1,13 +1,11 @@
-import React, {ReactNode, Suspense, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {
     useClickAway,
     useCreation,
-    useDebounceEffect,
     useDebounceFn,
     useDeepCompareEffect,
     useGetState,
     useMemoizedFn,
-    useThrottleEffect,
     useThrottleFn,
     useUpdateEffect,
     useVirtualList
@@ -16,29 +14,15 @@ import classNames from "classnames"
 import {
     ColumnsTypeProps,
     FiltersItemProps,
-    FixedWidthProps,
     RowSelectionProps,
     ScrollProps,
     SelectSearchProps,
-    ShowFixedShadowProps,
     SortProps,
     TableVirtualResizeProps
 } from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
-import {
-    DatePicker,
-    Divider,
-    Input,
-    Popconfirm,
-    Popover,
-    Radio,
-    RadioChangeEvent,
-    Select,
-    Spin,
-    Tag,
-    Tooltip
-} from "antd"
+import {DatePicker, Divider, Popover, RadioChangeEvent, Spin, Tag, Tooltip} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import "../style.css"
 import {
@@ -50,14 +34,13 @@ import {
     DragSortIcon
 } from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
-import moment, {ISO_8601, Moment} from "moment"
-import {C} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
+import moment, {Moment} from "moment"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {useDrag, useDrop, DndProvider} from "react-dnd"
 import {HTML5Backend} from "react-dnd-html5-backend"
 import type {Identifier, XYCoord} from "dnd-core"
-
-const {Search} = Input
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 const {RangePicker} = DatePicker
 
 /**
@@ -893,7 +876,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 </div>
                             </DndProvider>
                         </div>
-                        <div className={classNames(style["virtual-table-list-pagination"])} style={{display:scroll.scrollBottom < 10?'':'none'}}>
+                        <div
+                            className={classNames(style["virtual-table-list-pagination"])}
+                            style={{display: scroll.scrollBottom < 10 ? "" : "none"}}
+                        >
                             {loading && !(pagination?.total == data.length) && (
                                 <div className={classNames(style["pagination-loading"])}>
                                     <LoadingOutlined />
@@ -1631,7 +1617,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                             [style["select-search-input-icon"]]: filterSearchInputProps.isShowIcon === true
                         })}
                     >
-                        <Search
+                        <YakitInput.Search
                             size='small'
                             onSearch={onSearch}
                             onChange={(e) => onSearch(e.target.value)}
@@ -1719,11 +1705,10 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         return (
             <div className={style["select-search-multiple"]}>
                 <div className={style["select-heard"]} ref={selectRef}>
-                    <Select
+                    <YakitSelect
                         size='small'
                         mode='tags'
-                        style={{width: 124}}
-                        // onChange={(values, option) => onChangeSelect(values, option as FiltersItemProps[])}
+                        wrapperStyle={{width: 124}}
                         onChange={onChangeSelect}
                         allowClear
                         value={Array.isArray(value) ? [...value] : []}

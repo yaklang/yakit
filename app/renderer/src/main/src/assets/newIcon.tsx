@@ -1268,3 +1268,20 @@ const InformationCircle = () => (
 export const InformationCircleIcon = (props: Partial<IconProps>) => {
     return <Icon component={InformationCircle} {...props} />
 }
+
+const SolidCloudDownload = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M3.19995 15.2001C3.19995 18.2929 5.70716 20.8001 8.79995 20.8001H14.4V24.9374L12.3313 22.8687C11.7065 22.2439 10.6934 22.2439 10.0686 22.8687C9.44374 23.4936 9.44374 24.5066 10.0686 25.1315L14.8686 29.9315C15.4934 30.5563 16.5065 30.5563 17.1313 29.9315L21.9313 25.1315C22.5562 24.5066 22.5562 23.4936 21.9313 22.8687C21.3065 22.2439 20.2934 22.2439 19.6686 22.8687L17.6 24.9374V20.8001H21.6C25.5764 20.8001 28.8 17.5765 28.8 13.6001C28.8 9.62365 25.5764 6.4001 21.6 6.4001C21.2659 6.4001 20.9371 6.42285 20.6151 6.46689C19.9282 3.6727 17.4061 1.6001 14.4 1.6001C10.8653 1.6001 7.99995 4.46548 7.99995 8.0001C7.99995 8.56366 8.07279 9.11021 8.20958 9.63085C5.39429 9.92582 3.19995 12.3067 3.19995 15.2001ZM17.6 20.8001H14.4V12.8001C14.4 11.9164 15.1163 11.2001 16 11.2001C16.8836 11.2001 17.6 11.9164 17.6 12.8001V20.8001Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:solid-cloud-download 下载 实心
+ */
+export const SolidCloudDownloadIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidCloudDownload} {...props} />
+}
