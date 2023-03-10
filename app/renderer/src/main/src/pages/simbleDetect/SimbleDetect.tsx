@@ -58,7 +58,7 @@ const marks: SliderMarks = {
     },
     3: {
         label: <div>快速</div>
-    },
+    }
 }
 interface SimbleDetectFormProps {
     setPercent: (v: number) => void
@@ -122,7 +122,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
 
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
     const [checkedList, setCheckedList] = useState<CheckboxValueType[]>([])
-    const [__,setScanDeep,getScanDeep] = useGetState<number>(3)
+    const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
 
     useEffect(() => {
         if (YakScriptOnlineGroup) {
@@ -341,7 +341,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 </Spin>
                 <Form.Item name='scan_type' label='扫描模式'>
                     <Radio.Group
-                        buttonStyle="solid"
+                        buttonStyle='solid'
                         defaultValue={"基础扫描"}
                         onChange={(e) => {
                             setScanType(e.target.value)
@@ -366,14 +366,24 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                     <Input style={{width: 400}} placeholder='请输入任务名称' allowClear />
                 </Form.Item>
 
-                <Form.Item name='scan_deep' label='扫描速度' style={{position:"relative"}}>
+                <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
                     {/* <Radio.Group defaultValue={"fast"}>
                         <Radio.Button value='fast'>快速探测</Radio.Button>
                         <Radio.Button value='middle'>标准扫描</Radio.Button>
                         <Radio.Button value='slow'>深度扫描</Radio.Button>
                     </Radio.Group> */}
-                    <Slider tipFormatter={null} value={getScanDeep()} onChange={(value)=>setScanDeep(value)} style={{width: 400}} min={1} max={3} marks={marks} />
-                    <div style={{position:"absolute",top:26,fontSize:12,color:"gray"}}>扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择</div>
+                    <Slider
+                        tipFormatter={null}
+                        value={getScanDeep()}
+                        onChange={(value) => setScanDeep(value)}
+                        style={{width: 400}}
+                        min={1}
+                        max={3}
+                        marks={marks}
+                    />
+                    <div style={{position: "absolute", top: 26, fontSize: 12, color: "gray"}}>
+                        扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
+                    </div>
                 </Form.Item>
             </Form>
         </div>
@@ -734,23 +744,22 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
     if (loading) {
         return <Spin tip={"正在恢复未完成的任务"} />
     }
+
     return (
         <AutoCard
-            title={null}
             size={"small"}
             bordered={false}
+            title={<>{!executing && <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />}</>}
             extra={
                 <Space>
-                    {percent > 0 || executing ? (
-                        <div style={{width: 200}}>
+                    <div style={{width: 200}}>
+                        {(percent > 0 || executing) && (
                             <Progress
                                 status={executing ? "active" : undefined}
                                 percent={parseInt((percent * 100).toFixed(0))}
                             />
-                        </div>
-                    ) : (
-                        <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />
-                    )}
+                        )}
+                    </div>
                 </Space>
             }
             bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
