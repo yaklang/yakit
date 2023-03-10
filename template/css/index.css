@@ -1,0 +1,282 @@
+html,
+body {
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  height: 100%;
+}
+.container {
+  margin: 0 8px;
+  position: relative;
+}
+
+.container .left {
+  position: absolute;
+  width: 200px;
+  height: 100%;
+  min-height: 200px;
+  left: 0;
+  top: 0;
+}
+
+.container .right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 100%;
+  min-height: 200px;
+}
+
+.container .mid {
+  min-height: 200px;
+  margin: 0 220px;
+}
+
+#markdown-bar {
+  position: fixed;
+  z-index: 9999;
+  max-height: 94%;
+  float: left;
+  overflow-y: auto;
+  width: 200px;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  padding-left: 20px;
+}
+.center {
+  flex: 1;
+}
+
+@media only screen and (max-width: 999px) {
+  #markdown-bar{
+    display: none;
+  }
+  .container .left{
+    display: none;
+  }
+  .container .right{
+    display: none;
+  }
+  .container .mid{
+    margin: 0 20px;
+  }
+} 
+/* 
+@media only screen 
+    and (min-width: 320px) 
+    and (max-width: 480px){
+        body { line-height: 1.4; }
+} */
+
+.echarts-box {
+  text-align: center;
+}
+
+.echarts-box .echart-item {
+  width: 100%;
+  max-width: 600px;
+  min-width: 300px;
+  height: 400px;
+  display: inline-block;
+}
+
+/* table样式 */
+table {
+}
+
+td,
+th {
+  padding: 0;
+}
+
+.pure-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  empty-cells: show;
+  border: 1px solid #cbcbcb;
+  width: 100%;
+  table-layout: fixed;
+  overflow-wrap: break-word;
+}
+.pure-table a.close{
+  position: absolute;
+    display: block;
+    width: 16px;
+    height: 16px;
+    background: url(../image/minus.gif) center center no-repeat;
+    cursor: pointer;
+    padding: 4px 0px;
+}
+.pure-table a.open{
+  position: absolute;
+    display: block;
+    width: 16px;
+    height: 16px;
+    background: url(../image/plus.gif) center center no-repeat;
+    padding: 4px 0px;
+    cursor: pointer;
+}
+.pure-table caption {
+  color: #000;
+  font: italic 85%/1 arial, sans-serif;
+  padding: 1em 0;
+  text-align: center;
+}
+
+.pure-table td,
+.pure-table th {
+  border-left: 1px solid #cbcbcb;
+  border-width: 0 0 0 1px;
+  font-size: inherit;
+  margin: 0;
+  overflow: visible;
+  padding: 0.5em 1em;
+
+  /* padding: 0 8px; */
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+}
+
+.pure-table thead {
+  background-color: #e0e0e0;
+  color: #000;
+  text-align: left;
+  vertical-align: bottom;
+}
+
+.pure-table td {
+  background-color: transparent;
+  padding: 0 8px;
+}
+
+.pure-table-odd {
+  background-color: #f5f5f5;
+}
+
+.pure-table thead tr {
+  background-color: #c6d9f1;
+}
+.pure-table thead tr th {
+  word-break: break-all;
+  vertical-align: middle;
+  line-height: 40px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.pure-table tbody .pure-table-hover:hover {
+  background-color: #eeeeee;
+}
+/* markdown样式 */
+code {
+  margin: 0 5px;
+  padding: 2px 5px;
+  background-color: #ffe0e0;
+  color: #ff502c;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+/* 代码块 */
+pre > code {
+  display: block;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #333;
+  border-radius: 5px;
+  overflow-y: auto;
+  color: #fff;
+  font-family: Menlo, monospace;
+}
+
+/* p标签的颜色 */
+p {
+  color: #666;
+}
+
+ul {
+  margin-bottom: 16px;
+  /* font-size: 1rem; */
+  letter-spacing: 0.1rem;
+}
+
+/* li 的项目符号在内侧，显示项目符号 */
+ul > li {
+  list-style: disc inside;
+}
+
+ol {
+  /* font-size: 1rem; */
+}
+
+ol > li {
+  list-style: none;
+}
+
+pre code.hljs {
+  line-height: 1.5;
+  scrollbar-width: none; /* Firefox隐藏滚动条 */
+  -ms-overflow-style: none; /* Internet Explorer 10+隐藏滚动条 */
+}
+pre code.hljs::-webkit-scrollbar {
+  width: 0; /* Safari,Chrome 隐藏滚动条 */
+  height: 0; /* Safari,Chrome 隐藏滚动条 */
+  display: none; /* 移动端、pad 上Safari，Chrome，隐藏滚动条 */
+}
+
+.wmde-markdown table th,
+.wmde-markdown table td {
+  padding: 6px 13px;
+  border: 1px solid #d0d7de;
+}
+.wmde-markdown table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+.wmde-markdown table tr {
+  background-color: #ffffff;
+  border-top: 1px solid hsl(210, 18%, 87%);
+}
+.wmde-markdown table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+.wmde-markdown a {
+  word-break: break-all;
+}
+#content pre code.hljs {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* markdown导航栏样式 */
+.level-1 {
+}
+.level-2 {
+  font-size: 13px;
+  padding-left: 7px;
+}
+.level-3 {
+  padding-left: 14px;
+  font-size: 13px;
+}
+.level-4 {
+  padding-left: 21px;
+  font-size: 13px;
+}
+
+#markdown-bar div {
+  margin-top: 8px;
+}
+#markdown-bar div a {
+  text-decoration: none;
+  color: #000;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+}
+#markdown-bar div a:hover {
+  background-color: #eeeeee;
+}
