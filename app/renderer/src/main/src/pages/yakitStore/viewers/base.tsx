@@ -310,7 +310,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                 bodyStyle={{overflowY: "auto"}}
                             >
                                 <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                                    {(timelineItemProps || []).reverse().map((e, index) => {
+                                    {(timelineItemProps || []).reverse().filter((item)=>item.level!=="json-risk").map((e, index) => {
                                         return (
                                             <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
                                                 <YakitLogFormatter
