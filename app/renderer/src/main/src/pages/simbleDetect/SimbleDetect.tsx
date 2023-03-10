@@ -164,13 +164,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         // 时间戳生成
         const timeStamp: number = moment(new Date()).unix()
         setRunTimeStamp(timeStamp)
-        setRunPluginCount(params.ScriptNames.length)
+        setRunPluginCount(getParams().ScriptNames.length)
 
         reset()
         console.log("params11----", getParams())
         setRunTaskName(TaskName)
         setExecuting(true)
-        let newParams: PortScanParams = {...params}
+        let newParams: PortScanParams = {...getParams()}
         switch (getScanDeep()) {
             case 1:
                 newParams.Concurrent = 888
