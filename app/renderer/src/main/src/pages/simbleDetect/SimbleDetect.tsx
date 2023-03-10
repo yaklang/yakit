@@ -121,9 +121,9 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     })
 
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
-    const [checkedList, setCheckedList] = useState<CheckboxValueType[]>([])
+    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>([])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
-
+    const isInputValue = useRef<boolean>(false)
     useEffect(() => {
         if (YakScriptOnlineGroup) {
             let arr: string[] = YakScriptOnlineGroup.split(",")
@@ -150,6 +150,16 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             // })
         }
     }, [YakScriptOnlineGroup])
+
+    useEffect(() => {
+        if (!isInputValue.current) {
+            // 任务名称-时间戳
+            const taskNameTimeStamp: number = moment(new Date()).unix()
+            form.setFieldsValue({
+                TaskName: `${getScanType()}-${taskNameTimeStamp}`
+            })
+        }
+    }, [getScanType()])
 
     useEffect(() => {
         if (TaskName) {
@@ -217,6 +227,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         }
         if (TaskName.length === 0) {
             warn("请输入任务名称")
+            return
+        }
+        if (getScanType() === "自定义" && getCheckedList().length === 0) {
+            warn("请选择自定义内容")
             return
         }
 
@@ -363,7 +377,14 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 </Form.Item>
 
                 <Form.Item name='TaskName' label='任务名称'>
-                    <Input style={{width: 400}} placeholder='请输入任务名称' allowClear />
+                    <Input
+                        style={{width: 400}}
+                        placeholder='请输入任务名称'
+                        allowClear
+                        onChange={() => {
+                            isInputValue.current = true
+                        }}
+                    />
                 </Form.Item>
 
                 <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
