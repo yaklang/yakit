@@ -112,7 +112,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                             <span>{item.total}</span>
                         </div>
                     ),
-                    filters: getStatusCode()
+                    filters: statusCode
                 },
                 render: (text) => <div className={styles["status-code"]}>{text}</div>
             },
@@ -186,7 +186,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 }
             }
         ]
-    }, [])
+    }, [statusCode])
     const update = () => {
         if (!inViewport) {
             return
@@ -240,7 +240,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (compareLeft.content) {
             const params = {info: compareLeft, type: 1}
             setCompareState(compareState === 0 ? 1 : 0)
-
             ipcRenderer.invoke("add-data-compare", params)
         }
     }, [compareLeft])
@@ -249,7 +248,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (compareRight.content) {
             const params = {info: compareRight, type: 2}
             setCompareState(compareState === 0 ? 2 : 0)
-
             ipcRenderer.invoke("add-data-compare", params)
         }
     }, [compareRight])

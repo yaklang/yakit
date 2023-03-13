@@ -306,10 +306,17 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             })
         }
     }, [pagination.page])
-
     useDeepCompareEffect(() => {
-        setColumns([...props.columns])
-        setDefColumns([...props.columns])
+        const newColumns = props.columns.map((ele) => {
+            const defColumnItem = columns.find((c) => c.dataKey === ele.dataKey)
+            if (!defColumnItem) {
+                return ele
+            }
+            // 如果 columns 更新，保持之前的columnsItem的宽度
+            return {...ele, width: defColumnItem.width || ele.width}
+        })
+        setColumns([...newColumns])
+        setDefColumns([...newColumns])
     }, [props.columns])
     useDeepCompareEffect(() => {
         getLeftOrRightFixedWidth()
