@@ -6,7 +6,6 @@ import {
     useDeepCompareEffect,
     useGetState,
     useMemoizedFn,
-    useScroll,
     useThrottleFn,
     useUpdateEffect,
     useVirtualList
