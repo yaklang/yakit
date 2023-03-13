@@ -559,7 +559,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
-            firstRatio: "410px",
+            firstRatio: "25%",
             secondRatio: "50%"
         }
         if (isFullScreenSecondNode) {
@@ -573,6 +573,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }, [isFullScreenSecondNode, isFullScreenFirstNode])
     return (
         <ResizeBox
+            isVer={false}
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}
