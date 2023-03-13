@@ -1,5 +1,8 @@
 const {ipcMain} = require("electron")
-
+const {htmlTemplateDir} = require("../filePath")
+const compressing = require('compressing');
+const fs=require('fs') 
+const path=require('path') 
 module.exports = (win, getClient) => {
     // asyncQueryPorts wrapper
     const asyncQueryPorts = (params) => {
@@ -271,6 +274,72 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("QueryReport", async (e, params) => {
         return await asyncQueryReport(params)
+    })
+
+    // 文件复制
+    const copyFileByDir= (src1,src2)=>{
+        return new Promise((resolve, reject) => {
+          fs.readFile(src1,(err,data)=>{
+            if(err)return reject(err)
+                fs.writeFile(src2,data,(err)=>{
+                    if(err)return reject(err)
+                    resolve('复制文件成功')
+                })
+           })  
+        })
+    }
+
+    // 删除文件夹下所有文件
+    const delDir = (path) => {
+        let files = [];
+        if(fs.existsSync(path)){
+            files = fs.readdirSync(path);
+            files.forEach((file, index) => {
+                let curPath = path + "/" + file;
+                if(fs.statSync(curPath).isDirectory()){
+                    delDir(curPath); //递归删除文件夹
+                } else {
+                    fs.unlinkSync(curPath); //删除文件
+                }
+            });
+            fs.rmdirSync(path);
+        }
+    }
+
+    const asyncDownloadHtmlReport = (params) => {
+        return new Promise(async(resolve, reject) => {
+        const {outputDir,JsonRaw,reportName} = params
+        const inputFile = path.join(htmlTemplateDir, "template.zip")
+        const outputFile = path.join(outputDir, "template.zip")
+        const reportNameFile= reportName.replaceAll(/\\|\/|\:|\*|\?|\"|\<|\>|\|/g,"")||"html报告"
+        try {
+            // 复制模板到生成文件地址
+            await copyFileByDir(inputFile,outputFile)
+            // 判断报告名是否存在
+            const ReportItemName = path.join(outputDir, reportNameFile)
+            const judgeReportName = fs.existsSync(ReportItemName)
+            // 文件夹已存在 则先清空之前内容
+            if(judgeReportName) delDir(ReportItemName)
+            if(!judgeReportName)fs.mkdirSync(ReportItemName)
+            // 解压模板
+            await compressing.zip.uncompress(outputFile,ReportItemName)
+            // 删除zip
+            fs.unlinkSync(outputFile)
+            // 修改模板入口文件
+            const initDir = path.join(ReportItemName, "js","init.js")
+            // 模板源注入
+            fs.writeFileSync(initDir,`let initData = ${JSON.stringify(JsonRaw)}`)
+            resolve({
+                ok:true,
+                outputDir:ReportItemName
+            })
+        } catch (error) {
+            reject(error)
+        }   
+        })
+    }
+    ipcMain.handle("DownloadHtmlReport", async (e, params) => {
+        return await asyncDownloadHtmlReport(params)
     })
 
     // asyncDeleteReport wrapper

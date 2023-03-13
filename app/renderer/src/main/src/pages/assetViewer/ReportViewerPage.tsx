@@ -14,7 +14,6 @@ import {report} from "process"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import "./ReportViewerPage.scss"
 import { ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-import { EnterpriseReportViewer } from "./EnterpriseReportViewer";
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 export interface ReportViewerPageProp {
 }
@@ -30,7 +29,7 @@ export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
                 firstMinSize={"330px"}
                 firstRatio={"330px"}
                 secondNode={(() => {
-                    return !IsEnterprise?<EnterpriseReportViewer />:<ReportViewer id={getReport()?.Id || 0}/>
+                    return <ReportViewer id={getReport()?.Id || 0}/>
                 })()}
             />
         </>
@@ -76,9 +75,6 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         }
         if (!!limit) {
             pagination.Limit = limit
-        }
-        if(!IsEnterprise){
-
         }
         else{
             setLoading(true)
