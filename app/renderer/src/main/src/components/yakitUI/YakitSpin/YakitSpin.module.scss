@@ -1,5 +1,16 @@
 .yakit-spin {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
     :global {
+        .ant-spin-container {
+            flex-grow: 1;
+            display: flex;
+            flex-flow: column;
+            height: 100%;
+        }
+
         .ant-spin {
             color: var(--yakit-primary-color);
         }

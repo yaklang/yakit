@@ -135,6 +135,20 @@
                     box-sizing: border-box;
                     padding: 8px 12px;
                     border-left: 1px solid var(--yakit-border-color);
+                    color: var(--yakit-body-text-color);
+                    :global {
+                        svg {
+                            width: 20px;
+                            height: 20px;
+                        }
+                    }
+
+                    .mode-icon-selected {
+                        color: var(--yakit-primary-5);
+                    }
+                }
+                .yakit-mode-icon:hover {
+                    background-color: var(--yakit-background-color);
                 }
 
                 .yakit-mode-selected {
