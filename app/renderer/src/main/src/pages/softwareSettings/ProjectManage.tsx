@@ -1458,12 +1458,12 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
             if (parentNode.Id) {
                 const data: ImportProjectProps = {ProjectFilePath: ""}
                 // @ts-ignore
-                if (parentNode.FolderId === "0") {
+                if (+parentNode.FolderId === 0) {
                     data.FolderId = +parentNode.Id
                 } else {
                     data.FolderId = +parentNode.FolderId
                     // @ts-ignore
-                    if (parentNode.ChildFolderId === "0") {
+                    if (+parentNode.ChildFolderId === 0) {
                         data.FolderId = +parentNode.Id
                     } else {
                         data.FolderId = +parentNode.ChildFolderId
@@ -1542,12 +1542,12 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
             if (parentNode && !data.Id) {
                 data.parent = {...parentNode}
                 // @ts-ignore
-                if (parentNode.FolderId === "0") {
+                if (+parentNode.FolderId === 0) {
                     data.FolderId = +parentNode.Id
                 } else {
                     data.FolderId = +parentNode.FolderId
                     // @ts-ignore
-                    if (parentNode.ChildFolderId === "0") {
+                    if (+parentNode.ChildFolderId === 0) {
                         data.FolderId = +parentNode.Id
                     } else {
                         data.FolderId = +parentNode.ChildFolderId
