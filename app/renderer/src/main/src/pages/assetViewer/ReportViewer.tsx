@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from "react"
 import {Report} from "./models"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {AutoCard} from "../../components/AutoCard"
 import {Button, Empty, Space, Tag, Spin} from "antd"
 import {showModal} from "../../utils/showModal"
@@ -10,6 +10,9 @@ import {ReportItemRender} from "./reportRenders/render"
 import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
 import classNames from "classnames"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {openABSFileLocated} from "../../utils/openWebsite";
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 export interface ReportViewerProp {
     id?: number
 }
@@ -94,6 +97,36 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             }) // 导出
     }
 
+    const downloadHtml = () => {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data: any) => {
+                if (data.filePaths.length) {
+                    setSpinLoading(true)
+                    let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+                    ipcRenderer
+                        .invoke("DownloadHtmlReport", {
+                            JsonRaw: report.JsonRaw,
+                            outputDir: absolutePath,
+                            reportName: report.Title
+                        })
+                        .then((r) => {
+                            console.log(r)
+                            if (r?.ok) {
+                                success("报告导出成功")
+                                r?.outputDir && openABSFileLocated(r.outputDir)
+                            }
+                        })
+                        .catch((e) => {
+                            failed(`Download Html Report failed`)
+                        })
+                        .finally(() => setTimeout(() => setSpinLoading(false), 300))
+                }
+            })
+    }
     return (
         <div className={styles["report-viewer"]}>
             <Spin spinning={SpinLoading}>
@@ -128,7 +161,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             <a
                                 href={"#"}
                                 onClick={() => {
-                                    downloadPdf()
+                                    IsEnterprise ? downloadHtml() : downloadPdf()
                                 }}
                             >
                                 下载

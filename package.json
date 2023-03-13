@@ -40,6 +40,7 @@
     "@grpc/proto-loader": "^0.6.4",
     "axios": "^0.26.1",
     "chrome-launcher": "^0.15.0",
+    "compressing": "^1.8.0",
     "electron-is-dev": "^2.0.0",
     "electron-updater": "^4.3.9",
     "form-data": "^4.0.0",
