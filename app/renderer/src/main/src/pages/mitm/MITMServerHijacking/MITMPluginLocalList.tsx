@@ -150,7 +150,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
 
             <div
                 className={style["mitm-plugin-list"]}
-                style={{height: `calc(100% - ${tags.length > 0 ? vlistHeigth + 8 : 0}px)`}}
+                style={{height: `calc(100% - ${tags.length || selectGroup.length > 0 ? vlistHeigth + 8 : 0}px)`}}
             >
                 <YakModuleList
                     emptyNode={

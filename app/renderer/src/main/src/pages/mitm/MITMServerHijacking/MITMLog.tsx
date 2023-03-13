@@ -195,7 +195,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             .invoke("QueryHTTPFlows", {...params})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
-                console.log('params,newData',params,newData);
                 setData(newData)
                 setTotal(res.Total)
             })
