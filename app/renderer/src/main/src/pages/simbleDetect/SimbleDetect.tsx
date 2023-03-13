@@ -37,10 +37,11 @@ import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} fro
 import {OpenPortTableViewer} from "../portscan/PortTable"
 import {PluginResultUI} from "../yakitStore/viewers/base"
 import moment from "moment"
-import CreatReportScript from "./CreatReportScript"
+import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
 import type {CheckboxValueType} from "antd/es/checkbox/Group"
+import {PresetPorts} from "@/pages/portscan/schema";
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
@@ -103,21 +104,32 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         Ports: defaultPorts,
         Mode: "fingerprint",
         Targets: sendTarget ? JSON.parse(sendTarget || "[]").join(",") : "",
-        Active: true,
+        ScriptNames: openScriptNames || [],
+        // SYN 并发
+        SynConcurrent: 1000,
+        // 指纹并发
         Concurrent: 50,
+        Active: true,
+        // 服务指纹级别
+        ProbeMax: 100,
+        // 主动探测超时
+        ProbeTimeout: 7,
+        // web/服务/all
         FingerprintMode: "all",
         Proto: ["tcp"],
-        SaveClosedPorts: false,
-        SaveToDB: true,
-        Proxy: [],
-        ProbeTimeout: 7,
-        ScriptNames: openScriptNames || [],
-        ProbeMax: 100,
-        EnableCClassScan: false,
-        HostAlivePorts: "22,80,443",
+
         EnableBasicCrawler: true,
         BasicCrawlerRequestMax: 5,
-        SynConcurrent: 1000
+
+        SaveToDB: true,
+        SaveClosedPorts: false,
+        EnableCClassScan: false,
+        SkippedHostAliveScan: false,
+        HostAlivePorts: "22,80,443",
+        ExcludeHosts: "",
+        ExcludePorts: "",
+        Proxy: [],
+
     })
 
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
@@ -182,41 +194,36 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         setExecuting(true)
         let newParams: PortScanParams = {...getParams()}
         switch (getScanDeep()) {
-            case 1:
-                newParams.Concurrent = 888
-                break
-            case 2:
-                break
+            // 快速
             case 3:
+                // 指纹并发
+                newParams.Concurrent = 100
+                // SYN 并发
+                newParams.SynConcurrent = 2000
+                newParams.Ports = PresetPorts["topweb"]
+                newParams.ProbeTimeout = 3
+                // 指纹详细程度
+                newParams.ProbeMax = 3
                 break
-        }
-        ipcRenderer.invoke("PortScan", newParams, token)
+            // 适中
+            case 2:
+                newParams.Concurrent = 80
+                newParams.SynConcurrent = 1000
+                newParams.Ports = PresetPorts["top100"]
+                newParams.ProbeTimeout = 5
+                newParams.ProbeMax = 5
+                break
+            // 慢速
+            case 1:
+                newParams.Concurrent = 50
+                newParams.SynConcurrent = 1000
+                newParams.Ports =  PresetPorts["top100"]
+                newParams.ProbeTimeout = 7
+                newParams.ProbeMax = 7
+                break
 
-        // StartExecBatchYakScriptWithFilter(
-        //     target,
-        //     simpleQueryToFull(
-        //         false,
-        //         {
-        //             exclude: [],
-        //             include: include,
-        //             tags: "",
-        //             type: "mitm,port-scan,nuclei"
-        //         },
-        //         []
-        //     ),
-        //     tokens,
-        //     baseProgress ? true : undefined,
-        //     baseProgress,
-        //     OnlineGroup,
-        //     TaskName
-        // )
-        //     .then(() => {
-        // setExecuting(true)
-        // setRunTaskName(TaskName)
-        //     })
-        //     .catch((e) => {
-        //         failed(`启动批量安全检测失败：${e}`)
-        //     })
+        }
+        ipcRenderer.invoke("SimbleDetect", newParams, token)
     }
 
     const onFinish = useMemoizedFn((values) => {
@@ -254,7 +261,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     })
 
     const onCancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-PortScan", token)
+        ipcRenderer.invoke("cancel-SimbleDetect", token)
     })
 
     return (
@@ -453,10 +460,10 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(`[PortScan] error:  ${error}`)
+            failed(`[SimbleDetect] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-            info("[PortScan] finished")
+            info("[SimbleDetect] finished")
             setExecuting(false)
         })
 
@@ -469,7 +476,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         let id = setInterval(syncPorts, 1000)
         return () => {
             clearInterval(id)
-            ipcRenderer.invoke("cancel-PortScan", token)
+            ipcRenderer.invoke("cancel-SimbleDetect", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
@@ -482,7 +489,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     /** 通知生成报告 */
     const creatReport = () => {
         // 脚本数据
-        const scriptData = CreatReportScript()
+        const scriptData = CreatReportScript
         console.log("脚本数据", scriptData)
         console.log("TaskName", runTaskName)
         console.log("include数量", runPluginCount)
@@ -490,6 +497,15 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         Modal.success({
             content: "报告生成成功，请跳转至报告页查看"
         })
+        ipcRenderer.invoke("exec-yak", {
+            Script: scriptData,
+            Params: [
+                {"Key":"timestamp","Value":runTimeStamp},
+                {"Key":"report_name","Value":runTaskName},
+                {"Key":"plugins","Value":runPluginCount},
+            ],
+        })
+
     }
     return (
         <div className={styles["simble-detect-table"]}>
@@ -698,7 +714,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
 
     const [infoState, {reset}] = useHoldingIPCRStream(
         "scan-port",
-        "PortScan",
+        "SimbleDetect",
         token,
         () => {},
         () => {},
