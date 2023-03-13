@@ -6,6 +6,7 @@ import {
     useDeepCompareEffect,
     useGetState,
     useMemoizedFn,
+    useScroll,
     useThrottleFn,
     useUpdateEffect,
     useVirtualList
@@ -507,20 +508,27 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
     const onScrollContainerRef = useThrottleFn(
         (e) => {
-            const dom = e?.target
-
-            const contentScrollTop = dom.scrollTop // 滚动条距离顶部
-            const clientHeight = dom.clientHeight // 可视区域
-            const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
+            if (containerRef.current) return
+            const {
+                scrollTop: contentScrollTop,
+                clientHeight,
+                scrollHeight,
+                scrollWidth,
+                scrollLeft,
+                clientWidth
+            } = containerRef.current
+            // const contentScrollTop = dom.scrollTop // 滚动条距离顶部
+            // const clientHeight = dom.clientHeight // 可视区域
+            // const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
             const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-            const scrollRight = dom.scrollWidth - dom.scrollLeft - dom.clientWidth
+            const scrollRight = scrollWidth - scrollLeft - clientWidth
             // 性能优化
-            if (preScrollLeft.current !== dom.scrollLeft) {
-                preScrollLeft.current = dom.scrollLeft
-                if (dom.scrollLeft < 50 || scrollRight < 50) {
+            if (preScrollLeft.current !== scrollLeft) {
+                preScrollLeft.current = scrollLeft
+                if (scrollLeft < 50 || scrollRight < 50) {
                     setScroll({
                         ...scroll,
-                        scrollLeft: dom.scrollLeft,
+                        scrollLeft: scrollLeft,
                         scrollRight: scrollRight
                     })
                 }
@@ -1533,7 +1541,7 @@ const CellRenderDrop = React.memo(
         if (preProps.item.data !== nextProps.item.data) {
             return false
         }
-        return false
+        return true
     }
 )
 /**

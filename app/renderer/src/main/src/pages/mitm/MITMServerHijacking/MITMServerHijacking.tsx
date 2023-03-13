@@ -99,7 +99,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         系统代理
                     </YakitButton>
                     <div className={style["mitm-server-chrome"]}>
-                        <ChromeLauncherButton isStartMITM={true} />
+                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
                     </div>
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />
