@@ -330,6 +330,14 @@
                                 color: var(--yakit-header-color);
                             }
                         }
+
+                        .operate-btn {
+                            margin-top: 24px;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            gap: 16px;
+                        }
                     }
                 }
             }

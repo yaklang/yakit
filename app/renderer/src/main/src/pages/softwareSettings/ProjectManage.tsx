@@ -530,7 +530,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 })
                 .then((e) => {
                     ipcRenderer
-                        .invoke("DeleteProject", {Id: delId, IsDeleteLocal: isDel})
+                        .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
                         .then((e) => {
                             info("删除成功")
                             setData({
@@ -559,7 +559,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 })
         } else {
             ipcRenderer
-                .invoke("DeleteProject", {Id: delId, IsDeleteLocal: isDel})
+                .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
                 .then((e) => {
                     info("删除成功")
                     setData({
@@ -591,7 +591,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 setModalInfo(data ? {visible: true, isFolder: true, parentNode: data} : {visible: true, isFolder: true})
                 return
             case "import":
-                setModalInfo({visible: true, isNew: false, isImport: true})
+                setModalInfo({visible: true, isNew: false, isImport: true, parentNode: data || undefined})
                 return
             case "encryption":
                 if (!data || !data.Id) {
@@ -890,8 +890,16 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         }
                         style={{width: 288}}
                         onSearch={() => {
-                            setFiles([])
-                            update(1)
+                            if (getParams().ProjectName) {
+                                setFiles([])
+                                setParams({
+                                    Type: "all",
+                                    Pagination: {...getParams().Pagination, Page: 1},
+                                    ProjectName: getParams().ProjectName
+                                })
+                            }
+
+                            setTimeout(() => update(1), 300)
                         }}
                     />
                 </div>
@@ -1145,12 +1153,39 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                     <div className={styles["table-empty-wrapper"]}>
                                                         <YakitEmpty
                                                             descriptionReactNode={
-                                                                <div className={styles["title-style"]}>
-                                                                    <span className={styles["file-style"]}>
-                                                                        {files[files.length - 1].ProjectName}
-                                                                    </span>{" "}
-                                                                    内暂无项目内容
-                                                                </div>
+                                                                <>
+                                                                    <div className={styles["title-style"]}>
+                                                                        <span className={styles["file-style"]}>
+                                                                            {files[files.length - 1].ProjectName}
+                                                                        </span>{" "}
+                                                                        内暂无项目内容
+                                                                    </div>
+                                                                    <div className={styles["operate-btn"]}>
+                                                                        <YakitButton
+                                                                            size='max'
+                                                                            onClick={() =>
+                                                                                operateFunc(
+                                                                                    "newProject",
+                                                                                    files[files.length - 1]
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            新建项目
+                                                                        </YakitButton>
+                                                                        <YakitButton
+                                                                            size='max'
+                                                                            type='outline2'
+                                                                            onClick={() =>
+                                                                                operateFunc(
+                                                                                    "import",
+                                                                                    files[files.length - 1]
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            导入项目
+                                                                        </YakitButton>
+                                                                    </div>
+                                                                </>
                                                             }
                                                         />
                                                     </div>
@@ -1418,6 +1453,24 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                 ProjectName: project.ProjectName,
                 Password: ""
             })
+        }
+        if (visible && isImport && parentNode) {
+            if (parentNode.Id) {
+                const data: ImportProjectProps = {ProjectFilePath: ""}
+                // @ts-ignore
+                if (parentNode.FolderId === "0") {
+                    data.FolderId = +parentNode.Id
+                } else {
+                    data.FolderId = +parentNode.FolderId
+                    // @ts-ignore
+                    if (parentNode.ChildFolderId === "0") {
+                        data.FolderId = +parentNode.Id
+                    } else {
+                        data.FolderId = +parentNode.ChildFolderId
+                    }
+                }
+                setImportInfo({...data})
+            }
         }
         if (!visible) {
             setIsCheck(false)
@@ -1769,27 +1822,29 @@ const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => 
                                 onChange={(e) => setImportInfo({...importInfo, Password: e.target.value})}
                             />
                         </Form.Item>
-                        <Form.Item label={"所属文件夹 :"}>
-                            <Cascader
-                                options={data}
-                                fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
-                                changeOnSelect={true}
-                                loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
-                                onChange={(value, selectedOptions) => {
-                                    if (value) {
-                                        setImportInfo({
-                                            ...importInfo,
-                                            FolderId: +value[0] || 0,
-                                            ChildFolderId: +value[1] || 0
-                                        })
-                                    } else {
-                                        setImportInfo({...importInfo, FolderId: 0, ChildFolderId: 0})
-                                    }
-                                }}
-                                dropdownClassName={styles["cascader-dropdown-body"]}
-                                suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
-                            />
-                        </Form.Item>
+                        {!parentNode && (
+                            <Form.Item label={"所属文件夹 :"}>
+                                <Cascader
+                                    options={data}
+                                    fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
+                                    changeOnSelect={true}
+                                    loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
+                                    onChange={(value, selectedOptions) => {
+                                        if (value) {
+                                            setImportInfo({
+                                                ...importInfo,
+                                                FolderId: +value[0] || 0,
+                                                ChildFolderId: +value[1] || 0
+                                            })
+                                        } else {
+                                            setImportInfo({...importInfo, FolderId: 0, ChildFolderId: 0})
+                                        }
+                                    }}
+                                    dropdownClassName={styles["cascader-dropdown-body"]}
+                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                />
+                            </Form.Item>
+                        )}
                     </>
                 )}
                 <Form.Item label={""}>
