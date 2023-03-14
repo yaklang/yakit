@@ -7,7 +7,7 @@ import {
     Form,
     Input,
     Button,
-    Cascader,
+    Card,
     Spin,
     Radio,
     Popconfirm,
@@ -16,7 +16,8 @@ import {
     Modal,
     Row,
     Col,
-    Slider
+    Slider,
+    Tooltip,
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimbleDetect.module.scss"
@@ -35,13 +36,14 @@ import {ExecResult, YakScript} from "../invoker/schema"
 import {useStore, simbleDetectTabsParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
-import {PluginResultUI} from "../yakitStore/viewers/base"
+import {PluginResultUI,SimbleCardBox} from "../yakitStore/viewers/base"
 import moment from "moment"
 import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
 import type {CheckboxValueType} from "antd/es/checkbox/Group"
-import {PresetPorts} from "@/pages/portscan/schema";
+import {PresetPorts} from "@/pages/portscan/schema"
+import {RiskDetails} from "@/pages/risks/RiskTable"
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
@@ -128,8 +130,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         HostAlivePorts: "22,80,443",
         ExcludeHosts: "",
         ExcludePorts: "",
-        Proxy: [],
-
+        Proxy: []
     })
 
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
@@ -217,11 +218,10 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
             case 1:
                 newParams.Concurrent = 50
                 newParams.SynConcurrent = 1000
-                newParams.Ports =  PresetPorts["top100"]
+                newParams.Ports = PresetPorts["top100"]
                 newParams.ProbeTimeout = 7
                 newParams.ProbeMax = 7
                 break
-
         }
         ipcRenderer.invoke("SimbleDetect", newParams, token)
     }
@@ -270,6 +270,9 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 <Spin spinning={uploadLoading}>
                     <ContentUploadInput
                         type='textarea'
+                        dragger={{
+                            disabled: executing
+                        }}
                         beforeUpload={(f) => {
                             const typeArr: string[] = [
                                 "text/plain",
@@ -306,7 +309,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                             setValue: (Targets) => setParams({...params, Targets}),
                             value: params.Targets,
                             rows: 1,
-                            placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割"
+                            placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
+                            disabled: executing
                         }}
                         otherHelpNode={
                             <>
@@ -360,59 +364,56 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                <Form.Item name='scan_type' label='扫描模式'>
-                    <Radio.Group
-                        buttonStyle='solid'
-                        defaultValue={"基础扫描"}
-                        onChange={(e) => {
-                            setScanType(e.target.value)
-                        }}
-                        value={getScanType()}
-                    >
-                        <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
-                        <Radio.Button value='深度扫描'>深度扫描</Radio.Button>
-                        <Radio.Button value='自定义'>自定义</Radio.Button>
-                    </Radio.Group>
-                    {getScanType() === "自定义" && (
-                        <CheckboxGroup
-                            style={{paddingLeft: 18}}
-                            options={plainOptions}
-                            value={checkedList}
-                            onChange={(list) => setCheckedList(list)}
+                <div style={executing ? {display: "none"} : {}}>
+                    <Form.Item name='scan_type' label='扫描模式'>
+                        <Radio.Group
+                            buttonStyle='solid'
+                            defaultValue={"基础扫描"}
+                            onChange={(e) => {
+                                setScanType(e.target.value)
+                            }}
+                            value={getScanType()}
+                        >
+                            <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
+                            <Radio.Button value='深度扫描'>深度扫描</Radio.Button>
+                            <Radio.Button value='自定义'>自定义</Radio.Button>
+                        </Radio.Group>
+                        {getScanType() === "自定义" && (
+                            <CheckboxGroup
+                                style={{paddingLeft: 18}}
+                                options={plainOptions}
+                                value={checkedList}
+                                onChange={(list) => setCheckedList(list)}
+                            />
+                        )}
+                    </Form.Item>
+
+                    <Form.Item name='TaskName' label='任务名称'>
+                        <Input
+                            style={{width: 400}}
+                            placeholder='请输入任务名称'
+                            allowClear
+                            onChange={() => {
+                                isInputValue.current = true
+                            }}
                         />
-                    )}
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item name='TaskName' label='任务名称'>
-                    <Input
-                        style={{width: 400}}
-                        placeholder='请输入任务名称'
-                        allowClear
-                        onChange={() => {
-                            isInputValue.current = true
-                        }}
-                    />
-                </Form.Item>
-
-                <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
-                    {/* <Radio.Group defaultValue={"fast"}>
-                        <Radio.Button value='fast'>快速探测</Radio.Button>
-                        <Radio.Button value='middle'>标准扫描</Radio.Button>
-                        <Radio.Button value='slow'>深度扫描</Radio.Button>
-                    </Radio.Group> */}
-                    <Slider
-                        tipFormatter={null}
-                        value={getScanDeep()}
-                        onChange={(value) => setScanDeep(value)}
-                        style={{width: 400}}
-                        min={1}
-                        max={3}
-                        marks={marks}
-                    />
-                    <div style={{position: "absolute", top: 26, fontSize: 12, color: "gray"}}>
-                        扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
-                    </div>
-                </Form.Item>
+                    <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
+                        <Slider
+                            tipFormatter={null}
+                            value={getScanDeep()}
+                            onChange={(value) => setScanDeep(value)}
+                            style={{width: 400}}
+                            min={1}
+                            max={3}
+                            marks={marks}
+                        />
+                        <div style={{position: "absolute", top: 26, fontSize: 12, color: "gray"}}>
+                            扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
+                        </div>
+                    </Form.Item>
+                </div>
             </Form>
         </div>
     )
@@ -451,6 +452,8 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 
                     if (logInfo.isOpen) {
                         openPort.current.unshift(logInfo)
+                        // 限制20条数据
+                        openPort.current = openPort.current.slice(0, 20)
                     } else {
                         // closedPort.current.unshift(logInfo)
                     }
@@ -500,16 +503,16 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         ipcRenderer.invoke("exec-yak", {
             Script: scriptData,
             Params: [
-                {"Key":"timestamp","Value":runTimeStamp},
-                {"Key":"report_name","Value":runTaskName},
-                {"Key":"plugins","Value":runPluginCount},
-            ],
+                {Key: "timestamp", Value: runTimeStamp},
+                {Key: "report_name", Value: runTaskName},
+                {Key: "plugins", Value: runPluginCount}
+            ]
         })
-
     }
     return (
         <div className={styles["simble-detect-table"]}>
             <div className={styles["result-table-body"]}>
+                <SimbleCardBox statusCards={infoState.statusState}/>
                 <Tabs
                     className='scan-port-tabs'
                     tabBarStyle={{marginBottom: 5}}
@@ -526,17 +529,33 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                                     )}
                                 </>
                             )}
-                            <div className={styles["hole-text"]} onClick={openMenu}>
-                                查看完整漏洞
-                            </div>
                         </div>
                     }
                 >
+                    {!!infoState.riskState && infoState.riskState.length > 0 && (
+                        <Tabs.TabPane tab={`漏洞与风险`} key={"risk"} forceRender>
+                            <AutoCard
+                                bodyStyle={{overflowY: "auto"}}
+                                extra={
+                                    <div className={styles["hole-text"]} onClick={openMenu}>
+                                        查看完整漏洞
+                                    </div>
+                                }
+                            >
+                                <Space direction={"vertical"} style={{width: "100%"}} size={12}>
+                                    {infoState.riskState.slice(0, 10).map((i) => {
+                                        return <RiskDetails info={i} shrink={true} />
+                                    })}
+                                </Space>
+                            </AutoCard>
+                        </Tabs.TabPane>
+                    )}
+
                     <Tabs.TabPane tab={"扫描端口列表"} key={"scanPort"} forceRender>
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} />
+                                    <OpenPortTableViewer data={openPorts} isSimble={true} />
                                 </Col>
                             </Row>
                         </div>
@@ -551,6 +570,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                                 featureType={infoState.featureTypeState}
                                 feature={infoState.featureMessageState}
                                 statusCards={infoState.statusState}
+                                hideRisk={true}
                             />
                         </div>
                     </Tabs.TabPane>
