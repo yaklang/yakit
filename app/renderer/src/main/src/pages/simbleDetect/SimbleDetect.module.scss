@@ -5,7 +5,7 @@
         margin-left: 18px;
     }
     :global {
-        .ant-slider-mark-text{
+        .ant-slider-mark-text {
             top: -38px;
         }
     }
@@ -17,16 +17,18 @@
     .result-table-body {
         flex: 1;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
         :global {
-            .scan-port-tabs{
+            .scan-port-tabs {
+                
                 .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-                color: #1890ff !important;
+                    color: #1890ff !important;
+                }
+                .ant-tabs-tabpane {
+                    padding: 0px !important;
+                }
             }
-            .ant-tabs-tabpane{
-                padding: 0px !important;
-            }
-            }
-            
         }
     }
     .result-notice-body {
@@ -101,7 +103,7 @@
     .filter-opt-progress-modal {
     }
 }
-.body-time-line{
+.body-time-line {
     width: 100%;
     height: 100%;
     overflow: auto;
