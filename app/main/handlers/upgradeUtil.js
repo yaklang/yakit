@@ -492,7 +492,7 @@ module.exports = {
             }
             const buildinDBFile = loadExtraFilePath(path.join("bins", "database", "default-cve.db.gzip"));
             if (fs.existsSync(buildinDBFile)) {
-                fs.copyFileSync(buildinDBFile, targetFile, 0o666)
+                fs.copyFileSync(buildinDBFile, targetFile)
             }
         })
 
