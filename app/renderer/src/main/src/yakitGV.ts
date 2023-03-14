@@ -35,7 +35,9 @@ export enum RemoteGV {
     /** @name 登录账户Token(enterprise) */
     TokenOnlineEnterprise = "token-online-enterprise",
     /** @name 登录账户Token */
-    TokenOnline = "token-online"
+    TokenOnline = "token-online",
+    /** @name 连接的项目数据库 */
+    LinkDatabase = "link-database"
 }
 
 /** 项目逻辑全局变量 */

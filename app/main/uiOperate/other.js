@@ -1,5 +1,6 @@
 const {ipcMain, shell, clipboard} = require("electron")
 const URL = require("url")
+const Path = require("path")
 
 module.exports = (win, getClient) => {
     /**
@@ -22,5 +23,11 @@ module.exports = (win, getClient) => {
     // 将渲染进程传入内容复制进系统剪切板内
     ipcMain.handle("set-copy-clipboard", (e, text) => {
         clipboard.writeText(text)
+    })
+
+    // 将绝对路径里的文件名(不带文件后缀)提取出来
+    ipcMain.handle("fetch-path-file-name", (e, path) => {
+        const extension = Path.extname(path)
+        return Path.basename(path, extension)
     })
 }

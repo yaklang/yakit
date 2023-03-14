@@ -17,6 +17,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         isTop,
         setTop,
         wrapClassName,
+        heardIcon,
         extraIcon,
         title,
         content = "请写入合适的提示内容",
@@ -84,7 +85,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
 
                         <div className={styles["container-left-wrapper"]}>
                             <div className={styles["left-hint-icon"]}>
-                                <ShieldExclamationSvgIcon />
+                                {heardIcon ? heardIcon : <ShieldExclamationSvgIcon />}
                             </div>
                             <div className={styles["left-hint-icon-extra"]}>{extraIcon}</div>
                         </div>

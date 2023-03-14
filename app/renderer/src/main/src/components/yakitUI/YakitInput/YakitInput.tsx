@@ -38,8 +38,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
                 className={classNames(styles["yakit-input-middle"], {
                     [styles["yakit-input-large"]]: size === "large",
                     [styles["yakit-input-small"]]: size === "small",
-                    className
-                })}
+                },className)}
             >
                 {props.children}
             </Input>

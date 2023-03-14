@@ -12,6 +12,9 @@
         position: relative;
     }
 }
+.yakit-hint-hidden-wrapper {
+    display: none;
+}
 .yakit-hint-mask-wrapper {
     background: rgba(49, 52, 63, 0.3);
 }
@@ -63,6 +66,10 @@
             .left-hint-icon {
                 width: 32px;
                 height: 32px;
+                svg {
+                    width: 32px;
+                    height: 32px;
+                }
             }
             // .left-hint-icon-extra {
             // }

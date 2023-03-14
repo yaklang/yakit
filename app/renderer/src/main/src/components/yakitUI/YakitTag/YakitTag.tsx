@@ -81,10 +81,10 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
     return (
-        <span className={styles["yakit-copy"]} onClick={onCopy}>
+        <div className={styles["yakit-copy"]} onClick={onCopy}>
             {(loading && <LoadingOutlined />) || (
                 <>{(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || <CopyOutlined />}</>
             )}
-        </span>
+        </div>
     )
 }
