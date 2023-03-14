@@ -323,7 +323,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         getLeftOrRightFixedWidth()
     }, [columns])
     useEffect(() => {
-        if (!width) return
+        // if (!width) return
         getTableWidthAndColWidth(0)
     }, [width])
     useEffect(() => {
@@ -333,7 +333,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (tableRef.current && tableRef.current.getBoundingClientRect()) {
             tablePosition.current = tableRef.current.getBoundingClientRect()
         }
-    }, [tableRef.current])
+    }, [tableRef.current, width])
 
     // 计算左右宽度以及固定列
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
@@ -391,13 +391,20 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             columnsAllWidth = 0
             total = 0
         }
-        let w = (width - columnsAllWidth) / (cLength - total)
-        const cw = w - scrollBarWidth / (cLength - total) + 32
-        const newColumns = getColumns().map((ele) => {
+        let w = (width - columnsAllWidth) / (cLength - total || 1)
+        const cw = w - scrollBarWidth / (cLength - total || 1) + 32
+        const newColumns = getColumns().map((ele, index) => {
             if (ele.isDefWidth) {
                 return {
                     ...ele,
                     width: cw
+                }
+            }
+            if (cLength - total === 0 && index === getColumns().length - 2) {
+                // 倒数第二个 外界div宽度变宽，多出的宽度加在倒数第二列
+                return {
+                    ...ele,
+                    width: (ele.width || cw) + cw
                 }
             }
             return {
@@ -506,7 +513,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const preScrollLeft = useRef<number>(0)
     const preScrollBottom = useRef<number>(0)
     useScroll(containerRef, (val) => {
-        if (containerRef.current) return false
+        if (!containerRef.current) return false
         const {
             scrollTop: contentScrollTop,
             clientHeight,

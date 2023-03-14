@@ -538,14 +538,16 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
      * @description 获取Tags
      */
     useEffect(() => {
-        ipcRenderer
-            .invoke("GetYakScriptTags", {})
-            .then((res) => {
-                setAllTag(res.Tag.map((item) => ({Name: item.Value, Total: item.Total})))
-            })
-            .catch((e) => failed("获取插件组失败:" + e))
-            .finally(() => {})
-    }, [])
+        if (searchType === "Tags") {
+            ipcRenderer
+                .invoke("GetYakScriptTags", {})
+                .then((res) => {
+                    setAllTag(res.Tag.map((item) => ({Name: item.Value, Total: item.Total})))
+                })
+                .catch((e) => failed("获取插件组失败:" + e))
+                .finally(() => {})
+        }
+    }, [searchType])
     return (
         <YakitCombinationSearch
             afterModuleType={afterModuleType}
