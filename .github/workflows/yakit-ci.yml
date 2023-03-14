@@ -49,6 +49,9 @@ jobs:
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
+      - run: wget -O bins/database/default-cve.db.gzip https://cve-db.oss-cn-beijing.aliyuncs.com/default-cve.db.gzip
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        name: "Download CVE(Include CWE) Data (Yakit-EE)"
       - run: yarn build-render-enterprise
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
         working-directory: ./
