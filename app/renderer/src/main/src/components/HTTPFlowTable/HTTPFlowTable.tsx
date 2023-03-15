@@ -628,7 +628,7 @@ const TableFirstLinePlaceholder: HTTPFlow = {
     IsPlaceholder: true
 }
 
-const OFFSET_LIMIT = 50
+const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
 
 export interface ShieldData {
@@ -869,6 +869,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
+                    if (rsp?.Data.length === 0) return
                     if (paginationProps.Page == 1) {
                         setTotal(rsp.Total)
                     }
@@ -942,14 +943,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const scrollUpdateTop = useMemoizedFn(() => {
-        // if (maxId <= 0) return
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         if (scrollTop < 10) {
             update(1, undefined, undefined, undefined, undefined, true)
             setOffsetData([])
             return
         }
-        // if (getOffsetData().length > 0) return
         const paginationProps = {
             Page: 1,
             Limit: OFFSET_STEP,
