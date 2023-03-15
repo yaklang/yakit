@@ -42,7 +42,10 @@
         }
         .mitm-server-extra {
             .mitm-server-chrome {
-                margin-left: 8px;
+                margin-left: 16px;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
             }
             .mitm-server-quit-icon {
                 margin-left: 16px;
@@ -63,6 +66,7 @@
         display: flex;
         align-items: center;
         margin-bottom: 16px;
+        height: 28px;
         .mitm-hijacked-heard-left {
             display: flex;
             align-items: center;
@@ -79,9 +83,13 @@
 .expand-icon {
     display: inline-flex;
     align-items: center;
-    color: #85899e;
+    color: var(--yakit-body-text-color);
     cursor: pointer;
     margin-left: 8px;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
     &:hover {
         color: var(--yakit-primary-4);
     }
@@ -120,21 +128,6 @@
                 user-select: none;
             }
         }
-        .manual-discard-request {
-            --button-wave-shadow-color: var(--yakit-danger-2);
-
-            --button-background: #fff;
-            --button-color: var(--yakit-danger-5);
-            --button-border-color: var(--yakit-danger-5);
-
-            --button-hover-background: #fff;
-            --button-hover-color: var(--yakit-danger-4);
-            --button-hover-border-color: var(--yakit-danger-4);
-
-            --button-press-background: #fff;
-            --button-press-color: var(--yakit-danger-6);
-            --button-press-border-color: var(--yakit-danger-6);
-        }
     }
 }
 .autoForward-manual-urlInfo {
@@ -166,6 +159,8 @@
 .mitm-log {
     height: 100%;
     overflow-y: auto;
+    z-index: 1;
+    position: relative;
     .body-length-text-red {
         color: var(--yakit-danger-4);
     }
@@ -200,6 +195,16 @@
 .mitm-plugin-hijack-content {
     width: 100%;
     height: 100%;
+    .filter-small-icon {
+        color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .filter-small-icon-primary {
+        color: var(--yakit-primary-5);
+    }
     .mitm-plugin-hijack-heard {
         display: flex;
         align-items: center;
@@ -210,6 +215,8 @@
     .search-plugin-hijack-content {
         flex: 1;
         margin-left: 16px;
+        justify-content: flex-end;
+        display: flex;
     }
     .plugin-hijack-content-list {
         height: 100%;
@@ -274,7 +281,7 @@
 }
 
 .mitm-hijacked-manual-content {
-    height: calc(100% - 40px);
+    height: calc(100% - 44px);
     width: 100%;
     .mitm-hijacked-manual-content-url {
         margin-bottom: 16px;
@@ -289,5 +296,22 @@
 }
 
 .mitm-hijacked-passive-content {
-    height: calc(100% - 40px);
+    height: calc(100% - 44px);
+    :global {
+        .ant-timeline-item-head-blue {
+            color: var(--yakit-primary-5);
+            border-color: var(--yakit-primary-5);
+        }
+    }
+}
+
+.filter-popover {
+    width: 250px;
+    :global {
+        .ant-popover-placement-bottom,
+        .ant-popover-placement-bottomLeft,
+        .ant-popover-placement-bottomRight {
+            padding-top: 5px;
+        }
+    }
 }

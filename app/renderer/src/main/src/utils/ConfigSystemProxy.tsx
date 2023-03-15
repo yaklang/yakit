@@ -3,7 +3,7 @@ import {showModal} from "./showModal"
 import {Alert, Button, Form, Input, Space, Spin, Tag} from "antd"
 import {InputItem, SwitchItem} from "./inputUtil"
 import {useMemoizedFn} from "ahooks"
-import {info} from "@/utils/notification"
+import {info, yakitFailed} from "@/utils/notification"
 import {ReloadOutlined} from "@ant-design/icons"
 import {IsWindows} from "@/utils/basic"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -58,8 +58,13 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
             })
             .then((e) => {
                 info("设置系统代理成功")
+                setTimeout(() => {
+                    update()
+                }, 200)
             })
-            .finally(() => update())
+            .catch((err) => {
+                yakitFailed("设置系统代理失败:" + err)
+            })
     })
     return (
         <YakitSpin spinning={loading}>

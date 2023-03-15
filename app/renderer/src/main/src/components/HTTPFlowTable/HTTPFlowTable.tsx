@@ -2557,7 +2557,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            // info(`设置 HTTPFlow 颜色成功`)
+            info(`设置 HTTPFlow 颜色成功`)
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
@@ -2576,7 +2576,6 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
 export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) => {
     if (!flow) return
     const existedTags = flow.Tags ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
-    existedTags.pop()
     ipcRenderer
         .invoke("SetTagForHTTPFlow", {
             Id: flow.Id,
@@ -2584,14 +2583,14 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            // info(`清除 HTTPFlow 颜色成功`)
+            info(`清除 HTTPFlow 颜色成功`)
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
                 const item = data[index]
                 if (item.Hash === flow.Hash) {
                     item.cellClassName = ""
-                    item.Tags = ""
+                    item.Tags = existedTags.join("|")
                 }
                 newData.push(item)
             }

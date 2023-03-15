@@ -1,4 +1,4 @@
-import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon, FilterIcon, MenuIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -12,8 +12,8 @@ import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed} from "@/utils/notification"
 import {useCreation, useMap, useMemoizedFn} from "ahooks"
-import {CheckboxChangeEvent} from "antd/lib/checkbox"
-import React, {useEffect, useRef, useState} from "react"
+import ReactResizeDetector from "react-resize-detector"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
@@ -26,6 +26,10 @@ import {
 } from "./MITMPluginLocalList"
 import {enableMITMPluginMode} from "./MITMServerHijacking"
 import styles from "./MITMServerHijacking.module.scss"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import classNames from "classnames"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {Dropdown} from "antd"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -85,6 +89,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     // 是否允许获取默认勾选值
     const isDefaultCheck = useRef<boolean>(false)
+
+    const [visiblePluginSearch, setVisiblePluginSearch] = useState<boolean>(false)
+    const [visibleYakitMenu, setVisibleYakitMenu] = useState<boolean>(false)
 
     // 初始化加载 hooks，设置定时更新 hooks 状态
     useEffect(() => {
@@ -199,6 +206,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setScript(code)
         setMode("hot-patch")
     })
+
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (mode) {
             case "hot-patch":
@@ -252,28 +260,98 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 )
             case "loaded":
                 return (
-                    <YakitInput.Search
-                        placeholder='请输入插件名称搜索'
-                        value={hookScriptNameSearch}
-                        onChange={(e) => setHookScriptNameSearch(e.target.value)}
-                        style={{maxWidth: 200}}
-                        onSearch={() => setIsHooksSearch(!isHooksSearch)}
-                        onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
-                    />
+                    <>
+                        {(width > 350 && (
+                            <YakitInput.Search
+                                placeholder='请输入插件名称搜索'
+                                value={hookScriptNameSearch}
+                                onChange={(e) => setHookScriptNameSearch(e.target.value)}
+                                style={{maxWidth: 200}}
+                                onSearch={() => setIsHooksSearch(!isHooksSearch)}
+                                onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
+                            />
+                        )) || (
+                            <YakitPopover
+                                overlayClassName={styles["filter-popover"]}
+                                content={
+                                    <YakitInput.Search
+                                        placeholder='请输入插件名称搜索'
+                                        value={hookScriptNameSearch}
+                                        onChange={(e) => setHookScriptNameSearch(e.target.value)}
+                                        style={{maxWidth: 250}}
+                                        onSearch={() => setIsHooksSearch(!isHooksSearch)}
+                                        onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
+                                    />
+                                }
+                                trigger='click'
+                                onVisibleChange={setVisiblePluginSearch}
+                                placement='bottomLeft'
+                            >
+                                <YakitButton
+                                    className={classNames({
+                                        "button-text-primary": visiblePluginSearch
+                                    })}
+                                    type='outline2'
+                                    style={{padding: 4}}
+                                >
+                                    <FilterIcon
+                                        className={classNames(styles["filter-small-icon"], {
+                                            [styles["filter-small-icon-primary"]]: visiblePluginSearch
+                                        })}
+                                    />
+                                </YakitButton>
+                            </YakitPopover>
+                        )}
+                    </>
                 )
             default:
                 return (
                     <div className={styles["search-plugin-hijack-content"]}>
-                        <PluginSearch
-                            tag={tags}
-                            setTag={setTags}
-                            searchKeyword={searchKeyword}
-                            setSearchKeyword={setSearchKeyword}
-                            onSearch={onSearch}
-                            selectSize='small'
-                            inputSize='middle'
-                            selectModuleTypeSize='small'
-                        />
+                        {(width > 350 && (
+                            <PluginSearch
+                                tag={tags}
+                                setTag={setTags}
+                                searchKeyword={searchKeyword}
+                                setSearchKeyword={setSearchKeyword}
+                                onSearch={onSearch}
+                                selectSize='small'
+                                inputSize='middle'
+                                selectModuleTypeSize='small'
+                            />
+                        )) || (
+                            <YakitPopover
+                                overlayClassName={styles["filter-popover"]}
+                                content={
+                                    <PluginSearch
+                                        tag={tags}
+                                        setTag={setTags}
+                                        searchKeyword={searchKeyword}
+                                        setSearchKeyword={setSearchKeyword}
+                                        onSearch={onSearch}
+                                        selectSize='small'
+                                        inputSize='middle'
+                                        selectModuleTypeSize='small'
+                                    />
+                                }
+                                trigger='click'
+                                onVisibleChange={setVisiblePluginSearch}
+                                placement='bottomLeft'
+                            >
+                                <YakitButton
+                                    className={classNames({
+                                        "button-text-primary": visiblePluginSearch
+                                    })}
+                                    type='outline2'
+                                    style={{padding: 4}}
+                                >
+                                    <FilterIcon
+                                        className={classNames(styles["filter-small-icon"], {
+                                            [styles["filter-small-icon-primary"]]: visiblePluginSearch
+                                        })}
+                                    />
+                                </YakitButton>
+                            </YakitPopover>
+                        )}
                     </div>
                 )
         }
@@ -382,6 +460,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 isSelectAll={isSelectAll}
                                 selectGroup={selectGroup}
                                 setSelectGroup={setSelectGroup}
+                                total={total}
                                 setTotal={setTotal}
                                 hooks={hooks}
                                 onSelectAll={onSelectAll}
@@ -394,20 +473,69 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 )
         }
     })
+    const [width, setWidth] = useState<number>(0)
     return (
         <div className={styles["mitm-plugin-hijack-content"]}>
+            <ReactResizeDetector
+                onResize={(w, h) => {
+                    if (!w) {
+                        return
+                    }
+                    setWidth(w)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <div className={styles["mitm-plugin-hijack-heard"]}>
                 <div className={styles["mitm-plugin-hijack-heard-left"]}>
-                    <YakitRadioButtons
-                        buttonStyle='solid'
-                        value={mode}
-                        options={[
-                            {label: "全部", value: "all"},
-                            {label: "已启用", value: "loaded"},
-                            {label: "热加载", value: "hot-patch"}
-                        ]}
-                        onChange={(e) => setMode(e.target.value)}
-                    />
+                    {(width > 350 && (
+                        <YakitRadioButtons
+                            buttonStyle='solid'
+                            value={mode}
+                            options={[
+                                {label: "全部", value: "all"},
+                                {label: "已启用", value: "loaded"},
+                                {label: "热加载", value: "hot-patch"}
+                            ]}
+                            onChange={(e) => setMode(e.target.value)}
+                        />
+                    )) || (
+                        <Dropdown
+                            overlay={
+                                <YakitMenu
+                                    data={[
+                                        {
+                                            key: "all",
+                                            label: "全部"
+                                        },
+                                        {
+                                            key: "loaded",
+                                            label: "已启用"
+                                        },
+                                        {
+                                            key: "hot-patch",
+                                            label: "热加载"
+                                        }
+                                    ]}
+                                    onClick={({key}) => setMode(key as "hot-patch" | "loaded" | "all")}
+                                    style={{padding: 4}}
+                                />
+                            }
+                            onVisibleChange={setVisibleYakitMenu}
+                        >
+                            <YakitButton type='primary'>
+                                <MenuIcon
+                                    className={classNames(styles["filter-small-icon"])}
+                                    style={{color: "#fff", height: 16}}
+                                />
+                                {mode === "all" && "全部"}
+                                {mode === "loaded" && "已启用"}
+                                {mode === "hot-patch" && "热加载"}
+                            </YakitButton>
+                        </Dropdown>
+                    )}
                 </div>
                 {onRenderHeardExtra()}
             </div>

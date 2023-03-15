@@ -26,14 +26,14 @@ interface MITMChromeLauncherProp {
     callback: (host: string, port: number) => void
 }
 
-const {ipcRenderer} = window.require("electron");
-const {Text} = Typography;
+const {ipcRenderer} = window.require("electron")
+const {Text} = Typography
 
 const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
-    const [params, setParams] = useState<{ host: string, port: number }>({
+    const [params, setParams] = useState<{host: string; port: number}>({
         host: props.host ? props.host : "127.0.0.1",
-        port: props.port ? props.port : 8083,
-    });
+        port: props.port ? props.port : 8083
+    })
 
     return (
         <Form

@@ -55,9 +55,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 info("启动初始 MITM 插件成功")
             })
         }
-        return () => {
-            ipcRenderer.invoke("mitm-stop-call")
-        }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
     const stop = useMemoizedFn(() => {
         // setLoading(true)

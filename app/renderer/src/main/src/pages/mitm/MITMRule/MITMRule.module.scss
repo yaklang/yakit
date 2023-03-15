@@ -276,3 +276,10 @@
         background: var(--yakit-primary-color-press);
     }
 }
+.question-tooltip {
+    :global {
+        .ant-tooltip-arrow {
+            left: 35%;
+        }
+    }
+}

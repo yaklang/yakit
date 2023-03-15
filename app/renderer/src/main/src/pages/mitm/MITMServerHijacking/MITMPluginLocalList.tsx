@@ -16,6 +16,7 @@ import {
     ImportIcon,
     PlusCircleIcon,
     SolidCloudDownloadIcon,
+    SolidTrashIcon,
     TrashIcon
 } from "@/assets/newIcon"
 import {
@@ -35,6 +36,7 @@ import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
+import {queryYakScriptList} from "@/pages/yakitStore/network"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -64,6 +66,7 @@ interface MITMPluginLocalListProps {
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
     height: string | number
     renderTitle?: ReactNode
+    total: number
     setTotal: (n: number) => void
     hooks: Map<string, boolean>
     onSelectAll: (b: boolean) => void
@@ -89,6 +92,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         selectGroup,
         setSelectGroup,
         height,
+        total,
         setTotal,
         hooks,
         setIsSelectAll,
@@ -99,6 +103,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
+    const [initialTotal, setInitialTotal] = useState<number>(0) //初始插件总数
 
     const [refresh, setRefresh] = useState<boolean>(true)
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
@@ -125,6 +130,57 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     useUpdateEffect(() => {
         setRefresh(!refresh)
     }, [tags, inViewport])
+    useEffect(() => {
+        if (visibleOnline || inViewport) getAllSatisfyScript()
+    }, [inViewport, visibleOnline])
+
+    const getAllSatisfyScript = useMemoizedFn(() => {
+        queryYakScriptList(
+            "mitm,port-scan",
+            (data, t) => {
+                setInitialTotal(t || 0)
+            },
+            undefined,
+            1,
+            undefined,
+            searchKeyword,
+            {
+                Tag: tags,
+                Type: "mitm,port-scan",
+                Keyword: searchKeyword,
+                IncludedScriptNames: includedScriptNames,
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+            }
+        )
+    })
+    const onRenderEmptyNode = useMemoizedFn(() => {
+        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || includedScriptNames.length > 0)) {
+            return (
+                <div className={style["mitm-plugin-empty"]}>
+                    <YakitEmpty title={undefined} description='搜索结果“空”' />
+                </div>
+            )
+        }
+        if (Number(initialTotal) === 0) {
+            return (
+                <div className={style["mitm-plugin-empty"]}>
+                    <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
+                    <div className={style["mitm-plugin-buttons"]}>
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => setVisibleOnline(true)}
+                        >
+                            获取云端插件
+                        </YakitButton>
+                        <YakitButton type='outline1' icon={<ImportIcon />} onClick={() => setVisibleImport(true)}>
+                            导入插件源
+                        </YakitButton>
+                    </div>
+                </div>
+            )
+        }
+    })
     return (
         <div className={style["mitm-plugin-local"]} style={{height}} ref={listRef}>
             <div>
@@ -153,27 +209,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                 style={{height: `calc(100% - ${tags.length || selectGroup.length > 0 ? vlistHeigth + 8 : 0}px)`}}
             >
                 <YakModuleList
-                    emptyNode={
-                        <div className={style["mitm-plugin-empty"]}>
-                            <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
-                            <div className={style["mitm-plugin-buttons"]}>
-                                <YakitButton
-                                    type='outline1'
-                                    icon={<CloudDownloadIcon />}
-                                    onClick={() => setVisibleOnline(true)}
-                                >
-                                    获取云端插件
-                                </YakitButton>
-                                <YakitButton
-                                    type='outline1'
-                                    icon={<ImportIcon />}
-                                    onClick={() => setVisibleImport(true)}
-                                >
-                                    导入插件源
-                                </YakitButton>
-                            </div>
-                        </div>
-                    }
+                    emptyNode={onRenderEmptyNode()}
                     queryLocal={{
                         Tag: tags,
                         Type: "mitm,port-scan",
@@ -222,7 +258,9 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                 visible={visibleOnline}
                 setVisible={(v) => {
                     setVisibleOnline(v)
-                    setRefresh(!refresh)
+                    setTimeout(() => {
+                        setRefresh(!refresh)
+                    }, 100)
                 }}
             />
         </div>
@@ -250,7 +288,7 @@ const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((pr
                 setPercent(0)
                 setVisible(false)
                 ipcRenderer.invoke("change-main-menu")
-            }, 500)
+            }, 200)
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
         return () => {
@@ -353,7 +391,6 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
                                     setTags([...arr])
                                 }}
                                 closable={true}
-                                size='small'
                             >
                                 {i}
                             </YakitTag>
@@ -369,7 +406,6 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
                                     setSelectGroup([...arr])
                                 }}
                                 closable={true}
-                                size='small'
                                 className={classNames(style["mitm-plugin-query-plugin-group"])}
                             >
                                 <FolderOpenIcon />
@@ -628,6 +664,8 @@ interface PluginGroupListProps {
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
     const {pugGroup, selectGroup, setSelectGroup, onDeletePlugin} = props
+    const [visibleRemove, setVisibleRemove] = useState<boolean>(false)
+    const [deletePlugin, setDeletePlugin] = useState<YakFilterRemoteObj>()
     const onSelect = useMemoizedFn((selectItem: YakFilterRemoteObj) => {
         const checked = selectGroup.findIndex((l) => l.name === selectItem.name) === -1
         if (checked) {
@@ -646,7 +684,10 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                     className={classNames(style["plugin-group-item"], {
                         [style["plugin-group-item-select"]]: selectGroup.findIndex((l) => l.name === item.name) !== -1
                     })}
-                    onClick={() => onSelect(item)}
+                    onClick={() => {
+                        if (visibleRemove) return
+                        onSelect(item)
+                    }}
                 >
                     <div className={classNames(style["plugin-group-item-name"], "content-ellipsis")} title={item.name}>
                         {item.name}
@@ -656,12 +697,35 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                         <TrashIcon
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onDeletePlugin(item)
+                                setVisibleRemove(true)
+                                setDeletePlugin(item)
                             }}
                         />
                     </div>
                 </div>
             ))}
+            <YakitHint
+                visible={visibleRemove}
+                title='删除插件组'
+                content={
+                    <span>
+                        确认要删除“<span style={{color: "var(--yakit-warning-5)"}}>{deletePlugin?.name}</span>
+                        ”插件组吗？删除组不会删除插件。
+                    </span>
+                }
+                heardIcon={<SolidTrashIcon style={{color: "var(--yakit-warning-5)"}} />}
+                onCancel={() => {
+                    setVisibleRemove(false)
+                }}
+                okButtonText='确认删除'
+                okButtonProps={{type: "danger"}}
+                onOk={() => {
+                    if (deletePlugin) {
+                        onDeletePlugin(deletePlugin)
+                        setVisibleRemove(false)
+                    }
+                }}
+            />
         </div>
     )
 })

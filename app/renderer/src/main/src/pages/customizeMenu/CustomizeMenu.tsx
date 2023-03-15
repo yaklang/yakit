@@ -1241,13 +1241,17 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
     const {plugin, getScriptInfo} = props
     const renderIcon = useMemoizedFn(() => {
         if (plugin.OnlineOfficial) {
-            return <OfficialPluginIcon className={style["plugin-local-icon"]} />
+            return (
+                <Tooltip title='官方插件'>
+                    <OfficialPluginIcon className={style["plugin-local-icon"]} />
+                </Tooltip>
+            )
         }
         if (plugin.OnlineIsPrivate) {
-            return <PrivatePluginIcon className={style["plugin-local-icon"]} />
+            return  <Tooltip title='私有插件'><PrivatePluginIcon className={style["plugin-local-icon"]} /></Tooltip>
         }
         if (plugin.UUID) {
-            return <CloudPluginIcon className={style["plugin-local-icon"]} />
+            return <Tooltip title='云端插件'><CloudPluginIcon className={style["plugin-local-icon"]} /></Tooltip>
         }
     })
     return (

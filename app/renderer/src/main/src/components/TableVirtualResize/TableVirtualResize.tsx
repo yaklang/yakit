@@ -111,6 +111,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isRefresh,
         disableSorting,
         query,
+        currentSelectItem,
         onSetCurrentRow,
         onMoveRow,
         enableDragSort,
@@ -157,6 +158,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         itemHeight: defItemHeight,
         overscan: 10
     })
+    useEffect(() => {
+        setCurrentRow(currentSelectItem)
+    }, [currentSelectItem])
     useEffect(() => {
         scrollTo(0)
     }, [isRefresh])

@@ -1186,9 +1186,9 @@ export const QuitIcon = (props: Partial<IconProps>) => {
 }
 
 const ArrowsExpand = () => (
-    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
-            d='M2.66675 5.33333V2.66667M2.66675 2.66667H5.33341M2.66675 2.66667L6.00008 6M13.3334 5.33333V2.66667M13.3334 2.66667H10.6667M13.3334 2.66667L10.0001 6M2.66675 10.6667V13.3333M2.66675 13.3333H5.33341M2.66675 13.3333L6.00008 10M13.3334 13.3333L10.0001 10M13.3334 13.3333V10.6667M13.3334 13.3333H10.6667'
+            d='M4 8V4M4 4H8M4 4L9 9M20 8V4M20 4H16M20 4L15 9M4 16V20M4 20H8M4 20L9 15M20 20L15 15M20 20V16M20 20H16'
             stroke='currentColor'
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -1203,9 +1203,9 @@ export const ArrowsExpandIcon = (props: Partial<IconProps>) => {
 }
 
 const ArrowsRetract = () => (
-    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
-            d='M2.66675 5.33333V2.66667M2.66675 2.66667H5.33341M2.66675 2.66667L6.00008 6M13.3334 5.33333V2.66667M13.3334 2.66667H10.6667M13.3334 2.66667L10.0001 6M2.66675 10.6667V13.3333M2.66675 13.3333H5.33341M2.66675 13.3333L6.00008 10M13.3334 13.3333L10.0001 10M13.3334 13.3333V10.6667M13.3334 13.3333H10.6667'
+            d='M15 5V9M15 9H19M15 9L20 4M9 5V9M9 9H5M9 9L4 4M15 19V15M15 15H19M15 15L20 20M9 19V15M9 15H5M9 15L4 20'
             stroke='currentColor'
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -1284,4 +1284,39 @@ const SolidCloudDownload = () => (
  */
 export const SolidCloudDownloadIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidCloudDownload} {...props} />
+}
+
+const SolidTrash = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M14.3998 3.19995C13.7938 3.19995 13.2397 3.54235 12.9687 4.08441L11.811 6.39995H6.3998C5.51615 6.39995 4.7998 7.1163 4.7998 7.99995C4.7998 8.88361 5.51615 9.59995 6.39981 9.59995L6.3998 25.6C6.3998 27.3673 7.83249 28.7999 9.59981 28.7999H22.3998C24.1671 28.7999 25.5998 27.3673 25.5998 25.6V9.59995C26.4835 9.59995 27.1998 8.88361 27.1998 7.99995C27.1998 7.1163 26.4835 6.39995 25.5998 6.39995H20.1887L19.0309 4.08441C18.7599 3.54235 18.2058 3.19995 17.5998 3.19995H14.3998ZM11.1998 12.8C11.1998 11.9163 11.9161 11.2 12.7998 11.2C13.6835 11.2 14.3998 11.9163 14.3998 12.8V22.4C14.3998 23.2836 13.6835 24 12.7998 24C11.9161 24 11.1998 23.2836 11.1998 22.4V12.8ZM19.1998 11.2C18.3161 11.2 17.5998 11.9163 17.5998 12.8V22.4C17.5998 23.2836 18.3161 24 19.1998 24C20.0835 24 20.7998 23.2836 20.7998 22.4V12.8C20.7998 11.9163 20.0835 11.2 19.1998 11.2Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:solid-trash 垃圾桶 实心
+ */
+export const SolidTrashIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidTrash} {...props} />
+}
+
+const Menu = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4 6H20M4 12H20M4 18H20'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:menu 菜单
+ */
+export const MenuIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Menu} {...props} />
 }

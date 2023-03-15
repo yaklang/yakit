@@ -11,8 +11,8 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    :global{
-        .resize-box .resize-split-line:hover{
+    :global {
+        .resize-box .resize-split-line:hover {
             border: 1px solid var(--yakit-primary-5);
         }
     }
@@ -24,6 +24,11 @@
     height: 100%;
     position: relative;
     flex-direction: column;
+    padding-left: 2px;
+    .empty-button {
+        padding: 12px 0 8px 0;
+        height: 36px;
+    }
 
     .mitm-server-start-pre-line {
         width: 1px;
@@ -36,10 +41,11 @@
     .mitm-plugin-local {
         width: 100%;
         height: 100%;
-        padding-right: 4px;
+        padding-right: 10px;
         padding-top: 2px;
 
         .mitm-plugin-empty {
+            margin-top: 48px;
             .mitm-plugin-buttons {
                 display: flex;
                 gap: 8px;

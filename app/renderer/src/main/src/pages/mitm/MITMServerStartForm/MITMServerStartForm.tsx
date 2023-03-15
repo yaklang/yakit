@@ -30,6 +30,7 @@ export interface MITMServerStartFormProp {
         enableHttp2: boolean,
         clientCertificates: ClientCertificate[]
     ) => any
+    visible: boolean
     setVisible: (b: boolean) => void
     enableInitialPlugin: boolean
     setEnableInitialPlugin: (b: boolean) => void
@@ -93,7 +94,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     }, [props.enableInitialPlugin])
     useEffect(() => {
         getRules()
-    }, [])
+    }, [props.visible])
     const getRules = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetCurrentRules", {})

@@ -145,15 +145,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         })
     }, [visible])
     useEffect(() => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("GetCurrentRules", {})
-            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                setRules(newRules)
-                setBanAndNoReplace(newRules)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 100))
+        onGetCurrentRules()
     }, [visible])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
@@ -166,6 +158,18 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
         }
     }, [])
+    const onGetCurrentRules = useMemoizedFn(() => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("GetCurrentRules", {})
+            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setRules(newRules)
+                setBanAndNoReplace(newRules)
+                setIsRefresh(!isRefresh)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 100))
+    })
     const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
         const listReplace = rules.filter((item) => item.NoReplace === false)
         const listDisabled = rules.filter((item) => item.Disabled === false)
@@ -212,6 +216,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
             if (item.Id === rowDate.Id) {
+                if (!rowDate.Disabled && rowDate.Id === currentItem?.Id) {
+                    setCurrentItem(undefined)
+                }
                 item = {
                     ...rowDate,
                     Disabled: !rowDate.Disabled
@@ -320,6 +327,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "命中颜色",
                 dataKey: "Color",
                 ellipsis: false,
+                width: 120,
                 render: (text, record: MITMContentReplacerRule) => (
                     <YakitSelectMemo
                         value={text}
@@ -330,10 +338,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             },
             {
                 title: "追加 Tag",
-                dataKey: "ExtraTag",
-                render: (text) => {
-                    return <TagsList data={text} ellipsis={true} />
-                }
+                dataKey: "ExtraTag"
+                // render: (text) => {
+                //     return <TagsList data={text} ellipsis={true} />
+                // }
             },
             {
                 title: "操作",
@@ -343,18 +351,30 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 render: (_, record: MITMContentReplacerRule) => {
                     return (
                         <div className={styles["table-action-icon"]}>
-                            <TrashIcon className={styles["icon-trash"]} onClick={() => onRemove(record)} />
+                            <TrashIcon
+                                className={styles["icon-trash"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRemove(record)
+                                }}
+                            />
                             <PencilAltIcon
                                 className={classNames(styles["action-icon"], {
                                     [styles["action-icon-edit-disabled"]]: record.Disabled
                                 })}
-                                onClick={() => onOpenAddOrEdit(record)}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onOpenAddOrEdit(record)
+                                }}
                             />
                             <BanIcon
                                 className={classNames(styles["action-icon"], {
                                     [styles["action-icon-ban-disabled"]]: record.Disabled
                                 })}
-                                onClick={() => onBan(record)}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onBan(record)
+                                }}
                             />
                         </div>
                     )
@@ -530,7 +550,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
 
     const onOkImport = useMemoizedFn(() => {
-        setIsRefresh(!isRefresh)
+        onGetCurrentRules()
     })
 
     const onClose = useMemoizedFn(() => {
@@ -590,13 +610,15 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         >
                             保存
                         </YakitButton>
-                        <YakitButton
-                            type='outline2'
-                            className={styles["button-question"]}
-                            onClick={() => openExternalWebsite("https://www.yaklang.com/")}
-                        >
-                            <QuestionMarkCircleIcon />
-                        </YakitButton>
+                        <Tooltip title='官方网站' placement='top' overlayClassName={styles["question-tooltip"]}>
+                            <YakitButton
+                                type='outline2'
+                                className={styles["button-question"]}
+                                onClick={() => openExternalWebsite("https://www.yaklang.com/")}
+                            >
+                                <QuestionMarkCircleIcon />
+                            </YakitButton>
+                        </Tooltip>
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>
                             <RemoveIcon />
                         </div>
@@ -680,7 +702,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         }}
                         loading={loading}
                         columns={columns}
-                        onSetCurrentRow={onSetCurrentRow}
+                        currentSelectItem={currentItem}
+                        onRowClick={onSetCurrentRow}
                         onMoveRow={onMoveRow}
                         enableDragSort={true}
                         onMoveRowEnd={onMoveRowEnd}

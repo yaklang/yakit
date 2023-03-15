@@ -37,6 +37,7 @@ import {
     YakModuleListHeard
 } from "./MITMServerHijacking/MITMPluginLocalList"
 import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
+import classNames from "classnames"
 
 const {Text} = Typography
 const {Item} = Form
@@ -93,6 +94,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         })
 
         return () => {
+            ipcRenderer.invoke("mitm-stop-call")
             ipcRenderer.removeAllListeners("client-mitm-start-success")
             ipcRenderer.removeAllListeners("client-mitm-notification")
         }
@@ -250,6 +252,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 // status === "idle" 在没有开始的时候，渲染任务表单
                 return (
                     <MITMServer
+                        visible={visible}
                         onStartMITMServer={startMITMServerHandler}
                         setVisible={setVisible}
                         status={status}
@@ -281,7 +284,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             <div className={style["mitm-page"]} ref={mitmPageRef}>
                 <ReactResizeDetector
                     onResize={(w, h) => {
-                        if (!w || !h) {
+                        if (!h) {
                             return
                         }
                         setHeight(h)
@@ -308,6 +311,7 @@ interface MITMServerProps {
         enableHttp2: boolean,
         clientCertificates: ClientCertificate[]
     ) => any
+    visible?: boolean
     setVisible?: (b: boolean) => void
     status: "idle" | "hijacked" | "hijacking"
     // 开启劫持后
@@ -316,7 +320,7 @@ interface MITMServerProps {
     statusCards: StatusCardProps[]
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {setVisible, status, setStatus, logs, statusCards} = props
+    const {visible, setVisible, status, setStatus, logs, statusCards} = props
     /**
      * @description 插件勾选
      */
@@ -391,13 +395,14 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      */
     const onSelectAllHijacking = useMemoizedFn((checked: boolean) => {
         if (checked) {
-            enableMITMPluginMode(listNames)
+            ipcRenderer
+                .invoke("mitm-remove-hook", {
+                    HookName: [],
+                    RemoveHookID: listNames.concat(checkList)
+                } as any)
                 .then(() => {
+                    onEnableMITMPluginMode(checked)
                     setIsSelectAll(checked)
-                    info("启动 MITM 插件成功")
-                })
-                .catch((err) => {
-                    yakitFailed("启动 MITM 插件失败:" + err)
                 })
         } else {
             ipcRenderer
@@ -409,6 +414,17 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     setIsSelectAll(checked)
                 })
         }
+    })
+
+    const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
+        enableMITMPluginMode(listNames)
+            .then(() => {
+                setIsSelectAll(checked)
+                info("启动 MITM 插件成功")
+            })
+            .catch((err) => {
+                yakitFailed("启动 MITM 插件失败:" + err)
+            })
     })
 
     const getAllSatisfyScript = useMemoizedFn((limit: number) => {
@@ -441,22 +457,33 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             setSelectGroup={setSelectGroup}
                             isSelectAll={isSelectAll}
                         />
-                        <PluginSearch
-                            tag={tags}
-                            searchKeyword={searchKeyword}
-                            setTag={setTags}
-                            setSearchKeyword={setSearchKeyword}
-                            onSearch={() => {
-                                setTriggerSearch(!triggerSearch)
-                            }}
-                        />
-                        <YakModuleListHeard
-                            onSelectAll={onSelectAll}
-                            setIsSelectAll={setIsSelectAll}
-                            isSelectAll={isSelectAll}
-                            total={total}
-                            length={checkList.length}
-                        />
+                        <div style={{paddingRight: 8}}>
+                            <PluginSearch
+                                tag={tags}
+                                searchKeyword={searchKeyword}
+                                setTag={setTags}
+                                setSearchKeyword={setSearchKeyword}
+                                onSearch={() => {
+                                    setTriggerSearch(!triggerSearch)
+                                }}
+                            />
+                        </div>
+                        <div style={{display: "flex", justifyContent: "space-between", paddingRight: 8}}>
+                            <YakModuleListHeard
+                                onSelectAll={onSelectAll}
+                                setIsSelectAll={setIsSelectAll}
+                                isSelectAll={isSelectAll}
+                                total={total}
+                                length={checkList.length}
+                            />
+                            <YakitButton
+                                type='text'
+                                onClick={() => onSelectAll(false)}
+                                className={classNames("button-text-danger", style["empty-button"])}
+                            >
+                                清空
+                            </YakitButton>
+                        </div>
                         <MITMPluginLocalList
                             height='calc(100% - 100px)'
                             onSubmitYakScriptId={onSubmitYakScriptId}
@@ -478,6 +505,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             setSelectGroup={setSelectGroup}
                             setIsSelectAll={setIsSelectAll}
                             isSelectAll={isSelectAll}
+                            total={total}
                             setTotal={(t) => {
                                 setTotal(t)
                                 getAllSatisfyScript(t)
@@ -530,6 +558,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 return (
                     <MITMServerStartForm
                         onStartMITMServer={onStartMITMServer}
+                        visible={visible || false}
                         setVisible={(v) => {
                             if (setVisible) setVisible(v)
                         }}
@@ -584,8 +613,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 </div>
             )}
             lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
-            firstMinSize={410}
-            secondMinSize={600}
+            firstMinSize={340}
+            secondMinSize={300}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
