@@ -84,7 +84,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     onChange={() => onCheckboxClicked()}
                 />
                 <div className={style["mitm-plugin-local-info"]}>
-                    <div className={style["mitm-plugin-local-info-left"]}>
+                    <div className={style["mitm-plugin-local-info-left"]} onClick={() => onCheckboxClicked()}>
                         {i.HeadImg && (
                             <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
                         )}

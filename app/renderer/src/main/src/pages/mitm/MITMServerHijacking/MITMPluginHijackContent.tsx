@@ -1,4 +1,4 @@
-import {ArrowsExpandIcon, ArrowsRetractIcon, FilterIcon, MenuIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon, SearchIcon, MenuIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -91,7 +91,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
     const isDefaultCheck = useRef<boolean>(false)
 
     const [visiblePluginSearch, setVisiblePluginSearch] = useState<boolean>(false)
-    const [visibleYakitMenu, setVisibleYakitMenu] = useState<boolean>(false)
 
     // 初始化加载 hooks，设置定时更新 hooks 状态
     useEffect(() => {
@@ -294,7 +293,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     type='outline2'
                                     style={{padding: 4}}
                                 >
-                                    <FilterIcon
+                                    <SearchIcon
                                         className={classNames(styles["filter-small-icon"], {
                                             [styles["filter-small-icon-primary"]]: visiblePluginSearch
                                         })}
@@ -344,7 +343,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     type='outline2'
                                     style={{padding: 4}}
                                 >
-                                    <FilterIcon
+                                    <SearchIcon
                                         className={classNames(styles["filter-small-icon"], {
                                             [styles["filter-small-icon-primary"]]: visiblePluginSearch
                                         })}
@@ -523,7 +522,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     style={{padding: 4}}
                                 />
                             }
-                            onVisibleChange={setVisibleYakitMenu}
                         >
                             <YakitButton type='primary'>
                                 <MenuIcon

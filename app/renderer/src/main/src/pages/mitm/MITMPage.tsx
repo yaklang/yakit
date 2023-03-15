@@ -404,6 +404,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     onEnableMITMPluginMode(checked)
                     setIsSelectAll(checked)
                 })
+                .catch((err) => {
+                    yakitFailed("清空失败:" + err)
+                })
         } else {
             ipcRenderer
                 .invoke("mitm-remove-hook", {
@@ -412,6 +415,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 } as any)
                 .then(() => {
                     setIsSelectAll(checked)
+                })
+                .catch((err) => {
+                    yakitFailed("清空失败:" + err)
                 })
         }
     })
@@ -457,7 +463,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             setSelectGroup={setSelectGroup}
                             isSelectAll={isSelectAll}
                         />
-                        <div style={{paddingRight: 8}}>
+                        <div style={{paddingRight: 9}}>
                             <PluginSearch
                                 tag={tags}
                                 searchKeyword={searchKeyword}
@@ -468,7 +474,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 }}
                             />
                         </div>
-                        <div style={{display: "flex", justifyContent: "space-between", paddingRight: 8}}>
+                        <div style={{display: "flex", justifyContent: "space-between", paddingRight: 10}}>
                             <YakModuleListHeard
                                 onSelectAll={onSelectAll}
                                 setIsSelectAll={setIsSelectAll}
@@ -478,8 +484,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             />
                             <YakitButton
                                 type='text'
-                                onClick={() => onSelectAll(false)}
-                                className={classNames("button-text-danger", style["empty-button"])}
+                                onClick={() => {
+                                    if (checkList.length > 0) onSelectAll(false)
+                                }}
+                                className={classNames("button-text-danger", style["empty-button"], {
+                                    [style["empty-button-disable"]]: checkList.length === 0
+                                })}
                             >
                                 清空
                             </YakitButton>

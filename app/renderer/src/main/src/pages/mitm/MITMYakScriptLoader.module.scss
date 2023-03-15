@@ -5,6 +5,9 @@
     padding: 8px 0px;
     border-top: 1px solid var(--yakit-border-color);
     flex: 1;
+    &:hover {
+        background-color: var(--yakit-card-background-color);
+    }
     .mitm-plugin-local-left {
         display: flex;
         align-items: center;
@@ -21,6 +24,7 @@
                 display: flex;
                 align-items: center;
                 width: calc(100% - 72px);
+                cursor: pointer;
                 .plugin-local-headImg {
                     width: 28px;
                     height: 28px;

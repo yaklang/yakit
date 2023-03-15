@@ -42,7 +42,7 @@
         }
         .mitm-server-extra {
             .mitm-server-chrome {
-                margin-left: 16px;
+                margin-right: 16px;
                 font-size: 12px;
                 display: flex;
                 align-items: center;
@@ -209,8 +209,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-right: 4px;
+        padding-right: 8px;
         height: 28px;
+        .mitm-plugin-hijack-heard-left {
+            height: 24px;
+        }
     }
     .search-plugin-hijack-content {
         flex: 1;

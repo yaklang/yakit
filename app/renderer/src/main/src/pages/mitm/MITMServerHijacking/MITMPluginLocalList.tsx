@@ -197,8 +197,8 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                     refreshRate={50}
                 />
                 <TagsAndGroupRender
-                    tags={tags}
-                    setTags={setTags}
+                    // tags={tags}
+                    // setTags={setTags}
                     selectGroup={selectGroup}
                     setSelectGroup={setSelectGroup}
                 />
@@ -370,18 +370,23 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
 })
 
 interface TagsAndGroupRenderProps {
-    tags: string[]
-    setTags: (s: string[]) => void
+    // tags: string[]
+    // setTags: (s: string[]) => void
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
 }
 export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo((props) => {
-    const {tags, setTags, selectGroup, setSelectGroup} = props
+    const {
+        // tags, setTags,
+        selectGroup,
+        setSelectGroup
+    } = props
     return (
         <>
-            {(tags.length > 0 || selectGroup.length > 0) && (
+            {/* tags.length > 0 || */}
+            {selectGroup.length > 0 && (
                 <div className={style["mitm-plugin-query-show"]}>
-                    {tags.map((i) => {
+                    {/* {tags.map((i) => {
                         return (
                             <YakitTag
                                 key={i}
@@ -395,7 +400,7 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
                                 {i}
                             </YakitTag>
                         )
-                    })}
+                    })} */}
                     {selectGroup.map((i) => {
                         return (
                             <YakitTag
@@ -710,7 +715,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                 content={
                     <span>
                         确认要删除“<span style={{color: "var(--yakit-warning-5)"}}>{deletePlugin?.name}</span>
-                        ”插件组吗？删除组不会删除插件。
+                        ”插件组吗？不会删除组内插件。
                     </span>
                 }
                 heardIcon={<SolidTrashIcon style={{color: "var(--yakit-warning-5)"}} />}

@@ -26,8 +26,17 @@
     flex-direction: column;
     padding-left: 2px;
     .empty-button {
+        margin-top: 2px;
         padding: 12px 0 8px 0;
-        height: 36px;
+        height: 34px;
+    }
+    .empty-button-disable {
+        cursor: not-allowed;
+        --button-color: var(--yakit-disable-text-color);
+        --button-hover-color: var(--yakit-disable-text-color);
+        --button-hover-border-color: var(--yakit-disable-text-color);
+        --button-press-color: var(--yakit-disable-text-color);
+        --button-press-border-color: var(--yakit-disable-text-color);
     }
 
     .mitm-server-start-pre-line {
@@ -328,10 +337,6 @@
         max-width: 200px;
         .mitm-plugin-query-plugin-group-name {
             width: calc(100% - 20px);
-        }
-        svg {
-            height: 12px;
-            width: 12px;
         }
     }
 }

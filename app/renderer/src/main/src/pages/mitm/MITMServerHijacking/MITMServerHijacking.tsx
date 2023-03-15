@@ -87,6 +87,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <span onClick={() => setDownloadVisible(true)}>证书下载</span>
                     </div>
+                    <div className={style["mitm-server-chrome"]}>
+                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
+                    </div>
                     <YakitButton
                         onClick={() => {
                             showConfigSystemProxyForm(`${host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`)
@@ -95,9 +98,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     >
                         系统代理
                     </YakitButton>
-                    <div className={style["mitm-server-chrome"]}>
-                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
-                    </div>
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />
                     </div>

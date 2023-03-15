@@ -58,9 +58,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
             })
             .then((e) => {
                 info("设置系统代理成功")
-                setTimeout(() => {
-                    update()
-                }, 200)
+                onClose()
             })
             .catch((err) => {
                 yakitFailed("设置系统代理失败:" + err)
