@@ -20,7 +20,7 @@ import {
     Tooltip,
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
-import styles from "./SimbleDetect.module.scss"
+import styles from "./SimpleDetect.module.scss"
 import {Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
@@ -223,7 +223,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 newParams.ProbeMax = 7
                 break
         }
-        ipcRenderer.invoke("SimbleDetect", newParams, token)
+        ipcRenderer.invoke("SimpleDetect", newParams, token)
     }
 
     const onFinish = useMemoizedFn((values) => {
@@ -261,7 +261,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     })
 
     const onCancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-SimbleDetect", token)
+        ipcRenderer.invoke("cancel-SimpleDetect", token)
     })
 
     return (
@@ -463,10 +463,10 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(`[SimbleDetect] error:  ${error}`)
+            failed(`[SimpleDetect] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-            info("[SimbleDetect] finished")
+            info("[SimpleDetect] finished")
             setExecuting(false)
         })
 
@@ -479,7 +479,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         let id = setInterval(syncPorts, 1000)
         return () => {
             clearInterval(id)
-            ipcRenderer.invoke("cancel-SimbleDetect", token)
+            ipcRenderer.invoke("cancel-SimpleDetect", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
@@ -711,7 +711,7 @@ export interface SimbleDetectProps {
     TaskName?: string
 }
 
-export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
+export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
     const {Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
     // console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup, TaskName)
     const [percent, setPercent] = useState(0)
@@ -734,7 +734,7 @@ export const SimbleDetect: React.FC<SimbleDetectProps> = (props) => {
 
     const [infoState, {reset}] = useHoldingIPCRStream(
         "scan-port",
-        "SimbleDetect",
+        "SimpleDetect",
         token,
         () => {},
         () => {},

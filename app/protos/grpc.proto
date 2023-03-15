@@ -226,7 +226,7 @@ service Yak {
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
-  rpc SimbleDetect(PortScanRequest) returns (stream ExecResult);
+  rpc SimpleDetect(PortScanRequest) returns (stream ExecResult);
   rpc ViewPortScanCode(Empty) returns (SimpleScript);
 
   // 资产管理
