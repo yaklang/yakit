@@ -194,7 +194,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         const l = data.length
         const newParams = {
             ...params,
-            OffsetId: l > 0 ? Math.ceil(data[l - 1].Id) : undefined
+            AfterId: l > 0 ? Math.ceil(data[l - 1].Id) : undefined // 用于计算增量的
         }
         ipcRenderer
             .invoke("QueryHTTPFlows", {...newParams})
