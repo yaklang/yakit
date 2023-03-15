@@ -1020,8 +1020,8 @@ const YakitLogoSvg = () => (
                 y2='15.9831'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#FA931D' />
-                <stop offset='1' stop-color='#EF5B27' />
+                <stop stopColor='#FA931D' />
+                <stop offset='1' stopColor='#EF5B27' />
             </linearGradient>
             <linearGradient
                 id='paint1_linear_6508_201016'
@@ -1031,8 +1031,8 @@ const YakitLogoSvg = () => (
                 y2='16.0026'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#FA931D' />
-                <stop offset='1' stop-color='#EF5B27' />
+                <stop stopColor='#FA931D' />
+                <stop offset='1' stopColor='#EF5B27' />
             </linearGradient>
         </defs>
     </svg>
