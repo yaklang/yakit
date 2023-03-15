@@ -43,7 +43,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     const [params, setParams] = useState<YakQueryHTTPFlowRequest>({
         SearchURL: "",
         SourceType: "mitm",
-        Pagination: {...genDefaultPagination(), OrderBy: "created_at", Page: 1, Limit: 50}
+        Pagination: {...genDefaultPagination(), OrderBy: "created_at", Page: 1, Limit: 30}
     })
     const [data, setData] = useState<HTTPFlow[]>([])
     const [loading, setLoading] = useState(true)
@@ -191,10 +191,17 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (!inViewport) {
             return
         }
+        const l = data.length
+        const newParams = {
+            ...params,
+            OffsetId: l > 0 ? Math.ceil(data[l - 1].Id) : undefined
+        }
         ipcRenderer
-            .invoke("QueryHTTPFlows", {...params})
+            .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
+                    .concat(data || [])
+                    .filter((_, index) => index < 30)
                 setData(newData)
                 setTotal(res.Total)
             })
