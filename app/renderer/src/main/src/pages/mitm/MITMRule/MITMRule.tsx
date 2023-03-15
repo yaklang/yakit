@@ -338,7 +338,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             },
             {
                 title: "追加 Tag",
-                dataKey: "ExtraTag"
+                dataKey: "ExtraTag",
+                minWidth: 120
                 // render: (text) => {
                 //     return <TagsList data={text} ellipsis={true} />
                 // }
