@@ -7,6 +7,13 @@ extraFiles:
     to: "bins/flag.txt"
   - from: "bins/engine-version.txt"
     to: "bins/engine-version.txt"
+  - from: "bins/database/"
+    to: "bins/database/"
+    filter:
+      - "**/*"
+      - "*.txt"
+      - "*.gzip"
+      - "!*.db"
 
 directories:
   buildResources: resources

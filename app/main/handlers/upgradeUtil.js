@@ -20,11 +20,11 @@ const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 
 const loadExtraFilePath = (s) => {
-    if (electronIsDev){
+    if (electronIsDev) {
         return s
     }
 
-    switch (os.platform()){
+    switch (os.platform()) {
         case "darwin":
             return path.join(app.getAppPath(), "../..", s)
         case "linux":
@@ -414,14 +414,14 @@ module.exports = {
         // asyncInitBuildInEngine wrapper
         const asyncInitBuildInEngine = (params) => {
             return new Promise((resolve, reject) => {
-                if (!fs.existsSync(loadExtraFilePath("bins/yak.zip"))) {
+                if (!fs.existsSync(loadExtraFilePath(path.join("bins", "yak.zip")))) {
                     reject("BuildIn Engine Not Found!")
                     return
                 }
 
                 console.info("Start to Extract yak.zip")
                 const zipHandler = new zip({
-                    file: loadExtraFilePath("bins/yak.zip"),
+                    file: loadExtraFilePath(path.join("bins", "yak.zip")),
                     storeEntries: true,
                 })
                 console.info("Start to Extract yak.zip: Set `ready`")
@@ -484,14 +484,27 @@ module.exports = {
             return await asyncInitBuildInEngine(params)
         })
 
+        // 尝试初始化数据库
+        ipcMain.handle("InitCVEDatabase", async (e) => {
+            const targetFile = path.join(homeDir, "default-cve.db.gzip")
+            if (fs.existsSync(targetFile)) {
+                return
+            }
+            const buildinDBFile = loadExtraFilePath(path.join("bins", "database", "default-cve.db.gzip"));
+            if (fs.existsSync(buildinDBFile)) {
+                fs.copyFileSync(buildinDBFile, targetFile)
+            }
+        })
+
         // 获取内置引擎版本
         ipcMain.handle("GetBuildInEngineVersion"
             /*"IsBinsExisted"*/,
             async (e) => {
-                if (!fs.existsSync(loadExtraFilePath("bins/yak.zip"))) {
-                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(`bins/yak.zip`)}`)
+                const yakZipName = path.join("bins", "yak.zip")
+                if (!fs.existsSync(loadExtraFilePath(yakZipName))) {
+                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(yakZipName)}`)
                 }
-                return fs.readFileSync(loadExtraFilePath("bins/engine-version.txt")).toString("utf8")
+                return fs.readFileSync(loadExtraFilePath(path.join("bins", "engine-version.txt"))).toString("utf8")
             })
     },
 }
