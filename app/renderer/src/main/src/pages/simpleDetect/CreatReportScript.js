@@ -31,7 +31,7 @@ noWeakPassWordRisks = []
 
 // 风险漏洞分组
 // env.Get("YAK_RUNTIME_ID")
-for riskInstance = range risk.YieldRiskByCreateAt(createAt) {
+for riskInstance = range risk.YieldRiskByCreateAt(int64(createAt)) {
     //println(riskInstance.IP)
     // 按照级别分类 Risk
     // printf("#%v\\n", riskInstance)
@@ -94,7 +94,7 @@ if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens == 0 {
 
 // 端口开放情况
 portsLine = []
-portChan := db.QueryPortsByCreateAt(createAt)~
+portChan := db.QueryPortsByCreateAt(int64(createAt))~
 for port :=range portChan{
     // println(sprintf("%s:%d",port.Host,port.Port))
      portsLine = append(portsLine, [
@@ -222,6 +222,7 @@ if len(noPotentialRisks) == 0 {
 }
 
 showPotentialLine = []
+cpp = cve.NewStatistics("PotentialPie")
 for _, riskIns := range potentialRisks {
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
@@ -231,12 +232,14 @@ for _, riskIns := range potentialRisks {
 
     if len(showPotentialLine) < 10 {
         showPotentialLine = append(showPotentialLine, [
-            riskIns.TitleVerbose,
+            riskIns.Title,
             riskIns.IP,
             riskIns.RiskTypeVerbose,
             level,
         ])
     }
+    c = cve.GetCVE(riskIns.CVE)
+    cpp.Feed(c)
     if len(showPotentialLine) == 10 {
         showPotentialLine = append(showPotentialLine, [
             "更多风险请在附录中查看",
@@ -247,6 +250,13 @@ for _, riskIns := range potentialRisks {
     }
 }
 if len(potentialRisks) != 0 {
+    
+    reportInstance.Markdown(sprintf("### 3.4.2 风险资产图"))
+    for _, gp := range cpp.ToGraphs(){
+        aa = json.dumps(gp)
+        println(aa)
+        reportInstance.Raw(aa)
+    }
     reportInstance.Markdown(sprintf("### 3.4.2 合规检查风险列表"))
     reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
     reportInstance.Table(["漏洞标题", "地址", "漏洞类型", "漏洞级别"], showPotentialLine...)
@@ -351,11 +361,17 @@ for target,risks = range targetToRisks {
 func showReport(risks) {
     for _, riskIns := range risks {
             reportInstance.Markdown(sprintf(\` #### %v
+风险地址：%v:%v
 
 漏洞级别：%v
 
 漏洞类型：%v
-\` , riskIns.TitleVerbose, riskIns.Severity, riskIns.RiskTypeVerbose))
+
+漏洞描述：%v
+
+修复建议：%v
+
+\` , riskIns.Title, riskIns.Host, riskIns.Port, riskIns.Severity, riskIns.RiskTypeVerbose,riskIns.Description,riskIns.Solution))
 
             payload, _ = codec.StrconvUnquote(riskIns.Payload)
             if payload == "" {
