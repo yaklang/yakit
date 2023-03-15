@@ -61,7 +61,7 @@ import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {isSimbleEnterprise} from "@/utils/envfile"
-import { DownloadAllPlugin } from "@/pages/simbleDetect/SimbleDetect";
+import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect";
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {ipcRenderer} = window.require("electron")
@@ -364,7 +364,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(()=>{
         if(isSimbleEnterprise){
             // 简易企业版页面控制
-            addTabPage(Route.SimbleDetect)
+            addTabPage(Route.SimpleDetect)
             // 简易企业版判断本地插件数-导入弹窗
             const newParams = {
                 Type: "yak,mitm,codec,packet-hack,port-scan",
@@ -1151,9 +1151,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
 
     const addSimbleBatchExecRecover = useMemoizedFn((task: SimbleDetectBatchTask) => {
-        addTabPage(Route.SimbleDetect, {
+        addTabPage(Route.SimpleDetect, {
             hideAdd: true,
-            node: ContentByRoute(Route.SimbleDetect, undefined, {
+            node: ContentByRoute(Route.SimpleDetect, undefined, {
                 recoverUid: task.Uid,
                 recoverBaseProgress: task.Percent,
                 recoverOnlineGroup: task.YakScriptOnlineGroup,

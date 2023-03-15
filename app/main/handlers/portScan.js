@@ -43,10 +43,10 @@ module.exports = (win, getClient) => {
 
     const streamSimbleDetectMap = new Map();
 
-    ipcMain.handle("cancel-SimbleDetect", handlerHelper.cancelHandler(streamSimbleDetectMap));
+    ipcMain.handle("cancel-SimpleDetect", handlerHelper.cancelHandler(streamSimbleDetectMap));
 
-    ipcMain.handle("SimbleDetect", (e, params, token) => {
-        let stream = getClient().SimbleDetect(params);
+    ipcMain.handle("SimpleDetect", (e, params, token) => {
+        let stream = getClient().SimpleDetect(params);
         handlerHelper.registerHandler(win, stream, streamSimbleDetectMap, token)
     })
 
