@@ -194,11 +194,12 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         const l = data.length
         const newParams = {
             ...params,
-            AfterId: l > 0 ? Math.ceil(data[l - 1].Id) : undefined // 用于计算增量的
+            AfterId: l > 0 ? Math.ceil(data[0].Id) : undefined // 用于计算增量的
         }
         ipcRenderer
             .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
+                if (res?.Data.length === 0) return
                 const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
                     .concat(data || [])
                     .filter((_, index) => index < 30)
