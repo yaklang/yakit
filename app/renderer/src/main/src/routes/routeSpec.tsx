@@ -47,7 +47,7 @@ import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
-import { SimbleDetect } from "@/pages/simbleDetect/SimbleDetect";
+import { SimpleDetect } from "@/pages/simpleDetect/SimpleDetect";
 import {
     MenuDomainAssetsIcon,
     MenuHTTPHistoryIcon,
@@ -129,7 +129,7 @@ export enum Route {
 
     PenTest = "pen-test",
     HTTPHacker = "httpHacker",
-    SimbleDetect = "simbleDetect",
+    SimpleDetect = "simpleDetect",
     HTTPFuzzer = "httpFuzzer",
     WebsocketFuzzer = "websocket-fuzzer",
     WebsocketHistory = "websocket-history",
@@ -357,8 +357,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             )
         case Route.NewHome:
             return <NewHome/>
-        case Route.SimbleDetect:
-            return <SimbleDetect Uid={params?.recoverUid}
+        case Route.SimpleDetect:
+            return <SimpleDetect Uid={params?.recoverUid}
             BaseProgress={params?.recoverBaseProgress}
             YakScriptOnlineGroup={params?.recoverOnlineGroup}
             TaskName={params?.recoverTaskName}
@@ -794,7 +794,7 @@ export const SimbleDataBaseMenu: MenuDataProps[] = [
         subMenuData: [
             {
                 id: "10-1",
-                key: Route.SimbleDetect,
+                key: Route.SimpleDetect,
                 label: "安全检测",
                 icon: <MenuBatchVulnerabilityDetectionIcon />,
                 hoverIcon: <MenuSolidBatchVulnerabilityDetectionIcon />,
