@@ -1,8 +1,6 @@
-import {Button, Checkbox, Divider, Drawer, Modal, Select, Switch, Tag, Tooltip} from "antd"
-import React, {ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useState} from "react"
+import {Divider, Modal, Tag, Tooltip} from "antd"
+import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
-    ButtonTextProps,
-    CloseTipModalProps,
     MITMContentReplacerRule,
     MITMRuleProp,
     RuleExportAndImportButtonProps,
@@ -28,7 +26,6 @@ import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResi
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {openExternalWebsite} from "@/utils/openWebsite"
-import {TagsList} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
@@ -44,8 +41,10 @@ import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {CheckableTagProps} from "antd/lib/tag"
 
 const {ipcRenderer} = window.require("electron")
+const {CheckableTag} = Tag
 
 export const HitColor = [
     {
@@ -229,6 +228,27 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setRules(newRules)
     })
 
+    const rulesRangeList = useCreation(() => {
+        return [
+            {
+                label: "请求",
+                value: "EnableForRequest"
+            },
+            {
+                label: "响应",
+                value: "EnableForResponse"
+            },
+            {
+                label: "Header",
+                value: "EnableForHeader"
+            },
+            {
+                label: "Body",
+                value: "EnableForBody"
+            }
+        ]
+    }, [])
+
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -268,61 +288,84 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 )
             },
             {
-                title: "请求",
+                title: "规则作用范围",
                 dataKey: "EnableForRequest",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) =>
-                            onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
-                        }
-                    />
-                )
-            },
-            {
-                title: "响应",
-                dataKey: "EnableForResponse",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) =>
-                            onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
-                        }
-                    />
-                )
-            },
-            {
-                title: "Header",
-                dataKey: "EnableForHeader",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => {
+                width: 235,
+                render: (_, record: MITMContentReplacerRule) => {
                     return (
-                        <YakitCheckboxMemo
-                            checked={checked}
-                            disabled={record.Disabled}
-                            onChange={(e) =>
-                                onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
-                            }
-                        />
+                        <div>
+                            {rulesRangeList.map((item) => (
+                                <YakitCheckableTag
+                                    key={item.value}
+                                    checked={record[item.value]}
+                                    onChange={(checked) => {
+                                        onEdit({Id: record.Id, EnableForRequest: checked}, item.value)
+                                    }}
+                                    disable={record.Disabled}
+                                >
+                                    {item.label}
+                                </YakitCheckableTag>
+                            ))}
+                        </div>
                     )
                 }
             },
-            {
-                title: "Body",
-                dataKey: "EnableForBody",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
-                    />
-                )
-            },
+            // {
+            //     title: "请求",
+            //     dataKey: "EnableForRequest",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => (
+            //         <YakitCheckboxMemo
+            //             checked={checked}
+            //             disabled={record.Disabled}
+            //             onChange={(e) =>
+            //                 onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
+            //             }
+            //         />
+            //     )
+            // },
+            // {
+            //     title: "响应",
+            //     dataKey: "EnableForResponse",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => (
+            //         <YakitCheckboxMemo
+            //             checked={checked}
+            //             disabled={record.Disabled}
+            //             onChange={(e) =>
+            //                 onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
+            //             }
+            //         />
+            //     )
+            // },
+            // {
+            //     title: "Header",
+            //     dataKey: "EnableForHeader",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => {
+            //         return (
+            //             <YakitCheckboxMemo
+            //                 checked={checked}
+            //                 disabled={record.Disabled}
+            //                 onChange={(e) =>
+            //                     onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
+            //                 }
+            //             />
+            //         )
+            //     }
+            // },
+            // {
+            //     title: "Body",
+            //     dataKey: "EnableForBody",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => (
+            //         <YakitCheckboxMemo
+            //             checked={checked}
+            //             disabled={record.Disabled}
+            //             onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
+            //         />
+            //     )
+            // },
             {
                 title: "命中颜色",
                 dataKey: "Color",
@@ -880,3 +923,39 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
         return true
     }
 )
+
+interface YakitCheckableTagProps extends CheckableTagProps {
+    children?: ReactNode
+    wrapClassName?: string
+    disable?: boolean
+}
+/**
+ * @description 暂时使用，未封
+ */
+const YakitCheckableTag: React.FC<YakitCheckableTagProps> = React.memo((props) => {
+    const {wrapClassName, disable, className, ...resProps} = props
+    return (
+        <div
+            className={classNames(
+                styles["yakit-checked-tag-wrap"],
+                {
+                    [styles["yakit-checked-tag-disable"]]: disable,
+                    [styles["yakit-checked-tag-checked-disable"]]: disable && props.checked
+                },
+                wrapClassName
+            )}
+        >
+            <CheckableTag
+                {...resProps}
+                onClick={(e) => {
+                    if (!disable && props.onClick) props.onClick(e)
+                }}
+                onChange={(c) => {
+                    if (!disable && props.onChange) props.onChange(c)
+                }}
+            >
+                {props.children}
+            </CheckableTag>
+        </div>
+    )
+})
