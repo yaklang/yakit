@@ -121,7 +121,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             }
                         })
                         .catch((e) => {
-                            failed(`Download Html Report failed`)
+                            failed(`Download Html Report failed ${e}`)
                         })
                         .finally(() => setTimeout(() => setSpinLoading(false), 300))
                 }

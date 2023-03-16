@@ -312,15 +312,19 @@ module.exports = (win, getClient) => {
         const inputFile = path.join(htmlTemplateDir, "template.zip")
         const outputFile = path.join(outputDir, "template.zip")
         const reportNameFile= reportName.replaceAll(/\\|\/|\:|\*|\?|\"|\<|\>|\|/g,"")||"html报告"
+        // 判断报告名是否存在
+        const ReportItemName = path.join(outputDir, reportNameFile)
+        const judgeReportName = fs.existsSync(ReportItemName)
+        let isCreatDir = false
         try {
             // 复制模板到生成文件地址
             await copyFileByDir(inputFile,outputFile)
-            // 判断报告名是否存在
-            const ReportItemName = path.join(outputDir, reportNameFile)
-            const judgeReportName = fs.existsSync(ReportItemName)
             // 文件夹已存在 则先清空之前内容
             if(judgeReportName) delDir(ReportItemName)
-            if(!judgeReportName)fs.mkdirSync(ReportItemName)
+            if(!judgeReportName){
+                fs.mkdirSync(ReportItemName)
+                isCreatDir = true
+            }
             // 解压模板
             await compressing.zip.uncompress(outputFile,ReportItemName)
             // 删除zip
@@ -334,6 +338,8 @@ module.exports = (win, getClient) => {
                 outputDir:ReportItemName
             })
         } catch (error) {
+            // 如若错误 删除已创建文件夹
+            if(isCreatDir)delDir(ReportItemName)
             reject(error)
         }   
         })
