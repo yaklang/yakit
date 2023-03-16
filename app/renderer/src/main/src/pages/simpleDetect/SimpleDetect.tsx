@@ -17,7 +17,7 @@ import {
     Row,
     Col,
     Slider,
-    Tooltip,
+    Tooltip
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimpleDetect.module.scss"
@@ -36,7 +36,7 @@ import {ExecResult, YakScript} from "../invoker/schema"
 import {useStore, simbleDetectTabsParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
-import {PluginResultUI,SimbleCardBox} from "../yakitStore/viewers/base"
+import {PluginResultUI, SimbleCardBox} from "../yakitStore/viewers/base"
 import moment from "moment"
 import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
@@ -44,6 +44,8 @@ import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/y
 import type {CheckboxValueType} from "antd/es/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {RiskDetails} from "@/pages/risks/RiskTable"
+import {Report} from "../assetViewer/models"
+import {openABSFileLocated} from "../../utils/openWebsite"
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
@@ -134,7 +136,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     })
 
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
-    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>([])
+    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "合规检测"])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
     const isInputValue = useRef<boolean>(false)
     useEffect(() => {
@@ -205,6 +207,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 newParams.ProbeTimeout = 3
                 // 指纹详细程度
                 newParams.ProbeMax = 3
+                // newParams.ScriptNames = ["MySQL CVE 合规检查: 2016-2022"]
+                // newParams.Ports = "3306"
                 break
             // 适中
             case 2:
@@ -263,6 +267,22 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const onCancel = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-SimpleDetect", token)
     })
+
+    const judgeExtra = () => {
+        let str: string = ""
+        switch (getScanType()) {
+            case "基础扫描":
+                str = "xxxxxxxxxxxxxx-基础扫描"
+                break
+            case "深度扫描":
+                str = "xxxxxxxxxxxxxx-深度扫描"
+                break
+            case "自定义":
+                str = "xxxxxxxxxxxxxx-自定义"
+                break
+        }
+        return str
+    }
 
     return (
         <div className={styles["simble-detect-form"]} style={{marginTop: 20}}>
@@ -365,7 +385,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                     />
                 </Spin>
                 <div style={executing ? {display: "none"} : {}}>
-                    <Form.Item name='scan_type' label='扫描模式'>
+                    <Form.Item name='scan_type' label='扫描模式' extra={judgeExtra()}>
                         <Radio.Group
                             buttonStyle='solid'
                             defaultValue={"基础扫描"}
@@ -388,17 +408,18 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                         )}
                     </Form.Item>
 
-                    <Form.Item name='TaskName' label='任务名称'>
-                        <Input
-                            style={{width: 400}}
-                            placeholder='请输入任务名称'
-                            allowClear
-                            onChange={() => {
-                                isInputValue.current = true
-                            }}
-                        />
-                    </Form.Item>
-
+                    <div style={{display: "none"}}>
+                        <Form.Item name='TaskName' label='任务名称'>
+                            <Input
+                                style={{width: 400}}
+                                placeholder='请输入任务名称'
+                                allowClear
+                                onChange={() => {
+                                    isInputValue.current = true
+                                }}
+                            />
+                        </Form.Item>
+                    </div>
                     <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
                         <Slider
                             tipFormatter={null}
@@ -434,6 +455,10 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
+
+    // 下载报告Modal
+    const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
+    const [reportName, setReportName] = useState<string>(runTaskName || "默认报告名称")
 
     useEffect(() => {
         if (executing) {
@@ -493,13 +518,13 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     const creatReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
-        console.log("脚本数据", scriptData)
-        console.log("TaskName", runTaskName)
-        console.log("include数量", runPluginCount)
-        console.log("时间戳", runTimeStamp)
-        Modal.success({
-            content: "报告生成成功，请跳转至报告页查看"
-        })
+        // console.log("脚本数据", scriptData)
+        // console.log("TaskName", runTaskName)
+        // console.log("include数量", runPluginCount)
+        // console.log("时间戳", runTimeStamp)
+        // Modal.success({
+        //     content: "报告生成成功，请跳转至报告页查看"
+        // })
         ipcRenderer.invoke("exec-yak", {
             Script: scriptData,
             Params: [
@@ -508,11 +533,57 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                 {Key: "plugins", Value: runPluginCount}
             ]
         })
+        setReportModalVisible(true)
     }
+    /** 下载报告 */
+    const downloadReport = () => {
+        ipcRenderer
+            .invoke("QueryReport", {Id: 21})
+            .then((r: Report) => {
+                if (r) {
+                    ipcRenderer
+                        .invoke("openDialog", {
+                            title: "请选择文件夹",
+                            properties: ["openDirectory"]
+                        })
+                        .then((data: any) => {
+                            if (data.filePaths.length) {
+                                let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+                                ipcRenderer
+                                    .invoke("DownloadHtmlReport", {
+                                        JsonRaw: r.JsonRaw,
+                                        outputDir: absolutePath,
+                                        reportName: reportName
+                                    })
+                                    .then((r) => {
+                                        if (r?.ok) {
+                                            success("报告导出成功")
+                                            r?.outputDir && openABSFileLocated(r.outputDir)
+                                        }
+                                    })
+                                    .catch((e) => {
+                                        failed(`Download Html Report failed ${e}`)
+                                    })
+                                    .finally(() => setTimeout(() => {}, 300))
+                            }
+                        })
+                }
+            })
+            .catch((e) => {
+                failed(`Query Report[${21}] failed`)
+            })
+            .finally(() => {})
+    }
+
+    const timelineItemProps = (infoState.messageState || [])
+        .filter((i) => {
+            return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
+        })
+        .splice(0, 25)
     return (
         <div className={styles["simble-detect-table"]}>
             <div className={styles["result-table-body"]}>
-                <SimbleCardBox statusCards={infoState.statusState}/>
+                <SimbleCardBox statusCards={infoState.statusState} />
                 <Tabs
                     className='scan-port-tabs'
                     tabBarStyle={{marginBottom: 5}}
@@ -560,22 +631,42 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                             </Row>
                         </div>
                     </Tabs.TabPane>
-                    <Tabs.TabPane tab={"插件日志"} key={"pluginPort"} forceRender>
+                    {/* <Tabs.TabPane tab={"插件日志"} key={"pluginPort"} forceRender>
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <PluginResultUI
                                 loading={false}
                                 progress={[]}
                                 results={infoState.messageState}
-                                risks={infoState.riskState}
                                 featureType={infoState.featureTypeState}
                                 feature={infoState.featureMessageState}
                                 statusCards={infoState.statusState}
-                                hideRisk={true}
                             />
                         </div>
-                    </Tabs.TabPane>
+                    </Tabs.TabPane> */}
                 </Tabs>
             </div>
+            <Modal
+                title='下载报告'
+                visible={reportModalVisible}
+                onOk={() => downloadReport()}
+                onCancel={() => {
+                    setReportModalVisible(false)
+                }}
+                okText='确定'
+                cancelText='取消'
+            >
+                <div style={{textAlign: "center"}}>
+                    <Input
+                        style={{width: 400}}
+                        placeholder='请输入任务名称'
+                        allowClear
+                        value={reportName}
+                        onChange={(e) => {
+                            setReportName(e.target.value)
+                        }}
+                    />
+                </div>
+            </Modal>
         </div>
     )
 }
@@ -807,18 +898,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
             size={"small"}
             bordered={false}
             title={<>{!executing && <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />}</>}
-            extra={
-                <Space>
-                    <div style={{width: 200}}>
-                        {(percent > 0 || executing) && (
-                            <Progress
-                                status={executing ? "active" : undefined}
-                                percent={parseInt((percent * 100).toFixed(0))}
-                            />
-                        )}
-                    </div>
-                </Space>
-            }
+            extra={<></>}
             bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
         >
             <SimbleDetectForm
@@ -838,7 +918,17 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                 reset={reset}
             />
             <Divider style={{margin: 4}} />
+            <div style={{width: "100%"}}>
+                {(percent > 0 || executing) && (
+                    <Progress
+                        status={executing ? "active" : undefined}
+                        percent={parseInt((percent * 100).toFixed(0))}
+                    />
+                )}
+            </div>
+            <div>
 
+            </div>
             <div style={{flex: "1", overflow: "hidden"}}>
                 <SimbleDetectTable
                     token={token}
