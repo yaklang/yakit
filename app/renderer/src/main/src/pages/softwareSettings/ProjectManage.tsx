@@ -299,7 +299,18 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 className={styles["project-style"]}
                                 title={data.DatabasePath}
                                 onClick={() => {
-                                    if (data.DatabasePath) openABSFileLocated(data.DatabasePath)
+                                    if (data.DatabasePath) {
+                                        ipcRenderer
+                                            .invoke("is-file-exists", data.DatabasePath)
+                                            .then((flag: boolean) => {
+                                                if (flag) {
+                                                    openABSFileLocated(data.DatabasePath)
+                                                } else {
+                                                    failed("目标文件已不存在!")
+                                                }
+                                            })
+                                            .catch(() => {})
+                                    }
                                 }}
                             >
                                 {data.DatabasePath || "-"}
