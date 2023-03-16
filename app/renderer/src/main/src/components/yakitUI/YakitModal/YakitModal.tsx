@@ -55,6 +55,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             wrapClassName={classnames(styles["yakit-modal-wrapper"], wrapClassName)}
             closable={false}
             footer={null}
+            onCancel={onCancel}
         >
             <div className={styles["yakit-modal-body"]}>
                 {closable && (

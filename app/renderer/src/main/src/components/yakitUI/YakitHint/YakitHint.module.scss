@@ -34,12 +34,14 @@
     right: 0;
     margin: auto;
 }
+.yakit-hint-modal-container-box-shadow {
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+}
 .yakit-hint-modal-container {
     box-sizing: border-box;
     width: 100%;
     background: var(--yakit-card-background-color);
     border: 1px solid var(--yakit-border-color);
-    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
     border-radius: 4px;
 
     .container-wrapper {
