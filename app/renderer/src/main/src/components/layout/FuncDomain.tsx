@@ -606,7 +606,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 >
                     {content.length === 0 ? (
                         <div className={role === "superAdmin" ? styles["empty-content"] : ""}>
-                            管理员未编辑更新通知"
+                            管理员未编辑更新通知
                         </div>
                     ) : (
                         content.map((item, index) => {
@@ -702,7 +702,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 >
                     {content.length === 0 ? (
                         <div className={role === "superAdmin" ? styles["empty-content"] : ""}>
-                            管理员未编辑更新通知"
+                            管理员未编辑更新通知
                         </div>
                     ) : (
                         content.map((item, index) => {
@@ -866,6 +866,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             .catch(() => {})
         /** 获取社区版yakit更新内容 */
         NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
             params: {type: "yakit", source: "community"}
@@ -881,6 +882,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             .catch((err) => {})
         /** 获取企业版yakit更新内容 */
         NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
             params: {type: "yakit", source: "company"}
@@ -905,6 +907,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         })
         /** 获取社区版yaklang更新内容 */
         NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
             params: {type: "yaklang", source: "community"}

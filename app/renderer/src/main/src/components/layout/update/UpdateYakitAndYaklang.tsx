@@ -79,6 +79,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     /** 获取 yakit 更新内容 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
         NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
             params: {type: "yakit", source: isEnterprise ? "company" : "community"}
@@ -96,6 +97,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     /** 获取 yaklang 更新内容 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
         NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
             params: {type: "yaklang", source: "community"}

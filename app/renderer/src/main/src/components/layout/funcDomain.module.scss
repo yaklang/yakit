@@ -198,7 +198,7 @@
 
                 @media screen and (max-height: 630px) {
                     .version-wrapper {
-                        max-height: 380px;
+                        max-height: 340px;
                         padding: 0 16px;
                         overflow: hidden overlay;
                     }
@@ -355,7 +355,6 @@
         justify-content: space-between;
         padding: 8px;
         background: var(--yakit-background-color);
-        border: 1px solid var(--yakit-border-color);
         border-radius: 4px 4px 0px 0px;
         .header-info {
             display: flex;
@@ -493,8 +492,6 @@
     border: 1px solid var(--yakit-primary-border-color);
     .update-header-wrapper {
         background: var(--yakit-primary-color-focus);
-        // 暂时注释(后续带更新内容时使用)
-        // border: 1px solid var(--yakit-primary-border-color);
         .header-info {
             .update-title {
                 color: var(--yakit-primary-color);
