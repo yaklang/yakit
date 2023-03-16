@@ -76,8 +76,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         if (!!limit) {
             pagination.Limit = limit
         }
-        else{
-            setLoading(true)
+        setLoading(true)
         ipcRenderer
             .invoke("QueryReports", {
                 ...params,
@@ -85,7 +84,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
             })
             .then((rsp: QueryGeneralResponse<Report>) => {
                 if (rsp) {
-                    console.log("列表",rsp)
+                    // console.log("列表",rsp)
                     setResponse(rsp)
                     setSelectedRowKeys([])
                 }
@@ -95,7 +94,6 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                 console.info(e)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
-        }
     })
 
     const onSelect = useMemoizedFn((item: Report) => {
@@ -205,6 +203,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                 pagination={{
                     size: "small",
                     pageSize: pagination?.Limit || 10,
+                    current:response.Pagination.Page,
                     simple: true,
                     total,
                     showTotal: (i) => <Tag>共{i}条历史记录</Tag>,
