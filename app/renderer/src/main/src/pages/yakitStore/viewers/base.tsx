@@ -56,7 +56,6 @@ export interface PluginResultUIProp {
     debugMode?: boolean
 
     cardStyleType?: number
-    hideRisk?:boolean
 }
 
 export interface TooltipTitleProps {
@@ -152,7 +151,6 @@ const renderCard = (infoList, type) => {
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
     const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType} = props
-    const hideRisk = props?.hideRisk || false
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0")
     const xtermRef = useRef(null)
     const timer = useRef<any>(null)
@@ -236,7 +234,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     </div>
                 </>
             )}
-            {statusCards.length > 0 && !hideRisk && (
+            {statusCards.length > 0 && (
                 <div style={{margin:"8px 4px 4px"}}>
                     <Row gutter={8}>
                         {statusCards.map((card, cardIndex) => {
@@ -331,7 +329,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </>
                     }
                 </Tabs.TabPane>
-                {!!props?.risks && props.risks.length > 0 && !hideRisk &&
+                {!!props?.risks && props.risks.length > 0 &&
                 <Tabs.TabPane tab={`漏洞与风险[${props.risks.length}]`} key={"risk"}>
                     <AutoCard bodyStyle={{overflowY: "auto"}}>
                         <Space direction={"vertical"} style={{width: "100%"}} size={12}>
