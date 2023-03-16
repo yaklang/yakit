@@ -15,6 +15,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
+import ReactResizeDetector from "react-resize-detector"
 
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -132,9 +133,27 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(params.certs))
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, values.enableInitialPlugin ? "true" : "")
     })
+    const [width, setWidth] = useState<number>(0)
     return (
         <div className={styles["mitm-server-start-form"]}>
-            <Form form={form} onFinish={onStartMITM} layout={"horizontal"} labelCol={{span: 5}} wrapperCol={{span: 13}}>
+            <ReactResizeDetector
+                onResize={(w) => {
+                    if (!w) {
+                        return
+                    }
+                    setWidth(w)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <Form
+                form={form}
+                onFinish={onStartMITM}
+                labelCol={{span: width > 450 ? 5 : 8}}
+                wrapperCol={{span: width > 450 ? 13 : 11}}
+            >
                 <Item
                     label={"劫持代理监听主机"}
                     help={"远程模式可以修改为 0.0.0.0 以监听主机所有网卡"}

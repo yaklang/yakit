@@ -130,9 +130,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 const tmp = new Map<string, boolean>()
                 cacheTmp = []
                 data.forEach((i) => {
-                    i.Hooks.map((hook) => {
-                        tmp.set(hook.YakScriptName, true)
-                        cacheTmp = [...cacheTmp, hook.YakScriptName]
+                    i.Hooks.forEach((hook) => {
+                        if (hook.YakScriptName) {
+                            tmp.set(hook.YakScriptName, true)
+                            cacheTmp = [...cacheTmp, hook.YakScriptName]
+                        }
                     })
                 })
                 handlers.setAll(tmp)
@@ -153,7 +155,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         let tmpItem: YakScript[] = []
         hooks.forEach((value, key) => {
             if (!key.includes(hookScriptNameSearch)) return
-            if (value) {
+            if (value && key) {
                 tmpItem.push({
                     Id: 0,
                     ScriptName: key,

@@ -353,7 +353,11 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
     return (
         <div className={style["mitm-plugin-list-heard"]}>
             <div className={style["mitm-plugin-list-check"]}>
-                <YakitCheckbox checked={isSelectAll} onChange={(e) => onSelectAll(e.target.checked)} />
+                <YakitCheckbox
+                    checked={isSelectAll}
+                    indeterminate={!isSelectAll && length > 0}
+                    onChange={(e) => onSelectAll(e.target.checked)}
+                />
                 <span className={style["mitm-plugin-list-check-text"]}>全选</span>
             </div>
             <div className={style["mitm-plugin-list-tip"]}>
@@ -413,7 +417,7 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
                                 closable={true}
                                 className={classNames(style["mitm-plugin-query-plugin-group"])}
                             >
-                                <FolderOpenIcon />
+                                <FolderOpenIcon className={style["folder-icon"]} />
                                 <span
                                     className={classNames(
                                         style["mitm-plugin-query-plugin-group-name"],
@@ -631,6 +635,7 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
                 optValue: "Name",
                 optionLabelProp: "Name",
                 maxTagCount: "responsive",
+                allowClear: true,
                 renderOpt: (info: TagValue) => {
                     return (
                         <div className={classNames(style["mitm-plugin-local-tag-select-item"])}>
@@ -640,6 +645,9 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
                             <span>{info.Total}</span>
                         </div>
                     )
+                },
+                onClear: () => {
+                    setTag([])
                 },
                 onSelect: (item) => {
                     const checked = tag.includes(item)

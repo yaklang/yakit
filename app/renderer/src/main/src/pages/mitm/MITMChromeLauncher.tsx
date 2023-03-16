@@ -1,14 +1,13 @@
 import React, {useEffect, useState} from "react"
-import {Alert, Button, Form, Input, Popconfirm, Space, Typography} from "antd"
-import {showModal} from "../../utils/showModal"
+import {Alert,Form, Space, Typography} from "antd"
 import {failed, info} from "../../utils/notification"
-import {ChromeFilled, StopOutlined} from "@ant-design/icons"
+import {CheckOutlined,} from "@ant-design/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useMemoizedFn} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
+import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -143,10 +142,11 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     return (
         <>
             {(isStartMITM && (
-                <>
+                <YakitButton type='outline2' onClick={() => onSwitch(!started)}>
+                    {(started && <ChromeSvgIcon />) || <ChromeFrameSvgIcon />}
                     免配置启动
-                    <YakitSwitch checked={started} onChange={(c) => onSwitch(c)} />
-                </>
+                    {started && <CheckOutlined style={{color: "var(--yakit-success-5)", marginLeft: 8}} />}
+                </YakitButton>
             )) || (
                 <YakitButton
                     type='outline2'
@@ -155,6 +155,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                         setChromeVisible(true)
                     }}
                 >
+                    <ChromeFrameSvgIcon style={{height: 16}} />
                     免配置启动
                 </YakitButton>
             )}

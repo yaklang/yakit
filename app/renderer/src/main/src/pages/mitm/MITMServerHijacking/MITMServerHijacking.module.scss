@@ -24,15 +24,21 @@
         .mitm-server-extra {
             display: flex;
             align-items: center;
-            .mitm-server-spans {
+            .mitm-server-links {
                 color: var(--yakit-primary-5);
                 font-size: 12px;
-                line-height: 16px;
-                margin-right: 16px;
-                span {
+                margin-right: 8px;
+                display: flex;
+                align-items: center;
+                .link-item {
                     cursor: pointer;
+                    height: 24px;
+                    line-height: 16px;
+                    padding: 4px 8px;
+                    border-radius: 4px;
                     &:hover {
                         color: var(--yakit-primary-4);
+                        background-color: var(--yakit-background-color);
                     }
                     &:active {
                         color: var(--yakit-primary-6);
@@ -42,7 +48,7 @@
         }
         .mitm-server-extra {
             .mitm-server-chrome {
-                margin-right: 16px;
+                margin-left: 8px;
                 font-size: 12px;
                 display: flex;
                 align-items: center;

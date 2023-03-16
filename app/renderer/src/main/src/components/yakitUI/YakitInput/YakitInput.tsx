@@ -36,10 +36,14 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
             <Input
                 {...restProps}
                 size='middle'
-                className={classNames(styles["yakit-input-middle"], {
-                    [styles["yakit-input-large"]]: size === "large",
-                    [styles["yakit-input-small"]]: size === "small",
-                },className)}
+                className={classNames(
+                    styles["yakit-input-middle"],
+                    {
+                        [styles["yakit-input-large"]]: size === "large",
+                        [styles["yakit-input-small"]]: size === "small"
+                    },
+                    className
+                )}
             >
                 {props.children}
             </Input>
@@ -74,6 +78,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
             style={style}
         >
             <Input.Search
+                allowClear
                 {...restProps}
                 onFocus={onFocus}
                 onBlur={onBlur}

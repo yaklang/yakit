@@ -126,10 +126,14 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 width: 180
             },
             {
+                title: "追加 Tag",
+                dataKey: "ExtraTag",
+                minWidth: 200
+            },
+            {
                 title: "响应长度",
                 dataKey: "BodyLength",
-                width: 200,
-                minWidth: 140,
+                minWidth: 80,
                 render: (_, rowData) => {
                     return (
                         <>

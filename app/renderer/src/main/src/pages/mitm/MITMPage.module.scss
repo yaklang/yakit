@@ -338,6 +338,14 @@
         .mitm-plugin-query-plugin-group-name {
             width: calc(100% - 20px);
         }
+        .folder-icon {
+            width: 16px;
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
     }
 }
 
@@ -348,5 +356,12 @@
             margin-left: 0;
             margin-top: 2px;
         }
+    }
+}
+
+.chrome-launcher-status {
+    .chrome-launcher-text {
+        margin-left: 4px;
+        line-height: 16px;
     }
 }

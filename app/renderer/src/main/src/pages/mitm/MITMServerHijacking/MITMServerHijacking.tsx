@@ -80,15 +80,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     <div className={style["mitm-server-heard-addr"]}>{addr}</div>
                 </div>
                 <div className={style["mitm-server-extra"]}>
-                    <div className={style["mitm-server-spans"]}>
-                        <span onClick={() => setVisible(true)}>规则配置</span>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <span onClick={() => setFiltersVisible(true)}>过滤器</span>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <span onClick={() => setDownloadVisible(true)}>证书下载</span>
-                    </div>
-                    <div className={style["mitm-server-chrome"]}>
-                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
+                    <div className={style["mitm-server-links"]}>
+                        <div className={style["link-item"]} onClick={() => setVisible(true)}>
+                            规则配置
+                        </div>
+                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                        <div className={style["link-item"]} onClick={() => setFiltersVisible(true)}>
+                            过滤器
+                        </div>
+                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                        <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
+                            证书下载
+                        </div>
                     </div>
                     <YakitButton
                         onClick={() => {
@@ -98,6 +101,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     >
                         系统代理
                     </YakitButton>
+                    <div className={style["mitm-server-chrome"]}>
+                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
+                    </div>
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />
                     </div>
