@@ -19,7 +19,7 @@ import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
-import {YaklangEngineMode} from "@/yakitGVDefine"
+import {YakitSettingCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
@@ -68,7 +68,7 @@ export interface FuncDomainProp {
     engineMode: YaklangEngineMode
     isRemoteMode: boolean
     onEngineModeChange: (type: YaklangEngineMode) => any
-    typeCallback: (type: "console" | "adminMode" | "break") => any
+    typeCallback: (type: YakitSettingCallbackType) => any
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -281,7 +281,7 @@ interface UIOpSettingProp {
     engineMode: YaklangEngineMode
     /** yaklang引擎切换启动模式 */
     onEngineModeChange: (type: YaklangEngineMode) => any
-    typeCallback: (type: "console" | "adminMode" | "break") => any
+    typeCallback: (type: YakitSettingCallbackType) => any
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
@@ -367,6 +367,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "migrateLegacy":
                 migrateLegacyDatabase()
                 return
+            case "changeProject":
+            case "encryptionProject":
+            case "plaintextProject":
+                typeCallback(type)
+                return
             default:
                 return
         }
@@ -379,6 +384,15 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "pcapfix",
                     label: "网卡权限修复"
+                },
+                {
+                    key: "project",
+                    label: "项目管理",
+                    children: [
+                        {label: "切换项目", key: "changeProject"},
+                        {label: "加密导出", key: "encryptionProject"},
+                        {label: "明文导出", key: "plaintextProject"}
+                    ]
                 },
                 {
                     key: "plugin",
@@ -605,9 +619,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     })}
                 >
                     {content.length === 0 ? (
-                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>
-                            管理员未编辑更新通知
-                        </div>
+                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
                     ) : (
                         content.map((item, index) => {
                             return (
@@ -701,9 +713,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     })}
                 >
                     {content.length === 0 ? (
-                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>
-                            管理员未编辑更新通知
-                        </div>
+                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
                     ) : (
                         content.map((item, index) => {
                             return (

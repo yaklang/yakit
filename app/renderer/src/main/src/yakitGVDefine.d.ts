@@ -48,3 +48,12 @@ interface UserInfoProps {
 
 /** @name 当前yakit使用状态 */
 export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | "break" | ""
+
+/** @name funcDomain组件-全局setting功能的点击回调事件类型 */
+export type YakitSettingCallbackType =
+    | "console"
+    | "adminMode"
+    | "break"
+    | "changeProject"
+    | "encryptionProject"
+    | "plaintextProject"
