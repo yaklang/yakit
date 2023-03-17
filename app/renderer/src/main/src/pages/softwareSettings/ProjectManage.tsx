@@ -72,7 +72,7 @@ interface ProjectParamsProp extends QueryGeneralRequest {
     ChildFolderId?: number
 }
 /** 单条项目数据 */
-interface ProjectDescription {
+export interface ProjectDescription {
     Id: number
     ProjectName: string
     Description: string
@@ -988,7 +988,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 <div className={styles["icon-wrapper"]} onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu
                                         dropdown={{
-                                            trigger: ["click"],
                                             placement: "bottomRight",
                                             overlayClassName: styles["dropdown-menu-filter-wrapper"],
                                             onVisibleChange: (open) => setHeaderShow(open)
@@ -1397,7 +1396,7 @@ interface ProjectFolderInfoProps {
     ChildFolderId?: number
     parent?: ProjectDescription
 }
-interface ExportProjectProps {
+export interface ExportProjectProps {
     Id: number
     ProjectName: string
     Password: string
@@ -1416,7 +1415,7 @@ interface FileProjectInfoProps extends ProjectDescription {
     loading?: boolean
 }
 
-const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
+export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
     const {
         isNew = true,
         isFolder,
@@ -1953,7 +1952,7 @@ interface ProjectIOProgress {
     Percent: number
     Verbose: string
 }
-const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
+export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
     const {isExport, isImport, data, visible, setVisible, onSuccess} = props
 
     const [token, setToken] = useState(randomString(40))
