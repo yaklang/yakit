@@ -241,12 +241,12 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         {immediate: true}
     )
     useEffect(() => {
-        getHTTPFlowsFieldGroup(false)
-    }, [])
-    useEffect(() => {
-        // 刷新
         getHTTPFlowsFieldGroup(true)
-    }, [total])
+    }, [])
+    // useEffect(() => {
+    //     // 刷新
+    //     getHTTPFlowsFieldGroup(true)
+    // }, [total])
     // 向主页发送对比数据
     useEffect(() => {
         if (compareLeft.content) {
