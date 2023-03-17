@@ -50,6 +50,8 @@ import {openABSFileLocated} from "../../utils/openWebsite"
 import {YakitLogFormatter} from "../invoker/YakitLogFormatter"
 import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable"
 import {ResizeBox} from "../../components/ResizeBox"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams";
+
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
@@ -69,6 +71,7 @@ const marks: SliderMarks = {
         label: <div>快速</div>
     }
 }
+
 interface SimbleDetectFormProps {
     setPercent: (v: number) => void
     setExecuting: (v: boolean) => void
@@ -86,6 +89,7 @@ interface SimbleDetectFormProps {
     setRunPluginCount: (v: number) => void
     reset: () => void
 }
+
 export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     const {
         setPercent,
@@ -178,7 +182,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 TaskName: `${getScanType()}-${taskNameTimeStamp}`
             })
         }
-    }, [getScanType(),executing])
+    }, [getScanType(), executing])
 
     useEffect(() => {
         if (TaskName) {
@@ -256,7 +260,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-                .then((data: {Data: YakScript[]}) => {
+                .then((data: { Data: YakScript[] }) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
@@ -264,7 +268,8 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }
     })
 
@@ -465,20 +470,23 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     const [_, setReportId, getReportId] = useGetState<number>(21)
     // 是否允许更改TaskName
     const isSetTaskName = useRef<boolean>(true)
+
+    // 报告token
+    const [reportToken, setReportToken] = useState(randomString(40))
     useEffect(() => {
         if (executing) {
             openPort.current = []
             executing && setOpenPorts([])
             // 重新执行任务 重置已输入报告名
-            runTaskName&&setReportName(runTaskName)
+            runTaskName && setReportName(runTaskName)
         }
     }, [executing])
 
-    useEffect(()=>{
-        if(runTaskName&&isSetTaskName.current){
+    useEffect(() => {
+        if (runTaskName && isSetTaskName.current) {
             setReportName(runTaskName)
         }
-    },[runTaskName])
+    }, [runTaskName])
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
@@ -527,6 +535,14 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
     const openMenu = () => {
         ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
     }
+    /** 获取生成报告返回结果 */
+    // ipcRenderer.on(`${reportToken}-end`, (_, data) => {
+    ipcRenderer.on(`client-yak-end`, (_, data: ExecResult) => {
+        // if (data.IsMessage) {
+        console.log("获取生成报告返回结果", data)
+
+        // }
+    })
     /** 通知生成报告 */
     const creatReport = () => {
         // 脚本数据
@@ -546,6 +562,21 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                 {Key: "plugins", Value: runPluginCount}
             ]
         })
+
+        // const reqParams = {
+        //     Script: scriptData,
+        //     Params: [
+        //         {Key: "timestamp", Value: runTimeStamp},
+        //         {Key: "report_name", Value: runTaskName},
+        //         {Key: "plugins", Value: runPluginCount}
+        //     ]
+        // }
+        //
+        // ipcRenderer.invoke("ExecYakCode", reqParams, reportToken).then(() => {
+        //     info(`生成 ${runTaskName} 报告成功`)
+        // }).catch(e => {
+        //     failed(`生成 ${runTaskName} 报告遇到问题：${e}`)
+        // })
         setReportModalVisible(true)
         // setReportId()
     }
@@ -590,7 +621,8 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
             .catch((e) => {
                 failed(`Query Report[${21}] failed`)
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     }
 
     return (
@@ -627,7 +659,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                             >
                                 <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                     {infoState.riskState.slice(0, 10).map((i) => {
-                                        return <RiskDetails info={i} shrink={true} />
+                                        return <RiskDetails info={i} shrink={true}/>
                                     })}
                                 </Space>
                             </AutoCard>
@@ -638,7 +670,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimble={true} />
+                                    <OpenPortTableViewer data={openPorts} isSimble={true}/>
                                 </Col>
                             </Row>
                         </div>
@@ -716,7 +748,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                 onClose && onClose()
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+        })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -734,7 +767,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
         ipcRenderer
             .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-            .then(() => {})
+            .then(() => {
+            })
             .catch((e) => {
                 failed(`添加失败:${e}`)
             })
@@ -840,8 +874,10 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
         "scan-port",
         "SimpleDetect",
         token,
-        () => {},
-        () => {},
+        () => {
+        },
+        () => {
+        },
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -868,7 +904,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                 .invoke("GetExecBatchYakScriptUnfinishedTaskByUid", {
                     Uid
                 })
-                .then((req: {ScriptNames: string[]; Target: string}) => {
+                .then((req: { ScriptNames: string[]; Target: string }) => {
                     const {Target, ScriptNames} = req
                     // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
                     setTarget({...target, target: Target})
@@ -895,15 +931,15 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                 status = "success"
             }
             !!status &&
-                ipcRenderer.invoke("refresh-tabs-color", {
-                    tabId: getTabId(),
-                    status
-                })
+            ipcRenderer.invoke("refresh-tabs-color", {
+                tabId: getTabId(),
+                status
+            })
         }
     }, [percent, executing, getTabId()])
 
     if (loading) {
-        return <Spin tip={"正在恢复未完成的任务"} />
+        return <Spin tip={"正在恢复未完成的任务"}/>
     }
 
     const timelineItemProps = (infoState.messageState || [])
@@ -918,7 +954,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                 <AutoCard
                     size={"small"}
                     bordered={false}
-                    title={<>{!executing && <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />}</>}
+                    title={<>{!executing && <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin}/>}</>}
                     extra={<></>}
                     bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
                 >
@@ -938,7 +974,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                         setRunPluginCount={setRunPluginCount}
                         reset={reset}
                     />
-                    <Divider style={{margin: 4}} />
+                    <Divider style={{margin: 4}}/>
                     {(percent > 0 || executing) && (
                         <Row gutter={8}>
                             <Col span={6}>
@@ -973,7 +1009,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                                 })}
                         </Timeline>
                     )}
-                    <SimbleCardBox statusCards={infoState.statusState} />
+                    <SimbleCardBox statusCards={infoState.statusState}/>
                 </AutoCard>
             }
             firstMinSize={"200px"}

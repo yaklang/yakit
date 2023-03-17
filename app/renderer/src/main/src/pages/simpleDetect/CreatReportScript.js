@@ -12,6 +12,7 @@ if reportName == "" {
 }
 
 reportInstance = report.New()
+reportInstance.From("simple-detect")
 defer func{
     err := recover()
     if err != nil {
@@ -19,6 +20,7 @@ defer func{
     }
     id = reportInstance.Save()
     yakit.Report(id)
+    yakit.Info("Id: %v",id)
 }
 
 severityToRisks = {}
@@ -258,7 +260,7 @@ if len(potentialRisks) != 0 {
         aa = json.dumps(gp)
         println(aa)
         reportInstance.Raw(aa)
-        if gp.Name == "cwe-analysis"{
+        if gp.Name == "AttentionRing"{
              reportInstance.Markdown(sprintf(\`|  风险等级   | 等级划分依据  |
 |  ----  | ----  |
 | <font color="#da4943">通过网络无需认证且易于攻击</font>  | 这种漏洞类型指的是攻击者可以通过互联网或者内部网络等方式，<font color="#da4943">无需进行任何身份认证</font>就能够轻易地攻击目标系统或应用程序。通常，这种漏洞会暴露在网络端口、协议、服务等方面，攻击者**很容易**利用其漏洞来实现远程控制、拒绝服务攻击、数据窃取等攻击行为。这种漏洞对于网络安全威胁性较高，需要及时采取相应的安全措施来防范和修复。 |
