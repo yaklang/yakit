@@ -17,7 +17,8 @@ import {
     Row,
     Col,
     Slider,
-    Tooltip
+    Tooltip,
+    Timeline
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./SimpleDetect.module.scss"
@@ -46,6 +47,9 @@ import {PresetPorts} from "@/pages/portscan/schema"
 import {RiskDetails} from "@/pages/risks/RiskTable"
 import {Report} from "../assetViewer/models"
 import {openABSFileLocated} from "../../utils/openWebsite"
+import {YakitLogFormatter} from "../invoker/YakitLogFormatter"
+import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable"
+import {ResizeBox} from "../../components/ResizeBox"
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
@@ -174,7 +178,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
                 TaskName: `${getScanType()}-${taskNameTimeStamp}`
             })
         }
-    }, [getScanType()])
+    }, [getScanType(),executing])
 
     useEffect(() => {
         if (TaskName) {
@@ -272,13 +276,13 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
         let str: string = ""
         switch (getScanType()) {
             case "基础扫描":
-                str = "xxxxxxxxxxxxxx-基础扫描"
+                str = "包含合规检测、小字典弱口令检测与部分漏洞检测"
                 break
             case "深度扫描":
-                str = "xxxxxxxxxxxxxx-深度扫描"
+                str = "包含合规检测、大字典弱口令检测与所有漏洞检测"
                 break
             case "自定义":
-                str = "xxxxxxxxxxxxxx-自定义"
+                str = "自定义选择需要扫描的内容"
                 break
         }
         return str
@@ -455,17 +459,26 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
-
     // 下载报告Modal
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
     const [reportName, setReportName] = useState<string>(runTaskName || "默认报告名称")
-
+    const [_, setReportId, getReportId] = useGetState<number>(21)
+    // 是否允许更改TaskName
+    const isSetTaskName = useRef<boolean>(true)
     useEffect(() => {
         if (executing) {
             openPort.current = []
             executing && setOpenPorts([])
+            // 重新执行任务 重置已输入报告名
+            runTaskName&&setReportName(runTaskName)
         }
     }, [executing])
+
+    useEffect(()=>{
+        if(runTaskName&&isSetTaskName.current){
+            setReportName(runTaskName)
+        }
+    },[runTaskName])
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
@@ -534,11 +547,12 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
             ]
         })
         setReportModalVisible(true)
+        // setReportId()
     }
     /** 下载报告 */
     const downloadReport = () => {
         ipcRenderer
-            .invoke("QueryReport", {Id: 21})
+            .invoke("QueryReport", {Id: getReportId()})
             .then((r: Report) => {
                 if (r) {
                     ipcRenderer
@@ -564,7 +578,11 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                                     .catch((e) => {
                                         failed(`Download Html Report failed ${e}`)
                                     })
-                                    .finally(() => setTimeout(() => {}, 300))
+                                    .finally(() =>
+                                        setTimeout(() => {
+                                            setReportModalVisible(false)
+                                        }, 300)
+                                    )
                             }
                         })
                 }
@@ -575,15 +593,9 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
             .finally(() => {})
     }
 
-    const timelineItemProps = (infoState.messageState || [])
-        .filter((i) => {
-            return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
-        })
-        .splice(0, 25)
     return (
         <div className={styles["simble-detect-table"]}>
             <div className={styles["result-table-body"]}>
-                <SimbleCardBox statusCards={infoState.statusState} />
                 <Tabs
                     className='scan-port-tabs'
                     tabBarStyle={{marginBottom: 5}}
@@ -662,6 +674,7 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
                         allowClear
                         value={reportName}
                         onChange={(e) => {
+                            isSetTaskName.current = false
                             setReportName(e.target.value)
                         }}
                     />
@@ -893,53 +906,92 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
         return <Spin tip={"正在恢复未完成的任务"} />
     }
 
+    const timelineItemProps = (infoState.messageState || [])
+        .filter((i) => {
+            return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
+        })
+        .splice(0, 25)
     return (
-        <AutoCard
-            size={"small"}
-            bordered={false}
-            title={<>{!executing && <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />}</>}
-            extra={<></>}
-            bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
-        >
-            <SimbleDetectForm
-                executing={executing}
-                setPercent={setPercent}
-                setExecuting={setExecuting}
-                token={token}
-                target={target}
-                openScriptNames={openScriptNames}
-                YakScriptOnlineGroup={YakScriptOnlineGroup}
-                isDownloadPlugin={isDownloadPlugin}
-                baseProgress={BaseProgress}
-                TaskName={TaskName}
-                setRunTaskName={setRunTaskName}
-                setRunTimeStamp={setRunTimeStamp}
-                setRunPluginCount={setRunPluginCount}
-                reset={reset}
-            />
-            <Divider style={{margin: 4}} />
-            <div style={{width: "100%"}}>
-                {(percent > 0 || executing) && (
-                    <Progress
-                        status={executing ? "active" : undefined}
-                        percent={parseInt((percent * 100).toFixed(0))}
+        <ResizeBox
+            isVer={true}
+            firstNode={
+                <AutoCard
+                    size={"small"}
+                    bordered={false}
+                    title={<>{!executing && <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} />}</>}
+                    extra={<></>}
+                    bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
+                >
+                    <SimbleDetectForm
+                        executing={executing}
+                        setPercent={setPercent}
+                        setExecuting={setExecuting}
+                        token={token}
+                        target={target}
+                        openScriptNames={openScriptNames}
+                        YakScriptOnlineGroup={YakScriptOnlineGroup}
+                        isDownloadPlugin={isDownloadPlugin}
+                        baseProgress={BaseProgress}
+                        TaskName={TaskName}
+                        setRunTaskName={setRunTaskName}
+                        setRunTimeStamp={setRunTimeStamp}
+                        setRunPluginCount={setRunPluginCount}
+                        reset={reset}
                     />
-                )}
-            </div>
-            <div>
-
-            </div>
-            <div style={{flex: "1", overflow: "hidden"}}>
-                <SimbleDetectTable
-                    token={token}
-                    executing={executing}
-                    runTaskName={runTaskName}
-                    runTimeStamp={runTimeStamp}
-                    runPluginCount={runPluginCount}
-                    infoState={infoState}
-                    setExecuting={setExecuting}
-                />
-            </div>
-        </AutoCard>
+                    <Divider style={{margin: 4}} />
+                    {(percent > 0 || executing) && (
+                        <Row gutter={8}>
+                            <Col span={6}>
+                                <div style={{display: "flex"}}>
+                                    <span style={{marginRight: 10}}>任务进度:</span>
+                                    <div style={{flex: 1}}>
+                                        <Progress
+                                            status={executing ? "active" : undefined}
+                                            percent={parseInt((percent * 100).toFixed(0))}
+                                        />
+                                    </div>
+                                </div>
+                            </Col>
+                        </Row>
+                    )}
+                    {executing && (
+                        <Timeline pending={loading} style={{marginTop: 20, marginBottom: 20, maxHeight: 90}}>
+                            {(timelineItemProps || [])
+                                .filter((item) => item.level === "info")
+                                .slice(0, 3)
+                                .map((e, index) => {
+                                    return (
+                                        <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
+                                            <YakitLogFormatter
+                                                data={e.data}
+                                                level={e.level}
+                                                timestamp={e.timestamp}
+                                                onlyTime={true}
+                                            />
+                                        </Timeline.Item>
+                                    )
+                                })}
+                        </Timeline>
+                    )}
+                    <SimbleCardBox statusCards={infoState.statusState} />
+                </AutoCard>
+            }
+            firstMinSize={"200px"}
+            firstRatio={"400px"}
+            secondMinSize={200}
+            secondNode={() => {
+                return (
+                    <SimbleDetectTable
+                        token={token}
+                        executing={executing}
+                        runTaskName={runTaskName}
+                        runTimeStamp={runTimeStamp}
+                        runPluginCount={runPluginCount}
+                        infoState={infoState}
+                        setExecuting={setExecuting}
+                    />
+                )
+            }}
+        />
     )
 }

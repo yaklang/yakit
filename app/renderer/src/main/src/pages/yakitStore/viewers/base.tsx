@@ -629,7 +629,6 @@ export const SimbleCardBox: React.FC<SimbleCardBoxProps> = (props) => {
         <div className='status-cards-body'>
             <Row gutter={8}>
                 {newStatusCards.map((card, cardIndex) => {
-                    console.log("card----",card)
                     return (
                         <Col key={card.tag} span={6} style={{marginBottom: 8}}>
                             <Card
