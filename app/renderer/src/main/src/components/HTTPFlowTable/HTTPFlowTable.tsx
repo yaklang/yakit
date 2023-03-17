@@ -783,12 +783,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [props.inViewport])
     useEffect(() => {
         getNewData()
-        getHTTPFlowsFieldGroup(false)
-    }, [])
-    useEffect(() => {
-        // 刷新
         getHTTPFlowsFieldGroup(true)
-    }, [total])
+    }, [])
+    // useEffect(() => {
+    //     // 刷新
+    //     getHTTPFlowsFieldGroup(true)
+    // }, [total])
     const getShieldList = useMemoizedFn(() => {
         getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
             .then((data) => {
