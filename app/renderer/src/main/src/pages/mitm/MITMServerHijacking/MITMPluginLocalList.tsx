@@ -257,6 +257,8 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             <YakitGetOnlinePlugin
                 visible={visibleOnline}
                 setVisible={(v) => {
+                    console.log("YakitGetOnlinePlugin", v)
+
                     setVisibleOnline(v)
                     setTimeout(() => {
                         setRefresh(!refresh)

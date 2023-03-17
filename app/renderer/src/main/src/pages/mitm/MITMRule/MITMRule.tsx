@@ -299,7 +299,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                     key={item.value}
                                     checked={record[item.value]}
                                     onChange={(checked) => {
-                                        onEdit({Id: record.Id, EnableForRequest: checked}, item.value)
+                                        onEdit({Id: record.Id, [item.value]: checked}, item.value)
                                     }}
                                     disable={record.Disabled}
                                 >
