@@ -1,6 +1,7 @@
 const {ipcMain, shell, clipboard} = require("electron")
 const URL = require("url")
 const Path = require("path")
+const Fs = require("fs")
 
 module.exports = (win, getClient) => {
     /**
@@ -29,5 +30,10 @@ module.exports = (win, getClient) => {
     ipcMain.handle("fetch-path-file-name", (e, path) => {
         const extension = Path.extname(path)
         return Path.basename(path, extension)
+    })
+
+    /** 判断目标路径文件是否存在 */
+    ipcMain.handle("is-file-exists", (e, path) => {
+        return Fs.existsSync(path)
     })
 }
