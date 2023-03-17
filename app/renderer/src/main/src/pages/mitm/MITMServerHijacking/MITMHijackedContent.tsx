@@ -371,7 +371,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             {label: "自动放行", value: "log"},
                             {label: "被动日志", value: "passive"}
                         ]}
-                        onChange={(e) => setAutoForward(e.target.value)}
+                        onChange={(e) => {
+                            handleAutoForward(e.target.value)
+                        }}
                     />
                 </div>
                 <div className={styles["mitm-hijacked-heard-right"]}>
