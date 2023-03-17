@@ -73,47 +73,47 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             {
                 title: "方法",
                 dataKey: "Method",
-                width: 80,
-                filterProps: {
-                    filterKey: "Methods",
-                    filtersType: "select",
-                    filtersSelectAll: {
-                        isAll: true
-                    },
-                    filters: [
-                        {
-                            label: "GET",
-                            value: "GET"
-                        },
-                        {
-                            label: "POST",
-                            value: "POST"
-                        },
-                        {
-                            label: "HEAD",
-                            value: "HEAD"
-                        }
-                    ]
-                }
+                width: 80
+                // filterProps: {
+                //     filterKey: "Methods",
+                //     filtersType: "select",
+                //     filtersSelectAll: {
+                //         isAll: true
+                //     },
+                //     filters: [
+                //         {
+                //             label: "GET",
+                //             value: "GET"
+                //         },
+                //         {
+                //             label: "POST",
+                //             value: "POST"
+                //         },
+                //         {
+                //             label: "HEAD",
+                //             value: "HEAD"
+                //         }
+                //     ]
+                // }
             },
             {
                 title: "状态码",
                 dataKey: "StatusCode",
                 width: 100,
-                filterProps: {
-                    filtersType: "select",
-                    filterMultiple: true,
-                    filterSearchInputProps: {
-                        size: "small"
-                    },
-                    filterOptionRender: (item: FiltersItemProps) => (
-                        <div>
-                            <span>{item.value}</span>
-                            <span>{item.total}</span>
-                        </div>
-                    ),
-                    filters: statusCode
-                },
+                // filterProps: {
+                //     filtersType: "select",
+                //     filterMultiple: true,
+                //     filterSearchInputProps: {
+                //         size: "small"
+                //     },
+                //     filterOptionRender: (item: FiltersItemProps) => (
+                //         <div>
+                //             <span>{item.value}</span>
+                //             <span>{item.total}</span>
+                //         </div>
+                //     ),
+                //     filters: statusCode
+                // },
                 render: (text) => <div className={styles["status-code"]}>{text}</div>
             },
             {
@@ -127,7 +127,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             },
             {
                 title: "追加 Tag",
-                dataKey: "ExtraTag",
+                dataKey: "Tags",
                 minWidth: 200
             },
             {
@@ -203,10 +203,11 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         ipcRenderer
             .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
-                if (res?.Data.length === 0) return
+                // if (res?.Data.length === 0) return
                 const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
                     .concat(data || [])
                     .filter((_, index) => index < 30)
+
                 setData(newData)
                 setTotal(res.Total)
             })
