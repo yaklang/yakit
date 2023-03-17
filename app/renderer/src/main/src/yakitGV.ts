@@ -45,5 +45,7 @@ export enum CodeGV {
     /** @name 官网地址 */
     HomeWebsite = "https://www.yaklang.com",
     /** @name 远程连接配置信息文件路径 */
-    RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json"
+    RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json",
+    /** @name 历史版本下载页面 */
+    HistoricalVersion = "https://github.com/yaklang/yakit/releases"
 }

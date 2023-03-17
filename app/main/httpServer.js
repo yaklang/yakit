@@ -19,7 +19,7 @@ const service = axios.create({
 // request拦截器,拦截每一个请求加上请求头
 service.interceptors.request.use(
     (config) => {
-        config.baseURL = `${HttpSetting.httpBaseURL}/api/`
+        config.baseURL = config.diyHome ? `${config.diyHome}/api/` : `${HttpSetting.httpBaseURL}/api/`
         if (USER_INFO.isLogin && USER_INFO.token) config.headers["Authorization"] = USER_INFO.token
         // console.log('request-config',config);
         return config

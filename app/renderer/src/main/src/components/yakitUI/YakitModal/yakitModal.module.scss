@@ -1,3 +1,12 @@
+.yakit-modal-gray {
+    --haeder-footer-background: var(--yakit-card-background-color);
+    --header-footer-border: var(--yakit-border-color);
+}
+.yakit-modal-white {
+    --haeder-footer-background: var(--yakit-neutral10-color);
+    --header-footer-border: var(--yakit-neutral10-color);
+}
+
 .yakit-modal-wrapper {
     --select-modal-hover-color: var(--yakit-primary-color);
 
@@ -43,8 +52,8 @@
             padding: 8px 16px;
             gap: 16px;
             height: 41px;
-            background: var(--yakit-card-background-color);
-            border-bottom: 1px solid var(--yakit-border-color);
+            background: var(--haeder-footer-background);
+            border-bottom: 1px solid var(--header-footer-border);
             border-radius: 4px 4px 0px 0px;
 
             font-weight: 600;
@@ -71,8 +80,8 @@
             align-items: center;
             padding: 8px 16px;
             height: 41px;
-            background: var(--yakit-card-background-color);
-            border-top: 1px solid var(--yakit-border-color);
+            background: var(--haeder-footer-background);
+            border-top: 1px solid var(--header-footer-border);
             border-radius: 0px 0px 4px 4px;
 
             .body-footer-extra {
@@ -89,8 +98,8 @@
             display: flex;
             align-items: center;
             padding: 8px 16px;
-            background: var(--yakit-card-background-color);
-            border-top: 1px solid var(--yakit-border-color);
+            background: var(--haeder-footer-background);
+            border-top: 1px solid var(--header-footer-border);
             border-radius: 0px 0px 4px 4px;
         }
     }

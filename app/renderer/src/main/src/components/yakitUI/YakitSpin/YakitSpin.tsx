@@ -16,5 +16,11 @@ import classNames from "classnames"
  * @param {"small" | "middle" | "large" } size  默认middle
  */
 export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
-    return <Spin {...props} wrapperClassName={classNames(styles["yakit-spin"], props.wrapperClassName)}></Spin>
+    return (
+        <Spin
+            {...props}
+            className={styles["yakit-spin"]}
+            wrapperClassName={classNames(styles["yakit-spin"], props.wrapperClassName)}
+        ></Spin>
+    )
 }

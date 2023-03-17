@@ -99,13 +99,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             .invoke("GetBuildInEngineVersion")
             .then((e) => {
                 if (e !== "") {
-                    info(`引擎内置自检成功！内置引擎：${e}`)
+                    outputToWelcomeConsole(`引擎内置自检成功！内置引擎：${e}`)
                 } else {
-                    info(`引擎内置自检：无内置引擎标识 ${e}`)
+                    outputToWelcomeConsole(`引擎内置自检：无内置引擎标识 ${e}`)
                 }
             })
             .catch((e) => {
-                info(`引擎内置自检：无内置引擎: ${e}`)
+                outputToWelcomeConsole(`引擎内置自检：无内置引擎: ${e}`)
             }).finally(() => {
                 info("开始检查漏洞信息库")
                 ipcRenderer.invoke("InitCVEDatabase").then(()=>{
