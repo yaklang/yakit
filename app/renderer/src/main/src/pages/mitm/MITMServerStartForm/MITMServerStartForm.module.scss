@@ -1,0 +1,216 @@
+.mitm-server-start-form {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    padding-top: 62px;
+    overflow-y: auto;
+    padding-bottom: 24px;
+    :global {
+        .ant-form-item-with-help .ant-form-item-explain {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            line-height: 16px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+        .ant-form-item-control-input {
+            min-height: 28px;
+        }
+    }
+    .form-input-number {
+        width: 100%;
+    }
+    .form-rule-body {
+        display: flex;
+        align-items: center;
+        .form-rule {
+            height: 28px;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            &:hover {
+                border-color: var(--yakit-primary-5);
+            }
+            &:focus,
+            &:active {
+                box-shadow: 0 0 0 2px var(--yakit-primary-2);
+            }
+            .form-rule-text {
+                padding: 6px 12px;
+                flex: 1;
+                font-size: 14px;
+            }
+            .form-rule-icon {
+                width: 33px;
+                height: 26px;
+                background: var(--yakit-card-background-color);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-left: 1px solid var(--yakit-border-color);
+                border-radius: 0px 4px 4px 0px;
+                cursor: pointer;
+                &:hover {
+                    svg {
+                        color: var(--yakit-primary-5);
+                    }
+                }
+                svg {
+                    color: var(--yakit-header-color);
+                }
+            }
+        }
+    }
+    .form-rule-button {
+        position: absolute;
+        top: 2px;
+        right: -185px;
+    }
+    .form-rule-help {
+        .form-rule-help-setting {
+            margin-left: 8px;
+            color: var(--yakit-primary-5);
+            display: inline-flex;
+            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}
+
+.advanced-configuration-drawer {
+    :global {
+        .ant-form-item-with-help .ant-form-item-explain {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            line-height: 16px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+        .ant-form-item-control-input {
+            min-height: 28px;
+        }
+    }
+    .advanced-configuration-drawer-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .advanced-configuration-drawer-title-text {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-header-color);
+        }
+        .advanced-configuration-drawer-title-btns {
+            display: flex;
+            gap: 8px;
+        }
+    }
+    .advanced-configuration-drawer-TLS {
+        .drawer-TLS-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 32px;
+            .drawer-TLS-btns {
+                display: flex;
+                align-items: center;
+            }
+        }
+        .drawer-TLS-help {
+            margin-top: 2px;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 16px;
+            color: var(--yakit-helper-text-color);
+        }
+        .drawer-TLS-certs {
+            padding: 4px 8px 4px 12px;
+            border-radius: 4px;
+            .drawer-TLS-certs-item {
+                padding: 4px 0px;
+                height: 32px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid var(--yakit-border-color);
+                &:last-child {
+                    border-bottom: 0;
+                }
+                .drawer-TLS-certs-item-name {
+                    font-weight: 400;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--yakit-header-color);
+                    flex: 1;
+                }
+                .drawer-TLS-certs-item-operate {
+                    display: flex;
+                    align-items: center;
+                    margin-left: 8px;
+                    svg {
+                        cursor: pointer;
+                    }
+                    .trash-icon {
+                        color: var(--yakit-danger-5);
+                    }
+                    .export-icon {
+                        color: var(--yakit-primary-5);
+                    }
+                }
+            }
+        }
+    }
+}
+
+.input-certificate-form {
+    padding: 24px 16px;
+    :global {
+        .ant-form-item-explain-error {
+            font-size: 12px;
+        }
+    }
+}
+
+.mitm-filters-modal {
+    :global {
+        .ant-form-item-with-help .ant-form-item-explain {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            line-height: 16px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+        .ant-form-item-control-input {
+            min-height: 28px;
+        }
+    }
+    .mitm-filters-subTitle {
+        display: flex;
+        justify-content: flex-end;
+    }
+    .mitm-filters-form {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+.mitm-certificate-download-modal {
+    .certificate-download-modal-footer {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-header-color);
+    }
+    .certificate-download-modal-body {
+        height: 466px;
+    }
+}

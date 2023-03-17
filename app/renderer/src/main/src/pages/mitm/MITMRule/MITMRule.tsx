@@ -1,10 +1,9 @@
-import {Button, Checkbox, Divider, Drawer, Modal, Select, Switch, Tag, Tooltip} from "antd"
-import React, {ReactNode, useCallback, useEffect, useMemo, useState} from "react"
+import {Divider, Modal, Tag, Tooltip} from "antd"
+import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
-    ButtonTextProps,
-    CloseTipModalProps,
     MITMContentReplacerRule,
     MITMRuleProp,
+    RuleExportAndImportButtonProps,
     YakitCheckboxProps,
     YakitSelectMemoProps,
     YakitSwitchMemoProps
@@ -27,7 +26,6 @@ import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResi
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {openExternalWebsite} from "@/utils/openWebsite"
-import {TagsList} from "@/components/baseTemplate/BaseTags"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
@@ -43,8 +41,10 @@ import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {CheckableTagProps} from "antd/lib/tag"
 
 const {ipcRenderer} = window.require("electron")
+const {CheckableTag} = Tag
 
 export const HitColor = [
     {
@@ -129,8 +129,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const [modalVisible, setModalVisible] = useState<boolean>(false)
-    const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const [importVisible, setImportVisible] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
@@ -146,17 +144,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         })
     }, [visible])
     useEffect(() => {
-        if (importVisible) return
-        setLoading(true)
-        ipcRenderer
-            .invoke("GetCurrentRules", {})
-            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                setRules(newRules)
-                setBanAndNoReplace(newRules)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 100))
-    }, [visible, importVisible])
+        onGetCurrentRules()
+    }, [visible])
     useEffect(() => {
         ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
             const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
@@ -168,6 +157,18 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
         }
     }, [])
+    const onGetCurrentRules = useMemoizedFn(() => {
+        setLoading(true)
+        ipcRenderer
+            .invoke("GetCurrentRules", {})
+            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setRules(newRules)
+                setBanAndNoReplace(newRules)
+                setIsRefresh(!isRefresh)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 100))
+    })
     const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
         const listReplace = rules.filter((item) => item.NoReplace === false)
         const listDisabled = rules.filter((item) => item.Disabled === false)
@@ -214,6 +215,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
             if (item.Id === rowDate.Id) {
+                if (!rowDate.Disabled && rowDate.Id === currentItem?.Id) {
+                    setCurrentItem(undefined)
+                }
                 item = {
                     ...rowDate,
                     Disabled: !rowDate.Disabled
@@ -223,6 +227,27 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         })
         setRules(newRules)
     })
+
+    const rulesRangeList = useCreation(() => {
+        return [
+            {
+                label: "请求",
+                value: "EnableForRequest"
+            },
+            {
+                label: "响应",
+                value: "EnableForResponse"
+            },
+            {
+                label: "Header",
+                value: "EnableForHeader"
+            },
+            {
+                label: "Body",
+                value: "EnableForBody"
+            }
+        ]
+    }, [])
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -248,7 +273,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 dataKey: "NoReplace",
                 width: 350,
                 tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                extra: <div className={styles["table-result-extra"]}>开/关</div>,
+                beforeIconExtra: <div className={styles["table-result-extra"]}>开/关</div>,
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitSwitchMemo
                         ExtraCookies={i.ExtraCookies}
@@ -263,65 +288,89 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 )
             },
             {
-                title: "请求",
+                title: "规则作用范围",
                 dataKey: "EnableForRequest",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) =>
-                            onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
-                        }
-                    />
-                )
-            },
-            {
-                title: "响应",
-                dataKey: "EnableForResponse",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) =>
-                            onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
-                        }
-                    />
-                )
-            },
-            {
-                title: "Header",
-                dataKey: "EnableForHeader",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => {
+                width: 235,
+                render: (_, record: MITMContentReplacerRule) => {
                     return (
-                        <YakitCheckboxMemo
-                            checked={checked}
-                            disabled={record.Disabled}
-                            onChange={(e) =>
-                                onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
-                            }
-                        />
+                        <div>
+                            {rulesRangeList.map((item) => (
+                                <YakitCheckableTag
+                                    key={item.value}
+                                    checked={record[item.value]}
+                                    onChange={(checked) => {
+                                        onEdit({Id: record.Id, [item.value]: checked}, item.value)
+                                    }}
+                                    disable={record.Disabled}
+                                >
+                                    {item.label}
+                                </YakitCheckableTag>
+                            ))}
+                        </div>
                     )
                 }
             },
-            {
-                title: "Body",
-                dataKey: "EnableForBody",
-                width: 80,
-                render: (checked, record: MITMContentReplacerRule) => (
-                    <YakitCheckboxMemo
-                        checked={checked}
-                        disabled={record.Disabled}
-                        onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
-                    />
-                )
-            },
+            // {
+            //     title: "请求",
+            //     dataKey: "EnableForRequest",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => (
+            //         <YakitCheckboxMemo
+            //             checked={checked}
+            //             disabled={record.Disabled}
+            //             onChange={(e) =>
+            //                 onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
+            //             }
+            //         />
+            //     )
+            // },
+            // {
+            //     title: "响应",
+            //     dataKey: "EnableForResponse",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => (
+            //         <YakitCheckboxMemo
+            //             checked={checked}
+            //             disabled={record.Disabled}
+            //             onChange={(e) =>
+            //                 onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
+            //             }
+            //         />
+            //     )
+            // },
+            // {
+            //     title: "Header",
+            //     dataKey: "EnableForHeader",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => {
+            //         return (
+            //             <YakitCheckboxMemo
+            //                 checked={checked}
+            //                 disabled={record.Disabled}
+            //                 onChange={(e) =>
+            //                     onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
+            //                 }
+            //             />
+            //         )
+            //     }
+            // },
+            // {
+            //     title: "Body",
+            //     dataKey: "EnableForBody",
+            //     width: 80,
+            //     render: (checked, record: MITMContentReplacerRule) => (
+            //         <YakitCheckboxMemo
+            //             checked={checked}
+            //             disabled={record.Disabled}
+            //             onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
+            //         />
+            //     )
+            // },
             {
                 title: "命中颜色",
                 dataKey: "Color",
                 ellipsis: false,
+                width: 120,
                 render: (text, record: MITMContentReplacerRule) => (
                     <YakitSelectMemo
                         value={text}
@@ -333,9 +382,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             {
                 title: "追加 Tag",
                 dataKey: "ExtraTag",
-                render: (text) => {
-                    return <TagsList data={text} ellipsis={true} />
-                }
+                minWidth: 120
+                // render: (text) => {
+                //     return <TagsList data={text} ellipsis={true} />
+                // }
             },
             {
                 title: "操作",
@@ -345,18 +395,30 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 render: (_, record: MITMContentReplacerRule) => {
                     return (
                         <div className={styles["table-action-icon"]}>
-                            <TrashIcon className={styles["icon-trash"]} onClick={() => onRemove(record)} />
+                            <TrashIcon
+                                className={styles["icon-trash"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRemove(record)
+                                }}
+                            />
                             <PencilAltIcon
                                 className={classNames(styles["action-icon"], {
                                     [styles["action-icon-edit-disabled"]]: record.Disabled
                                 })}
-                                onClick={() => onOpenAddOrEdit(record)}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onOpenAddOrEdit(record)
+                                }}
                             />
                             <BanIcon
                                 className={classNames(styles["action-icon"], {
                                     [styles["action-icon-ban-disabled"]]: record.Disabled
                                 })}
-                                onClick={() => onBan(record)}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onBan(record)
+                                }}
                             />
                         </div>
                     )
@@ -532,8 +594,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
 
     const onOkImport = useMemoizedFn(() => {
-        setIsRefresh(!isRefresh)
-        setImportVisible(false)
+        onGetCurrentRules()
     })
 
     const onClose = useMemoizedFn(() => {
@@ -562,8 +623,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 onCancel: () => {
                     setVisible(false)
                 },
-                cancelButtonProps: {size: "small", style: {borderRadius: 4}},
-                okButtonProps: {size: "small", style: {borderRadius: 4, backgroundColor: "#1890ff"}}
+                cancelButtonProps: {size: "small", className: styles["cancel-button"]},
+                okButtonProps: {size: "small", className: styles["ok-button"]}
             })
         } else {
             setVisible(false)
@@ -580,25 +641,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 getContainer={getContainer}
                 mask={false}
                 style={(visible && styleDrawer) || {}}
-                className={classNames(styles["mitm-rule-drawer"], "old-theme-html")}
+                className={classNames(styles["mitm-rule-drawer"])}
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={<div className={styles["heard-title"]}>内容规则配置</div>}
                 extra={
                     <div className={styles["heard-right-operation"]}>
-                        <YakitButton type='text' icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
-                            导入配置
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <YakitButton
-                            type='text'
-                            icon={<ExportIcon />}
-                            className={styles["button-export"]}
-                            onClick={() => {
-                                setExportVisible(true)
-                            }}
-                        >
-                            导出配置
-                        </YakitButton>
+                        <RuleExportAndImportButton onOkImport={onOkImport} />
                         <YakitButton
                             type='primary'
                             className={styles["button-save"]}
@@ -606,13 +654,15 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         >
                             保存
                         </YakitButton>
-                        <YakitButton
-                            type='outline2'
-                            className={styles["button-question"]}
-                            onClick={() => openExternalWebsite("https://www.yaklang.com/")}
-                        >
-                            <QuestionMarkCircleIcon />
-                        </YakitButton>
+                        <Tooltip title='官方网站' placement='top' overlayClassName={styles["question-tooltip"]}>
+                            <YakitButton
+                                type='outline2'
+                                className={styles["button-question"]}
+                                onClick={() => openExternalWebsite("https://www.yaklang.com/")}
+                            >
+                                <QuestionMarkCircleIcon />
+                            </YakitButton>
+                        </Tooltip>
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>
                             <RemoveIcon />
                         </div>
@@ -659,7 +709,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                         />
                                     }
                                     trigger='hover'
-                                    overlayClassName={classNames(styles["popover-remove"], "old-theme-html")}
+                                    overlayClassName={classNames(styles["popover-remove"])}
                                 >
                                     <YakitButton
                                         type='outline2'
@@ -696,7 +746,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         }}
                         loading={loading}
                         columns={columns}
-                        onSetCurrentRow={onSetCurrentRow}
+                        currentSelectItem={currentItem}
+                        onRowClick={onSetCurrentRow}
                         onMoveRow={onMoveRow}
                         enableDragSort={true}
                         onMoveRowEnd={onMoveRowEnd}
@@ -713,13 +764,65 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     currentItem={currentItem}
                 />
             )}
-            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
-            {importVisible && (
-                <MITMRuleImport visible={importVisible} setVisible={setImportVisible} onOk={onOkImport} />
-            )}
         </>
     )
 }
+
+export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
+    const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props
+    const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [importVisible, setImportVisible] = useState<boolean>(false)
+    const onOk = useMemoizedFn(() => {
+        if (onOkImport) onOkImport()
+        setImportVisible(false)
+    })
+    useImperativeHandle(
+        ref,
+        () => ({
+            // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
+            // 导入
+            onSetImportVisible: (newVal) => {
+                setImportVisible(newVal)
+            },
+            // 导出
+            onSetExportVisible: (newVal) => {
+                setExportVisible(newVal)
+            }
+        }),
+        []
+    )
+    useEffect(() => {
+        if (setIsUseDefRules && !importVisible) setIsUseDefRules(false)
+    }, [importVisible])
+    return (
+        <>
+            {onBeforeNode}
+            <YakitButton type='text' icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
+                导入配置
+            </YakitButton>
+            <Divider type='vertical' style={{margin: "0 4px"}} />
+            <YakitButton
+                type='text'
+                icon={<ExportIcon />}
+                className={styles["button-export"]}
+                onClick={() => {
+                    setExportVisible(true)
+                }}
+            >
+                导出配置
+            </YakitButton>
+            {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
+            {importVisible && (
+                <MITMRuleImport
+                    visible={importVisible}
+                    setVisible={setImportVisible}
+                    onOk={onOk}
+                    isUseDefRules={isUseDefRules}
+                />
+            )}
+        </>
+    )
+})
 
 const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
     (props) => {
@@ -731,7 +834,6 @@ const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
                 size='small'
                 wrapperStyle={{width: "100%"}}
                 onSelect={(val) => props.onSelect(val)}
-                dropdownClassName='old-theme-html'
             >
                 {colorSelectNode}
             </YakitSelect>
@@ -821,3 +923,39 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
         return true
     }
 )
+
+interface YakitCheckableTagProps extends CheckableTagProps {
+    children?: ReactNode
+    wrapClassName?: string
+    disable?: boolean
+}
+/**
+ * @description 暂时使用，未封
+ */
+const YakitCheckableTag: React.FC<YakitCheckableTagProps> = React.memo((props) => {
+    const {wrapClassName, disable, className, ...resProps} = props
+    return (
+        <div
+            className={classNames(
+                styles["yakit-checked-tag-wrap"],
+                {
+                    [styles["yakit-checked-tag-disable"]]: disable,
+                    [styles["yakit-checked-tag-checked-disable"]]: disable && props.checked
+                },
+                wrapClassName
+            )}
+        >
+            <CheckableTag
+                {...resProps}
+                onClick={(e) => {
+                    if (!disable && props.onClick) props.onClick(e)
+                }}
+                onChange={(c) => {
+                    if (!disable && props.onChange) props.onChange(c)
+                }}
+            >
+                {props.children}
+            </CheckableTag>
+        </div>
+    )
+})

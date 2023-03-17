@@ -4,6 +4,7 @@ import {
     FeaturesAndPluginProps,
     FirstMenuItemProps,
     FirstMenuProps,
+    PluginLocalInfoProps,
     PluginLocalItemProps,
     PluginLocalListProps,
     SecondMenuItemProps,
@@ -27,7 +28,8 @@ import {
     TerminalIcon,
     PencilAltIcon,
     ShieldExclamationIcon,
-    DocumentDownloadIcon
+    DocumentDownloadIcon,
+    CloudPluginIcon
 } from "@/assets/newIcon"
 import {MenuDataProps, DefaultRouteMenuData, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -1208,22 +1210,7 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
                 >
                     {plugin.ScriptName}
                 </span>
-                {plugin.OnlineIsPrivate && <PrivatePluginIcon className={style["plugin-local-icon"]} />}
-                {plugin.OnlineOfficial && <OfficialPluginIcon className={style["plugin-local-icon"]} />}
-                <Tooltip
-                    title={plugin.Help || "No Description about it."}
-                    placement='topRight'
-                    overlayClassName={style["question-tooltip"]}
-                >
-                    <QuestionMarkCircleIcon className={style["plugin-local-icon"]} />
-                </Tooltip>
-                <YakitPopover
-                    placement='topRight'
-                    overlayClassName={style["terminal-popover"]}
-                    content={<YakEditor type={"yak"} value={plugin.Content} readOnly={true} />}
-                >
-                    <TerminalIcon className={style["plugin-local-icon"]} />
-                </YakitPopover>
+                <PluginLocalInfoIcon plugin={plugin} />
             </div>
             {(isDragDisabled && (
                 <>
@@ -1247,5 +1234,55 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
                 </div>
             )}
         </div>
+    )
+})
+
+export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((props) => {
+    const {plugin, getScriptInfo} = props
+    const renderIcon = useMemoizedFn(() => {
+        if (plugin.OnlineOfficial) {
+            return (
+                <Tooltip title='官方插件'>
+                    <OfficialPluginIcon className={style["plugin-local-icon"]} />
+                </Tooltip>
+            )
+        }
+        if (plugin.OnlineIsPrivate) {
+            return  <Tooltip title='私有插件'><PrivatePluginIcon className={style["plugin-local-icon"]} /></Tooltip>
+        }
+        if (plugin.UUID) {
+            return <Tooltip title='云端插件'><CloudPluginIcon className={style["plugin-local-icon"]} /></Tooltip>
+        }
+    })
+    return (
+        <>
+            {/* {plugin.OnlineIsPrivate && <PrivatePluginIcon className={style["plugin-local-icon"]} />}
+            {plugin.OnlineOfficial && <OfficialPluginIcon className={style["plugin-local-icon"]} />} */}
+            {renderIcon()}
+            <Tooltip
+                title={plugin.Help || "No Description about it."}
+                placement='topRight'
+                overlayClassName={style["question-tooltip"]}
+                onVisibleChange={(v) => {
+                    if (v && !plugin.Help) {
+                        if (getScriptInfo) getScriptInfo(plugin)
+                    }
+                }}
+            >
+                <QuestionMarkCircleIcon className={style["plugin-local-icon"]} />
+            </Tooltip>
+            <YakitPopover
+                placement='topRight'
+                overlayClassName={style["terminal-popover"]}
+                content={<YakEditor type={"yak"} value={plugin.Content} readOnly={true} />}
+                onVisibleChange={(v) => {
+                    if (v && !plugin.Content) {
+                        if (getScriptInfo) getScriptInfo(plugin)
+                    }
+                }}
+            >
+                <TerminalIcon className={style["plugin-local-icon"]} />
+            </YakitPopover>
+        </>
     )
 })

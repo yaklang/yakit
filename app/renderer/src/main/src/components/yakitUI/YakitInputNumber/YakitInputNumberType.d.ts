@@ -9,11 +9,13 @@ export declare type ValueType = string | number
  * @augments InputNumberProps 继承antd的InputNumber默认属性
  * @param {horizontal | vertical} type  默认vertical
  * @param {YakitSizeType} size  默认middle
+ * @param {string} wrapperClassName  默认middle
  */
 export interface YakitInputNumberProps extends Omit<InputNumberProps, "size"> {
     type?: "horizontal" | "vertical"
     size?: YakitSizeType
     ref?:any
+    wrapperClassName?: string
 }
 
 /**
