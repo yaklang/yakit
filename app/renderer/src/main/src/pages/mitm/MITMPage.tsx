@@ -365,14 +365,11 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      * @description 插件全选 启动  批量执行最多200条
      */
     const onSelectAll = useMemoizedFn((checked: boolean) => {
-        console.log("onSelectAll", checked, status)
-
         switch (status) {
             case "idle":
                 onSelectAllIdle(checked)
                 break
             case "hijacked":
-                break
             case "hijacking":
                 onSelectAllHijacking(checked)
                 break
@@ -396,7 +393,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      * @description 劫持开启后的全选 启动插件
      */
     const onSelectAllHijacking = useMemoizedFn((checked: boolean) => {
-        console.log("onSelectAllHijacking", checked, status)
         if (checked) {
             ipcRenderer
                 .invoke("mitm-remove-hook", {
@@ -404,8 +400,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     RemoveHookID: listNames.concat(checkList)
                 } as any)
                 .then(() => {
-                    console.log("onEnableMITMPluginMode")
-
                     onEnableMITMPluginMode(checked)
                     setIsSelectAll(checked)
                 })
@@ -428,8 +422,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     })
 
     const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
-        console.log("onEnableMITMPluginMode", listNames)
-
         enableMITMPluginMode(listNames)
             .then(() => {
                 setIsSelectAll(checked)

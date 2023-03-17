@@ -1665,8 +1665,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
-                console.log("newParams", newParams,item)
-
                 const data = page === 1 ? item.Data : response.Data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
                 setHasMore(!isMore)

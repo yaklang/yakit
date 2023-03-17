@@ -257,8 +257,6 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             <YakitGetOnlinePlugin
                 visible={visibleOnline}
                 setVisible={(v) => {
-                    console.log("YakitGetOnlinePlugin", v)
-
                     setVisibleOnline(v)
                     setTimeout(() => {
                         setRefresh(!refresh)
@@ -346,9 +344,10 @@ interface YakModuleListHeardProps {
     setIsSelectAll: (e: boolean) => void
     total: number
     length: number
+    loading?: boolean
 }
 export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo((props) => {
-    const {isSelectAll, onSelectAll, setIsSelectAll, total, length} = props
+    const {isSelectAll, onSelectAll, setIsSelectAll, total, length, loading} = props
     useEffect(() => {
         if (length > 0) setIsSelectAll(length == total)
     }, [total, length])
@@ -359,6 +358,7 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
                     checked={isSelectAll}
                     indeterminate={!isSelectAll && length > 0}
                     onChange={(e) => onSelectAll(e.target.checked)}
+                    disabled={loading}
                 />
                 <span className={style["mitm-plugin-list-check-text"]}>全选</span>
             </div>

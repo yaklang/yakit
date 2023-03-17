@@ -262,12 +262,12 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             case "loaded":
                 return (
                     <>
-                        {(width > 350 && (
+                        {(width > 400 && (
                             <YakitInput.Search
                                 placeholder='请输入插件名称搜索'
                                 value={hookScriptNameSearch}
                                 onChange={(e) => setHookScriptNameSearch(e.target.value)}
-                                style={{maxWidth: 200}}
+                                style={{maxWidth: 180}}
                                 onSearch={() => setIsHooksSearch(!isHooksSearch)}
                                 onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
                             />
@@ -443,6 +443,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             isSelectAll={isSelectAll}
                             total={total}
                             length={checkList.length}
+                            loading={loading}
                         />
                         <YakitSpin spinning={loading}>
                             <MITMPluginLocalList
