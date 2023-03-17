@@ -53,6 +53,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
             <div className={styles["yakit-hint-body"]}>
                 <YakitHintModal
                     {...rest}
+                    isMask={mask}
                     visible={true}
                     isTop={currentTop === "main"}
                     setTop={() => setCurrnetTop("main")}
@@ -62,8 +63,9 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
 
                     return (
                         <YakitHintModal
-                            key={key}
                             {...content}
+                            key={key}
+                            isMask={mask}
                             isTop={currentTop === key}
                             setTop={() => setCurrnetTop(key)}
                         />
