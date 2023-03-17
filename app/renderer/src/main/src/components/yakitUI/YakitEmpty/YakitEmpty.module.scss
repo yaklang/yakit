@@ -1,0 +1,17 @@
+.yakit-empty {
+    display: flex;
+    flex-direction: column;
+    .yakit-empty-title {
+        font-size: 12px;
+        color: var(--yakit-header-color);
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .yakit-empty-description {
+        margin-top: 4px;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-helper-text-color);
+    }
+}

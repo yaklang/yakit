@@ -26,6 +26,8 @@ type AxiosResponseProps<T = any, D = any> = Merge<
 
 interface requestConfig<T = any> extends AxiosRequestConfig<T> {
     params?: T
+    /** @name 自定义接口域名 */
+    diyHome?: string
 }
 
 export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {

@@ -11,12 +11,14 @@ import styles from "./YakitHint.module.scss"
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
     const {
+        isMask,
         isDrag = false,
         visible,
         width = 448,
         isTop,
         setTop,
         wrapClassName,
+        heardIcon,
         extraIcon,
         title,
         content = "请写入合适的提示内容",
@@ -63,7 +65,9 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         >
             <div style={{width: width || 448}} ref={draggleRef}>
                 <div
-                    className={styles["yakit-hint-modal-container"]}
+                    className={classnames(styles["yakit-hint-modal-container"], {
+                        [styles["yakit-hint-modal-container-box-shadow"]]: !isMask
+                    })}
                     onClick={() => {
                         if (!isTop && setTop) setTop()
                     }}
@@ -84,7 +88,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
 
                         <div className={styles["container-left-wrapper"]}>
                             <div className={styles["left-hint-icon"]}>
-                                <ShieldExclamationSvgIcon />
+                                {heardIcon ? heardIcon : <ShieldExclamationSvgIcon />}
                             </div>
                             <div className={styles["left-hint-icon-extra"]}>{extraIcon}</div>
                         </div>

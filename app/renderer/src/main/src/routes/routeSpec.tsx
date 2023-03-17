@@ -442,8 +442,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <PlugInAdminPage />
         case Route.AttachEngineCombinedOutput:
             return <EngineConsole />
-        case Route.DB_Projects:
-            return <ProjectPage />
+        // case Route.DB_Projects:
+        //     return <ProjectPage />
         default:
             return <div />
     }
@@ -719,13 +719,13 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             //     icon: <MenuDefaultPluginIcon />,
             //     hoverIcon: <MenuSolidDefaultPluginIcon />
             // },
-            {
-                id: "9-8",
-                key: Route.DB_Projects,
-                label: "项目管理(Beta*)",
-                icon: <MenuDefaultPluginIcon />,
-                hoverIcon: <MenuSolidDefaultPluginIcon />
-            }
+            // {
+            //     id: "9-8",
+            //     key: Route.DB_Projects,
+            //     label: "项目管理(Beta*)",
+            //     icon: <MenuDefaultPluginIcon />,
+            //     hoverIcon: <MenuSolidDefaultPluginIcon />
+            // }
         ]
     },
 ]

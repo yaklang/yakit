@@ -29,7 +29,7 @@
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
-    background: var(--yakit-neutral10-color);
+    background: var(--yakit-card-background-color);
     border-radius: 4px;
 
     .yaklang-engine-hint-wrapper {
@@ -101,6 +101,26 @@
                 font-size: 14px;
                 line-height: 20px;
                 color: var(--yakit-body-text-color);
+            }
+            .hint-right-update-content {
+                box-sizing: border-box;
+                margin-top: 8px;
+                max-height: 108px;
+                overflow: hidden auto;
+
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+                gap: 6px;
+
+                background: var(--yakit-neutral10-color);
+                border: 1px solid var(--yakit-border-color);
+                border-radius: 4px;
+
+                font-size: 12px;
+                line-height: 18px;
+                color: var(--yakit-header-color);
             }
             .hint-right-btn {
                 margin-top: 24px;

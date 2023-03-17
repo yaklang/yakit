@@ -97,7 +97,39 @@ module.exports = (win, getClient) => {
         return await asyncRemoveProject(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
+    // asyncDeleteProject wrapper
+    const asyncDeleteProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteProject", async (e, params) => {
+        return await asyncDeleteProject(params)
+    })
+
+    // asyncGetDefaultProject wrapper
+    const asyncGetDefaultProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetDefaultProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetDefaultProject", async (e) => {
+        return await asyncGetDefaultProject()
+    })
+
+    const handlerHelper = require("./handleStreamWithContext")
 
     const streamExportProjectMap = new Map();
     ipcMain.handle("cancel-ExportProject", handlerHelper.cancelHandler(streamExportProjectMap));

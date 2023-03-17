@@ -19,9 +19,11 @@ interface ChildModalProps {
     content: YakitHintModalTypes
 }
 
-type YakitHintModalTypes = Omit<YakitHintModalProps, "isTop" | "setTop">
+type YakitHintModalTypes = Omit<YakitHintModalProps, "isTop" | "setTop" | "isMask">
 
 export interface YakitHintModalProps {
+    /** 是否存在遮罩层 */
+    isMask?: boolean
     /** 是否可以拖拽 */
     isDrag?: boolean
     /** 是否展示弹窗 */
@@ -34,6 +36,8 @@ export interface YakitHintModalProps {
     setTop?: () => any
     /** 弹窗修饰-样式类 */
     wrapClassName?: string
+    /** 左上侧区域提示性图标 */
+    heardIcon?: ReactNode
     /** 左下侧区域拓展图标 */
     extraIcon?: ReactNode
     /** 弹窗标题 */

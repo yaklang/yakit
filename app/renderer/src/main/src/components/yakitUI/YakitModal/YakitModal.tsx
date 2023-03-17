@@ -1,17 +1,10 @@
-import React, {CSSProperties, ReactNode} from "react"
+import React, {CSSProperties, ReactNode, useMemo} from "react"
 import {Modal, ModalProps} from "antd"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {RemoveIcon} from "@/assets/newIcon"
 
 import styles from "./yakitModal.module.scss"
 import classnames from "classnames"
-
-/**
- * 更新说明
- * 1、close-icon 设置svg图标的大小
- * 2.body-header-subTitle 设置flex 占满剩余的宽度
- * 3.增加一个hover icon的颜色变量
- */
 
 export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
     cancelButtonProps?: YakitButtonProp
@@ -23,6 +16,8 @@ export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "
     footerStyle?: CSSProperties
     /** @name footer组件左部操作区域 */
     footerExtra?: ReactNode
+    /** header和footer背景色(灰底和白底) */
+    type?: "gray" | "white"
 }
 
 /** 可以用，但是使用的时候考虑部分属性的覆盖重写问题， */
@@ -46,15 +41,22 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         subTitle,
         footerStyle,
         footerExtra,
+        type = "gray",
         ...resetProps
     } = props
+
+    const typeClass = useMemo(() => {
+        if (type === "white") return styles["yakit-modal-white"]
+        return styles["yakit-modal-gray"]
+    }, [type])
 
     return (
         <Modal
             {...resetProps}
-            wrapClassName={classnames(styles["yakit-modal-wrapper"], wrapClassName)}
+            wrapClassName={classnames(styles["yakit-modal-wrapper"], typeClass, wrapClassName)}
             closable={false}
             footer={null}
+            onCancel={onCancel}
         >
             <div className={styles["yakit-modal-body"]}>
                 {closable && (

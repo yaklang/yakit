@@ -8,7 +8,7 @@ import classnames from "classnames"
 import styles from "./YakitHint.module.scss"
 
 export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
-    const {mask = true, maskColor, childModal = [], getContainer} = props
+    const {mask = true, maskColor, childModal = [], getContainer, visible, ...rest} = props
 
     const container = useMemo(() => {
         if (!getContainer) return document.body
@@ -46,13 +46,15 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
     return ReactDOM.createPortal(
         <div
             style={{backgroundColor: mask && maskColor ? maskColor : ""}}
-            className={classnames(styles["yakit-hint-wrapper"], {[styles["yakit-hint-mask-wrapper"]]: mask})}
+            className={classnames(visible ? styles["yakit-hint-wrapper"] : styles["yakit-hint-hidden-wrapper"], {
+                [styles["yakit-hint-mask-wrapper"]]: mask
+            })}
         >
             <div className={styles["yakit-hint-body"]}>
                 <YakitHintModal
-                    isDrag={true}
+                    {...rest}
+                    isMask={mask}
                     visible={true}
-                    title={"main"}
                     isTop={currentTop === "main"}
                     setTop={() => setCurrnetTop("main")}
                 />
@@ -61,8 +63,9 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
 
                     return (
                         <YakitHintModal
-                            key={key}
                             {...content}
+                            key={key}
+                            isMask={mask}
                             isTop={currentTop === key}
                             setTop={() => setCurrnetTop(key)}
                         />

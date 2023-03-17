@@ -150,5 +150,9 @@ module.exports = (win, getClient) => {
         return shell.openPath(remoteLinkDir)
     })
 
-    
+    /** 获取计算机名 */
+    ipcMain.handle("fetch-computer-name", () => {
+        /** @return {String} */
+        return OS.hostname()
+    })
 }
