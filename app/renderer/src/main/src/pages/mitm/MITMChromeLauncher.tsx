@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
-import {Alert,Form, Space, Typography} from "antd"
+import {Alert, Form, Space, Typography} from "antd"
 import {failed, info} from "../../utils/notification"
-import {CheckOutlined,} from "@ant-design/icons"
+import {CheckOutlined} from "@ant-design/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -143,7 +143,9 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
         <>
             {(isStartMITM && (
                 <YakitButton type='outline2' onClick={() => onSwitch(!started)}>
-                    {(started && <ChromeSvgIcon />) || <ChromeFrameSvgIcon />}
+                    {(started && <ChromeSvgIcon />) || (
+                        <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
+                    )}
                     免配置启动
                     {started && <CheckOutlined style={{color: "var(--yakit-success-5)", marginLeft: 8}} />}
                 </YakitButton>
@@ -155,8 +157,8 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                         setChromeVisible(true)
                     }}
                 >
-                    <ChromeFrameSvgIcon style={{height: 16}} />
-                    免配置启动
+                    <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
+                    <span style={{marginLeft: 4}}>免配置启动</span>
                 </YakitButton>
             )}
             <YakitModal

@@ -151,8 +151,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             <Form
                 form={form}
                 onFinish={onStartMITM}
-                labelCol={{span: width > 450 ? 5 : 8}}
-                wrapperCol={{span: width > 450 ? 13 : 11}}
+                labelCol={{span: width > 610 ? 5 : 9}}
+                wrapperCol={{span: width > 610 ? 13 : 11}}
             >
                 <Item
                     label={"劫持代理监听主机"}
@@ -201,7 +201,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 >
                     <div className={styles["form-rule-body"]}>
                         <div className={styles["form-rule"]} onClick={() => props.setVisible(true)}>
-                            <div className={styles["form-rule-text"]}>现有规则共 {rules.length} 条</div>
+                            <div className={styles["form-rule-text"]}>现有规则 {rules.length} 条</div>
                             <div className={styles["form-rule-icon"]}>
                                 <CogIcon />
                             </div>

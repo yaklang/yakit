@@ -157,7 +157,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         if (Number(total) === 0 && (tags.length > 0 || searchKeyword || includedScriptNames.length > 0)) {
             return (
                 <div className={style["mitm-plugin-empty"]}>
-                    <YakitEmpty title={undefined} description='搜索结果“空”' />
+                    <YakitEmpty title={null} description='搜索结果“空”' />
                 </div>
             )
         }
