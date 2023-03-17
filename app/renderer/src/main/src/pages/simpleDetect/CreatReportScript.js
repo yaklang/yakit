@@ -223,6 +223,7 @@ if len(noPotentialRisks) == 0 {
 
 showPotentialLine = []
 cpp = cve.NewStatistics("PotentialPie")
+println(len(potentialRisks))
 for _, riskIns := range potentialRisks {
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
@@ -253,9 +254,17 @@ if len(potentialRisks) != 0 {
     
     reportInstance.Markdown(sprintf("### 3.4.2 风险资产图"))
     for _, gp := range cpp.ToGraphs(){
+        
         aa = json.dumps(gp)
         println(aa)
         reportInstance.Raw(aa)
+        if gp.Name == "cwe-analysis"{
+             reportInstance.Markdown(sprintf(\`|  风险等级   | 等级划分依据  |
+|  ----  | ----  |
+| <font color="#da4943">通过网络无需认证且易于攻击</font>  | 这种漏洞类型指的是攻击者可以通过互联网或者内部网络等方式，<font color="#da4943">无需进行任何身份认证</font>就能够轻易地攻击目标系统或应用程序。通常，这种漏洞会暴露在网络端口、协议、服务等方面，攻击者**很容易**利用其漏洞来实现远程控制、拒绝服务攻击、数据窃取等攻击行为。这种漏洞对于网络安全威胁性较高，需要及时采取相应的安全措施来防范和修复。 |
+| <font color="#dc9b02">攻击通过网络无需认证</font>  | 这种漏洞类型指的是攻击者可以通过互联网或者内部网络等方式，利用特定的漏洞或技术手段来<font color="#dc9b02">绕过身份验证或者访问控制机制</font>，从而获取系统或应用程序中敏感信息或者实现非法操作。这种漏洞通常涉及到系统或应用程序中存在的逻辑错误、缺陷或者安全配置问题，攻击者可以通过这些漏洞从外部或内部进入系统，发起攻击行为。这种漏洞需要综合考虑网络架构、身份认证、授权机制等多个方面来解决，确保系统或应用程序的安全和可靠性。 |
+| <font color="#43ab42">通过网络攻击</font>  | 这种漏洞类型指的是攻击者可以通过互联网或者内部网络等方式，利用<font color="#43ab42">已知或未知的漏洞</font>来实现对目标系统或应用程序的攻击。这种攻击通常涉及到系统或应用程序中的某个软件组件或者功能模块，攻击者可以通过针对这些组件或模块的漏洞发起攻击，例如代码注入、文件包含、SQL 注入等方式。这种漏洞需要及时更新系统或应用程序中的软件版本，并加强安全测试和审计等手段，确保系统或应用程序的安全性和可靠性。|\`))
+        }
     }
     reportInstance.Markdown(sprintf("### 3.4.2 合规检查风险列表"))
     reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
