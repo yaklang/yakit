@@ -16,27 +16,19 @@ jobs:
     #          - macos-latest
     #          - ubuntu-latest
     runs-on: macos-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') || startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
+    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') || startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: 16.10.0
       - run: echo ${{ github.ref }}
-      - run: brew install wget curl zip
-      - name: "Download Yak Engine via wget(MacOS)"
-        id: download-darwin-engine
-        run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
-      - name: "Download Yak Engine via wget(Linux)"
-        id: download-linux-engine
-        run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
-      - name: "Download Yak Engine via wget(Windows)"
-        id: download-windows-engine
-        run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
-      - name: "Fetch Latest EngineVersion"
-        id: fetch-version-engine
-        run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
-      - run: ls ./bins && cat bins/engine-version.txt
+      - uses: mad9000/actions-find-and-replace-string@1
+        id: fetchtag_yakit
+        with:
+          source: ${{ github.ref }}
+          find: 'refs/tags/v'
+          replace: ''
       # Enterprise
       - name: Extract Version
         id: extract_version
@@ -92,116 +84,33 @@ jobs:
 
       - name: Upload Yakit Artifacts Windows
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit Artifacts Linux
         uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
-      - name: Upload Yakit Artifacts Windows
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-      - name: Upload Yakit Artifacts Mac(m1)
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-      - name: Upload Yakit Artifacts Mac(intel)
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Upload Yakit Artifacts Linux
-        uses: actions/upload-artifact@v2
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
-        with:
-          # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-
-  publish_yakit_ee_to_oss:
-    if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') && !endsWith(github.ref, '/no-release') }}
-    needs:
-      - build_yakit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16.10.0
-
-      # 提取版本
-      - name: Extract Version
-        id: extract_version
-        uses: Saionaro/extract-package-version@v1.1.1
-      - name: Echo Yakit Package Version
-        run: echo ${{ steps.extract_version.outputs.version }}
-
-      # Download From Artifacts
-      - name: Download Yakit (Darwin Amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Download Yakit (Windows amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-      - name: Download Yakit (Darwin arm64)
-        uses: actions/download-artifact@v2
-        with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-      - name: Download Yakit (Linux amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-      - run: ls
-        name: Ls Published Artifacts...
-
-      - name: Update OSS latest file
-        run: echo ${{ steps.extract_version.outputs.version }} > ./yakit-ee-version.txt
-
-      - name: Upload Yakit to oss(windows)
-        uses: tvrcgo/upload-to-oss@master
-        with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
-          region: oss-accelerate
-          bucket: yaklang
-          assets: |
-            ./yakit-ee-version.txt:/yak/latest/yakit-ee-version.txt
-            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
   download_artifacts_and_release:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
@@ -214,8 +123,8 @@ jobs:
         id: fetchtag_release
         with:
           source: ${{ github.ref }}
-          find: "refs/tags/v"
-          replace: ""
+          find: 'refs/tags/v'
+          replace: ''
       - name: Download Yakit (Darwin Amd64)
         uses: actions/download-artifact@v2
         with:
