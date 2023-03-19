@@ -442,4 +442,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryCVE", async (e, params) => {
         return await asyncQueryCVE(params)
     })
+
+    // asyncGetCVE wrapper
+    const asyncGetCVE = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetCVE(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetCVE", async (e, params) => {
+        return await asyncGetCVE(params)
+    })
 }
