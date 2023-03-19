@@ -9,6 +9,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {OneLine} from "@/utils/inputUtil";
 import {CVEDetail} from "@/pages/cve/models";
 import {CVEInspect} from "@/pages/cve/CVEInspect";
+import {showDrawer} from "@/utils/showModal";
+import {CVEDownloader} from "@/pages/cve/Downloader";
 
 export interface CVETableProp {
     filter: QueryCVERequest
@@ -75,14 +77,23 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
                 loading={loading}
                 size={"small"}
                 onClick={() => {
-                    alert(1)
+                    showDrawer({
+                        title: "下载/更新 CVE 漏洞库基础信息",
+                        width: 800,
+                        content: (
+                            <div style={{width: 780}}>
+                                <CVEDownloader />
+                            </div>
+                        )
+                    })
                 }}
             >数据库更新</YakitButton>
         </div>}
     >
         <ResizeBox
             isVer={true}
-            firstNode={<AutoCard style={{margin: 0, padding: 0, height: "100%"}}
+            firstRatio={"500px"}
+            firstNode={<AutoCard style={{margin: 0, padding: 0, height: "100%"}} bordered={false}
                                  bodyStyle={{margin: 0, padding: 0, overflowY: "auto"}}>
                 <Table<CVEDetail>
                     size={"small"}
@@ -92,6 +103,7 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
                         pageSize: limit,
                         showSizeChanger: true,
                         total,
+                        current: pagination.Page,
                         pageSizeOptions: ["5", "10", "20"],
                         onChange: (page: number, limit?: number) => {
                             update(page, limit)

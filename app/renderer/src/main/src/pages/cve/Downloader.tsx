@@ -18,6 +18,7 @@ export const CVEDownloader: React.FC<CVEDownloaderProp> = (props) => {
     const [available, setAvailable] = useState(false);
     const [_token, setToken, getToken] = useGetState(randomString(40))
     const [messages, setMessages, getMessages] = useGetState<string[]>([]);
+    const [outOfDate, setOutOfDate] = useState(false);
 
     useEffect(() => {
         const token = getToken()
@@ -44,14 +45,36 @@ export const CVEDownloader: React.FC<CVEDownloaderProp> = (props) => {
 
     useEffect(() => {
         setLoading(true)
-        ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean, Reason: string }) => {
+        ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean, Reason: string, ShouldUpdate: boolean }) => {
             setAvailable(rsp.Ok)
+            setOutOfDate(rsp.ShouldUpdate)
         }).finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
 
     return <AutoCard size={"small"} bordered={false} loading={loading}>
+        <Alert type={"warning"} closable={false} message={(
+            <div>
+                <div>{
+                    outOfDate ? "当前 CVE 最新记录距当前时间超过 7 天，建议 " : "数据库最新记录还保持在 7 天内，当然也可以强制更新："
+                }<Popconfirm
+                    title={"下载将是一个耗时操作，请您尽量等待下载完成，更新将会删除旧的数据库"}
+                    onConfirm={() => {
+                        ipcRenderer.invoke("UpdateCVEDatabase", {Proxy: ""}, getToken()).then(() => {
+
+                        }).catch(e => {
+                            failed(`更新 CVE 数据库失败！${e}`)
+                        })
+                    }}
+                >
+                    <Button type={"link"}>点击此按钮强制更新</Button>
+                </Popconfirm></div>
+            </div>
+        )}/>
+        <br/>
         {available ? <Alert type={"success"} closable={false} message={(
-            <div>CVE 漏洞库当前可用，无需下载</div>
+            <div>
+                <div>CVE 漏洞库当前可用，无需下载</div>
+            </div>
         )}/> : <Alert type={"warning"} closable={false} message={(
             <div>本地 CVE 数据库未初始化，<Popconfirm
                 title={"下载将是一个耗时操作，请您尽量等待下载完成"}
@@ -70,5 +93,5 @@ export const CVEDownloader: React.FC<CVEDownloaderProp> = (props) => {
         {messages.map(i => {
             return <p>{`${i}`}</p>
         })}
-            </AutoCard>
-        };
+    </AutoCard>
+};
