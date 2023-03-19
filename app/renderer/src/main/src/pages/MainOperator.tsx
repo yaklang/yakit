@@ -676,24 +676,24 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         setPageCache([...pageCache])
     })
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
-    const coordinateTimer = useRef<any>(null)
-    useEffect(() => {
-        document.onmousemove = (e) => {
-            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
-            if (coordinateTimer.current) {
-                clearTimeout(coordinateTimer.current)
-                coordinateTimer.current = null
-            }
-            coordinateTimer.current = setTimeout(() => {
-                coordinate.screenX = screenX
-                coordinate.screenY = screenY
-                coordinate.clientX = clientX
-                coordinate.clientY = clientY
-                coordinate.pageX = pageX
-                coordinate.pageY = pageY
-            }, 50)
-        }
-    }, [])
+    // const coordinateTimer = useRef<any>(null)
+    // useEffect(() => {
+    //     document.onmousemove = (e) => {
+    //         const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+    //         if (coordinateTimer.current) {
+    //             clearTimeout(coordinateTimer.current)
+    //             coordinateTimer.current = null
+    //         }
+    //         coordinateTimer.current = setTimeout(() => {
+    //             coordinate.screenX = screenX
+    //             coordinate.screenY = screenY
+    //             coordinate.clientX = clientX
+    //             coordinate.clientY = clientY
+    //             coordinate.pageX = pageX
+    //             coordinate.pageY = pageY
+    //         }, 50)
+    //     }
+    // }, [])
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
