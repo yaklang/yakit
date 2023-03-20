@@ -20,7 +20,7 @@ defer func{
     }
     id = reportInstance.Save()
     yakit.Report(id)
-    yakit.Info("Id: %v",id)
+    
 }
 
 severityToRisks = {}
