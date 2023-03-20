@@ -34,7 +34,7 @@ import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
 import {ExecResult, YakScript} from "../invoker/schema"
-import {useStore, simbleDetectTabsParams} from "@/store"
+import {useStore, simpleDetectTabsParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
 import {PluginResultUI, SimbleCardBox} from "../yakitStore/viewers/base"
@@ -71,7 +71,7 @@ const marks: SliderMarks = {
     }
 }
 
-interface SimbleDetectFormProps {
+interface SimpleDetectFormProps {
     setPercent: (v: number) => void
     setExecuting: (v: boolean) => void
     token: string
@@ -89,7 +89,7 @@ interface SimbleDetectFormProps {
     reset: () => void
 }
 
-export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
+export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const {
         setPercent,
         setExecuting,
@@ -448,7 +448,7 @@ export const SimbleDetectForm: React.FC<SimbleDetectFormProps> = (props) => {
     )
 }
 
-export interface SimbleDetectTableProps {
+export interface SimpleDetectTableProps {
     token: string
     executing: boolean
     runTaskName?: string
@@ -458,7 +458,7 @@ export interface SimbleDetectTableProps {
     setExecuting: (v: boolean) => void
 }
 
-export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
+export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const {token, executing, runTaskName, runTimeStamp, runPluginCount, infoState, setExecuting} = props
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
@@ -842,14 +842,14 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
     )
 }
 
-export interface SimbleDetectProps {
+export interface SimpleDetectProps {
     Uid?: string
     BaseProgress?: number
     YakScriptOnlineGroup?: string
     TaskName?: string
 }
 
-export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
+export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const {Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
     // console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup, TaskName)
     const [percent, setPercent] = useState(0)
@@ -885,7 +885,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
     const [tabId, setTabId, getTabId] = useGetState<string>()
 
     useEffect(() => {
-        setTabId(simbleDetectTabsParams.tabId)
+        setTabId(simpleDetectTabsParams.tabId)
     }, [])
 
     useEffect(() => {
@@ -986,7 +986,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                                 </Col>
                             )}
                             <Col span={percent > 0 || executing ? 18 : 24}>
-                                <SimbleDetectForm
+                                <SimpleDetectForm
                                     executing={executing}
                                     setPercent={setPercent}
                                     setExecuting={setExecuting}
@@ -1015,7 +1015,7 @@ export const SimpleDetect: React.FC<SimbleDetectProps> = (props) => {
                 secondMinSize={200}
                 secondNode={() => {
                     return (
-                        <SimbleDetectTable
+                        <SimpleDetectTable
                             token={token}
                             executing={executing}
                             runTaskName={runTaskName}

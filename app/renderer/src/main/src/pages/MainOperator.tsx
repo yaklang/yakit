@@ -39,7 +39,7 @@ import SetPassword from "./SetPassword"
 // import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import {UnfinishedBatchTask,SimbleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
+import {UnfinishedBatchTask,SimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 // import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
 // import {showConfigMenuItems} from "../utils/ConfigMenuItems"
 // import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
@@ -1150,7 +1150,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
     })
 
-    const addSimbleBatchExecRecover = useMemoizedFn((task: SimbleDetectBatchTask) => {
+    const addSimbleBatchExecRecover = useMemoizedFn((task: SimpleDetectBatchTask) => {
         addTabPage(Route.SimpleDetect, {
             hideAdd: true,
             node: ContentByRoute(Route.SimpleDetect, undefined, {
@@ -1187,7 +1187,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
-            if (type === "simble-batch-exec-recover") addSimbleBatchExecRecover(data as SimbleDetectBatchTask)
+            if (type === "simble-batch-exec-recover") addSimbleBatchExecRecover(data as SimpleDetectBatchTask)
             if (type === "exec-packet-scan")
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)

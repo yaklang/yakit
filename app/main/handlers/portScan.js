@@ -41,13 +41,13 @@ module.exports = (win, getClient) => {
     }
 
 
-    const streamSimbleDetectMap = new Map();
+    const streamSimpleDetectMap = new Map();
 
-    ipcMain.handle("cancel-SimpleDetect", handlerHelper.cancelHandler(streamSimbleDetectMap));
+    ipcMain.handle("cancel-SimpleDetect", handlerHelper.cancelHandler(streamSimpleDetectMap));
 
     ipcMain.handle("SimpleDetect", (e, params, token) => {
         let stream = getClient().SimpleDetect(params);
-        handlerHelper.registerHandler(win, stream, streamSimbleDetectMap, token)
+        handlerHelper.registerHandler(win, stream, streamSimpleDetectMap, token)
     })
 
     // 获取URL的IP地址
