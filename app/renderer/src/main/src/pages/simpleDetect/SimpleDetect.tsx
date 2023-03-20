@@ -535,47 +535,48 @@ export const SimbleDetectTable: React.FC<SimbleDetectTableProps> = (props) => {
         ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
     }
     /** 获取生成报告返回结果 */
-    // ipcRenderer.on(`${reportToken}-end`, (_, data) => {
-    ipcRenderer.on(`client-yak-end`, (_, data: ExecResult) => {
-        // if (data.IsMessage) {
-        console.log("获取生成报告返回结果", data)
+    useEffect(() => {
+        ipcRenderer.on(`${reportToken}-data`, (e, xxxx: ExecResult) => {
+        // ipcRenderer.on(`client-yak-data`, (e, xxxx: ExecResult) => {
+            if (xxxx.IsMessage) {
+                console.log("获取生成报告返回结果", new Buffer(xxxx.Message).toString())
 
-        // }
-    })
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners(`${reportToken}-data`)
+            // ipcRenderer.removeAllListeners(`client-yak-data`)
+        }
+    }, [reportToken])
     /** 通知生成报告 */
     const creatReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
-        // console.log("脚本数据", scriptData)
-        // console.log("TaskName", runTaskName)
-        // console.log("include数量", runPluginCount)
-        // console.log("时间戳", runTimeStamp)
-        // Modal.success({
-        //     content: "报告生成成功，请跳转至报告页查看"
-        // })
-        ipcRenderer.invoke("exec-yak", {
-            Script: scriptData,
-            Params: [
-                {Key: "timestamp", Value: runTimeStamp},
-                {Key: "report_name", Value: runTaskName},
-                {Key: "plugins", Value: runPluginCount}
-            ]
-        })
-
-        // const reqParams = {
+        // ipcRenderer.invoke("exec-yak", {
         //     Script: scriptData,
         //     Params: [
         //         {Key: "timestamp", Value: runTimeStamp},
         //         {Key: "report_name", Value: runTaskName},
         //         {Key: "plugins", Value: runPluginCount}
         //     ]
-        // }
-        //
-        // ipcRenderer.invoke("ExecYakCode", reqParams, reportToken).then(() => {
-        //     info(`生成 ${runTaskName} 报告成功`)
-        // }).catch(e => {
-        //     failed(`生成 ${runTaskName} 报告遇到问题：${e}`)
         // })
+
+        const reqParams = {
+            Script: scriptData,
+            Params: [
+                // {Key: "timestamp", Value: runTimeStamp},
+                {Key: "timestamp", Value: "1678709044"},
+                {Key: "report_name", Value: runTaskName},
+                {Key: "plugins", Value: runPluginCount}
+            ]
+        }
+
+        ipcRenderer.invoke("ExecYakCode", reqParams, reportToken).then((e) => {
+            info(`生成 ${runTaskName} 报告成功`)
+            console.log("xxxxxxx :", e)
+        }).catch(e => {
+            failed(`生成 ${runTaskName} 报告遇到问题：${e}`)
+        })
         setReportModalVisible(true)
         // setReportId()
     }
