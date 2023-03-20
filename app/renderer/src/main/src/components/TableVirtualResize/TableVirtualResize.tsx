@@ -36,12 +36,13 @@ import {
 } from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
 import moment, {Moment} from "moment"
-import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+// import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {useDrag, useDrop, DndProvider} from "react-dnd"
 import {HTML5Backend} from "react-dnd-html5-backend"
 import type {Identifier, XYCoord} from "dnd-core"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
+import {YakitProtoCheckbox} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 const {RangePicker} = DatePicker
 
 /**
@@ -1015,11 +1016,11 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                             {cIndex === 0 && rowSelection && (
                                 <span className={classNames(style["check"], style["check-title"])}>
                                     {rowSelection.type !== "radio" && (
-                                        <YakitCheckbox
+                                        <YakitProtoCheckbox
+                                            checked={isAll}
                                             onChange={(e) => {
                                                 onChangeCheckbox(e.target.checked)
                                             }}
-                                            checked={isAll}
                                         />
                                     )}
                                 </span>
@@ -1308,7 +1309,7 @@ const CellRender = React.memo(
                 {colIndex === 0 && rowSelection && (
                     <span className={classNames(style["check"])}>
                         {rowSelection.type !== "radio" && (
-                            <YakitCheckbox
+                            <YakitProtoCheckbox
                                 onChange={(e) => {
                                     onChangeCheckboxSingle(
                                         e.target.checked,
@@ -1502,7 +1503,7 @@ const CellRenderDrop = React.memo(
                 {colIndex === 0 && rowSelection && (
                     <span className={classNames(style["check"])}>
                         {rowSelection.type !== "radio" && (
-                            <YakitCheckbox
+                            <YakitProtoCheckbox
                                 onChange={(e) => {
                                     onChangeCheckboxSingle(
                                         e.target.checked,
@@ -1756,7 +1757,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <YakitCheckbox checked={checked} />
+                                        <YakitProtoCheckbox checked={checked} />
                                         <span className={classNames(style["select-item-text"], "content-ellipsis")}>
                                             {item.data.label}
                                         </span>

@@ -872,9 +872,9 @@ const YakitCheckboxMemo = React.memo<YakitCheckboxProps>(
 const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
     (props) => {
         let node: ReactNode = (
-            <Tooltip title={props.Result}>
-                <div className={styles["table-result-text"]}>{props.Result}</div>
-            </Tooltip>
+            <div className={styles["table-result-text"]} title={props.Result}>
+                {props.Result}
+            </div>
         )
         if (
             (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
@@ -898,7 +898,7 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
         return (
             <div className={styles["table-result"]}>
                 {node}
-                <YakitSwitch size='small' disabled={props.disabled} checked={props.checked} onChange={props.onChange} />
+                {/* <YakitSwitch size='small' disabled={props.disabled} checked={props.checked} onChange={props.onChange} /> */}
             </div>
         )
     },
