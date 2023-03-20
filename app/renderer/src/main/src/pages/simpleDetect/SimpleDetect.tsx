@@ -471,6 +471,12 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     // 是否允许更改TaskName
     const isSetTaskName = useRef<boolean>(true)
 
+    useEffect(()=>{
+        if(!reportModalVisible){
+            setReportLoading(false)
+        }
+    },[reportModalVisible])
+
     // 报告token
     const [reportToken, setReportToken] = useState(randomString(40))
     useEffect(() => {
@@ -514,11 +520,12 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                                         .finally(() =>
                                             setTimeout(() => {
                                                 setReportModalVisible(false)
-                                                setReportLoading(false)
                                             }, 300)
                                         )
                                 }
-                            })
+                            }).finally(()=>{
+                            setReportLoading(false)
+                        })
                     }
                 })
                 .catch((e) => {
@@ -617,12 +624,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             ]
         }
 
-        ipcRenderer.invoke("ExecYakCode", reqParams, reportToken).then((e) => {
-            info(`生成 ${runTaskName} 报告成功`)
-            console.log("xxxxxxx :", e)
-        }).catch(e => {
-            failed(`生成 ${runTaskName} 报告遇到问题：${e}`)
-        })
+        ipcRenderer.invoke("ExecYakCode", reqParams, reportToken)
     }
 
     return (
