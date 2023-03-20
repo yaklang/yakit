@@ -611,8 +611,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
         const reqParams = {
             Script: scriptData,
             Params: [
-                // {Key: "timestamp", Value: runTimeStamp},
-                {Key: "timestamp", Value: "1678709044"},
+                {Key: "timestamp", Value: runTimeStamp},
                 {Key: "report_name", Value: runTaskName},
                 {Key: "plugins", Value: runPluginCount}
             ]
