@@ -89,7 +89,8 @@
                             align-items: center;
                         }
                         .icon-focus-body {
-                            background: var(--yakit-primary-1) !important;
+                            background: var(--yakit-background-color) !important;
+                            color: var(--yakit-primary-5);
                         }
                     }
                     .icon-wrapper:hover {

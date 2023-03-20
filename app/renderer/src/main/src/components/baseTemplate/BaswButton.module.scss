@@ -17,10 +17,9 @@
 //     border: 1px solid #fbc6a1;
 // }
 .base-tags-list-tag:hover {
-    color: #1890ff;
-    border: 1px solid #91d5ff;
+    color: var(--yakit-primary-5);
+    border: 1px solid var(--yakit-primary-3);
 }
-
 
 .base-tags-small-size {
     height: 16px;

@@ -1,6 +1,7 @@
 import {SelectProps} from "antd"
 import {OptionProps} from "rc-select/lib/Option"
 import {ReactNode} from "react"
+import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
  * @description: YakitSelectProps
@@ -13,7 +14,8 @@ export interface YakitSelectProps<
     ValueType = any,
     OptionType extends BaseOptionType | DefaultOptionType = DefaultOptionType
 > extends SelectProps {
-    wrapperClassName?:string
-    wrapperStyle?:CSSProperties
+    wrapperClassName?: string
+    wrapperStyle?: CSSProperties
+    size?: YakitSizeType
 }
 export interface YakitSelectOptionProps extends OptionProps {}

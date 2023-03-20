@@ -1,0 +1,367 @@
+.mitm-header-title {
+    :global {
+        .ant-page-header-content {
+            padding-top: 0;
+        }
+    }
+}
+
+.mitm-page {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    :global {
+        .resize-box .resize-split-line:hover {
+            border: 1px solid var(--yakit-primary-5);
+        }
+    }
+}
+
+.mitm-server-start-pre-first {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    flex-direction: column;
+    padding-left: 2px;
+    .empty-button {
+        margin-top: 2px;
+        padding: 12px 0 8px 0;
+        height: 34px;
+    }
+    .empty-button-disable {
+        cursor: not-allowed;
+        --button-color: var(--yakit-disable-text-color);
+        --button-hover-color: var(--yakit-disable-text-color);
+        --button-hover-border-color: var(--yakit-disable-text-color);
+        --button-press-color: var(--yakit-disable-text-color);
+        --button-press-border-color: var(--yakit-disable-text-color);
+    }
+
+    .mitm-server-start-pre-line {
+        width: 1px;
+        height: 100%;
+        background-color: var(--yakit-border-color);
+        position: absolute;
+        right: -3px;
+    }
+
+    .mitm-plugin-local {
+        width: 100%;
+        height: 100%;
+        padding-right: 10px;
+        padding-top: 2px;
+
+        .mitm-plugin-empty {
+            margin-top: 48px;
+            .mitm-plugin-buttons {
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+                margin-top: 16px;
+            }
+        }
+    }
+
+    .mitm-plugin-list {
+        height: 100%;
+        :global {
+            .ant-spin-nested-loading {
+                height: 100%;
+            }
+            .ant-spin {
+                color: var(--yakit-primary-color);
+            }
+
+            .ant-spin-text {
+                color: var(--yakit-primary-color);
+            }
+
+            .ant-spin-dot-item {
+                background-color: var(--yakit-primary-color);
+            }
+        }
+    }
+}
+
+.mitm-plugin-list-heard {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    width: 100%;
+    padding: 12px 0 8px 0;
+
+    .mitm-plugin-list-check {
+        display: flex;
+        align-items: center;
+        .mitm-plugin-list-check-text {
+            margin-left: 4px;
+            font-size: 12px;
+            color: var(--yakit-header-color);
+        }
+    }
+    .mitm-plugin-list-tip {
+        display: flex;
+        align-items: center;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-helper-text-color);
+        margin-left: 16px;
+        span {
+            color: var(--yakit-primary-color);
+        }
+    }
+}
+
+.mitm-server-start-pre-second {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    flex-direction: column;
+}
+
+.plugin-group-modal {
+    padding: 18px 24px;
+
+    .plugin-group-heard {
+        display: flex;
+        justify-content: space-between;
+
+        .plugin-group-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--yakit-header-color);
+        }
+
+        .close-icon {
+            color: var(--yakit-helper-text-color);
+            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+
+                &:hover {
+                    color: var(--yakit-primary-color);
+                }
+            }
+        }
+    }
+
+    .plugin-group-input {
+        padding-top: 16px;
+        margin-bottom: 2px;
+    }
+
+    .plugin-group-tip {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--yakit-helper-text-color);
+        padding-bottom: 16px;
+
+        span {
+            margin: 0 2px;
+            color: var(--yakit-primary-color);
+        }
+    }
+
+    .plugin-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}
+
+.import-local-plugin-modal {
+    .import-local-plugin-subTitle {
+        display: flex;
+        margin-left: 70px;
+    }
+    .import-local-plugin-form {
+        padding: 24px 16px;
+        :global {
+            .ant-form-item-explain,
+            .ant-form-item-extra {
+                font-size: 12px;
+                color: var(--yakit-helper-text-color);
+            }
+        }
+    }
+}
+.mitm-plugin-group {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+
+    .mitm-plugin-group-left {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        color: var(--yakit-header-color);
+        font-size: 12px;
+
+        .chevron-down {
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        svg {
+            color: var(--yakit-body-text-color);
+        }
+
+        .mitm-plugin-group-number {
+            padding: 0px 8px;
+            height: 16px;
+            line-height: 16px;
+            background: var(--yakit-background-color);
+            border-radius: 8px;
+            color: var(--yakit-body-text-color);
+            font-size: 12px;
+        }
+    }
+
+    .mitm-plugin-group-left-open {
+        color: var(--yakit-primary-5);
+
+        svg {
+            color: var(--yakit-primary-5);
+        }
+
+        .mitm-plugin-group-number {
+            background: var(--yakit-primary-1);
+            color: var(--yakit-primary-5);
+        }
+    }
+
+    .plus-circle {
+        margin-left: 4px;
+        height: 15px;
+    }
+}
+.plugin-group-list {
+    padding: 4px 6px;
+    border-radius: 4px;
+    .plugin-group-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 28px;
+        border-radius: 4px;
+        padding: 0 2px;
+        .plugin-group-item-name {
+            font-size: 12px;
+            color: var(--yakit-header-color);
+            font-weight: 400;
+            margin-right: 4px;
+        }
+        .plugin-group-item-right {
+            display: flex;
+            align-items: center;
+            color: var(--yakit-helper-text-color);
+            .plugin-group-item-length {
+                margin-right: 8px;
+            }
+            svg {
+                color: var(--yakit-danger-color);
+                cursor: pointer;
+            }
+        }
+        &:hover {
+            padding: 0 4px;
+            background-color: var(--yakit-primary-color);
+            .plugin-group-item-name {
+                color: #fff;
+            }
+            .plugin-group-item-right {
+                color: #fff;
+                svg {
+                    color: #fff;
+                }
+            }
+        }
+    }
+    .plugin-group-item-select {
+        .plugin-group-item-name {
+            color: var(--yakit-primary-color);
+        }
+    }
+}
+
+.mitm-plugin-local-tag-select-item {
+    display: flex;
+    justify-content: space-between;
+    margin-right: 8px;
+    .tag-select-item-name {
+        margin-right: 8px;
+    }
+}
+
+.chrome-input-group {
+    :global {
+        .ant-input-affix-wrapper {
+            border-radius: 0px;
+        }
+    }
+    :first-child {
+        :global {
+            .ant-input-affix-wrapper {
+                border-top-left-radius: 4px;
+                border-bottom-left-radius: 4px;
+                border-right-width: 0;
+                &:hover,
+                &:focus {
+                    border-right-width: 1px;
+                }
+            }
+        }
+    }
+    :last-child {
+        :global {
+            .ant-input-affix-wrapper {
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+            }
+        }
+    }
+}
+
+.mitm-plugin-query-show {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    .mitm-plugin-query-plugin-group {
+        max-width: 200px;
+        .mitm-plugin-query-plugin-group-name {
+            width: calc(100% - 20px);
+        }
+        .folder-icon {
+            width: 16px;
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}
+
+.download-progress {
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
+        }
+    }
+}
+
+.chrome-launcher-status {
+    .chrome-launcher-text {
+        margin-left: 4px;
+        line-height: 16px;
+    }
+}

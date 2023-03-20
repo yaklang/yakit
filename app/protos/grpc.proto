@@ -226,6 +226,7 @@ service Yak {
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
+  rpc SimpleDetect(PortScanRequest) returns (stream ExecResult);
   rpc ViewPortScanCode(Empty) returns (SimpleScript);
 
   // 资产管理
@@ -433,6 +434,52 @@ service Yak {
   rpc UpdateCVEDatabase(UpdateCVEDatabaseRequest) returns (stream ExecResult);
   rpc ExportsProfileDatabase(ExportsProfileDatabaseRequest) returns (stream ExecResult);
   rpc ImportsProfileDatabase(ImportsProfileDatabaseRequest) returns (stream ExecResult);
+  rpc QueryCVE(QueryCVERequest) returns (QueryCVEResponse);
+}
+
+message QueryCVERequest {
+  Paging Pagination = 1;
+  // NETWORK/LOCAL/ADJACENT_NETWORK/PHYSICAL
+  string AccessVector = 2;
+  // HIGH/MIDDLE/LOW
+  string AccessComplexity = 3;
+  string CWE = 4;
+  string Year = 5;
+  string Severity = 6;
+  double Score = 7;
+  string Product = 8;
+}
+
+message CVEDetail {
+  string CVE = 1;
+  string DescriptionZh = 2;
+  string DescriptionOrigin = 3;
+  string Title = 4;
+  string Solution = 5;
+  string AccessVector = 7;
+  string AccessComplexity = 8;
+  string Authentication = 9;
+  string ConfidentialityImpact = 10;
+  string IntegrityImpact = 11;
+  string AvailabilityImpact = 12;
+
+  string Severity = 14;
+  int64 PublishedAt = 15;
+  string CWE = 16;
+  string CVSSVersion = 17;
+  string CVSSVectorString = 18;
+  double BaseCVSSv2Score = 19;
+  double ExploitabilityScore = 20;
+  bool ObtainAllPrivileged = 21;
+  bool ObtainUserPrivileged = 22;
+  bool ObtainOtherPrivileged = 23;
+  bool UserInteractionRequired = 24;
+}
+
+message QueryCVEResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated CVEDetail Data = 3;
 }
 
 message ImportsProfileDatabaseRequest {
@@ -1407,8 +1454,8 @@ message Risk {
   string RuntimeId = 22;
 
   string CVE = 23;
-  string Description =24;
-  string Solution =25;
+  string Description = 24;
+  string Solution = 25;
 }
 
 message QueryRisksRequest {

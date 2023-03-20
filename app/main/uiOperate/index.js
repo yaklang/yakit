@@ -45,7 +45,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("trigger-devtool", () => {
         const flag = win.webContents.isDevToolsOpened()
         if (flag) win.webContents.closeDevTools()
-        else win.webContents.openDevTools({mode: "detach"})
+        else win.webContents.openDevTools()
         return
     })
     /** 刷新缓存 */

@@ -42,6 +42,7 @@ import {RemoteGV} from "@/yakitGV"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 import classnames from "classnames"
 import styles from "./ProjectManage.module.scss"
@@ -71,7 +72,7 @@ interface ProjectParamsProp extends QueryGeneralRequest {
     ChildFolderId?: number
 }
 /** 单条项目数据 */
-interface ProjectDescription {
+export interface ProjectDescription {
     Id: number
     ProjectName: string
     Description: string
@@ -298,7 +299,18 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 className={styles["project-style"]}
                                 title={data.DatabasePath}
                                 onClick={() => {
-                                    if (data.DatabasePath) openABSFileLocated(data.DatabasePath)
+                                    if (data.DatabasePath) {
+                                        ipcRenderer
+                                            .invoke("is-file-exists", data.DatabasePath)
+                                            .then((flag: boolean) => {
+                                                if (flag) {
+                                                    openABSFileLocated(data.DatabasePath)
+                                                } else {
+                                                    failed("目标文件已不存在!")
+                                                }
+                                            })
+                                            .catch(() => {})
+                                    }
                                 }}
                             >
                                 {data.DatabasePath || "-"}
@@ -867,6 +879,52 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         setTimeout(() => setTransferShow({visible: false}), 300)
     })
 
+    const projectContextMenu = useMemoizedFn((project: ProjectDescription) => {
+        showByRightContext({
+            data: [
+                {
+                    key: "setCurrent",
+                    label: "打开项目"
+                },
+                {
+                    key: "export",
+                    label: "导出",
+                    children: [
+                        {
+                            key: "encryption",
+                            label: "加密导出"
+                        },
+                        {
+                            key: "plaintext",
+                            label: "明文导出"
+                        }
+                    ]
+                },
+                {
+                    key: "edit",
+                    label: "编辑",
+                    disabled: project?.ProjectName === "[default]"
+                },
+                {
+                    key: "copyPath",
+                    label: "复制路径"
+                },
+                {type: "divider"},
+                {
+                    key: "delete",
+                    label: "删除",
+                    disabled: project?.ProjectName === "[default]"
+                }
+            ],
+            onClick: ({key}) => {
+                if (key === "delete") {
+                    setDelId({Id: +project.Id, Type: project.Type})
+                    setDelShow(true)
+                } else operateFunc(key, project)
+            }
+        })
+    })
+
     return (
         <div className={styles["project-manage-wrapper"]}>
             <div className={styles["project-manage-container"]}>
@@ -912,7 +970,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     >
                         <div
                             className={styles["open-recent-body"]}
-                            onDoubleClick={() => operateFunc("setCurrent", latestProject)}
+                            onClick={() => operateFunc("setCurrent", latestProject)}
                         >
                             <div className={styles["body-title"]}>
                                 <DocumentTextSvgIcon />
@@ -930,7 +988,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 <div className={styles["icon-wrapper"]} onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu
                                         dropdown={{
-                                            trigger: ["click"],
                                             placement: "bottomRight",
                                             overlayClassName: styles["dropdown-menu-filter-wrapper"],
                                             onVisibleChange: (open) => setHeaderShow(open)
@@ -975,6 +1032,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 {
                                                     key: "delete",
                                                     label: "删除",
+                                                    disabled: latestProject?.ProjectName === "[default]",
                                                     itemIcon: <TrashIcon className={styles["type-filter-icon-style"]} />
                                                 }
                                             ],
@@ -1213,13 +1271,18 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                 operateShow >= 0 && operateShow === +i.data.Id
                                                         })}
                                                         onClick={(e) => {
+                                                            if (!i.data.Type || i.data.Type === "project") {
+                                                                setTimeout(() => {
+                                                                    projectContextMenu(i.data)
+                                                                }, 100)
+                                                            }
                                                             if (i.data.Type === "file") {
                                                                 operateFunc("openFile", i.data)
                                                             }
                                                         }}
-                                                        onDoubleClick={() => {
+                                                        onContextMenu={() => {
                                                             if (!i.data.Type || i.data.Type === "project") {
-                                                                operateFunc("setCurrent", i.data)
+                                                                projectContextMenu(i.data)
                                                             }
                                                         }}
                                                     >
@@ -1333,7 +1396,7 @@ interface ProjectFolderInfoProps {
     ChildFolderId?: number
     parent?: ProjectDescription
 }
-interface ExportProjectProps {
+export interface ExportProjectProps {
     Id: number
     ProjectName: string
     Password: string
@@ -1352,7 +1415,7 @@ interface FileProjectInfoProps extends ProjectDescription {
     loading?: boolean
 }
 
-const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
+export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
     const {
         isNew = true,
         isFolder,
@@ -1889,7 +1952,7 @@ interface ProjectIOProgress {
     Percent: number
     Verbose: string
 }
-const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
+export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
     const {isExport, isImport, data, visible, setVisible, onSuccess} = props
 
     const [token, setToken] = useState(randomString(40))

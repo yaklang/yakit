@@ -1,0 +1,60 @@
+.config-system-proxy {
+    :global {
+        .ant-form-item-explain ant-form-item-explain-connected {
+            font-weight: 400;
+            font-size: 14px;
+            color: var(--yakit-helper-text-color);
+        }
+    }
+    .config-system-proxy-heard {
+        padding: 18px 24px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .config-system-proxy-title {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-header-color);
+        }
+        .close-icon {
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--yakit-helper-text-color);
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+                &:active {
+                    color: var(--yakit-primary-6);
+                }
+            }
+        }
+    }
+    .config-system-proxy-status-success {
+        margin-top: 8px;
+        margin-bottom: 16px;
+        padding: 8px 24px;
+        height: 32px;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-body-text-color);
+        background-color: var(--yakit-success-1);
+        span {
+            color: var(--yakit-success-5);
+        }
+    }
+    .config-system-proxy-status-danger {
+        background-color: var(--yakit-danger-1);
+        span {
+            color: var(--yakit-danger-5);
+        }
+    }
+    .config-system-proxy-btns {
+        display: flex;
+        justify-content: flex-end;
+        flex: 1;
+        gap: 8px;
+    }
+}

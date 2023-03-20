@@ -822,7 +822,7 @@ const HomeSvg = () => (
         />
     </svg>
 )
-export const HomeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const HomeSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={HomeSvg} {...props} />
 }
 
@@ -859,7 +859,7 @@ const ChromeSvg = () => (
     </svg>
 )
 /** @name Chrome彩色图标 */
-export const ChromeSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ChromeSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChromeSvg} {...props} />
 }
 
@@ -874,7 +874,7 @@ const ChromeFrameSvg = () => (
     </svg>
 )
 /** @name Chrome边框图标 */
-export const ChromeFrameSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ChromeFrameSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChromeFrameSvg} {...props} />
 }
 
@@ -889,7 +889,7 @@ const ArrowCircleRightSvg = () => (
     </svg>
 )
 /** @name 带圆形边框的向右箭头图标 */
-export const ArrowCircleRightSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const ArrowCircleRightSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={ArrowCircleRightSvg} {...props} />
 }
 
@@ -1020,8 +1020,8 @@ const YakitLogoSvg = () => (
                 y2='15.9831'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#FA931D' />
-                <stop offset='1' stop-color='#EF5B27' />
+                <stop stopColor='#FA931D' />
+                <stop offset='1' stopColor='#EF5B27' />
             </linearGradient>
             <linearGradient
                 id='paint1_linear_6508_201016'
@@ -1031,8 +1031,8 @@ const YakitLogoSvg = () => (
                 y2='16.0026'
                 gradientUnits='userSpaceOnUse'
             >
-                <stop stop-color='#FA931D' />
-                <stop offset='1' stop-color='#EF5B27' />
+                <stop stopColor='#FA931D' />
+                <stop offset='1' stopColor='#EF5B27' />
             </linearGradient>
         </defs>
     </svg>
@@ -1040,4 +1040,283 @@ const YakitLogoSvg = () => (
 /** @name yakit-logo */
 export const YakitLogoSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={YakitLogoSvg} {...props} />
+}
+const GithubSvg = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M9.99219 1.49048C5.16211 1.48853 1.25 5.39868 1.25 10.2249C1.25 14.0413 3.69727 17.2854 7.10547 18.4768C7.56445 18.592 7.49414 18.2659 7.49414 18.0432V16.5295C4.84375 16.8401 4.73633 15.0862 4.55859 14.7932C4.19922 14.1799 3.34961 14.0237 3.60352 13.7307C4.20703 13.4202 4.82227 13.8088 5.53516 14.8616C6.05078 15.6252 7.05664 15.4963 7.56641 15.3694C7.67773 14.9104 7.91602 14.5002 8.24414 14.1819C5.49805 13.6897 4.35352 12.0139 4.35352 10.0217C4.35352 9.05493 4.67188 8.16626 5.29688 7.44946C4.89844 6.26782 5.33398 5.2561 5.39258 5.10571C6.52734 5.00415 7.70703 5.91821 7.79883 5.99048C8.44336 5.81665 9.17969 5.72485 10.0039 5.72485C10.832 5.72485 11.5703 5.82056 12.2207 5.99634C12.4414 5.82837 13.5352 5.04321 14.5898 5.13892C14.6465 5.28931 15.0723 6.27759 14.6973 7.4436C15.3301 8.16235 15.6523 9.05884 15.6523 10.0276C15.6523 12.0237 14.5 13.7014 11.7461 14.1858C12.2051 14.6389 12.4902 15.2678 12.4902 15.9631V18.1604C12.5059 18.3362 12.4902 18.51 12.7832 18.51C16.2422 17.344 18.7324 14.0764 18.7324 10.2268C18.7324 5.39868 14.8184 1.49048 9.99219 1.49048Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/** @name github图标 */
+export const GithubSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={GithubSvg} {...props} />
+}
+const FolderOpen = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M2 6C2 4.89543 2.89543 4 4 4H8L10 6H14C15.1046 6 16 6.89543 16 8V9H8C6.34315 9 5 10.3431 5 12V13.5C5 14.3284 4.32843 15 3.5 15C2.67157 15 2 14.3284 2 13.5V6Z'
+            fill='currentColor'
+        />
+        <path
+            d='M6 12C6 10.8954 6.89543 10 8 10H16C17.1046 10 18 10.8954 18 12V14C18 15.1046 17.1046 16 16 16H2H4C5.10457 16 6 15.1046 6 14V12Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description: folder-open 文件夹
+ */
+export const FolderOpenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={FolderOpen} {...props} />
+}
+
+const CloudDownload = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4.66667 10.6666C3.19391 10.6666 2 9.47268 2 7.99992C2 6.72855 2.88971 5.66499 4.08047 5.39789C4.02779 5.16255 4 4.91781 4 4.66659C4 2.82564 5.49238 1.33325 7.33333 1.33325C8.9462 1.33325 10.2915 2.47875 10.6001 4.00057C10.6223 4.00014 10.6444 3.99992 10.6667 3.99992C12.5076 3.99992 14 5.4923 14 7.33325C14 8.94589 12.8548 10.2911 11.3333 10.5999M6 12.6666L8 14.6666M8 14.6666L10 12.6666M8 14.6666V6.66659'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: folder-open 下载 云
+ */
+export const CloudDownloadIcon = (props: Partial<IconProps>) => {
+    return <Icon component={CloudDownload} {...props} />
+}
+
+const Import = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.6665 2.66675H4.6665C3.56193 2.66675 2.6665 3.56218 2.6665 4.66675V11.3334C2.6665 12.438 3.56194 13.3334 4.66651 13.3334H11.3332C12.4377 13.3334 13.3332 12.438 13.3332 11.3334V8.00008'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M13.3333 2.66675C11.3333 2.66675 8 5.33341 8 8.66675'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M10 8L8 10L6 8' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+/**
+ * @description: import 导入
+ */
+export const ImportIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Import} {...props} />
+}
+
+const CloudPlugin = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M3.67173 7.58167L4.2437 7.51952L4.10241 6.96181C4.03557 6.69799 3.9998 6.4204 3.9998 6.13333C3.9998 4.33031 5.40471 2.89999 7.0998 2.89999C8.54228 2.89999 9.77239 3.93308 10.1093 5.3543L10.2145 5.79805L10.6661 5.734C10.824 5.7116 10.9855 5.69999 11.1498 5.69999C13.0934 5.69999 14.6998 7.33925 14.6998 9.39999C14.6998 11.4607 13.0934 13.1 11.1498 13.1H3.9498C2.50323 13.1 1.2998 11.8786 1.2998 10.3333C1.2998 8.88889 2.35349 7.72491 3.67173 7.58167Z'
+            fill='url(#paint0_linear_6675_6238)'
+            stroke='#31343F'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_6675_6238'
+                x1='11.1998'
+                y1='14'
+                x2='5.1998'
+                y2='1.99999'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#2A82F8' />
+                <stop offset='1' stopColor='#8FBFFF' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+/**
+ * @description: 云端插件 菜单
+ */
+export const CloudPluginIcon = (props: Partial<IconProps>) => {
+    return <Icon component={CloudPlugin} {...props} />
+}
+
+const Cog = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.88309 2.87821C7.16735 1.70726 8.83265 1.70726 9.11692 2.87821C9.30055 3.63462 10.1672 3.99358 10.8319 3.58857C11.8609 2.96159 13.0384 4.13914 12.4114 5.16812C12.0064 5.83284 12.3654 6.69945 13.1218 6.88308C14.2927 7.16735 14.2927 8.83265 13.1218 9.11692C12.3654 9.30055 12.0064 10.1672 12.4114 10.8319C13.0384 11.8609 11.8609 13.0384 10.8319 12.4114C10.1672 12.0064 9.30055 12.3654 9.11692 13.1218C8.83265 14.2927 7.16735 14.2927 6.88309 13.1218C6.69945 12.3654 5.83284 12.0064 5.16812 12.4114C4.13914 13.0384 2.96159 11.8609 3.58857 10.8319C3.99358 10.1672 3.63462 9.30055 2.87821 9.11692C1.70726 8.83265 1.70726 7.16735 2.87821 6.88308C3.63462 6.69945 3.99358 5.83284 3.58857 5.16812C2.96159 4.13914 4.13914 2.96159 5.16812 3.58857C5.83284 3.99358 6.69945 3.63462 6.88309 2.87821Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: cog 设置
+ */
+export const CogIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Cog} {...props} />
+}
+
+const Quit = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.66667 3.33333C6.37783 3.47633 6.09956 3.63733 5.83333 3.81486C3.82336 5.15522 2.5 7.43782 2.5 10.0283C2.5 14.1548 5.85786 17.5 10 17.5C14.1421 17.5 17.5 14.1548 17.5 10.0283C17.5 7.43782 16.1766 5.15522 14.1667 3.81486C13.9004 3.63733 13.6222 3.47633 13.3333 3.33333M10 1.66667V8.33333'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+    </svg>
+)
+/**
+ * @description: Quit 退出
+ */
+export const QuitIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Quit} {...props} />
+}
+
+const ArrowsExpand = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4 8V4M4 4H8M4 4L9 9M20 8V4M20 4H16M20 4L15 9M4 16V20M4 20H8M4 20L9 15M20 20L15 15M20 20V16M20 20H16'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: arrows-expand 全屏 展开
+ */
+export const ArrowsExpandIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ArrowsExpand} {...props} />
+}
+
+const ArrowsRetract = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M15 5V9M15 9H19M15 9L20 4M9 5V9M9 9H5M9 9L4 4M15 19V15M15 15H19M15 15L20 20M9 19V15M9 15H5M9 15L4 20'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description: arrows-expand 全屏 收起
+ */
+export const ArrowsRetractIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ArrowsRetract} {...props} />
+}
+
+const LightningBolt = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M9.04042 0.83701C9.37344 0.941986 9.5999 1.25082 9.5999 1.6V5.6L12.7999 5.6C13.0982 5.6 13.3717 5.76597 13.5095 6.03055C13.6472 6.29514 13.6264 6.61439 13.4553 6.85877L7.85529 14.8588C7.65505 15.1448 7.29242 15.268 6.95939 15.163C6.62637 15.058 6.39991 14.7492 6.39991 14.4V10.4H3.1999C2.9016 10.4 2.62808 10.234 2.49032 9.96945C2.35256 9.70486 2.37346 9.38561 2.54452 9.14123L8.14452 1.14123C8.34476 0.855174 8.70739 0.732034 9.04042 0.83701Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:lightning-bolt 闪电
+ */
+export const LightningBoltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LightningBolt} {...props} />
+}
+
+const Play = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8.00001 14.4C11.5346 14.4 14.4 11.5346 14.4 8C14.4 4.46538 11.5346 1.6 8.00001 1.6C4.46538 1.6 1.60001 4.46538 1.60001 8C1.60001 11.5346 4.46538 14.4 8.00001 14.4ZM7.64377 5.73436C7.39828 5.5707 7.08265 5.55544 6.82252 5.69466C6.56239 5.83388 6.40001 6.10496 6.40001 6.4V9.6C6.40001 9.89504 6.56239 10.1661 6.82252 10.3053C7.08265 10.4446 7.39828 10.4293 7.64377 10.2656L10.0438 8.66564C10.2663 8.51727 10.4 8.26748 10.4 8C10.4 7.73252 10.2663 7.48273 10.0438 7.33436L7.64377 5.73436Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:play
+ */
+export const PlayIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Play} {...props} />
+}
+const InformationCircle = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8 2.5C4.96243 2.5 2.5 4.96243 2.5 8C2.5 11.0376 4.96243 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8C13.5 4.96243 11.0376 2.5 8 2.5ZM1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8ZM7.5 5.33333C7.5 5.05719 7.72386 4.83333 8 4.83333H8.00667C8.28281 4.83333 8.50667 5.05719 8.50667 5.33333C8.50667 5.60948 8.28281 5.83333 8.00667 5.83333H8C7.72386 5.83333 7.5 5.60948 7.5 5.33333ZM6.83333 8C6.83333 7.72386 7.05719 7.5 7.33333 7.5H8C8.27614 7.5 8.5 7.72386 8.5 8V10.1667H8.66667C8.94281 10.1667 9.16667 10.3905 9.16667 10.6667C9.16667 10.9428 8.94281 11.1667 8.66667 11.1667H8C7.72386 11.1667 7.5 10.9428 7.5 10.6667V8.5H7.33333C7.05719 8.5 6.83333 8.27614 6.83333 8Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:information-circle
+ */
+export const InformationCircleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={InformationCircle} {...props} />
+}
+
+const SolidCloudDownload = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M3.19995 15.2001C3.19995 18.2929 5.70716 20.8001 8.79995 20.8001H14.4V24.9374L12.3313 22.8687C11.7065 22.2439 10.6934 22.2439 10.0686 22.8687C9.44374 23.4936 9.44374 24.5066 10.0686 25.1315L14.8686 29.9315C15.4934 30.5563 16.5065 30.5563 17.1313 29.9315L21.9313 25.1315C22.5562 24.5066 22.5562 23.4936 21.9313 22.8687C21.3065 22.2439 20.2934 22.2439 19.6686 22.8687L17.6 24.9374V20.8001H21.6C25.5764 20.8001 28.8 17.5765 28.8 13.6001C28.8 9.62365 25.5764 6.4001 21.6 6.4001C21.2659 6.4001 20.9371 6.42285 20.6151 6.46689C19.9282 3.6727 17.4061 1.6001 14.4 1.6001C10.8653 1.6001 7.99995 4.46548 7.99995 8.0001C7.99995 8.56366 8.07279 9.11021 8.20958 9.63085C5.39429 9.92582 3.19995 12.3067 3.19995 15.2001ZM17.6 20.8001H14.4V12.8001C14.4 11.9164 15.1163 11.2001 16 11.2001C16.8836 11.2001 17.6 11.9164 17.6 12.8001V20.8001Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:solid-cloud-download 下载 实心
+ */
+export const SolidCloudDownloadIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidCloudDownload} {...props} />
+}
+
+const SolidTrash = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M14.3998 3.19995C13.7938 3.19995 13.2397 3.54235 12.9687 4.08441L11.811 6.39995H6.3998C5.51615 6.39995 4.7998 7.1163 4.7998 7.99995C4.7998 8.88361 5.51615 9.59995 6.39981 9.59995L6.3998 25.6C6.3998 27.3673 7.83249 28.7999 9.59981 28.7999H22.3998C24.1671 28.7999 25.5998 27.3673 25.5998 25.6V9.59995C26.4835 9.59995 27.1998 8.88361 27.1998 7.99995C27.1998 7.1163 26.4835 6.39995 25.5998 6.39995H20.1887L19.0309 4.08441C18.7599 3.54235 18.2058 3.19995 17.5998 3.19995H14.3998ZM11.1998 12.8C11.1998 11.9163 11.9161 11.2 12.7998 11.2C13.6835 11.2 14.3998 11.9163 14.3998 12.8V22.4C14.3998 23.2836 13.6835 24 12.7998 24C11.9161 24 11.1998 23.2836 11.1998 22.4V12.8ZM19.1998 11.2C18.3161 11.2 17.5998 11.9163 17.5998 12.8V22.4C17.5998 23.2836 18.3161 24 19.1998 24C20.0835 24 20.7998 23.2836 20.7998 22.4V12.8C20.7998 11.9163 20.0835 11.2 19.1998 11.2Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:solid-trash 垃圾桶 实心
+ */
+export const SolidTrashIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidTrash} {...props} />
+}
+
+const Menu = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4 6H20M4 12H20M4 18H20'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:menu 菜单
+ */
+export const MenuIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Menu} {...props} />
 }

@@ -19,9 +19,11 @@ interface ChildModalProps {
     content: YakitHintModalTypes
 }
 
-type YakitHintModalTypes = Omit<YakitHintModalProps, "isTop" | "setTop">
+type YakitHintModalTypes = Omit<YakitHintModalProps, "isTop" | "setTop" | "isMask">
 
 export interface YakitHintModalProps {
+    /** 是否存在遮罩层 */
+    isMask?: boolean
     /** 是否可以拖拽 */
     isDrag?: boolean
     /** 是否展示弹窗 */

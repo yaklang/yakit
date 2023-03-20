@@ -22,9 +22,11 @@ const {ipcRenderer} = window.require("electron")
  * @param {middle|large|small} size 默认middle 16 20 24
  * @param {"danger" | "info" | "success" | "warning" | "purple" | "blue" | "cyan" | "bluePurple"} color 颜色
  * @param {boolean} disable
+ * @param {boolean} enableCopy 是否可复制
+ * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const {color, size, disable, className, enableCopy} = props
+    const {color, size, disable, className, enableCopy, iconColor} = props
     const onAfterCopy = useMemoizedFn((e) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
@@ -32,7 +34,9 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
         <Tag
             {...props}
             closeIcon={
-                (enableCopy && <CopyComponents copyText={props.copyText || ""} onAfterCopy={onAfterCopy} />) ||
+                (enableCopy && (
+                    <CopyComponents copyText={props.copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
+                )) ||
                 props.closeIcon || <RemoveIcon />
             }
             closable={props.closable || enableCopy}
@@ -64,6 +68,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
 }
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
+    const {iconColor} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowSure, setIsShowSure] = useState<boolean>(false)
     const onCopy = useMemoizedFn((e) => {
@@ -83,7 +88,11 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
     return (
         <div className={styles["yakit-copy"]} onClick={onCopy}>
             {(loading && <LoadingOutlined />) || (
-                <>{(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || <CopyOutlined />}</>
+                <>
+                    {(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || (
+                        <CopyOutlined style={{color: iconColor || "var(--yakit-primary-5)"}} />
+                    )}
+                </>
             )}
         </div>
     )

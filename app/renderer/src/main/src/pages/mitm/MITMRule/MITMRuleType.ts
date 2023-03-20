@@ -3,7 +3,7 @@ import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperato
 
 export interface MITMContentReplacerRule {
     // 文本字符串，正则/Re2/字符串硬匹配
-    Id:number
+    Id: number
     Index: number
     Rule: string
     NoReplace: boolean
@@ -87,4 +87,17 @@ export interface CloseTipModalProps {
     visible: boolean
     onOK: (b: boolean) => void
     onCancel: (b: boolean) => void
+}
+
+export interface RuleContentProps {
+    getRule: (s: string) => void
+    // rule: string
+}
+
+export interface RuleExportAndImportButtonProps {
+    onOkImport?: () => void
+    onBeforeNode?: ReactNode
+    ref?: any
+    isUseDefRules?: boolean
+    setIsUseDefRules?: (b: boolean) => void
 }

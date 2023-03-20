@@ -11,6 +11,7 @@ import styles from "./YakitHint.module.scss"
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
     const {
+        isMask,
         isDrag = false,
         visible,
         width = 448,
@@ -64,7 +65,9 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         >
             <div style={{width: width || 448}} ref={draggleRef}>
                 <div
-                    className={styles["yakit-hint-modal-container"]}
+                    className={classnames(styles["yakit-hint-modal-container"], {
+                        [styles["yakit-hint-modal-container-box-shadow"]]: !isMask
+                    })}
                     onClick={() => {
                         if (!isTop && setTop) setTop()
                     }}

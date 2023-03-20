@@ -41,6 +41,7 @@ export const EmptySvgIcon = (props: Partial<CustomIconComponentProps>) => {
  * @augments YakitEmptyProps 继承antd的 Empty 默认属性
  */
 export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
+    const {title = "暂无数据"} = props
     return (
         <Empty
             image={<EmptySvgIcon />}
@@ -58,7 +59,7 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
                     props.descriptionReactNode
                 ) : (
                     <div className={styles["yakit-empty"]}>
-                        <div className={styles["yakit-empty-title"]}>{props.title || "暂无数据"}</div>
+                        <div className={styles["yakit-empty-title"]}>{title}</div>
                         <div className={styles["yakit-empty-description"]}>{props.description}</div>
                     </div>
                 )

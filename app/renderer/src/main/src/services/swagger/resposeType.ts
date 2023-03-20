@@ -12,6 +12,7 @@ export declare namespace API {
     plugin_type: YakitSearchData[];
     tags: YakitSearchData[];
     status: YakitSearchData[];
+    group?: YakitSearchData[];
   }
   export interface YakitPluginResponse {
     id: number;
@@ -82,8 +83,15 @@ export declare namespace API {
      * 是否能审核插件
      */
     checkPlugin?: boolean;
+    /**
+     * 复制源插件
+     */
     base_plugin_id?: number;
+    /**
+     * 复制源插件名
+     */
     base_script_name?: string;
+    group?: string;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
@@ -296,6 +304,7 @@ export declare namespace API {
     uuid: string;
     head_img: string;
     base_plugin_id?: number;
+    group?: string;
   }
   export interface PluginDownloadResponse extends Paging {
     data: PluginDownloadDetail[];
@@ -327,9 +336,14 @@ export declare namespace API {
     user_id?: number;
     user_name?: string;
     /**
+     * 根据插件名批量下载
+     */
+    script_name?: string[];
+    /**
      * 当天 day, 本周 week
      */
     time_search?: string;
+    group?: string;
   }
   export interface Paging {
     pagemeta: PageMeta;
@@ -447,6 +461,7 @@ export declare namespace API {
      * 当天 day, 本周 week
      */
     time_search?: string;
+    group?: string;
   }
   export interface GetPluginUnloggedWhere {
     keywords?: string;

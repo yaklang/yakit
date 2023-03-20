@@ -19,7 +19,7 @@ import {useMemoizedFn} from "ahooks"
  * @augments InputProps 继承antd的Input默认属性
  */
 const InternalInput: React.FC<YakitInputProps> = (props) => {
-    const {size, wrapperClassName, className, ...restProps} = props
+    const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
     return (
         <div
             className={classNames(
@@ -31,14 +31,19 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
                 },
                 wrapperClassName
             )}
+            style={{...(wrapperStyle || {})}}
         >
             <Input
                 {...restProps}
                 size='middle'
-                className={classNames(styles["yakit-input-middle"], {
-                    [styles["yakit-input-large"]]: size === "large",
-                    [styles["yakit-input-small"]]: size === "small",
-                },className)}
+                className={classNames(
+                    styles["yakit-input-middle"],
+                    {
+                        [styles["yakit-input-large"]]: size === "large",
+                        [styles["yakit-input-small"]]: size === "small"
+                    },
+                    className
+                )}
             >
                 {props.children}
             </Input>
@@ -64,6 +69,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
                 {
                     [styles["yakit-search-wrapper-large"]]: size === "large",
                     [styles["yakit-search-wrapper-small"]]: size === "small",
+                    [styles["yakit-search-wrapper-maxLarge"]]: size === "maxLarge",
                     [styles["yakit-search-wrapper-focus"]]: focus,
                     [styles["yakit-search-disabled"]]: !!props.disabled
                 },
@@ -72,6 +78,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
             style={style}
         >
             <Input.Search
+                allowClear
                 {...restProps}
                 onFocus={onFocus}
                 onBlur={onBlur}
@@ -80,6 +87,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
                 className={classNames(styles["yakit-search-middle"], {
                     [styles["yakit-search-large"]]: size === "large",
                     [styles["yakit-search-small"]]: size === "small",
+                    [styles["yakit-search-maxLarge"]]: size === "maxLarge",
                     className
                 })}
             />

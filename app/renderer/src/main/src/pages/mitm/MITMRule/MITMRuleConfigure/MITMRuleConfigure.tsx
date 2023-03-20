@@ -619,7 +619,6 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
             onOk={() => {
                 saveABSFileToOpen("yakit-mitm-replacer-rules-config.json", value)
             }}
-            wrapClassName='old-theme-html'
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>
@@ -631,11 +630,14 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
 }
 
 export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
-    const {visible, setVisible, onOk} = props
+    const {visible, setVisible, onOk, isUseDefRules} = props
     const [params, setParams] = useState<{JsonRaw: Uint8Array; ReplaceAll: boolean}>({
         JsonRaw: new Uint8Array(),
         ReplaceAll: false
     })
+    useEffect(() => {
+        if (isUseDefRules) onUseDefaultConfig()
+    }, [isUseDefRules])
     const [loading, setLoading] = useState(false)
     const onImport = useMemoizedFn(() => {
         if (!new Buffer(params.JsonRaw).toString("utf8")) {
@@ -689,14 +691,13 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
             onOk={() => onImport()}
             footerExtra={
                 <div className={styles["modal-footer-extra"]}>
-                    <span className={styles["modal-footer-extra-text"]}>全部替换</span>
+                    <span className={styles["modal-footer-extra-text"]}>覆盖现有规则</span>
                     <YakitSwitch
                         onChange={(ReplaceAll) => setParams({...params, ReplaceAll})}
                         checked={params.ReplaceAll}
                     />
                 </div>
             }
-            wrapClassName='old-theme-html'
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>

@@ -20,7 +20,13 @@ import {FuncDomain} from "./FuncDomain"
 import {WinUIOp} from "./WinUIOp"
 import {GlobalReverseState} from "./GlobalReverseState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
-import {DownloadingState, YakitStatusType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
+import {
+    DownloadingState,
+    YakitSettingCallbackType,
+    YakitStatusType,
+    YakitSystem,
+    YaklangEngineMode
+} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
@@ -39,10 +45,17 @@ import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
 import {HomeSvgIcon} from "@/assets/newIcon"
+import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin"
+import {
+    ExportProjectProps,
+    NewProjectAndFolder,
+    ProjectDescription,
+    TransferProject
+} from "@/pages/softwareSettings/ProjectManage"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
-import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin"
+
 // 是否为企业版
 const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 const {ipcRenderer} = window.require("electron")
@@ -99,13 +112,24 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             .invoke("GetBuildInEngineVersion")
             .then((e) => {
                 if (e !== "") {
-                    info(`引擎内置自检成功！内置引擎：${e}`)
+                    outputToWelcomeConsole(`引擎内置自检成功！内置引擎：${e}`)
                 } else {
-                    info(`引擎内置自检：无内置引擎标识 ${e}`)
+                    outputToWelcomeConsole(`引擎内置自检：无内置引擎标识 ${e}`)
                 }
             })
             .catch((e) => {
-                info(`引擎内置自检：无内置引擎: ${e}`)
+                outputToWelcomeConsole(`引擎内置自检：无内置引擎: ${e}`)
+            })
+            .finally(() => {
+                info("开始检查漏洞信息库")
+                ipcRenderer
+                    .invoke("InitCVEDatabase")
+                    .then(() => {
+                        info("漏洞信息库自检完成")
+                    })
+                    .catch((e) => {
+                        info(`漏洞信息库检查错误：${e}`)
+                    })
             })
     }, [])
 
@@ -440,8 +464,32 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         changeEngineMode("admin")
     })
 
+    /** 项目导出相关功能变量 */
+    const [currentProject, setCurrentProject] = useState<ProjectDescription>()
+    const [projectModalInfo, setProjectModalInfo] = useState<{
+        visible: boolean
+        isNew?: boolean
+        isFolder?: boolean
+        isExport?: boolean
+        isImport?: boolean
+        project?: ProjectDescription
+        parentNode?: ProjectDescription
+    }>({visible: false})
+    const [projectTransferShow, setProjectTransferShow] = useState<{
+        isExport?: boolean
+        isImport?: boolean
+        visible: boolean
+        data?: ExportProjectProps
+    }>({
+        visible: false
+    })
+    const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
+    const fetchCurrentProject = useMemoizedFn(() => {
+        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => setCurrentProject(rsp || undefined))
+    })
+
     /** funcDomain组件的回调事件 */
-    const typeCallback = useMemoizedFn((type: "console" | "adminMode" | "break") => {
+    const typeCallback = useMemoizedFn((type: YakitSettingCallbackType) => {
         switch (type) {
             case "console":
                 setYakitConsole(true)
@@ -463,6 +511,32 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         setEngineLink(false)
                     }, 100)
                 }
+                return
+
+            case "changeProject":
+                changeYakitMode("soft")
+                return
+            case "encryptionProject":
+                if (!currentProject || !currentProject.Id) {
+                    failed("当前项目无关键信息，无法导出!")
+                    return
+                }
+                setProjectModalInfo({visible: true, isNew: false, isExport: true, project: currentProject})
+                return
+            case "plaintextProject":
+                if (!currentProject || !currentProject.Id) {
+                    failed("当前项目无关键信息，无法导出!")
+                    return
+                }
+                setProjectTransferShow({
+                    visible: true,
+                    isExport: true,
+                    data: {
+                        Id: currentProject.Id,
+                        ProjectName: currentProject.ProjectName,
+                        Password: ""
+                    }
+                })
                 return
 
             default:
@@ -589,6 +663,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const softwareSettingFinish = useMemoizedFn(() => {
         setYakitMode("")
         setLinkDatabase(false)
+        fetchCurrentProject()
     })
 
     /** MACOS 上双击放大窗口(不是最大化) */
@@ -620,6 +695,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     ipcRenderer.invoke("SetCurrentProject", {Id: +id})
                     setLinkDatabase(false)
                     setYakitMode("")
+                    fetchCurrentProject()
                 } else {
                     setLinkDatabase(true)
                     setYakitMode("soft")
@@ -875,22 +951,21 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                     <div className={styles["ui-layout-body"]}>
                         {engineLink &&
-                            !linkDatabase &&
                             (isJudgeLicense ? (
                                 <EnterpriseJudgeLogin
                                     setJudgeLicense={setJudgeLicense}
                                     setJudgeLogin={(v: boolean) => {}}
                                 />
+                            ) : linkDatabase ? (
+                                <SoftwareSettings
+                                    engineMode={engineMode || "local"}
+                                    onEngineModeChange={changeEngineMode}
+                                    onFinish={softwareSettingFinish}
+                                />
                             ) : (
                                 props.children
                             ))}
-                        {engineLink && linkDatabase && (
-                            <SoftwareSettings
-                                engineMode={engineMode || "local"}
-                                onEngineModeChange={changeEngineMode}
-                                onFinish={softwareSettingFinish}
-                            />
-                        )}
+
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}
@@ -973,6 +1048,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             </div>
 
             <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole} />
+
+            <NewProjectAndFolder
+                {...projectModalInfo}
+                setVisible={(open: boolean) => setProjectModalInfo({visible: open})}
+                loading={projectModalLoading}
+                setLoading={setProjectModalLoading}
+                onModalSubmit={() => {
+                    setProjectModalInfo({visible: false})
+                    setTimeout(() => setProjectModalLoading(false), 300)
+                }}
+            />
+
+            <TransferProject
+                {...projectTransferShow}
+                onSuccess={() => {
+                    if (!projectTransferShow.visible) return
+                    setProjectTransferShow({visible: false})
+                }}
+                setVisible={(open: boolean) => setProjectTransferShow({visible: open})}
+            />
         </div>
     )
 }
