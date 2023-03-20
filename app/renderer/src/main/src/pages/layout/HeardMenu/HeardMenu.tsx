@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route,SimbleDataBaseMenu} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route,SimpleDataBaseMenu} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -63,7 +63,7 @@ import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -140,8 +140,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const {userInfo} = useStore()
     useEffect(() => {
         // 当为企业简易版
-        if(isSimbleEnterprise){
-            let currentMenuList: MenuDataProps[] = [...SimbleDataBaseMenu]
+        if(isSimpleEnterprise){
+            let currentMenuList: MenuDataProps[] = [...SimpleDataBaseMenu]
             if(userInfo.role!=="admin"){
                 // 简易企业版非管理员 无需插件权限
                 currentMenuList = currentMenuList.filter((item)=>item.id!=="4")
@@ -161,14 +161,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         
     }, [])
     useEffect(() => {
-        if(!isSimbleEnterprise){
+        if(!isSimpleEnterprise){
             ipcRenderer.on("fetch-new-main-menu", (e) => {
                 init(getPatternMenu(), true)
             })
         }
         
         return () => {
-            if(!isSimbleEnterprise){
+            if(!isSimpleEnterprise){
                 ipcRenderer.removeAllListeners("fetch-new-main-menu")
             }
         }
@@ -680,7 +680,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {!isSimbleEnterprise&&<>
+                    {!isSimpleEnterprise&&<>
                         <YakitButton
                         type='text'
                         className={style["heard-menu-theme"]}

@@ -3,7 +3,7 @@ export enum ENTERPRISE_STATUS {
 }
 
 // 是否为企业-简易版 
-export let isSimbleEnterprise:boolean = false
+export let isSimpleEnterprise:boolean = false
 
 /**
  *  版本变量
@@ -18,8 +18,8 @@ export const getJuageEnvFile = () => {
     switch (process.env?.REACT_APP_PLATFORM) {
         case "enterprise":
             return ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS
-        case "simble-enterprise":
-            isSimbleEnterprise = true
+        case "simple-enterprise":
+            isSimpleEnterprise = true
             return ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS
         case "newUI":
             return EDITION_STATUS.IS_NEW_UI

@@ -21,7 +21,7 @@ import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
 import {ColumnType} from "antd/lib/table"
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 
 import "./RiskTable.css"
 
@@ -861,7 +861,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                 <div>{info.Host || "-"}</div>
             </Descriptions.Item>
             <Descriptions.Item label='类型'>
-                {isSimbleEnterprise ? (
+                {isSimpleEnterprise ? (
                     <div>{(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}</div>
                 ) : (
                     <div>{info?.RiskTypeVerbose || info.RiskType}</div>

@@ -54,7 +54,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import { AdminUpOnlineBatch } from "@/pages/yakitStore/YakitStorePage";
 
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
@@ -127,7 +127,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if(isSimbleEnterprise){
+            if(isSimpleEnterprise){
                 cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
             }
             setUserMenu(cacheMenu)
@@ -140,7 +140,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if(isSimbleEnterprise){
+            if(isSimpleEnterprise){
                 cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
             }
             setUserMenu(cacheMenu)
@@ -456,7 +456,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         <YakitMenu
             width={142}
             selectedKeys={[engineMode]}
-            data={isSimbleEnterprise?[
+            data={isSimpleEnterprise?[
                 {
                     key: "pcapfix",
                     label: "网卡权限修复"
@@ -1203,7 +1203,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
-                                {userInfo.role === "superAdmin" && !isSimbleEnterprise && (
+                                {userInfo.role === "superAdmin" && !isSimpleEnterprise && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastVersion}
@@ -1216,7 +1216,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         onUpdateEdit={UpdateContentEdit}
                                     />
                                 )}
-                               {!isSimbleEnterprise && <UIOpUpdateYakit
+                               {!isSimpleEnterprise && <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -1282,7 +1282,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdate = useMemo(() => {
         return (
-            isSimbleEnterprise?(yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion):
+            isSimpleEnterprise?(yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion):
             (yakitLastVersion !== "" && yakitLastVersion !== yakitVersion) ||
             (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion)
         )

@@ -99,7 +99,7 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
 import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -884,7 +884,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        if(!isSimbleEnterprise && queryName==="group"){
+                                        if(!isSimpleEnterprise && queryName==="group"){
                                             return <></>
                                         }
                                         
@@ -3665,7 +3665,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
-                    {isSimbleEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
+                    {isSimpleEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}

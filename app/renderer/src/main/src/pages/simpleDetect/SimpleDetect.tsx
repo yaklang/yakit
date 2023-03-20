@@ -37,7 +37,7 @@ import {ExecResult, YakScript} from "../invoker/schema"
 import {useStore, simpleDetectTabsParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
-import {PluginResultUI, SimbleCardBox} from "../yakitStore/viewers/base"
+import {PluginResultUI, SimpleCardBox} from "../yakitStore/viewers/base"
 import moment from "moment"
 import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
@@ -293,7 +293,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }
 
     return (
-        <div className={styles["simble-detect-form"]} style={{marginTop: 20}}>
+        <div className={styles["simple-detect-form"]} style={{marginTop: 20}}>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Spin spinning={uploadLoading}>
                     <ContentUploadInput
@@ -368,7 +368,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                     onClick={() => {
                                         showUnfinishedBatchTaskList((task: UnfinishedBatchTask) => {
                                             ipcRenderer.invoke("send-to-tab", {
-                                                type: "simble-batch-exec-recover",
+                                                type: "simple-batch-exec-recover",
                                                 data: task
                                             })
                                         })
@@ -626,7 +626,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }
 
     return (
-        <div className={styles["simble-detect-table"]}>
+        <div className={styles["simple-detect-table"]}>
             <div className={styles["result-table-body"]}>
                 <Tabs
                     className='scan-port-tabs'
@@ -670,7 +670,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimble={true}/>
+                                    <OpenPortTableViewer data={openPorts} isSimple={true}/>
                                 </Col>
                             </Row>
                         </div>
@@ -1016,7 +1016,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
                         <Divider style={{margin: 4}} />
 
-                        <SimbleCardBox statusCards={infoState.statusState} />
+                        <SimpleCardBox statusCards={infoState.statusState} />
                     </AutoCard>
                 }
                 firstMinSize={"200px"}

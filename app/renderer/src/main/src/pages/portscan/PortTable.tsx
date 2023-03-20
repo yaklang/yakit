@@ -12,7 +12,7 @@ import {useMemoizedFn} from "ahooks"
 import {Route} from "@/routes/routeSpec"
 export interface PortTableProp {
     data: YakitPort[]
-    isSimble?: boolean
+    isSimple?: boolean
 }
 
 const formatJson = (filterVal, jsonData) => {
@@ -31,7 +31,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     const [checkedURL, setCheckedURL] = useState<string[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [checkedAll, setCheckedAll] = useState<boolean>(false)
-    const isSimble = props.isSimble || false
+    const isSimple = props.isSimple || false
     useEffect(() => {
         if (checkedAll) {
             const rowKeys = props.data.map((item, index) => `${item.host}:${item.port}-${item.timestamp}`)
@@ -84,7 +84,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                             <Col span={12}>开放端口 / Open Ports</Col>
                             <Col span={12} style={{textAlign: "right"}}>
                                 {
-                                    isSimble&&<div style={{fontSize:14,color:"#1890ff",cursor:"pointer"}} onClick={openMenu}>查看完整数据</div>
+                                    isSimple&&<div style={{fontSize:14,color:"#1890ff",cursor:"pointer"}} onClick={openMenu}>查看完整数据</div>
                                 }
                             </Col>
                         </Row>
@@ -107,7 +107,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                 {selectedRowKeys.length > 0 && <Tag color='blue'>已选{selectedRowKeys?.length}条</Tag>}
                             </Col>
                             <Col span={12} style={{textAlign: "right"}}>
-                                {!isSimble && (
+                                {!isSimple && (
                                     <>
                                         <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='开放端口' />
                                         <DropdownMenu
