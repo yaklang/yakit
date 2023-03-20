@@ -466,7 +466,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     // 下载报告Modal
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
     const [reportName, setReportName] = useState<string>(runTaskName || "默认报告名称")
-    const [_, setReportId, getReportId] = useGetState<number>(21)
+    const [reportLoading,setReportLoading] = useState<boolean>(false)
+    const [_, setReportId, getReportId] = useGetState<number>()
     // 是否允许更改TaskName
     const isSetTaskName = useRef<boolean>(true)
 
@@ -480,6 +481,54 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             runTaskName && setReportName(runTaskName)
         }
     }, [executing])
+
+    useEffect(()=>{
+        if(getReportId()){
+            ipcRenderer
+                .invoke("QueryReport", {Id: getReportId()})
+                .then((r: Report) => {
+                    if (r) {
+                        ipcRenderer
+                            .invoke("openDialog", {
+                                title: "请选择文件夹",
+                                properties: ["openDirectory"]
+                            })
+                            .then((data: any) => {
+                                if (data.filePaths.length) {
+                                    let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+                                    ipcRenderer
+                                        .invoke("DownloadHtmlReport", {
+                                            JsonRaw: r.JsonRaw,
+                                            outputDir: absolutePath,
+                                            reportName: reportName
+                                        })
+                                        .then((r) => {
+                                            if (r?.ok) {
+                                                success("报告导出成功")
+                                                r?.outputDir && openABSFileLocated(r.outputDir)
+                                            }
+                                        })
+                                        .catch((e) => {
+                                            failed(`Download Html Report failed ${e}`)
+                                        })
+                                        .finally(() =>
+                                            setTimeout(() => {
+                                                setReportModalVisible(false)
+                                                setReportLoading(false)
+                                            }, 300)
+                                        )
+                                }
+                            })
+                    }
+                })
+                .catch((e) => {
+                    failed(`Query Report[${21}] failed`)
+                })
+                .finally(() => {
+                })
+        }
+
+    },[getReportId()])
 
     useEffect(() => {
         if (runTaskName && isSetTaskName.current) {
@@ -536,11 +585,13 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }
     /** 获取生成报告返回结果 */
     useEffect(() => {
-        ipcRenderer.on(`${reportToken}-data`, (e, xxxx: ExecResult) => {
+        ipcRenderer.on(`${reportToken}-data`, (e, data: ExecResult) => {
         // ipcRenderer.on(`client-yak-data`, (e, xxxx: ExecResult) => {
-            if (xxxx.IsMessage) {
-                console.log("获取生成报告返回结果", new Buffer(xxxx.Message).toString())
-
+            if (data.IsMessage) {
+                console.log("获取生成报告返回结果", new Buffer(data.Message).toString())
+                const aa = JSON.parse(new Buffer(data.Message).toString())
+                console.log(aa)
+                setReportId(parseInt(JSON.parse(new Buffer(data.Message).toString()).content.data))
             }
         })
         return () => {
@@ -550,17 +601,13 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }, [reportToken])
     /** 通知生成报告 */
     const creatReport = () => {
+        setReportId(undefined)
+        setReportModalVisible(true)
+    }
+    /** 下载报告 */
+    const downloadReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
-        // ipcRenderer.invoke("exec-yak", {
-        //     Script: scriptData,
-        //     Params: [
-        //         {Key: "timestamp", Value: runTimeStamp},
-        //         {Key: "report_name", Value: runTaskName},
-        //         {Key: "plugins", Value: runPluginCount}
-        //     ]
-        // })
-
         const reqParams = {
             Script: scriptData,
             Params: [
@@ -577,52 +624,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
         }).catch(e => {
             failed(`生成 ${runTaskName} 报告遇到问题：${e}`)
         })
-        setReportModalVisible(true)
-        // setReportId()
-    }
-    /** 下载报告 */
-    const downloadReport = () => {
-        ipcRenderer
-            .invoke("QueryReport", {Id: getReportId()})
-            .then((r: Report) => {
-                if (r) {
-                    ipcRenderer
-                        .invoke("openDialog", {
-                            title: "请选择文件夹",
-                            properties: ["openDirectory"]
-                        })
-                        .then((data: any) => {
-                            if (data.filePaths.length) {
-                                let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
-                                ipcRenderer
-                                    .invoke("DownloadHtmlReport", {
-                                        JsonRaw: r.JsonRaw,
-                                        outputDir: absolutePath,
-                                        reportName: reportName
-                                    })
-                                    .then((r) => {
-                                        if (r?.ok) {
-                                            success("报告导出成功")
-                                            r?.outputDir && openABSFileLocated(r.outputDir)
-                                        }
-                                    })
-                                    .catch((e) => {
-                                        failed(`Download Html Report failed ${e}`)
-                                    })
-                                    .finally(() =>
-                                        setTimeout(() => {
-                                            setReportModalVisible(false)
-                                        }, 300)
-                                    )
-                            }
-                        })
-                }
-            })
-            .catch((e) => {
-                failed(`Query Report[${21}] failed`)
-            })
-            .finally(() => {
-            })
     }
 
     return (
@@ -692,13 +693,10 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             <Modal
                 title='下载报告'
                 visible={reportModalVisible}
-                onOk={() => downloadReport()}
-                onCancel={() => {
-                    setReportModalVisible(false)
-                }}
-                okText='确定'
-                cancelText='取消'
+                footer={null}
+                onCancel={()=>setReportModalVisible(false)}
             >
+                <div>
                 <div style={{textAlign: "center"}}>
                     <Input
                         style={{width: 400}}
@@ -710,6 +708,18 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                             setReportName(e.target.value)
                         }}
                     />
+                </div>
+                    <div style={{marginTop:20,textAlign:"right"}}>
+                        <Button style={{marginRight:8}} onClick={()=>{
+                            setReportModalVisible(false)
+                        }
+                        }>取消</Button>
+                        <Button loading={reportLoading} type={"primary"} onClick={()=>{
+                            setReportLoading(true)
+                            downloadReport()
+                        }
+                        }>确定</Button>
+                    </div>
                 </div>
             </Modal>
         </div>
