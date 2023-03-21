@@ -450,13 +450,9 @@
             height: 16px;
             width: 16px;
             line-height: 16px;
-        }
-
-        .check-title {
-            :global {
-                .ant-checkbox {
-                    top: 2px;
-                }
+            .yakit-check {
+                padding-top: 2px;
+                padding-left: 2px;
             }
         }
 

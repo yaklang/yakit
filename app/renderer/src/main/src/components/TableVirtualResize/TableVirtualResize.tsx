@@ -1014,13 +1014,15 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                     <div className='virtual-col-title' style={{maxWidth: "90%"}}>
                         <div className={style["ellipsis-1"]}>
                             {cIndex === 0 && rowSelection && (
-                                <span className={classNames(style["check"], style["check-title"])}>
+                                <span className={classNames(style["check"])}>
                                     {rowSelection.type !== "radio" && (
                                         <YakitProtoCheckbox
                                             checked={isAll}
+                                            indeterminate={!isAll && (rowSelection?.selectedRowKeys?.length || 0) > 0}
                                             onChange={(e) => {
                                                 onChangeCheckbox(e.target.checked)
                                             }}
+                                            wrapperClassName={style['yakit-check']}
                                         />
                                     )}
                                 </span>
