@@ -310,62 +310,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     )
                 }
             },
-            // {
-            //     title: "请求",
-            //     dataKey: "EnableForRequest",
-            //     width: 80,
-            //     render: (checked, record: MITMContentReplacerRule) => (
-            //         <YakitCheckboxMemo
-            //             checked={checked}
-            //             disabled={record.Disabled}
-            //             onChange={(e) =>
-            //                 onEdit({Id: record.Id, EnableForRequest: e.target.checked}, "EnableForRequest")
-            //             }
-            //         />
-            //     )
-            // },
-            // {
-            //     title: "响应",
-            //     dataKey: "EnableForResponse",
-            //     width: 80,
-            //     render: (checked, record: MITMContentReplacerRule) => (
-            //         <YakitCheckboxMemo
-            //             checked={checked}
-            //             disabled={record.Disabled}
-            //             onChange={(e) =>
-            //                 onEdit({Id: record.Id, EnableForResponse: e.target.checked}, "EnableForResponse")
-            //             }
-            //         />
-            //     )
-            // },
-            // {
-            //     title: "Header",
-            //     dataKey: "EnableForHeader",
-            //     width: 80,
-            //     render: (checked, record: MITMContentReplacerRule) => {
-            //         return (
-            //             <YakitCheckboxMemo
-            //                 checked={checked}
-            //                 disabled={record.Disabled}
-            //                 onChange={(e) =>
-            //                     onEdit({Id: record.Id, EnableForHeader: e.target.checked}, "EnableForHeader")
-            //                 }
-            //             />
-            //         )
-            //     }
-            // },
-            // {
-            //     title: "Body",
-            //     dataKey: "EnableForBody",
-            //     width: 80,
-            //     render: (checked, record: MITMContentReplacerRule) => (
-            //         <YakitCheckboxMemo
-            //             checked={checked}
-            //             disabled={record.Disabled}
-            //             onChange={(e) => onEdit({Id: record.Id, EnableForBody: e.target.checked}, "EnableForBody")}
-            //         />
-            //     )
-            // },
             {
                 title: "命中颜色",
                 dataKey: "Color",
@@ -383,9 +327,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "追加 Tag",
                 dataKey: "ExtraTag",
                 minWidth: 120
-                // render: (text) => {
-                //     return <TagsList data={text} ellipsis={true} />
-                // }
             },
             {
                 title: "操作",
@@ -843,23 +784,6 @@ const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
         // return true; 	不渲染
         // return false;	渲染
         if (preProps.value !== nextProps.value) {
-            return false
-        }
-        if (preProps.disabled !== nextProps.disabled) {
-            return false
-        }
-        return true
-    }
-)
-
-const YakitCheckboxMemo = React.memo<YakitCheckboxProps>(
-    (props) => {
-        return <YakitCheckbox checked={props.checked} disabled={props.disabled} onChange={props.onChange} />
-    },
-    (preProps, nextProps) => {
-        // return true; 	不渲染
-        // return false;	渲染
-        if (preProps.checked !== nextProps.checked) {
             return false
         }
         if (preProps.disabled !== nextProps.disabled) {

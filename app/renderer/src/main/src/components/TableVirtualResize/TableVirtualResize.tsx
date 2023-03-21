@@ -1011,22 +1011,22 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
             <div className={classNames(style["justify-content-between"])}>
                 <div className={style["virtual-title"]}>
                     {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                    <div className='virtual-col-title' style={{maxWidth: "90%"}}>
-                        <div className={style["ellipsis-1"]}>
-                            {cIndex === 0 && rowSelection && (
-                                <span className={classNames(style["check"])}>
-                                    {rowSelection.type !== "radio" && (
-                                        <YakitProtoCheckbox
-                                            checked={isAll}
-                                            indeterminate={!isAll && (rowSelection?.selectedRowKeys?.length || 0) > 0}
-                                            onChange={(e) => {
-                                                onChangeCheckbox(e.target.checked)
-                                            }}
-                                            wrapperClassName={style['yakit-check']}
-                                        />
-                                    )}
-                                </span>
-                            )}
+                    <div className='virtual-col-title' style={{width: "100%", display: "flex", alignItems: "center"}}>
+                        {cIndex === 0 && rowSelection && (
+                            <>
+                                {rowSelection.type !== "radio" && (
+                                    <YakitProtoCheckbox
+                                        checked={isAll}
+                                        indeterminate={!isAll && (rowSelection?.selectedRowKeys?.length || 0) > 0}
+                                        onChange={(e) => {
+                                            onChangeCheckbox(e.target.checked)
+                                        }}
+                                        wrapperClassName={style["check"]}
+                                    />
+                                )}
+                            </>
+                        )}
+                        <div className={style["ellipsis-1"]} style={{maxWidth: "90%"}}>
                             {columnsItem.title}
                         </div>
                     </div>
