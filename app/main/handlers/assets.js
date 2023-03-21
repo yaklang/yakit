@@ -1,7 +1,6 @@
 const {ipcMain} = require("electron")
 const {htmlTemplateDir} = require("../filePath")
 const compressing = require('compressing');
-const puppeteer = require('puppeteer');
 const fs=require('fs') 
 const path=require('path') 
 module.exports = (win, getClient) => {
@@ -334,12 +333,6 @@ module.exports = (win, getClient) => {
             const initDir = path.join(ReportItemName, "js","init.js")
             // 模板源注入
             fs.writeFileSync(initDir,`let initData = ${JSON.stringify(JsonRaw)}`)
-            // html 转 pdf
-            const browser = await puppeteer.launch();
-            const page = await browser.newPage();
-            await page.goto(path.join(ReportItemName, "index.html"), {waitUntil: 'networkidle2'});
-            await page.pdf({path:path.join(ReportItemName, `${reportNameFile}.pdf`), format: 'A3'});
-            await browser.close();
             resolve({
                 ok:true,
                 outputDir:ReportItemName

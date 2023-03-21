@@ -49,7 +49,6 @@
     "node-xlsx": "^0.21.0",
     "numeral": "^2.0.6",
     "process": "^0.11.10",
-    "puppeteer": "^19.7.5",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",
     "sudo-prompt": "^9.2.1",
