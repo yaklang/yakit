@@ -2,7 +2,7 @@ import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 import classNames from "classnames"
 import styles from "./MITMServerStartForm.module.scss"
 import {ClientCertificate} from "./MITMServerStartForm"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
 import {useMemoizedFn} from "ahooks"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
@@ -38,6 +38,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
 
+    const [form] = Form.useForm()
+
     useEffect(() => {
         getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then((e) => {
             if (!!e) {
@@ -47,14 +49,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 } catch (e) {
                     setCerts([])
                 }
+            } else {
+                setCerts([])
             }
         })
         getRemoteValue(MITMConsts.MITMDefaultDownstreamProxy).then((e) => {
-            if (!!e) {
-                setDownstreamProxy(`${e}`)
-            }
+            setDownstreamProxy(`${e}`)
+            form.setFieldsValue({downstreamProxy: e})
         })
-    }, [])
+    }, [visible])
     /**
      * @description 单个导出证书
      */
@@ -122,6 +125,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             downstreamProxy,
             certs
         }
+        setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, downstreamProxy)
+        setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
         onSave(params)
     })
     return (
@@ -134,7 +139,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 <div className={styles["advanced-configuration-drawer-title"]}>
                     <div className={styles["advanced-configuration-drawer-title-text"]}>高级配置</div>
                     <div className={styles["advanced-configuration-drawer-title-btns"]}>
-                        <YakitButton type='outline2' onClick={() => setVisible(false)}>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                setVisible(false)
+                            }}
+                        >
                             取消
                         </YakitButton>
                         <YakitButton type='primary' onClick={() => onSaveSetting()}>
@@ -144,7 +154,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 </div>
             }
         >
-            <Form labelCol={{span: 6}} wrapperCol={{span: 18}}>
+            <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
                 <Form.Item
                     label='下游代理'
                     name='downstreamProxy'
