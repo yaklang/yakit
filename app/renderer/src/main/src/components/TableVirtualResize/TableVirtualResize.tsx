@@ -523,7 +523,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
     const onScrollContainer = useThrottleFn(
         () => {
-            console.log(444, moment().format("HH-mm-ss"))
             if (!containerRef.current) return false
             const {
                 scrollTop: contentScrollTop,
