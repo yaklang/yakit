@@ -42,52 +42,53 @@ import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfig
 import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
+import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 
 const {ipcRenderer} = window.require("electron")
 const {CheckableTag} = Tag
 
-export const HitColor = [
-    {
+const HitColor = {
+    red: {
         title: "Red",
         value: "red",
         className: "bg-color-red-opacity"
     },
-    {
+    green: {
         title: "Green",
         value: "green",
         className: "bg-color-green-opacity"
     },
-    {
+    blue: {
         title: "Blue",
         value: "blue",
         className: "bg-color-blue-opacity"
     },
-    {
+    yellow: {
         title: "Yellow",
         value: "yellow",
         className: "bg-color-yellow-opacity"
     },
-    {
+    orange: {
         title: "Orange",
         value: "orange",
         className: "bg-color-orange-opacity"
     },
-    {
+    purple: {
         title: "Purple",
         value: "purple",
         className: "bg-color-purple-opacity"
     },
-    {
+    cyan: {
         title: "Cyan",
         value: "cyan",
         className: "bg-color-cyan-opacity"
     },
-    {
+    grey: {
         title: "Grey",
         value: "grey",
         className: "bg-color-grey-opacity"
     }
-]
+}
 
 const batchMenuData: YakitMenuItemProps[] = [
     {
@@ -106,7 +107,7 @@ const batchMenuData: YakitMenuItemProps[] = [
 
 export const colorSelectNode = (
     <>
-        {HitColor.map((item) => (
+        {Object.values(HitColor).map((item) => (
             <YakitSelect.Option value={item.value} key={item.value}>
                 <div className={classNames(styles["table-hit-color-content"])}>
                     <div className={classNames(styles["table-hit-color"], item.className)} />
@@ -314,13 +315,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "命中颜色",
                 dataKey: "Color",
                 ellipsis: false,
-                width: 120,
+                width: 80,
                 render: (text, record: MITMContentReplacerRule) => (
-                    <YakitSelectMemo
-                        value={text}
-                        disabled={record.Disabled}
-                        onSelect={(val) => onEdit({Id: record.Id, Color: val}, "Color")}
-                    />
+                    <div className={classNames(styles["table-hit-color-content"])}>
+                        <div className={classNames(styles["table-hit-color"], HitColor[text].className)} />
+                        {HitColor[text].title}
+                    </div>
                 )
             },
             {
@@ -800,28 +800,29 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
                 {props.Result}
             </div>
         )
-        if (
-            (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
-            (props.ExtraCookies && props.ExtraCookies.length > 0)
-        ) {
-            node = (
-                <div>
-                    {props.ExtraHeaders.length > 0 && (
-                        <YakitTag size='small' color='purple' disable={props.disabled}>
-                            HTTP Header: {props.ExtraHeaders.length}
-                        </YakitTag>
-                    )}
-                    {props.ExtraCookies.length > 0 && (
-                        <YakitTag size='small' color='success' disable={props.disabled}>
-                            HTTP Cookie: {props.ExtraCookies.length}
-                        </YakitTag>
-                    )}
-                </div>
-            )
-        }
+        // if (
+        //     (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
+        //     (props.ExtraCookies && props.ExtraCookies.length > 0)
+        // ) {
+        //     node = (
+        //         <div>
+        //             {props.ExtraHeaders.length > 0 && (
+        //                 <YakitTag size='small' color='purple' disable={props.disabled}>
+        //                     HTTP Header: {props.ExtraHeaders.length}
+        //                 </YakitTag>
+        //             )}
+        //             {props.ExtraCookies.length > 0 && (
+        //                 <YakitTag size='small' color='success' disable={props.disabled}>
+        //                     HTTP Cookie: {props.ExtraCookies.length}
+        //                 </YakitTag>
+        //             )}
+        //         </div>
+        //     )
+        // }
         return (
             <div className={styles["table-result"]}>
                 {node}
+                <YakitProtoSwitch disabled={props.disabled} checked={props.checked} onChange={props.onChange} />
                 {/* <YakitSwitch size='small' disabled={props.disabled} checked={props.checked} onChange={props.onChange} /> */}
             </div>
         )

@@ -518,59 +518,69 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const preScrollLeft = useRef<number>(0)
     const preScrollBottom = useRef<number>(0)
     useScroll(containerRef, (val) => {
-        if (!containerRef.current) return false
-        const {
-            scrollTop: contentScrollTop,
-            clientHeight,
-            scrollHeight,
-            scrollWidth,
-            scrollLeft,
-            clientWidth
-        } = containerRef.current
-        // const contentScrollTop = dom.scrollTop // 滚动条距离顶部
-        // const clientHeight = dom.clientHeight // 可视区域
-        // const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
-        const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-        const scrollRight = scrollWidth - scrollLeft - clientWidth
-        // 性能优化
-        if (preScrollLeft.current !== scrollLeft) {
-            preScrollLeft.current = scrollLeft
-            if (scrollLeft < 50 || scrollRight < 50) {
-                setScroll({
-                    ...scroll,
-                    scrollLeft: scrollLeft,
-                    scrollRight: scrollRight
-                })
+        return onScrollContainer()
+    })
+
+    const onScrollContainer = useThrottleFn(
+        () => {
+            console.log(444, moment().format("HH-mm-ss"))
+            if (!containerRef.current) return false
+            const {
+                scrollTop: contentScrollTop,
+                clientHeight,
+                scrollHeight,
+                scrollWidth,
+                scrollLeft,
+                clientWidth
+            } = containerRef.current
+            // const contentScrollTop = dom.scrollTop // 滚动条距离顶部
+            // const clientHeight = dom.clientHeight // 可视区域
+            // const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
+            const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+            const scrollRight = scrollWidth - scrollLeft - clientWidth
+            // 性能优化
+            if (preScrollLeft.current !== scrollLeft) {
+                preScrollLeft.current = scrollLeft
+                if (scrollLeft < 50 || scrollRight < 50) {
+                    setScroll({
+                        ...scroll,
+                        scrollLeft: scrollLeft,
+                        scrollRight: scrollRight
+                    })
+                }
+                return false
+            }
+            if (preScrollBottom.current !== scrollBottom) {
+                if (wrapperRef && containerRef && pagination) {
+                    const hasMore = pagination.total == data.length
+                    //避免频繁set
+                    if (scroll.scrollBottom < 50 && scrollBottom > 50) {
+                        // 不显示暂无数据
+                        setScroll({
+                            ...scroll,
+                            scrollBottom: scrollBottom
+                        })
+                    }
+                    if (scrollBottom < 50) {
+                        //显示暂无数据
+                        setScroll({
+                            ...scroll,
+                            scrollBottom: scrollBottom
+                        })
+                    }
+                    //向下滑动
+                    if (preScrollBottom.current > scrollBottom && scrollBottom <= (scrollToBottom || 300) && !hasMore) {
+                        pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+                    }
+                }
+                preScrollBottom.current = scrollBottom
             }
             return false
+        },
+        {
+            wait: 200
         }
-        if (preScrollBottom.current !== scrollBottom) {
-            if (wrapperRef && containerRef && pagination) {
-                const hasMore = pagination.total == data.length
-                //避免频繁set
-                if (scroll.scrollBottom < 50 && scrollBottom > 50) {
-                    // 不显示暂无数据
-                    setScroll({
-                        ...scroll,
-                        scrollBottom: scrollBottom
-                    })
-                }
-                if (scrollBottom < 50) {
-                    //显示暂无数据
-                    setScroll({
-                        ...scroll,
-                        scrollBottom: scrollBottom
-                    })
-                }
-                //向下滑动
-                if (preScrollBottom.current > scrollBottom && scrollBottom <= (scrollToBottom || 300) && !hasMore) {
-                    pagination.onChange(Number(pagination.page) + 1, pagination.limit)
-                }
-            }
-            preScrollBottom.current = scrollBottom
-        }
-        return false
-    })
+    ).run
 
     const onRowClick = useMemoizedFn((record: T) => {
         setCurrentRow(record)

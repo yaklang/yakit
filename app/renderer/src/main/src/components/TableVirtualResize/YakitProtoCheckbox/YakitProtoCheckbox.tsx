@@ -14,7 +14,7 @@ interface YakitProtoCheckboxProps {
 /**
  * @description: 原生 多选框
  */
-export const YakitProtoCheckbox: React.FC<YakitProtoCheckboxProps> = (props) => {
+export const YakitProtoCheckbox: React.FC<YakitProtoCheckboxProps> = React.memo((props) => {
     const {wrapperClassName, indeterminate, wrapperStyle, ...resProps} = props
     const [focus, setFocus] = useState<boolean>(false)
 
@@ -42,4 +42,4 @@ export const YakitProtoCheckbox: React.FC<YakitProtoCheckboxProps> = (props) => 
             </span>
         </label>
     )
-}
+})
