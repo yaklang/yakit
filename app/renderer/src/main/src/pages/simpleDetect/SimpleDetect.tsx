@@ -893,7 +893,17 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     )
 
     // 获取tabId用于变色
-    const [tabId, setTabId, getTabId] = useGetState<string>()
+    const [_, setTabId, getTabId] = useGetState<string>()
+
+    // 是否拖动ResizeBox
+    const isResize = useRef<boolean>(false)
+    // 设置ResizeBox高度
+    const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("380px")
+    useEffect(()=>{
+        if(!isResize.current){
+            executing?setResizeBoxSize("206px"):setResizeBoxSize("380px")
+        }
+    },[executing])
 
     useEffect(() => {
         setTabId(simpleDetectTabsParams.tabId)
@@ -1022,8 +1032,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                     </AutoCard>
                 }
                 firstMinSize={"200px"}
-                firstRatio={"380px"}
+                firstRatio={getResizeBoxSize()}
                 secondMinSize={200}
+                onChangeSize={()=>{
+                    isResize.current = true
+                }}
                 secondNode={() => {
                     return (
                         <SimpleDetectTable
