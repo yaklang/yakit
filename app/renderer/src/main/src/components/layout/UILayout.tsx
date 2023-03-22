@@ -750,15 +750,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 企业版-连接引擎后验证license=>展示企业登录
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterprise)
-    useEffect(() => {
-        // 监听是否退出登录 重新打开License控件验证身份
-        ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
-            setJudgeLicense(v)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-judge-license")
-        }
-    }, [])
+    // useEffect(() => {
+    //     // 监听是否退出登录 重新打开License控件验证身份
+    //     ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
+    //         setJudgeLicense(v)
+    //     })
+    //     return () => {
+    //         ipcRenderer.removeAllListeners("fetch-judge-license")
+    //     }
+    // }, [])
 
     // outputToWelcomeConsole("UILayout 刷新")
     return (
