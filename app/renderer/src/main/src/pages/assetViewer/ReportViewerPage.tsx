@@ -19,7 +19,7 @@ export interface ReportViewerPageProp {
 }
 
 export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
-    const [_, setReport, getReport] = useGetState<Report>()
+    const [_, setReport, getReport] = useGetState<Report|undefined>()
 
     return (
         <>
@@ -37,7 +37,7 @@ export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
 }
 
 export interface ReportListProp {
-    onClick: (r: Report) => any
+    onClick: (r: Report|undefined) => any
     selectedId?: number
 }
 
@@ -51,6 +51,7 @@ interface QueryReports extends QueryGeneralRequest {
 const {ipcRenderer} = window.require("electron")
 
 export const ReportList: React.FC<ReportListProp> = (props) => {
+    const {onClick,selectedId} = props
     const [response, setResponse] = useState<QueryGeneralResponse<Report>>({
         Data: [],
         Pagination: genDefaultPagination(20),
@@ -116,6 +117,14 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
+                // 当为全部删除时 直接详情页置空
+                selectedRowKeys.length===0&&onClick(undefined)
+                // 当存在选中项时 如若选中项被删除则详情页置空
+                if(selectedId&&selectedRowKeys.length!==0){
+                    if(selectedRowKeys.includes(selectedId)){
+                        onClick(undefined)
+                    }
+                }
                 update()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))

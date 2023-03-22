@@ -49,7 +49,7 @@ import {Report} from "../assetViewer/models"
 import {openABSFileLocated} from "../../utils/openWebsite"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ResizeBox} from "../../components/ResizeBox"
-import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams";
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -259,7 +259,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-                .then((data: { Data: YakScript[] }) => {
+                .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
@@ -267,8 +267,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
     })
 
@@ -415,19 +414,16 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             />
                         )}
                     </Form.Item>
-
-                    <div style={{display: "none"}}>
-                        <Form.Item name='TaskName' label='任务名称'>
-                            <Input
-                                style={{width: 400}}
-                                placeholder='请输入任务名称'
-                                allowClear
-                                onChange={() => {
-                                    isInputValue.current = true
-                                }}
-                            />
-                        </Form.Item>
-                    </div>
+                    <Form.Item name='TaskName' label='任务名称'>
+                        <Input
+                            style={{width: 400}}
+                            placeholder='请输入任务名称'
+                            allowClear
+                            onChange={() => {
+                                isInputValue.current = true
+                            }}
+                        />
+                    </Form.Item>
                     <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
                         <Slider
                             tipFormatter={null}
@@ -466,16 +462,16 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     // 下载报告Modal
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
     const [reportName, setReportName] = useState<string>(runTaskName || "默认报告名称")
-    const [reportLoading,setReportLoading] = useState<boolean>(false)
+    const [reportLoading, setReportLoading] = useState<boolean>(false)
     const [_, setReportId, getReportId] = useGetState<number>()
     // 是否允许更改TaskName
     const isSetTaskName = useRef<boolean>(true)
 
-    useEffect(()=>{
-        if(!reportModalVisible){
+    useEffect(() => {
+        if (!reportModalVisible) {
             setReportLoading(false)
         }
-    },[reportModalVisible])
+    }, [reportModalVisible])
 
     // 报告token
     const [reportToken, setReportToken] = useState(randomString(40))
@@ -488,8 +484,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
         }
     }, [executing])
 
-    useEffect(()=>{
-        if(getReportId()){
+    useEffect(() => {
+        if (getReportId()) {
             ipcRenderer
                 .invoke("QueryReport", {Id: getReportId()})
                 .then((r: Report) => {
@@ -523,19 +519,18 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                                             }, 300)
                                         )
                                 }
-                            }).finally(()=>{
-                            setReportLoading(false)
-                        })
+                            })
+                            .finally(() => {
+                                setReportLoading(false)
+                            })
                     }
                 })
                 .catch((e) => {
                     failed(`Query Report[${21}] failed`)
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
-
-    },[getReportId()])
+    }, [getReportId()])
 
     useEffect(() => {
         if (runTaskName && isSetTaskName.current) {
@@ -593,7 +588,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     /** 获取生成报告返回结果 */
     useEffect(() => {
         ipcRenderer.on(`${reportToken}-data`, (e, data: ExecResult) => {
-        // ipcRenderer.on(`client-yak-data`, (e, xxxx: ExecResult) => {
+            // ipcRenderer.on(`client-yak-data`, (e, xxxx: ExecResult) => {
             if (data.IsMessage) {
                 console.log("获取生成报告返回结果", new Buffer(data.Message).toString())
                 const aa = JSON.parse(new Buffer(data.Message).toString())
@@ -661,7 +656,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                             >
                                 <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                     {infoState.riskState.slice(0, 10).map((i) => {
-                                        return <RiskDetails info={i} shrink={true}/>
+                                        return <RiskDetails info={i} shrink={true} />
                                     })}
                                 </Space>
                             </AutoCard>
@@ -672,7 +667,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimple={true}/>
+                                    <OpenPortTableViewer data={openPorts} isSimple={true} />
                                 </Col>
                             </Row>
                         </div>
@@ -695,31 +690,40 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                 title='下载报告'
                 visible={reportModalVisible}
                 footer={null}
-                onCancel={()=>setReportModalVisible(false)}
+                onCancel={() => setReportModalVisible(false)}
             >
                 <div>
-                <div style={{textAlign: "center"}}>
-                    <Input
-                        style={{width: 400}}
-                        placeholder='请输入任务名称'
-                        allowClear
-                        value={reportName}
-                        onChange={(e) => {
-                            isSetTaskName.current = false
-                            setReportName(e.target.value)
-                        }}
-                    />
-                </div>
-                    <div style={{marginTop:20,textAlign:"right"}}>
-                        <Button style={{marginRight:8}} onClick={()=>{
-                            setReportModalVisible(false)
-                        }
-                        }>取消</Button>
-                        <Button loading={reportLoading} type={"primary"} onClick={()=>{
-                            setReportLoading(true)
-                            downloadReport()
-                        }
-                        }>确定</Button>
+                    <div style={{textAlign: "center"}}>
+                        <Input
+                            style={{width: 400}}
+                            placeholder='请输入任务名称'
+                            allowClear
+                            value={reportName}
+                            onChange={(e) => {
+                                isSetTaskName.current = false
+                                setReportName(e.target.value)
+                            }}
+                        />
+                    </div>
+                    <div style={{marginTop: 20, textAlign: "right"}}>
+                        <Button
+                            style={{marginRight: 8}}
+                            onClick={() => {
+                                setReportModalVisible(false)
+                            }}
+                        >
+                            取消
+                        </Button>
+                        <Button
+                            loading={reportLoading}
+                            type={"primary"}
+                            onClick={() => {
+                                setReportLoading(true)
+                                downloadReport()
+                            }}
+                        >
+                            确定
+                        </Button>
                     </div>
                 </div>
             </Modal>
@@ -759,8 +763,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                 onClose && onClose()
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -778,8 +781,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
         ipcRenderer
             .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-            .then(() => {
-            })
+            .then(() => {})
             .catch((e) => {
                 failed(`添加失败:${e}`)
             })
@@ -885,10 +887,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         "scan-port",
         "SimpleDetect",
         token,
-        () => {
-        },
-        () => {
-        },
+        () => {},
+        () => {},
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -898,12 +898,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 是否拖动ResizeBox
     const isResize = useRef<boolean>(false)
     // 设置ResizeBox高度
-    const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("380px")
-    useEffect(()=>{
-        if(!isResize.current){
-            executing?setResizeBoxSize("206px"):setResizeBoxSize("380px")
+    const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
+    useEffect(() => {
+        if (!isResize.current) {
+            executing ? setResizeBoxSize("206px") : setResizeBoxSize("430px")
         }
-    },[executing])
+    }, [executing])
 
     useEffect(() => {
         setTabId(simpleDetectTabsParams.tabId)
@@ -925,7 +925,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 .invoke("GetExecBatchYakScriptUnfinishedTaskByUid", {
                     Uid
                 })
-                .then((req: { ScriptNames: string[]; Target: string }) => {
+                .then((req: {ScriptNames: string[]; Target: string}) => {
                     const {Target, ScriptNames} = req
                     // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
                     setTarget({...target, target: Target})
@@ -952,15 +952,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 status = "success"
             }
             !!status &&
-            ipcRenderer.invoke("refresh-tabs-color", {
-                tabId: getTabId(),
-                status
-            })
+                ipcRenderer.invoke("refresh-tabs-color", {
+                    tabId: getTabId(),
+                    status
+                })
         }
     }, [percent, executing, getTabId()])
 
     if (loading) {
-        return <Spin tip={"正在恢复未完成的任务"}/>
+        return <Spin tip={"正在恢复未完成的任务"} />
     }
 
     const timelineItemProps = (infoState.messageState || [])
@@ -1034,7 +1034,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 firstMinSize={"200px"}
                 firstRatio={getResizeBoxSize()}
                 secondMinSize={200}
-                onChangeSize={()=>{
+                onChangeSize={() => {
                     isResize.current = true
                 }}
                 secondNode={() => {
