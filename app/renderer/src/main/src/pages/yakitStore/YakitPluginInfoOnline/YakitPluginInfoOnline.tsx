@@ -18,17 +18,12 @@ import {
     Modal,
     Spin,
     Image,
-    Popconfirm
 } from "antd"
 import {
     StarOutlined,
     StarFilled,
-    ArrowLeftOutlined,
-    PlusCircleOutlined,
     DownloadOutlined,
     PictureOutlined,
-    ZoomInOutlined,
-    ZoomOutOutlined,
     QuestionOutlined,
     LoadingOutlined,
     ExclamationCircleOutlined
@@ -37,7 +32,6 @@ import numeral from "numeral"
 import "./YakitPluginInfoOnline.scss"
 import moment from "moment"
 import cloneDeep from "lodash/cloneDeep"
-import {showFullScreenMask} from "@/components/functionTemplate/showByContext"
 import {useCommenStore} from "@/store/comment"
 import InfiniteScroll from "react-infinite-scroll-component"
 import {CollapseParagraph} from "./CollapseParagraph"
@@ -49,6 +43,8 @@ import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import Login from "@/pages/Login"
 import {fail} from "assert"
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetails"))
 
@@ -219,11 +215,12 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 setTimeout(() => setLoading(false), 200)
             })
     })
-    const onRemove = useMemoizedFn(() => {
+    const onRemove = useMemoizedFn((isDel: boolean) => {
         if (!plugin) return
         if (["admin", "superAdmin"].includes(userInfo.role || "") || plugin?.user_id === userInfo.user_id) {
             const deletedParams: API.DeletePluginUuid = {
-                uuid: plugin.uuid || ""
+                uuid: plugin.uuid ? [plugin.uuid] : [],
+                dump: isDel
             }
             setLoading(true)
             // 查询本地数据
@@ -268,6 +265,10 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                 setTimeout(() => setLoading(false), 200)
             })
     })
+
+    /** 删除功能逻辑 */
+    const [delPluginShow,setDelPluginShow]=useState<boolean>(false)
+
     if (!plugin) {
         return (
             <Spin spinning={loading} style={{height: "100%"}}>
@@ -281,6 +282,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const isShowAdmin = (isAdmin || userInfo.showStatusSearch) && !plugin.is_private
     // 是否为企业版
     const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+
     return (
         <div className={`plugin-info`} id='plugin-info-scroll'>
             <Spin spinning={loading} style={{height: "100%"}}>
@@ -370,11 +372,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         {isEnterprise ? (
                             <div className='plugin-info-examine'>
                                 {(isAdmin || userInfo.user_id === plugin.user_id || plugin.checkPlugin) && (
-                                    <Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
-                                        <Button type='primary' danger>
+                                        <Button type='primary' danger onClick={() => {
+                                            if(!delPluginShow) setDelPluginShow(true)
+                                        }}>
                                             删除
                                         </Button>
-                                    </Popconfirm>
                                 )}
                                 {(isAdmin || plugin.checkPlugin) && (
                                     <>
@@ -393,11 +395,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             <div className='plugin-info-examine'>
                                 {(isAdmin || userInfo.user_id === plugin.user_id) && (
                                     <>
-                                        <Popconfirm title='是否删除插件?' onConfirm={() => onRemove()}>
-                                            <Button type='primary' danger>
-                                                删除
-                                            </Button>
-                                        </Popconfirm>
+                                        <Button type='primary' danger onClick={(e) => {
+                                            if(!delPluginShow) setDelPluginShow(true)
+                                        }}>
+                                            删除
+                                        </Button>
                                         {/* base_plugin_id存在时则为复制云端插件 不允许更改 私密/公开 */}
                                         {!plugin?.base_plugin_id && <Button type='primary' onClick={() => setIsEdit(true)}>
                                             修改
@@ -440,6 +442,28 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </TabPane>
                     </Tabs>
                 </div>
+                    <YakitHint
+                        visible={delPluginShow}
+                        title="删除插件"
+                        content="是否需要彻底删除插件"
+                        okButtonText='放入回收站'
+                        cancelButtonText='删除'
+                        cancelButtonProps={{
+                            style: plugin?.user_id === userInfo.user_id ? undefined : {display: "none"}
+                        }}
+                        footerExtra={
+                            <YakitButton
+                                size='max'
+                                type='outline2'
+                                onClick={() => setDelPluginShow(false)
+                                }
+                            >
+                                取消
+                            </YakitButton>
+                        }
+                        onOk={() => onRemove(false)}
+                        onCancel={() => onRemove(true)}
+                    />
             </Spin>
         </div>
     )

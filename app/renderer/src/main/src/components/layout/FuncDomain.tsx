@@ -38,7 +38,6 @@ import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
-import {showConfigMenuItems} from "@/utils/ConfigMenuItems"
 import {showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
@@ -352,9 +351,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "refreshMenu":
                 ipcRenderer.invoke("change-main-menu")
                 return
-            case "settingMenu":
-                showConfigMenuItems()
-                return
             case "invalidCache":
                 invalidCacheAndUserData()
                 return
@@ -379,6 +375,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
 
     const menu = (
         <YakitMenu
+            width={142}
             selectedKeys={[engineMode]}
             data={[
                 {
@@ -395,14 +392,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     ]
                 },
                 {
-                    key: "plugin",
-                    label: "配置插件源",
-                    children: [
-                        {label: "插件商店", key: "store"},
-                        {label: "CVE 数据库", key: "cve-database-download"},
-                        {label: "外部", key: "external"}
-                    ]
+                    key: "system-manager",
+                    label: "进程与缓存管理",
+                    children: [{key: "invalidCache", label: "删除缓存数据"}]
                 },
+                {type: "divider"},
                 {
                     key: "reverse",
                     label: "全局反连"
@@ -419,6 +413,16 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     key: "engineVar",
                     label: "引擎环境变量"
                 },
+                {type: "divider"},
+                {
+                    key: "plugin",
+                    label: "配置插件源",
+                    children: [
+                        {label: "插件商店", key: "store"},
+                        {label: "CVE 数据库", key: "cve-database-download"},
+                        {label: "外部", key: "external"}
+                    ]
+                },
                 {
                     key: "link",
                     label: "切换连接模式",
@@ -430,15 +434,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "refreshMenu",
                     label: "刷新菜单"
-                },
-                {
-                    key: "settingMenu",
-                    label: "配置菜单栏"
-                },
-                {
-                    key: "system-manager",
-                    label: "进程与缓存管理",
-                    children: [{key: "invalidCache", label: "删除缓存数据"}]
                 },
                 {
                     key: "otherMode",
