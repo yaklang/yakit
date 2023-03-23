@@ -43,9 +43,9 @@ import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
-const {CheckableTag} = Tag
 
 const HitColor = {
     red: {
@@ -848,39 +848,3 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
         return true
     }
 )
-
-interface YakitCheckableTagProps extends CheckableTagProps {
-    children?: ReactNode
-    wrapClassName?: string
-    disable?: boolean
-}
-/**
- * @description 暂时使用，未封
- */
-const YakitCheckableTag: React.FC<YakitCheckableTagProps> = React.memo((props) => {
-    const {wrapClassName, disable, className, ...resProps} = props
-    return (
-        <div
-            className={classNames(
-                styles["yakit-checked-tag-wrap"],
-                {
-                    [styles["yakit-checked-tag-disable"]]: disable,
-                    [styles["yakit-checked-tag-checked-disable"]]: disable && props.checked
-                },
-                wrapClassName
-            )}
-        >
-            <CheckableTag
-                {...resProps}
-                onClick={(e) => {
-                    if (!disable && props.onClick) props.onClick(e)
-                }}
-                onChange={(c) => {
-                    if (!disable && props.onChange) props.onChange(c)
-                }}
-            >
-                {props.children}
-            </CheckableTag>
-        </div>
-    )
-})

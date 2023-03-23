@@ -131,6 +131,16 @@
                     align-items: center;
                     justify-content: flex-end;
 
+                    svg {
+                        cursor: pointer;
+                        &:hover {
+                            color: var(--yakit-primary-4);
+                        }
+                        &:active {
+                            color: var(--yakit-primary-6);
+                        }
+                    }
+
                     .virtual-table-sorter {
                         display: flex;
                         color: var(--yakit-helper-text-color);
