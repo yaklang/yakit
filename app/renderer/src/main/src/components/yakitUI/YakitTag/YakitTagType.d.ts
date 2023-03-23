@@ -1,4 +1,5 @@
 import {TagProps} from "antd"
+import {CheckableTagProps} from "antd/lib/tag"
 import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
@@ -19,7 +20,7 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
     disable?: boolean
     enableCopy?: boolean
     onAfterCopy?: (e: MouseEvent) => void
-    copyText?:string
+    copyText?: string
     iconColor?: string
 }
 /**
@@ -30,6 +31,18 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
  */
 export interface CopyComponentsProps {
     onAfterCopy?: (e: MouseEvent) => void
-    copyText:string
+    copyText: string
     iconColor?: string
+}
+
+/**
+ * @description: tag 多选
+ * @param {ReactNode} children
+ * @param {string} wrapClassName
+ * @param {boolean} disable
+ */
+export interface YakitCheckableTagProps extends CheckableTagProps {
+    children?: ReactNode
+    wrapClassName?: string
+    disable?: boolean
 }

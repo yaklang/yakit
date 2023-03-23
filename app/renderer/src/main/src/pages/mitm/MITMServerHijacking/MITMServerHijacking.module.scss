@@ -71,7 +71,7 @@
     .mitm-hijacked-heard {
         display: flex;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         height: 28px;
         .mitm-hijacked-heard-left {
             display: flex;
@@ -112,26 +112,23 @@
         display: flex;
         gap: 8px;
         justify-content: flex-end;
-        width: 310px;
+        width: 380px;
         .manual-select {
             display: flex;
             align-items: center;
+            font-size: 12px;
             :global {
                 .ant-select:not(.ant-select-customize-input) .ant-select-selector {
                     border-radius: 0 4px 4px 0;
                 }
             }
             .manual-select-label {
-                padding: 4px 10px;
-                background: var(--yakit-card-background-color);
-                border: 1px solid var(--yakit-border-color);
-                border-right-width: 0;
-                border-radius: 4px 0px 0px 4px;
                 font-weight: 500;
                 font-size: 12px;
-                line-height: 14px;
+                line-height: 24px;
                 color: var(--yakit-header-color);
                 user-select: none;
+                margin-right: 4px;
             }
         }
     }
@@ -140,7 +137,7 @@
     display: flex;
     align-items: center;
     flex: 1;
-    width: calc(100% - 310px);
+    width: calc(100% - 380px);
     .manual-url-info {
         font-size: 11px;
         line-height: 16px;
@@ -153,6 +150,7 @@
         font-size: 11px;
         line-height: 16px;
         color: var(--yakit-header-color);
+        align-items: center;
     }
 }
 .mitm-log-heard {
@@ -293,7 +291,7 @@
     height: calc(100% - 44px);
     width: 100%;
     .mitm-hijacked-manual-content-url {
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         width: 100%;
     }
     .mitm-hijacked-manual-content-editor {

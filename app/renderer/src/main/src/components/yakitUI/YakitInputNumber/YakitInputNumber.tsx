@@ -22,11 +22,22 @@ import {useMemoizedFn, useMutationObserver} from "ahooks"
  */
 export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
     const {type, size, className, wrapperClassName, ...resProps} = props
+    const [focus, setFocus] = useState<boolean>(false)
+    const onFocus = useMemoizedFn((e) => {
+        setFocus(true)
+        if (props.onFocus) props.onFocus(e)
+    })
+    const onBlur = useMemoizedFn((e) => {
+        setFocus(false)
+        if (props.onBlur) props.onBlur(e)
+    })
     return (
         <div className={classNames(styles["yakit-input-number-wrapper"], wrapperClassName)}>
             {(type === "horizontal" && <YakitInputNumberHorizontal {...props} />) || (
                 <InputNumber
                     {...resProps}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
                     size='middle'
                     className={classNames(
                         styles["yakit-input-number"],
@@ -34,7 +45,8 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
                             [styles["yakit-input-number-max-large"]]: size === "maxLarge",
                             [styles["yakit-input-number-large"]]: size === "large",
                             [styles["yakit-input-number-small"]]: size === "small",
-                            [styles["yakit-input-number-disabled"]]: !!props.disabled
+                            [styles["yakit-input-number-focus"]]: focus,
+                            [styles["yakit-input-number-disabled"]]: !!props.disabled,
                         },
                         className
                     )}

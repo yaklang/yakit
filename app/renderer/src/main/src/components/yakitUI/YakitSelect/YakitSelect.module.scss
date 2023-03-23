@@ -97,23 +97,14 @@
             padding: 4px 8px;
 
             &:hover {
-                background-color: #f5f5f5;
+                background-color: var(--yakit-background-color);
             }
         }
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             font-weight: 400;
             background-color: var(--select-background-color);
-        }
-
-        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            font-weight: 400;
-            background-color: var(--select-background-color);
-        }
-
-        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            font-weight: 400;
-            background-color: var(--select-background-color);
+            color: var(--yakit-primary-5);
         }
     }
 }

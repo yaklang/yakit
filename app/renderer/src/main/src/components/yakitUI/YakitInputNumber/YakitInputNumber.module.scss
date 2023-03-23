@@ -38,12 +38,17 @@
         .ant-input-number:focus,
         .ant-input-number-focused {
             box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
+            z-index: 1;
         }
 
         .ant-input-number-disabled:hover {
             border-color: var(--input-number-border-disabled-color);
         }
     }
+}
+
+.yakit-input-number-focus {
+    border-radius: 4px;
 }
 
 // ========================== midden ==========================
@@ -54,6 +59,7 @@
     max-width: 88px;
     display: inline-flex;
     align-items: center;
+    font-size: 12px;
 
     :global {
         .ant-input-number-input {
@@ -131,6 +137,7 @@
         .ant-input-number:focus,
         .ant-input-number-focused {
             box-shadow: none;
+            z-index: 1;
         }
     }
 
