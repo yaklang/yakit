@@ -71,9 +71,9 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 {/*        <WebsocketFlowHistory/>*/}
                 {/*    </div>*/}
                 {/*</Tabs.TabPane>*/}
-                <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
+                {/* <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
                     <YakScriptExecResultTable />
-                </Tabs.TabPane>
+                </Tabs.TabPane> */}
                 <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <div style={{height: "100%"}}>
                         <WebsiteTreeViewer />

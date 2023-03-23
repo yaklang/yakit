@@ -2228,12 +2228,36 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                 )
                                                                 return
                                                             }
-                                                            const currentItem = menuData.find(
-                                                                (f) => f.onClickBatch && f.key === key
-                                                            )
-                                                            if (!currentItem) return
-                                                            if (currentItem.onClickBatch)
-                                                                currentItem.onClickBatch(selectedRows, currentItem.number)
+                                                            switch (key) {
+                                                                case "删除记录":
+                                                                    onRemoveHttpHistory({ Id: selectedRowKeys })
+                                                                    break
+                                                                case "删除URL":
+                                                                    const urls = selectedRows.map((ele) => ele.Url)
+                                                                    onRemoveHttpHistory({
+                                                                        Filter: {
+                                                                            IncludeInUrl: urls
+                                                                        }
+                                                                    })
+                                                                    break
+                                                                case "删除域名":
+                                                                    const hosts = selectedRows.map((ele) => ele.HostPort?.split(":")[0])
+                                                                    onRemoveHttpHistory({
+                                                                        Filter: {
+                                                                            IncludeInUrl: hosts
+                                                                        }
+                                                                    })
+                                                                    break
+                                                                default:
+                                                                    const currentItem = menuData.find(
+                                                                        (f) => f.onClickBatch && f.key === key
+                                                                    )
+                                                                    if (!currentItem) return
+                                                                    if (currentItem.onClickBatch)
+                                                                        currentItem.onClickBatch(selectedRows, currentItem.number)
+                                                                    break
+                                                            }
+
                                                         }}
                                                     />
                                                 }
