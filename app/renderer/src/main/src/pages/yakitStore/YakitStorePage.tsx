@@ -99,6 +99,7 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
 import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import {isSimpleEnterprise} from "@/utils/envfile"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -177,7 +178,8 @@ const queryTitle = {
     Tag: "TAG",
     tags: "TAG",
     plugin_type: "插件类型",
-    status: "审核状态"
+    status: "审核状态",
+    group: "插件分组"
 }
 
 export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
@@ -750,6 +752,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                 setListLoading={setListLoading}
                                 updatePluginRecordOnline={updatePluginRecordOnline}
                                 searchType={searchType}
+                                onRefList={onRefList}
                             />
                         )}
                     </Spin>
@@ -881,7 +884,13 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        const statisticsList = item[1]
+                                        if(!isSimpleEnterprise && queryName==="group"){
+                                            return <></>
+                                        }
+                                        
+                                        const statisticsList = queryName==="group"&&Array.isArray(item[1])?
+                                        item[1].map((item)=> ({...item,value:item.value.replaceAll('"','')})):item[1]
+
                                         const title = queryTitle[queryName]
                                         let current: string | string[] = ""
                                         if (plugSource === "local") {
@@ -913,6 +922,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
                                         }
+
                                         return (
                                             statisticsList &&
                                             statisticsList.length > 0 && (
@@ -1011,10 +1021,21 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const [upLoading, setUpLoading] = useState<boolean>(false)
+    const [baseUrl, setBaseUrl] = useState<string>("")
     const [userInfoLocal, setUserInfoLocal] = useState<PluginUserInfoLocalProps>({
         UserId: 0,
         HeadImg: ""
     })
+    const SelectedUploadRowKeysRecordLocal = useRef<YakScript[]>([])
+    const StopUpload = useRef<boolean>(false)
+    // 获取私有域
+    useEffect(() => {
+        getRemoteValue("httpSetting").then((setting) => {
+            const values = JSON.parse(setting)
+            const baseUrl: string = values.BaseUrl
+            setBaseUrl(baseUrl)
+        })
+    }, [])
     useEffect(() => {
         if (searchType === "keyword") {
             setQueryLocal({
@@ -1229,14 +1250,17 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 
     const upOnlineBatch = useMemoizedFn(async (type: number) => {
         setUpLoading(true)
-        const realSelectedRowKeysRecordLocal = [...getSelectedUploadRowKeysRecordLocal()]
+        StopUpload.current = false
+        const realSelectedRowKeysRecordLocal = [...SelectedUploadRowKeysRecordLocal.current]
         const length = realSelectedRowKeysRecordLocal.length
         const errList: any[] = []
         for (let index = 0; index < length; index++) {
-            const element = realSelectedRowKeysRecordLocal[index]
-            const res = await upOnline(element, "yakit/plugin", type)
-            if (res) {
-                errList.push(res)
+            if(!StopUpload.current){
+                const element = realSelectedRowKeysRecordLocal[index]
+                const res = await upOnline(element, "yakit/plugin", type)
+                if (res) {
+                    errList.push(res)
+                }
             }
         }
 
@@ -1248,7 +1272,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 })
             failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
         } else {
-            success("批量上传成功")
+            StopUpload.current?success("取消上传成功"):success("批量上传成功")
         }
         setUpLoading(false)
         setVisibleSyncSelect(false)
@@ -1259,7 +1283,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
-        if (params.OnlineId) {
+        if(IsEnterprise&&userInfo.role==="admin"&&params.OnlineBaseUrl===baseUrl){
+            onlineParams.id = parseInt(`${params.OnlineId}`)
+        }
+        if(!IsEnterprise&&params.OnlineId){
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }
         return new Promise((resolve) => {
@@ -1512,11 +1539,14 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 handleOk={onSyncSelect}
                 handleCancel={() => {
                     if (upLoading) {
-                        warn("请等待插件上传完成后再关闭该modal框")
-                        return
+                       StopUpload.current = true 
+                        //     warn("请等待插件上传完成后再关闭该modal框")
+                        //     return
                     }
-                    setVisibleSyncSelect(false)
-                    onResetList()
+                    else{
+                       setVisibleSyncSelect(false)
+                       onResetList()   
+                    }
                 }}
                 loading={upLoading}
             />
@@ -2790,6 +2820,262 @@ export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
     )
 }
 
+const setPluginGroup = (obj,onRefList,onClose,msg) => {
+    NetWorkApi<PluginGroupPostProps, API.ActionSucceeded>({
+        method: "post",
+        url: "yakit/plugin/group",
+        data: obj
+    })
+        .then((res) => {
+            if(res.ok){
+                success(msg)
+                onRefList()
+                onClose()
+            }
+        })
+        .catch((err) => {
+        })
+}
+
+const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
+    const {selectedRowKeysRecordOnline,onRefList,onClose,queryOnline,isSelectAllOnline} = props
+
+    const selectItemType:string[] = Array.from(new Set(selectedRowKeysRecordOnline.map((item)=>item.group?JSON.parse(item.group):[]).reduce((pre,current)=>{
+        return [...pre,...current]
+    },[])))
+
+    const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
+
+    const [_,setSelectItem,getSelectItem] = useGetState<string[]>(selectItemType)
+
+    const typeList = ["基础扫描","深度扫描","弱口令","漏洞扫描","合规检测"]
+    const submit = () => {
+        let obj:PluginGroupPostProps = {
+            groupName:[]
+        }
+        obj.groupName = [...getSelectItem()]
+        obj.pluginWhere = {...queryOnline,bind_me:false}
+        // 全选
+        if(!isSelectAllOnline){
+            obj.pluginUuid=selectedRowKeysRecordOnline.map((item)=>item.uuid)
+        }
+        setPluginGroup(obj,onRefList,onClose,"编辑分组成功")
+    }
+    return(
+<div>
+                            <div>编辑分组</div>
+                            <div style={{fontSize:12,color:"gray",marginBottom:10}}>已勾选的分组为当前所在分组</div>
+                            <div style={{display:"flex",justifyContent:"flex-start",flexWrap:"wrap"}}>
+                            {typeList.map((item)=><div style={{width:108,position:"relative",margin:"0 20px 10px 0",padding:"10px 22px",display:"inline-block",border:"1px solid rgba(0,0,0,.06)",borderRadius:"2px"}}>
+                                {item}
+                                <SelectIcon
+                    //  @ts-ignore
+                    className={`icon-select  ${
+                        getSelectItem().includes(item) && "icon-select-active"
+                    }`}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectItem(filterNonUnique([...getSelectItem(),item]))
+                    }}
+                />
+                            </div>)}
+</div>
+                            <div style={{textAlign:"center",marginTop:10}}>
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        submit()
+                                    }}
+                                    type="primary"
+                                >
+                                    确定
+                                </Button>
+                            </div>
+                        </div>
+    )
+}
+
+interface SetPluginGroupProps{
+    selectedRowKeysRecordOnline:API.YakitPluginDetail[]
+    isSelectAllOnline:boolean
+    queryOnline:API.GetPluginWhere
+    onClose:()=>void
+    onRefList:()=>void
+}
+
+const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
+    const {selectedRowKeysRecordOnline,isSelectAllOnline,queryOnline,onClose,onRefList} = props
+    const [_,setGroupName,getGroupName] = useGetState<string[]>([])
+    
+    const submit = () => {
+        let obj:PluginGroupPostProps = {
+            groupName:[]
+        }
+        obj.groupName = [...getGroupName()]
+        obj.pluginWhere = {...queryOnline,bind_me:false}
+        // 全选
+        if(!isSelectAllOnline){
+            obj.pluginUuid=selectedRowKeysRecordOnline.map((item)=>item.uuid)
+        }
+        setPluginGroup(obj,onRefList,onClose,"加入分组成功")
+    }
+    const onChange = (checkedValues) => {
+        setGroupName(checkedValues)
+    }
+    return(
+<div>
+                            <div>加入分组</div>
+                            <div style={{fontSize:12,color:"gray"}}>可选择加入多个分组</div>
+                            <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
+                                    <div style={{display:"flex",flexDirection:"row",marginTop:10}}>
+                                        <div style={{paddingRight:16}}>扫描模式</div>
+                                        <div style={{flex:1}}>
+                                          <Row>
+                                        <Col span={8}>
+                                            <Checkbox value="基础扫描">基础扫描</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="深度扫描">深度扫描</Checkbox>
+                                        </Col>
+                                        </Row>  
+                                        </div>
+                                        
+                                    </div>
+                                    <div style={{display:"flex",flexDirection:"row",marginTop:10}}>
+                            <div style={{paddingRight:16}}>功能类型</div>
+                            <div style={{flex:1}}>
+                                        <Row>
+                                        <Col span={8}>
+                                            <Checkbox value="弱口令">弱口令</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="漏洞扫描">漏洞扫描</Checkbox>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Checkbox value="合规检测">合规检测</Checkbox>
+                                        </Col>
+                                        </Row>
+                                        </div>
+                                    </div>
+                                
+                                
+                            </Checkbox.Group>
+                            <div style={{textAlign:"center",marginTop:10}}>
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        submit()
+                                    }}
+                                    type="primary"
+                                    disabled={getGroupName().length===0}
+                                >
+                                    确定
+                                </Button>
+                            </div>
+                            
+                        </div>
+    )
+}
+
+interface PluginGroupProps{
+    size:"small" | "middle"
+    selectedRowKeysRecordOnline:API.YakitPluginDetail[]
+    isSelectAllOnline:boolean
+    queryOnline:API.GetPluginWhere
+    onRefList:()=>void
+}
+
+interface PluginGroupPostProps{
+    groupName:string[]
+    pluginUuid?:string[]
+    pluginWhere?:API.GetPluginWhere
+}
+
+export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
+    const {size,selectedRowKeysRecordOnline,isSelectAllOnline,queryOnline,onRefList} = props
+
+    const menuData = [
+        {
+            title: "加入分组",
+            number: 10,
+            onClickBatch: () => {
+                const m = showModal({
+                    width: "40%",
+                    content: (
+                        <AddPluginGroup onRefList={onRefList} onClose={() => m.destroy()} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline} queryOnline={queryOnline}/>
+                    )
+                })
+                return m
+            }
+        },
+        {
+            title: "编辑分组",
+            number: 10,
+            onClickBatch: () => {
+                const n = showModal({
+                    width: "30%",
+                    content: (
+                        <RemovePluginGroup onRefList={onRefList} onClose={() => n.destroy()} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline} queryOnline={queryOnline}/>
+                    )
+                })
+                return n
+            }
+        },
+    ]
+
+    return(
+        <div>
+            {size === "middle"&&<>
+            {
+                selectedRowKeysRecordOnline.length===0?<Button
+                style={{margin:"0 12px 0 0"}}
+                size='small'
+                onClick={(e) => {
+                    e.stopPropagation()
+                }}
+                disabled={true}
+            >
+                插件分组
+                <ChevronDownIcon style={{color: "#85899E"}} />
+            </Button>:
+               <Popover
+               overlayClassName={style["http-history-table-drop-down-popover"]}
+               content={
+                   <Menu className={style["http-history-table-drop-down-batch"]}>
+                       {menuData.map((m) => {
+                           return (
+                               <Menu.Item
+                                   onClick={() => {
+                                       m.onClickBatch()
+                                   }}
+                                   key={m.title}
+                               >
+                                   {m.title}
+                               </Menu.Item>
+                           )
+                       })}
+                   </Menu>
+               }
+               trigger='click'
+               placement='bottomLeft'
+           >
+                   <Button
+                       style={{margin:"0 12px 0 0"}}
+                       size='small'
+                       onClick={(e) => {
+                           e.stopPropagation()
+                       }}
+                       
+                   >
+                       插件分组
+                       <ChevronDownIcon style={{color: "#85899E"}} />
+                   </Button>
+           </Popover>
+            }</>}
+                        </div>
+    )
+}
+
 interface AddAllPluginProps {
     setListLoading: (a: boolean) => void
     selectedRowKeysRecord: API.YakitPluginDetail[]
@@ -3220,6 +3506,7 @@ interface YakModuleOnlineProps {
     statisticsQueryOnline: SearchPluginOnlineRequest
     isShowFilter: boolean
     searchType: "userName" | "keyword"
+    onRefList:()=>void
 }
 
 export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
@@ -3238,7 +3525,8 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
         statisticsQueryOnline,
         setStatisticsQueryOnline,
         isShowFilter,
-        searchType
+        searchType,
+        onRefList
     } = props
     const [queryOnline, setQueryOnline] = useState<SearchPluginOnlineRequest>({
         ...statisticsQueryOnline
@@ -3377,6 +3665,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
+                    {isSimpleEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
@@ -4147,4 +4436,130 @@ const PluginFilter: React.FC<PluginFilterProps> = (props) => {
             )}
         </Popconfirm>
     )
+}
+
+const adminUpOnline = async (params: YakScript, url: string, type: number,baseUrl:string,userInfo) => {
+    const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+    if(IsEnterprise&&userInfo.role==="admin"&&params.OnlineBaseUrl===baseUrl){
+        onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    if(!IsEnterprise&&params.OnlineId){
+        onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    return new Promise((resolve) => {
+        NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
+            method: "post",
+            url,
+            data: onlineParams
+        })
+            .then((res) => {
+                resolve(false)
+                // 上传后，先下载最新的然后删除本地旧的
+                ipcRenderer
+                    .invoke("DownloadOnlinePluginById", {
+                        OnlineID: res.id,
+                        UUID: res.uuid
+                    } as DownloadOnlinePluginProps)
+                    .then((res) => {
+                        ipcRenderer
+                            .invoke("delete-yak-script", params.Id)
+                            .then(() => {})
+                            .catch((err) => {
+                                failed("删除本地【" + params.ScriptName + "】失败:" + err)
+                            })
+                    })
+            })
+            .catch((err) => {
+                const errObj = {
+                    script_name: params.ScriptName,
+                    err
+                }
+                resolve(errObj)
+            })
+    })
+}
+
+interface AdminUpOnlineBatchProps {
+    userInfo:any
+    onClose:()=>void
+}
+
+export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => {
+    const {userInfo,onClose} = props
+    const [newSrcipt,setNewSrcipt] = useState<YakScript[]>([])
+    const [loading,setLoading] = useState<boolean>(true)
+    const [percent, setPercent, getPercent] = useGetState<number>(0)
+    const [isUpload,setIsUpload] = useState<boolean>(false)
+    const [nowPligin,setNowPligin] = useState<string>("")
+    useEffect(()=>{
+        ipcRenderer
+                                            .invoke("QueryYakScriptLocalAll", {})
+                                            .then((newSrcipt: {Data: YakScript[]}) => {
+                                                setNewSrcipt(newSrcipt.Data)
+                                                setLoading(true)
+                                            })
+                                            .catch((e) => {
+                                                failed(`查询所有插件错误:${e}`)
+                                            })
+                                            .finally(() => {
+                                                setTimeout(()=>{
+                                                    setLoading(false)
+                                                },200)
+                                            })
+    },[])
+
+    const submit = () => {
+        setIsUpload(true)
+        getRemoteValue("httpSetting").then(async(setting) => {
+        const values = JSON.parse(setting)
+        const baseUrl: string = values.BaseUrl
+        const realSelectedRowKeysRecordLocal = [...newSrcipt]
+    const length = realSelectedRowKeysRecordLocal.length
+    const errList: any[] = []
+    setPercent(0)
+    for (let index = 0; index < length; index++) {
+        setNowPligin(realSelectedRowKeysRecordLocal[index].ScriptName)
+        const element = realSelectedRowKeysRecordLocal[index]
+        const res = await adminUpOnline(element, "yakit/plugin", 2,baseUrl,userInfo)
+        if (res) {
+            errList.push(res)
+            const p = Math.floor(index/length * 100)
+            setPercent(p)
+        }
+    }
+
+    // if (errList.length > 0) {
+    //     const errString = errList
+    //         .filter((_, index) => index < 10)
+    //         .map((e) => {
+    //             return `插件名：【${e.script_name}】，失败原因：${e.err}`
+    //         })
+    //     failed("“" + errString.join(";") + `${(errList.length > 0 && "...") || ""}` + "”上传失败")
+    // } else {
+        setNowPligin("")
+        success("批量上传成功")
+    // }
+    onClose()
+    })
+    }
+
+    return <div>
+        <div>
+        同步插件是为了初始化插件商店，将本地所有插件一键同步至云端，若是正常插件上传流程，请在插件商店-本地页进行上传
+        </div>
+        <div style={{textAlign:"center",marginTop:10}}>
+            {
+                isUpload?<Progress
+                        size='small'
+                        percent={percent}
+                    />:<Button type="primary" onClick={submit} loading={loading}>
+                        确认
+                    </Button> 
+            }
+           
+        </div>
+        <div className="yakit-single-line-ellipsis">
+          {nowPligin}  
+        </div>
+    </div>
 }

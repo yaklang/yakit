@@ -9,8 +9,10 @@ import {LineMenunIcon} from "../../assets/icons"
 import {callCopyToClipboard} from "../../utils/basic"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {useMemoizedFn} from "ahooks"
+import {Route} from "@/routes/routeSpec"
 export interface PortTableProp {
     data: YakitPort[]
+    isSimple?: boolean
 }
 
 const formatJson = (filterVal, jsonData) => {
@@ -29,7 +31,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     const [checkedURL, setCheckedURL] = useState<string[]>([])
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [checkedAll, setCheckedAll] = useState<boolean>(false)
-
+    const isSimple = props.isSimple || false
     useEffect(() => {
         if (checkedAll) {
             const rowKeys = props.data.map((item, index) => `${item.host}:${item.port}-${item.timestamp}`)
@@ -43,7 +45,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
             setSelectedRowKeys([])
             setCheckedURL([])
         }
-        if(props.data.length>selectedRowKeys.length){
+        if (props.data.length > selectedRowKeys.length) {
             setCheckedAll(false)
         }
     }, [props.data])
@@ -66,7 +68,10 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
             resolve(params)
         })
     })
-
+    /** 通知软件打开管理页面 */
+    const openMenu = () => {
+        ipcRenderer.invoke("open-user-manage", Route.DB_Ports)
+    }
     return (
         <Table<YakitPort>
             size={"small"}
@@ -77,12 +82,16 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                     <>
                         <Row>
                             <Col span={12}>开放端口 / Open Ports</Col>
-                            <Col span={12} style={{textAlign: "right"}}></Col>
+                            <Col span={12} style={{textAlign: "right"}}>
+                                {
+                                    isSimple&&<div style={{fontSize:14,color:"#1890ff",cursor:"pointer"}} onClick={openMenu}>查看完整数据</div>
+                                }
+                            </Col>
                         </Row>
                         <Row>
                             <Col span={12} style={{display: "flex", alignItems: "center"}}>
                                 <Checkbox
-                                    style={{marginLeft:8}}
+                                    style={{marginLeft: 8}}
                                     checked={checkedAll}
                                     onChange={(e) => {
                                         if (!e.target.checked) {
@@ -95,35 +104,35 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                 >
                                     全选
                                 </Checkbox>
-                                {selectedRowKeys.length > 0 && (
-                                    <Tag color='blue'>
-                                        已选{selectedRowKeys?.length}条
-                                    </Tag>
-                                )}
+                                {selectedRowKeys.length > 0 && <Tag color='blue'>已选{selectedRowKeys?.length}条</Tag>}
                             </Col>
                             <Col span={12} style={{textAlign: "right"}}>
-                                <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='开放端口' />
-                                <DropdownMenu
-                                    menu={{
-                                        data: [
-                                            {key: "bug-test", title: "发送到漏洞检测"},
-                                            {key: "brute", title: "发送到爆破"}
-                                        ]
-                                    }}
-                                    dropdown={{placement: "bottomRight"}}
-                                    onClick={(key) => {
-                                        if (checkedURL.length === 0) {
-                                            failed("请最少选择一个选项再进行操作")
-                                            return
-                                        }
-                                        ipcRenderer.invoke("send-to-tab", {
-                                            type: key,
-                                            data: {URL: JSON.stringify(checkedURL)}
-                                        })
-                                    }}
-                                >
-                                    <Button type='link' style={{height: 16}} icon={<LineMenunIcon />}></Button>
-                                </DropdownMenu>
+                                {!isSimple && (
+                                    <>
+                                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='开放端口' />
+                                        <DropdownMenu
+                                            menu={{
+                                                data: [
+                                                    {key: "bug-test", title: "发送到漏洞检测"},
+                                                    {key: "brute", title: "发送到爆破"}
+                                                ]
+                                            }}
+                                            dropdown={{placement: "bottomRight"}}
+                                            onClick={(key) => {
+                                                if (checkedURL.length === 0) {
+                                                    failed("请最少选择一个选项再进行操作")
+                                                    return
+                                                }
+                                                ipcRenderer.invoke("send-to-tab", {
+                                                    type: key,
+                                                    data: {URL: JSON.stringify(checkedURL)}
+                                                })
+                                            }}
+                                        >
+                                            <Button type='link' style={{height: 16}} icon={<LineMenunIcon />}></Button>
+                                        </DropdownMenu>
+                                    </>
+                                )}
                             </Col>
                         </Row>
                     </>

@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route,SimpleDataBaseMenu} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -63,6 +63,7 @@ import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
+import {isSimpleEnterprise} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,21 +135,42 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftInnerRef = useRef<any>()
 
     const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
-
+    
+    /** 登录用户信息 */
+    const {userInfo} = useStore()
     useEffect(() => {
-        getRemoteValue("PatternMenu").then((patternMenu) => {
+        // 当为企业简易版
+        if(isSimpleEnterprise){
+            let currentMenuList: MenuDataProps[] = [...SimpleDataBaseMenu]
+            if(userInfo.role!=="admin"){
+                // 简易企业版非管理员 无需插件权限
+                currentMenuList = currentMenuList.filter((item)=>item.id!=="4")
+            }
+            setRouteMenu(currentMenuList)
+            setSubMenuData(currentMenuList[0].subMenuData||[])
+            setMenuId(currentMenuList[0].id)
+        }
+        else{
+            getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setRemoteValue("PatternMenu", menuMode)
             setPatternMenu(menuMode)
             init(menuMode)
         })
+        }
+        
     }, [])
     useEffect(() => {
-        ipcRenderer.on("fetch-new-main-menu", (e) => {
-            init(getPatternMenu(), true)
-        })
+        if(!isSimpleEnterprise){
+            ipcRenderer.on("fetch-new-main-menu", (e) => {
+                init(getPatternMenu(), true)
+            })
+        }
+        
         return () => {
-            ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            if(!isSimpleEnterprise){
+                ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            }
         }
     }, [])
     useUpdateEffect(() => {
@@ -188,10 +210,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
                         } else {
-                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除
+                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除 企业简易版管理员默认展示所有菜单
                             let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData]
+                            // 新手版菜单-novice
                             if (menuMode == "new") {
-                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.isNovice)
+                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.menuPattern?.includes("novice"))
                             }
                             const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
                             const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
@@ -261,7 +284,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         // 获取没有key的菜单名称
         let listMenu: MenuDataProps[] = menuList
         if (menuMode == "new") {
-            listMenu = menuList.filter((item) => item.isNovice)
+            listMenu = menuList.filter((item) => item.menuPattern?.includes("novice"))
         }
         listMenu.forEach((item) => {
             if (item.subMenuData && item.subMenuData.length > 0) {
@@ -280,8 +303,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
         onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
     })
-    /** 登录用户信息 */
-    const {userInfo} = useStore()
     /**
      * @description: 通过名字下载插件
      */
@@ -659,7 +680,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    <YakitButton
+                    {!isSimpleEnterprise&&<>
+                        <YakitButton
                         type='text'
                         className={style["heard-menu-theme"]}
                         onClick={() => onImportShare()}
@@ -749,6 +771,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             </div>
                         </YakitButton>
                     </Dropdown>
+                    </>}
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}

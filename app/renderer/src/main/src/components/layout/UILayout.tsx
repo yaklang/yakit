@@ -52,6 +52,7 @@ import {
     ProjectDescription,
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
+import {isSimpleEnterprise} from "@/utils/envfile"
 
 import classnames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -690,6 +691,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) {
+            isSimpleEnterprise?setEngineLink(true):
             getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
                 if (id) {
                     ipcRenderer.invoke("SetCurrentProject", {Id: +id})
@@ -748,15 +750,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 企业版-连接引擎后验证license=>展示企业登录
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterprise)
-    useEffect(() => {
-        // 监听是否退出登录 重新打开License控件验证身份
-        ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
-            setJudgeLicense(v)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-judge-license")
-        }
-    }, [])
+    // useEffect(() => {
+    //     // 监听是否退出登录 重新打开License控件验证身份
+    //     ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
+    //         setJudgeLicense(v)
+    //     })
+    //     return () => {
+    //         ipcRenderer.removeAllListeners("fetch-judge-license")
+    //     }
+    // }, [])
 
     // outputToWelcomeConsole("UILayout 刷新")
     return (
@@ -792,7 +794,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                     {engineLink && (
                                         <>
-                                            <div
+                                            {!isSimpleEnterprise && <div
                                                 className={classnames(styles["yakit-mode-icon"], {
                                                     [styles["yakit-mode-selected"]]: yakitMode === "soft"
                                                 })}
@@ -801,7 +803,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 <HomeSvgIcon
                                                     className={yakitMode === "soft" ? styles["mode-icon-selected"] : ""}
                                                 />
-                                            </div>
+                                            </div>}
 
                                             {/* <div
                                         className={classnames(styles["yakit-mode-icon"], {
@@ -875,7 +877,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <>
                                             <GlobalReverseState isEngineLink={engineLink} />
 
-                                            <div
+                                            {!isSimpleEnterprise && <div
                                                 className={classnames(styles["yakit-mode-icon"], {
                                                     [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
                                                 })}
@@ -884,7 +886,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 <HomeSvgIcon
                                                     className={yakitMode === "soft" ? styles["mode-icon-selected"] : ""}
                                                 />
-                                            </div>
+                                            </div>}
 
                                             {/* <div
                                     className={classnames(styles["yakit-mode-icon"], {

@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip} from "antd"
+import {Badge, Modal, Tooltip,Form,Input,Button} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -32,7 +32,7 @@ import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
 import SelectUpload from "@/pages/SelectUpload"
-import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {QueryGeneralResponse,YakScript} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -52,7 +52,9 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import { AdminUpOnlineBatch } from "@/pages/yakitStore/YakitStorePage";
 
+import {isSimpleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
@@ -116,27 +118,34 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
-            setUserMenu([
+            let cacheMenu = [
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                {key: "upload-plugin", title: "同步插件"},
                 {key: "upload-data", title: "上传数据"},
                 {key: "role-admin", title: "角色管理"},
                 {key: "account-admin", title: "用户管理"},
                 {key: "set-password", title: "修改密码"},
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
-            ])
+            ]
+            if(isSimpleEnterprise){
+                cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
+            }
+            setUserMenu(cacheMenu)
         }
         // 企业用户非管理员登录
         else if (userInfo.role !== "admin" && userInfo.platform === "company") {
-            setUserMenu([
+            let cacheMenu = [
                 {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                 {key: "upload-data", title: "上传数据"},
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
-            ])
+            ]
+            if(isSimpleEnterprise){
+                cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
+            }
+            setUserMenu(cacheMenu)
         } else {
             setUserMenu([
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "sign-out", title: "退出登录"}
             ])
         }
@@ -225,6 +234,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                         const key = Route.PlugInAdminPage
                                         openMenu(key)
                                     }
+                                    if(key === "upload-plugin"){
+                                        const m = showModal({
+                                            title: "同步本地插件",
+                                            content: <AdminUpOnlineBatch userInfo={userInfo} onClose={() => m.destroy()}/>
+                                        })
+                                        return m          
+                                    }
                                 }}
                             >
                                 {userInfo.platform === "company" ? (
@@ -271,6 +287,63 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             >
                 <SelectUpload onCancel={() => setUploadModalShow(false)} />
             </Modal>
+        </div>
+    )
+})
+
+interface NetworkDetectionProp{
+    onClose:()=>void
+}
+
+const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
+    const [form] = Form.useForm()
+    const {onClose} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [result,setResult] = useState<string>()
+    const onFinish = useMemoizedFn((values) => {
+        setLoading(true)
+        const {url} = values
+        setResult(undefined)
+        ipcRenderer
+            .invoke("try-network-detection", url)
+            .then((value: boolean) => {
+                // console.log("value",value)
+                let str:string = value?"网络连接正常":"网络无法连接"
+                setResult(str)
+            })
+            .catch(() => {})
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    const layout = {
+        labelCol: {span: 5},
+        wrapperCol: {span: 16}
+    }
+    // 判断是否为网址
+    const judgeUrl = () =>[ 
+        {
+            validator: (_, value) => {
+                let re = /([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
+                if (re.test(value)) {
+                    return Promise.resolve()
+                } else {
+                    return Promise.reject("请输入符合要求的地址")
+                }
+            }
+        }
+    ]
+    return(
+        <div>
+            <Form {...layout} form={form} onFinish={onFinish}>
+                <Form.Item name='url' label='地址' rules={[{required: true, message: "该项为必填"},...judgeUrl()]}>
+                    <Input placeholder='请输入地址' allowClear />
+                </Form.Item>
+                <div style={{textAlign: "center"}}>
+                    <Button type='primary' htmlType='submit' loading={loading}>
+                        确认
+                    </Button>
+                    {result&&<div style={{marginTop:10}}>检测结果：{result}</div>}  
+                </div>
+            </Form>
         </div>
     )
 })
@@ -368,6 +441,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "plaintextProject":
                 typeCallback(type)
                 return
+            case "network-detection":
+                const n = showModal({
+                    title: "网络检测",
+                    content: <NetworkDetection onClose={() => n.destroy()}/>
+                })
+                return n
             default:
                 return
         }
@@ -377,7 +456,45 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         <YakitMenu
             width={142}
             selectedKeys={[engineMode]}
-            data={[
+            data={isSimpleEnterprise?[
+                {
+                    key: "pcapfix",
+                    label: "网卡权限修复"
+                },
+                {
+                    key: "plugin",
+                    label: "配置插件源",
+                    children: [
+                        {label: "外部", key: "external"},
+                        {label: "插件商店", key: "store"}
+                    ]
+                },
+                {
+                    key: "link",
+                    label: "切换连接模式",
+                    children: [
+                        {label: "本地", key: "local"},
+                        {label: "远程", key: "remote"}
+                    ]
+                },
+                {
+                    key: "refreshMenu",
+                    label: "刷新菜单"
+                },
+                {
+                    key: "settingMenu",
+                    label: "配置菜单栏"
+                },
+                {
+                    key: "system-manager",
+                    label: "进程与缓存管理",
+                    children: [{key: "invalidCache", label: "删除缓存数据"}]
+                },
+                {
+                    key: "network-detection",
+                    label: "网络检测"
+                }
+            ]:[
                 {
                     key: "pcapfix",
                     label: "网卡权限修复"
@@ -442,6 +559,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                         {label: "管理员模式", key: "adminMode"},
                         {label: "旧版本迁移", key: "migrateLegacy"}
                     ]
+                },
+                {
+                    key: "network-detection",
+                    label: "网络检测"
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
@@ -1082,7 +1203,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
-                                {userInfo.role === "superAdmin" && (
+                                {userInfo.role === "superAdmin" && !isSimpleEnterprise && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastVersion}
@@ -1095,7 +1216,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         onUpdateEdit={UpdateContentEdit}
                                     />
                                 )}
-                                <UIOpUpdateYakit
+                               {!isSimpleEnterprise && <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -1104,7 +1225,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     role={userInfo.role}
                                     updateContent={isEnterprise ? companyYakit : communityYakit}
                                     onUpdateEdit={UpdateContentEdit}
-                                />
+                                />}
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}
                                     lastVersion={yaklangLastVersion}
@@ -1161,6 +1282,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdate = useMemo(() => {
         return (
+            isSimpleEnterprise?(yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion):
             (yakitLastVersion !== "" && yakitLastVersion !== yakitVersion) ||
             (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion)
         )

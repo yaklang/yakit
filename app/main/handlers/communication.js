@@ -1,6 +1,6 @@
 const {ipcMain} = require("electron")
 const isDev = require("electron-is-dev")
-
+const exec = require("child_process").exec
 module.exports = (win, getClient) => {
     // 刷新主页面左侧菜单内容 / refresh the menu content on the right side of the main page
     ipcMain.handle("change-main-menu", async (e) => {
@@ -72,5 +72,23 @@ module.exports = (win, getClient) => {
     /** License验证通信 */
     ipcMain.handle("update-judge-license", (e, params) => {
         win.webContents.send("fetch-judge-license", params)
+    })
+
+    /** 网络检测 */
+    ipcMain.handle("try-network-detection", async (e, ip) => {
+        return await new Promise((resolve, reject) => {
+            exec(`ping ${ip}`, (error, stdout, stderr) => {
+                if (error) {
+                    resolve(false)
+                } else {
+                    resolve(true)
+                }
+            })
+        })
+    })
+
+    /** 刷新tabs颜色展示 */
+    ipcMain.handle("refresh-tabs-color", async (e,params) => {
+        win.webContents.send("fetch-new-tabs-color",params)
     })
 }

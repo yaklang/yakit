@@ -18,6 +18,14 @@ export interface UnfinishedBatchTask {
     Percent: number
 }
 
+export interface SimpleDetectBatchTask {
+    Uid: string
+    CreatedAt: number
+    Percent: number
+    YakScriptOnlineGroup: string
+    TaskName: string
+}
+
 const {ipcRenderer} = window.require("electron");
 
 const UnfinishedBatchTaskList: React.FC<UnfinishedBatchTaskListProp> = (props) => {

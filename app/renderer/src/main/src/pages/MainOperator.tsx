@@ -39,7 +39,7 @@ import SetPassword from "./SetPassword"
 // import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import {UnfinishedBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
+import {UnfinishedBatchTask,SimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 // import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
 // import {showConfigMenuItems} from "../utils/ConfigMenuItems"
 // import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
@@ -60,7 +60,8 @@ import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-
+import {isSimpleEnterprise} from "@/utils/envfile"
+import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect";
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {ipcRenderer} = window.require("electron")
@@ -336,7 +337,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>([
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimpleEnterprise?[]:[
         {
             verbose: "首页",
             route: Route.NewHome,
@@ -344,7 +345,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(Route.NewHome)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimpleEnterprise?"":Route.NewHome)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -359,6 +360,33 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
+    
+    useEffect(()=>{
+        if(isSimpleEnterprise){
+            // 简易企业版页面控制
+            addTabPage(Route.SimpleDetect)
+            // 简易企业版判断本地插件数-导入弹窗
+            const newParams = {
+                Type: "yak,mitm,codec,packet-hack,port-scan",
+                Keyword: "",
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                UserId: 0
+            }
+            ipcRenderer
+            .invoke("QueryYakScript", newParams)
+            .then((item: QueryYakScriptsResponse) => {
+                if(item.Data.length===0){
+                    const m = showModal({
+                        title: "导入插件",
+                        content: <DownloadAllPlugin type="modal" onClose={() => m.destroy()} />
+                    })
+                    return m 
+                }
+            })
+            
+        }
+    },[])
+
     // 监听console方向打开
     useEffect(() => {
         ipcRenderer.on("callback-direction-console-log", (e, res: any) => {
@@ -871,14 +899,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         saveFuzzerList()
     }
     useEffect(() => {
-        setPageCache([
-            {
-                verbose: "首页",
-                route: Route.NewHome,
-                singleNode: ContentByRoute(Route.NewHome),
-                multipleNode: []
-            }
-        ])
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
             try {
                 updateFuzzerList(res.key, {...(fuzzerList.current.get(res.key) || {}), ...JSON.parse(res.param)})
@@ -1130,6 +1150,18 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
     })
 
+    const addSimpleBatchExecRecover = useMemoizedFn((task: SimpleDetectBatchTask) => {
+        addTabPage(Route.SimpleDetect, {
+            hideAdd: true,
+            node: ContentByRoute(Route.SimpleDetect, undefined, {
+                recoverUid: task.Uid,
+                recoverBaseProgress: task.Percent,
+                recoverOnlineGroup: task.YakScriptOnlineGroup,
+                recoverTaskName: task.TaskName
+            })
+        })
+    })
+
     const addPacketScan = useMemoizedFn(
         (httpFlows: number[], https: boolean, request?: Uint8Array, keyword?: string) => {
             addTabPage(Route.PacketScanPage, {
@@ -1155,6 +1187,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
+            if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as SimpleDetectBatchTask)
             if (type === "exec-packet-scan")
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)
@@ -1188,7 +1221,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache([
+                setPageCache(isSimpleEnterprise?[]:[
                     {
                         verbose: "首页",
                         route: Route.NewHome,
@@ -1196,7 +1229,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         multipleNode: []
                     }
                 ])
-                setCurrentTabKey(Route.NewHome)
+                setCurrentTabKey(isSimpleEnterprise?"":Route.NewHome)
             }
         })
     })
@@ -1206,7 +1239,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                setPageCache([
+                if(isSimpleEnterprise){
+                    setPageCache([...arr])
+                }
+                if(!isSimpleEnterprise){
+                    setPageCache([
                     {
                         verbose: "首页",
                         route: Route.NewHome,
@@ -1215,6 +1252,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     },
                     ...arr
                 ])
+                }
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })

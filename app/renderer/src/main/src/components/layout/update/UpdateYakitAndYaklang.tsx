@@ -11,6 +11,7 @@ import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
+import {isSimpleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
@@ -136,6 +137,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
+        if (isSimpleEnterprise) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true

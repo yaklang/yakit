@@ -1,0 +1,122 @@
+.simple-detect {
+    height: 100%;
+    overflow: hidden;
+    .log-list {
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        color: #666666;
+    }
+}
+.simple-detect-form {
+    .help-hint-title {
+        color: #198fff;
+        cursor: pointer;
+        margin-left: 18px;
+    }
+    :global {
+        .ant-slider-mark-text {
+            top: -38px;
+        }
+    }
+}
+.simple-detect-table {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .result-table-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        :global {
+            .scan-port-tabs {
+                .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+                    color: #1890ff !important;
+                }
+                .ant-tabs-tabpane {
+                    padding: 0px !important;
+                }
+            }
+        }
+    }
+    .result-notice-body {
+        height: 70px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .result-notice-body .notice-body {
+        height: 60px;
+        padding: 2px;
+    }
+    .result-notice-body .notice-body .notice-body-header {
+        height: 38px;
+        line-height: 38px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    .result-notice-body .notice-body .notice-font-in-progress {
+        color: #ffd666;
+    }
+    .result-notice-body .notice-body .notice-font-completed {
+        color: #bae637;
+    }
+    .result-notice-body .notice-body .notice-font-vuln {
+        color: #a8071a;
+    }
+
+    .result-notice-body .notice-body .notice-body-counter {
+        height: 18px;
+        line-height: 18px;
+        text-align: center;
+        font-weight: 500;
+    }
+    .result-notice-body .notice-divider {
+        height: 100%;
+        margin: 4px;
+    }
+}
+.download-all-plugin {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    .filter-opt-progress {
+        flex: 1;
+        min-width: 100px;
+        max-width: 300px;
+        margin-left: 6px;
+    }
+    .operation-text {
+        font-size: 14px;
+        color: #1890ff;
+        cursor: pointer;
+    }
+}
+.hole-text {
+    font-size: 14px;
+    color: #1890ff;
+    margin-left: 12px;
+    cursor: pointer;
+    display: inline-block;
+}
+.disable-hole-text {
+    font-size: 14px;
+    color: #d9d9d9;
+    margin-left: 12px;
+    cursor: no-drop;
+    display: inline-block;
+}
+
+.download-all-plugin-modal {
+    .filter-opt-progress-modal {
+    }
+}
+.body-time-line {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding-top: 8px;
+}
