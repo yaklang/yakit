@@ -1,24 +1,25 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react"
 import classNames from "classnames"
 import styles from "./MITMServerStartForm.module.scss"
-import {ClientCertificate} from "./MITMServerStartForm"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {MITMConsts} from "../MITMConsts"
-import {useMemoizedFn} from "ahooks"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {yakitFailed} from "@/utils/notification"
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Divider, Form, Upload} from "antd"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {ExportIcon, PlusCircleIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
+import { ClientCertificate } from "./MITMServerStartForm"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { MITMConsts } from "../MITMConsts"
+import { useMemoizedFn } from "ahooks"
+import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
+import { saveABSFileToOpen } from "@/utils/openWebsite"
+import { yakitFailed } from "@/utils/notification"
+import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { Divider, Form, Modal, Upload } from "antd"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { ExportIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon } from "@/assets/newIcon"
+import { ExclamationCircleOutlined } from "@ant-design/icons"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
 const MITMCertificateDownloadModal = React.lazy(() => import("./MITMCertificateDownloadModal"))
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 interface MITMFormAdvancedConfigurationProps {
     visible: boolean
@@ -30,9 +31,11 @@ export interface AdvancedConfigurationFromValue {
     certs: ClientCertificate[]
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo((props) => {
-    const {visible, setVisible, onSave} = props
+    const { visible, setVisible, onSave } = props
     const [certs, setCerts] = useState<ClientCertificate[]>([])
+    const [certsDef, setCertsDef] = useState<ClientCertificate[]>([])// 用来判断是否修改了 certs 这个值
     const [downstreamProxy, setDownstreamProxy] = useState<string>("")
+    const [downstreamProxyDef, setDownstreamProxyDef] = useState<string>("")// 用来判断是否修改了 downstreamProxy 这个值
     const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
@@ -46,6 +49,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 try {
                     const certsRaw = JSON.parse(e) as ClientCertificate[]
                     setCerts(certsRaw)
+                    setCertsDef(certsRaw)
                 } catch (e) {
                     setCerts([])
                 }
@@ -55,7 +59,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         })
         getRemoteValue(MITMConsts.MITMDefaultDownstreamProxy).then((e) => {
             setDownstreamProxy(`${e}`)
-            form.setFieldsValue({downstreamProxy: e})
+            setDownstreamProxyDef(`${e}`)
+            form.setFieldsValue({ downstreamProxy: e })
         })
     }, [visible])
     /**
@@ -129,11 +134,44 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
         onSave(params)
     })
+    const onClose = useMemoizedFn(() => {
+        if (downstreamProxyDef !== downstreamProxy || certs !== certsDef) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "请问是否要保存规则内容并关闭弹框？",
+                okText: "保存",
+                cancelText: "不保存",
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className="modal-remove-icon"
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
+                onOk: () => {
+                    onSaveSetting()
+                },
+                onCancel: () => {
+                    setVisible(false)
+                },
+                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
+                okButtonProps: { size: "small", className: "modal-ok-button" }
+            })
+        } else {
+            setVisible(false)
+        }
+    })
     return (
         <YakitDrawer
             className={styles["advanced-configuration-drawer"]}
             visible={visible}
-            onClose={() => setVisible(false)}
+            onClose={() => onClose()}
             width='40%'
             title={
                 <div className={styles["advanced-configuration-drawer-title"]}>
@@ -153,8 +191,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     </div>
                 </div>
             }
+            maskClosable={false}
         >
-            <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+            <Form labelCol={{ span: 6 }} wrapperCol={{ span: 18 }} form={form}>
                 <Form.Item
                     label='下游代理'
                     name='downstreamProxy'
@@ -174,7 +213,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             type='text'
                             icon={<PlusCircleIcon />}
                             onClick={() => setCertificateFormVisible(true)}
-                            style={{paddingLeft: 0}}
+                            style={{ paddingLeft: 0 }}
                         >
                             添加
                         </YakitButton>
@@ -182,12 +221,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             <YakitButton
                                 type='text'
                                 disabled={certs.length === 0}
-                                style={{color: certs.length > 0 ? "var(--yakit-danger-5)" : ""}}
+                                style={{ color: certs.length > 0 ? "var(--yakit-danger-5)" : "" }}
                                 onClick={() => setCerts([])}
                             >
                                 清除
                             </YakitButton>
-                            <Divider type='vertical' style={{margin: "0 4px"}} />
+                            <Divider type='vertical' style={{ margin: "0 4px" }} />
                             <Upload
                                 multiple={false}
                                 maxCount={1}
@@ -199,7 +238,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 </YakitButton>
                             </Upload>
 
-                            <Divider type='vertical' style={{margin: "0 4px"}} />
+                            <Divider type='vertical' style={{ margin: "0 4px" }} />
                             <YakitButton
                                 type='text'
                                 icon={<ExportIcon />}
@@ -226,18 +265,18 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                             setCerts(certs.filter((ele) => ele.CerName !== item.CerName))
                                         }}
                                     />
-                                    <Divider type='vertical' style={{margin: "0 8px"}} />
+                                    <Divider type='vertical' style={{ margin: "0 8px" }} />
                                     <ExportIcon className={styles["export-icon"]} onClick={() => onExportCerts(item)} />
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <Divider dashed style={{margin: "16px 0"}} />
+                    <Divider dashed style={{ margin: "16px 0" }} />
                     <div>
-                        <YakitButton type='text' style={{paddingLeft: 0}} onClick={() => setFiltersVisible(true)}>
+                        <YakitButton type='text' style={{ paddingLeft: 0 }} onClick={() => setFiltersVisible(true)}>
                             过滤器
                         </YakitButton>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
+                        <Divider type='vertical' style={{ margin: "0 4px" }} />
                         <YakitButton type='text' onClick={() => setDownloadVisible(true)}>
                             证书下载
                         </YakitButton>

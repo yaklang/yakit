@@ -553,7 +553,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             e.stopPropagation()
                             Modal.destroyAll()
                         }}
-                        className={styles["remove-icon"]}
+                        className="modal-remove-icon"
                     >
                         <RemoveIcon />
                     </div>
@@ -564,8 +564,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 onCancel: () => {
                     setVisible(false)
                 },
-                cancelButtonProps: {size: "small", className: styles["cancel-button"]},
-                okButtonProps: {size: "small", className: styles["ok-button"]}
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
             })
         } else {
             setVisible(false)
