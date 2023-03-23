@@ -899,11 +899,18 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const isResize = useRef<boolean>(false)
     // 设置ResizeBox高度
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
+    
+    const statusCards = infoState.statusState.filter((item)=>["加载插件","漏洞/风险","开放端口数","扫描主机数"].includes(item.tag))
     useEffect(() => {
         if (!isResize.current) {
-            executing ? setResizeBoxSize("206px") : setResizeBoxSize("430px")
+            if(executing){
+                statusCards.length===0?setResizeBoxSize("116px"):setResizeBoxSize("206px")
+            }
+            else{
+                statusCards.length===0?setResizeBoxSize("340px"):setResizeBoxSize("430px")
+            }
         }
-    }, [executing])
+    }, [executing,statusCards.length])
 
     useEffect(() => {
         setTabId(simpleDetectTabsParams.tabId)
@@ -968,6 +975,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
             return i.level === "info"
         })
         .splice(0, 3)
+
+    
     return (
         <div className={styles["simple-detect"]}>
             <ResizeBox
@@ -1028,7 +1037,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
                         <Divider style={{margin: 4}} />
 
-                        <SimpleCardBox statusCards={infoState.statusState} />
+                        <SimpleCardBox statusCards={statusCards} />
                     </AutoCard>
                 }
                 firstMinSize={"200px"}
