@@ -1891,8 +1891,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // 根据host拿到对应ID数组
         const newArr = filterItem([...shieldData.data, host])
         const newObj = { ...shieldData, data: newArr }
-        console.log("newObj", newObj)
-
         setShieldData(newObj)
     })
     return (
