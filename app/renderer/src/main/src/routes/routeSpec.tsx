@@ -787,7 +787,7 @@ export const HiddenMenuData: MenuDataProps[] = [
 /**
     * @description: 企业版简易版菜单
 */
-export const SimbleDataBaseMenu: MenuDataProps[] = [
+export const SimpleDataBaseMenu: MenuDataProps[] = [
     // {
     //     id: "2",
     //     label: "基础工具",

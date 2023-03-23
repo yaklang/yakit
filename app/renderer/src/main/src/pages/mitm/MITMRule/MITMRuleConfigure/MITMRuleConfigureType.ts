@@ -6,5 +6,6 @@ export interface MITMRuleExportProps {
 export interface MITMRuleImportProps {
     visible: boolean
     setVisible: (b: boolean) => void
-    onOk?:()=>void
+    onOk?: () => void
+    isUseDefRules?: boolean
 }

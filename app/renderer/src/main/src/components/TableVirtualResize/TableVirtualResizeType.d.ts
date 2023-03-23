@@ -26,10 +26,12 @@ import {SelectProps} from "antd"
  * @property {boolean} isRefresh： 刷新表格 滚动至0
  * @property {boolean} disableSorting：禁用排序
  * @property {object} query：查询条件
+ * @event (T) => onSetCurrentRow 选中项
  * @event (record: T) => void onSetCurrentRow:设置选中
  * @event (dragIndex: number, hoverIndex: number) => void onMoveRow:拖拽
  * @property {boolean} enableDragSort 是否拖拽排序
  * @event   onMoveRowEnd 拖拽结束
+ * @property {boolean}  useUpAndDown 是否启用上下建
  */
 export interface TableVirtualResizeProps<T> {
     ref?: any
@@ -58,10 +60,12 @@ export interface TableVirtualResizeProps<T> {
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
     query?: object
+    currentSelectItem?: T
     onSetCurrentRow?: (record: T) => void
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
+    useUpAndDown?: boolean
 }
 
 export interface SortProps {

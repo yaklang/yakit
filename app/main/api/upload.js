@@ -40,4 +40,12 @@ module.exports = (win, getClient) => {
         )
         return res
     })
+    ipcMain.handle("get-folder-under-files", async (event, params) => {
+        const {folderPath} = params
+        if (!folderPath) return 0
+        fs.readdir(folderPath, (err, files) => {
+            if (err) throw err
+            event.sender.send(`send-folder-under-files`, files)
+        })
+    })
 }

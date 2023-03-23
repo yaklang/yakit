@@ -16,6 +16,7 @@ import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
+import { coordinate } from "./pages/globalVariable"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 /** 快捷键目录 */
@@ -65,6 +66,26 @@ function NewApp() {
     const agrTimeRef = useRef<any>(null)
     /** 私有域是否设置成功 */
     const [onlineProfileStatus, setOnlineProfileStatus] = useState<boolean>(false)
+
+    // 全局记录鼠标坐标位置(为右键菜单提供定位)
+    const coordinateTimer = useRef<any>(null)
+    useEffect(() => {
+        document.onmousemove = (e) => {
+            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+            if (coordinateTimer.current) {
+                clearTimeout(coordinateTimer.current)
+                coordinateTimer.current = null
+            }
+            coordinateTimer.current = setTimeout(() => {
+                coordinate.screenX = screenX
+                coordinate.screenY = screenY
+                coordinate.clientX = clientX
+                coordinate.clientY = clientY
+                coordinate.pageX = pageX
+                coordinate.pageY = pageY
+            }, 50)
+        }
+    }, [])
 
     /** 是否展示用户协议 */
     useEffect(() => {

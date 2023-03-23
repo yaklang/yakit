@@ -185,6 +185,44 @@
             .ant-menu-item-selected:hover {
                 color: var(--menu-color);
             }
+
+            .ant-menu-submenu .icon-style {
+                color: var(--yakit-body-text-color);
+            }
+
+            .ant-menu-submenu-active {
+                background-color: var(--menu-background) !important;
+                color: var(--menu-color) !important;
+                border-radius: 4px;
+
+                span.anticon {
+                    color: var(--menu-color);
+                }
+            }
+
+            .ant-menu-submenu-selected {
+                color: var(--yakit-header-color);
+            }
+
+            .ant-menu-submenu {
+                .ant-menu-submenu-title {
+                    height: 100%;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .ant-menu-submenu-title:hover {
+                    color: var(--menu-color);
+
+                    span.anticon {
+                        color: var(--menu-color);
+                    }
+                }
+
+                .ant-menu-submenu-arrow {
+                    display: none;
+                }
+            }
         }
 
         .ant-menu-item-active {

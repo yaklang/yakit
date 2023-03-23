@@ -4,9 +4,9 @@ import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 import "./MainTabs.scss"
-import {simbleDetectTabsParams} from "@/store"
+import {simpleDetectTabsParams} from "@/store"
 import {useGetState} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
@@ -16,8 +16,8 @@ interface InitTabIdProp {
 }
 const InitTabId: React.FC<InitTabIdProp> = (props) => {
     useLayoutEffect(()=>{
-        if(isSimbleEnterprise){
-            simbleDetectTabsParams.tabId=props.id
+        if(isSimpleEnterprise){
+            simpleDetectTabsParams.tabId=props.id
         }
     },[])
     return <>{props.children}</>
@@ -35,7 +35,7 @@ export interface MainTabsProp {
     updateCacheVerbose: (key: string, tabType: string, value: string) => void
 }
 
-interface SimbleDetectTabsProps {
+interface SimpleDetectTabsProps {
     tabId:string
     status:"run"|"stop"|"success"
 }
@@ -55,7 +55,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const tabsRef = useRef(null)
-    const [_,setSimbleDetectTabsStatus,getSimbleDetectTabsStatus] = useGetState<SimbleDetectTabsProps[]>([])
+    const [_,setSimpleDetectTabsStatus,getSimpleDetectTabsStatus] = useGetState<SimpleDetectTabsProps[]>([])
     useEffect(() => {
         setTimeout(() => {
             if (!tabsRef || !tabsRef.current) return
@@ -106,8 +106,8 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
 
     // 简易企业版 根据任务状态控制颜色
     const judgeTabColor = (verbose:string,id:string) => {
-        if(isSimbleEnterprise){
-            let itemArr = getSimbleDetectTabsStatus().filter((item)=>item.tabId===id)
+        if(isSimpleEnterprise){
+            let itemArr = getSimpleDetectTabsStatus().filter((item)=>item.tabId===id)
             if(itemArr.length>0&&itemArr[0].tabId!==currentKey){
                 let status = itemArr[0].status
                 let color = ""
@@ -132,8 +132,8 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
     }
 
     useEffect(()=>{
-        ipcRenderer.on("fetch-new-tabs-color", (e, data:SimbleDetectTabsProps) => {
-            let cacheData = [...getSimbleDetectTabsStatus()]
+        ipcRenderer.on("fetch-new-tabs-color", (e, data:SimpleDetectTabsProps) => {
+            let cacheData = [...getSimpleDetectTabsStatus()]
             let isFind:boolean = cacheData.filter((item)=>item.tabId===data.tabId).length>0
             if(isFind){
                 cacheData = cacheData.map((item)=>{
@@ -145,10 +145,10 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                     }
                     return item
                 })
-                setSimbleDetectTabsStatus(cacheData)
+                setSimpleDetectTabsStatus(cacheData)
             }
             else{
-                setSimbleDetectTabsStatus([...getSimbleDetectTabsStatus(),data])
+                setSimpleDetectTabsStatus([...getSimpleDetectTabsStatus(),data])
             }
         })
         return () => {

@@ -18,7 +18,7 @@ export interface UnfinishedBatchTask {
     Percent: number
 }
 
-export interface SimbleDetectBatchTask {
+export interface SimpleDetectBatchTask {
     Uid: string
     CreatedAt: number
     Percent: number

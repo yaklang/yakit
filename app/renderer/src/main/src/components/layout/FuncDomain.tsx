@@ -19,7 +19,7 @@ import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
-import {YaklangEngineMode} from "@/yakitGVDefine"
+import {YakitSettingCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
@@ -38,7 +38,6 @@ import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
-import {showConfigMenuItems} from "@/utils/ConfigMenuItems"
 import {showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
@@ -55,7 +54,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import { AdminUpOnlineBatch } from "@/pages/yakitStore/YakitStorePage";
 
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
@@ -70,7 +69,7 @@ export interface FuncDomainProp {
     engineMode: YaklangEngineMode
     isRemoteMode: boolean
     onEngineModeChange: (type: YaklangEngineMode) => any
-    typeCallback: (type: "console" | "adminMode" | "break") => any
+    typeCallback: (type: YakitSettingCallbackType) => any
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -128,7 +127,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if(isSimbleEnterprise){
+            if(isSimpleEnterprise){
                 cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
             }
             setUserMenu(cacheMenu)
@@ -141,7 +140,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if(isSimbleEnterprise){
+            if(isSimpleEnterprise){
                 cacheMenu = cacheMenu.filter((item)=>item.key!=="upload-data")
             }
             setUserMenu(cacheMenu)
@@ -354,7 +353,7 @@ interface UIOpSettingProp {
     engineMode: YaklangEngineMode
     /** yaklang引擎切换启动模式 */
     onEngineModeChange: (type: YaklangEngineMode) => any
-    typeCallback: (type: "console" | "adminMode" | "break") => any
+    typeCallback: (type: YakitSettingCallbackType) => any
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
@@ -425,9 +424,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "refreshMenu":
                 ipcRenderer.invoke("change-main-menu")
                 return
-            case "settingMenu":
-                showConfigMenuItems()
-                return
             case "invalidCache":
                 invalidCacheAndUserData()
                 return
@@ -439,6 +435,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "migrateLegacy":
                 migrateLegacyDatabase()
+                return
+            case "changeProject":
+            case "encryptionProject":
+            case "plaintextProject":
+                typeCallback(type)
                 return
             case "network-detection":
                 const n = showModal({
@@ -453,8 +454,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
 
     const menu = (
         <YakitMenu
+            width={142}
             selectedKeys={[engineMode]}
-            data={isSimbleEnterprise?[
+            data={isSimpleEnterprise?[
                 {
                     key: "pcapfix",
                     label: "网卡权限修复"
@@ -498,14 +500,20 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     label: "网卡权限修复"
                 },
                 {
-                    key: "plugin",
-                    label: "配置插件源",
+                    key: "project",
+                    label: "项目管理",
                     children: [
-                        {label: "插件商店", key: "store"},
-                        {label: "CVE 数据库", key: "cve-database-download"},
-                        {label: "外部", key: "external"}
+                        {label: "切换项目", key: "changeProject"},
+                        {label: "加密导出", key: "encryptionProject"},
+                        {label: "明文导出", key: "plaintextProject"}
                     ]
                 },
+                {
+                    key: "system-manager",
+                    label: "进程与缓存管理",
+                    children: [{key: "invalidCache", label: "删除缓存数据"}]
+                },
+                {type: "divider"},
                 {
                     key: "reverse",
                     label: "全局反连"
@@ -522,6 +530,16 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     key: "engineVar",
                     label: "引擎环境变量"
                 },
+                {type: "divider"},
+                {
+                    key: "plugin",
+                    label: "配置插件源",
+                    children: [
+                        {label: "插件商店", key: "store"},
+                        {label: "CVE 数据库", key: "cve-database-download"},
+                        {label: "外部", key: "external"}
+                    ]
+                },
                 {
                     key: "link",
                     label: "切换连接模式",
@@ -533,15 +551,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "refreshMenu",
                     label: "刷新菜单"
-                },
-                {
-                    key: "settingMenu",
-                    label: "配置菜单栏"
-                },
-                {
-                    key: "system-manager",
-                    label: "进程与缓存管理",
-                    children: [{key: "invalidCache", label: "删除缓存数据"}]
                 },
                 {
                     key: "otherMode",
@@ -726,9 +735,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     })}
                 >
                     {content.length === 0 ? (
-                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>
-                            管理员未编辑更新通知
-                        </div>
+                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
                     ) : (
                         content.map((item, index) => {
                             return (
@@ -822,9 +829,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     })}
                 >
                     {content.length === 0 ? (
-                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>
-                            管理员未编辑更新通知
-                        </div>
+                        <div className={role === "superAdmin" ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
                     ) : (
                         content.map((item, index) => {
                             return (
@@ -1198,7 +1203,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
-                                {userInfo.role === "superAdmin" && !isSimbleEnterprise && (
+                                {userInfo.role === "superAdmin" && !isSimpleEnterprise && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastVersion}
@@ -1211,7 +1216,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         onUpdateEdit={UpdateContentEdit}
                                     />
                                 )}
-                               {!isSimbleEnterprise && <UIOpUpdateYakit
+                               {!isSimpleEnterprise && <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -1277,7 +1282,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdate = useMemo(() => {
         return (
-            isSimbleEnterprise?(yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion):
+            isSimpleEnterprise?(yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion):
             (yakitLastVersion !== "" && yakitLastVersion !== yakitVersion) ||
             (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion)
         )

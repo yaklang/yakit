@@ -39,7 +39,7 @@ import SetPassword from "./SetPassword"
 // import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import {UnfinishedBatchTask,SimbleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
+import {UnfinishedBatchTask,SimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 // import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
 // import {showConfigMenuItems} from "../utils/ConfigMenuItems"
 // import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
@@ -60,7 +60,7 @@ import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {isSimpleEnterprise} from "@/utils/envfile"
 import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect";
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
@@ -337,7 +337,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     const [notification, setNotification] = useState("")
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimbleEnterprise?[]:[
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimpleEnterprise?[]:[
         {
             verbose: "首页",
             route: Route.NewHome,
@@ -345,7 +345,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             multipleNode: []
         }
     ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimbleEnterprise?"":Route.NewHome)
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimpleEnterprise?"":Route.NewHome)
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -362,7 +362,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
     
     useEffect(()=>{
-        if(isSimbleEnterprise){
+        if(isSimpleEnterprise){
             // 简易企业版页面控制
             addTabPage(Route.SimpleDetect)
             // 简易企业版判断本地插件数-导入弹窗
@@ -704,24 +704,24 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         setPageCache([...pageCache])
     })
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
-    const coordinateTimer = useRef<any>(null)
-    useEffect(() => {
-        document.onmousemove = (e) => {
-            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
-            if (coordinateTimer.current) {
-                clearTimeout(coordinateTimer.current)
-                coordinateTimer.current = null
-            }
-            coordinateTimer.current = setTimeout(() => {
-                coordinate.screenX = screenX
-                coordinate.screenY = screenY
-                coordinate.clientX = clientX
-                coordinate.clientY = clientY
-                coordinate.pageX = pageX
-                coordinate.pageY = pageY
-            }, 50)
-        }
-    }, [])
+    // const coordinateTimer = useRef<any>(null)
+    // useEffect(() => {
+    //     document.onmousemove = (e) => {
+    //         const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+    //         if (coordinateTimer.current) {
+    //             clearTimeout(coordinateTimer.current)
+    //             coordinateTimer.current = null
+    //         }
+    //         coordinateTimer.current = setTimeout(() => {
+    //             coordinate.screenX = screenX
+    //             coordinate.screenY = screenY
+    //             coordinate.clientX = clientX
+    //             coordinate.clientY = clientY
+    //             coordinate.pageX = pageX
+    //             coordinate.pageY = pageY
+    //         }, 50)
+    //     }
+    // }, [])
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
     useEffect(() => {
@@ -1150,7 +1150,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
     })
 
-    const addSimbleBatchExecRecover = useMemoizedFn((task: SimbleDetectBatchTask) => {
+    const addSimpleBatchExecRecover = useMemoizedFn((task: SimpleDetectBatchTask) => {
         addTabPage(Route.SimpleDetect, {
             hideAdd: true,
             node: ContentByRoute(Route.SimpleDetect, undefined, {
@@ -1187,7 +1187,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
-            if (type === "simble-batch-exec-recover") addSimbleBatchExecRecover(data as SimbleDetectBatchTask)
+            if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as SimpleDetectBatchTask)
             if (type === "exec-packet-scan")
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)
@@ -1221,7 +1221,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache(isSimbleEnterprise?[]:[
+                setPageCache(isSimpleEnterprise?[]:[
                     {
                         verbose: "首页",
                         route: Route.NewHome,
@@ -1229,7 +1229,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         multipleNode: []
                     }
                 ])
-                setCurrentTabKey(isSimbleEnterprise?"":Route.NewHome)
+                setCurrentTabKey(isSimpleEnterprise?"":Route.NewHome)
             }
         })
     })
@@ -1239,10 +1239,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                if(isSimbleEnterprise){
+                if(isSimpleEnterprise){
                     setPageCache([...arr])
                 }
-                if(!isSimbleEnterprise){
+                if(!isSimpleEnterprise){
                     setPageCache([
                     {
                         verbose: "首页",

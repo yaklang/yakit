@@ -32,6 +32,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
+import {isSimpleEnterprise} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 export interface PortAssetTableProp {
@@ -450,7 +451,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             删除端口
                                         </Button>
                                     </Popconfirm>
-                                    <DropdownMenu
+                                   {!isSimpleEnterprise&&<DropdownMenu
                                         menu={{
                                             data: [
                                                 {key: "bug-test", title: "发送到漏洞检测"},
@@ -471,7 +472,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         }}
                                     >
                                         <Button type='link' icon={<LineMenunIcon />}></Button>
-                                    </DropdownMenu>
+                                    </DropdownMenu>}
                                 </Space>
                             </Col>
                         </Row>

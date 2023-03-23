@@ -28,10 +28,12 @@ interface ConfigPrivateDomainProps {
     onSuccee?:() => void,
     // 是否为企业登录
     enterpriseLogin?:boolean|undefined
+    // 是否展示跳过
+    skipShow?:boolean
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,onSuccee,enterpriseLogin = false} = props
+    const {onClose,onSuccee,enterpriseLogin = false,skipShow=false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -216,6 +218,11 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <Input.Password placeholder='请输入你的密码' allowClear />
                 </Form.Item>}
                 <div className="form-item-submit">
+                    {enterpriseLogin&&skipShow&&<Button style={{width:120,marginRight:12}} onClick={()=>{
+                        onSuccee&&onSuccee()
+                    }}>
+                        跳过
+                    </Button>}
                     <Button type='primary' htmlType='submit' style={{width:120}} loading={loading}>
                         {enterpriseLogin?"登录":"确定"}
                     </Button>

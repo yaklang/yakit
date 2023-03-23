@@ -12,7 +12,7 @@ export declare namespace API {
     plugin_type: YakitSearchData[];
     tags: YakitSearchData[];
     status: YakitSearchData[];
-    group?: YakitSearchData[];
+    group: YakitSearchData[];
   }
   export interface YakitPluginResponse {
     id: number;
@@ -511,7 +511,10 @@ export declare namespace API {
     file_type: string;
   }
   export interface DeletePluginUuid {
-    uuid: string;
+    uuid: string[];
+    dump: boolean;
+    keywords?: string;
+    is_recycle?: boolean;
   }
   export interface CompanyLicenseConfigResponse extends Paging {
     data: CompanyLicenseConfigList[];

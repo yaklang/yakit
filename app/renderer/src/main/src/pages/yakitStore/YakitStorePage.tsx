@@ -45,7 +45,7 @@ import {
     SettingOutlined,
     CloseOutlined,
     DownOutlined,
-    CloudUploadOutlined,
+    CloudUploadOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
@@ -56,7 +56,7 @@ import {formatDate} from "../../utils/timeUtil"
 import {PluginOperator} from "./PluginOperator"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoCard} from "../../components/AutoCard"
-import {UserInfoProps, useStore,YakitStoreParams} from "@/store"
+import {UserInfoProps, useStore, YakitStoreParams} from "@/store"
 import "./YakitStorePage.scss"
 import {getLocalValue, setLocalValue} from "../../utils/kv"
 import {
@@ -98,7 +98,8 @@ import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
-import {isSimbleEnterprise} from "@/utils/envfile"
+import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import {isSimpleEnterprise} from "@/utils/envfile"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -115,7 +116,7 @@ export interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }
 
-export interface QueryYakScriptLocalAndUserRequest{
+export interface QueryYakScriptLocalAndUserRequest {
     OnlineBaseUrl: string
     UserId: number
 }
@@ -155,7 +156,7 @@ export const defQueryOnline: SearchPluginOnlineRequest = {
     tags: "",
     recycle: false,
     user_id: 0,
-    time_search:""
+    time_search: ""
 }
 
 const defQueryLocal: QueryYakScriptRequest = {
@@ -163,7 +164,7 @@ const defQueryLocal: QueryYakScriptRequest = {
     Keyword: "",
     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
     UserId: 0,
-    IgnoreGeneralModuleOrder: true,
+    IgnoreGeneralModuleOrder: true
 }
 
 const statusType = {
@@ -198,7 +199,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     const [userPlugin, setUserPlugin] = useState<API.YakitPluginDetail>()
     const [fullScreen, setFullScreen] = useState<boolean>(false)
-    const [isRefList, setIsRefList,getIsRefList] = useGetState(false)
+    const [isRefList, setIsRefList, getIsRefList] = useGetState(false)
 
     // 监听是否点击编辑插件 用于控制插件仓库是否刷新
     const [isEdit, setMonitorEdit] = useState<boolean>(false)
@@ -207,12 +208,18 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     // 插件仓库参数及页面状态
     const {storeParams, setYakitStoreParams} = YakitStoreParams()
 
-    const [publicKeyword, setPublicKeyword,getPublicKeyword] = useGetState<string>(storeParams.keywords)
+    const [publicKeyword, setPublicKeyword, getPublicKeyword] = useGetState<string>(storeParams.keywords)
 
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
-    const [statisticsQueryOnline, setStatisticsQueryOnline,getStatisticsQueryOnline] = useGetState<SearchPluginOnlineRequest>({...defQueryOnline,keywords:storeParams.keywords,plugin_type:storeParams.plugin_type,time_search:storeParams.time_search})
+    const [statisticsQueryOnline, setStatisticsQueryOnline, getStatisticsQueryOnline] =
+        useGetState<SearchPluginOnlineRequest>({
+            ...defQueryOnline,
+            keywords: storeParams.keywords,
+            plugin_type: storeParams.plugin_type,
+            time_search: storeParams.time_search
+        })
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     // 统计数据
     const [yakScriptTagsAndType, setYakScriptTagsAndType] = useState<GetYakScriptTagsAndTypeResponse>()
@@ -220,44 +227,62 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [isShowFilter, setIsShowFilter] = useState<boolean>(true)
     const [statisticsIsNull, setStatisticsIsNull] = useState<boolean>(false)
     const [typeStatistics, setTypeStatistics] = useState<string[]>([])
-    // 是否第一次渲染页面 
+    // 是否第一次渲染页面
     const isFirstRendergraphPage = useRef<boolean>(true)
     const paramsParamsOperation = (res) => {
-        if(res){
+        if (res) {
             setPlugSource("online")
-            if(res.keywords&&res.keywords.length>0){
+            if (res.keywords && res.keywords.length > 0) {
                 setPublicKeyword(res.keywords)
-                setStatisticsQueryOnline({...defQueryOnline,keywords:res.keywords,plugin_type:typeOnline,time_search:""})
-            }else if(res.plugin_type){
+                setStatisticsQueryOnline({
+                    ...defQueryOnline,
+                    keywords: res.keywords,
+                    plugin_type: typeOnline,
+                    time_search: ""
+                })
+            } else if (res.plugin_type) {
                 setPublicKeyword("")
-                setStatisticsQueryOnline({...defQueryOnline,plugin_type:res.plugin_type,keywords:"",time_search:""}) 
-            }else if(res.time_search){
+                setStatisticsQueryOnline({
+                    ...defQueryOnline,
+                    plugin_type: res.plugin_type,
+                    keywords: "",
+                    time_search: ""
+                })
+            } else if (res.time_search) {
                 setPublicKeyword("")
-                setStatisticsQueryOnline({...defQueryOnline,plugin_type:typeOnline,keywords:"",time_search:res.time_search}) 
+                setStatisticsQueryOnline({
+                    ...defQueryOnline,
+                    plugin_type: typeOnline,
+                    keywords: "",
+                    time_search: res.time_search
+                })
             }
         }
     }
 
     // 参数动态更改
     useEffect(() => {
-        if(storeParams.keywords.length>0||storeParams.plugin_type!==typeOnline||storeParams.time_search.length>0){
+        if (
+            storeParams.keywords.length > 0 ||
+            storeParams.plugin_type !== typeOnline ||
+            storeParams.time_search.length > 0
+        ) {
             setPlugSource("online")
-        }
-        else{
+        } else {
             ipcRenderer
-            .invoke("fetch-local-cache", userInitUse)
-            .then((value: boolean) => {
-                if (value) {
-                    setPlugSource("local")
-                } else {
-                    setPlugSource("online")
-                    ipcRenderer.invoke("set-local-cache", userInitUse, true)
-                }
-            })
-            .catch(() => {})
-            .finally(() => {})
+                .invoke("fetch-local-cache", userInitUse)
+                .then((value: boolean) => {
+                    if (value) {
+                        setPlugSource("local")
+                    } else {
+                        setPlugSource("online")
+                        ipcRenderer.invoke("set-local-cache", userInitUse, true)
+                    }
+                })
+                .catch(() => {})
+                .finally(() => {})
         }
-        setYakitStoreParams({...storeParams, isShowYakitStorePage:true})
+        setYakitStoreParams({...storeParams, isShowYakitStorePage: true})
         ipcRenderer.on("get-yakit-store-params", (e, res) => {
             paramsParamsOperation(res)
         })
@@ -265,23 +290,23 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
             ipcRenderer.removeAllListeners("get-yakit-store-params")
             setYakitStoreParams({
                 keywords: "",
-                time_search:"",
-                plugin_type:typeOnline,
-                isShowYakitStorePage:false,
+                time_search: "",
+                plugin_type: typeOnline,
+                isShowYakitStorePage: false
             })
         }
     }, [])
 
     useEffect(() => {
-        if (!isEdit&&!isFirstRendergraphPage.current) {
+        if (!isEdit && !isFirstRendergraphPage.current) {
             onRefList()
         }
         isFirstRendergraphPage.current = false
     }, [userInfo.isLogin])
     const onRefList = useMemoizedFn((clearFilter = true) => {
-        if(clearFilter){
-           setPublicKeyword("") 
-           onResetQuery()
+        if (clearFilter) {
+            setPublicKeyword("")
+            onResetQuery()
         }
         onResetPluginDetails()
         setScriptIdOnlineId(undefined)
@@ -402,7 +427,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
         setIsFull(!(script || userPlugin || plugin))
     }, [script, userPlugin, plugin])
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-   
+
     useEffect(() => {
         if (plugSource === "user" && !userInfo.isLogin) {
             setIsShowFilter(true)
@@ -859,7 +884,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        if(!isSimbleEnterprise && queryName==="group"){
+                                        if(!isSimpleEnterprise && queryName==="group"){
                                             return <></>
                                         }
                                         
@@ -984,11 +1009,13 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     } = props
     const [totalLocal, setTotalLocal] = useState<number>(0)
     const [queryLocal, setQueryLocal] = useState<QueryYakScriptRequest>({
-        ...statisticsQueryLocal,
+        ...statisticsQueryLocal
     })
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
+    const [selectedUploadRowKeysRecordLocal, setSelectedUploadRowKeysRecordLocal, getSelectedUploadRowKeysRecordLocal] =
+        useGetState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState<boolean>(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
@@ -1174,37 +1201,37 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             warn("请选择需要上传的本地数据")
             return
         }
-        if(isSelectAllLocal){
+        if (isSelectAllLocal) {
             getRemoteValue("httpSetting").then((setting) => {
                 const values = JSON.parse(setting)
                 const OnlineBaseUrl: string = values.BaseUrl
                 const UserId = userInfo.user_id
                 ipcRenderer
-                            .invoke("QueryYakScriptLocalAndUser", {
-                                OnlineBaseUrl,
-                                UserId
-                            } as QueryYakScriptLocalAndUserRequest)
-                            .then((newSrcipt: {Data:YakScript[]}) => {
-                                SelectedUploadRowKeysRecordLocal.current = newSrcipt.Data
-                                JudgeIsShowVisible(newSrcipt.Data)
-                            })
-                            .catch((e) => {
-                                failed(`查询所有插件错误:${e}`)
-                                setUpLoading(false)
-                            })
-                            .finally(() => {})
+                    .invoke("QueryYakScriptLocalAndUser", {
+                        OnlineBaseUrl,
+                        UserId
+                    } as QueryYakScriptLocalAndUserRequest)
+                    .then((newSrcipt: {Data: YakScript[]}) => {
+                        setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
+                        JudgeIsShowVisible(newSrcipt.Data)
+                    })
+                    .catch((e) => {
+                        failed(`查询所有插件错误:${e}`)
+                        setUpLoading(false)
+                    })
+                    .finally(() => {})
             })
-        }
-        else{
-            SelectedUploadRowKeysRecordLocal.current = selectedRowKeysRecordLocal
+        } else {
+            setSelectedUploadRowKeysRecordLocal(selectedRowKeysRecordLocal)
             JudgeIsShowVisible(selectedRowKeysRecordLocal)
         }
     })
 
     // 判断是否显示私密公开弹框(如没有新增则不显示弹窗)
-    const JudgeIsShowVisible = (selectArr:YakScript[]) => {
+    const JudgeIsShowVisible = (selectArr: YakScript[]) => {
         const index = selectArr.findIndex((s) => s.UUID === "")
-        if (index === -1) { // 所选插件全都有UUID
+        if (index === -1) {
+            // 所选插件全都有UUID
             upOnlineBatch(2)
             return
         }
@@ -1221,7 +1248,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }
     })
 
-    const upOnlineBatch = useMemoizedFn(async(type: number) => {
+    const upOnlineBatch = useMemoizedFn(async (type: number) => {
         setUpLoading(true)
         StopUpload.current = false
         const realSelectedRowKeysRecordLocal = [...SelectedUploadRowKeysRecordLocal.current]
@@ -1338,7 +1365,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             onClickBatch: () => {
                 onBatchUpload()
             }
-        },
+        }
     ]
 
     return (
@@ -1578,6 +1605,7 @@ export interface YakModuleListProp {
     tag?: string[]
     onSetUser?: (u: PluginUserInfoLocalProps) => void
     setIsRequest?: (s: boolean) => void
+    emptyNode?: ReactNode
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -1602,7 +1630,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         isGridLayout,
         setIsSelectAll,
         onSetUser,
-        setIsRequest
+        setIsRequest,
+        emptyNode
     } = props
 
     // 全局登录状态
@@ -1741,40 +1770,42 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     })
     return (
         <Spin spinning={listBodyLoading}>
-            <RollingLoadList<YakScript>
-                isGridLayout={isGridLayout}
-                numberRoll={numberLocalRoll}
-                isRef={isRef}
-                recalculation={recalculation}
-                data={response.Data}
-                page={response.Pagination.Page}
-                hasMore={hasMore}
-                loading={loading}
-                loadMoreData={loadMoreData}
-                classNameList='plugin-list-body'
-                defItemHeight={itemHeight}
-                renderRow={(data: YakScript, index) => (
-                    <PluginListLocalItem
-                        plugin={data}
-                        userInfo={userInfo}
-                        onClicked={(info) => {
-                            numberLocal.current = index
-                            props.onClicked(info, index)
-                        }}
-                        onlineProfile={baseUrl}
-                        currentScript={props.currentScript}
-                        onYakScriptRender={props.onYakScriptRender}
-                        maxWidth={maxWidth}
-                        selectedRowKeysRecord={selectedRowKeysRecord || []}
-                        onSelect={onSelect}
-                        setUpdatePluginRecordLocal={(s) => {
-                            if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
-                        }}
-                        onShare={onShare}
-                        onSetUser={onSetUser}
-                    />
-                )}
-            />
+            {(response.Data.length === 0 && emptyNode) || (
+                <RollingLoadList<YakScript>
+                    isGridLayout={isGridLayout}
+                    numberRoll={numberLocalRoll}
+                    isRef={isRef}
+                    recalculation={recalculation}
+                    data={response.Data}
+                    page={response.Pagination.Page}
+                    hasMore={hasMore}
+                    loading={loading}
+                    loadMoreData={loadMoreData}
+                    classNameList='plugin-list-body'
+                    defItemHeight={itemHeight}
+                    renderRow={(data: YakScript, index) => (
+                        <PluginListLocalItem
+                            plugin={data}
+                            userInfo={userInfo}
+                            onClicked={(info) => {
+                                numberLocal.current = index
+                                props.onClicked(info, index)
+                            }}
+                            onlineProfile={baseUrl}
+                            currentScript={props.currentScript}
+                            onYakScriptRender={props.onYakScriptRender}
+                            maxWidth={maxWidth}
+                            selectedRowKeysRecord={selectedRowKeysRecord || []}
+                            onSelect={onSelect}
+                            setUpdatePluginRecordLocal={(s) => {
+                                if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
+                            }}
+                            onShare={onShare}
+                            onSetUser={onSetUser}
+                        />
+                    )}
+                />
+            )}
         </Spin>
     )
 }
@@ -1783,7 +1814,7 @@ export interface YakFilterModuleSelectProps {
     selectedTags: string[]
     setSelectedTags: (v: string[]) => void
 }
-interface TagValue {
+export interface TagValue {
     Name: string
     Total: number
 }
@@ -1932,10 +1963,7 @@ export interface YakFilterModuleList {
     TagsSelectRender?: () => any
     settingRender?: () => any
 }
-interface YakFilterRemoteObj {
-    name: string
-    value: string[]
-}
+
 export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
     const {
         // 控件来源
@@ -2409,7 +2437,7 @@ const PluginTypeText = (type) => {
     }
 }
 
-const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
+export const loadLocalYakitPluginCode = `yakit.AutoInitYakit()
 
 log.setLevel("info")
 
@@ -2428,7 +2456,7 @@ if err != nil {
 yakit.Output("更新本地仓库成功")
 `
 
-const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
+export const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
 
 loglevel("info");
 
@@ -2443,7 +2471,7 @@ if err != nil {
 yakit.Info("Update Nuclei PoC Finished")
 `
 
-const loadYakitPluginCode = `yakit.AutoInitYakit()
+export const loadYakitPluginCode = `yakit.AutoInitYakit()
 loglevel("info")
 
 gitUrl = cli.String("giturl")
@@ -2735,7 +2763,12 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             )}
             {loadMode === "local-nuclei" && (
                 <div style={{position: "relative"}}>
-                    <InputItem style={{width: "calc(100% - 20px)"}} label={"Nuclei PoC 本地路径"} value={localNucleiPath} setValue={setLocalNucleiPath} />
+                    <InputItem
+                        style={{width: "calc(100% - 20px)"}}
+                        label={"Nuclei PoC 本地路径"}
+                        value={localNucleiPath}
+                        setValue={setLocalNucleiPath}
+                    />
                     <Tooltip title={"选择导入路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
@@ -2745,8 +2778,8 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                                         properties: ["openDirectory"]
                                     })
                                     .then((data: any) => {
-                                        if(data.filePaths.length){
-                                            let absolutePath = data.filePaths[0].replace(/\\/g, '\\');
+                                        if (data.filePaths.length) {
+                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                                             setLocalNucleiPath(absolutePath)
                                         }
                                     })
@@ -3120,7 +3153,7 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     IsPrivate: query?.is_private,
                     UserId: query?.user_id,
                     UserName: query?.user_name,
-                    TimeSearch:query?.time_search
+                    TimeSearch: query?.time_search
                 }
             }
 
@@ -3619,15 +3652,20 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             </div>
                         </div>
                     )}
-                    {statisticsQueryOnline.time_search&&statisticsQueryOnline.time_search?.length>0&&
-                    <YakitTag closable color='blue' onClose={()=>{
-                        setStatisticsQueryOnline({...statisticsQueryOnline,time_search:""})
-                    }}>
-                        {statisticsQueryOnline.time_search==="week"?"本周新增":"今日新增"}
-                    </YakitTag>}
+                    {statisticsQueryOnline.time_search && statisticsQueryOnline.time_search?.length > 0 && (
+                        <YakitTag
+                            closable
+                            color='blue'
+                            onClose={() => {
+                                setStatisticsQueryOnline({...statisticsQueryOnline, time_search: ""})
+                            }}
+                        >
+                            {statisticsQueryOnline.time_search === "week" ? "本周新增" : "今日新增"}
+                        </YakitTag>
+                    )}
                 </Col>
                 <Col span={8} className='col-flex-end'>
-                    {isSimbleEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
+                    {isSimpleEnterprise&&<PluginGroup onRefList={onRefList} size={size} queryOnline={queryOnline} selectedRowKeysRecordOnline={selectedRowKeysRecordOnline} isSelectAllOnline={isSelectAllOnline}/>}
                     {isShowFilter && (
                         <PluginFilter
                             visibleQuery={visibleQuery}
@@ -4091,7 +4129,7 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
                                 // @ts-ignore
                                 <OfficialYakitLogoIcon className='text-icon-style' />
                             )}
-                            {!bind_me&& <>{(info.is_private && <LockOutlined style={{paddingLeft:5}}/>)}</>}
+                            {!bind_me && <>{info.is_private && <LockOutlined style={{paddingLeft: 5}} />}</>}
                             {bind_me && <>{(info.is_private && <LockOutlined />) || <OnlineCloudIcon />}</>}
                         </div>
                     </div>

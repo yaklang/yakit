@@ -1,4 +1,16 @@
-.simble-detect-form {
+.simple-detect {
+    height: 100%;
+    overflow: hidden;
+    .log-list {
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        color: #666666;
+    }
+}
+.simple-detect-form {
     .help-hint-title {
         color: #198fff;
         cursor: pointer;
@@ -10,7 +22,7 @@
         }
     }
 }
-.simble-detect-table {
+.simple-detect-table {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -21,7 +33,6 @@
         flex-direction: column;
         :global {
             .scan-port-tabs {
-                
                 .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
                     color: #1890ff !important;
                 }
