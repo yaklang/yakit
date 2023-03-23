@@ -44,37 +44,41 @@ export const OnlinePluginRecycleBin: React.FC = () => {
     })
     const onReduction = (item: API.YakitPluginDetail) => {
         setCurrentItem(item)
-        const params: API.UpPluginRecycleRequest = {
+        const params: API.DeletePluginUuid = {
+            is_recycle: true,
             dump: false,
-            ids: [item.id]
+            uuid: [item.uuid]
         }
         onReductionOrRemove(params)
     }
     const onBatchOperation = useMemoizedFn((type: boolean) => {
-        let params: API.UpPluginRecycleRequest = {
+        let params: API.DeletePluginUuid = {
+            uuid: [],
+            is_recycle: true,
             dump: type,
         }
         if (isSelectAll || selectedRowKeysRecord.length === 0) {
             params = {
                 ...params,
-                keywords: queryRecycleBin.keywords
+                keywords: queryRecycleBin.keywords || undefined
             }
             // 默认删除全部
             onReductionOrRemove(params)
         } else {
             params = {
                 ...params,
-                ids: selectedRowKeysRecord.map(ele => ele.id)
+                uuid: selectedRowKeysRecord.map(ele => ele.uuid)
             }
             onReductionOrRemove(params)
         }
     })
-    const onReductionOrRemove = (params: API.UpPluginRecycleRequest) => {
+    const onReductionOrRemove = (params: API.DeletePluginUuid) => {
         setRecycleLoading(true)
-        NetWorkApi<API.UpPluginRecycleRequest, API.ActionSucceeded>({
-            method: "post",
-            url: "yakit/plugin/recycle",
-            data: params
+
+        NetWorkApi<API.DeletePluginUuid, API.ActionSucceeded>({
+            method: "delete",
+            url: "yakit/plugin",
+            data: {...params}
         })
             .then((res) => {
                 onRefresh()
