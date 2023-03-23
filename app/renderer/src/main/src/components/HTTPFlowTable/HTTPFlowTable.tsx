@@ -70,10 +70,6 @@ const { ipcRenderer } = window.require("electron")
 
 const { Option } = Select
 
-interface adasdas extends YakitMenuItemProps {
-    onRun?: () => any
-}
-
 export interface HTTPHeaderItem {
     Header: string
     Value: string
@@ -2191,6 +2187,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 overlayClassName={style["http-history-table-drop-down-popover"]}
                                                 content={
                                                     <YakitMenu
+                                                        width={150}
                                                         data={menuData
                                                             .filter((f) => f.onClickBatch)
                                                             .map((m) => {
@@ -2198,8 +2195,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                     key: m.key,
                                                                     label: m.label,
                                                                     children: m.children?.map((ele) => ({
-                                                                        key: ele.title,
-                                                                        label: ele.render || ele.title
+                                                                        key: ele.key,
+                                                                        label: ele.label
                                                                     }))
                                                                 }
                                                             })}

@@ -139,7 +139,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             Modal.confirm({
                 title: "温馨提示",
                 icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存规则内容并关闭弹框？",
+                content: "请问是否要保存高级配置并关闭弹框？",
                 okText: "保存",
                 cancelText: "不保存",
                 closable: true,
