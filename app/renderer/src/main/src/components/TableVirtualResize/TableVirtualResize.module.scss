@@ -17,31 +17,6 @@
         .ant-spin-dot-item {
             background-color: var(--yakit-primary-5);
         }
-
-        ::-webkit-scrollbar {
-            /*滚动条整体样式*/
-            width: 8px;
-            /*高宽分别对应横竖滚动条的尺寸*/
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            /*滚动条里面小方块*/
-            border-radius: 10px;
-            box-shadow: none;
-            background-clip: padding-box;
-            border: 1px solid transparent;
-        }
-
-        ::-webkit-scrollbar-track {
-            border-radius: 0;
-            box-shadow: none;
-            background: none;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            border-color: #c1c1c1;
-        }
     }
 
     .virtual-table-heard-right {
@@ -228,12 +203,14 @@
             position: relative;
             padding-bottom: 34px;
             border: 1px solid var(--yakit-border-color);
+            // pointer-events: none;
 
             .virtual-table-list {
                 display: flex;
                 position: relative;
                 width: fit-content;
                 font-size: 12px;
+                // pointer-events: auto;
 
                 .virtual-table-row {
                     display: flex;
