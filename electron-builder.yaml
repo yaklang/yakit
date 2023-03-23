@@ -7,6 +7,11 @@ extraFiles:
     to: "bins/flag.txt"
   - from: "bins/engine-version.txt"
     to: "bins/engine-version.txt"
+  - from: "bins/resources"
+    to: "bins/resources"
+    filter:
+      - "**/*"
+      - "*.txt"
   - from: "bins/database/"
     to: "bins/database/"
     filter:
