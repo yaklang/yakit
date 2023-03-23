@@ -27,7 +27,7 @@ import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperato
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {colorSelectNode, HitColor} from "./MITMRule"
+import {colorSelectNode} from "./MITMRule"
 import {ValidateStatus} from "antd/lib/form/FormItem"
 
 const {ipcRenderer} = window.require("electron")

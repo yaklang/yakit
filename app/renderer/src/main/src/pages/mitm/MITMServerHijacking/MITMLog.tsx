@@ -126,9 +126,17 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 width: 180
             },
             {
-                title: "追加 Tag",
+                title: "Tag",
                 dataKey: "Tags",
-                minWidth: 200
+                minWidth: 200,
+                render: (text) => {
+                    return text
+                        ? `${text}`
+                              .split("|")
+                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                              .join(", ")
+                        : ""
+                }
             },
             {
                 title: "响应长度",
@@ -503,7 +511,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         },
         {wait: 200}
     ).run
-
     return (
         <div className={styles["mitm-log"]} ref={logRef}>
             <TableVirtualResize<HTTPFlow>

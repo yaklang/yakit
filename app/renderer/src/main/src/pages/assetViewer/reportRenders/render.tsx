@@ -6,6 +6,7 @@ import {AutoCard} from "../../../components/AutoCard";
 import {Tag} from "antd";
 import {JSONTableRender} from "./jsonTableRender";
 import {PieGraph} from "../../graph/PieGraph";
+import {BarGraph} from "../../graph/BarGraph";
 
 export interface ReportItemRenderProp {
     item: ReportItem
@@ -20,6 +21,17 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
         case "pie-graph":
             try {
                 return <PieGraph type={"pie"} height={300}
+                                 data={JSON.parse(props.item.content) as { key: string, value: number }[]}/>
+            } catch (e) {
+                console.info("渲染图失败")
+                console.info(e)
+                return <div style={{height: 300}}>
+                    <YakEditor value={props.item.content}/>
+                </div>
+            }
+        case "bar-graph":
+            try {
+                return <BarGraph type={"bar"} width={450} direction={props.item?.direction}
                                  data={JSON.parse(props.item.content) as { key: string, value: number }[]}/>
             } catch (e) {
                 console.info("渲染图失败")

@@ -40,6 +40,16 @@ module.exports = (win, getClient) => {
         })
     }
 
+
+    const streamSimpleDetectMap = new Map();
+
+    ipcMain.handle("cancel-SimpleDetect", handlerHelper.cancelHandler(streamSimpleDetectMap));
+
+    ipcMain.handle("SimpleDetect", (e, params, token) => {
+        let stream = getClient().SimpleDetect(params);
+        handlerHelper.registerHandler(win, stream, streamSimpleDetectMap, token)
+    })
+
     // 获取URL的IP地址
     ipcMain.handle("fetch-file-content", async (e, params) => {
         return await asyncFetchFileContent(params)

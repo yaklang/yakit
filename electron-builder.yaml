@@ -34,6 +34,8 @@ mac:
       to: "bins/flag.darwin.txt"
     - from: "bins/yak_darwin_amd64.zip"
       to: "bins/yak.zip"
+    - from: "report/template.zip"
+      to: "report/template.zip"
   target:
     - target: dmg
       arch:
@@ -48,6 +50,8 @@ linux:
       to: "bins/flag.linux.txt"
     - from: "bins/yak_linux_amd64.zip"
       to: "bins/yak.zip"
+    - from: "report/template.zip"
+      to: "report/template.zip"
   target:
     - target: AppImage
       arch:
@@ -60,6 +64,8 @@ win:
       to: "bins/flag.windows.txt"
     - from: "bins/yak_windows_amd64.zip"
       to: "bins/yak.zip"
+    - from: "report/template.zip"
+      to: "report/template.zip"
   # requestedExecutionLevel: requireAdministrator
   target:
     - target: nsis

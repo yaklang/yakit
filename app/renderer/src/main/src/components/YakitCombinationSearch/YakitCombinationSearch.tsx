@@ -67,6 +67,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
                 onFocus={onFocus}
                 onBlur={onBlur}
                 wrapperClassName={classNames(
+                    styles["yakit-combination-search"],
                     {
                         [styles["yakit-combination-search-focus"]]: focus
                     },

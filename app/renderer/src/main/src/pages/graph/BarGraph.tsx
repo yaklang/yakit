@@ -1,9 +1,11 @@
 import React from "react";
-import {Axis, Chart, Coord, Geom, Tooltip} from "bizcharts";
+import {Axis,Legend, Chart, Coord, Geom, Tooltip} from "bizcharts";
 import {GraphProps} from "./base";
 
 export const BarGraph: React.FC<GraphProps> = (g) => {
+    const color = g.color||[]
     const barData = g.data;
+    const direction:boolean = g.direction??true
     return <div>
         <Chart
             padding={{
@@ -12,16 +14,18 @@ export const BarGraph: React.FC<GraphProps> = (g) => {
             height={g.height || 400} width={g.width || 400}
             data={barData || []} forceFit
         >
-            <Coord transpose/>
+            <Coord transpose={direction}/>
             <Axis
                 name="key"
                 label={{
                     offset: 12
                 }}
             />
+            <Legend position="right" />
             <Axis name="value"/>
-            <Tooltip/>
-            <Geom type="interval" position="key*value"/>
+            <Tooltip />
+            <Geom type="interval" position="key*value" color={color.length === 0 ? undefined : ["name", color]}/>
         </Chart>
     </div>
 };
+

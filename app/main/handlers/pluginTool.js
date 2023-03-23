@@ -143,6 +143,38 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryYakScriptLocalAndUser", async (e, params) => {
         return await asyncQueryYakScriptLocalAndUser(params)
     })
+ 
+    const asyncQueryYakScriptByOnlineGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptByOnlineGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //通过OnlineGroup查询
+    ipcMain.handle("QueryYakScriptByOnlineGroup", async (e, params) => {
+        return await asyncQueryYakScriptByOnlineGroup(params)
+    })
+
+    const asyncQueryYakScriptLocalAll = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptLocalAll(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //企业版管理员获取所有可上传插件
+    ipcMain.handle("QueryYakScriptLocalAll", async (e, params) => {
+        return await asyncQueryYakScriptLocalAll(params)
+    })
 
     const asyncGetYakScriptTagsAndType = (params) => {
         return new Promise((resolve, reject) => {

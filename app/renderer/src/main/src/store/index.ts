@@ -69,3 +69,8 @@ export const YakitStoreParams = create<YakitStoreParamsProps>((set, get) => ({
     },
     setYakitStoreParams: (info) => set({storeParams: info})
 }))
+
+/**@name 企业简易版安全检测导航栏currentKey传递*/
+export let simpleDetectTabsParams = {
+    tabId:""
+}

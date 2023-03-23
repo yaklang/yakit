@@ -230,52 +230,7 @@
     }
 }
 
-.remove-icon {
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-}
 
-.cancel-button {
-    border-radius: 4px;
-    color: var(--yakit-header-color);
-    text-shadow: none;
-    box-shadow: none;
-
-    &:hover {
-        color: var(--yakit-primary-color-hover);
-        border-color: var(--yakit-primary-color-hover);
-    }
-
-    &:focus {
-        color: var(--yakit-primary-color-press);
-        border-color: var(--yakit-primary-color-press);
-    }
-}
-
-.ok-button {
-    border-radius: 4px;
-    border-color: var(--yakit-primary-color);
-    background: var(--yakit-primary-color);
-    text-shadow: none;
-    box-shadow: none;
-
-    &:hover {
-        border-color: var(--yakit-primary-color-hover);
-        background: var(--yakit-primary-color-hover);
-    }
-
-    &:focus {
-        border-color: var(--yakit-primary-color);
-        background: var(--yakit-primary-color);
-    }
-
-    &:active {
-        border-color: var(--yakit-primary-color-press);
-        background: var(--yakit-primary-color-press);
-    }
-}
 .question-tooltip {
     :global {
         .ant-tooltip-arrow {
@@ -284,50 +239,3 @@
     }
 }
 
-// ========================== yakit-checked-tag   start ==========================
-.yakit-checked-tag-wrap {
-    display: inline-flex;
-    align-items: center;
-
-    :global {
-        .ant-tag {
-            line-height: 18px;
-            height: 20px;
-        }
-        .ant-tag-checkable {
-            background-color: var(--yakit-background-color);
-        }
-        .ant-tag-checkable-checked {
-            background-color: var(--yakit-primary-5);
-        }
-        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: var(--yakit-primary-5);
-        }
-    }
-}
-
-.yakit-checked-tag-disable {
-    cursor: not-allowed;
-    :global {
-        .ant-tag-checkable {
-            color: var(--yakit-disable-text-color);
-        }
-        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: var(--yakit-disable-text-color);
-        }
-    }
-}
-.yakit-checked-tag-checked-disable {
-    cursor: not-allowed;
-    :global {
-        .ant-tag-checkable-checked {
-            color: #fff;
-            background-color: var(--yakit-disable-text-color);
-        }
-        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: #fff;
-        }
-    }
-}
-
-// ========================== yakit-checked-tag   end ==========================

@@ -9,6 +9,7 @@ import styles from "./MITMServerHijacking.module.scss"
 import * as monaco from "monaco-editor"
 import classNames from "classnames"
 import {useResponsive} from "ahooks"
+import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -50,22 +51,32 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
             )}
             <div className={styles["autoForward-manual-right"]}>
                 <div className={styles["manual-select"]}>
-                    <div className={styles["manual-select-label"]}>劫持响应</div>
-                    <YakitSelect
+                    <span className={styles["manual-select-label"]}>劫持响应&nbsp;:</span>
+                    <YakitSegmented
                         value={hijackResponseType}
-                        wrapperStyle={{width: 88}}
-                        size='small'
-                        onSelect={setHijackResponseType}
-                    >
-                        <YakitSelect.Option value='onlyOne'>仅一次</YakitSelect.Option>
-                        <YakitSelect.Option value='all'>永久</YakitSelect.Option>
-                        <YakitSelect.Option value='never'>从不</YakitSelect.Option>
-                    </YakitSelect>
+                        onChange={(v) => {
+                            setHijackResponseType(v as "onlyOne" | "all" | "never")
+                        }}
+                        options={[
+                            {
+                                label: "当前请求",
+                                value: "onlyOne"
+                            },
+                            {
+                                label: "所有",
+                                value: "all"
+                            },
+                            {
+                                label: "从不",
+                                value: "never"
+                            }
+                        ]}
+                    />
                 </div>
                 <YakitButton
                     type='outline2'
                     disabled={status === "hijacking"}
-                    className="button-text-danger"
+                    className='button-text-danger'
                     onClick={() => onDiscardRequest()}
                 >
                     丢弃请求
