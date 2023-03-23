@@ -13,6 +13,7 @@
         .ant-spin {
             color: var(--yakit-primary-5);
         }
+
         .ant-spin-dot-item {
             background-color: var(--yakit-primary-5);
         }
@@ -133,9 +134,11 @@
 
                     svg {
                         cursor: pointer;
+
                         &:hover {
                             color: var(--yakit-primary-4);
                         }
+
                         &:active {
                             color: var(--yakit-primary-6);
                         }
@@ -206,7 +209,7 @@
                 }
             }
 
-            .virtual-table-title + .virtual-table-title-fixed-right:nth-last-child(1) {
+            .virtual-table-title+.virtual-table-title-fixed-right:nth-last-child(1) {
                 border-left: 1px solid var(--yakit-border-color);
                 box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
             }
@@ -285,9 +288,11 @@
                             color: var(--yakit-primary-5);
                         }
                     }
+
                     .drag-sort-icon-active {
                         color: var(--yakit-primary-5);
                     }
+
                     &-isDragging {
                         background-color: var(--yakit-primary-1);
                     }
@@ -368,7 +373,7 @@
                     z-index: 1;
                 }
 
-                .virtual-table-row-content + .virtual-table-row-fixed-right:nth-last-child(1) {
+                .virtual-table-row-content+.virtual-table-row-fixed-right:nth-last-child(1) {
                     border-left: 1px solid var(--yakit-border-color);
                     box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
                 }
@@ -388,7 +393,7 @@
                     background-color: var(--yakit-card-background-color);
                 }
 
-                .virtual-table-active-row + .virtual-table-row-cell {
+                .virtual-table-active-row+.virtual-table-row-cell {
                     border-top: 0 !important;
                 }
             }
@@ -454,6 +459,7 @@
                 cursor: col-resize;
             }
         }
+
         .check {
             margin-right: 4px;
             height: 16px;
@@ -559,14 +565,23 @@
             max-height: 40vh;
             min-height: 34px;
             overflow-y: auto;
+            margin-bottom: 4px;
+        }
+
+        .select-wrapper {
+            padding: 0 4px;
+            margin-bottom: 4px;
         }
 
         .select-item {
+            padding: 4px 8px 4px 6px;
             display: flex;
             flex-direction: row;
             align-items: center;
             padding: 6px 12px;
             cursor: pointer;
+            border-radius: 4px;
+            justify-content: space-between;
 
             &:hover {
                 background: var(--yakit-card-background-color);
@@ -577,9 +592,7 @@
                 color: var(--yakit-primary-5);
             }
 
-            .select-item-text {
-                margin-left: 8px;
-            }
+            .select-item-text {}
         }
 
         .no-data {
@@ -590,11 +603,18 @@
         }
 
         .select-item-active {
-            background: var(--yakit-card-background-color);
+            // background: var(--yakit-card-background-color);
+            color: var(--yakit-primary-5);
+        }
+
+        .select-item-active-single {
+            background: var(--yakit-primary-1);
             color: var(--yakit-primary-5);
         }
 
         .select-search-single {
+            padding: 0 4px;
+
             .select-search-input {
                 padding: 0 6px;
                 position: sticky;
@@ -629,7 +649,7 @@
         }
 
         .select-search-multiple {
-            padding: 24px 0;
+            padding: 0 0 24px 0;
             width: 138px;
 
             :global {
@@ -651,6 +671,10 @@
                     }
                 }
             }
+        }
+
+        .select-search-multiple-filterSearch {
+            padding: 24px 0;
         }
     }
 
@@ -722,4 +746,13 @@
     text-overflow: ellipsis;
     overflow: hidden;
     word-break: break-all;
+}
+
+.check-icon {
+    color: var(--yakit-primary-5);
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
 }

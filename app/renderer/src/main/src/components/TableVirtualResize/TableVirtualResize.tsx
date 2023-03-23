@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, { ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react"
 import {
     useClickAway,
     useCreation,
@@ -23,8 +23,8 @@ import {
 } from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import style from "./TableVirtualResize.module.scss"
-import {DatePicker, Divider, Popover, RadioChangeEvent, Spin, Tag, Tooltip} from "antd"
-import {LoadingOutlined} from "@ant-design/icons"
+import { DatePicker, Divider, Popover, RadioChangeEvent, Spin, Tag, Tooltip } from "antd"
+import { LoadingOutlined } from "@ant-design/icons"
 import "../style.css"
 import {
     FilterIcon,
@@ -32,18 +32,20 @@ import {
     SorterUpIcon,
     DisableSorterIcon,
     QuestionMarkCircleIcon,
-    DragSortIcon
+    DragSortIcon,
+    CheckIcon
 } from "@/assets/newIcon"
-import {useHotkeys} from "react-hotkeys-hook"
-import moment, {Moment} from "moment"
+import { useHotkeys } from "react-hotkeys-hook"
+import moment, { Moment } from "moment"
 // import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import {useDrag, useDrop, DndProvider} from "react-dnd"
-import {HTML5Backend} from "react-dnd-html5-backend"
-import type {Identifier, XYCoord} from "dnd-core"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import {YakitProtoCheckbox} from "./YakitProtoCheckbox/YakitProtoCheckbox"
-const {RangePicker} = DatePicker
+import { useDrag, useDrop, DndProvider } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
+import type { Identifier, XYCoord } from "dnd-core"
+import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
+import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
+import { YakitProtoCheckbox } from "./YakitProtoCheckbox/YakitProtoCheckbox"
+import { YakitTag } from "../yakitUI/YakitTag/YakitTag"
+const { RangePicker } = DatePicker
 
 /**
  * @description: 更新说明
@@ -89,7 +91,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             page: 1,
             limit: 20,
             total: 0,
-            onChange: () => {}
+            onChange: () => { }
         }),
         []
     )
@@ -236,7 +238,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
             if (!inViewport) scrollTo(index)
         },
-        {wait: 100}
+        { wait: 100 }
     ).run
     // 使用下箭头
     useHotkeys(
@@ -301,7 +303,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
             if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
         },
-        {wait: 100}
+        { wait: 100 }
     ).run
     useEffect(() => {
         if (pagination.page == 1) {
@@ -319,7 +321,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 return ele
             }
             // 如果 columns 更新，保持之前的columnsItem的宽度
-            return {...ele, width: defColumnItem.width || ele.width}
+            return { ...ele, width: defColumnItem.width || ele.width }
         })
         setColumns([...newColumns])
         setDefColumns([...newColumns])
@@ -344,7 +346,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
         const newColumns: ColumnsTypeProps[] = []
         columns.forEach((l, index) => {
-            const ele = {...l}
+            const ele = { ...l }
             if (ele.fixed === "left") {
                 if (index > 0) {
                     const leftList = columns
@@ -446,7 +448,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             getLeftOrRightFixedWidth()
         }, 50)
     })
-    const onChangeRadio = useMemoizedFn((e: RadioChangeEvent) => {})
+    const onChangeRadio = useMemoizedFn((e: RadioChangeEvent) => { })
     const onChangeCheckbox = useMemoizedFn((checked: boolean) => {
         if (!rowSelection) return
         if (!rowSelection.onSelectAll) return
@@ -622,7 +624,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
         sort.order = newOrder
         sort.orderBy = newOrder === "none" ? "" : s.orderBy
-        setSort({...sort})
+        setSort({ ...sort })
         if (props.onChange) props.onChange(1, pagination.limit, sort, filters)
     })
 
@@ -631,7 +633,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             ...filters,
             [colKey]: valueSearch === "all" ? "" : valueSearch
         }
-        setFilters({...newFilters})
+        setFilters({ ...newFilters })
         // if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
     })
 
@@ -641,7 +643,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             [colKey]: dates ? [moment(dates[0]).unix(), moment(dates[1]).unix()] : undefined, //给出去的时间 时间戳秒  antd时间组件值要毫秒
             [`${colKey}-time`]: dates ? [moment(dates[0]).valueOf(), moment(dates[1]).valueOf()] : undefined //antd时间组件显示的时间 时间戳秒  antd时间组件值要毫秒
         }
-        setFilters({...newFilters})
+        setFilters({ ...newFilters })
         // if (props.onChange) props.onChange(1, pagination.limit, sort, newFilters)
     })
 
@@ -712,24 +714,24 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         }
                     />
                     <div className={style["time-rang"]}>
-                        <Tag
-                            color='processing'
+                        <YakitTag
+                            color='info'
                             onClick={() => onDateTimeSearch([moment().subtract(1, "minute"), moment()], filterKey)}
                         >
                             1分钟
-                        </Tag>
-                        <Tag
-                            color='processing'
+                        </YakitTag>
+                        <YakitTag
+                            color='info'
                             onClick={() => onDateTimeSearch([moment().subtract(1, "hours"), moment()], filterKey)}
                         >
                             1小时
-                        </Tag>
-                        <Tag
-                            color='processing'
+                        </YakitTag>
+                        <YakitTag
+                            color='info'
                             onClick={() => onDateTimeSearch([moment().subtract(1, "day"), moment()], filterKey)}
                         >
                             1天
-                        </Tag>
+                        </YakitTag>
                     </div>
                 </div>
                 <FooterBottom
@@ -833,7 +835,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         {enableDrag && lineIndex > -1 && (
                             <div
                                 className={classNames(style["drag-line"])}
-                                style={{left: lineLeft}}
+                                style={{ left: lineLeft }}
                                 onMouseUp={(e) => onMouseUp(e)}
                             />
                         )}
@@ -910,7 +912,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         </div>
                         <div
                             className={classNames(style["virtual-table-list-pagination"])}
-                            style={{display: scroll.scrollBottom < 10 ? "" : "none"}}
+                            style={{ display: scroll.scrollBottom < 10 ? "" : "none" }}
                         >
                             {loading && !(pagination?.total == data.length) && (
                                 <div className={classNames(style["pagination-loading"])}>
@@ -1010,8 +1012,8 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 width: columnsItem.width || colWidth,
                 ...(columnsItem.fixed === "left" &&
                     scroll.scrollLeft > 0 && {
-                        left: columnsItem.left
-                    }),
+                    left: columnsItem.left
+                }),
                 ...(columnsItem.fixed === "right" && {
                     right: columnsItem.right
                 })
@@ -1020,7 +1022,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
             <div className={classNames(style["justify-content-between"])}>
                 <div className={style["virtual-title"]}>
                     {/* 这个不要用 module ，用来拖拽最小宽度*/}
-                    <div className='virtual-col-title' style={{width: "100%", display: "flex", alignItems: "center"}}>
+                    <div className='virtual-col-title' style={{ width: "100%", display: "flex", alignItems: "center" }}>
                         {cIndex === 0 && rowSelection && (
                             <>
                                 {rowSelection.type !== "radio" && (
@@ -1035,7 +1037,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                 )}
                             </>
                         )}
-                        <div className={style["ellipsis-1"]} style={{maxWidth: "90%"}}>
+                        <div className={style["ellipsis-1"]} style={{ maxWidth: "90%" }}>
                             {columnsItem.title}
                         </div>
                     </div>
@@ -1087,10 +1089,10 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                         {columnsItem?.filterProps?.filterRender
                                             ? columnsItem?.filterProps?.filterRender()
                                             : renderFilterPopover(
-                                                  columnsItem,
-                                                  filterKey,
-                                                  columnsItem?.filterProps?.filtersType
-                                              )}
+                                                columnsItem,
+                                                filterKey,
+                                                columnsItem?.filterProps?.filtersType
+                                            )}
                                     </div>
                                 }
                                 overlayClassName={style["search-popover"]}
@@ -1101,8 +1103,8 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                         [style["virtual-table-filter-value"]]: columnsItem.filterProps.filterMultiple
                                             ? filters[filterKey] && filters[filterKey].length > 0
                                             : filters[filterKey] &&
-                                              filters[filterKey] !==
-                                                  (columnsItem.filterProps.filtersSelectAll?.textAll || "all")
+                                            filters[filterKey] !==
+                                            (columnsItem.filterProps.filtersSelectAll?.textAll || "all")
                                     })}
                                     onClick={() => {
                                         setOpensPopover({
@@ -1126,7 +1128,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 {enableDrag && columnsItem.enableDrag !== false && cIndex < columns.length - 1 && (
                     <div
                         className={classNames(style["virtual-table-title-drag"])}
-                        style={{height: hoverLine ? height : 28}}
+                        style={{ height: hoverLine ? height : 28 }}
                         onMouseEnter={() => setHoverLine(true)}
                         onMouseLeave={() => setHoverLine(false)}
                         onMouseDown={(e) => onMouseDown(e, cIndex)}
@@ -1140,7 +1142,7 @@ interface ColRenderProps {
     colIndex: number
     columnsItem: ColumnsTypeProps
     colWidth: number
-    list: {data: any; index: number}[]
+    list: { data: any; index: number }[]
     renderKey: string
     isLastItem: boolean
     onRowClick: (r: any) => void
@@ -1254,7 +1256,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
 
 interface CellRenderProps {
     colIndex: number
-    item: {data: any; index: number}
+    item: { data: any; index: number }
     columnsItem: ColumnsTypeProps
     number: number
     isLastItem: boolean
@@ -1393,7 +1395,7 @@ const CellRenderDrop = React.memo(
         } = props
         const dragRef = useRef<any>()
 
-        const [{handlerId}, drop] = useDrop<DragItem, void, {handlerId: Identifier | null}>(
+        const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>(
             {
                 accept: "row",
                 collect(monitor) {
@@ -1440,11 +1442,11 @@ const CellRenderDrop = React.memo(
             },
             [number]
         )
-        const [{isDragging}, drag] = useDrag(
+        const [{ isDragging }, drag] = useDrag(
             {
                 type: "row",
                 item: () => {
-                    return {id: item.data[renderKey], index: number}
+                    return { id: item.data[renderKey], index: number }
                 },
                 collect: (monitor: any) => ({
                     isDragging: monitor.isDragging()
@@ -1461,8 +1463,8 @@ const CellRenderDrop = React.memo(
         const styleDrag =
             (enableDragSort &&
                 isDragging && {
-                    width
-                }) ||
+                width
+            }) ||
             {}
         return (
             <div
@@ -1501,7 +1503,7 @@ const CellRenderDrop = React.memo(
                         className={classNames({
                             [style["virtual-table-row-cell-isDragging"]]: isDragging
                         })}
-                        style={{height: 28, left: 0, position: "absolute", ...styleDrag}}
+                        style={{ height: 28, left: 0, position: "absolute", ...styleDrag }}
                     />
                 )}
                 {enableDragSort && colIndex === 0 && (
@@ -1590,11 +1592,11 @@ const CellRenderDrop = React.memo(
  * @return {*}
  */
 export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) as <T>(
-    props: TableVirtualResizeProps<T> & {ref?: React.ForwardedRef<HTMLUListElement>}
+    props: TableVirtualResizeProps<T> & { ref?: React.ForwardedRef<HTMLUListElement> }
 ) => ReturnType<typeof TableVirtualResizeFunction>
 
 export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
-    const {originalList, onSelect, value, filterProps, onClose} = props
+    const { originalList, onSelect, value, filterProps, onClose } = props
     const {
         filterOptionRender,
         filtersSelectAll,
@@ -1635,7 +1637,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                 setData(originalList)
             }
         }),
-        {wait: 200}
+        { wait: 200 }
     ).run
 
     const onSelectSingle = useMemoizedFn((f: string, record?: FiltersItemProps) => {
@@ -1679,7 +1681,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                 <div
                                     key={item.data.value}
                                     className={classNames(style["select-item"], {
-                                        [style["select-item-active"]]: value === item.data.value
+                                        [style["select-item-active-single"]]: value === item.data.value
                                     })}
                                     onClick={() => onSelectSingle(item.data.value, item.data)}
                                 >
@@ -1698,16 +1700,16 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
         useMemoizedFn(() => {
             scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
         }),
-        {wait: 500}
+        { wait: 500 }
     ).run
 
     const onChangeSelect = useDebounceFn(
         useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
             onSelect(values, option)
             // 滑动至最右边
-            onHandleScroll()
+            if (filterSearch) onHandleScroll()
         }),
-        {wait: 200}
+        { wait: 200 }
     ).run
     const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
         if (value) {
@@ -1723,7 +1725,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
             onSelect([selectItem.value], selectItem)
         }
         setTimeout(() => {
-            onHandleScroll()
+            if (filterSearch) onHandleScroll()
         }, 50)
     })
 
@@ -1737,24 +1739,29 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
 
     const renderMultiple = useMemoizedFn(() => {
         return (
-            <div className={style["select-search-multiple"]}>
-                <div className={style["select-heard"]} ref={selectRef}>
-                    <YakitSelect
-                        size='small'
-                        mode='tags'
-                        wrapperStyle={{width: 124}}
-                        onChange={onChangeSelect}
-                        allowClear
-                        value={Array.isArray(value) ? [...value] : []}
-                        {...filterMultipleProps}
-                        dropdownStyle={{height: 0, padding: 0}}
-                        options={data}
-                        className='select-small'
-                        onFocus={() => onHandleScroll()}
-                    />
-                </div>
+            <div className={classNames(style["select-search-multiple"], {
+                [style["select-search-multiple-filterSearch"]]: filterSearch
+            })}>
+                {
+                    filterSearch &&
+                    <div className={style["select-heard"]} ref={selectRef}>
+                        <YakitSelect
+                            size='small'
+                            mode='tags'
+                            wrapperStyle={{ width: 124 }}
+                            onChange={onChangeSelect}
+                            allowClear
+                            value={Array.isArray(value) ? [...value] : []}
+                            {...filterMultipleProps}
+                            dropdownStyle={{ height: 0, padding: 0 }}
+                            options={data}
+                            className='select-small'
+                            onFocus={() => onHandleScroll()}
+                        />
+                    </div>
+                }
                 <div ref={containerRef} className={style["select-container"]}>
-                    <div ref={wrapperRef}>
+                    <div ref={wrapperRef} className={style["select-wrapper"]}>
                         {(list.length > 0 &&
                             list.map((item) => {
                                 const checked = Array.isArray(value)
@@ -1768,10 +1775,10 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <YakitProtoCheckbox checked={checked} />
                                         <span className={classNames(style["select-item-text"], "content-ellipsis")}>
                                             {item.data.label}
                                         </span>
+                                        {checked && <CheckIcon className={style["check-icon"]} />}
                                     </div>
                                 )
                             })) || <div className={classNames(style["no-data"])}>暂无数据</div>}
@@ -1791,7 +1798,7 @@ interface FooterBottomProps {
     className?: string
 }
 export const FooterBottom: React.FC<FooterBottomProps> = (props) => {
-    const {onReset, onSure, className} = props
+    const { onReset, onSure, className } = props
     return (
         <div className={classNames(style["select-footer"], className)}>
             <div className={classNames(style["footer-bottom"], style["select-reset"])} onClick={() => onReset()}>
