@@ -95,8 +95,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }),
         []
     )
-    const defItemHeight = useCreation(() => 28, [])
     const {
+        size = "small",
         data,
         rowSelection,
         renderKey,
@@ -121,7 +121,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         onMoveRowEnd,
         useUpAndDown
     } = props
-
+    const defItemHeight = useCreation(() => {
+        if (size === "middle") return 32
+        return 28
+    }, [size])
     const [currentRow, setCurrentRow] = useState<T>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
@@ -876,6 +879,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         height={height}
                                         setHoverLine={setHoverLine}
                                         hoverLine={hoverLine}
+                                        size={size}
                                     />
                                 ))}
                             </div>
@@ -905,6 +909,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             width={width}
                                             enableDragSort={enableDragSort}
                                             moveRowEnd={moveRowEnd}
+                                            size={size}
                                         />
                                     ))}
                                 </div>
@@ -964,6 +969,7 @@ interface ColumnsItemRenderProps {
     height: number
     hoverLine: boolean
     setHoverLine: (b: boolean) => void
+    size: "small" | "middle" | "large"
 }
 const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
     const {
@@ -989,7 +995,8 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
         onMouseDown,
         height,
         setHoverLine,
-        hoverLine
+        hoverLine,
+        size
     } = props
     const filterKey = columnsItem?.filterProps?.filterKey || columnsItem.dataKey
     const sorterKey = columnsItem?.sorterProps?.sorterKey || columnsItem.dataKey
@@ -998,6 +1005,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
         <div
             key={`${columnsItem.dataKey}-title`}
             className={classNames(style["virtual-table-title"], {
+                [style["virtual-table-title-middle"]]: size === 'middle',
                 [style["virtual-table-row-left"]]: columnsItem.align === "left",
                 [style["virtual-table-row-center"]]: columnsItem.align === "center",
                 [style["virtual-table-row-right"]]: columnsItem.align === "right",
@@ -1158,6 +1166,7 @@ interface ColRenderProps {
     width: number
     enableDragSort?: boolean
     moveRowEnd?: () => void
+    size: "small" | "middle" | "large"
 }
 const ColRender = React.memo((props: ColRenderProps) => {
     const {
@@ -1179,7 +1188,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
         moveRow,
         width,
         enableDragSort,
-        moveRowEnd
+        moveRowEnd,
+        size
     } = props
 
     return (
@@ -1228,6 +1238,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             width={width}
                             enableDragSort={enableDragSort}
                             moveRowEnd={moveRowEnd}
+                            size={size}
                         />
                     )) || (
                         <CellRender
@@ -1247,6 +1258,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             setMouseEnter={setMouseEnter}
                             setMouseLeave={setMouseLeave}
                             mouseCellId={mouseCellId}
+                            size={size}
                         />
                     )
             )}
@@ -1274,6 +1286,7 @@ interface CellRenderProps {
     width?: number
     enableDragSort?: boolean
     moveRowEnd?: () => void
+    size: "small" | "middle" | "large"
 }
 const CellRender = React.memo(
     (props: CellRenderProps) => {
@@ -1291,11 +1304,13 @@ const CellRender = React.memo(
             onChangeCheckboxSingle,
             setMouseEnter,
             setMouseLeave,
-            mouseCellId
+            mouseCellId,
+            size
         } = props
         return (
             <div
                 className={classNames(style["virtual-table-row-cell"], item.data["cellClassName"], {
+                    [style["virtual-table-row-cell-middle"]]: size==='middle',
                     [style["virtual-table-active-row"]]: isSelect,
                     [style["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
                     [style["virtual-table-row-cell-border-right-0"]]: isLastItem,
@@ -1391,7 +1406,8 @@ const CellRenderDrop = React.memo(
             moveRow,
             width,
             enableDragSort,
-            moveRowEnd
+            moveRowEnd,
+            size
         } = props
         const dragRef = useRef<any>()
 
@@ -1470,6 +1486,7 @@ const CellRenderDrop = React.memo(
             <div
                 data-handler-id={handlerId}
                 className={classNames(style["virtual-table-row-cell"], item.data["cellClassName"], {
+                    [style["virtual-table-row-cell-middle"]]: size === 'middle',
                     [style["virtual-table-active-row"]]: isSelect,
                     [style["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
                     [style["virtual-table-row-cell-border-right-0"]]: isLastItem,

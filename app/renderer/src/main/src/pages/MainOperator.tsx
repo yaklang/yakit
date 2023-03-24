@@ -127,7 +127,8 @@ const noPaddingPage = [
     Route.ICMPSizeLog,
     Route.TCPPortLog,
     Route.DNSLog,
-    Route.NewHome
+    Route.NewHome,
+    Route.DB_CVE
 ]
 
 export const defaultUserInfo: UserInfoProps = {

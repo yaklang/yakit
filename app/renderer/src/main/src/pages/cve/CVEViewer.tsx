@@ -1,18 +1,19 @@
-import React, {useEffect, useState} from "react";
-import {ResizeBox} from "@/components/ResizeBox";
-import {AutoCard} from "@/components/AutoCard";
-import {Button, Form} from "antd";
-import {PaginationSchema} from "@/pages/invoker/schema";
-import {MultiSelectForString, SwitchItem} from "@/utils/inputUtil";
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
-import {CVETable} from "@/pages/cve/CVETable";
-import {useDebounceEffect} from "ahooks";
+import React, { useEffect, useState } from "react";
+import { ResizeBox } from "@/components/ResizeBox";
+import { AutoCard } from "@/components/AutoCard";
+import { Button, Card, Form } from "antd";
+import { PaginationSchema } from "@/pages/invoker/schema";
+import { MultiSelectForString, SwitchItem } from "@/utils/inputUtil";
+import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
+import { CVETable } from "@/pages/cve/CVETable";
+import { useDebounceEffect } from "ahooks";
 
 export interface QueryCVERequest {
     Pagination?: PaginationSchema
 
     AccessVector: "NETWORK" | "LOCAL" | "ADJACENT_NETWORK" | "PHYSICAL" | string
     AccessComplexity: "HIGH" | "MEDIUM" | "LOW" | string
+    CVE: string
     CWE: string
     Year: string
     Severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | string
@@ -29,6 +30,7 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
     const [params, setParams] = useState<QueryCVERequest>({
         AccessComplexity: "",
         AccessVector: "",
+        CVE: "",
         CWE: "",
         Product: "",
         Score: 0,
@@ -36,13 +38,10 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
         Year: "", ChineseTranslationFirst: true
     });
 
-    return <ResizeBox
-        firstNode={<CVEQuery onChange={setParams} defaultParams={params}/>}
-        freeze={true}
-        firstRatio={"300px"}
-        firstMinSize={"300px"}
-        secondNode={<CVETable filter={params}/>}
-    />
+    return <div style={{ height: '100%', width: '100%', display: 'flex' }}>
+        <CVEQuery onChange={setParams} defaultParams={params} />
+        <CVETable filter={params} />
+    </div>
 };
 
 interface CVEQueryProp {
@@ -54,6 +53,7 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     const [params, setParams] = useState<QueryCVERequest>(props.defaultParams || {
         AccessComplexity: "LOW",
         AccessVector: "NETWORK,ADJACENT_NETWORK",
+        CVE: "",
         CWE: "",
         Product: "",
         Score: 6.0,
@@ -66,48 +66,49 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
             return
         }
         props.onChange(params)
-    }, [params], {wait: 700})
+    }, [params], { wait: 700 })
 
-    return <AutoCard title={"CVE 查询条件"} bordered={true} hoverable={true} size={"small"} extra={<>
-        <Button size={"small"}>重置</Button>
-    </>}>
+    return <Card title={"CVE 查询条件"} bordered={true} hoverable={true}
+        style={{ width: 300 }} size={"small"} extra={<>
+            <Button size={"small"}>重置</Button>
+        </>}>
         <Form
             // labelCol={{span: 5}} wrapperCol={{span: 14}}
             layout={"vertical"}
         >
             <SwitchItem label={"有中文数据"}
-                        setValue={ChineseTranslationFirst => setParams({...params, ChineseTranslationFirst})}
-                        value={params.ChineseTranslationFirst}/>
+                setValue={ChineseTranslationFirst => setParams({ ...params, ChineseTranslationFirst })}
+                value={params.ChineseTranslationFirst} />
             <MultiSelectForString
                 label={"利用路径"}
-                setValue={AccessVector => setParams({...params, AccessVector})}
+                setValue={AccessVector => setParams({ ...params, AccessVector })}
                 data={[
-                    {value: "NETWORK", label: "网络"},
-                    {value: "ADJACENT_NETWORK", label: "局域网"},
-                    {value: "LOCAL", label: "本地"},
-                    {value: "PHYSICAL", label: "物理"},
+                    { value: "NETWORK", label: "网络" },
+                    { value: "ADJACENT_NETWORK", label: "局域网" },
+                    { value: "LOCAL", label: "本地" },
+                    { value: "PHYSICAL", label: "物理" },
                 ]}
                 value={params.AccessVector}
             />
             <MultiSelectForString
                 label={"利用难度"}
-                setValue={AccessComplexity => setParams({...params, AccessComplexity})} value={params.AccessComplexity}
+                setValue={AccessComplexity => setParams({ ...params, AccessComplexity })} value={params.AccessComplexity}
                 data={[
-                    {value: "HIGH", label: "难以利用"},
-                    {value: "MEDIUM", label: "有一定难度"},
-                    {value: "LOW", label: "容易被利用"},
+                    { value: "HIGH", label: "难以利用" },
+                    { value: "MEDIUM", label: "有一定难度" },
+                    { value: "LOW", label: "容易被利用" },
                 ]}
             />
             <MultiSelectForString
                 label={"利用难度"}
-                setValue={Severity => setParams({...params, Severity})} value={params.Severity}
+                setValue={Severity => setParams({ ...params, Severity })} value={params.Severity}
                 data={[
-                    {value: "CRITICAL", label: "严重"},
-                    {value: "HIGH", label: "高危"},
-                    {value: "MEDIUM", label: "中危"},
-                    {value: "LOW", label: "低危"},
+                    { value: "CRITICAL", label: "严重" },
+                    { value: "HIGH", label: "高危" },
+                    { value: "MEDIUM", label: "中危" },
+                    { value: "LOW", label: "低危" },
                 ]}
             />
         </Form>
-    </AutoCard>
+    </Card>
 };

@@ -1,0 +1,71 @@
+.cve-list {
+    height: 100%;
+    width: 100%;
+    padding: 12px;
+    padding-bottom: 0;
+
+    .cve-list-title-body {
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+
+        .cve-list-title {
+            color: var(--yakit-header-color);
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            margin-right: 24px;
+        }
+
+        .cve-list-title-extra {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    .cve-list-product-success {
+        border: 1px solid #FFE5C6;
+        color: #FFB660;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        border-radius: 4px;
+        width: min-content;
+        height: 22px;
+
+        .cve-list-severity {
+            padding: 2px 6px;
+            border-right: 1px solid #FFE5C6;
+            background-color: rgba(255, 213, 131, 0.1);
+            border-radius: 4px 0 0 4px;
+        }
+
+        .cve-list-baseCVSSv2Score {
+            padding: 2px 6px;
+            color: #85899E;
+        }
+    }
+
+    .cve-list-product-warning {
+
+        border: 1px solid #FBC6A1;
+        color: #F28B44;
+
+        .cve-list-severity {
+            border-right: 1px solid #FBC6A1;
+            background-color: #FBE7D9;
+        }
+    }
+
+    .cve-list-product-danger {
+        border: 1px solid #E99A95;
+        color: #CB2318;
+
+        .cve-list-severity {
+            border-right: 1px solid #E99A95;
+            background-color: rgba(203, 35, 24, 0.2);
+        }
+    }
+}

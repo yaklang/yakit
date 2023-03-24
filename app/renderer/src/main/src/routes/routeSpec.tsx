@@ -723,7 +723,7 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {
                 id: "9-8",
                 key: Route.DB_CVE,
-                label: "CVE 查询",
+                label: "CVE 管理",
                 icon: <MenuHTTPHistoryIcon />,
                 hoverIcon: <MenuSolidHTTPHistoryIcon />
             },
