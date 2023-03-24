@@ -43,7 +43,6 @@ import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
 import type {CheckboxValueType} from "antd/es/checkbox/Group"
-import {PresetPorts} from "@/pages/portscan/schema"
 import {RiskDetails} from "@/pages/risks/RiskTable"
 import {Report} from "../assetViewer/models"
 import {openABSFileLocated} from "../../utils/openWebsite"
@@ -180,6 +179,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             form.setFieldsValue({
                 TaskName: `${getScanType()}-${taskNameTimeStamp}`
             })
+            setRunTaskName(`${getScanType()}-${taskNameTimeStamp}`)
         }
     }, [getScanType(), executing])
 
@@ -210,7 +210,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 newParams.Concurrent = 100
                 // SYN 并发
                 newParams.SynConcurrent = 2000
-                newParams.Ports = PresetPorts["topweb"]
+                newParams.Ports = params.Ports
                 newParams.ProbeTimeout = 3
                 // 指纹详细程度
                 newParams.ProbeMax = 3
@@ -221,7 +221,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             case 2:
                 newParams.Concurrent = 80
                 newParams.SynConcurrent = 1000
-                newParams.Ports = PresetPorts["top100"]
+                newParams.Ports = params.Ports
                 newParams.ProbeTimeout = 5
                 newParams.ProbeMax = 5
                 break
@@ -229,7 +229,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             case 1:
                 newParams.Concurrent = 50
                 newParams.SynConcurrent = 1000
-                newParams.Ports = PresetPorts["top100"]
+                newParams.Ports = params.Ports
                 newParams.ProbeTimeout = 7
                 newParams.ProbeMax = 7
                 break
@@ -349,7 +349,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                             content: (
                                                 <>
                                                     <ScanPortForm
-                                                        isLimitShow={true}
+                                                        isSimpleDetectShow={true}
                                                         defaultParams={params}
                                                         setParams={(value) => {
                                                             setParams(value)
@@ -414,16 +414,19 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             />
                         )}
                     </Form.Item>
-                    <Form.Item name='TaskName' label='任务名称'>
-                        <Input
-                            style={{width: 400}}
-                            placeholder='请输入任务名称'
-                            allowClear
-                            onChange={() => {
-                                isInputValue.current = true
-                            }}
-                        />
-                    </Form.Item>
+                    <div style={{display: "none"}}>
+                        <Form.Item name='TaskName' label='任务名称'>
+                            <Input
+                                style={{width: 400}}
+                                placeholder='请输入任务名称'
+                                allowClear
+                                onChange={() => {
+                                    isInputValue.current = true
+                                }}
+                            />
+                        </Form.Item>
+                    </div>
+
                     <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
                         <Slider
                             tipFormatter={null}
@@ -463,74 +466,42 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
     const [reportName, setReportName] = useState<string>(runTaskName || "默认报告名称")
     const [reportLoading, setReportLoading] = useState<boolean>(false)
-    const [_, setReportId, getReportId] = useGetState<number>()
-    // 是否允许更改TaskName
-    const isSetTaskName = useRef<boolean>(true)
+// 是否允许更改TaskName
+const isSetTaskName = useRef<boolean>(true)
+    // 报告token
+    const [reportToken, setReportToken] = useState(randomString(40))
+    // 是否展示报告生成进度
+    const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
+    // 报告生成进度
+    const [reportPercent, setReportPercent] = useState(0)
 
     useEffect(() => {
         if (!reportModalVisible) {
             setReportLoading(false)
+            setShowReportPercent(false)
+            ipcRenderer.invoke("cancel-ExecYakCode", reportToken)
         }
     }, [reportModalVisible])
 
-    // 报告token
-    const [reportToken, setReportToken] = useState(randomString(40))
+    useEffect(() => {
+        // 报告生成成功
+        if (reportPercent >= 1) {
+            setReportLoading(false)
+            setShowReportPercent(false)
+            setReportPercent(0)
+            ipcRenderer.invoke("open-user-manage", Route.DB_Report)
+        }
+    }, [reportPercent])
+
     useEffect(() => {
         if (executing) {
             openPort.current = []
             executing && setOpenPorts([])
-            // 重新执行任务 重置已输入报告名
-            runTaskName && setReportName(runTaskName)
         }
+        // 重新执行任务 重置已输入报告名
+        runTaskName && setReportName(runTaskName)
+        isSetTaskName.current = true
     }, [executing])
-
-    useEffect(() => {
-        if (getReportId()) {
-            ipcRenderer
-                .invoke("QueryReport", {Id: getReportId()})
-                .then((r: Report) => {
-                    if (r) {
-                        ipcRenderer
-                            .invoke("openDialog", {
-                                title: "请选择文件夹",
-                                properties: ["openDirectory"]
-                            })
-                            .then((data: any) => {
-                                if (data.filePaths.length) {
-                                    let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
-                                    ipcRenderer
-                                        .invoke("DownloadHtmlReport", {
-                                            JsonRaw: r.JsonRaw,
-                                            outputDir: absolutePath,
-                                            reportName: reportName
-                                        })
-                                        .then((r) => {
-                                            if (r?.ok) {
-                                                success("报告导出成功")
-                                                r?.outputDir && openABSFileLocated(r.outputDir)
-                                            }
-                                        })
-                                        .catch((e) => {
-                                            failed(`Download Html Report failed ${e}`)
-                                        })
-                                        .finally(() =>
-                                            setTimeout(() => {
-                                                setReportModalVisible(false)
-                                            }, 300)
-                                        )
-                                }
-                            })
-                            .finally(() => {
-                                setReportLoading(false)
-                            })
-                    }
-                })
-                .catch((e) => {
-                    failed(`Query Report[${21}] failed`)
-                })
-                .finally(() => {})
-        }
-    }, [getReportId()])
 
     useEffect(() => {
         if (runTaskName && isSetTaskName.current) {
@@ -588,12 +559,13 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     /** 获取生成报告返回结果 */
     useEffect(() => {
         ipcRenderer.on(`${reportToken}-data`, (e, data: ExecResult) => {
-            // ipcRenderer.on(`client-yak-data`, (e, xxxx: ExecResult) => {
             if (data.IsMessage) {
-                console.log("获取生成报告返回结果", new Buffer(data.Message).toString())
-                const aa = JSON.parse(new Buffer(data.Message).toString())
-                console.log(aa)
-                setReportId(parseInt(JSON.parse(new Buffer(data.Message).toString()).content.data))
+                // console.log("获取生成报告返回结果", new Buffer(data.Message).toString())
+                const obj = JSON.parse(new Buffer(data.Message).toString())
+                // console.log(obj)
+                if (obj?.type === "progress") {
+                    setReportPercent(obj.content.progress)
+                }
             }
         })
         return () => {
@@ -603,7 +575,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }, [reportToken])
     /** 通知生成报告 */
     const creatReport = () => {
-        setReportId(undefined)
         setReportModalVisible(true)
     }
     /** 下载报告 */
@@ -614,6 +585,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             Script: scriptData,
             Params: [
                 {Key: "timestamp", Value: runTimeStamp},
+                // {Key: "timestamp", Value: 1678709044},
                 {Key: "report_name", Value: runTaskName},
                 {Key: "plugins", Value: runPluginCount}
             ]
@@ -690,7 +662,12 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                 title='下载报告'
                 visible={reportModalVisible}
                 footer={null}
-                onCancel={() => setReportModalVisible(false)}
+                onCancel={() => {
+                    setReportModalVisible(false)
+                    if (reportPercent < 1 && reportPercent > 0) {
+                        warn("取消生成报告")
+                    }
+                }}
             >
                 <div>
                     <div style={{textAlign: "center"}}>
@@ -704,12 +681,23 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                                 setReportName(e.target.value)
                             }}
                         />
+                        {showReportPercent && (
+                            <div style={{width: 400, margin: "0 auto"}}>
+                                <Progress
+                                    // status={executing ? "active" : undefined}
+                                    percent={parseInt((reportPercent * 100).toFixed(0))}
+                                />
+                            </div>
+                        )}
                     </div>
                     <div style={{marginTop: 20, textAlign: "right"}}>
                         <Button
                             style={{marginRight: 8}}
                             onClick={() => {
                                 setReportModalVisible(false)
+                                if (reportPercent < 1 && reportPercent > 0) {
+                                    warn("取消生成报告")
+                                }
                             }}
                         >
                             取消
@@ -720,6 +708,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                             onClick={() => {
                                 setReportLoading(true)
                                 downloadReport()
+                                setShowReportPercent(true)
                             }}
                         >
                             确定
@@ -899,18 +888,19 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const isResize = useRef<boolean>(false)
     // 设置ResizeBox高度
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
-    
-    const statusCards = infoState.statusState.filter((item)=>["加载插件","漏洞/风险","开放端口数","存活主机数/扫描主机数"].includes(item.tag))
+
+    const statusCards = infoState.statusState.filter((item) =>
+        ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
+    )
     useEffect(() => {
         if (!isResize.current) {
-            if(executing){
-                statusCards.length===0?setResizeBoxSize("116px"):setResizeBoxSize("206px")
-            }
-            else{
-                statusCards.length===0?setResizeBoxSize("340px"):setResizeBoxSize("430px")
+            if (executing) {
+                statusCards.length === 0 ? setResizeBoxSize("116px") : setResizeBoxSize("206px")
+            } else {
+                statusCards.length === 0 ? setResizeBoxSize("295px") : setResizeBoxSize("385px")
             }
         }
-    }, [executing,statusCards.length])
+    }, [executing, statusCards.length])
 
     useEffect(() => {
         setTabId(simpleDetectTabsParams.tabId)
@@ -976,7 +966,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         })
         .splice(0, 3)
 
-    
     return (
         <div className={styles["simple-detect"]}>
             <ResizeBox
