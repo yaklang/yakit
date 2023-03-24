@@ -44,7 +44,7 @@
 
         .cve-list-baseCVSSv2Score {
             padding: 2px 6px;
-            color: #85899E;
+            color: var(--yakit-body-text-color);
         }
     }
 
@@ -68,4 +68,11 @@
             background-color: rgba(203, 35, 24, 0.2);
         }
     }
+}
+
+.database-update-messages {
+    color: var(--yakit-body-text-color);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 24px;
 }

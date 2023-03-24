@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AutoCard } from "@/components/AutoCard";
-import { Divider, Empty, Space, Table, Tag } from "antd";
+import { Divider, Empty, Progress, Space, Table, Tag } from "antd";
 import { QueryCVERequest } from "@/pages/cve/CVEViewer";
 import { useDebounceEffect, useDebounceFn, useKeyPress, useMemoizedFn } from "ahooks";
-import { genDefaultPagination, PaginationSchema, QueryGeneralResponse } from "@/pages/invoker/schema";
+import { ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse } from "@/pages/invoker/schema";
 import { ResizeBox } from "@/components/ResizeBox";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
 import { OneLine } from "@/utils/inputUtil";
@@ -16,8 +16,12 @@ import { TableVirtualResize } from "@/components/TableVirtualResize/TableVirtual
 import { ColumnsTypeProps } from "@/components/TableVirtualResize/TableVirtualResizeType";
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag";
 import { YakitCombinationSearch } from "@/components/YakitCombinationSearch/YakitCombinationSearch";
-import { RefreshIcon } from "@/assets/newIcon";
+import { RefreshIcon, ShieldExclamationIcon, SolidRefreshIcon } from "@/assets/newIcon";
 import classNames from "classnames";
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint";
+import { failed, info, yakitFailed } from "@/utils/notification";
+import { randomString } from "@/utils/randomUtil";
+import { Uint8ArrayToString } from "@/utils/str";
 
 export interface CVETableProp {
     filter: QueryCVERequest
@@ -52,8 +56,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
 
     const [searchType, setSearchType] = useState<string>('CVE');
-
-
+    const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
 
     useDebounceEffect(() => {
         setParams({
@@ -139,17 +142,6 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         },
         { wait: 500 }
     ).run
-    const dataBaseUpdate = useMemoizedFn(() => {
-        showDrawer({
-            title: "下载/更新 CVE 漏洞库基础信息",
-            width: 800,
-            content: (
-                <div style={{ width: 780 }}>
-                    <CVEDownloader />
-                </div>
-            )
-        })
-    })
     return <div className={styles['cve-list']}>
         <TableVirtualResize<CVEDetail>
             query={params}
@@ -204,7 +196,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                             }}
                         />
                         <Divider type='vertical' />
-                        <YakitButton type="primary" onClick={dataBaseUpdate}><RefreshIcon />数据库更新</YakitButton>
+                        <YakitButton type="primary" onClick={() => setDataBaseUpdateVisible(true)}><RefreshIcon />数据库更新</YakitButton>
                     </div>
                 </div>
             }
@@ -223,5 +215,94 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             }}
             onChange={onTableChange}
         />
+        <DatabaseUpdateModal visible={dataBaseUpdateVisible} setVisible={setDataBaseUpdateVisible} />
     </div>
+})
+
+interface DatabaseUpdateModalProps {
+    visible: boolean
+    setVisible: (b: boolean) => void
+}
+const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
+    const { visible, setVisible } = props;
+    const [token, setToken] = useState(randomString(40))
+    const [messages, setMessages] = useState<string[]>([]);
+    const [available, setAvailable] = useState(false);
+    const [outOfDate, setOutOfDate] = useState(false);
+    const [showOk, setShowOk] = useState(true);
+    // const [downloadProgress, setDownloadProgress] = useState<DownloadingState>();
+    useEffect(() => {
+        ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
+            if (!data.IsMessage) {
+                return
+            }
+            setMessages([...messages, Uint8ArrayToString(data.Message)])
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            info("[UpdateCVEDatabase] finished")
+            setVisible(false)
+        })
+        return () => {
+            ipcRenderer.invoke("cancel-UpdateCVEDatabase", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [])
+    useEffect(() => {
+        if (!visible) return
+        setShowOk(true)
+        setMessages([])
+        setAvailable(false)
+        setOutOfDate(false)
+        ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean, Reason: string, ShouldUpdate: boolean }) => {
+            setAvailable(rsp.Ok)
+            setOutOfDate(rsp.ShouldUpdate)
+        })
+    }, [visible])
+    return (
+        <YakitHint
+            visible={visible}
+            title={showOk ? "CVE数据初始化" : 'CVE数据库更新'}
+            heardIcon={showOk?<ShieldExclamationIcon style={{ color: "var(--yakit-warning-5)" }} />:<SolidRefreshIcon style={{ color: "var(--yakit-warning-5)" }} />}
+            onCancel={() => {
+                setVisible(false)
+            }}
+            onOk={() => {
+                setShowOk(false)
+                ipcRenderer.invoke("UpdateCVEDatabase", { Proxy: "" }, token).then(() => {
+
+                }).catch(e => {
+                    failed(`更新 CVE 数据库失败！${e}`)
+                })
+            }}
+            okButtonText={available ? '强制更新' : '初始化'}
+            isDrag={true}
+            mask={false}
+            okButtonProps={{ style: { display: showOk ? 'flex' : 'none' } }}
+            content={
+                <div>
+                    <p>{available ? '点击“强制更新”，可更新本地CVE数据库' : '本地CVE数据库未初始化，请点击“初始化”下载CVE数据库'}</p>
+                    {/* {downloadProgress && <Progress percent={
+                downloading ? Math.floor((downloadProgress?.percent || 0) * 100) : 100
+            }/>}
+            {downloadProgress && downloading && <Space>
+                <Tag>剩余时间:{downloadProgress?.time.remaining}</Tag>
+                <Tag>已下载用时:{downloadProgress?.time.elapsed}</Tag>
+                <Tag>
+                    下载速度:约{((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s
+                </Tag>
+            </Space>} */}
+                    <div className={styles['database-update-messages']}>
+                        {messages.map(i => {
+                            return <p>{`${i}`}</p>
+                        })}
+                    </div>
+                </div>
+            }
+        />
+    )
 })
