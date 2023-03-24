@@ -624,7 +624,7 @@ interface SimpleCardBoxProps{
 }
 export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
     const {statusCards} = props
-    const newStatusCards = statusCards.filter((item)=>["加载插件","漏洞/风险","开放端口数","扫描主机数"].includes(item.tag))
+    const newStatusCards = statusCards.filter((item)=>["加载插件","漏洞/风险","开放端口数","存活主机数/扫描主机数"].includes(item.tag))
     return <>{newStatusCards.length > 0 && (
         <div className='status-cards-body'>
             <Row gutter={8}>
