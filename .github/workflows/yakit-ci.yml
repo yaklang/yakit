@@ -52,6 +52,9 @@ jobs:
       - run: wget -O bins/database/default-cve.db.gzip https://cve-db.oss-cn-beijing.aliyuncs.com/default-cve.db.gzip
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
         name: "Download CVE(Include CWE) Data (Yakit-EE && Yakit-SE)"
+      - run: wget -O bins/resources/local-plugins-se.yakitresource.txt https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-ee/local-plugins-se.yakitresource.txt
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
+        name: "Download Plugin resource Files (Yakit-EE && Yakit-SE)"
       # 企业版
       - run: yarn build-render-enterprise
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
