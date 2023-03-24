@@ -34,7 +34,7 @@ import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
 import {ExecResult, YakScript} from "../invoker/schema"
-import {useStore, simpleDetectTabsParams} from "@/store"
+import {useStore, simpleDetectParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
 import {PluginResultUI, SimpleCardBox} from "../yakitStore/viewers/base"
@@ -466,8 +466,9 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
     const [reportName, setReportName] = useState<string>(runTaskName || "默认报告名称")
     const [reportLoading, setReportLoading] = useState<boolean>(false)
-// 是否允许更改TaskName
-const isSetTaskName = useRef<boolean>(true)
+    const [_, setReportId, getReportId] = useGetState<number>()
+    // 是否允许更改TaskName
+    const isSetTaskName = useRef<boolean>(true)
     // 报告token
     const [reportToken, setReportToken] = useState(randomString(40))
     // 是否展示报告生成进度
@@ -485,13 +486,17 @@ const isSetTaskName = useRef<boolean>(true)
 
     useEffect(() => {
         // 报告生成成功
-        if (reportPercent >= 1) {
+        if (getReportId()) {
             setReportLoading(false)
             setShowReportPercent(false)
             setReportPercent(0)
+            setReportModalVisible(false)
             ipcRenderer.invoke("open-user-manage", Route.DB_Report)
+            setTimeout(()=>{
+                ipcRenderer.invoke("simple-open-report", getReportId())
+            },300)
         }
-    }, [reportPercent])
+    }, [getReportId()])
 
     useEffect(() => {
         if (executing) {
@@ -566,6 +571,7 @@ const isSetTaskName = useRef<boolean>(true)
                 if (obj?.type === "progress") {
                     setReportPercent(obj.content.progress)
                 }
+                setReportId(parseInt(obj.content.data))
             }
         })
         return () => {
@@ -575,6 +581,7 @@ const isSetTaskName = useRef<boolean>(true)
     }, [reportToken])
     /** 通知生成报告 */
     const creatReport = () => {
+        setReportId(undefined)
         setReportModalVisible(true)
     }
     /** 下载报告 */
@@ -585,15 +592,14 @@ const isSetTaskName = useRef<boolean>(true)
             Script: scriptData,
             Params: [
                 {Key: "timestamp", Value: runTimeStamp},
-                // {Key: "timestamp", Value: 1678709044},
-                {Key: "report_name", Value: runTaskName},
+                // {Key: "timestamp", Value: 1679649369},
+                {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount}
             ]
         }
 
         ipcRenderer.invoke("ExecYakCode", reqParams, reportToken)
     }
-
     return (
         <div className={styles["simple-detect-table"]}>
             <div className={styles["result-table-body"]}>
@@ -872,7 +878,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 获取运行任务插件数
     const [runPluginCount, setRunPluginCount] = useState<number>()
 
-    const [infoState, {reset}] = useHoldingIPCRStream(
+    const [infoState, {reset, setXtermRef, resetAll}] = useHoldingIPCRStream(
         "scan-port",
         "SimpleDetect",
         token,
@@ -903,7 +909,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     }, [executing, statusCards.length])
 
     useEffect(() => {
-        setTabId(simpleDetectTabsParams.tabId)
+        setTabId(simpleDetectParams.tabId)
     }, [])
 
     useEffect(() => {
@@ -965,7 +971,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
             return i.level === "info"
         })
         .splice(0, 3)
-
     return (
         <div className={styles["simple-detect"]}>
             <ResizeBox
@@ -1019,7 +1024,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                     setRunTaskName={setRunTaskName}
                                     setRunTimeStamp={setRunTimeStamp}
                                     setRunPluginCount={setRunPluginCount}
-                                    reset={reset}
+                                    reset={resetAll}
                                 />
                             </Col>
                         </Row>
