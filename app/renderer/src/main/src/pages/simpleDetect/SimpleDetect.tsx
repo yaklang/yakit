@@ -900,7 +900,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 设置ResizeBox高度
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
     
-    const statusCards = infoState.statusState.filter((item)=>["加载插件","漏洞/风险","开放端口数","扫描主机数"].includes(item.tag))
+    const statusCards = infoState.statusState.filter((item)=>["加载插件","漏洞/风险","开放端口数","存活主机数/扫描主机数"].includes(item.tag))
     useEffect(() => {
         if (!isResize.current) {
             if(executing){
