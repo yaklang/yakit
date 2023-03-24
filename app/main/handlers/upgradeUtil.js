@@ -44,6 +44,27 @@ const initMkbaseDir = async () => {
             fs.mkdirSync(cacheDir, {recursive: true})
             fs.mkdirSync(yakEngineDir, {recursive: true})
             fs.mkdirSync(codeDir, {recursive: true})
+
+            try {
+                console.info("Start checking bins/resources")
+                const extraResources = loadExtraFilePath(path.join("bins", "resources"));
+                const resourceBase = cacheDir;
+                if (!fs.existsSync(path.join(resourceBase, "flag.txt"))) {
+                    console.info("Start to load bins/resources ...")
+                    fs.readdirSync(extraResources).forEach(value => {
+                        if (value.endsWith(".txt")) {
+                            try {
+                                fs.copyFileSync(path.join(extraResources, value), path.join(resourceBase, value))
+                            } catch (e) {
+                                console.info(e)
+                            }
+                        }
+                    })
+                }
+            } catch (e) {
+                console.error(e)
+            }
+
             resolve()
         } catch (e) {
             reject(e)
