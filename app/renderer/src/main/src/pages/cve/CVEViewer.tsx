@@ -7,6 +7,7 @@ import { MultiSelectForString, SwitchItem } from "@/utils/inputUtil";
 import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
 import { CVETable } from "@/pages/cve/CVETable";
 import { useDebounceEffect } from "ahooks";
+import styles from "./CVETable.module.scss";
 
 export interface QueryCVERequest {
     Pagination?: PaginationSchema
@@ -38,7 +39,7 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
         Year: "", ChineseTranslationFirst: true
     });
 
-    return <div style={{ height: '100%', width: '100%', display: 'flex' }}>
+    return <div className={styles['cve-viewer']} >
         <CVEQuery onChange={setParams} defaultParams={params} />
         <CVETable filter={params} />
     </div>

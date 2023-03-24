@@ -1,3 +1,15 @@
+.cve-viewer {
+    height: 100%;
+    width: 100%;
+    display: flex;
+
+    :global {
+        .resize-box .resize-split-line:hover {
+            border: 1px solid var(--yakit-primary-5);
+        }
+    }
+}
+
 .cve-list {
     height: 100%;
     width: 100%;
@@ -25,48 +37,69 @@
         }
     }
 
-    .cve-list-product-success {
-        border: 1px solid #FFE5C6;
-        color: #FFB660;
+}
+
+.cve-list-product-success {
+    border: 1px solid #FFE5C6;
+    color: #FFB660;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-radius: 4px;
+    width: fit-content;
+    height: 22px;
+
+    .cve-list-severity {
+        padding: 2px 6px;
+        border-right: 1px solid #FFE5C6;
+        background-color: rgba(255, 213, 131, 0.1);
+        border-radius: 4px 0 0 4px;
+        height: 20px;
+        line-height: 20px;
         display: flex;
-        flex-direction: row;
         align-items: center;
-        border-radius: 4px;
-        width: min-content;
-        height: 22px;
-
-        .cve-list-severity {
-            padding: 2px 6px;
-            border-right: 1px solid #FFE5C6;
-            background-color: rgba(255, 213, 131, 0.1);
-            border-radius: 4px 0 0 4px;
-        }
-
-        .cve-list-baseCVSSv2Score {
-            padding: 2px 6px;
-            color: var(--yakit-body-text-color);
-        }
     }
 
-    .cve-list-product-warning {
+    .cve-list-baseCVSSv2Score {
+        padding: 2px 6px;
+        color: var(--yakit-body-text-color);
+        height: 20px;
+        line-height: 20px;
+        display: flex;
+        align-items: center;
+    }
+}
 
-        border: 1px solid #FBC6A1;
-        color: #F28B44;
+.cve-description-product-success {
+    height: auto;
 
-        .cve-list-severity {
-            border-right: 1px solid #FBC6A1;
-            background-color: #FBE7D9;
-        }
+    .cve-list-severity {
+        height: auto;
     }
 
-    .cve-list-product-danger {
-        border: 1px solid #E99A95;
-        color: #CB2318;
+    .cve-list-baseCVSSv2Score {
+        height: auto;
+    }
+}
 
-        .cve-list-severity {
-            border-right: 1px solid #E99A95;
-            background-color: rgba(203, 35, 24, 0.2);
-        }
+.cve-list-product-warning {
+
+    border: 1px solid #FBC6A1;
+    color: #F28B44;
+
+    .cve-list-severity {
+        border-right: 1px solid #FBC6A1;
+        background-color: #FBE7D9;
+    }
+}
+
+.cve-list-product-danger {
+    border: 1px solid #E99A95;
+    color: #CB2318;
+
+    .cve-list-severity {
+        border-right: 1px solid #E99A95;
+        background-color: rgba(203, 35, 24, 0.2);
     }
 }
 
@@ -75,4 +108,90 @@
     font-weight: 400;
     font-size: 14px;
     line-height: 24px;
+}
+
+.cve-inspect {
+    padding: 12px;
+    padding-top: 0;
+    height: 100%;
+
+    .cve-description {
+        height: 100%;
+        overflow-y: overlay;
+        border: 1px solid var(--yakit-border-color);
+
+        :global {
+            .ant-descriptions-bordered .ant-descriptions-view {
+                border: 0;
+            }
+
+            .ant-descriptions-bordered .ant-descriptions-item-label,
+            .ant-descriptions-bordered .ant-descriptions-item-content {
+                border-right: 1px solid var(--yakit-border-color);
+            }
+
+            .ant-descriptions-item-label {
+                padding: 12px 16px 12px 12px;
+                color: var(--yakit-header-color);
+                height: 40px;
+                min-width: 96px;
+            }
+
+            .ant-descriptions-bordered .ant-descriptions-row {
+                border-bottom: 1px solid var(--yakit-border-color);
+            }
+
+
+            .ant-descriptions-bordered .ant-descriptions-item-label {
+                background-color: var(--yakit-background-color);
+            }
+
+            .ant-descriptions-item-content {
+                height: 40px;
+                padding: 12px 16px 12px 12px;
+                background-color: var(--yakit-card-background-color);
+                color: var(--yakit-header-color);
+            }
+
+            .ant-descriptions-bordered .ant-descriptions-item-label:last-child,
+            .ant-descriptions-bordered .ant-descriptions-item-content:last-child {
+                border-right: none
+            }
+        }
+
+        .cve-description-heard {
+            height: 32px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .cve-description-heard-title {
+                font-weight: 500;
+                font-size: 12px;
+                color: var(--yakit-header-color);
+            }
+        }
+    }
+
+    .cve-description-icon {
+        cursor: pointer;
+
+        svg {
+            color: var(--yakit-body-text-color);
+            height: 16px;
+            width: 16px;
+
+            &:hover {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+}
+
+.no-more {
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
+    text-align: center;
+    padding: 12px;
 }

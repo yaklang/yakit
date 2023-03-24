@@ -6,11 +6,8 @@ import { useDebounceEffect, useDebounceFn, useKeyPress, useMemoizedFn } from "ah
 import { ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse } from "@/pages/invoker/schema";
 import { ResizeBox } from "@/components/ResizeBox";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
-import { OneLine } from "@/utils/inputUtil";
 import { CVEDetail } from "@/pages/cve/models";
 import { CVEInspect } from "@/pages/cve/CVEInspect";
-import { showDrawer } from "@/utils/showModal";
-import { CVEDownloader } from "@/pages/cve/Downloader";
 import styles from "./CVETable.module.scss";
 import { TableVirtualResize } from "@/components/TableVirtualResize/TableVirtualResize";
 import { ColumnsTypeProps } from "@/components/TableVirtualResize/TableVirtualResizeType";
@@ -89,8 +86,9 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     })
 
     useEffect(() => {
+        if(dataBaseUpdateVisible)return
         update(1)
-    }, [])
+    }, [dataBaseUpdateVisible])
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -267,7 +265,7 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
         <YakitHint
             visible={visible}
             title={showOk ? "CVE数据初始化" : 'CVE数据库更新'}
-            heardIcon={showOk?<ShieldExclamationIcon style={{ color: "var(--yakit-warning-5)" }} />:<SolidRefreshIcon style={{ color: "var(--yakit-warning-5)" }} />}
+            heardIcon={showOk ? <ShieldExclamationIcon style={{ color: "var(--yakit-warning-5)" }} /> : <SolidRefreshIcon style={{ color: "var(--yakit-warning-5)" }} />}
             onCancel={() => {
                 setVisible(false)
             }}
