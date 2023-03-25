@@ -448,11 +448,13 @@ func showCVEReport(risks) {
         markdownStr += sprintf("<details>\\n<summary><b> %s 年的CVE列表(共 %d 个)</b></summary>\\n\\n",year,len(cves))
 
         for _,cve := range cves{
-            level,description,solution = "-"
+            level,description,solution = "-","-","-"
             if str.Contains(cve.Severity, "critical") { level = \`<font color="#da4943">严重</font>\` }
             if str.Contains(cve.Severity, "high") { level = \`<font color="#d83931">高危</font>\` }
             if str.Contains(cve.Severity, "warning") { level = \`<font color="#dc9b02">中危</font>\` }
             if str.Contains(cve.Severity, "low") { level = \`<font color="#43ab42">低危</font>\`}
+            if len(cve.Description) > 0 {description = cve.Description}
+            if len(cve.Solution) > 0 {solution = cve.Solution}
             markdownStr +=  sprintf(\` #### %v
 
 风险地址：%v:%v
