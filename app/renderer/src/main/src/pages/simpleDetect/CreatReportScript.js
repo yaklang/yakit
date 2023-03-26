@@ -4,6 +4,8 @@ loglevel(\`info\`)
 
 
 createAt  = cli.Int("timestamp", cli.setRequired(true))
+hostTotal = cli.Int("host_total", cli.setRequired(true))
+portTotal = cli.Int("port_total", cli.setRequired(true))
 reportName = cli.String("report_name")
 plugins = cli.Int("plugins",cli.setDefault(10))
 
@@ -174,8 +176,8 @@ reportInstance.Markdown(\`# 1、项目概述
 // 检测端口扫描结果
 // targetRawLen = len(str.ParseStringToHosts(targetRaw))
 // redlinePortsLen = len(str.ParseStringToPorts(ports)) + len(str.ParseStringToPorts(ports))
-reportInstance.Markdown(sprintf("共扫描端口：【%v】个，涉及主机：【%v】个，每台主机涉及端口：【%v】个", 2000, 2, 1000))
-
+totalTasks = hostTotal * portTotal
+reportInstance.Markdown(sprintf("共扫描端口:【%v】个,涉及主机:【%v】个,每台主机涉及端口:【%v】个", totalTasks, hostTotal, portTotal))
 // 输出漏洞图相关的内容
 total := len(riskAll)
 reportInstance.Markdown(sprintf("本次测试风险漏洞共【%v】个，其中<font color='#da4943'>严重</font>漏洞有【%v】个，<font color='#d83931'>高危</font>漏洞有【%v】个，<font color='#dc9b02'>中危</font>漏洞有【%v】个，<font color='#43ab42'>低危</font>漏洞有【%v】个，附录含有漏洞详情，如有需求请及时修复。", total, criticalLens, highLens, warningLens, lowLens))

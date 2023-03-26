@@ -567,7 +567,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             if (data.IsMessage) {
                 // console.log("获取生成报告返回结果", new Buffer(data.Message).toString())
                 const obj = JSON.parse(new Buffer(data.Message).toString())
-                // console.log(obj)
+                console.log(obj)
                 if (obj?.type === "progress") {
                     setReportPercent(obj.content.progress)
                 }
@@ -592,9 +592,10 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             Script: scriptData,
             Params: [
                 {Key: "timestamp", Value: runTimeStamp},
-                // {Key: "timestamp", Value: 1679649369},
                 {Key: "report_name", Value: reportName},
-                {Key: "plugins", Value: runPluginCount}
+                {Key: "plugins", Value: runPluginCount},
+                {Key: "host_total", Value: 2},
+                {Key: "port_total", Value: 1000},
             ]
         }
 
