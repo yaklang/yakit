@@ -226,7 +226,7 @@ if len(noPotentialRisks) == 0 {
 showPotentialLine = []
 cpp = cve.NewStatistics("PotentialPie")
 println(len(potentialRisks))
-for _, riskIns := range potentialRisks {
+for i, riskIns := range potentialRisks {
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
@@ -243,6 +243,7 @@ for _, riskIns := range potentialRisks {
     }
     c = cve.GetCVE(riskIns.CVE)
     cpp.Feed(c)
+    yakit.SetProgress((float(i) / float(len(potentialRisks)-1) ))
     if len(showPotentialLine) == 10 {
         showPotentialLine = append(showPotentialLine, [
             "更多风险请在附录中查看...",
