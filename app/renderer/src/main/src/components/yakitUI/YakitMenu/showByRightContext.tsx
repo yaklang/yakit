@@ -23,11 +23,15 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
 
     if (div.clientWidth > 0 && div.clientHeight > 0) {
         if (div.clientHeight + top > clientHeight) {
-            top = top - div.clientHeight
+            top = top - div.clientHeight - 6
+        } else {
+            top = top + 6
         }
         // 右边宽度不够，向左边移动 reactNode 内容的宽度
         if (div.clientWidth + left > clientWidth) {
-            left = left - div.clientWidth
+            left = left - div.clientWidth - 6
+        } else {
+            left = left + 6
         }
         div.style.left = `${left}px`
         div.style.top = `${top}px`
@@ -52,11 +56,15 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     const offsetPosition = (width: number, height: number) => {
         // 底部高度不够，向上移动 reactNode 内容的高度
         if (height + top > clientHeight) {
-            top = top - height
+            top = top - height - 6
+        } else {
+            top = top + 6
         }
         // 右边宽度不够，向左边移动 reactNode 内容的宽度
         if (width + left > clientWidth) {
-            left = left - width
+            left = left - width - 6
+        } else {
+            left = left + 6
         }
         div.style.left = `${left}px`
         div.style.top = `${top}px`
