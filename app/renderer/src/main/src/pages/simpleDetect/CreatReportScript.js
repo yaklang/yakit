@@ -234,16 +234,23 @@ for i, riskIns := range potentialRisks {
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
     if str.Contains(riskIns.Severity, "warning") { level = "中危" }
     if str.Contains(riskIns.Severity, "low") { level = "低危"}
-
+    c = cve.GetCVE(riskIns.CVE)
+    ccwe = cwe.Get(c.CWE)
+    cveStr = riskIns.CVE
+    if len(cveStr) ==0 {
+        cveStr = "-"
+    }
     if len(showPotentialLine) < 10 {
+        title = str.SplitN(riskIns.Title,": -",2)[1]
         showPotentialLine = append(showPotentialLine, [
-            riskIns.Title,
+            cveStr,
+            title,
             riskIns.IP,
-            riskIns.RiskTypeVerbose,
+            ccwe.NameZh,
             level,
         ])
     }
-    c = cve.GetCVE(riskIns.CVE)
+    
     cpp.Feed(c)
     yakit.SetProgress((float(i) / float(len(potentialRisks)-1) ))
     if len(showPotentialLine) == 10 {
@@ -271,7 +278,7 @@ if len(potentialRisks) != 0 {
     }
     reportInstance.Markdown(sprintf("### 3.4.2 合规检查风险列表"))
     reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
-    reportInstance.Table(["漏洞标题", "地址", "漏洞类型", "漏洞级别"], showPotentialLine...)
+    reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
 }
 
 

@@ -72,6 +72,7 @@ const marks: SliderMarks = {
 
 interface SimpleDetectFormProps {
     setPercent: (v: number) => void
+    percent:number
     setExecuting: (v: boolean) => void
     token: string
     sendTarget?: string
@@ -82,14 +83,17 @@ interface SimpleDetectFormProps {
     isDownloadPlugin: boolean
     baseProgress?: number
     TaskName?: string
+    runTaskName?:string
     setRunTaskName: (v: string) => void
     setRunTimeStamp: (v: number) => void
     setRunPluginCount: (v: number) => void
     reset: () => void
+    filePtrValue:number
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const {
+        percent,
         setPercent,
         setExecuting,
         token,
@@ -101,10 +105,12 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         isDownloadPlugin,
         baseProgress,
         TaskName,
+        runTaskName,
         setRunTaskName,
         setRunTimeStamp,
         setRunPluginCount,
-        reset
+        reset,
+        filePtrValue
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -273,6 +279,16 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     const onCancel = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-SimpleDetect", token)
+        let newParams: PortScanParams = {...getParams()}
+        const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+        ipcRenderer.invoke("SaveCancelSimpleDetect",{
+            LastRecord : {
+                LastRecordPtr : filePtrValue,
+                Percent : percent,
+                YakScriptOnlineGroup:OnlineGroup
+            },
+            PortScanRequest: {...newParams,TaskName:runTaskName}
+        })
     })
 
     const judgeExtra = () => {
@@ -910,6 +926,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const statusCards = infoState.statusState.filter((item) =>
         ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
     )
+
+    const filePtr=infoState.statusState.filter((item) =>
+        ["当前文件指针"].includes(item.tag)
+    )
+    const filePtrValue:number = Array.isArray(filePtr)?parseInt(filePtr[0]?.info[0]?.Data):0
+
     useEffect(() => {
         if (!isResize.current) {
             if (executing) {
@@ -1025,6 +1047,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 <SimpleDetectForm
                                     executing={executing}
                                     setPercent={setPercent}
+                                    percent={percent}
                                     setExecuting={setExecuting}
                                     token={token}
                                     target={target}
@@ -1033,10 +1056,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                     isDownloadPlugin={isDownloadPlugin}
                                     baseProgress={BaseProgress}
                                     TaskName={TaskName}
+                                    runTaskName={runTaskName}
                                     setRunTaskName={setRunTaskName}
                                     setRunTimeStamp={setRunTimeStamp}
                                     setRunPluginCount={setRunPluginCount}
                                     reset={resetAll}
+                                    filePtrValue={filePtrValue}
                                 />
                             </Col>
                         </Row>

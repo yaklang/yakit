@@ -16,6 +16,7 @@ export interface UnfinishedBatchTask {
     Uid: string
     CreatedAt: number
     Percent: number
+    TaskName: string
 }
 
 export interface SimpleDetectBatchTask {
@@ -51,6 +52,7 @@ const UnfinishedBatchTaskList: React.FC<UnfinishedBatchTaskListProp> = (props) =
             return <AutoCard size={"small"} hoverable={true} style={{marginBottom: 6}}>
                 <Space>
                     <Tag color={"geekblue"}>{formatTimestamp(i.CreatedAt)}</Tag>
+                    <Tag color={"red"}>{i.TaskName}</Tag>
                     <div style={{width: 230, marginRight: 8}}>
                         <Progress percent={parseInt((i.Percent * 100).toFixed(2))}/>
                     </div>

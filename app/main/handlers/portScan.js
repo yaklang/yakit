@@ -1,6 +1,7 @@
 const {ipcMain} = require("electron");
 const FS=require("fs")
 const xlsx = require("node-xlsx")
+const handlerHelper = require("./handleStreamWithContext");
 module.exports = (win, getClient) => {
     const handlerHelper = require("./handleStreamWithContext");
 
@@ -48,6 +49,21 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SimpleDetect", (e, params, token) => {
         let stream = getClient().SimpleDetect(params);
         handlerHelper.registerHandler(win, stream, streamSimpleDetectMap, token)
+    })
+
+    const asyncSaveCancelSimpleDetect = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CancelSimpleDetect(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SaveCancelSimpleDetect", async (e, params) => {
+        return await asyncSaveCancelSimpleDetect(params)
     })
 
     // 获取URL的IP地址
