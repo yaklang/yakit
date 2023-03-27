@@ -28,7 +28,11 @@ import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTex
 import {failed, info, success, warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {defTargetRequest, TargetRequest, CancelBatchYakScript} from "../invoker/batch/BatchExecutorPage"
-import {showUnfinishedBatchTaskList, UnfinishedBatchTask} from "../invoker/batch/UnfinishedBatchTaskList"
+import {
+    showUnfinishedBatchTaskList,
+    showUnfinishedSimpleDetectTaskList,
+    UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask
+} from "../invoker/batch/UnfinishedBatchTaskList"
 import {useGetState, useMemoizedFn} from "ahooks"
 import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -72,7 +76,7 @@ const marks: SliderMarks = {
 
 interface SimpleDetectFormProps {
     setPercent: (v: number) => void
-    percent:number
+    percent: number
     setExecuting: (v: boolean) => void
     token: string
     sendTarget?: string
@@ -83,12 +87,12 @@ interface SimpleDetectFormProps {
     isDownloadPlugin: boolean
     baseProgress?: number
     TaskName?: string
-    runTaskName?:string
+    runTaskName?: string
     setRunTaskName: (v: string) => void
     setRunTimeStamp: (v: number) => void
     setRunPluginCount: (v: number) => void
     reset: () => void
-    filePtrValue:number
+    filePtrValue: number
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -240,7 +244,11 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 newParams.ProbeMax = 7
                 break
         }
-        ipcRenderer.invoke("SimpleDetect", newParams, token)
+
+        ipcRenderer.invoke("SimpleDetect", {
+            LastRecord: {},
+            PortScanRequest: {...newParams, TaskName: TaskName}
+        }, token)
     }
 
     const onFinish = useMemoizedFn((values) => {
@@ -265,7 +273,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-                .then((data: {Data: YakScript[]}) => {
+                .then((data: { Data: YakScript[] }) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
@@ -273,7 +281,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }
     })
 
@@ -281,13 +290,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         ipcRenderer.invoke("cancel-SimpleDetect", token)
         let newParams: PortScanParams = {...getParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
-        ipcRenderer.invoke("SaveCancelSimpleDetect",{
-            LastRecord : {
-                LastRecordPtr : filePtrValue,
-                Percent : percent,
-                YakScriptOnlineGroup:OnlineGroup
+        ipcRenderer.invoke("SaveCancelSimpleDetect", {
+            LastRecord: {
+                LastRecordPtr: filePtrValue,
+                Percent: percent,
+                YakScriptOnlineGroup: OnlineGroup
             },
-            PortScanRequest: {...newParams,TaskName:runTaskName}
+            PortScanRequest: {...newParams, TaskName: runTaskName}
         })
     })
 
@@ -381,7 +390,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 </span>
                                 <span
                                     onClick={() => {
-                                        showUnfinishedBatchTaskList((task: UnfinishedBatchTask) => {
+                                        showUnfinishedSimpleDetectTaskList((task: UnfinishedSimpleDetectBatchTask) => {
                                             ipcRenderer.invoke("send-to-tab", {
                                                 type: "simple-batch-exec-recover",
                                                 data: task
@@ -508,9 +517,9 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
             setReportPercent(0)
             setReportModalVisible(false)
             ipcRenderer.invoke("open-user-manage", Route.DB_Report)
-            setTimeout(()=>{
+            setTimeout(() => {
                 ipcRenderer.invoke("simple-open-report", getReportId())
-            },300)
+            }, 300)
         }
     }, [getReportId()])
 
@@ -602,9 +611,9 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }
 
     /** 获取扫描主机数 扫描端口数 */
-    const getProtAndHost = (v:string) => {
-        const item = infoState.statusState.filter((item)=>item.tag===v)
-        if(item.length>0){
+    const getProtAndHost = (v: string) => {
+        const item = infoState.statusState.filter((item) => item.tag === v)
+        if (item.length > 0) {
             return parseInt(item[0].info[0].Data)
         }
         return null
@@ -661,7 +670,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                             >
                                 <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                     {infoState.riskState.slice(0, 10).map((i) => {
-                                        return <RiskDetails info={i} shrink={true} />
+                                        return <RiskDetails info={i} shrink={true}/>
                                     })}
                                 </Space>
                             </AutoCard>
@@ -672,7 +681,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimple={true} />
+                                    <OpenPortTableViewer data={openPorts} isSimple={true}/>
                                 </Col>
                             </Row>
                         </div>
@@ -786,7 +795,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                 onClose && onClose()
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+        })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -804,7 +814,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
         ipcRenderer
             .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-            .then(() => {})
+            .then(() => {
+            })
             .catch((e) => {
                 failed(`添加失败:${e}`)
             })
@@ -907,11 +918,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [runPluginCount, setRunPluginCount] = useState<number>()
 
     const [infoState, {reset, setXtermRef, resetAll}] = useHoldingIPCRStream(
-        "scan-port",
+        "simple-scan",
         "SimpleDetect",
         token,
-        () => {},
-        () => {},
+        () => {
+        },
+        () => {
+        },
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -927,10 +940,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
     )
 
-    const filePtr=infoState.statusState.filter((item) =>
+    const filePtr = infoState.statusState.filter((item) =>
         ["当前文件指针"].includes(item.tag)
     )
-    const filePtrValue:number = Array.isArray(filePtr)?parseInt(filePtr[0]?.info[0]?.Data):0
+    const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
 
     useEffect(() => {
         if (!isResize.current) {
@@ -962,7 +975,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 .invoke("GetExecBatchYakScriptUnfinishedTaskByUid", {
                     Uid
                 })
-                .then((req: {ScriptNames: string[]; Target: string}) => {
+                .then((req: { ScriptNames: string[]; Target: string }) => {
                     const {Target, ScriptNames} = req
                     // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
                     setTarget({...target, target: Target})
@@ -989,15 +1002,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 status = "success"
             }
             !!status &&
-                ipcRenderer.invoke("refresh-tabs-color", {
-                    tabId: getTabId(),
-                    status
-                })
+            ipcRenderer.invoke("refresh-tabs-color", {
+                tabId: getTabId(),
+                status
+            })
         }
     }, [percent, executing, getTabId()])
 
     if (loading) {
-        return <Spin tip={"正在恢复未完成的任务"} />
+        return <Spin tip={"正在恢复未完成的任务"}/>
     }
 
     const timelineItemProps = (infoState.messageState || [])
@@ -1013,7 +1026,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                     <AutoCard
                         size={"small"}
                         bordered={false}
-                        title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} /> : null}
+                        title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin}/> : null}
                         bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
                     >
                         <Row>
@@ -1066,9 +1079,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                             </Col>
                         </Row>
 
-                        <Divider style={{margin: 4}} />
+                        <Divider style={{margin: 4}}/>
 
-                        <SimpleCardBox statusCards={statusCards} />
+                        <SimpleCardBox statusCards={statusCards}/>
                     </AutoCard>
                 }
                 firstMinSize={"200px"}

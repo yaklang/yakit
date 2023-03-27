@@ -226,9 +226,16 @@ service Yak {
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
-  rpc SimpleDetect(PortScanRequest) returns (stream ExecResult);
-  rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
   rpc ViewPortScanCode(Empty) returns (SimpleScript);
+
+  rpc SimpleDetect(RecordPortScanRequest) returns (stream ExecResult);
+  rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
+
+  rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
+  rpc GetSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc PopSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc RecoverSimpleDetectUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecResult);
+
 
   // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
@@ -482,7 +489,7 @@ message CWEDetail {
 
 message CVEDetailEx {
   CVEDetail CVE = 1;
-  repeated CWEDetail CWE= 2;
+  repeated CWEDetail CWE = 2;
 }
 
 message CVEDetail {
@@ -1029,8 +1036,21 @@ message ExecBatchYakScriptUnfinishedTask {
   string TaskName = 5;
 }
 
+message SimpleDetectUnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string Uid = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+  int64  LastRecordPtr = 6;
+}
+
 message GetExecBatchYakScriptUnfinishedTaskResponse {
   repeated ExecBatchYakScriptUnfinishedTask Tasks = 1;
+}
+
+message    GetSimpleDetectUnfinishedTaskResponse {
+  repeated SimpleDetectUnfinishedTask Tasks = 1;
 }
 
 message FixUploadPacketRequest {
@@ -1941,9 +1961,9 @@ message SimpleScript {
 }
 
 message LastRecord {
-  int64 LastRecordPtr =1;
+  int64 LastRecordPtr = 1;
   double Percent = 2;
-  string YakScriptOnlineGroup =3;
+  string YakScriptOnlineGroup = 3;
 }
 
 message RecordPortScanRequest {
