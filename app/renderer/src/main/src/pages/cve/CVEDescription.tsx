@@ -99,7 +99,7 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
             tabBarExtraContent={tabBarExtraContent}
         >
             {
-                data.map((i: CWEDetail, index) => <TabPane tab={i.CWE} key={index}>
+                data.map((i: CWEDetail) => <TabPane tab={i.CWE} key={i.CWE}>
                     <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
                 </TabPane>)
             }
@@ -131,7 +131,7 @@ export const CWEDescriptionItem: React.FC<CWEDescriptionItemProps> = React.memo(
                 {item.Solution}
             </Descriptions.Item>
             <Descriptions.Item label={"其他案例"} span={3} contentStyle={{ paddingBottom: 8 }}>
-                {item.RelativeCVE.map(c => <div className={styles['cwe-tag']} onClick={() => onSelectCve(c)}>{c}</div>)}
+                {item.RelativeCVE.map(c => <div key={c} className={styles['cwe-tag']} onClick={() => onSelectCve(c)}>{c}</div>)}
             </Descriptions.Item>
         </Descriptions>
     )

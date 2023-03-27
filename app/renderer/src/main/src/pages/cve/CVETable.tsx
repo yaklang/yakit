@@ -137,7 +137,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             },
             {
                 title: "漏洞级别",
-                dataKey: "Product",
+                dataKey: "BaseCVSSv2Score",
                 width: 120,
                 render: (_, i: CVEDetail) => {
                     let color = "success"
