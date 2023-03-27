@@ -165,6 +165,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            border-bottom: 1px solid var(--yakit-border-color);
 
             .cve-description-heard-title {
                 font-weight: 500;
@@ -187,6 +188,27 @@
             }
         }
     }
+
+    .cwe-tag {
+        margin-bottom: 4px;
+        margin-right: 4px;
+        height: 20px;
+        background: #FFFFFF;
+        border: 1px solid var(--yakit-border-color);
+        border-radius: 4px;
+        color: var(--yakit-header-color);
+        padding: 3px 6px;
+        font-weight: 500;
+        font-size: 11px;
+        line-height: 14px;
+        display: inline-flex;
+        cursor: pointer;
+
+        &:hover {
+            border-color: var(--yakit-primary-4);
+            color: var(--yakit-primary-5);
+        }
+    }
 }
 
 .no-more {
@@ -194,4 +216,5 @@
     color: var(--yakit-helper-text-color);
     text-align: center;
     padding: 12px;
+    width: 100%;
 }

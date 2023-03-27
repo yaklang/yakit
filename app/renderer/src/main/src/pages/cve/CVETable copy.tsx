@@ -1,25 +1,25 @@
-import React, {useEffect, useState} from "react";
-import {AutoCard} from "@/components/AutoCard";
-import {Empty, Space, Table, Tag} from "antd";
-import {QueryCVERequest} from "@/pages/cve/CVEViewer";
-import {useDebounceEffect, useMemoizedFn} from "ahooks";
-import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema";
-import {ResizeBox} from "@/components/ResizeBox";
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {OneLine} from "@/utils/inputUtil";
-import {CVEDetail} from "@/pages/cve/models";
-import {CVEInspect} from "@/pages/cve/CVEInspect";
-import {showDrawer} from "@/utils/showModal";
-import {CVEDownloader} from "@/pages/cve/Downloader";
+import React, { useEffect, useState } from "react";
+import { AutoCard } from "@/components/AutoCard";
+import { Empty, Space, Table, Tag } from "antd";
+import { QueryCVERequest } from "@/pages/cve/CVEViewer";
+import { useDebounceEffect, useMemoizedFn } from "ahooks";
+import { genDefaultPagination, PaginationSchema, QueryGeneralResponse } from "@/pages/invoker/schema";
+import { ResizeBox } from "@/components/ResizeBox";
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
+import { OneLine } from "@/utils/inputUtil";
+import { CVEDetail } from "@/pages/cve/models";
+import { CVEInspect } from "@/pages/cve/CVEInspect";
+import { showDrawer } from "@/utils/showModal";
+import { CVEDownloader } from "@/pages/cve/Downloader";
 
 export interface CVETableProp {
     filter: QueryCVERequest
 }
 
-const {ipcRenderer} = window.require("electron");
+const { ipcRenderer } = window.require("electron");
 
 export const CVETable: React.FC<CVETableProp> = (props) => {
-    const [params, setParams] = useState<QueryCVERequest>({...props.filter});
+    const [params, setParams] = useState<QueryCVERequest>({ ...props.filter });
     const [data, setData] = useState<CVEDetail[]>([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState<PaginationSchema>(genDefaultPagination(10, 1));
@@ -31,7 +31,7 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
     useDebounceEffect(() => {
         setParams(props.filter)
         update(1)
-    }, [props.filter], {wait: 1000})
+    }, [props.filter], { wait: 1000 })
 
     const update = useMemoizedFn((page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
         const paginationProps = {
@@ -69,9 +69,9 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
     }, [selectedKeys])
 
     return <AutoCard
-        loading={loading} style={{height: "100%"}}
+        loading={loading} style={{ height: "100%" }}
         bordered={false} size={"small"} title={"CVE 数据库管理"}
-        bodyStyle={{overflowY: "hidden"}}
+        bodyStyle={{ overflowY: "hidden" }}
         extra={<div>
             <YakitButton
                 loading={loading}
@@ -81,7 +81,7 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
                         title: "下载/更新 CVE 漏洞库基础信息",
                         width: 800,
                         content: (
-                            <div style={{width: 780}}>
+                            <div style={{ width: 780 }}>
                                 <CVEDownloader />
                             </div>
                         )
@@ -93,11 +93,11 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
         <ResizeBox
             isVer={true}
             firstRatio={"500px"}
-            firstNode={<AutoCard style={{margin: 0, padding: 0, height: "100%"}} bordered={false}
-                                 bodyStyle={{margin: 0, padding: 0, overflowY: "auto"}}>
+            firstNode={<AutoCard style={{ margin: 0, padding: 0, height: "100%" }} bordered={false}
+                bodyStyle={{ margin: 0, padding: 0, overflowY: "auto" }}>
                 <Table<CVEDetail>
                     size={"small"}
-                    style={{height: '100%'}}
+                    style={{ height: '100%' }}
                     rowKey={(i: CVEDetail) => i.CVE}
                     pagination={{
                         pageSize: limit,
@@ -125,7 +125,7 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
                     })}
                     dataSource={data}
                     columns={[
-                        {title: "CVE编号", render: (i: CVEDetail) => i.CVE, width: 160},
+                        { title: "CVE编号", render: (i: CVEDetail) => i.CVE, width: 160 },
                         {
                             title: "概述", render: (i: CVEDetail) => <Space size={1}>
                                 <OneLine maxWidth={300} overflow={"hidden"}>
@@ -158,7 +158,7 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
                     ]}
                 />
             </AutoCard>}
-            secondNode={<CVEInspect CVE={selected}/>}
+            secondNode={<CVEInspect CVE={selected} onSelectCve={() => { }} />}
         />
     </AutoCard>
 };

@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AutoCard } from "@/components/AutoCard";
-import { Descriptions, Empty, List } from "antd";
+import { Descriptions, Empty, List, Tabs } from "antd";
 import { CVEDetail, CVEDetailEx, CWEDetail } from "@/pages/cve/models";
 import { ResizeBox } from "@/components/ResizeBox";
-import { CVEDescription } from "@/pages/cve/CVEDescription";
+import { CVEDescription, CWEDescription, CWEDescriptionItem } from "@/pages/cve/CVEDescription";
 import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty";
 import styles from "./CVETable.module.scss";
 import { ArrowsExpandIcon, ArrowsRetractIcon } from "@/assets/newIcon";
-import { useCreation } from "ahooks";
+import { useCreation, useMemoizedFn } from "ahooks";
+
 export interface CVEInspectProp {
     CVE?: string
+    onSelectCve: (s: string) => void
 }
 
 function emptyCVE() {
@@ -19,6 +21,7 @@ function emptyCVE() {
 const { ipcRenderer } = window.require("electron");
 
 export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
+    const { onSelectCve } = props
     const selected = props.CVE;
 
     const [cve, setCVE] = useState<CVEDetail>(emptyCVE);
@@ -31,13 +34,19 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
         if (!selected) {
             return
         }
-        ipcRenderer.invoke("GetCVE", { CVE: selected }).then((i: CVEDetailEx) => {
+        onGetCve(selected)
+    }, [props.CVE])
+    useEffect(() => {
+        setFirstFull(cwes.length === 0)
+    }, [cwes])
+    const onGetCve = useMemoizedFn((c: string) => {
+        ipcRenderer.invoke("GetCVE", { CVE: c }).then((i: CVEDetailEx) => {
             console.log('GetCVE', i)
             const { CVE, CWE } = i;
             setCVE(CVE);
             setCWE(CWE);
         })
-    }, [props.CVE])
+    })
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "50%",
@@ -51,11 +60,11 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
             p.firstRatio = "100%"
         }
         return p
-    }, [firstFull, secondFull])
+    }, [firstFull, secondFull, cwes])
     return !!selected ? <div className={styles['cve-inspect']}>
         <ResizeBox
             firstMinSize={"400px"}
-            firstNode={<div className={styles['cve-description']}>
+            firstNode={<div className={styles['cve-description']} style={{ display: secondFull ? 'none' : '' }}>
                 <div className={styles['cve-description-heard']}>
                     <div className={styles['cve-description-heard-title']}>CVE 详情</div>
                     <div className={styles['cve-description-icon']} onClick={() => setFirstFull(!firstFull)}>
@@ -67,34 +76,40 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
             lineStyle={{ display: firstFull ? 'none' : '' }}
             secondNodeStyle={{ padding: firstFull ? 0 : undefined }}
             firstNodeStyle={{ padding: secondFull ? 0 : undefined }}
-            secondNode={<div style={{ display: firstFull ? 'none' : '' }}>
-                <List<CWEDetail>
-                    dataSource={cwes}
-                    renderItem={(item: CWEDetail) => {
-                        return <List.Item>
-                            <Descriptions column={2}>
-                                <Descriptions.Item label={"CWE编号"} span={1}>
-                                    {item.CWE}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={"CWE 状态"}>
-                                    {item.Status}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={"类型"} span={2}>
-                                    {item.NameZh || item.Name}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={"描述信息"} span={2}>
-                                    {item.DescriptionZh || item.Description}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={"修复方案"} span={2}>
-                                    {item.Solution}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={"其他案例"} span={2}>
-                                    {item.RelativeCVE.join(", ")}
-                                </Descriptions.Item>
-                            </Descriptions>
-                        </List.Item>
-                    }}
-                />
+            secondNode={<div className={styles['cve-description']} style={{ display: firstFull ? 'none' : '' }}>
+                {cwes.length === 1 ?
+                    <>
+                        <div className={styles['cve-description-heard']}>
+                            <div className={styles['cve-description-heard-title']}>{cwes.length > 0 ? cwes[0].CWE : 'CWE 编号'}</div>
+                            <div className={styles['cve-description-icon']} onClick={() => setSecondFull(!secondFull)}>
+                                {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                            </div>
+                        </div>
+                        <CWEDescriptionItem item={cwes[0]} onSelectCve={(s) => {
+                            onGetCve(s)
+                            onSelectCve(s)
+                        }} />
+                        <div className={styles['no-more']}>暂无更多</div>
+                    </> :
+                    (cwes.length === 0 ? <YakitEmpty style={{ paddingTop: 48 }} title="暂无CWE数据" /> :
+                        <CWEDescription
+                            data={cwes}
+                            onSelectCve={(s) => {
+                                onGetCve(s)
+                                onSelectCve(s)
+                            }}
+                            tabBarExtraContent={
+                                <div
+                                    className={styles['cve-description-icon']}
+                                    onClick={() => setSecondFull(!secondFull)}
+                                    style={{ paddingRight: 12 }}
+                                >
+                                    {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                </div>
+                            }
+                        />
+                    )
+                }
             </div>}
             {...ResizeBoxProps}
         />

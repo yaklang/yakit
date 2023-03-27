@@ -1,14 +1,14 @@
-import {InputNumber, Tag} from "antd"
-import React, {useState} from "react"
-import {CopyComponentsProps, YakitTagProps} from "./YakitTagType"
+import { InputNumber, Tag } from "antd"
+import React, { useState } from "react"
+import { CopyComponentsProps, YakitTagProps } from "./YakitTagType"
 import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
-import {RemoveIcon} from "@/assets/newIcon"
-import {useMemoizedFn} from "ahooks"
-import {CheckOutlined, CopyOutlined, LoadingOutlined} from "@ant-design/icons"
-import {success} from "@/utils/notification"
+import { RemoveIcon } from "@/assets/newIcon"
+import { useMemoizedFn } from "ahooks"
+import { CheckOutlined, CopyOutlined, LoadingOutlined } from "@ant-design/icons"
+import { success } from "@/utils/notification"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 /**
  * 更新说明
@@ -26,7 +26,7 @@ const {ipcRenderer} = window.require("electron")
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const {color, size, disable, className, enableCopy, iconColor} = props
+    const { color, size, disable, className, enableCopy, iconColor } = props
     const onAfterCopy = useMemoizedFn((e) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
@@ -53,6 +53,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                     [styles["yakit-tag-blue"]]: color === "blue",
                     [styles["yakit-tag-cyan"]]: color === "cyan",
                     [styles["yakit-tag-bluePurple"]]: color === "bluePurple",
+                    [styles["yakit-tag-white"]]: color === "white",
                     [styles["yakit-tag-disable"]]: !!disable
                 },
                 className
@@ -68,7 +69,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
 }
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
-    const {iconColor} = props
+    const { iconColor } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowSure, setIsShowSure] = useState<boolean>(false)
     const onCopy = useMemoizedFn((e) => {
@@ -89,8 +90,8 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
         <div className={styles["yakit-copy"]} onClick={onCopy}>
             {(loading && <LoadingOutlined />) || (
                 <>
-                    {(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || (
-                        <CopyOutlined style={{color: iconColor || "var(--yakit-primary-5)"}} />
+                    {(isShowSure && <CheckOutlined style={{ color: "var(--yakit-success-5)" }} />) || (
+                        <CopyOutlined style={{ color: iconColor || "var(--yakit-primary-5)" }} />
                     )}
                 </>
             )}

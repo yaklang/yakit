@@ -1,11 +1,15 @@
-import { Descriptions, Tag } from 'antd';
-import { CVEDetail } from "@/pages/cve/models";
+import { Descriptions, List, Tabs } from 'antd';
+import { CVEDetail, CWEDetail } from "@/pages/cve/models";
 import classNames from 'classnames';
 import styles from "./CVETable.module.scss";
 import { useCreation } from 'ahooks';
 import moment from 'moment';
+import React, { ReactNode } from 'react';
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag';
 
-export const CVEDescription = ({
+const { TabPane } = Tabs
+
+export const CVEDescription = React.memo(({
     CVE,
     DescriptionZh,
     DescriptionOrigin,
@@ -77,4 +81,58 @@ export const CVEDescription = ({
         </Descriptions>
         <div className={styles['no-more']}>暂无更多</div>
     </>
-};
+});
+interface CWEDescriptionProps {
+    data: CWEDetail[]
+    tabBarExtraContent: ReactNode
+    onSelectCve: (s: string) => void
+}
+export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) => {
+    const { data, tabBarExtraContent, onSelectCve } = props;
+
+    return <>
+        <Tabs
+            defaultActiveKey={data[0]?.CWE || '-'}
+            size='small'
+            type='card'
+            className='main-content-tabs yakit-layout-tabs'
+            tabBarExtraContent={tabBarExtraContent}
+        >
+            {
+                data.map((i: CWEDetail, index) => <TabPane tab={i.CWE} key={index}>
+                    <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
+                </TabPane>)
+            }
+        </Tabs>
+        <div className={styles['no-more']}>暂无更多</div>
+    </>
+});
+interface CWEDescriptionItemProps {
+    item: CWEDetail
+    onSelectCve: (s: string) => void
+}
+export const CWEDescriptionItem: React.FC<CWEDescriptionItemProps> = React.memo((props) => {
+    const { item, onSelectCve } = props
+    return (
+        <Descriptions bordered size="small" column={3}>
+            <Descriptions.Item label={"CWE编号"} span={2} contentStyle={{ fontSize: 16, fontWeight: 'bold' }}>
+                {item.CWE}
+            </Descriptions.Item>
+            <Descriptions.Item label={"CWE 状态"} span={1}>
+                {item.Status}
+            </Descriptions.Item>
+            <Descriptions.Item label={"类型"} span={3}>
+                {item.NameZh || item.Name}
+            </Descriptions.Item>
+            <Descriptions.Item label={"描述信息"} span={3}>
+                {item.DescriptionZh || item.Description}
+            </Descriptions.Item>
+            <Descriptions.Item label={"修复方案"} span={3}>
+                {item.Solution}
+            </Descriptions.Item>
+            <Descriptions.Item label={"其他案例"} span={3} contentStyle={{ paddingBottom: 8 }}>
+                {item.RelativeCVE.map(c => <div className={styles['cwe-tag']} onClick={() => onSelectCve(c)}>{c}</div>)}
+            </Descriptions.Item>
+        </Descriptions>
+    )
+})
