@@ -27,14 +27,11 @@ import classNames from "classnames"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
 import {failed, info, success, warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {defTargetRequest, TargetRequest, CancelBatchYakScript} from "../invoker/batch/BatchExecutorPage"
 import {
-    showUnfinishedBatchTaskList,
     showUnfinishedSimpleDetectTaskList,
-    UnfinishedBatchTask,
     UnfinishedSimpleDetectBatchTask
 } from "../invoker/batch/UnfinishedBatchTaskList"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useDebounceEffect} from "ahooks"
 import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
@@ -42,18 +39,16 @@ import {ExecResult, YakScript} from "../invoker/schema"
 import {useStore, simpleDetectParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
-import {PluginResultUI, SimpleCardBox} from "../yakitStore/viewers/base"
+import {SimpleCardBox} from "../yakitStore/viewers/base"
 import moment from "moment"
 import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
 import type {CheckboxValueType} from "antd/es/checkbox/Group"
 import {RiskDetails} from "@/pages/risks/RiskTable"
-import {Report} from "../assetViewer/models"
-import {openABSFileLocated} from "../../utils/openWebsite"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ResizeBox} from "../../components/ResizeBox"
-import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -94,7 +89,7 @@ interface SimpleDetectFormProps {
     reset: () => void
     filePtrValue: number
     oldRunParams?: OldRunParamsProps
-    Uid?:string
+    Uid?: string
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -216,18 +211,21 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }, [TaskName])
 
     // 保存任务
-    const saveTask = () => {
+    const saveTask = (v?:string) => {
+        const cacheData = v?JSON.parse(v):false
+        console.log("SimpleCloseInfo",SimpleCloseInfo,token,cacheData);
+
         let newParams: PortScanParams = {...getParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
-        if(oldRunParams){
+        if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
-            ipcRenderer.invoke("SaveCancelSimpleDetect", {
-                LastRecord,PortScanRequest
+            ipcRenderer.invoke("SaveCancelSimpleDetect", cacheData||{
+                LastRecord,
+                PortScanRequest
             })
-        }
-        else{
-            ipcRenderer.invoke("SaveCancelSimpleDetect", {
-                LastRecord: {
+        } else {
+            ipcRenderer.invoke("SaveCancelSimpleDetect",  cacheData||{
+                LastRecord:{
                     LastRecordPtr: filePtrValue,
                     Percent: percent,
                     YakScriptOnlineGroup: OnlineGroup
@@ -235,14 +233,40 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 PortScanRequest: {...newParams, TaskName: runTaskName}
             })
         }
-
+        delSimpleInfo(token)
     }
 
-    // useEffect(()=>{
-    //     return()=>{
-    //         executing&&saveTask()
-    //     }
-    // },[executing])
+    // 更新销毁参数
+    useDebounceEffect(() => {
+        let obj = {}
+        if (oldRunParams) {
+            const {LastRecord, PortScanRequest} = oldRunParams
+            obj = {
+                LastRecord,
+                PortScanRequest
+            }
+        }
+        else{
+            let newParams: PortScanParams = {...getParams()}
+            const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+            obj = {
+                LastRecord: {
+                    LastRecordPtr: filePtrValue,
+                    Percent: percent,
+                    YakScriptOnlineGroup: OnlineGroup
+                },
+                PortScanRequest: {...newParams, TaskName: runTaskName}
+            }
+        }
+        setSimpleInfo(token, executing,JSON.stringify(obj))
+    }, [executing, oldRunParams, filePtrValue, percent, getScanType(), runTaskName])
+
+    useEffect(() => {
+        return () => {
+            // 任务运行中
+            SimpleCloseInfo[token]?.status&&saveTask(SimpleCloseInfo[token].info)
+        }
+    }, [])
 
     const run = (OnlineGroup: string, TaskName: string) => {
         setPercent(0)
@@ -304,11 +328,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setRunTimeStamp(timeStamp)
         reset()
         setExecuting(true)
-        ipcRenderer.invoke(
-            "RecoverSimpleDetectUnfinishedTask",
-            {Uid},
-            token
-        )
+        ipcRenderer.invoke("RecoverSimpleDetectUnfinishedTask", {Uid}, token)
     }
 
     const onFinish = useMemoizedFn((values) => {
@@ -328,7 +348,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         // 继续任务 参数拦截
-        if(Uid){
+        if (Uid) {
             recoverRun()
         }
         // 当为跳转带参
@@ -350,10 +370,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     })
 
     const onCancel = useMemoizedFn(() => {
-        if(Uid){
+        if (Uid) {
             ipcRenderer.invoke("cancel-RecoverSimpleDetectUnfinishedTask", token)
-        }
-        else{
+        } else {
             ipcRenderer.invoke("cancel-SimpleDetect", token)
         }
         saveTask()
