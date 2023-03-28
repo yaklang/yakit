@@ -6,7 +6,7 @@ import {PaginationSchema} from "@/pages/invoker/schema"
 import {MultiSelectForString, SwitchItem} from "@/utils/inputUtil"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {CVETable} from "@/pages/cve/CVETable"
-import {useDebounceEffect} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import styles from "./CVETable.module.scss"
 import {yakitFailed} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -37,6 +37,9 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [available, setAvailable] = useState(false) // cve数据库是否可用
     useEffect(() => {
+        onIsCVEDatabaseReady()
+    }, [])
+    const onIsCVEDatabaseReady = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
             .invoke("IsCVEDatabaseReady")
@@ -48,7 +51,7 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
                 yakitFailed("IsCVEDatabaseReady失败：" + err)
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
-    }, [])
+    })
     return loading ? (
         <YakitSpin spinning={true} style={{alignItems: "center", paddingTop: 150}} />
     ) : (

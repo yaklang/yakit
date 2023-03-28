@@ -388,14 +388,6 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
         setShowOk(true)
         setMessages([])
         setError(false)
-        // setAvailable(false)
-        // setOutOfDate(false)
-        // ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
-        //     setAvailable(rsp.Ok)
-        //     setOutOfDate(rsp.ShouldUpdate)
-        // }).catch((err) => {
-        //     failed("IsCVEDatabaseReady失败：" + err)
-        // })
     }, [visible])
     return (
         <YakitHint
