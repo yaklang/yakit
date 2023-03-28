@@ -1,20 +1,22 @@
 import React, {useState} from "react";
-import {Form, Space} from "antd";
+import {Form, Popconfirm, Space} from "antd";
 import {SelectOne} from "@/utils/inputUtil";
 import {YakEditor} from "@/utils/editors";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {useMemoizedFn} from "ahooks";
-import {failed} from "@/utils/notification";
+import {failed, info} from "@/utils/notification";
 
 export interface ChaosMakerRuleImportProp {
-
+    onFinished?: ()=>any
 }
 
 export interface ChaosMakerRuleImportParams {
     RuleType: string
     Content: string
 }
+
+const {ipcRenderer} = window.require("electron");
 
 export const ChaosMakerRuleImport: React.FC<ChaosMakerRuleImportProp> = (props) => {
     const [params, setParams] = useState<ChaosMakerRuleImportParams>({
@@ -26,11 +28,25 @@ export const ChaosMakerRuleImport: React.FC<ChaosMakerRuleImportProp> = (props) 
             failed("规则内容为空")
             return
         }
+
+        ipcRenderer.invoke("ImportChaosMakerRules", {...params}).then(()=>{
+            info("导入成功")
+            if (props.onFinished) {
+                props.onFinished()
+            }
+        })
     })
 
     return <AutoCard size={"small"} bordered={true} title={"导入流量规则"} extra={(
         <Space>
-            <YakitButton>导入流量规则</YakitButton>
+            <Popconfirm
+                title={"你确认要导入这些规则吗？"}
+                onConfirm={()=>{
+                    onSubmit()
+                }}
+            >
+                <YakitButton>导入流量规则</YakitButton>
+            </Popconfirm>
         </Space>
     )}>
         <Form
