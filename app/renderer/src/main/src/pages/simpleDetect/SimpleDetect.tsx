@@ -300,6 +300,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }
 
     const recoverRun = () => {
+        const timeStamp: number = moment(new Date()).unix()
+        setRunTimeStamp(timeStamp)
         reset()
         setExecuting(true)
         ipcRenderer.invoke(
