@@ -226,8 +226,16 @@ service Yak {
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
-  rpc SimpleDetect(PortScanRequest) returns (stream ExecResult);
   rpc ViewPortScanCode(Empty) returns (SimpleScript);
+
+  rpc SimpleDetect(RecordPortScanRequest) returns (stream ExecResult);
+  rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
+
+  rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
+  rpc GetSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc PopSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc RecoverSimpleDetectUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecResult);
+
 
   // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
@@ -434,7 +442,14 @@ service Yak {
   rpc UpdateCVEDatabase(UpdateCVEDatabaseRequest) returns (stream ExecResult);
   rpc ExportsProfileDatabase(ExportsProfileDatabaseRequest) returns (stream ExecResult);
   rpc ImportsProfileDatabase(ImportsProfileDatabaseRequest) returns (stream ExecResult);
+
   rpc QueryCVE(QueryCVERequest) returns (QueryCVEResponse);
+  rpc GetCVE(GetCVERequest) returns (CVEDetailEx);
+  rpc SaveTextToTemporalFile(SaveTextToTemporalFileRequest) returns (SaveTextToTemporalFileResponse);
+}
+
+message GetCVERequest {
+  string CVE = 1;
 }
 
 message QueryCVERequest {
@@ -448,6 +463,33 @@ message QueryCVERequest {
   string Severity = 6;
   double Score = 7;
   string Product = 8;
+
+  // by published_date
+  string AfterYear = 9;
+  bool ChineseTranslationFirst = 10;
+}
+
+message CWEDetail {
+  string CWE = 1;
+  string Name = 2;
+  string NameZh = 3;
+  //  repeated CWEDetail InterTo = 4;
+
+  string Status = 5;
+  bool Stable = 6;
+  bool Incomplete = 7;
+  string Description = 8;
+  string DescriptionZh = 9;
+  string LongDescription = 10;
+  string LongDescriptionZh = 11;
+  repeated string RelativeLanguage = 12;
+  string Solution = 13;
+  repeated string RelativeCVE = 14;
+}
+
+message CVEDetailEx {
+  CVEDetail CVE = 1;
+  repeated CWEDetail CWE = 2;
 }
 
 message CVEDetail {
@@ -462,7 +504,6 @@ message CVEDetail {
   string ConfidentialityImpact = 10;
   string IntegrityImpact = 11;
   string AvailabilityImpact = 12;
-
   string Severity = 14;
   int64 PublishedAt = 15;
   string CWE = 16;
@@ -474,12 +515,21 @@ message CVEDetail {
   bool ObtainUserPrivileged = 22;
   bool ObtainOtherPrivileged = 23;
   bool UserInteractionRequired = 24;
+  string Product = 25;
 }
 
 message QueryCVEResponse {
   Paging Pagination = 1;
   int64 Total = 2;
   repeated CVEDetail Data = 3;
+}
+
+message SaveTextToTemporalFileRequest {
+  bytes Text = 1;
+}
+
+message SaveTextToTemporalFileResponse {
+  string FileName = 1;
 }
 
 message ImportsProfileDatabaseRequest {
@@ -497,6 +547,7 @@ message UpdateCVEDatabaseRequest {
 message IsCVEDatabaseReadyResponse {
   bool Ok = 1;
   string Reason = 2;
+  bool ShouldUpdate = 3;
 }
 
 message IsCVEDatabaseReadyRequest {
@@ -985,8 +1036,21 @@ message ExecBatchYakScriptUnfinishedTask {
   string TaskName = 5;
 }
 
+message SimpleDetectUnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string Uid = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+  int64  LastRecordPtr = 6;
+}
+
 message GetExecBatchYakScriptUnfinishedTaskResponse {
   repeated ExecBatchYakScriptUnfinishedTask Tasks = 1;
+}
+
+message    GetSimpleDetectUnfinishedTaskResponse {
+  repeated SimpleDetectUnfinishedTask Tasks = 1;
 }
 
 message FixUploadPacketRequest {
@@ -1896,6 +1960,17 @@ message SimpleScript {
   string Content = 1;
 }
 
+message LastRecord {
+  int64 LastRecordPtr = 1;
+  double Percent = 2;
+  string YakScriptOnlineGroup = 3;
+}
+
+message RecordPortScanRequest {
+  LastRecord LastRecord = 1;
+  PortScanRequest PortScanRequest = 2;
+}
+
 message PortScanRequest {
   string Targets = 1;
   string Ports = 2;
@@ -1949,6 +2024,8 @@ message PortScanRequest {
   // SYN Concurrent
   // 简易设置 SYN 每秒并发
   int64 SynConcurrent = 24;
+
+  string TaskName = 25;
 }
 
 message DeletePortsRequest {
