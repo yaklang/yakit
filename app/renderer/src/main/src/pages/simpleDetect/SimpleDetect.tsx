@@ -94,6 +94,7 @@ interface SimpleDetectFormProps {
     reset: () => void
     filePtrValue: number
     oldRunParams?: OldRunParamsProps
+    Uid?:string
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -115,7 +116,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setRunPluginCount,
         reset,
         filePtrValue,
-        oldRunParams
+        oldRunParams,
+        Uid
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -213,6 +215,35 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
     }, [TaskName])
 
+    // 保存任务
+    const saveTask = () => {
+        let newParams: PortScanParams = {...getParams()}
+        const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+        if(oldRunParams){
+            const {LastRecord, PortScanRequest} = oldRunParams
+            ipcRenderer.invoke("SaveCancelSimpleDetect", {
+                LastRecord,PortScanRequest
+            })
+        }
+        else{
+            ipcRenderer.invoke("SaveCancelSimpleDetect", {
+                LastRecord: {
+                    LastRecordPtr: filePtrValue,
+                    Percent: percent,
+                    YakScriptOnlineGroup: OnlineGroup
+                },
+                PortScanRequest: {...newParams, TaskName: runTaskName}
+            })
+        }
+
+    }
+
+    // useEffect(()=>{
+    //     return()=>{
+    //         executing&&saveTask()
+    //     }
+    // },[executing])
+
     const run = (OnlineGroup: string, TaskName: string) => {
         setPercent(0)
         // 时间戳生成
@@ -258,19 +289,22 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
         let LastRecord = {}
         let PortScanRequest = {...newParams, TaskName: TaskName}
-        // 继续任务 参数拦截
-        if (oldRunParams) {
-            const {LastRecord: LastRecordOld, PortScanRequest: PortScanRequestOld} = oldRunParams
-            LastRecord = LastRecordOld
-            PortScanRequest = PortScanRequestOld
-        }
-
         ipcRenderer.invoke(
             "SimpleDetect",
             {
                 LastRecord,
                 PortScanRequest
             },
+            token
+        )
+    }
+
+    const recoverRun = () => {
+        reset()
+        setExecuting(true)
+        ipcRenderer.invoke(
+            "RecoverSimpleDetectUnfinishedTask",
+            {Uid},
             token
         )
     }
@@ -291,8 +325,12 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
 
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+        // 继续任务 参数拦截
+        if(Uid){
+            recoverRun()
+        }
         // 当为跳转带参
-        if (Array.isArray(openScriptNames)) {
+        else if (Array.isArray(openScriptNames)) {
             run(OnlineGroup, TaskName)
         } else {
             ipcRenderer
@@ -310,17 +348,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     })
 
     const onCancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-SimpleDetect", token)
-        let newParams: PortScanParams = {...getParams()}
-        const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
-        ipcRenderer.invoke("SaveCancelSimpleDetect", {
-            LastRecord: {
-                LastRecordPtr: filePtrValue,
-                Percent: percent,
-                YakScriptOnlineGroup: OnlineGroup
-            },
-            PortScanRequest: {...newParams, TaskName: runTaskName}
-        })
+        if(Uid){
+            ipcRenderer.invoke("cancel-RecoverSimpleDetectUnfinishedTask", token)
+        }
+        else{
+            ipcRenderer.invoke("cancel-SimpleDetect", token)
+        }
+        saveTask()
     })
 
     const judgeExtra = () => {
@@ -1099,6 +1133,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                         reset={resetAll}
                                         filePtrValue={filePtrValue}
                                         oldRunParams={oldRunParams}
+                                        Uid={Uid}
                                     />
                                 </Col>
                             </Row>
