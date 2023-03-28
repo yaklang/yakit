@@ -429,12 +429,26 @@ service Yak {
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
 
+  /*
+    ChaosMakerRule: Bas
+  */
+  rpc ImportChaosMakerRules(ImportChaosMakerRulesRequest) returns (Empty);
+  rpc QueryChaosMakerRule(QueryChaosMakerRuleRequest) returns (QueryChaosMakerRuleResponse);
+  rpc DeleteChaosMakerRuleByID(DeleteChaosMakerRuleByIDRequest) returns (Empty);
+
   // CVE
   rpc IsCVEDatabaseReady(IsCVEDatabaseReadyRequest) returns (IsCVEDatabaseReadyResponse);
   rpc UpdateCVEDatabase(UpdateCVEDatabaseRequest) returns (stream ExecResult);
   rpc ExportsProfileDatabase(ExportsProfileDatabaseRequest) returns (stream ExecResult);
   rpc ImportsProfileDatabase(ImportsProfileDatabaseRequest) returns (stream ExecResult);
+
   rpc QueryCVE(QueryCVERequest) returns (QueryCVEResponse);
+  rpc GetCVE(GetCVERequest) returns (CVEDetailEx);
+  rpc SaveTextToTemporalFile(SaveTextToTemporalFileRequest) returns (SaveTextToTemporalFileResponse);
+}
+
+message GetCVERequest {
+  string CVE = 1;
 }
 
 message QueryCVERequest {
@@ -448,6 +462,33 @@ message QueryCVERequest {
   string Severity = 6;
   double Score = 7;
   string Product = 8;
+
+  // by published_date
+  string AfterYear = 9;
+  bool ChineseTranslationFirst = 10;
+}
+
+message CWEDetail {
+  string CWE = 1;
+  string Name = 2;
+  string NameZh = 3;
+  //  repeated CWEDetail InterTo = 4;
+
+  string Status = 5;
+  bool Stable = 6;
+  bool Incomplete = 7;
+  string Description = 8;
+  string DescriptionZh = 9;
+  string LongDescription = 10;
+  string LongDescriptionZh = 11;
+  repeated string RelativeLanguage = 12;
+  string Solution = 13;
+  repeated string RelativeCVE = 14;
+}
+
+message CVEDetailEx {
+  CVEDetail CVE = 1;
+  repeated CWEDetail CWE = 2;
 }
 
 message CVEDetail {
@@ -462,7 +503,6 @@ message CVEDetail {
   string ConfidentialityImpact = 10;
   string IntegrityImpact = 11;
   string AvailabilityImpact = 12;
-
   string Severity = 14;
   int64 PublishedAt = 15;
   string CWE = 16;
@@ -474,12 +514,63 @@ message CVEDetail {
   bool ObtainUserPrivileged = 22;
   bool ObtainOtherPrivileged = 23;
   bool UserInteractionRequired = 24;
+  string Product = 25;
 }
 
 message QueryCVEResponse {
   Paging Pagination = 1;
   int64 Total = 2;
   repeated CVEDetail Data = 3;
+}
+
+message SaveTextToTemporalFileRequest {
+  bytes Text = 1;
+}
+
+message SaveTextToTemporalFileResponse {
+  string FileName = 1;
+}
+
+message ImportChaosMakerRulesRequest {
+  string Content = 1;
+  // suricata / http-request / icmp
+  string RuleType = 2;
+}
+
+message ChaosMakerRule {
+  int64 Id = 1;
+  string RawTrafficBeyondIpPacketBase64 = 2;
+  string RawTrafficBeyondLinkLayerBase64 = 3;
+  string RawTrafficBeyondHttpBase64 = 4;
+  string RuleType = 5;
+  string SuricataRaw = 6;
+  string Protocol = 7;
+  string Action = 8;
+  string Name = 9;
+  string NameZh = 10;
+  string ClassType = 11;
+  string ClassTypeZh = 12;
+  string Group = 13;
+  string Keywords = 15;
+  string KeywordsZh = 16;
+  string Description = 17;
+  string DescriptionZh = 18;
+}
+
+message QueryChaosMakerRuleResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated ChaosMakerRule Data = 3;
+}
+
+message DeleteChaosMakerRuleByIDRequest {
+  int64 Id = 1;
+}
+
+message QueryChaosMakerRuleRequest {
+  Paging Pagination = 1;
+  string RuleType = 2;
+  repeated string Keywords = 3;
 }
 
 message ImportsProfileDatabaseRequest {
@@ -497,6 +588,7 @@ message UpdateCVEDatabaseRequest {
 message IsCVEDatabaseReadyResponse {
   bool Ok = 1;
   string Reason = 2;
+  bool ShouldUpdate = 3;
 }
 
 message IsCVEDatabaseReadyRequest {

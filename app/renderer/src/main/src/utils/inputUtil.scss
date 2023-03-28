@@ -1,0 +1,9 @@
+.select-one {
+  .ant-radio-button-wrapper:not(:first-child)::before {
+    display: none;
+  }
+
+  .ant-radio-button-wrapper {
+    border-left-width: 1.02px;
+  }
+}
