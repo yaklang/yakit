@@ -972,13 +972,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         if (Uid) {
             setLoading(true)
             ipcRenderer
-                .invoke("GetExecBatchYakScriptUnfinishedTaskByUid", {
+                .invoke("GetSimpleDetectUnfinishedTaskByUid", {
                     Uid
                 })
-                .then((req: { ScriptNames: string[]; Target: string }) => {
-                    const {Target, ScriptNames} = req
-                    // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
-                    setTarget({...target, target: Target})
+                .then(({LastRecord,PortScanRequest}) => {
+                    console.log(LastRecord,PortScanRequest)
+                    const {ScriptNames} = PortScanRequest
+                    // const {Target, ScriptNames} = req
+                    // // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
+                    // setTarget({...target, target: Target})
                     setOpenScriptNames(ScriptNames)
                 })
                 .catch((e) => {

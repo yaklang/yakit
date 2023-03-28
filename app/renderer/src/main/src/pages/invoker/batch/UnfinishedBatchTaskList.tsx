@@ -142,13 +142,13 @@ const UnfinishedSimpleDetectTaskList: React.FC<SimpleDetectBatchTaskListProp> = 
                                 onConfirm={() => {
                                     // 先get GetSimpleDetectUnfinishedTaskByUid
 
-                                    ipcRenderer.invoke("GetSimpleDetectUnfinishedTaskByUid",{
-                                        Uid : i.Uid
-                                    }).then((e)=>{
-                                        console.log(e)
-                                    })
+                                    // ipcRenderer.invoke("GetSimpleDetectUnfinishedTaskByUid",{
+                                    //     Uid : i.Uid
+                                    // }).then((e )=>{
+                                    //     console.log(e)
+                                    // })
                                     // ipcRenderer.invoke("RecoverSimpleDetectUnfinishedTask",)
-
+                                    props.handler(i)
                                 }}
                     >
                         <Button size={"small"} type={"primary"}>
