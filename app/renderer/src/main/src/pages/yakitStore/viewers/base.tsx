@@ -624,11 +624,10 @@ interface SimpleCardBoxProps{
 }
 export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
     const {statusCards} = props
-    const newStatusCards = statusCards.filter((item)=>["加载插件","漏洞/风险","开放端口数","扫描主机数"].includes(item.tag))
-    return <>{newStatusCards.length > 0 && (
+    return <>{statusCards.length > 0 && (
         <div className='status-cards-body'>
             <Row gutter={8}>
-                {newStatusCards.map((card, cardIndex) => {
+                {statusCards.map((card, cardIndex) => {
                     return (
                         <Col key={card.tag} span={6} style={{marginBottom: 8}}>
                             <Card

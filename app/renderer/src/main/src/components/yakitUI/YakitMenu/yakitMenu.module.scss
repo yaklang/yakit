@@ -11,14 +11,25 @@
     }
 }
 
+// 不同类型颜色配置
 .yakit-menu-primary {
     --menu-background: var(--yakit-primary-5);
     --menu-color: var(--yakit-neutral10-color);
 }
-
 .yakit-menu-secondary {
     --menu-background: var(--yakit-primary-1);
     --menu-color: var(--yakit-primary-5);
+}
+// 不同尺寸大小配置
+.yakit-menu-default-size {
+    --menu-height: 28px;
+    --menu-content-height: 16px;
+    --menu-padding: 6px 8px;
+}
+.yakit-menu-right-menu-size {
+    --menu-height: 24px;
+    --menu-content-height: 16px;
+    --menu-padding: 4px 8px;
 }
 
 .yakit-menu-wrapper {
@@ -38,6 +49,9 @@
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+            .icon-style {
+                color: var(--menu-color);
+            }
         }
 
         .ant-menu-item-selected {
@@ -50,6 +64,9 @@
             border-radius: 4px;
 
             span.anticon {
+                color: var(--menu-color);
+            }
+            .icon-style {
                 color: var(--menu-color);
             }
         }
@@ -198,6 +215,9 @@
                 span.anticon {
                     color: var(--menu-color);
                 }
+                .icon-style {
+                    color: var(--menu-color);
+                }
             }
 
             .ant-menu-submenu-selected {
@@ -229,6 +249,10 @@
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+
+            .icon-style {
+                color: var(--menu-color);
+            }
         }
 
         .ant-menu-vertical.ant-menu-sub {
@@ -294,18 +318,18 @@
 }
 
 .yakit-menu-item {
-    height: 28px;
+    height: var(--menu-height);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 8px;
+    padding: var(--menu-padding);
     border-radius: 4px;
 
     .yakit-submenu-item-content {
         display: flex;
         align-items: center;
         gap: 8px;
-        height: 16px;
+        height: var(--menu-content-height);
         max-width: calc(100% - 16px);
     }
 
@@ -313,16 +337,13 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        height: 16px;
+        height: var(--menu-content-height);
         max-width: 100%;
         flex: 1;
     }
 
     .yakit-menu-item-title {
         width: 100%;
-        // height: 100%;
-        // display: flex;
-        // align-items: center;
-        line-height: 16px;
+        line-height: var(--menu-content-height);
     }
 }

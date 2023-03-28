@@ -4,6 +4,8 @@ loglevel(\`info\`)
 
 
 createAt  = cli.Int("timestamp", cli.setRequired(true))
+hostTotal = cli.Int("host_total", cli.setRequired(true))
+portTotal = cli.Int("port_total", cli.setRequired(true))
 reportName = cli.String("report_name")
 plugins = cli.Int("plugins",cli.setDefault(10))
 
@@ -174,8 +176,8 @@ reportInstance.Markdown(\`# 1、项目概述
 // 检测端口扫描结果
 // targetRawLen = len(str.ParseStringToHosts(targetRaw))
 // redlinePortsLen = len(str.ParseStringToPorts(ports)) + len(str.ParseStringToPorts(ports))
-reportInstance.Markdown(sprintf("共扫描端口：【%v】个，涉及主机：【%v】个，每台主机涉及端口：【%v】个", 2000, 2, 1000))
-
+totalTasks = hostTotal * portTotal
+reportInstance.Markdown(sprintf("共扫描端口:【%v】个,涉及主机:【%v】个,每台主机涉及端口:【%v】个", totalTasks, hostTotal, portTotal))
 // 输出漏洞图相关的内容
 total := len(riskAll)
 reportInstance.Markdown(sprintf("本次测试风险漏洞共【%v】个，其中<font color='#da4943'>严重</font>漏洞有【%v】个，<font color='#d83931'>高危</font>漏洞有【%v】个，<font color='#dc9b02'>中危</font>漏洞有【%v】个，<font color='#43ab42'>低危</font>漏洞有【%v】个，附录含有漏洞详情，如有需求请及时修复。", total, criticalLens, highLens, warningLens, lowLens))
@@ -226,26 +228,34 @@ if len(noPotentialRisks) == 0 {
 showPotentialLine = []
 cpp = cve.NewStatistics("PotentialPie")
 println(len(potentialRisks))
-for _, riskIns := range potentialRisks {
+for i, riskIns := range potentialRisks {
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
     if str.Contains(riskIns.Severity, "warning") { level = "中危" }
     if str.Contains(riskIns.Severity, "low") { level = "低危"}
-
+    c = cve.GetCVE(riskIns.CVE)
+    ccwe = cwe.Get(c.CWE)
+    cveStr = riskIns.CVE
+    if len(cveStr) ==0 {
+        cveStr = "-"
+    }
     if len(showPotentialLine) < 10 {
+        title = str.SplitN(riskIns.Title,": -",2)[1]
         showPotentialLine = append(showPotentialLine, [
-            riskIns.Title,
+            cveStr,
+            title,
             riskIns.IP,
-            riskIns.RiskTypeVerbose,
+            ccwe.NameZh,
             level,
         ])
     }
-    c = cve.GetCVE(riskIns.CVE)
+    
     cpp.Feed(c)
+    yakit.SetProgress((float(i) / float(len(potentialRisks)-1) ))
     if len(showPotentialLine) == 10 {
         showPotentialLine = append(showPotentialLine, [
-            "更多风险请在附录中查看",
+            "更多风险请在附录中查看...",
             "",
             "",
             "",
@@ -256,9 +266,7 @@ if len(potentialRisks) != 0 {
     
     reportInstance.Markdown(sprintf("### 3.4.2 风险资产图"))
     for _, gp := range cpp.ToGraphs(){
-        
         aa = json.dumps(gp)
-        println(aa)
         reportInstance.Raw(aa)
         if gp.Name == "AttentionRing"{
              reportInstance.Markdown(sprintf(\`|  风险等级   | 等级划分依据  |
@@ -270,7 +278,7 @@ if len(potentialRisks) != 0 {
     }
     reportInstance.Markdown(sprintf("### 3.4.2 合规检查风险列表"))
     reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
-    reportInstance.Table(["漏洞标题", "地址", "漏洞类型", "漏洞级别"], showPotentialLine...)
+    reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
 }
 
 
@@ -431,21 +439,67 @@ if len(criticalRisks)== 0 && len(highRisks)== 0 && len(warningRisks)== 0 && len(
 
 reportInstance.Markdown("## 合规检查风险详情")
 
+// 用 map 存储每个年份的 CVE 编号
+cveMap := make(map[string][]var)
+
+func showCVEReport(risks) {
+    markdownStr = ""
+    for _, riskIns := range risks {
+        year = riskIns.CVE[4:8]
+
+        if len(cveMap[year]) ==0 {
+            cveMap[year] = []
+        }
+        cveMap[year] = append(cveMap[year], riskIns)
+    }
+
+
+    for year, cves := range cveMap {
+        markdownStr += sprintf("<details>\\n<summary><b> %s 年的CVE列表(共 %d 个)</b></summary>\\n\\n",year,len(cves))
+
+        for _,cve := range cves{
+            level,description,solution = "-","-","-"
+            if str.Contains(cve.Severity, "critical") { level = \`<font color="#da4943">严重</font>\` }
+            if str.Contains(cve.Severity, "high") { level = \`<font color="#d83931">高危</font>\` }
+            if str.Contains(cve.Severity, "warning") { level = \`<font color="#dc9b02">中危</font>\` }
+            if str.Contains(cve.Severity, "low") { level = \`<font color="#43ab42">低危</font>\`}
+            if len(cve.Description) > 0 {description = cve.Description}
+            if len(cve.Solution) > 0 {solution = cve.Solution}
+            markdownStr +=  sprintf(\` #### %v
+
+风险地址：%v:%v
+
+漏洞级别：%v
+
+漏洞类型：%v
+
+漏洞描述：%v
+
+修复建议：%v
+
+\` , cve.Title, cve.Host, cve.Port, level, cve.RiskTypeVerbose,description,solution)
+        }
+        markdownStr += "</details>"
+    }
+    reportInstance.Markdown(markdownStr)
+}
+
+
 if len(criticalPotentialRisks) > 0 {
     reportInstance.Markdown(sprintf("### 严重漏洞详情"))
-    showReport(criticalPotentialRisks)
+    showCVEReport(criticalPotentialRisks)
 }
 if len(highPotentialRisks) > 0 {
     reportInstance.Markdown(sprintf("### 高危漏洞详情"))
-    showReport(highPotentialRisks)
+    showCVEReport(highPotentialRisks)
 }
 if len(warningPotentialRisks) > 0 {
     reportInstance.Markdown(sprintf("### 中危漏洞详情"))
-    showReport(warningPotentialRisks)
+    showCVEReport(warningPotentialRisks)
 }
 if len(lowPotentialRisks) > 0 {
     reportInstance.Markdown(sprintf("### 低危漏洞详情"))
-    showReport(lowPotentialRisks)
+    showCVEReport(lowPotentialRisks)
 }
 if len(criticalPotentialRisks)== 0 && len(highPotentialRisks)== 0 && len(warningPotentialRisks)== 0 && len(lowPotentialRisks)== 0 {
     reportInstance.Markdown(sprintf("暂无风险"))

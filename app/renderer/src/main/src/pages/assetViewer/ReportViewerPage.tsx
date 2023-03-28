@@ -20,7 +20,6 @@ export interface ReportViewerPageProp {
 
 export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
     const [_, setReport, getReport] = useGetState<Report|undefined>()
-
     return (
         <>
             <ResizeBox
@@ -96,6 +95,16 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
+
+    useEffect(()=>{
+        ipcRenderer.on("fetch-simple-open-report", (e, reportId:number) => {
+            update()
+            reportId&&onClick({Id:reportId,Title:"",Hash:"",Owner:"",From:"",PublishedAt:0,JsonRaw:""})
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-new-tabs-color")
+        }
+    },[])
 
     const onSelect = useMemoizedFn((item: Report) => {
         const index = selectedRowKeys.findIndex((ele) => ele === item.Id)

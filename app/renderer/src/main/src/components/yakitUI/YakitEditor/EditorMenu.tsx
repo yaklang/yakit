@@ -4,25 +4,29 @@ import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
 import {ChevronRightIcon} from "@/assets/newIcon"
 import {MenuDividerType} from "rc-menu/lib/interface"
+import {YakitEditorKeyCode} from "./YakitEditorType"
 
 import classnames from "classnames"
-import styles from "./yakitMenu.module.scss"
+import styles from "@/components/yakitUI/YakitMenu/yakitMenu.module.scss"
 
-export interface YakitMenuItemProps {
+export interface EditorMenuItemProps {
     label: string | ReactNode
     key: string
     disabled?: boolean
-    children?: YakitMenuItemProps[]
+    children?: EditorMenuItemType[]
     itemIcon?: ReactNode
     title?: string
+    width?: number
+    /** @description !!! 请最少使用其中一个(ctrl/alt/meta/shift)[不能重复使用] 搭配 字母或F1-12 使用快捷键功能 */
+    keybindings?: YakitEditorKeyCode[]
 }
-export interface YakitMenuItemDividerProps {
+export interface EditorMenuItemDividerProps {
     type: "divider"
 }
-type YakitMenuItemType = YakitMenuItemProps | YakitMenuItemDividerProps
+export type EditorMenuItemType = EditorMenuItemProps | EditorMenuItemDividerProps
 
-export interface YakitMenuProp extends MenuProps {
-    data?: YakitMenuItemType[]
+export interface EditorMenuProp extends MenuProps {
+    data?: EditorMenuItemType[]
     width?: number
     /** 有默认菜单样式(深底白字)和'secondary-浅底深字'样式 */
     type?: "secondary" | "primary"
@@ -33,10 +37,10 @@ export interface YakitMenuProp extends MenuProps {
     size?: "default" | "rightMenu"
 }
 
-export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
+export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
     const {
         data = [],
-        width = 128,
+        width,
         type = "primary",
         isHint = false,
         className,
@@ -50,20 +54,24 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         return styles["yakit-menu-default-size"]
     }, [size])
 
-    const generateMenuInfo = useMemoizedFn((data: YakitMenuItemType) => {
-        if (typeof (data as any as YakitMenuItemDividerProps)["type"] !== "undefined") {
+    const generateMenuInfo = useMemoizedFn((data: EditorMenuItemType) => {
+        if (typeof (data as any as EditorMenuItemDividerProps)["type"] !== "undefined") {
             const itemInfo: MenuDividerType = {
                 type: "divider"
             }
             return itemInfo
         } else {
-            const info: YakitMenuItemProps = {...(data as any)}
+            const info = {...(data as any as EditorMenuItemProps)}
             const hintTitle = !!info.title ? info.title : typeof info.label === "string" ? info.label : ""
 
             if (info.children && info.children.length > 0) {
+                const itemWidth = info.width ? info.width : width
                 const itemInfo: ItemType = {
                     label: (
-                        <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
+                        <div
+                            style={itemWidth ? {width: itemWidth} : {}}
+                            className={classnames(styles["yakit-menu-item"])}
+                        >
                             <div className={styles["yakit-submenu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
@@ -111,9 +119,13 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 itemInfo.children = itemInfo.children.concat(arr)
                 return itemInfo
             } else {
+                const itemWidth = info.width ? info.width : width
                 const itemInfo: ItemType = {
                     label: (
-                        <div style={{width: width}} className={classnames(styles["yakit-menu-item"])}>
+                        <div
+                            style={itemWidth ? {width: itemWidth} : {}}
+                            className={classnames(styles["yakit-menu-item"])}
+                        >
                             <div className={styles["yakit-menu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (

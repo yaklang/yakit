@@ -4,6 +4,8 @@ import {FullscreenOutlined, FullscreenExitOutlined, SearchOutlined} from "@ant-d
 import {CopyableField} from "../../utils/inputUtil"
 import {useDebounce, useGetState} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
+import {AutoCard} from "../../components/AutoCard"
+import {YakEditor} from "../../utils/editors"
 
 import "./reverseTable.scss"
 
@@ -137,6 +139,18 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                     bordered={true}
                     pagination={false}
                     rowKey={(i) => i.uuid}
+                    expandable={{
+                        expandRowByClick: true,
+                        expandedRowRender: (i: ReverseNotification) => {
+                            return (
+                                <div style={{width: "100%", height: 300}}>
+                                    <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
+                                        <YakEditor readOnly={true} valueBytes={i.raw} bytes={true} />
+                                    </AutoCard>
+                                </div>
+                            )
+                        }
+                    }}
                     columns={[
                         {
                             width: 120,

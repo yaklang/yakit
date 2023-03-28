@@ -14,7 +14,7 @@ monaco.editor.defineTheme("kurior", {
             "token": "fuzz.tag.outter", fontStyle: "bold underline",
         },
         {
-            "background": "#E8E9E8",
+            "background": "#F0F2F5",
             "token": ""
         },
         {
@@ -458,7 +458,7 @@ monaco.editor.defineTheme("kurior", {
     ],
     "colors": {
         "editor.foreground": "#363636",
-        "editor.background": "#E8E9E8",
+        "editor.background": "#F0F2F5",
         "editor.selectionBackground": "#F5AA0091",
         "editor.inactiveSelectionBackground": "#F5AA0091",
         "editor.lineHighlightBackground": "#CBDC2F38",

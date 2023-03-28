@@ -335,22 +335,35 @@ module.exports = {
                 } catch (e) {
 
                 }
-                // https://github.com/IndigoUnited/node-request-progress
-                // The options argument is optional so you can omit it
-                requestProgress(request(downloadUrl), {
-                    // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-                    // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-                    // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-                })
-                    .on('progress', function (state) {
-                        win.webContents.send("download-yakit-engine-progress", state)
-                    })
-                    .on('error', function (err) {
-                        reject(err)
-                    })
-                    .on('end', function () {
-                        resolve()
-                    }).pipe(fs.createWriteStream(dest));
+                
+                request(
+                    {
+                        url: downloadUrl
+                    },
+                    function (error, response, body) {
+                        if (response.statusCode === 404) {
+                            reject("暂无最新安装包")
+                        } else {
+                            // https://github.com/IndigoUnited/node-request-progress
+                            // The options argument is optional so you can omit it
+                            requestProgress(request(downloadUrl), {
+                                // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+                                // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+                                // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+                            })
+                                .on("progress", function (state) {
+                                    win.webContents.send("download-yakit-engine-progress", state)
+                                })
+                                .on("error", function (err) {
+                                    reject(err)
+                                })
+                                .on("end", function () {
+                                    resolve()
+                                })
+                                .pipe(fs.createWriteStream(dest))
+                        }
+                    }
+                )
             })
         }
         ipcMain.handle("download-latest-yakit", async (e, version, isEnterprise) => {
