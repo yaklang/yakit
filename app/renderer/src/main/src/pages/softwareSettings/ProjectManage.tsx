@@ -85,7 +85,7 @@ export interface ProjectDescription {
     ChildFolderName: string
     Type: string
 }
-interface ProjectsResponse {
+export interface ProjectsResponse {
     Pagination: {Page: number; Limit: number}
     Projects: ProjectDescription[]
     Total: number
@@ -1947,7 +1947,7 @@ interface TransferProjectProps {
     setVisible: (open: boolean) => any
     onSuccess: (type: string) => any
 }
-interface ProjectIOProgress {
+export interface ProjectIOProgress {
     TargetPath: string
     Percent: number
     Verbose: string
@@ -2037,6 +2037,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
 
         return () => {
             clearInterval(id)
+            ipcRenderer.invoke("cancel-ExportProject", token)
             ipcRenderer.invoke("cancel-ImportProject", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)

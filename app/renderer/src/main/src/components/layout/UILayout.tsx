@@ -854,9 +854,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 isRemoteMode={engineMode === "remote"}
                                                 onEngineModeChange={changeEngineMode}
                                                 typeCallback={typeCallback}
+                                                showProjectManage={linkDatabase}
                                             />
-                                            <div className={styles["divider-wrapper"]}></div>
-                                            <GlobalReverseState isEngineLink={engineLink} />
+                                            {!linkDatabase && <><div className={styles["divider-wrapper"]}></div>
+                                            <GlobalReverseState isEngineLink={engineLink} /></>}
                                         </>
                                     )}
                                 </div>
@@ -875,7 +876,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 <div className={styles["header-left"]}>
                                     {engineLink && (
                                         <>
-                                            <GlobalReverseState isEngineLink={engineLink} />
+                                            {!linkDatabase && <GlobalReverseState isEngineLink={engineLink} />}
 
                                             {!isSimpleEnterprise && <div
                                                 className={classNames(styles["yakit-mode-icon"], {
@@ -906,6 +907,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     isRemoteMode={engineMode === "remote"}
                                                     onEngineModeChange={changeEngineMode}
                                                     typeCallback={typeCallback}
+                                                    showProjectManage={linkDatabase}
                                                 />
                                             </div>
                                         </>

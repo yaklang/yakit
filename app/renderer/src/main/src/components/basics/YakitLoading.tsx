@@ -208,7 +208,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         }
 
         return false
-    }, [currentYakit, latestYakit, currentYaklang, latestYaklang, yakitStatus])
+    }, [currentYakit, latestYakit, currentYaklang, latestYaklang, yakitStatus, readyTime.current])
 
     const selectEngineMode = useMemoizedFn((key: string) => {
         if (key === "remote" && onEngineModeChange) {
