@@ -9,6 +9,7 @@ import { CVETable } from "@/pages/cve/CVETable";
 import { useDebounceEffect } from "ahooks";
 import styles from "./CVETable.module.scss";
 import { yakitFailed } from "@/utils/notification";
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin";
 
 export interface QueryCVERequest {
     Pagination?: PaginationSchema
@@ -38,16 +39,18 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
         Year: "", ChineseTranslationFirst: true
     });
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
+    const [loading, setLoading] = useState(false)
     const [available, setAvailable] = useState(false)// cve数据库是否可用
     useEffect(() => {
-        setAvailable(false)
+        setLoading(true)
         ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
             setAvailable(rsp.Ok)
         }).catch((err) => {
             yakitFailed("IsCVEDatabaseReady失败：" + err)
         })
+            .finally(() => setTimeout(() => setLoading(false), 200))
     }, [])
-    return <div className={styles['cve-viewer']} >
+    return loading ? <YakitSpin spinning={true} style={{ alignItems: 'center', paddingTop: 150 }} /> : <div className={styles['cve-viewer']} >
         {available && advancedQuery && <CVEQuery onChange={setParams} defaultParams={params} />}
         <CVETable filter={params} advancedQuery={advancedQuery} setAdvancedQuery={setAdvancedQuery} available={available} />
     </div>
@@ -84,9 +87,9 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
             // labelCol={{span: 5}} wrapperCol={{span: 14}}
             layout={"vertical"}
         >
-            <SwitchItem label={"有中文数据"}
+            {/* <SwitchItem label={"有中文数据"}
                 setValue={ChineseTranslationFirst => setParams({ ...params, ChineseTranslationFirst })}
-                value={params.ChineseTranslationFirst} />
+                value={params.ChineseTranslationFirst} /> */}
             <MultiSelectForString
                 label={"利用路径"}
                 setValue={AccessVector => setParams({ ...params, AccessVector })}
@@ -108,7 +111,7 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
                 ]}
             />
             <MultiSelectForString
-                label={"利用难度"}
+                label={"漏洞级别"}
                 setValue={Severity => setParams({ ...params, Severity })} value={params.Severity}
                 data={[
                     { value: "CRITICAL", label: "严重" },
