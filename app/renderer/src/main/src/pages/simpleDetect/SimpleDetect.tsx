@@ -684,6 +684,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const downloadReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
+        console.log("runTimeStamp",runTimeStamp)
         const reqParams = {
             Script: scriptData,
             Params: [
