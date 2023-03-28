@@ -81,7 +81,6 @@ interface SimpleDetectFormProps {
     token: string
     sendTarget?: string
     executing: boolean
-    target: TargetRequest
     openScriptNames: string[] | undefined
     YakScriptOnlineGroup?: string
     isDownloadPlugin: boolean
@@ -93,6 +92,7 @@ interface SimpleDetectFormProps {
     setRunPluginCount: (v: number) => void
     reset: () => void
     filePtrValue: number
+    oldRunParams?:OldRunParamsProps
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -103,7 +103,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         token,
         sendTarget,
         executing,
-        target,
         openScriptNames,
         YakScriptOnlineGroup,
         isDownloadPlugin,
@@ -114,7 +113,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setRunTimeStamp,
         setRunPluginCount,
         reset,
-        filePtrValue
+        filePtrValue,
+        oldRunParams
     } = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
@@ -155,6 +155,18 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "合规检测"])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
     const isInputValue = useRef<boolean>(false)
+    // 继续任务操作屏蔽
+    const [shield,setShield] = useState<boolean>(false)
+
+    useEffect(()=>{
+        if(oldRunParams){
+            const {LastRecord,PortScanRequest} = oldRunParams
+            const {Targets,TargetsFile} = PortScanRequest
+            setParams({...params, Targets:Targets||TargetsFile})
+            setShield(true)
+        }
+    },[oldRunParams])
+
     useEffect(() => {
         if (YakScriptOnlineGroup) {
             let arr: string[] = YakScriptOnlineGroup.split(",")
@@ -175,10 +187,10 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         break
                 }
             })
-            setCheckedList(selectArr)
-            // form.setFieldsValue({
-            //     scan_type: selectArr
-            // })
+            if(selectArr.length>0){
+                setCheckedList(selectArr)
+                setScanType("自定义")
+            }
         }
     }, [YakScriptOnlineGroup])
 
@@ -244,10 +256,18 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 newParams.ProbeMax = 7
                 break
         }
+        let LastRecord = {}
+        let PortScanRequest = {...newParams, TaskName: TaskName}
+        // 继续任务 参数拦截
+        if(oldRunParams){
+            const {LastRecord:LastRecordOld,PortScanRequest:PortScanRequestOld} = oldRunParams
+            LastRecord = LastRecordOld
+            PortScanRequest = PortScanRequestOld
+        }
 
         ipcRenderer.invoke("SimpleDetect", {
-            LastRecord: {},
-            PortScanRequest: {...newParams, TaskName: TaskName}
+            LastRecord,
+            PortScanRequest
         }, token)
     }
 
@@ -323,7 +343,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     <ContentUploadInput
                         type='textarea'
                         dragger={{
-                            disabled: executing
+                            disabled: executing||shield
                         }}
                         beforeUpload={(f) => {
                             const typeArr: string[] = [
@@ -362,7 +382,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             value: params.Targets,
                             rows: 1,
                             placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
-                            disabled: executing
+                            disabled: executing||shield
                         }}
                         otherHelpNode={
                             <>
@@ -425,6 +445,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 setScanType(e.target.value)
                             }}
                             value={getScanType()}
+                            disabled={shield}
                         >
                             <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
                             <Radio.Button value='深度扫描'>深度扫描</Radio.Button>
@@ -432,6 +453,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         </Radio.Group>
                         {getScanType() === "自定义" && (
                             <CheckboxGroup
+                                disabled={shield}
                                 style={{paddingLeft: 18}}
                                 options={plainOptions}
                                 value={checkedList}
@@ -442,6 +464,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     <div style={{display: "none"}}>
                         <Form.Item name='TaskName' label='任务名称'>
                             <Input
+                                disabled={shield}
                                 style={{width: 400}}
                                 placeholder='请输入任务名称'
                                 allowClear
@@ -461,6 +484,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             min={1}
                             max={3}
                             marks={marks}
+                            disabled={shield}
                         />
                         <div style={{position: "absolute", top: 26, fontSize: 12, color: "gray"}}>
                             扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
@@ -896,6 +920,11 @@ export interface SimpleDetectProps {
     TaskName?: string
 }
 
+interface OldRunParamsProps{
+    LastRecord:any,
+    PortScanRequest:any,
+}
+
 export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const {Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
     // console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup, TaskName)
@@ -903,10 +932,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [executing, setExecuting] = useState<boolean>(false)
     const [token, setToken] = useState(randomString(20))
     const [loading, setLoading] = useState<boolean>(false)
-
-    const [target, setTarget] = useState<TargetRequest>(defTargetRequest)
     // 打开新页面任务参数
     const [openScriptNames, setOpenScriptNames] = useState<string[]>()
+    const [oldRunParams,setOldRunParams] = useState<OldRunParamsProps>()
 
     const [isDownloadPlugin, setDownloadPlugin] = useState<boolean>(false)
 
@@ -976,11 +1004,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                     Uid
                 })
                 .then(({LastRecord,PortScanRequest}) => {
-                    console.log(LastRecord,PortScanRequest)
                     const {ScriptNames} = PortScanRequest
                     // const {Target, ScriptNames} = req
                     // // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
-                    // setTarget({...target, target: Target})
+                    setOldRunParams({
+                        LastRecord,
+                        PortScanRequest
+                    })
                     setOpenScriptNames(ScriptNames)
                 })
                 .catch((e) => {
@@ -1065,7 +1095,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                     percent={percent}
                                     setExecuting={setExecuting}
                                     token={token}
-                                    target={target}
                                     openScriptNames={openScriptNames}
                                     YakScriptOnlineGroup={YakScriptOnlineGroup}
                                     isDownloadPlugin={isDownloadPlugin}
@@ -1077,6 +1106,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                     setRunPluginCount={setRunPluginCount}
                                     reset={resetAll}
                                     filePtrValue={filePtrValue}
+                                    oldRunParams={oldRunParams}
                                 />
                             </Col>
                         </Row>
