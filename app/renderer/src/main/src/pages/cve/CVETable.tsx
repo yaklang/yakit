@@ -1,26 +1,27 @@
-import React, { useEffect, useMemo, useState } from "react"
-import { AutoCard } from "@/components/AutoCard"
-import { Divider, Empty, Progress, Space, Table, Tag } from "antd"
-import { QueryCVERequest } from "@/pages/cve/CVEViewer"
-import { useDebounceEffect, useDebounceFn, useGetState, useKeyPress, useMemoizedFn } from "ahooks"
-import { ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse } from "@/pages/invoker/schema"
-import { ResizeBox } from "@/components/ResizeBox"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { CVEDetail, CVEDetailEx } from "@/pages/cve/models"
-import { CVEInspect } from "@/pages/cve/CVEInspect"
+import React, {useEffect, useMemo, useState} from "react"
+import {AutoCard} from "@/components/AutoCard"
+import {Divider, Empty, Progress, Space, Table, Tag} from "antd"
+import {defQueryCVERequest, QueryCVERequest} from "@/pages/cve/CVEViewer"
+import {useDebounceEffect, useDebounceFn, useGetState, useKeyPress, useMemoizedFn} from "ahooks"
+import {ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema"
+import {ResizeBox} from "@/components/ResizeBox"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {CVEDetail, CVEDetailEx} from "@/pages/cve/models"
+import {CVEInspect} from "@/pages/cve/CVEInspect"
 import styles from "./CVETable.module.scss"
-import { TableVirtualResize } from "@/components/TableVirtualResize/TableVirtualResize"
-import { ColumnsTypeProps } from "@/components/TableVirtualResize/TableVirtualResizeType"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-import { YakitCombinationSearch } from "@/components/YakitCombinationSearch/YakitCombinationSearch"
-import { CloudDownloadIcon, RefreshIcon, ShieldExclamationIcon, SolidRefreshIcon } from "@/assets/newIcon"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
+import {CloudDownloadIcon, RefreshIcon, ShieldExclamationIcon, SolidRefreshIcon} from "@/assets/newIcon"
 import classNames from "classnames"
-import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
-import { failed, info, yakitFailed } from "@/utils/notification"
-import { randomString } from "@/utils/randomUtil"
-import { Uint8ArrayToString } from "@/utils/str"
-import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {failed, info, yakitFailed} from "@/utils/notification"
+import {randomString} from "@/utils/randomUtil"
+import {Uint8ArrayToString} from "@/utils/str"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {openExternalWebsite} from "@/utils/openWebsite"
 
 export interface CVETableProp {
     available: boolean
@@ -29,24 +30,41 @@ export interface CVETableProp {
     setAdvancedQuery: (b: boolean) => void
 }
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export const CVETable: React.FC<CVETableProp> = (props) => {
-    const { available, advancedQuery, setAdvancedQuery } = props
+    const {available, advancedQuery, setAdvancedQuery} = props
     const [selected, setSelected] = useState<string>("")
 
     return (
         <>
-            {
-                available ?
-                    <ResizeBox
-                        isVer={true}
-                        firstMinSize='200px'
-                        secondMinSize='200px'
-                        firstNode={<CVETableList available={available} advancedQuery={advancedQuery} setAdvancedQuery={setAdvancedQuery} filter={props.filter} selected={selected} setSelected={setSelected} />}
-                        secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected} />}
-                    /> : <CVETableList available={available} advancedQuery={advancedQuery} setAdvancedQuery={setAdvancedQuery} filter={props.filter} selected={selected} setSelected={setSelected} />
-            }
+            {available ? (
+                <ResizeBox
+                    isVer={true}
+                    firstMinSize='200px'
+                    secondMinSize='200px'
+                    firstNode={
+                        <CVETableList
+                            available={available}
+                            advancedQuery={advancedQuery}
+                            setAdvancedQuery={setAdvancedQuery}
+                            filter={props.filter}
+                            selected={selected}
+                            setSelected={setSelected}
+                        />
+                    }
+                    secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected} />}
+                />
+            ) : (
+                <CVETableList
+                    available={available}
+                    advancedQuery={advancedQuery}
+                    setAdvancedQuery={setAdvancedQuery}
+                    filter={props.filter}
+                    selected={selected}
+                    setSelected={setSelected}
+                />
+            )}
         </>
     )
 }
@@ -60,8 +78,8 @@ interface CVETableListProps {
     setAdvancedQuery: (b: boolean) => void
 }
 const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
-    const { available, selected, setSelected, advancedQuery, setAdvancedQuery } = props
-    const [params, setParams] = useState<QueryCVERequest>({ ...props.filter })
+    const {available, selected, setSelected, advancedQuery, setAdvancedQuery} = props
+    const [params, setParams] = useState<QueryCVERequest>({...props.filter})
     const [loading, setLoading] = useState(false)
     const [pagination, setPagination] = useState<PaginationSchema>(genDefaultPagination(20, 1))
     const [data, setData] = useState<CVEDetail[]>([])
@@ -73,27 +91,42 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
 
     const [currentSelectItem, setCurrentSelectItem] = useState<CVEDetail>()
 
-
     useEffect(() => {
-        ipcRenderer.invoke("GetCVE", { CVE: selected }).then((i: CVEDetailEx) => {
-            const { CVE } = i
+        ipcRenderer.invoke("GetCVE", {CVE: selected}).then((i: CVEDetailEx) => {
+            const {CVE} = i
             setCurrentSelectItem(CVE)
         })
     }, [selected])
 
+    useEffect(() => {
+        if (advancedQuery) return
+        setParams({
+            ...defQueryCVERequest,
+            Year: params.Year,
+            CWE: params.CWE
+        })
+        setTimeout(() => {
+            update(1)
+        }, 100)
+    }, [advancedQuery])
 
     useDebounceEffect(
         () => {
-            setParams({
-                ...props.filter,
-                Year: params.Year,
-                CWE: params.CWE
-            })
-            update(1)
+            if (advancedQuery) {
+                setParams({
+                    ...props.filter,
+                    Year: params.Year,
+                    CWE: params.CWE
+                })
+                setTimeout(() => {
+                    update(1)
+                }, 100)
+            }
         },
         [props.filter],
-        { wait: 1000 }
+        {wait: 200}
     )
+
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
             const paginationProps = {
@@ -110,7 +143,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             ipcRenderer
                 .invoke("QueryCVE", finalParams)
                 .then((r: QueryGeneralResponse<CVEDetail>) => {
-                    console.info("QueryCVE", r)
+                    console.info("QueryCVE", finalParams, r)
                     const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
                     setData(d)
                     setPagination(r.Pagination)
@@ -150,6 +183,14 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                 dataKey: "Product",
                 width: 200
             },
+            // {
+            //     title: "利用路径",
+            //     dataKey: "AccessVector"
+            // },
+            // {
+            //     title: "利用难度",
+            //     dataKey: "AccessComplexity"
+            // },
             {
                 title: "漏洞级别",
                 dataKey: "BaseCVSSv2Score",
@@ -187,109 +228,121 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                 ...filter
             })
             setTimeout(() => {
+                console.log(111)
+
                 update(1, limit)
             }, 10)
         },
-        { wait: 500 }
+        {wait: 500}
     ).run
     return (
         <div className={styles["cve-list"]}>
-            {
-                available ?
-                    <TableVirtualResize<CVEDetail>
-                        query={params}
-                        titleHeight={36}
-                        size='middle'
-                        renderTitle={
-                            <div className={styles["cve-list-title-body"]}>
-                                <div className={styles["cve-list-title-left"]}>
-                                    <div className={styles["cve-list-title-query"]}><span className={styles["cve-list-title-query-text"]}>高级查询</span><YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} /></div>
-                                    <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
-                                </div>
-                                <div className={styles["cve-list-title-extra"]}>
-                                    <YakitCombinationSearch
-                                        selectProps={{
-                                            size: "small"
-                                        }}
-                                        beforeOptionWidth={68}
-                                        valueBeforeOption={searchType}
-                                        afterModuleType='input'
-                                        onSelectBeforeOption={(o) => {
-                                            if (o === "CVE") {
-                                                setParams({
-                                                    ...params,
-                                                    CWE: ""
-                                                })
-                                            }
-                                            if (o === "CWE") {
-                                                setParams({
-                                                    ...params,
-                                                    Year: ""
-                                                })
-                                            }
-                                            setSearchType(o)
-                                        }}
-                                        addonBeforeOption={[
-                                            {
-                                                label: "CVE",
-                                                value: "Year"
-                                            },
-                                            {
-                                                label: "CWE",
-                                                value: "CWE"
-                                            }
-                                        ]}
-                                        inputSearchModuleTypeProps={{
-                                            size: "middle",
-                                            value: params[searchType],
-                                            onChange: (e) => {
-                                                setParams({
-                                                    ...params,
-                                                    [searchType]: e.target.value
-                                                })
-                                            },
-                                            onSearch: () => update(1)
-                                        }}
-                                    />
-                                    <Divider type='vertical' />
-                                    <YakitButton type='primary' onClick={() => setDataBaseUpdateVisible(true)}>
-                                        <RefreshIcon />
-                                        数据库更新
-                                    </YakitButton>
-                                </div>
+            {available ? (
+                <TableVirtualResize<CVEDetail>
+                    query={params}
+                    titleHeight={36}
+                    size='middle'
+                    renderTitle={
+                        <div className={styles["cve-list-title-body"]}>
+                            <div className={styles["cve-list-title-left"]}>
+                                {!advancedQuery && (
+                                    <div className={styles["cve-list-title-query"]}>
+                                        <span className={styles["cve-list-title-query-text"]}>高级查询</span>
+                                        <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
+                                    </div>
+                                )}
+                                <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
                             </div>
-                        }
-                        isRefresh={isRefresh}
-                        renderKey='CVE'
-                        data={data}
-                        loading={loading}
-                        enableDrag={true}
-                        columns={columns}
-                        onRowClick={onRowClick}
-                        pagination={{
-                            page: pagination.Page,
-                            limit: pagination.Limit,
-                            total,
-                            onChange: update
-                        }}
-                        currentSelectItem={currentSelectItem}
-                        onChange={onTableChange}
-                    /> : <>
-                        <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
-                        <div className={styles["cve-list-btns"]}>
-                            <YakitEmpty title="暂无数据" description="点击下方按钮进行数据库初始化" />
-                            <YakitButton
-                                type='outline1'
-                                icon={<CloudDownloadIcon />}
-                                onClick={() => setDataBaseUpdateVisible(true)}
-                                style={{ marginTop: 16 }}
-                            >
-                                初始化数据库
-                            </YakitButton>
+                            <div className={styles["cve-list-title-extra"]}>
+                                <YakitCombinationSearch
+                                    selectProps={{
+                                        size: "small"
+                                    }}
+                                    beforeOptionWidth={68}
+                                    valueBeforeOption={searchType}
+                                    afterModuleType='input'
+                                    onSelectBeforeOption={(o) => {
+                                        if (o === "CVE") {
+                                            setParams({
+                                                ...params,
+                                                CWE: ""
+                                            })
+                                        }
+                                        if (o === "CWE") {
+                                            setParams({
+                                                ...params,
+                                                Year: ""
+                                            })
+                                        }
+                                        setSearchType(o)
+                                    }}
+                                    addonBeforeOption={[
+                                        {
+                                            label: "CVE",
+                                            value: "Year"
+                                        },
+                                        {
+                                            label: "CWE",
+                                            value: "CWE"
+                                        }
+                                    ]}
+                                    inputSearchModuleTypeProps={{
+                                        size: "middle",
+                                        value: params[searchType],
+                                        onChange: (e) => {
+                                            setParams({
+                                                ...params,
+                                                [searchType]: e.target.value
+                                            })
+                                        },
+                                        onSearch: () => update(1)
+                                    }}
+                                />
+                                <Divider type='vertical' />
+                                <YakitButton type='primary' onClick={() => setDataBaseUpdateVisible(true)}>
+                                    <RefreshIcon />
+                                    数据库更新
+                                </YakitButton>
+                            </div>
                         </div>
-                    </>
-            }
-            <DatabaseUpdateModal available={available} visible={dataBaseUpdateVisible} setVisible={setDataBaseUpdateVisible} />
+                    }
+                    isRefresh={isRefresh}
+                    renderKey='CVE'
+                    data={data}
+                    loading={loading}
+                    enableDrag={true}
+                    columns={columns}
+                    onRowClick={onRowClick}
+                    pagination={{
+                        page: pagination.Page,
+                        limit: pagination.Limit,
+                        total,
+                        onChange: update
+                    }}
+                    currentSelectItem={currentSelectItem}
+                    onChange={onTableChange}
+                />
+            ) : (
+                <>
+                    <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
+                    <div className={styles["cve-list-btns"]}>
+                        <YakitEmpty title='暂无数据' description='点击下方按钮进行数据库初始化' />
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => setDataBaseUpdateVisible(true)}
+                            style={{marginTop: 16}}
+                        >
+                            初始化数据库
+                        </YakitButton>
+                    </div>
+                </>
+            )}
+            <DatabaseUpdateModal
+                available={available}
+                visible={dataBaseUpdateVisible}
+                setVisible={setDataBaseUpdateVisible}
+            />
         </div>
     )
 })
@@ -299,20 +352,24 @@ interface DatabaseUpdateModalProps {
     visible: boolean
     setVisible: (b: boolean) => void
 }
+const url = "https://cve-db.oss-cn-beijing.aliyuncs.com/default-cve.db.gzip"
 const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
-    const { available, visible, setVisible } = props
+    const {available, visible, setVisible} = props
     const [token, setToken] = useState(randomString(40))
     const [messages, setMessages, getMessages] = useGetState<string[]>([])
     const [showOk, setShowOk] = useState(true)
+    const [error, setError] = useState(false)
     // const [downloadProgress, setDownloadProgress] = useState<DownloadingState>();
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             if (!data.IsMessage) {
                 return
             }
+            console.log("data", Uint8ArrayToString(data.Message))
             setMessages([...getMessages(), Uint8ArrayToString(data.Message)])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
+            console.log("error", error)
             yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
@@ -326,28 +383,29 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
     }, [])
-    // useEffect(() => {
-    //     if (!visible) return
-    //     setShowOk(true)
-    //     setMessages([])
-    //     setAvailable(false)
-    //     setOutOfDate(false)
-    //     ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
-    //         setAvailable(rsp.Ok)
-    //         setOutOfDate(rsp.ShouldUpdate)
-    //     }).catch((err) => {
-    //         failed("IsCVEDatabaseReady失败：" + err)
-    //     })
-    // }, [visible])
+    useEffect(() => {
+        if (!visible) return
+        setShowOk(true)
+        setMessages([])
+        setError(false)
+        // setAvailable(false)
+        // setOutOfDate(false)
+        // ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
+        //     setAvailable(rsp.Ok)
+        //     setOutOfDate(rsp.ShouldUpdate)
+        // }).catch((err) => {
+        //     failed("IsCVEDatabaseReady失败：" + err)
+        // })
+    }, [visible])
     return (
         <YakitHint
             visible={visible}
             title={available ? "CVE数据库更新" : "CVE数据初始化"}
             heardIcon={
                 available ? (
-                    <SolidRefreshIcon style={{ color: "var(--yakit-warning-5)" }} />
+                    <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}} />
                 ) : (
-                    <ShieldExclamationIcon style={{ color: "var(--yakit-warning-5)" }} />
+                    <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}} />
                 )
             }
             onCancel={() => {
@@ -357,8 +415,8 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
             onOk={() => {
                 setShowOk(false)
                 ipcRenderer
-                    .invoke("UpdateCVEDatabase", { Proxy: "" }, token)
-                    .then(() => { })
+                    .invoke("UpdateCVEDatabase", {Proxy: ""}, token)
+                    .then(() => {})
                     .catch((e) => {
                         failed(`更新 CVE 数据库失败！${e}`)
                     })
@@ -366,9 +424,9 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
             okButtonText={available ? "强制更新" : "初始化"}
             isDrag={true}
             mask={false}
-            okButtonProps={{ style: { display: showOk ? "flex" : "none" } }}
+            okButtonProps={{style: {display: showOk ? "flex" : "none"}}}
             content={
-                <div style={{ minHeight: 40 }}>
+                <div className={styles["database-update-content"]}>
                     <p>
                         {available
                             ? "点击“强制更新”，可更新本地CVE数据库"
@@ -389,6 +447,21 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
                             return <p>{`${i}`}</p>
                         })}
                     </div>
+                    {error && (
+                        <div>
+                            如果更新失败，可点击该地址下载：
+                            <a
+                                href={url}
+                                style={{color: "var(--yakit-primary-5)"}}
+                                onClick={() => {
+                                    openExternalWebsite(url)
+                                }}
+                            >
+                                {url}
+                            </a>
+                            , 下载后请将文件放在~/yakit-projects项目文件下
+                        </div>
+                    )}
                 </div>
             }
         />
