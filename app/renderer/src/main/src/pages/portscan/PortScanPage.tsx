@@ -22,6 +22,7 @@ import {ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
 import {SimplePluginList} from "../../components/SimplePluginList"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox";
 
 const {ipcRenderer} = window.require("electron")
 const ScanPortTemplate = "scan-port-template"
