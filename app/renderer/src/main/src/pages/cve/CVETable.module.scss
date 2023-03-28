@@ -187,6 +187,9 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--yakit-border-color);
+            background-color: #ffffff;
+            position: sticky;
+            top: 0;
 
             .cve-description-heard-title {
                 font-weight: 500;
