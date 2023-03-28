@@ -31,7 +31,8 @@ import {defTargetRequest, TargetRequest, CancelBatchYakScript} from "../invoker/
 import {
     showUnfinishedBatchTaskList,
     showUnfinishedSimpleDetectTaskList,
-    UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask
+    UnfinishedBatchTask,
+    UnfinishedSimpleDetectBatchTask
 } from "../invoker/batch/UnfinishedBatchTaskList"
 import {useGetState, useMemoizedFn} from "ahooks"
 import type {SliderMarks} from "antd/es/slider"
@@ -92,7 +93,7 @@ interface SimpleDetectFormProps {
     setRunPluginCount: (v: number) => void
     reset: () => void
     filePtrValue: number
-    oldRunParams?:OldRunParamsProps
+    oldRunParams?: OldRunParamsProps
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -117,7 +118,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         oldRunParams
     } = props
     const [form] = Form.useForm()
-    const [loading, setLoading] = useState<boolean>(false)
     const [uploadLoading, setUploadLoading] = useState(false)
 
     const [params, setParams, getParams] = useGetState<PortScanParams>({
@@ -156,16 +156,16 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
     const isInputValue = useRef<boolean>(false)
     // 继续任务操作屏蔽
-    const [shield,setShield] = useState<boolean>(false)
+    const [shield, setShield] = useState<boolean>(false)
 
-    useEffect(()=>{
-        if(oldRunParams){
-            const {LastRecord,PortScanRequest} = oldRunParams
-            const {Targets,TargetsFile} = PortScanRequest
-            setParams({...params, Targets:Targets||TargetsFile})
+    useEffect(() => {
+        if (oldRunParams) {
+            const {LastRecord, PortScanRequest} = oldRunParams
+            const {Targets, TargetsFile} = PortScanRequest
+            setParams({...params, Targets: Targets || TargetsFile})
             setShield(true)
         }
-    },[oldRunParams])
+    }, [oldRunParams])
 
     useEffect(() => {
         if (YakScriptOnlineGroup) {
@@ -187,7 +187,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         break
                 }
             })
-            if(selectArr.length>0){
+            if (selectArr.length > 0) {
                 setCheckedList(selectArr)
                 setScanType("自定义")
             }
@@ -259,16 +259,20 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         let LastRecord = {}
         let PortScanRequest = {...newParams, TaskName: TaskName}
         // 继续任务 参数拦截
-        if(oldRunParams){
-            const {LastRecord:LastRecordOld,PortScanRequest:PortScanRequestOld} = oldRunParams
+        if (oldRunParams) {
+            const {LastRecord: LastRecordOld, PortScanRequest: PortScanRequestOld} = oldRunParams
             LastRecord = LastRecordOld
             PortScanRequest = PortScanRequestOld
         }
 
-        ipcRenderer.invoke("SimpleDetect", {
-            LastRecord,
-            PortScanRequest
-        }, token)
+        ipcRenderer.invoke(
+            "SimpleDetect",
+            {
+                LastRecord,
+                PortScanRequest
+            },
+            token
+        )
     }
 
     const onFinish = useMemoizedFn((values) => {
@@ -293,7 +297,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-                .then((data: { Data: YakScript[] }) => {
+                .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
@@ -301,8 +305,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
     })
 
@@ -343,7 +346,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     <ContentUploadInput
                         type='textarea'
                         dragger={{
-                            disabled: executing||shield
+                            disabled: executing || shield
                         }}
                         beforeUpload={(f) => {
                             const typeArr: string[] = [
@@ -382,7 +385,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             value: params.Targets,
                             rows: 1,
                             placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
-                            disabled: executing||shield
+                            disabled: executing || shield
                         }}
                         otherHelpNode={
                             <>
@@ -429,7 +432,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                     立即停止任务
                                 </Button>
                             ) : (
-                                <Button type='primary' htmlType='submit' disabled={isDownloadPlugin} loading={loading}>
+                                <Button type='primary' htmlType='submit' disabled={isDownloadPlugin}>
                                     开始检测
                                 </Button>
                             )
@@ -654,7 +657,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                 {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount},
                 {Key: "host_total", Value: getProtAndHost("扫描主机数")},
-                {Key: "port_total", Value: getProtAndHost("扫描端口数")},
+                {Key: "port_total", Value: getProtAndHost("扫描端口数")}
             ]
         }
 
@@ -694,7 +697,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                             >
                                 <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                     {infoState.riskState.slice(0, 10).map((i) => {
-                                        return <RiskDetails info={i} shrink={true}/>
+                                        return <RiskDetails info={i} shrink={true} />
                                     })}
                                 </Space>
                             </AutoCard>
@@ -705,7 +708,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimple={true}/>
+                                    <OpenPortTableViewer data={openPorts} isSimple={true} />
                                 </Col>
                             </Row>
                         </div>
@@ -807,7 +810,6 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
             return
         }
         ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-
             const p = Math.floor(data.Progress * 100)
             setPercent(p)
         })
@@ -819,8 +821,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                 onClose && onClose()
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -838,8 +839,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
         ipcRenderer
             .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-            .then(() => {
-            })
+            .then(() => {})
             .catch((e) => {
                 failed(`添加失败:${e}`)
             })
@@ -920,9 +920,9 @@ export interface SimpleDetectProps {
     TaskName?: string
 }
 
-interface OldRunParamsProps{
-    LastRecord:any,
-    PortScanRequest:any,
+interface OldRunParamsProps {
+    LastRecord: any
+    PortScanRequest: any
 }
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
@@ -934,7 +934,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     // 打开新页面任务参数
     const [openScriptNames, setOpenScriptNames] = useState<string[]>()
-    const [oldRunParams,setOldRunParams] = useState<OldRunParamsProps>()
+    const [oldRunParams, setOldRunParams] = useState<OldRunParamsProps>()
 
     const [isDownloadPlugin, setDownloadPlugin] = useState<boolean>(false)
 
@@ -949,10 +949,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         "simple-scan",
         "SimpleDetect",
         token,
-        () => {
-        },
-        () => {
-        },
+        () => {},
+        () => {},
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -968,9 +966,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
     )
 
-    const filePtr = infoState.statusState.filter((item) =>
-        ["当前文件指针"].includes(item.tag)
-    )
+    const filePtr = infoState.statusState.filter((item) => ["当前文件指针"].includes(item.tag))
     const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
 
     useEffect(() => {
@@ -1003,10 +999,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 .invoke("GetSimpleDetectUnfinishedTaskByUid", {
                     Uid
                 })
-                .then(({LastRecord,PortScanRequest}) => {
+                .then(({LastRecord, PortScanRequest}) => {
                     const {ScriptNames} = PortScanRequest
-                    // const {Target, ScriptNames} = req
-                    // // setQuery({include: ScriptNames, type: "mitm,port-scan,nuclei", exclude: [], tags: ""})
                     setOldRunParams({
                         LastRecord,
                         PortScanRequest
@@ -1034,16 +1028,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 status = "success"
             }
             !!status &&
-            ipcRenderer.invoke("refresh-tabs-color", {
-                tabId: getTabId(),
-                status
-            })
+                ipcRenderer.invoke("refresh-tabs-color", {
+                    tabId: getTabId(),
+                    status
+                })
         }
     }, [percent, executing, getTabId()])
-
-    if (loading) {
-        return <Spin tip={"正在恢复未完成的任务"}/>
-    }
 
     const timelineItemProps = (infoState.messageState || [])
         .filter((i) => {
@@ -1051,91 +1041,94 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         })
         .splice(0, 3)
     return (
-        <div className={styles["simple-detect"]}>
-            <ResizeBox
-                isVer={true}
-                firstNode={
-                    <AutoCard
-                        size={"small"}
-                        bordered={false}
-                        title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin}/> : null}
-                        bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
-                    >
-                        <Row>
-                            {(percent > 0 || executing) && (
-                                <Col span={6}>
-                                    <div style={{display: "flex"}}>
-                                        <span style={{marginRight: 10}}>任务进度:</span>
-                                        <div style={{flex: 1}}>
-                                            <Progress
-                                                status={executing ? "active" : undefined}
-                                                percent={parseInt((percent * 100).toFixed(0))}
-                                            />
+        <>
+            {loading && <Spin tip={"正在恢复未完成的任务"} />}
+            <div className={styles["simple-detect"]} style={loading ? {display: "none"} : {}}>
+                <ResizeBox
+                    isVer={true}
+                    firstNode={
+                        <AutoCard
+                            size={"small"}
+                            bordered={false}
+                            title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} /> : null}
+                            bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
+                        >
+                            <Row>
+                                {(percent > 0 || executing) && (
+                                    <Col span={6}>
+                                        <div style={{display: "flex"}}>
+                                            <span style={{marginRight: 10}}>任务进度:</span>
+                                            <div style={{flex: 1}}>
+                                                <Progress
+                                                    status={executing ? "active" : undefined}
+                                                    percent={parseInt((percent * 100).toFixed(0))}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <Timeline
-                                        pending={loading}
-                                        style={{marginTop: 10, marginBottom: 10, maxHeight: 90}}
-                                    >
-                                        {(timelineItemProps || []).map((e, index) => {
-                                            return (
-                                                <div key={index} className={styles["log-list"]}>
-                                                    [{formatTimestamp(e.timestamp, true)}]: {e.data}
-                                                </div>
-                                            )
-                                        })}
-                                    </Timeline>
+                                        <Timeline
+                                            pending={loading}
+                                            style={{marginTop: 10, marginBottom: 10, maxHeight: 90}}
+                                        >
+                                            {(timelineItemProps || []).map((e, index) => {
+                                                return (
+                                                    <div key={index} className={styles["log-list"]}>
+                                                        [{formatTimestamp(e.timestamp, true)}]: {e.data}
+                                                    </div>
+                                                )
+                                            })}
+                                        </Timeline>
+                                    </Col>
+                                )}
+                                <Col span={percent > 0 || executing ? 18 : 24}>
+                                    <SimpleDetectForm
+                                        executing={executing}
+                                        setPercent={setPercent}
+                                        percent={percent}
+                                        setExecuting={setExecuting}
+                                        token={token}
+                                        openScriptNames={openScriptNames}
+                                        YakScriptOnlineGroup={YakScriptOnlineGroup}
+                                        isDownloadPlugin={isDownloadPlugin}
+                                        baseProgress={BaseProgress}
+                                        TaskName={TaskName}
+                                        runTaskName={runTaskName}
+                                        setRunTaskName={setRunTaskName}
+                                        setRunTimeStamp={setRunTimeStamp}
+                                        setRunPluginCount={setRunPluginCount}
+                                        reset={resetAll}
+                                        filePtrValue={filePtrValue}
+                                        oldRunParams={oldRunParams}
+                                    />
                                 </Col>
-                            )}
-                            <Col span={percent > 0 || executing ? 18 : 24}>
-                                <SimpleDetectForm
-                                    executing={executing}
-                                    setPercent={setPercent}
-                                    percent={percent}
-                                    setExecuting={setExecuting}
-                                    token={token}
-                                    openScriptNames={openScriptNames}
-                                    YakScriptOnlineGroup={YakScriptOnlineGroup}
-                                    isDownloadPlugin={isDownloadPlugin}
-                                    baseProgress={BaseProgress}
-                                    TaskName={TaskName}
-                                    runTaskName={runTaskName}
-                                    setRunTaskName={setRunTaskName}
-                                    setRunTimeStamp={setRunTimeStamp}
-                                    setRunPluginCount={setRunPluginCount}
-                                    reset={resetAll}
-                                    filePtrValue={filePtrValue}
-                                    oldRunParams={oldRunParams}
-                                />
-                            </Col>
-                        </Row>
+                            </Row>
 
-                        <Divider style={{margin: 4}}/>
+                            <Divider style={{margin: 4}} />
 
-                        <SimpleCardBox statusCards={statusCards}/>
-                    </AutoCard>
-                }
-                firstMinSize={"200px"}
-                firstRatio={getResizeBoxSize()}
-                secondMinSize={200}
-                onChangeSize={() => {
-                    isResize.current = true
-                }}
-                secondNode={() => {
-                    return (
-                        <SimpleDetectTable
-                            token={token}
-                            executing={executing}
-                            runTaskName={runTaskName}
-                            runTimeStamp={runTimeStamp}
-                            runPluginCount={runPluginCount}
-                            infoState={infoState}
-                            setExecuting={setExecuting}
-                        />
-                    )
-                }}
-            />
-        </div>
+                            <SimpleCardBox statusCards={statusCards} />
+                        </AutoCard>
+                    }
+                    firstMinSize={"200px"}
+                    firstRatio={getResizeBoxSize()}
+                    secondMinSize={200}
+                    onChangeSize={() => {
+                        isResize.current = true
+                    }}
+                    secondNode={() => {
+                        return (
+                            <SimpleDetectTable
+                                token={token}
+                                executing={executing}
+                                runTaskName={runTaskName}
+                                runTimeStamp={runTimeStamp}
+                                runPluginCount={runPluginCount}
+                                infoState={infoState}
+                                setExecuting={setExecuting}
+                            />
+                        )
+                    }}
+                />
+            </div>
+        </>
     )
 }
