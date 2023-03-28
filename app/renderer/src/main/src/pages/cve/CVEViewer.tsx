@@ -14,7 +14,6 @@ export interface QueryCVERequest {
 
     AccessVector: "NETWORK" | "LOCAL" | "ADJACENT_NETWORK" | "PHYSICAL" | string
     AccessComplexity: "HIGH" | "MEDIUM" | "LOW" | string
-    CVE: string
     CWE: string
     Year: string
     Severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | string
@@ -31,7 +30,6 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
     const [params, setParams] = useState<QueryCVERequest>({
         AccessComplexity: "",
         AccessVector: "",
-        CVE: "",
         CWE: "",
         Product: "",
         Score: 0,
@@ -54,7 +52,6 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     const [params, setParams] = useState<QueryCVERequest>(props.defaultParams || {
         AccessComplexity: "LOW",
         AccessVector: "NETWORK,ADJACENT_NETWORK",
-        CVE: "",
         CWE: "",
         Product: "",
         Score: 6.0,

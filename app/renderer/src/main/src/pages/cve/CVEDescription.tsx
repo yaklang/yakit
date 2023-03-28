@@ -71,10 +71,6 @@ export const CVEDescription = React.memo(({
             </Descriptions.Item>
             <Descriptions.Item label="影响产品" span={3}>{Product}</Descriptions.Item>
 
-            <Descriptions.Item label="利用情况" span={3}>
-                {CVSSVectorString}
-            </Descriptions.Item>
-
             <Descriptions.Item label="解决方案" span={3}>
                 {Solution}
             </Descriptions.Item>

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { AutoCard } from "@/components/AutoCard"
 import { Divider, Empty, Progress, Space, Table, Tag } from "antd"
 import { QueryCVERequest } from "@/pages/cve/CVEViewer"
-import { useDebounceEffect, useDebounceFn, useKeyPress, useMemoizedFn } from "ahooks"
+import { useDebounceEffect, useDebounceFn, useGetState, useKeyPress, useMemoizedFn } from "ahooks"
 import { ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse } from "@/pages/invoker/schema"
 import { ResizeBox } from "@/components/ResizeBox"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
@@ -71,7 +71,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         () => {
             setParams({
                 ...props.filter,
-                CVE: params.CVE,
+                Year: params.Year,
                 CWE: params.CWE
             })
             update(1)
@@ -204,7 +204,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     if (o === "CWE") {
                                         setParams({
                                             ...params,
-                                            CVE: ""
+                                            Year: ""
                                         })
                                     }
                                     setSearchType(o)
@@ -212,7 +212,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                 addonBeforeOption={[
                                     {
                                         label: "CVE",
-                                        value: "CVE"
+                                        value: "Year"
                                     },
                                     {
                                         label: "CWE",
@@ -255,21 +255,21 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                 currentSelectItem={currentSelectItem}
                 onChange={onTableChange}
             />
-            <DatabaseUpdateModal visible={dataBaseUpdateVisible} setVisible={setDataBaseUpdateVisible} />
+            <DatabaseUpdateModal available={total > 0} visible={dataBaseUpdateVisible} setVisible={setDataBaseUpdateVisible} />
         </div>
     )
 })
 
 interface DatabaseUpdateModalProps {
+    available: boolean
     visible: boolean
     setVisible: (b: boolean) => void
 }
 const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
-    const { visible, setVisible } = props
+    const { available, visible, setVisible } = props
     const [token, setToken] = useState(randomString(40))
-    const [messages, setMessages] = useState<string[]>([])
-    const [available, setAvailable] = useState(false)
-    const [outOfDate, setOutOfDate] = useState(false)
+    const [messages, setMessages, getMessages] = useGetState<string[]>([])
+    // const [available, setAvailable] = useState(false)
     const [showOk, setShowOk] = useState(true)
     // const [downloadProgress, setDownloadProgress] = useState<DownloadingState>();
     useEffect(() => {
@@ -277,7 +277,7 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
             if (!data.IsMessage) {
                 return
             }
-            setMessages([...messages, Uint8ArrayToString(data.Message)])
+            setMessages([...getMessages(), Uint8ArrayToString(data.Message)])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
@@ -293,30 +293,33 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
     }, [])
-    useEffect(() => {
-        if (!visible) return
-        setShowOk(true)
-        setMessages([])
-        setAvailable(false)
-        setOutOfDate(false)
-        ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
-            setAvailable(rsp.Ok)
-            setOutOfDate(rsp.ShouldUpdate)
-        })
-    }, [visible])
+    // useEffect(() => {
+    //     if (!visible) return
+    //     setShowOk(true)
+    //     setMessages([])
+    //     setAvailable(false)
+    //     setOutOfDate(false)
+    //     ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
+    //         setAvailable(rsp.Ok)
+    //         setOutOfDate(rsp.ShouldUpdate)
+    //     }).catch((err) => {
+    //         failed("IsCVEDatabaseReady失败：" + err)
+    //     })
+    // }, [visible])
     return (
         <YakitHint
             visible={visible}
-            title={showOk ? "CVE数据初始化" : "CVE数据库更新"}
+            title={available ? "CVE数据库更新" : "CVE数据初始化"}
             heardIcon={
-                showOk ? (
-                    <ShieldExclamationIcon style={{ color: "var(--yakit-warning-5)" }} />
-                ) : (
+                available ? (
                     <SolidRefreshIcon style={{ color: "var(--yakit-warning-5)" }} />
+                ) : (
+                    <ShieldExclamationIcon style={{ color: "var(--yakit-warning-5)" }} />
                 )
             }
             onCancel={() => {
                 setVisible(false)
+                ipcRenderer.invoke("cancel-UpdateCVEDatabase", token)
             }}
             onOk={() => {
                 setShowOk(false)
@@ -332,7 +335,7 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
             mask={false}
             okButtonProps={{ style: { display: showOk ? "flex" : "none" } }}
             content={
-                <div>
+                <div style={{ minHeight: 40 }}>
                     <p>
                         {available
                             ? "点击“强制更新”，可更新本地CVE数据库"
