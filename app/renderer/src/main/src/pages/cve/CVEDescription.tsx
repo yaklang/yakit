@@ -45,7 +45,7 @@ export const CVEDescription = React.memo(
                     <Descriptions.Item label='CVE编号' span={2} contentStyle={{fontSize: 16, fontWeight: "bold"}}>
                         {CVE}
                     </Descriptions.Item>
-                    <Descriptions.Item label='漏洞级别' span={1}>
+                    <Descriptions.Item label='漏洞级别' span={1} contentStyle={{minWidth: 110}}>
                         <div
                             className={classNames(
                                 styles["cve-list-product-success"],
