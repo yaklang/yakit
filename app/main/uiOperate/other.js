@@ -25,6 +25,10 @@ module.exports = (win, getClient) => {
     ipcMain.handle("set-copy-clipboard", (e, text) => {
         clipboard.writeText(text)
     })
+    /** 将剪贴板中的内容传递进渲染进程 */
+    ipcMain.handle("get-copy-clipboard", (e, text) => {
+        return clipboard.readText()
+    })
 
     // 将绝对路径里的文件名(不带文件后缀)提取出来
     ipcMain.handle("fetch-path-file-name", (e, path) => {
