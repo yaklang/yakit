@@ -2975,6 +2975,7 @@ message ExecResult {
   int64 Id = 6;
 
   string RuntimeID = 7;
+  string Progress = 8;
 }
 
 message GetLicenseResponse {
