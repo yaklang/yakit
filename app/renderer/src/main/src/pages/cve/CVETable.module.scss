@@ -16,19 +16,35 @@
     padding: 12px;
     padding-bottom: 0;
 
+    .cve-list-btns {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: calc(100% - 36px);
+        justify-content: center;
+    }
+
     .cve-list-title-body {
         height: 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 12px;
-
-        .cve-list-title {
-            color: var(--yakit-header-color);
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 24px;
-            margin-right: 24px;
+        .cve-list-title-left {
+            display: flex;
+            align-items: center;
+            .cve-list-title-query {
+                display: flex;
+                align-items: center;
+                margin-right: 16px;
+                .cve-list-title-query-text {
+                    font-weight: 400;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--yakit-header-color);
+                    margin-right: 4px;
+                }
+            }
         }
 
         .cve-list-title-extra {
@@ -36,12 +52,18 @@
             align-items: center;
         }
     }
-
+    .cve-list-title {
+        color: var(--yakit-header-color);
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 24px;
+        margin-right: 24px;
+    }
 }
 
 .cve-list-product-success {
-    border: 1px solid #FFE5C6;
-    color: #FFB660;
+    border: 1px solid #ffe5c6;
+    color: #ffb660;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -51,7 +73,7 @@
 
     .cve-list-severity {
         padding: 2px 6px;
-        border-right: 1px solid #FFE5C6;
+        border-right: 1px solid #ffe5c6;
         background-color: rgba(255, 213, 131, 0.1);
         border-radius: 4px 0 0 4px;
         height: 20px;
@@ -83,22 +105,21 @@
 }
 
 .cve-list-product-warning {
-
-    border: 1px solid #FBC6A1;
-    color: #F28B44;
+    border: 1px solid #fbc6a1;
+    color: #f28b44;
 
     .cve-list-severity {
-        border-right: 1px solid #FBC6A1;
-        background-color: #FBE7D9;
+        border-right: 1px solid #fbc6a1;
+        background-color: #fbe7d9;
     }
 }
 
 .cve-list-product-danger {
-    border: 1px solid #E99A95;
-    color: #CB2318;
+    border: 1px solid #e99a95;
+    color: #cb2318;
 
     .cve-list-severity {
-        border-right: 1px solid #E99A95;
+        border-right: 1px solid #e99a95;
         background-color: rgba(203, 35, 24, 0.2);
     }
 }
@@ -141,7 +162,6 @@
                 border-bottom: 1px solid var(--yakit-border-color);
             }
 
-
             .ant-descriptions-bordered .ant-descriptions-item-label {
                 background-color: var(--yakit-background-color);
             }
@@ -155,7 +175,7 @@
 
             .ant-descriptions-bordered .ant-descriptions-item-label:last-child,
             .ant-descriptions-bordered .ant-descriptions-item-content:last-child {
-                border-right: none
+                border-right: none;
             }
         }
 
@@ -193,7 +213,7 @@
         margin-bottom: 4px;
         margin-right: 4px;
         height: 20px;
-        background: #FFFFFF;
+        background: #ffffff;
         border: 1px solid var(--yakit-border-color);
         border-radius: 4px;
         color: var(--yakit-header-color);

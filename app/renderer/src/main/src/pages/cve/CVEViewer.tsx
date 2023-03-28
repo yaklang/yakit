@@ -8,6 +8,7 @@ import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitR
 import { CVETable } from "@/pages/cve/CVETable";
 import { useDebounceEffect } from "ahooks";
 import styles from "./CVETable.module.scss";
+import { yakitFailed } from "@/utils/notification";
 
 export interface QueryCVERequest {
     Pagination?: PaginationSchema
@@ -25,7 +26,7 @@ export interface QueryCVERequest {
 export interface CVEViewerProp {
 
 }
-
+const { ipcRenderer } = window.require("electron")
 export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
     const [params, setParams] = useState<QueryCVERequest>({
         AccessComplexity: "",
@@ -36,10 +37,19 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
         Severity: "",
         Year: "", ChineseTranslationFirst: true
     });
-
+    const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
+    const [available, setAvailable] = useState(false)// cve数据库是否可用
+    useEffect(() => {
+        setAvailable(false)
+        ipcRenderer.invoke("IsCVEDatabaseReady").then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
+            setAvailable(rsp.Ok)
+        }).catch((err) => {
+            yakitFailed("IsCVEDatabaseReady失败：" + err)
+        })
+    }, [])
     return <div className={styles['cve-viewer']} >
-        <CVEQuery onChange={setParams} defaultParams={params} />
-        <CVETable filter={params} />
+        {available && advancedQuery && <CVEQuery onChange={setParams} defaultParams={params} />}
+        <CVETable filter={params} advancedQuery={advancedQuery} setAdvancedQuery={setAdvancedQuery} available={available} />
     </div>
 };
 
