@@ -250,5 +250,22 @@ export default function useHoldingIPCRStream(
         })
     }
 
-    return [infoState, {reset, setXtermRef}, xtermRef] as const
+    const resetAll = () => {
+        messages.current = []
+        featureMessages.current = []
+        featureTypes.current = []
+        processKVPair.current = new Map<string, number>()
+        statusKVPair.current = new Map<string, CacheStatusCardProps>()
+        riskMessages.current = []
+        setInfoState({
+            messageState: [],
+            processState: [],
+            statusState: [],
+            riskState: [],
+            featureMessageState: [],
+            featureTypeState: []
+        })
+    }
+
+    return [infoState, {reset, setXtermRef,resetAll}, xtermRef] as const
 }

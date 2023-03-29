@@ -6,7 +6,7 @@ import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
 import {isSimpleEnterprise} from "@/utils/envfile"
 import "./MainTabs.scss"
-import {simpleDetectTabsParams} from "@/store"
+import {simpleDetectParams} from "@/store"
 import {useGetState} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
@@ -17,7 +17,7 @@ interface InitTabIdProp {
 const InitTabId: React.FC<InitTabIdProp> = (props) => {
     useLayoutEffect(()=>{
         if(isSimpleEnterprise){
-            simpleDetectTabsParams.tabId=props.id
+            simpleDetectParams.tabId=props.id
         }
     },[])
     return <>{props.children}</>
