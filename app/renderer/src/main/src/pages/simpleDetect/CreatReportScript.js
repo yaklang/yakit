@@ -235,7 +235,14 @@ for i, riskIns := range potentialRisks {
     if str.Contains(riskIns.Severity, "warning") { level = "中危" }
     if str.Contains(riskIns.Severity, "low") { level = "低危"}
     c = cve.GetCVE(riskIns.CVE)
-    ccwe = cwe.Get(c.CWE)
+    cweNameZh="-"
+    if len(c.CWE) !=0 {
+        ccwe = cwe.Get(c.CWE)
+        if ccwe != nil{
+            cweNameZh =  ccwe.NameZh
+        }
+    }
+    
     cveStr = riskIns.CVE
     if len(cveStr) ==0 {
         cveStr = "-"
@@ -246,7 +253,7 @@ for i, riskIns := range potentialRisks {
             cveStr,
             title,
             riskIns.IP,
-            ccwe.NameZh,
+            cweNameZh,
             level,
         ])
     }
