@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {
     Space,
     Tag,
@@ -21,6 +21,7 @@ import {
     Timeline
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
+import {DeleteOutlined} from "@ant-design/icons"
 import styles from "./SimpleDetect.module.scss"
 import {Route} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -76,7 +77,6 @@ interface SimpleDetectFormProps {
     percent: number
     setExecuting: (v: boolean) => void
     token: string
-    sendTarget?: string
     executing: boolean
     openScriptNames: string[] | undefined
     YakScriptOnlineGroup?: string
@@ -99,7 +99,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setPercent,
         setExecuting,
         token,
-        sendTarget,
         executing,
         openScriptNames,
         YakScriptOnlineGroup,
@@ -121,7 +120,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [params, setParams, getParams] = useGetState<PortScanParams>({
         Ports: "",
         Mode: "fingerprint",
-        Targets: sendTarget ? JSON.parse(sendTarget || "[]").join(",") : "",
+        Targets: "",
+        TargetsFile:"",
         ScriptNames: openScriptNames || [],
         // SYN 并发
         SynConcurrent: 1000,
@@ -179,7 +179,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
             const {Targets, TargetsFile} = PortScanRequest
-            setParams({...params, Targets: Targets || TargetsFile})
+            setParams({...params, Targets , TargetsFile})
             setShield(true)
         }
     }, [oldRunParams])
@@ -436,18 +436,31 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
                                 return false
                             }
-
                             setUploadLoading(true)
-                            ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                                let Targets = res
-                                // 处理Excel格式文件
-                                if (f.type !== "text/plain") {
-                                    let str = JSON.stringify(res)
-                                    Targets = str.replace(/(\[|\]|\{|\}|\")/g, "")
+                            const TargetsFile = getParams().TargetsFile
+                            const absPath:string = (f as any).path
+                            // 当已有文件上传时
+                            if(TargetsFile&&TargetsFile?.length>0){
+                                let arr = TargetsFile.split(',')
+                                // 限制最多3个文件上传
+                                if(arr.length>=3){
+                                    info("最多支持3个文件上传")
+                                    setUploadLoading(false)
+                                    return
                                 }
-                                setParams({...params, Targets})
-                                setTimeout(() => setUploadLoading(false), 100)
-                            })
+                                // 当不存在时添加
+                                if(!arr.includes(absPath)){
+                                    setParams({...params, TargetsFile:`${TargetsFile},${absPath}`})
+                                }
+                                else{
+                                    info("路径已存在，请勿重复上传")
+                                }
+                                
+                            }// 当未上传过文件时
+                            else{
+                                setParams({...params, TargetsFile:absPath})
+                            }
+                            setUploadLoading(false)
                             return false
                         }}
                         item={{
@@ -520,6 +533,20 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
+                {getParams().TargetsFile&&<Form.Item label=" " colon={false}>
+                    {
+                        getParams().TargetsFile?.split(",").map((item:string)=>{
+                            return <div className={styles["upload-file-item"]}>
+                                <div className={styles["text"]}>{item.substring(item.lastIndexOf('\\')+1)}</div>
+                                {!!!oldRunParams&&<DeleteOutlined className={styles["icon"]} onClick={()=>{
+                                    let arr = getParams().TargetsFile?.split(",")||[]
+                                    let str = arr?.filter((itemIn:string)=>itemIn!==item).join(',')
+                                    setParams({...params, TargetsFile:str})
+                                }}/>}
+                            </div>
+                        })
+                    }
+                </Form.Item>}
                 <div style={executing ? {display: "none"} : {}}>
                     <Form.Item name='scan_type' label='扫描模式' extra={judgeExtra()}>
                         <Radio.Group
@@ -677,7 +704,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
 
         const syncPorts = () => {
             if (openPort.current) setOpenPorts([...openPort.current])
-            // if (closedPort.current) setClosedPorts([...closedPort.current])
         }
 
         syncPorts()
@@ -709,7 +735,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
         })
         return () => {
             ipcRenderer.removeAllListeners(`${reportToken}-data`)
-            // ipcRenderer.removeAllListeners(`client-yak-data`)
         }
     }, [reportToken])
     /** 通知生成报告 */
@@ -1043,9 +1068,18 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 设置ResizeBox高度
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
 
-    const statusCards = infoState.statusState.filter((item) =>
+    const statusErrorCards = infoState.statusState.filter((item) =>
+        ["加载插件失败","SYN扫描失败"].includes(item.tag)
+    )
+    const statusSucceeCards = infoState.statusState.filter((item) =>
         ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
     )
+    const statusCards = useMemo(() => {
+        if(statusErrorCards.length>0){
+            return statusErrorCards
+        }
+        return statusSucceeCards
+    }, [statusErrorCards, statusSucceeCards])
 
     const filePtr = infoState.statusState.filter((item) => ["当前文件指针"].includes(item.tag))
     const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
@@ -1053,9 +1087,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     useEffect(() => {
         if (!isResize.current) {
             if (executing) {
-                statusCards.length === 0 ? setResizeBoxSize("116px") : setResizeBoxSize("206px")
+                statusCards.length === 0 ? setResizeBoxSize("160px") : setResizeBoxSize("270px")
             } else {
-                statusCards.length === 0 ? setResizeBoxSize("295px") : setResizeBoxSize("385px")
+                statusCards.length === 0 ? setResizeBoxSize("350px") : setResizeBoxSize("455px")
             }
         }
     }, [executing, statusCards.length])
