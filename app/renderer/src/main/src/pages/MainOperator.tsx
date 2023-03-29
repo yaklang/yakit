@@ -111,7 +111,10 @@ const singletonRoute: Route[] = [
     // 获取引擎输出
     Route.AttachEngineCombinedOutput,
     // 首页
-    Route.NewHome
+    Route.NewHome,
+
+    // 录屏
+    Route.ScreenRecorderPage,
 ]
 /** 不需要首页组件安全边距的页面 */
 const noPaddingPage = [
@@ -1195,6 +1198,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
+            if (type === "**screen-recorder") addTabPage(Route.ScreenRecorderPage)
             console.info("send to tab: ", type)
         })
 
