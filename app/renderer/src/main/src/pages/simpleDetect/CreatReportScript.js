@@ -98,8 +98,15 @@ if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens == 0 {
 
 // 端口开放情况
 portsLine = []
+aliveHostCountList = []
+openPortCount = 0
+
 portChan := db.QueryPortsByCreateAt(int64(createAt))~
 for port :=range portChan{
+    openPortCount +=1
+    if port.Host not in aliveHostCountList {
+\t\taliveHostCountList = append(aliveHostCountList,port.Host)
+\t}
     // println(sprintf("%s:%d",port.Host,port.Port))
      portsLine = append(portsLine, [
         port.Host,
@@ -109,6 +116,8 @@ for port :=range portChan{
     ])
 }
 
+
+aliveHostCount = len(aliveHostCountList)
 
 reportInstance.Title(reportName)
 
@@ -169,18 +178,36 @@ reportInstance.Markdown(\`# 1、项目概述
 # 3、测试结果概述
 
 ## 3.1 总体安全现状
-
-以下是本次测试的总体安全现状:
 \`)
 
 // 检测端口扫描结果
 // targetRawLen = len(str.ParseStringToHosts(targetRaw))
 // redlinePortsLen = len(str.ParseStringToPorts(ports)) + len(str.ParseStringToPorts(ports))
 totalTasks = hostTotal * portTotal
-reportInstance.Markdown(sprintf("共扫描端口:【%v】个,涉及主机:【%v】个,每台主机涉及端口:【%v】个", totalTasks, hostTotal, portTotal))
+reportInstance.Markdown(sprintf(\`
+本次测试的总体安全现状如下：
+
+- 扫描端口数：%v个
+- 开放端口数：%v个
+- 扫描主机数：%v个
+- 存活主机数：%v个
+- 每台主机涉及端口数：%v个
+
+\`, totalTasks,openPortCount,aliveHostCount, hostTotal, portTotal))
 // 输出漏洞图相关的内容
 total := len(riskAll)
-reportInstance.Markdown(sprintf("本次测试风险漏洞共【%v】个，其中<font color='#da4943'>严重</font>漏洞有【%v】个，<font color='#d83931'>高危</font>漏洞有【%v】个，<font color='#dc9b02'>中危</font>漏洞有【%v】个，<font color='#43ab42'>低危</font>漏洞有【%v】个，附录含有漏洞详情，如有需求请及时修复。", total, criticalLens, highLens, warningLens, lowLens))
+reportInstance.Markdown(sprintf(\`
+本次测试发现以下风险漏洞：
+
+- 总漏洞数：**%v**个
+- 严重漏洞数：<span style="color:#8B0000;font-weight:bold">%v个</span>
+- 高危漏洞数：<span style="color:#FF4500;font-weight:bold">%v个</span>
+- 中危漏洞数：<span style="color:#FFA500;font-weight:bold">%v个</span>
+- 低危漏洞数：<span style="color:#008000;font-weight:bold">%v个</span>
+
+附录含有漏洞详情，如有需求请及时修复。
+
+\`, total, criticalLens, highLens, warningLens, lowLens))
 
 
 reportInstance.Markdown("#### 漏洞汇总")
