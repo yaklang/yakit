@@ -361,6 +361,10 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             warn("请选择自定义内容")
             return
         }
+        if(params.Ports.length===0){
+            warn("请选择或输入扫描端口")
+            return
+        }
 
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         // 继续任务 参数拦截

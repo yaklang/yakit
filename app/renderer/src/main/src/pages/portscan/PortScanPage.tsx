@@ -549,7 +549,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                             <Form.Item label='预设端口' className='form-item-margin'>
                                 <Checkbox.Group
                                     value={getPortroupValue()}
-                                    onChange={(value) => {
+                                    onChange={(value) => {                  
                                         let res: string = (value || [])
                                             .map((i) => {
                                                 // @ts-ignore
@@ -558,8 +558,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                             .join(",")
                                         if (!!res) {
                                             setParams({...params, Ports: res})
-                                            setPortroupValue(value)
                                         }
+                                        setPortroupValue(value)
                                     }}
                                 >
                                     <Checkbox value={"top100"}>常见100端口</Checkbox>
@@ -567,6 +567,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     <Checkbox value={"top1000+"}>常见一两千</Checkbox>
                                     <Checkbox value={"topdb"}>常见数据库与 MQ</Checkbox>
                                     <Checkbox value={"topudp"}>常见 UDP 端口</Checkbox>
+                                    <Checkbox value={"defect"}>常见弱点端口</Checkbox>
                                 </Checkbox.Group>
                             </Form.Item>
 
