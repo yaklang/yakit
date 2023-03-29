@@ -538,7 +538,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         getParams().TargetsFile?.split(",").map((item:string)=>{
                             return <div className={styles["upload-file-item"]}>
                                 <div className={styles["text"]}><PaperClipOutlined style={{marginRight:8,color:"#666666"}}/>{item.substring(item.lastIndexOf('\\')+1)}</div>
-                                {!!!oldRunParams&&<DeleteOutlined className={styles["icon"]} onClick={()=>{
+                                {!executing&&!!!oldRunParams&&<DeleteOutlined className={styles["icon"]} onClick={()=>{
                                     let arr = getParams().TargetsFile?.split(",")||[]
                                     let str = arr?.filter((itemIn:string)=>itemIn!==item).join(',')
                                     setParams({...params, TargetsFile:str})
