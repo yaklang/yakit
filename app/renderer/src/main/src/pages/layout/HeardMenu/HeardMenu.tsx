@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     HeardMenuProps,
     RouteMenuDataItemProps,
@@ -27,7 +27,7 @@ import {
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Divider, Dropdown, Tabs, Tooltip, Form, Upload, Modal, Spin} from "antd"
 import {
     MenuBasicCrawlerIcon,
@@ -64,6 +64,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
 import {isSimpleEnterprise} from "@/utils/envfile"
+import { CodeGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -206,6 +207,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("QueryAllMenuItem", {Mode: menuMode})
                     .then((rsp: MenuByGroupProps) => {
+                        // 存放开发者已经废弃的页面菜单项(但这些菜单项在用户数据中存在)
+                        const invalidMenuItem: string[] = []
+                        
                         if (rsp.Groups.length === 0) {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
@@ -219,6 +223,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
                             const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
                             for (let i = 0; i < rsp.Groups.length; i++) {
+                                // 对用户菜单项数据进行过滤(过滤开发者已经废弃的页面菜单项)
+                                const filterChild: MenuItem[] = (rsp.Groups[i].Items || []).filter(item => {
+                                    const flag = CodeGV.InvalidPageMenuItem.indexOf(item.Verbose) > -1
+                                    if(flag) invalidMenuItem.push(item.Verbose)
+                                    return !flag
+                                })
+                                rsp.Groups[i].Items = filterChild
+
                                 const onlineMenuItem = rsp.Groups[i]
                                 const localMenuItem = currentMenuList.find((ele) => ele.label === onlineMenuItem.Group)
                                 if (localMenuItem && localMenuItem.subMenuData) {
@@ -257,6 +269,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 setSubMenuData(firstMenu.subMenuData || [])
                                 setMenuId(firstMenu.id)
                             }
+
+                            // 开始清除用户数据中的无效页面菜单项
+                            if (invalidMenuItem.length > 0) {
+                                const invalidMenus = Array.from(new Set(invalidMenuItem))
+                                for (let menuName of invalidMenus) {
+                                    ipcRenderer
+                                        .invoke("DeleteAllMenu", {Verbose: menuName})
+                                        .then(() => { })
+                                        .catch((e: any) => { })
+                                }
+                            }
+
                             setTimeout(() => setLoading(false), 300)
                         }
                     })
@@ -619,6 +643,41 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onRefMenu = useMemoizedFn(() => {
         init(getPatternMenu(), true)
     })
+    
+    const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
+    const importMenuSelect = useMemoizedFn((type: string) => {
+        switch (type) {
+            case "import-plugin":
+                onImportPlugin()
+                setImportMenuShow(false)
+                return
+            case "import-fuzzer":
+                onImportShare()
+                setImportMenuShow(false)
+                return
+
+            default:
+                return
+        }
+    })
+
+    const importMenu = useMemo(() =>
+        <YakitMenu
+            width={142}
+            selectedKeys={[]}
+            data={[
+                {
+                    key: "import-plugin",
+                    label: "导入插件"
+                },
+                {
+                    key: "import-fuzzer",
+                    label: "导入 WebFuzzer"
+                },
+            ]}
+            onClick={({key}) => importMenuSelect(key)}
+        />
+    , [])
 
     return (
         <div className={style["heard-menu-body"]}>
@@ -681,14 +740,24 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
                     {!isSimpleEnterprise&&<>
-                        <YakitButton
-                        type='text'
-                        className={style["heard-menu-theme"]}
-                        onClick={() => onImportShare()}
-                        icon={<SaveIcon />}
+                    <YakitPopover
+                        overlayClassName={style['import-resource-menu-popover']}
+                        overlayStyle={{paddingTop: 4}}
+                        placement={"bottom"}
+                        trigger={"click"}
+                        content={importMenu}
+                        visible={importMenuShow}
+                        onVisibleChange={(visible) => setImportMenuShow(visible)}
                     >
-                        导入协作资源
-                    </YakitButton>
+                        <YakitButton
+                            type='text'
+                            className={style["heard-menu-theme"]}
+                            onClick={(e) => e.stopPropagation()}
+                            icon={<SaveIcon />}
+                        >
+                            导入协作资源
+                        </YakitButton>
+                    </YakitPopover>
                     <YakitButton
                         type='secondary2'
                         className={style["heard-menu-grey"]}

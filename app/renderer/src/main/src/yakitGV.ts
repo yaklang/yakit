@@ -47,5 +47,12 @@ export enum CodeGV {
     /** @name 远程连接配置信息文件路径 */
     RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json",
     /** @name 历史版本下载页面 */
-    HistoricalVersion = "https://github.com/yaklang/yakit/releases"
+    HistoricalVersion = "https://github.com/yaklang/yakit/releases",
+
+    /**
+     * @name 强制删除用户端的无效菜单项集合
+     * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
+     * @description 每个菜单项由 '|' 字符进行分割
+     */
+    InvalidPageMenuItem = "项目管理(Beta*)|"
 }

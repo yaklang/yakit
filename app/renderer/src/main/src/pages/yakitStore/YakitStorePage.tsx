@@ -2562,11 +2562,11 @@ const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY"
 const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH"
 const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH"
 
-export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
+export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any, onlyId?: boolean}) => {
     const [gitUrl, setGitUrl] = useState("https://github.com/yaklang/yakit-store")
     const [nucleiGitUrl, setNucleiGitUrl] = useState("https://github.com/projectdiscovery/nuclei-templates")
     const [proxy, setProxy] = useState("")
-    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei" | "uploadId">("official")
+    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei" | "uploadId">(p.onlyId ? "uploadId" : "official")
     const [localPath, setLocalPath] = useState("")
     const [localNucleiPath, setLocalNucleiPath] = useState("")
     const [localId, setLocalId] = useState<string>("")
@@ -2668,7 +2668,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
             <SelectOne
                 label={" "}
                 colon={false}
-                data={[
+                data={p.onlyId ? [{text: "使用ID", value: "uploadId"}] : [
                     {text: "使用官方源", value: "official"},
                     {text: "第三方仓库源", value: "giturl"},
                     {text: "本地仓库", value: "local"},

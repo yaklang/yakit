@@ -53,6 +53,7 @@ import {
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
 import {isSimpleEnterprise} from "@/utils/envfile"
+import { YakitHint } from "../yakitUI/YakitHint/YakitHint"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -656,8 +657,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yakitMode, setYakitMode] = useState<"soft" | "store" | "">("")
     const changeYakitMode = useMemoizedFn((type: "soft" | "store") => {
         if (type === "soft" && yakitMode !== "soft") {
-            setYakitMode(type)
-            setLinkDatabase(true)
+            setLinkDatabaseHint(true)
         }
     })
     /** 软件配置界面完成事件回调 */
@@ -673,6 +673,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }
 
     const [linkDatabase, setLinkDatabase] = useState<boolean>(false)
+    const [linkDatabaseHint, setLinkDatabaseHint] = useState<boolean>(false)
 
     /**
      * 管理员模式补充情况
@@ -1071,6 +1072,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setProjectTransferShow({visible: false})
                 }}
                 setVisible={(open: boolean) => setProjectTransferShow({visible: open})}
+            />
+            
+            <YakitHint
+                visible={linkDatabaseHint}
+                title="是否进入项目管理"
+                content="如果有正在进行中的任务，回到项目管理页则都会停止，确定回到项目管理页面吗?"
+                onOk={() => {
+                    setYakitMode("soft")
+                    setLinkDatabase(true)
+                    setLinkDatabaseHint(false)
+                }}
+                onCancel={() => setLinkDatabaseHint(false)}
             />
         </div>
     )

@@ -109,7 +109,6 @@ import {
     MenuSolidYsoJavaHackIcon,
     MenuSolidBatchVulnerabilityDetectionIcon,
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
-import {ProjectPage} from "@/pages/projects/ProjectPage"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
 
@@ -158,7 +157,6 @@ export enum Route {
     DB_ExecResults = "db-exec-results",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
-    DB_Projects = "db-projects",
     DB_CVE = "cve",
 
     // Handler
