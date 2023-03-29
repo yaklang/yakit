@@ -189,8 +189,8 @@ reportInstance.Markdown(sprintf(\`
 
 - 扫描端口数：%v个
 - 开放端口数：%v个
-- 扫描主机数：%v个
 - 存活主机数：%v个
+- 扫描主机数：%v个
 - 每台主机涉及端口数：%v个
 
 \`, totalTasks,openPortCount,aliveHostCount, hostTotal, portTotal))
