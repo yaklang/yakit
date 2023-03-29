@@ -34,7 +34,7 @@ import {
 import {useGetState, useMemoizedFn, useDebounceEffect} from "ahooks"
 import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {ScanPortForm, PortScanParams, defaultPorts} from "../portscan/PortScanPage"
+import {ScanPortForm, PortScanParams} from "../portscan/PortScanPage"
 import {ExecResult, YakScript} from "../invoker/schema"
 import {useStore, simpleDetectParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
@@ -49,6 +49,7 @@ import {RiskDetails} from "@/pages/risks/RiskTable"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ResizeBox} from "../../components/ResizeBox"
 import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVariable"
+import {PresetPorts} from "@/pages/portscan/schema"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -118,7 +119,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [uploadLoading, setUploadLoading] = useState(false)
 
     const [params, setParams, getParams] = useGetState<PortScanParams>({
-        Ports: defaultPorts,
+        Ports: "",
         Mode: "fingerprint",
         Targets: sendTarget ? JSON.parse(sendTarget || "[]").join(",") : "",
         ScriptNames: openScriptNames || [],
@@ -152,6 +153,25 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "合规检测"])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
     const isInputValue = useRef<boolean>(false)
+    // 是否已经修改速度
+    const isSetSpeed = useRef<number>()
+    useEffect(()=>{
+        switch (getScanDeep()) {
+            // 快速
+            case 3:
+                setParams({...params,Ports:PresetPorts["top100"]})
+                break
+            // 适中
+            case 2:
+                setParams({...params,Ports:PresetPorts["topweb"]})
+                break
+            // 慢速
+            case 1:
+                setParams({...params,Ports:PresetPorts["top1000+"]})
+                break
+        }
+    },[getScanDeep()])
+
     // 继续任务操作屏蔽
     const [shield, setShield] = useState<boolean>(false)
 
@@ -287,18 +307,14 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 newParams.Concurrent = 100
                 // SYN 并发
                 newParams.SynConcurrent = 2000
-                newParams.Ports = params.Ports
                 newParams.ProbeTimeout = 3
                 // 指纹详细程度
                 newParams.ProbeMax = 3
-                // newParams.ScriptNames = ["MySQL CVE 合规检查: 2016-2022"]
-                // newParams.Ports = "3306"
                 break
             // 适中
             case 2:
                 newParams.Concurrent = 80
                 newParams.SynConcurrent = 1000
-                newParams.Ports = params.Ports
                 newParams.ProbeTimeout = 5
                 newParams.ProbeMax = 5
                 break
@@ -306,13 +322,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             case 1:
                 newParams.Concurrent = 50
                 newParams.SynConcurrent = 1000
-                newParams.Ports = params.Ports
                 newParams.ProbeTimeout = 7
                 newParams.ProbeMax = 7
                 break
         }
         let LastRecord = {}
         let PortScanRequest = {...newParams, TaskName: TaskName}
+
         ipcRenderer.invoke(
             "SimpleDetect",
             {
@@ -446,12 +462,18 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             <>
                                 <span
                                     onClick={() => {
-                                        showDrawer({
+                                        let m = showDrawer({
                                             title: "设置高级参数",
                                             width: "60%",
+                                            onClose:()=>{
+                                                isSetSpeed.current = getScanDeep()
+                                                m.destroy()
+                                            },
                                             content: (
                                                 <>
                                                     <ScanPortForm
+                                                        isSetPort={isSetSpeed.current!==getScanDeep()}
+                                                        deepLevel={getScanDeep()}
                                                         isSimpleDetectShow={true}
                                                         defaultParams={params}
                                                         setParams={(value) => {
