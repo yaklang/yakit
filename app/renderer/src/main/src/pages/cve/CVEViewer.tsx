@@ -18,15 +18,14 @@ import {YakitCheckableTagList} from "@/components/YakitCheckableTagList/YakitChe
 const {Panel} = Collapse
 export interface QueryCVERequest {
     Pagination?: PaginationSchema
-
     AccessVector: "NETWORK" | "LOCAL" | "ADJACENT_NETWORK" | "PHYSICAL" | string
     AccessComplexity: "HIGH" | "MEDIUM" | "LOW" | string
     CWE: string
     Year: string
     Severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | string
-    Score: number
+    // Score: number
     Product: string
-    ChineseTranslationFirst: boolean
+    // ChineseTranslationFirst: boolean
 }
 
 export interface CVEViewerProp {}
@@ -85,10 +84,10 @@ export const defQueryCVERequest = {
     AccessVector: "NETWORK,ADJACENT_NETWORK",
     CWE: "",
     Product: "",
-    Score: 6.0,
+    // Score: 6.0,
     Severity: "HIGH",
-    Year: "",
-    ChineseTranslationFirst: true
+    Year: ""
+    // ChineseTranslationFirst: true
 }
 const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     const {advancedQuery, setAdvancedQuery} = props
@@ -128,7 +127,7 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
                             {value: "LOCAL", label: "本地"},
                             {value: "PHYSICAL", label: "物理"}
                         ]}
-                        value={params.AccessVector.split(",")}
+                        value={params.AccessVector ? params.AccessVector.split(",") : []}
                         setValue={(AccessVector) => setParams({...params, AccessVector: AccessVector.join(",")})}
                     />
                 </div>
@@ -138,7 +137,7 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
                         setValue={(AccessComplexity) =>
                             setParams({...params, AccessComplexity: AccessComplexity.join(",")})
                         }
-                        value={params.AccessComplexity.split(",")}
+                        value={params.AccessComplexity ? params.AccessComplexity.split(",") : []}
                         data={[
                             {value: "HIGH", label: "困难"},
                             {value: "MEDIUM", label: "一般"},
@@ -150,7 +149,7 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
                     <div>漏洞级别</div>
                     <YakitCheckableTagList
                         setValue={(Severity) => setParams({...params, Severity: Severity.join(",")})}
-                        value={params.Severity.split(",")}
+                        value={params.Severity ? params.Severity.split(",") : []}
                         data={[
                             {value: "CRITICAL", label: "严重"},
                             {value: "HIGH", label: "高危"},

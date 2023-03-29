@@ -139,7 +139,7 @@
 
     .cve-description {
         height: 100%;
-        overflow-y: overlay;
+        // overflow-y: overlay;
         border: 1px solid var(--yakit-border-color);
 
         :global {
@@ -180,6 +180,11 @@
             }
         }
 
+        .cve-description-content {
+            overflow-y: overlay;
+            height: calc(100% - 32px);
+        }
+
         .cve-description-heard {
             height: 32px;
             padding: 8px 12px;
@@ -188,8 +193,8 @@
             justify-content: space-between;
             border-bottom: 1px solid var(--yakit-border-color);
             background-color: #ffffff;
-            position: sticky;
-            top: 0;
+            // position: sticky;
+            // top: 0;
 
             .cve-description-heard-title {
                 font-weight: 500;
@@ -245,7 +250,7 @@
 
 .database-update-content {
     min-height: 30px;
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
 }
 
@@ -307,6 +312,53 @@
             :first-child {
                 margin-right: 4px;
             }
+        }
+    }
+}
+
+.download-progress {
+    margin-bottom: 12px;
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
+        }
+    }
+}
+
+.cwe-tabs {
+    :global {
+        .ant-tabs-nav {
+            background-color: #ffffff !important;
+            position: sticky;
+            top: 0;
+        }
+        .ant-tabs-nav-wrap {
+            height: 31px;
+            overflow: initial !important;
+        }
+        .ant-tabs-tab {
+            background-color: #ffffff !important;
+            border-radius: 0 !important;
+            // border-top: 1px solid var(--yakit-border-color) !important;
+        }
+        .ant-tabs-tab-active {
+            border-radius: 0;
+            background-color: var(--yakit-card-background-color) !important;
+            border-top-width: 0 !important;
+            &::before {
+                content: "";
+                border-top: 2px solid #f28b44;
+                width: calc(100% + 2px);
+                position: absolute;
+                height: 0;
+                top: -1px;
+                left: -1px;
+            }
+        }
+        .ant-tabs-content-holder {
+            overflow-y: overlay;
         }
     }
 }

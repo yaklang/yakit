@@ -1,11 +1,12 @@
 import {Descriptions, List, Tabs} from "antd"
 import {CVEDetail, CWEDetail} from "@/pages/cve/models"
 import classNames from "classnames"
+import "../main.scss"
+import "../MainTabs.scss"
 import styles from "./CVETable.module.scss"
 import {useCreation} from "ahooks"
 import moment from "moment"
 import React, {ReactNode} from "react"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {TabPane} = Tabs
 
@@ -40,7 +41,7 @@ export const CVEDescription = React.memo(
         }, [BaseCVSSv2Score, Severity, Severity])
 
         return (
-            <>
+            <div className={styles["cve-description-content"]}>
                 <Descriptions bordered size='small' column={3}>
                     <Descriptions.Item label='CVE编号' span={2} contentStyle={{fontSize: 16, fontWeight: "bold"}}>
                         {CVE}
@@ -99,7 +100,7 @@ export const CVEDescription = React.memo(
                     </Descriptions.Item>
                 </Descriptions>
                 <div className={styles["no-more"]}>暂无更多</div>
-            </>
+            </div>
         )
     }
 )
@@ -117,16 +118,17 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
                 defaultActiveKey={data[0]?.CWE || "-"}
                 size='small'
                 type='card'
-                className='main-content-tabs yakit-layout-tabs'
+                className={classNames(styles["cwe-tabs"], "main-content-tabs", "yakit-layout-tabs")}
+                // className={styles["cwe-tabs"]}
                 tabBarExtraContent={tabBarExtraContent}
             >
                 {data.map((i: CWEDetail) => (
                     <TabPane tab={i.CWE} key={i.CWE}>
                         <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
+                        <div className={styles["no-more"]}>暂无更多</div>
                     </TabPane>
                 ))}
             </Tabs>
-            <div className={styles["no-more"]}>暂无更多</div>
         </>
     )
 })
