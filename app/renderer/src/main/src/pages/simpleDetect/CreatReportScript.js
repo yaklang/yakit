@@ -105,8 +105,8 @@ portChan := db.QueryPortsByUpdatedAt(int64(createAt))~
 for port :=range portChan{
     openPortCount +=1
     if port.Host not in aliveHostCountList {
-\t\taliveHostCountList = append(aliveHostCountList,port.Host)
-\t}
+        aliveHostCountList = append(aliveHostCountList,port.Host)
+    }
     // println(sprintf("%s:%d",port.Host,port.Port))
      portsLine = append(portsLine, [
         port.Host,
