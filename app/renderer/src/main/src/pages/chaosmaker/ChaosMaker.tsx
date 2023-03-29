@@ -30,9 +30,10 @@ export interface ChaosMakerRule {
     KeywordsZh: string;
     Description: string;
     DescriptionZh: string;
+    CVE: string[]
 }
 
-interface ChaosMakerRuleGroup {
+export interface ChaosMakerRuleGroup {
     Title: string
     Description: string
     Keywords: string
@@ -80,54 +81,54 @@ const groups: ChaosMakerRuleGroup[] = [
         "Solution": "为了防止DNS协议下挖矿外连攻击，建议采取以下措施：1. 安装并更新有效的安全防护软件，以便检测和移除恶意挖矿程序；2. 对DNS流量进行监控，分析异常请求和数据传输；3. 限制或禁止未经授权的设备访问内部网络；4. 增强DNS服务器安全，限制未经授权的DNS解析；5. 定期进行安全审计，检查系统漏洞。"
     },
     {
-        "Title":"攻击协同办公套件",
-        "Description":"对常见的OA系统万户Ezoffice、Tongda OA、红帆OA、Weaver e-bridge、FineReport、Weaver e-cology、Weaver e-office、Weaver e-mobile、YonYou NC等产品的历史漏洞进行攻击",
-        "Keywords":"OA,RCE,Web,安全漏洞,攻击,代码执行",
-        "Protocols":[
+        "Title": "攻击协同办公套件",
+        "Description": "对常见的OA系统万户Ezoffice、Tongda OA、红帆OA、Weaver e-bridge、FineReport、Weaver e-cology、Weaver e-office、Weaver e-mobile、YonYou NC等产品的历史漏洞进行攻击",
+        "Keywords": "OA,RCE,Web,安全漏洞,攻击,代码执行",
+        "Protocols": [
             "HTTP",
             "HTTPS"
         ],
-        "Solution":"及时升级软件版本：对于已知的漏洞,协同办公软件厂商通常会发布修复程序,用户应该及时升级软件版本以避免漏洞被攻击者利用。配置安全策略：协同办公软件一般包括许多功能和模块,用户可以根据自身需求和安全要求配置相应的安全策略,例如禁止外网访问、限制文件上传大小、配置防火墙等。"
+        "Solution": "及时升级软件版本：对于已知的漏洞,协同办公软件厂商通常会发布修复程序,用户应该及时升级软件版本以避免漏洞被攻击者利用。配置安全策略：协同办公软件一般包括许多功能和模块,用户可以根据自身需求和安全要求配置相应的安全策略,例如禁止外网访问、限制文件上传大小、配置防火墙等。"
     },
     {
-        "Title":"攻击 大数据平台",
-        "Description":"对常见的大数据平台比如hadoop(HDFS、hbase、hive、zookeeper)、spark、kafka、splunk、Apache Dubbo、OpenStack、Apache Flink、Elasticsearch历史漏洞进行攻击",
-        "Keywords":"大数据,平台,hadoop,spark,Dubbo,rce,web,安全漏洞",
-        "Protocols":[
+        "Title": "攻击 大数据平台",
+        "Description": "对常见的大数据平台比如hadoop(HDFS、hbase、hive、zookeeper)、spark、kafka、splunk、Apache Dubbo、OpenStack、Apache Flink、Elasticsearch历史漏洞进行攻击",
+        "Keywords": "大数据,平台,hadoop,spark,Dubbo,rce,web,安全漏洞",
+        "Protocols": [
             "HTTP",
             "HTTPS"
         ],
-        "Solution":"对于已知的漏洞,大数据平台的开发团队通常会发布修复程序,用户应该及时升级软件版本以避免漏洞被攻击者利用。启用访问控制：大数据平台包括许多组件和模块,用户可以根据自身需求和安全要求配置相应的访问控制策略,如限制访问IP、授权用户访问、配置防火墙等。"
+        "Solution": "对于已知的漏洞,大数据平台的开发团队通常会发布修复程序,用户应该及时升级软件版本以避免漏洞被攻击者利用。启用访问控制：大数据平台包括许多组件和模块,用户可以根据自身需求和安全要求配置相应的访问控制策略,如限制访问IP、授权用户访问、配置防火墙等。"
     },
     {
-        "Title":"攻击中间件服务器",
-        "Description":"对常见的IIS、apache、Nginx、Weblogic、Tomcat 、jboss等进行历史漏洞进行攻击",
-        "Keywords":"Web,安全漏洞,攻击,代码执行,IIS,apache,nginx,weblogic,Tomcat,jboss",
-        "Protocols":[
+        "Title": "攻击中间件服务器",
+        "Description": "对常见的IIS、apache、Nginx、Weblogic、Tomcat 、jboss等进行历史漏洞进行攻击",
+        "Keywords": "Web,安全漏洞,攻击,代码执行,IIS,apache,nginx,weblogic,Tomcat,jboss",
+        "Protocols": [
             "HTTP",
             "HTTPS"
         ],
-        "Solution":"及时升级软件版本：对于已知的漏洞,Web服务器的开发团队通常会发布修复程序,用户应该及时升级软件版本以避免漏洞被攻击者利用。启用安全配置：Web服务器包括许多配置选项,用户应该根据自身需求和安全要求配置相应的安全策略,如关闭不必要的服务、启用HTTPS、配置访问控制等。"
+        "Solution": "及时升级软件版本：对于已知的漏洞,Web服务器的开发团队通常会发布修复程序,用户应该及时升级软件版本以避免漏洞被攻击者利用。启用安全配置：Web服务器包括许多配置选项,用户应该根据自身需求和安全要求配置相应的安全策略,如关闭不必要的服务、启用HTTPS、配置访问控制等。"
     },
     {
-        "Title":"攻击IOT设备",
-        "Description":"对常见的IPCamera、iCatch摄像头、GoAhead摄像头、avtech摄像头、ACTI Camera、5MP Network Camera、海康威视摄像头等进行历史漏洞进行攻击",
-        "Keywords":"摄像头,rce,IOT,固件,信息泄露,路由器",
-        "Protocols":[
+        "Title": "攻击IOT设备",
+        "Description": "对常见的IPCamera、iCatch摄像头、GoAhead摄像头、avtech摄像头、ACTI Camera、5MP Network Camera、海康威视摄像头等进行历史漏洞进行攻击",
+        "Keywords": "摄像头,rce,IOT,固件,信息泄露,路由器",
+        "Protocols": [
             "HTTP",
             "HTTPS"
         ],
-        "Solution":"及时固件版本：对于已知的漏洞,设备厂商通常会发布补丁进行修复。尽量将设备部署在内网环境"
+        "Solution": "及时固件版本：对于已知的漏洞,设备厂商通常会发布补丁进行修复。尽量将设备部署在内网环境"
     },
     {
-        "Title":"攻击邮件服务器",
-        "Description":"对常见的exchange、亿邮、Coremail、anymacro、华为 anymail、webmail、zimbra等进行历史漏洞进行攻击",
-        "Keywords":"邮件,服务器,exchange、亿邮、Coremail、anymacro、rce",
-        "Protocols":[
+        "Title": "攻击邮件服务器",
+        "Description": "对常见的exchange、亿邮、Coremail、anymacro、华为 anymail、webmail、zimbra等进行历史漏洞进行攻击",
+        "Keywords": "邮件,服务器,exchange、亿邮、Coremail、anymacro、rce",
+        "Protocols": [
             "HTTP",
             "HTTPS"
         ],
-        "Solution":""
+        "Solution": ""
     }
 ] as ChaosMakerRuleGroup[];
 
@@ -193,7 +194,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
 
                     </List>
                 }
-                secondNode={<ChaosMakerRuleTable/>}
+                secondNode={<ChaosMakerRuleTable groups={selected}/>}
             />
         </div>
     </div>

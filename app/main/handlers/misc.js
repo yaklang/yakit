@@ -437,4 +437,20 @@ module.exports = (win, getClient) => {
         let stream = getClient().UpdateCVEDatabase(params);
         handlerHelper.registerHandler(win, stream, streamUpdateCVEDatabaseMap, token)
     })
+
+    // asyncIsRemoteAddrAvailable wrapper
+    const asyncIsRemoteAddrAvailable = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsRemoteAddrAvailable(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IsRemoteAddrAvailable", async (e, params) => {
+        return await asyncIsRemoteAddrAvailable(params)
+    })
 }

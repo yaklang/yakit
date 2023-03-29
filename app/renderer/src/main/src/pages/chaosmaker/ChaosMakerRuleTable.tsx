@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {Table, Tag} from "antd";
-import {ChaosMakerRule} from "@/pages/chaosmaker/ChaosMaker";
+import {Form, Space, Table, Tag} from "antd";
+import {ChaosMakerRule, ChaosMakerRuleGroup} from "@/pages/chaosmaker/ChaosMaker";
 import {useMemoizedFn} from "ahooks";
 import {
     genDefaultPagination,
@@ -11,9 +11,11 @@ import {
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {showDrawer} from "@/utils/showModal";
+import {InputItem} from "@/utils/inputUtil";
+import {ChaosMakerOperators} from "@/pages/chaosmaker/ChaosMakerOperators";
 
 export interface ChaosMakerRuleTableProp {
-
+    groups?: ChaosMakerRuleGroup[]
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -56,17 +58,29 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
 
     const limit = pagination.Limit;
     return <AutoCard
-        title={"BAS 模拟规则"} size={"small"} bordered={true} style={{marginLeft: 6}}
+        title={<div>
+            模拟攻击集
+            <Space style={{marginLeft: 4}} size={0}>
+                {(props?.groups || []).filter((_, index) => {
+                    return index < 3
+                }).map(i => {
+                    return <Tag color={"orange"}>{i.Title}</Tag>
+                })}
+                {(props?.groups || []).length > 3 && <Tag color={"orange"}>+{(props?.groups || []).length - 3}</Tag>}
+            </Space>
+        </div>} size={"small"} bordered={true} style={{marginLeft: 6}}
         extra={<>
             <Tag color={"orange"}>已选{total}攻击规则</Tag>
-            <YakitButton>按选中剧本发起攻击</YakitButton>
         </>}
+        bodyStyle={{display: "flex", flexDirection: "column"}}
     >
+        <ChaosMakerOperators groups={(props.groups || [])}/>
         <Table<ChaosMakerRule>
+            style={{flex: 1}}
             columns={[
-                {title: "规则名", render: (i: ChaosMakerRule) => i.Name},
-                {title: "规则类型", render: (i: ChaosMakerRule) => i.RuleType},
-                {title: "规则描述", render: (i: ChaosMakerRule) => i.RuleType},
+                {title: "规则名", render: (i: ChaosMakerRule) => i.NameZh || i.Name},
+                {title: "规则类型", render: (i: ChaosMakerRule) => i.ClassType},
+                {title: "相关", render: (i: ChaosMakerRule) => (i["CVE"] || []).join(", ")},
             ]}
             rowKey={i => i["Id"]}
             size={"small"}
@@ -102,6 +116,7 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
             }}
             pagination={{
                 pageSize: limit,
+                simple: true,
                 showSizeChanger: true,
                 total, current: pagination.Page,
                 pageSizeOptions: ["5", "10", "20"],
