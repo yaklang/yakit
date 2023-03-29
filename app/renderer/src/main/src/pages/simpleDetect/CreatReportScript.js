@@ -520,19 +520,19 @@ func showCVEReport(risks) {
 
 
 if len(criticalPotentialRisks) > 0 {
-    reportInstance.Markdown(sprintf("### 严重漏洞详情"))
+    reportInstance.Markdown(sprintf("### 严重合规风险详情"))
     showCVEReport(criticalPotentialRisks)
 }
 if len(highPotentialRisks) > 0 {
-    reportInstance.Markdown(sprintf("### 高危漏洞详情"))
+    reportInstance.Markdown(sprintf("### 高危合规风险详情"))
     showCVEReport(highPotentialRisks)
 }
 if len(warningPotentialRisks) > 0 {
-    reportInstance.Markdown(sprintf("### 中危漏洞详情"))
+    reportInstance.Markdown(sprintf("### 中危合规风险详情"))
     showCVEReport(warningPotentialRisks)
 }
 if len(lowPotentialRisks) > 0 {
-    reportInstance.Markdown(sprintf("### 低危漏洞详情"))
+    reportInstance.Markdown(sprintf("### 低危合规风险详情"))
     showCVEReport(lowPotentialRisks)
 }
 if len(criticalPotentialRisks)== 0 && len(highPotentialRisks)== 0 && len(warningPotentialRisks)== 0 && len(lowPotentialRisks)== 0 {

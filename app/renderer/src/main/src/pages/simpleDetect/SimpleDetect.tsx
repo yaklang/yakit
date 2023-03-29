@@ -21,7 +21,7 @@ import {
     Timeline
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
-import {DeleteOutlined,PaperClipOutlined} from "@ant-design/icons"
+import {DeleteOutlined, PaperClipOutlined} from "@ant-design/icons"
 import styles from "./SimpleDetect.module.scss"
 import {Route} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -121,7 +121,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         Ports: "",
         Mode: "fingerprint",
         Targets: "",
-        TargetsFile:"",
+        TargetsFile: "",
         ScriptNames: openScriptNames || [],
         // SYN 并发
         SynConcurrent: 1000,
@@ -155,22 +155,22 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const isInputValue = useRef<boolean>(false)
     // 是否已经修改速度
     const isSetSpeed = useRef<number>()
-    useEffect(()=>{
+    useEffect(() => {
         switch (getScanDeep()) {
             // 快速
             case 3:
-                setParams({...params,Ports:PresetPorts["top100"]})
+                setParams({...params, Ports: PresetPorts["top100"]})
                 break
             // 适中
             case 2:
-                setParams({...params,Ports:PresetPorts["topweb"]})
+                setParams({...params, Ports: PresetPorts["topweb"]})
                 break
             // 慢速
             case 1:
-                setParams({...params,Ports:PresetPorts["top1000+"]})
+                setParams({...params, Ports: PresetPorts["top1000+"]})
                 break
         }
-    },[getScanDeep()])
+    }, [getScanDeep()])
 
     // 继续任务操作屏蔽
     const [shield, setShield] = useState<boolean>(false)
@@ -179,7 +179,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
             const {Targets, TargetsFile} = PortScanRequest
-            setParams({...params, Targets , TargetsFile})
+            setParams({...params, Targets, TargetsFile})
             setShield(true)
         }
     }, [oldRunParams])
@@ -231,21 +231,21 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }, [TaskName])
 
     // 保存任务
-    const saveTask = (v?:string) => {
-        const cacheData = v?JSON.parse(v):false
-        console.log("SimpleCloseInfo",SimpleCloseInfo,token,cacheData);
+    const saveTask = (v?: string) => {
+        const cacheData = v ? JSON.parse(v) : false
+        console.log("SimpleCloseInfo", SimpleCloseInfo, token, cacheData);
 
         let newParams: PortScanParams = {...getParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
-            ipcRenderer.invoke("SaveCancelSimpleDetect", cacheData||{
+            ipcRenderer.invoke("SaveCancelSimpleDetect", cacheData || {
                 LastRecord,
                 PortScanRequest
             })
         } else {
-            ipcRenderer.invoke("SaveCancelSimpleDetect",  cacheData||{
-                LastRecord:{
+            ipcRenderer.invoke("SaveCancelSimpleDetect", cacheData || {
+                LastRecord: {
                     LastRecordPtr: filePtrValue,
                     Percent: percent,
                     YakScriptOnlineGroup: OnlineGroup
@@ -265,8 +265,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 LastRecord,
                 PortScanRequest
             }
-        }
-        else{
+        } else {
             let newParams: PortScanParams = {...getParams()}
             const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
             obj = {
@@ -278,13 +277,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 PortScanRequest: {...newParams, TaskName: runTaskName}
             }
         }
-        setSimpleInfo(token, executing,JSON.stringify(obj))
+        setSimpleInfo(token, executing, JSON.stringify(obj))
     }, [executing, oldRunParams, filePtrValue, percent, getScanType(), runTaskName])
 
     useEffect(() => {
         return () => {
             // 任务运行中
-            SimpleCloseInfo[token]?.status&&saveTask(SimpleCloseInfo[token].info)
+            SimpleCloseInfo[token]?.status && saveTask(SimpleCloseInfo[token].info)
         }
     }, [])
 
@@ -361,7 +360,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             warn("请选择自定义内容")
             return
         }
-        if(params.Ports.length===0){
+        if (params.Ports.length === 0) {
             warn("请选择或输入扫描端口")
             return
         }
@@ -377,7 +376,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-                .then((data: {Data: YakScript[]}) => {
+                .then((data: { Data: YakScript[] }) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setParams({...getParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
@@ -385,7 +384,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
                 })
-                .finally(() => {})
+                .finally(() => {
+                })
         }
     })
 
@@ -438,27 +438,26 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             }
                             setUploadLoading(true)
                             const TargetsFile = getParams().TargetsFile
-                            const absPath:string = (f as any).path
+                            const absPath: string = (f as any).path
                             // 当已有文件上传时
-                            if(TargetsFile&&TargetsFile?.length>0){
+                            if (TargetsFile && TargetsFile?.length > 0) {
                                 let arr = TargetsFile.split(',')
                                 // 限制最多3个文件上传
-                                if(arr.length>=3){
+                                if (arr.length >= 3) {
                                     info("最多支持3个文件上传")
                                     setUploadLoading(false)
                                     return
                                 }
                                 // 当不存在时添加
-                                if(!arr.includes(absPath)){
-                                    setParams({...params, TargetsFile:`${TargetsFile},${absPath}`})
-                                }
-                                else{
+                                if (!arr.includes(absPath)) {
+                                    setParams({...params, TargetsFile: `${TargetsFile},${absPath}`})
+                                } else {
                                     info("路径已存在，请勿重复上传")
                                 }
-                                
+
                             }// 当未上传过文件时
-                            else{
-                                setParams({...params, TargetsFile:absPath})
+                            else {
+                                setParams({...params, TargetsFile: absPath})
                             }
                             setUploadLoading(false)
                             return false
@@ -482,14 +481,14 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                         let m = showDrawer({
                                             title: "设置高级参数",
                                             width: "60%",
-                                            onClose:()=>{
+                                            onClose: () => {
                                                 isSetSpeed.current = getScanDeep()
                                                 m.destroy()
                                             },
                                             content: (
                                                 <>
                                                     <ScanPortForm
-                                                        isSetPort={isSetSpeed.current!==getScanDeep()}
+                                                        isSetPort={isSetSpeed.current !== getScanDeep()}
                                                         deepLevel={getScanDeep()}
                                                         isSimpleDetectShow={true}
                                                         defaultParams={params}
@@ -533,16 +532,20 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                {getParams().TargetsFile&&<Form.Item label=" " colon={false}>
+                {getParams().TargetsFile && <Form.Item label=" " colon={false}>
                     {
-                        getParams().TargetsFile?.split(",").map((item:string)=>{
+                        getParams().TargetsFile?.split(",").map((item: string) => {
                             return <div className={styles["upload-file-item"]}>
-                                <div className={styles["text"]}><PaperClipOutlined style={{marginRight:8,color:"#666666"}}/>{item.substring(item.lastIndexOf('\\')+1)}</div>
-                                {!executing&&!!!oldRunParams&&<DeleteOutlined className={styles["icon"]} onClick={()=>{
-                                    let arr = getParams().TargetsFile?.split(",")||[]
-                                    let str = arr?.filter((itemIn:string)=>itemIn!==item).join(',')
-                                    setParams({...params, TargetsFile:str})
-                                }}/>}
+                                <div className={styles["text"]}><PaperClipOutlined style={{
+                                    marginRight: 8,
+                                    color: "#666666"
+                                }}/>{item.substring(item.lastIndexOf('\\') + 1)}</div>
+                                {!executing && !!!oldRunParams &&
+                                    <DeleteOutlined className={styles["icon"]} onClick={() => {
+                                        let arr = getParams().TargetsFile?.split(",") || []
+                                        let str = arr?.filter((itemIn: string) => itemIn !== item).join(',')
+                                        setParams({...params, TargetsFile: str})
+                                    }}/>}
                             </div>
                         })
                     }
@@ -803,7 +806,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                             >
                                 <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                     {infoState.riskState.slice(0, 10).map((i) => {
-                                        return <RiskDetails info={i} shrink={true} />
+                                        return <RiskDetails info={i} shrink={true}/>
                                     })}
                                 </Space>
                             </AutoCard>
@@ -814,7 +817,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimple={true} />
+                                    <OpenPortTableViewer data={openPorts} isSimple={true}/>
                                 </Col>
                             </Row>
                         </div>
@@ -927,7 +930,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                 onClose && onClose()
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+        })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -945,7 +949,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
         ipcRenderer
             .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-            .then(() => {})
+            .then(() => {
+            })
             .catch((e) => {
                 failed(`添加失败:${e}`)
             })
@@ -1055,8 +1060,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         "simple-scan",
         "SimpleDetect",
         token,
-        () => {},
-        () => {},
+        () => {
+        },
+        () => {
+        },
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -1069,13 +1076,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
 
     const statusErrorCards = infoState.statusState.filter((item) =>
-        ["加载插件失败","SYN扫描失败"].includes(item.tag)
+        ["加载插件失败", "SYN扫描失败"].includes(item.tag)
     )
     const statusSucceeCards = infoState.statusState.filter((item) =>
         ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
     )
     const statusCards = useMemo(() => {
-        if(statusErrorCards.length>0){
+        if (statusErrorCards.length > 0) {
             return statusErrorCards
         }
         return statusSucceeCards
@@ -1143,10 +1150,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 status = "success"
             }
             !!status &&
-                ipcRenderer.invoke("refresh-tabs-color", {
-                    tabId: getTabId(),
-                    status
-                })
+            ipcRenderer.invoke("refresh-tabs-color", {
+                tabId: getTabId(),
+                status
+            })
         }
     }, [percent, executing, getTabId()])
 
@@ -1157,7 +1164,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         .splice(0, 3)
     return (
         <>
-            {loading && <Spin tip={"正在恢复未完成的任务"} />}
+            {loading && <Spin tip={"正在恢复未完成的任务"}/>}
             <div className={styles["simple-detect"]} style={loading ? {display: "none"} : {}}>
                 <ResizeBox
                     isVer={true}
@@ -1165,7 +1172,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                         <AutoCard
                             size={"small"}
                             bordered={false}
-                            title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} /> : null}
+                            title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin}/> : null}
                             bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
                         >
                             <Row>
@@ -1219,9 +1226,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 </Col>
                             </Row>
 
-                            <Divider style={{margin: 4}} />
+                            <Divider style={{margin: 4}}/>
 
-                            <SimpleCardBox statusCards={statusCards} />
+                            <SimpleCardBox statusCards={statusCards}/>
                         </AutoCard>
                     }
                     firstMinSize={"200px"}
