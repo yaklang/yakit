@@ -21,7 +21,7 @@ import {
     Timeline
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
-import {DeleteOutlined} from "@ant-design/icons"
+import {DeleteOutlined,PaperClipOutlined} from "@ant-design/icons"
 import styles from "./SimpleDetect.module.scss"
 import {Route} from "@/routes/routeSpec"
 import classNames from "classnames"
@@ -537,7 +537,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     {
                         getParams().TargetsFile?.split(",").map((item:string)=>{
                             return <div className={styles["upload-file-item"]}>
-                                <div className={styles["text"]}>{item.substring(item.lastIndexOf('\\')+1)}</div>
+                                <div className={styles["text"]}><PaperClipOutlined style={{marginRight:8,color:"#666666"}}/>{item.substring(item.lastIndexOf('\\')+1)}</div>
                                 {!!!oldRunParams&&<DeleteOutlined className={styles["icon"]} onClick={()=>{
                                     let arr = getParams().TargetsFile?.split(",")||[]
                                     let str = arr?.filter((itemIn:string)=>itemIn!==item).join(',')

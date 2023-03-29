@@ -10,6 +10,7 @@
         color: #666666;
     }
     .upload-file-item{
+        border-radius: 2px;
         font-size: 12px;
         width: 248px;
         padding: 2px 0 2px 2px;
@@ -19,19 +20,21 @@
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+            color: #1890ff;
         }
         .icon{
-            margin-right: 4px;
+            margin-right: 8px;
             position: relative;
             top: 3px;
             display: none;
+            color: #666666;
             &:hover{
                 color: red;
             }
         }
         &:hover{
             background-color: #f5f5f5;
-
+            // color: #1890ff;
             .icon{
                 display: inline-block;
             }
