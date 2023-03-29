@@ -101,7 +101,7 @@ portsLine = []
 aliveHostCountList = []
 openPortCount = 0
 
-portChan := db.QueryPortsByCreateAt(int64(createAt))~
+portChan := db.QueryPortsByUpdatedAt(int64(createAt))~
 for port :=range portChan{
     openPortCount +=1
     if port.Host not in aliveHostCountList {
