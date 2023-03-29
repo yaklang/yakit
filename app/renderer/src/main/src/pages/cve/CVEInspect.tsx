@@ -98,14 +98,16 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                         {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
                                     </div>
                                 </div>
-                                <CWEDescriptionItem
-                                    item={cwes[0]}
-                                    onSelectCve={(s) => {
-                                        onGetCve(s)
-                                        onSelectCve(s)
-                                    }}
-                                />
-                                <div className={styles["no-more"]}>暂无更多</div>
+                                <div className={styles["description-content"]}>
+                                    <CWEDescriptionItem
+                                        item={cwes[0]}
+                                        onSelectCve={(s) => {
+                                            onGetCve(s)
+                                            onSelectCve(s)
+                                        }}
+                                    />
+                                    <div className={styles["no-more"]}>暂无更多</div>
+                                </div>
                             </>
                         ) : cwes.length === 0 ? (
                             <YakitEmpty style={{paddingTop: 48}} title='暂无CWE数据' />

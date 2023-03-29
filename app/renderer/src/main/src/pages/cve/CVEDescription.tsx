@@ -41,7 +41,7 @@ export const CVEDescription = React.memo(
         }, [BaseCVSSv2Score, Severity, Severity])
 
         return (
-            <div className={styles["cve-description-content"]}>
+            <div className={styles["description-content"]}>
                 <Descriptions bordered size='small' column={3}>
                     <Descriptions.Item label='CVE编号' span={2} contentStyle={{fontSize: 16, fontWeight: "bold"}}>
                         {CVE}
