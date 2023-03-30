@@ -110,6 +110,7 @@ import {
     MenuSolidBatchVulnerabilityDetectionIcon,
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
 import {ProjectPage} from "@/pages/projects/ProjectPage"
+import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -192,6 +193,9 @@ export enum Route {
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output",
+
+    // 录屏管理器
+    ScreenRecorderPage = "screen-recorder-page",
 
     // 首页
     NewHome = "new-home"
@@ -440,6 +444,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <TrustListPage />
         case Route.PlugInAdminPage:
             return <PlugInAdminPage />
+        case Route.ScreenRecorderPage:
+            return <ScreenRecorderPage/>
         case Route.AttachEngineCombinedOutput:
             return <EngineConsole />
         // case Route.DB_Projects:
