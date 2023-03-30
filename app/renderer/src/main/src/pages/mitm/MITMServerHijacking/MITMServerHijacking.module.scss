@@ -77,12 +77,14 @@
             display: flex;
             align-items: center;
             margin-right: 8px;
-            width: 240px;
+            // width: 240px;
         }
         .mitm-hijacked-heard-right {
             display: flex;
             justify-content: flex-end;
-            width: calc(100% - 248px);
+            // width: calc(100% - 248px);
+            flex: 1;
+            overflow: hidden;
         }
     }
 }
@@ -107,12 +109,14 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: calc(100% - 24px);
+    // width: calc(100% - 24px);
+    flex: 1;
+    overflow: hidden;
     .autoForward-manual-right {
         display: flex;
         gap: 8px;
         justify-content: flex-end;
-        width: 380px;
+        // width: 380px;
         .manual-select {
             display: flex;
             align-items: center;
@@ -137,12 +141,13 @@
     display: flex;
     align-items: center;
     flex: 1;
-    width: calc(100% - 380px);
+    overflow: hidden;
+    // width: calc(100% - 380px);
     .manual-url-info {
         font-size: 11px;
         line-height: 16px;
         color: var(--yakit-body-text-color);
-        max-width: calc(100% - 220px);
+        // max-width: calc(100% - 220px);
     }
     .manual-ip-info {
         display: inline-flex;
