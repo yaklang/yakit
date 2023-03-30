@@ -437,4 +437,20 @@ module.exports = (win, getClient) => {
         let stream = getClient().UpdateCVEDatabase(params);
         handlerHelper.registerHandler(win, stream, streamUpdateCVEDatabaseMap, token)
     })
+
+    // asyncSaveTextToTemporalFile wrapper
+    const asyncSaveTextToTemporalFile = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveTextToTemporalFile(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SaveTextToTemporalFile", async (e, params) => {
+        return await asyncSaveTextToTemporalFile(params)
+    })
 }

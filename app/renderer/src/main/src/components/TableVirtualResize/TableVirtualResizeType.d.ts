@@ -1,9 +1,10 @@
-import {ReactNode} from "react"
-import {SearchProps} from "antd/lib/input"
-import {SelectProps} from "antd"
+import { ReactNode } from "react"
+import { SearchProps } from "antd/lib/input"
+import { SelectProps } from "antd"
 
 /**
  * @description:表格的props描述，包裹虚拟表格的父元素需要设置高度
+ * @property {"small" | "middle"} size: 表格单行高度 middle：32px; small:28px
  * @property {any} ref: 返回的滚动条所在的div的元素
  * @property {string | ReactNode} title: 表格顶部的title,左边
  * @property {ReactNode} extra: 表格顶部的title，右边
@@ -34,6 +35,7 @@ import {SelectProps} from "antd"
  * @property {boolean}  useUpAndDown 是否启用上下建
  */
 export interface TableVirtualResizeProps<T> {
+    size?: "small" | "middle" | "large"
     ref?: any
     /**
      * @private 组件自用
@@ -122,7 +124,7 @@ interface FilterSearchInputProps extends SearchProps {
     isShowIcon?: boolean
 }
 
-interface FilterSearchMultipleProps extends SelectProps {}
+interface FilterSearchMultipleProps extends SelectProps { }
 
 export interface SorterProps {
     sorterKey?: string

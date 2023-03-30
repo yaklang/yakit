@@ -1,8 +1,8 @@
 const {ipcMain} = require("electron")
 const {htmlTemplateDir} = require("../filePath")
-const compressing = require('compressing');
-const fs = require('fs')
-const path = require('path')
+const compressing = require("compressing")
+const fs = require("fs")
+const path = require("path")
 module.exports = (win, getClient) => {
     // asyncQueryPorts wrapper
     const asyncQueryPorts = (params) => {
@@ -283,7 +283,7 @@ module.exports = (win, getClient) => {
                 if (err) return reject(err)
                 fs.writeFile(src2, data, (err) => {
                     if (err) return reject(err)
-                    resolve('复制文件成功')
+                    resolve("复制文件成功")
                 })
             })
         })
@@ -291,18 +291,18 @@ module.exports = (win, getClient) => {
 
     // 删除文件夹下所有文件
     const delDir = (path) => {
-        let files = [];
+        let files = []
         if (fs.existsSync(path)) {
-            files = fs.readdirSync(path);
+            files = fs.readdirSync(path)
             files.forEach((file, index) => {
-                let curPath = path + "/" + file;
+                let curPath = path + "/" + file
                 if (fs.statSync(curPath).isDirectory()) {
-                    delDir(curPath); //递归删除文件夹
+                    delDir(curPath) //递归删除文件夹
                 } else {
-                    fs.unlinkSync(curPath); //删除文件
+                    fs.unlinkSync(curPath) //删除文件
                 }
-            });
-            fs.rmdirSync(path);
+            })
+            fs.rmdirSync(path)
         }
     }
 
@@ -392,6 +392,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+
     ipcMain.handle("IsScrecorderReady", async (e, params) => {
         return await asyncIsScrecorderReady(params)
     })
@@ -412,18 +413,49 @@ module.exports = (win, getClient) => {
         return await asyncQueryScreenRecorders(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
-    const streamInstallScrecorderMap = new Map();
-    ipcMain.handle("cancel-InstallScrecorder", handlerHelper.cancelHandler(streamInstallScrecorderMap));
+    const handlerHelper = require("./handleStreamWithContext")
+    const streamInstallScrecorderMap = new Map()
+    ipcMain.handle("cancel-InstallScrecorder", handlerHelper.cancelHandler(streamInstallScrecorderMap))
     ipcMain.handle("InstallScrecorder", (e, params, token) => {
-        let stream = getClient().InstallScrecorder(params);
+        let stream = getClient().InstallScrecorder(params)
         handlerHelper.registerHandler(win, stream, streamInstallScrecorderMap, token)
     })
 
-    const streamStartScrecorderMap = new Map();
-    ipcMain.handle("cancel-StartScrecorder", handlerHelper.cancelHandler(streamStartScrecorderMap));
+    const streamStartScrecorderMap = new Map()
+    ipcMain.handle("cancel-StartScrecorder", handlerHelper.cancelHandler(streamStartScrecorderMap))
     ipcMain.handle("StartScrecorder", (e, params, token) => {
-        let stream = getClient().StartScrecorder(params);
+        let stream = getClient().StartScrecorder(params)
         handlerHelper.registerHandler(win, stream, streamStartScrecorderMap, token)
+    })
+    // asyncQueryCVE wrapper
+    const asyncQueryCVE = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryCVE(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryCVE", async (e, params) => {
+        return await asyncQueryCVE(params)
+    })
+
+    // asyncGetCVE wrapper
+    const asyncGetCVE = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetCVE(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetCVE", async (e, params) => {
+        return await asyncGetCVE(params)
     })
 }

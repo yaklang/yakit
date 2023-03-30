@@ -1,12 +1,12 @@
-import {Input, InputRef} from "antd"
-import React, {useState} from "react"
+import { Input, InputRef } from "antd"
+import React, { useState } from "react"
 import styles from "./YakitCombinationSearch.module.scss"
 import classNames from "classnames"
-import {useMemoizedFn} from "ahooks"
-import {SearchIcon} from "@/assets/newIcon"
-import {YakitCombinationSearchProps} from "./YakitCombinationSearchType"
-import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import { useMemoizedFn } from "ahooks"
+import { SearchIcon } from "@/assets/newIcon"
+import { YakitCombinationSearchProps } from "./YakitCombinationSearchType"
+import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
+import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
 
 /**
  *
@@ -51,7 +51,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
             case "select":
                 return onRenderSelect()
             default:
-                break
+                return <></>
         }
     })
     const onRenderInput = useMemoizedFn(() => {
@@ -115,8 +115,8 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
                             {!!selectModuleTypeProps.renderOpt
                                 ? selectModuleTypeProps.renderOpt(item)
                                 : item[optText]
-                                ? item[optText]
-                                : value}
+                                    ? item[optText]
+                                    : value}
                         </YakitSelect.Option>
                     )
                 })}
@@ -124,7 +124,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
         )
     })
     return (
-        <div className={classNames(styles["yakit-combination-search"], {wrapperClassName})}>
+        <div className={classNames(styles["yakit-combination-search"], { wrapperClassName })}>
             <Input.Group compact>
                 <YakitSelect
                     {...selectProps}

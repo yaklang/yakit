@@ -87,6 +87,7 @@ const singletonRoute: Route[] = [
     Route.DB_Risk,
     Route.DB_Report,
     Route.DB_Projects,
+    Route.DB_CVE,
 
     Route.PoC,
     Route.DNSLog,
@@ -126,7 +127,8 @@ const noPaddingPage = [
     Route.ICMPSizeLog,
     Route.TCPPortLog,
     Route.DNSLog,
-    Route.NewHome
+    Route.NewHome,
+    Route.DB_CVE
 ]
 
 export const defaultUserInfo: UserInfoProps = {

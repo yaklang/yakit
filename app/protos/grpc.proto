@@ -520,7 +520,6 @@ message CWEDetail {
   string Name = 2;
   string NameZh = 3;
   //  repeated CWEDetail InterTo = 4;
-
   string Status = 5;
   bool Stable = 6;
   bool Incomplete = 7;
@@ -2976,6 +2975,7 @@ message ExecResult {
   int64 Id = 6;
 
   string RuntimeID = 7;
+  float Progress = 8;
 }
 
 message GetLicenseResponse {

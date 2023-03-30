@@ -145,6 +145,11 @@
                 }
             }
 
+            .virtual-table-title-middle {
+                height: 32px;
+                padding: 8px 12px;
+            }
+
             .virtual-table-title-fixed-left {
                 position: sticky;
                 z-index: 5;
@@ -210,7 +215,6 @@
                 position: relative;
                 width: fit-content;
                 font-size: 12px;
-                // pointer-events: auto;
 
                 .virtual-table-row {
                     display: flex;
@@ -273,6 +277,11 @@
                     &-isDragging {
                         background-color: var(--yakit-primary-1);
                     }
+                }
+
+                .virtual-table-row-cell-middle {
+                    height: 32px;
+                    padding: 8px 12px;
                 }
 
                 .virtual-table-row-cell-disabled {

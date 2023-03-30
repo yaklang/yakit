@@ -11,10 +11,12 @@ export interface ResizeBoxProps {
     firstRatio?: string
     firstMinSize?: string | number
     firstNode: any
+    firstNodeStyle?: React.CSSProperties
 
     secondRatio?: string
     secondMinSize?: string | number
     secondNode: any
+    secondNodeStyle?: React.CSSProperties
 
     style?: React.CSSProperties
     lineStyle?: React.CSSProperties
@@ -29,9 +31,11 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
         firstRatio = "50%",
         firstMinSize = "100px",
         firstNode,
+        firstNodeStyle,
         secondRatio = "50%",
         secondMinSize = "100px",
         secondNode,
+        secondNodeStyle,
         style,
         lineStyle,
         onChangeSize
@@ -134,7 +138,8 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     width: isVer ? "100%" : firstRatio === "50%" ? `calc(100% - ${secondRatio})` : firstRatio,
                     height: isVer ? (firstRatio === "50%" ? `calc(100% - ${secondRatio} - 6px)` : firstRatio) : "100%",
                     padding: `${isVer ? "0 0 3px 0" : "0 3px 0 0 "}`,
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    ...firstNodeStyle
                 }}
             >
                 {typeof firstNode === "function" ? firstNode() : firstNode}
@@ -155,7 +160,8 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                     width: isVer ? "100%" : firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio})`,
                     height: isVer ? (firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio} - 6px)`) : "100%",
                     padding: `${isVer ? "3px 0 0 0" : "0 0 0 3px"}`,
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    ...secondNodeStyle
                 }}
             >
                 {typeof secondNode === "function" ? secondNode() : secondNode}

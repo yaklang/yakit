@@ -1,11 +1,11 @@
 import Icon from "@ant-design/icons"
-import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
+import { CustomIconComponentProps } from "@ant-design/icons/lib/components/Icon"
 
 const PortScanning = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
         <mask
             id='mask0_2721_76421'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -37,7 +37,7 @@ const BasicCrawler = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7447'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -85,7 +85,7 @@ const ComprehensiveCatalogScanningAndBlasting = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7395'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -117,7 +117,7 @@ const SpecialVulnerabilityDetection = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_7833'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -151,7 +151,7 @@ const BatchVulnerabilityDetection = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7504'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -181,7 +181,7 @@ const PluginWarehouse = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7475'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -235,7 +235,7 @@ const MITMInteractiveHijacking = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7532'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -275,7 +275,7 @@ const WebFuzzer = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_4918_9813'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -333,7 +333,7 @@ const BlastingAndUnauthorizedTesting = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7557'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -383,7 +383,7 @@ const Codec = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7584'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -436,7 +436,7 @@ const DataComparison = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7610'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -475,7 +475,7 @@ const PortListener = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7637'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -518,7 +518,7 @@ const ReverseConnectionServer = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7666'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -556,7 +556,7 @@ const DNSLog = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7697'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -616,7 +616,7 @@ const ICMPSizeLog = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7727'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -656,7 +656,7 @@ const TCPPortLog = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7755'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -715,7 +715,7 @@ const YsoJavaHack = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7793'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -761,7 +761,7 @@ const PluginBatchExecution = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2812_7819'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -803,7 +803,7 @@ const DefaultPlugin = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_2879_6168'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -842,7 +842,7 @@ const SpaceEngineHunter = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_166_5755'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -915,7 +915,7 @@ const WebsocketFuzzer = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_9116'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -981,7 +981,7 @@ const SubDomainCollection = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_9175'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1022,7 +1022,7 @@ const Report = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_9207'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1060,7 +1060,7 @@ const PlugExecutionResults = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_9237'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1109,7 +1109,7 @@ const PortAssets = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_7917'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1160,7 +1160,7 @@ const VulnerabilityRisk = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_7890'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1206,7 +1206,7 @@ const DomainAssets = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_9146'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1218,7 +1218,7 @@ const DomainAssets = () => (
         <g mask='url(#mask0_3031_9146)'>
             <mask
                 id='mask1_3031_9146'
-                style={{maskType: "alpha"}}
+                style={{ maskType: "alpha" }}
                 maskUnits='userSpaceOnUse'
                 x='2'
                 y='14'
@@ -1239,7 +1239,7 @@ const DomainAssets = () => (
             </g>
             <mask
                 id='mask2_3031_9146'
-                style={{maskType: "alpha"}}
+                style={{ maskType: "alpha" }}
                 maskUnits='userSpaceOnUse'
                 x='2'
                 y='9'
@@ -1278,7 +1278,7 @@ const HTTPHistory = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_3031_8824'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -1326,4 +1326,22 @@ const HTTPHistory = () => (
  */
 export const MenuHTTPHistoryIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={HTTPHistory} {...props} />
+}
+
+const CVE = () => (
+    <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M34 37H10C9.44772 37 9 36.5523 9 36V8C9 7.44772 9.44772 7 10 7H27.5V12C27.5 13.3807 28.6193 14.5 30 14.5H35V36C35 36.5523 34.5523 37 34 37ZM36 13.5V14.5V36C36 37.1046 35.1046 38 34 38H10C8.89543 38 8 37.1046 8 36V8C8 6.89543 8.89543 6 10 6H27.5H28.5H28.5049C29.0353 6 29.544 6.21071 29.9191 6.58579L35.4142 12.0809L34.7071 12.788L29.212 7.29289C29.0245 7.10536 28.7701 7 28.5049 7H28.5V12C28.5 12.8284 29.1716 13.5 30 13.5H35V13.4951C35 13.2299 34.8946 12.9755 34.7071 12.788L35.4142 12.0809C35.7893 12.456 36 12.9647 36 13.4951V13.5Z" fill="#31343F" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.5 14C12.5 13.7239 12.7239 13.5 13 13.5H19C19.2761 13.5 19.5 13.7239 19.5 14C19.5 14.2761 19.2761 14.5 19 14.5H13C12.7239 14.5 12.5 14.2761 12.5 14Z" fill="#31343F" />
+        <path d="M6 20C6 18.8954 6.89543 18 8 18H36C37.1046 18 38 18.8954 38 20V30C38 31.1046 37.1046 32 36 32H8C6.89543 32 6 31.1046 6 30V20Z" fill="#F28B44" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M36 19H8C7.44772 19 7 19.4477 7 20V30C7 30.5523 7.44772 31 8 31H36C36.5523 31 37 30.5523 37 30V20C37 19.4477 36.5523 19 36 19ZM8 18C6.89543 18 6 18.8954 6 20V30C6 31.1046 6.89543 32 8 32H36C37.1046 32 38 31.1046 38 30V20C38 18.8954 37.1046 18 36 18H8Z" fill="#31343F" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M16.3955 23.3936L18.9971 23.3008L18.9918 22.6959H19.5576V23.2758L20.0287 23.2633V22.6548L19.5646 22.6671V22.0161H16.1938C13.7724 22.5567 13.9687 25.0549 13.9687 25.0549C14.0793 27.5459 16.1563 27.9938 16.1563 27.9938H19.1238L19.9054 26.6305H16.3633C15.1714 26.3415 15.2463 24.955 15.2463 24.955C15.2588 23.7255 16.3955 23.3936 16.3955 23.3936ZM20.0517 22.6174V22.0125L20.5228 22V22.6049L20.0517 22.6174ZM21.0474 22.6174V22.0125L21.5185 22V22.6049L21.0474 22.6174ZM19.1128 23.3082L20.5225 23.2761L22.1106 26.24C22.1106 26.24 22.1659 26.3399 22.1891 26.24L24.4553 22.0127H29.9995L29.2714 23.351H25.2137L22.8618 27.6175L22.4764 28.0832H21.7698C21.7698 28.0832 20.9757 27.2017 19.1128 23.3082ZM29.1341 25.4742L29.7158 24.4464L25.3672 24.4036V28.083L29.3 27.9902L29.9995 26.6947L26.6359 26.6698V25.4742H29.1341Z" fill="white" />
+    </svg>
+
+)
+
+/**
+ * @description:cve
+ */
+export const CVEIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={CVE} {...props} />
 }
