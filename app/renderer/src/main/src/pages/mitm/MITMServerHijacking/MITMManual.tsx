@@ -49,9 +49,13 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     currentIsForResponse={currentIsForResponse}
                 />
             )}
-            <div className={styles["autoForward-manual-right"]}>
+            <div
+                className={classNames(styles["autoForward-manual-right"], {
+                    [styles["autoForward-manual-right-sm"]]: width < 900
+                })}
+            >
                 <div className={styles["manual-select"]}>
-                    <span className={styles["manual-select-label"]}>劫持响应&nbsp;:</span>
+                    <span className={styles["manual-select-label"]}>劫持响应:</span>
                     <YakitSegmented
                         value={hijackResponseType}
                         onChange={(v) => {

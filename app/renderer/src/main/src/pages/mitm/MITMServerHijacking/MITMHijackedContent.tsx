@@ -305,11 +305,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 className={styles["mitm-hijacked-manual-content-url"]}
                             />
                         )}
-                        <div
-                            className={classNames(styles["mitm-hijacked-manual-content-editor"], {
-                                [styles["mitm-hijacked-manual-content-editor-sm"]]: width < 900
-                            })}
-                        >
+                        <div className={styles["mitm-hijacked-manual-content-editor"]}>
                             <MITMManualEditor
                                 currentPacket={currentPacket}
                                 setModifiedPacket={setModifiedPacket}
