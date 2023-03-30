@@ -15,7 +15,6 @@ import {BrutePage} from "../pages/brute/BrutePage"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
 import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
-import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable"
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage"
 import {RiskPage} from "../pages/risks/RiskPage"
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage"
@@ -154,7 +153,6 @@ export enum Route {
     DB_Ports = "db-ports",
     DB_HTTPHistory = "db-http-request",
     DB_Domain = "db-domains",
-    DB_ExecResults = "db-exec-results",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
     DB_CVE = "cve",
@@ -387,8 +385,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <PortAssetTable />
         case Route.DB_Domain:
             return <DomainAssetPage />
-        case Route.DB_ExecResults:
-            return <YakScriptExecResultTable />
         // case Route.ReverseServer:
         //     return <ReverseServerPage />
         // case Route.PayloadGenerater:
@@ -682,13 +678,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 label: "报告",
                 icon: <MenuReportIcon />,
                 hoverIcon: <MenuSolidReportIcon />
-            },
-            {
-                id: "9-2",
-                key: Route.DB_ExecResults,
-                label: "插件执行结果",
-                icon: <MenuPlugExecutionResultsIcon />,
-                hoverIcon: <MenuSolidPlugExecutionResultsIcon />
             },
             {
                 id: "9-3",

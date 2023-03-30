@@ -34,12 +34,15 @@ export function onImportShare() {
     })
 }
 export function onImportPlugin() {
-    showModal({
-        title: "更新插件源",
+    const m = showModal({
+        title: "导入插件ID",
         width: 800,
         content: (
             <div style={{width: 780}}>
-                <LoadYakitPluginForm onlyId={true} onFinished={() => info("更新进程执行完毕")} />
+                <LoadYakitPluginForm onlyId={true} onFinished={() => {
+                    info("更新进程执行完毕")
+                    m.destroy()
+                }} />
             </div>
         )
     })

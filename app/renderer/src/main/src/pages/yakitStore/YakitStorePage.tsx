@@ -2658,6 +2658,10 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any, onlyId
                         .then(() => {
                             p.onFinished()
                             success("插件导入成功")
+                            ipcRenderer.invoke("send-to-tab", {
+                                type: "open-plugin-store",
+                                data:{ }
+                            })
                         })
                         .catch((e: any) => {
                             failed(`插件导入失败: ${e}`)
@@ -2665,10 +2669,10 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any, onlyId
                 }
             }}
         >
-            <SelectOne
+            {!p.onlyId && <SelectOne
                 label={" "}
                 colon={false}
-                data={p.onlyId ? [{text: "使用ID", value: "uploadId"}] : [
+                data={[
                     {text: "使用官方源", value: "official"},
                     {text: "第三方仓库源", value: "giturl"},
                     {text: "本地仓库", value: "local"},
@@ -2677,7 +2681,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any, onlyId
                 ]}
                 value={loadMode}
                 setValue={setLoadMode}
-            />
+            />}
             {["official", "giturl"].includes(loadMode) && (
                 <>
                     {loadMode === "official" && (

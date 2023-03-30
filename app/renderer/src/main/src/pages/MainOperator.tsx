@@ -82,7 +82,6 @@ const singletonRoute: Route[] = [
     // database
     Route.DB_Ports,
     Route.DB_HTTPHistory,
-    Route.DB_ExecResults,
     Route.DB_Domain,
     Route.DB_Risk,
     Route.DB_Report,
@@ -1200,6 +1199,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
             if (type === "**screen-recorder") addTabPage(Route.ScreenRecorderPage)
+            if (type === "open-plugin-store"){
+                const flag = getPageCache().filter(item => item.route === Route.ModManager).length
+                if(flag === 0 ){ addTabPage(Route.ModManager) }
+                else{
+                    removePage(Route.AddYakitScript, false) 
+                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50);
+                }
+            }
             console.info("send to tab: ", type)
         })
 

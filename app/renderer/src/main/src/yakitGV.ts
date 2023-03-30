@@ -54,5 +54,5 @@ export enum CodeGV {
      * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
      * @description 每个菜单项由 '|' 字符进行分割
      */
-    InvalidPageMenuItem = "项目管理(Beta*)|"
+    InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|"
 }
