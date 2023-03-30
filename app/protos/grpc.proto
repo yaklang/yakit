@@ -1980,6 +1980,7 @@ message AddMenuRequest {
 message QueryAllMenuItemRequest {
   string Mode = 1;
   string Group = 2;
+  string Verbose = 3;
 }
 
 message ImportMenuItemRequest {

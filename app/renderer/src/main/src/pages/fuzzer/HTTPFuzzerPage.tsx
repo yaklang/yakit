@@ -381,12 +381,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [historyTask])
 
     useEffect(() => {
-        // 缓存全局参数
+        // 缓存全局参数(将fuzz参数的缓存从本地文件替换到引擎数据库内)
         getLocalValue(WEB_FUZZ_PROXY).then((e) => {
-            if (!e) {
-                return
+            if (e) {
+                setLocalValue(WEB_FUZZ_PROXY, "")
+                setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
+                setProxy(`${e}`)
+            } else {
+                getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
+                    if (!e) {
+                        return
+                    }
+                    setProxy(`${e}`)
+                })
             }
-            setProxy(`${e}`)
         })
     }, [])
 
@@ -1017,6 +1025,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onClick={() => {
                                     resetResponse()
 
+                                    setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
                                     setRedirectedResponse(undefined)
                                     sendFuzzerSettingInfo()
                                     submitToHTTPFuzzer()

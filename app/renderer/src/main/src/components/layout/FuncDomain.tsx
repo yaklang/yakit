@@ -72,10 +72,13 @@ export interface FuncDomainProp {
     isRemoteMode: boolean
     onEngineModeChange: (type: YaklangEngineMode) => any
     typeCallback: (type: YakitSettingCallbackType) => any
+
+    /** @name 当前是否展示项目管理页面 */
+    showProjectManage?: boolean
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
-    const {isEngineLink, isReverse = false, engineMode, isRemoteMode, onEngineModeChange, typeCallback} = props
+    const {isEngineLink, isReverse = false, engineMode, isRemoteMode, onEngineModeChange, typeCallback, showProjectManage = false} = props
 
     /** 登录用户信息 */
     const {userInfo, setStoreUserInfo} = useStore()
@@ -165,7 +168,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     <ScreensHotSvgIcon className={styles["icon-style"]} />
                 </div> */}
 
-                <div
+                {!showProjectManage && <div
                     className={styles["ui-op-btn-wrapper"]}
                     onClick={() => {
                         getLocalValue("SHOW_BASE_CONSOLE").then((val: boolean) => {
@@ -180,21 +183,21 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             <RocketSvgIcon style={{fontSize: 20}} className={styles["icon-style"]}/>
                         </Tooltip>
                     </div>
-                </div>
+                </div>}
 
                 <div className={styles["short-divider-wrapper"]}>
                     <div className={styles["divider-style"]}></div>
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
-                    <UIOpRisk isEngineLink={isEngineLink}/>
-                    <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode}/>
-                    <UIOpSetting
+                    {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
+                    <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} />
+                    {!showProjectManage && <UIOpSetting
                         engineMode={engineMode}
                         onEngineModeChange={onEngineModeChange}
                         typeCallback={typeCallback}
-                    />
+                    />}
                 </div>
-                <div className={styles["divider-wrapper"]}></div>
+                {!showProjectManage && <><div className={styles["divider-wrapper"]}></div>
                 <div className={styles["user-wrapper"]}>
                     {userInfo.isLogin ? (
                         <div className={styles["user-info"]}>
@@ -259,7 +262,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             <UnLoginSvgIcon/>
                         </div>
                     )}
-                </div>
+                </div></>}
             </div>
 
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)}/>}
