@@ -32,9 +32,13 @@ export const CVEDescription = React.memo(
     }: CVEDetail) => {
         const color = useCreation(() => {
             let text = "success"
-            if (BaseCVSSv2Score > 8.0 || Severity === "CRITICAL" || Severity === "HIGH") {
+            if (Severity === "严重") {
+                text = "serious"
+            }
+            if (Severity === "高危") {
                 text = "danger"
-            } else if (BaseCVSSv2Score > 6.0) {
+            }
+            if (Severity === "中危") {
                 text = "warning"
             }
             return text
@@ -47,19 +51,26 @@ export const CVEDescription = React.memo(
                         {CVE}
                     </Descriptions.Item>
                     <Descriptions.Item label='漏洞级别' span={1} contentStyle={{minWidth: 110}}>
-                        <div
-                            className={classNames(
-                                styles["cve-list-product-success"],
-                                styles["cve-description-product-success"],
-                                {
-                                    [styles["cve-list-product-warning"]]: color === "warning",
-                                    [styles["cve-list-product-danger"]]: color === "danger"
-                                }
-                            )}
-                        >
-                            <div className={classNames(styles["cve-list-severity"])}>{Severity}</div>
-                            <span className={classNames(styles["cve-list-baseCVSSv2Score"])}>{BaseCVSSv2Score}</span>
-                        </div>
+                        {Severity === "-" ? (
+                            "-"
+                        ) : (
+                            <div
+                                className={classNames(
+                                    styles["cve-list-product-success"],
+                                    styles["cve-description-product-success"],
+                                    {
+                                        [styles["cve-list-product-warning"]]: color === "warning",
+                                        [styles["cve-list-product-danger"]]: color === "danger",
+                                        [styles["cve-list-product-serious"]]: color === "serious"
+                                    }
+                                )}
+                            >
+                                <div className={classNames(styles["cve-list-severity"])}>{Severity}</div>
+                                <span className={classNames(styles["cve-list-baseCVSSv2Score"])}>
+                                    {BaseCVSSv2Score}
+                                </span>
+                            </div>
+                        )}
                     </Descriptions.Item>
                     <Descriptions.Item label='标题' span={2}>
                         {Title}
@@ -75,21 +86,25 @@ export const CVEDescription = React.memo(
                         {AccessVector}
                     </Descriptions.Item>
                     <Descriptions.Item label='利用难度' span={2}>
-                        <div
-                            className={classNames(
-                                styles["cve-list-product-success"],
-                                styles["cve-description-product-success"],
-                                {
-                                    [styles["cve-list-product-warning"]]: AccessComplexity === "MIDDLE",
-                                    [styles["cve-list-product-danger"]]: AccessComplexity === "HEIGHT"
-                                }
-                            )}
-                        >
-                            <div className={classNames(styles["cve-list-severity"])}>{AccessComplexity}</div>
-                            <span className={classNames(styles["cve-list-baseCVSSv2Score"])}>
-                                {ExploitabilityScore}
-                            </span>
-                        </div>
+                        {AccessComplexity === "-" ? (
+                            "-"
+                        ) : (
+                            <div
+                                className={classNames(
+                                    styles["cve-list-product-success"],
+                                    styles["cve-description-product-success"],
+                                    {
+                                        [styles["cve-list-product-warning"]]: AccessComplexity === "一般",
+                                        [styles["cve-list-product-danger"]]: AccessComplexity === "困难"
+                                    }
+                                )}
+                            >
+                                <div className={classNames(styles["cve-list-severity"])}>{AccessComplexity}</div>
+                                <span className={classNames(styles["cve-list-baseCVSSv2Score"])}>
+                                    {ExploitabilityScore}
+                                </span>
+                            </div>
+                        )}
                     </Descriptions.Item>
                     <Descriptions.Item label='影响产品' span={3}>
                         {Product}

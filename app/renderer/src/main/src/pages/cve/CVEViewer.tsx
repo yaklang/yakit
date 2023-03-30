@@ -43,7 +43,6 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
         ipcRenderer
             .invoke("IsCVEDatabaseReady")
             .then((rsp: {Ok: boolean; Reason: string; ShouldUpdate: boolean}) => {
-                console.log("IsCVEDatabaseReady", rsp)
                 setAvailable(rsp.Ok)
             })
             .catch((err) => {

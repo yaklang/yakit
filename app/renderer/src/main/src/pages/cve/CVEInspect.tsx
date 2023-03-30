@@ -41,7 +41,6 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
     }, [cwes])
     const onGetCve = useMemoizedFn((c: string) => {
         ipcRenderer.invoke("GetCVE", {CVE: c}).then((i: CVEDetailEx) => {
-            console.log("GetCVE", i)
             const {CVE, CWE} = i
             setCVE(CVE)
             setCWE(CWE)

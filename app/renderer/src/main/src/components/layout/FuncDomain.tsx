@@ -16,7 +16,7 @@ import {YakitEllipsis} from "../basics/YakitEllipsis"
 import {useMemoizedFn} from "ahooks"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, yakitFailed} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitSettingCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
@@ -45,7 +45,6 @@ import {CodeGV, LocalGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
-import {CVEDownloader} from "@/pages/cve/Downloader"
 import {GithubSvgIcon, PencilAltIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
@@ -59,6 +58,8 @@ import classnames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {addToTab} from "@/pages/MainTabs";
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 
 const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
@@ -146,9 +147,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             }
             setUserMenu(cacheMenu)
         } else {
-            setUserMenu([
-                {key: "sign-out", title: "退出登录"}
-            ])
+            setUserMenu([{key: "sign-out", title: "退出登录"}])
         }
     }, [userInfo.role, userInfo.companyHeadImg])
 
@@ -363,20 +362,27 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const {engineMode, onEngineModeChange, typeCallback} = props
 
     const [show, setShow] = useState<boolean>(false)
-
+    const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
+    const [available, setAvailable] = useState(false) // cve数据库是否可用
+    useEffect(() => {
+        onIsCVEDatabaseReady()
+    }, [])
+    const onIsCVEDatabaseReady = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("IsCVEDatabaseReady")
+            .then((rsp: {Ok: boolean; Reason: string; ShouldUpdate: boolean}) => {
+                setAvailable(rsp.Ok)
+            })
+            .catch((err) => {
+                yakitFailed("IsCVEDatabaseReady失败：" + err)
+            })
+    })
     const menuSelect = useMemoizedFn((type: string) => {
         switch (type) {
             case "cve-database-download":
-                showDrawer({
-                    title: "下载/更新 CVE 漏洞库基础信息",
-                    width: 800,
-                    content: (
-                        <div style={{width: 780}}>
-                            <CVEDownloader/>
-                        </div>
-                    )
-                })
+                setDataBaseUpdateVisible(true)
                 return
+
             case "external":
                 showModal({
                     title: "更新插件源",
@@ -450,7 +456,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "network-detection":
                 const n = showModal({
                     title: "网络检测",
-                    content: <NetworkDetection onClose={() => n.destroy()}/>
+                    content: <NetworkDetection onClose={() => n.destroy()} />
                 })
                 return n
             default:
@@ -580,18 +586,25 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     )
 
     return (
-        <YakitPopover
-            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
-            placement={"bottom"}
-            content={menu}
-            onVisibleChange={(visible) => setShow(visible)}
-        >
-            <div className={styles["ui-op-btn-wrapper"]}>
-                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                    <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
+        <>
+            <YakitPopover
+                overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
+                placement={"bottom"}
+                content={menu}
+                onVisibleChange={(visible) => setShow(visible)}
+            >
+                <div className={styles["ui-op-btn-wrapper"]}>
+                    <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                        <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                    </div>
                 </div>
-            </div>
-        </YakitPopover>
+            </YakitPopover>
+            <DatabaseUpdateModal
+                available={available}
+                visible={dataBaseUpdateVisible}
+                setVisible={setDataBaseUpdateVisible}
+            />
+        </>
     )
 })
 

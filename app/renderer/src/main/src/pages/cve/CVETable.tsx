@@ -2,7 +2,15 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {Divider, Empty, Progress, Space, Table, Tag} from "antd"
 import {defQueryCVERequest, QueryCVERequest} from "@/pages/cve/CVEViewer"
-import {useDebounceEffect, useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    useCountDown,
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useKeyPress,
+    useMemoizedFn,
+    useUpdateEffect
+} from "ahooks"
 import {ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -38,10 +46,9 @@ export interface CVETableProp {
 
 const {ipcRenderer} = window.require("electron")
 
-export const CVETable: React.FC<CVETableProp> = (props) => {
+export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
     const {available, advancedQuery, setAdvancedQuery} = props
     const [selected, setSelected] = useState<string>("")
-
     return (
         <>
             {available ? (
@@ -73,7 +80,7 @@ export const CVETable: React.FC<CVETableProp> = (props) => {
             )}
         </>
     )
-}
+})
 
 interface CVETableListProps {
     available: boolean
@@ -122,20 +129,21 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         update(1)
     }, [dataBaseUpdateVisible])
 
+    useEffect(() => {
+        if (advancedQuery) {
+            setParams({
+                ...props.filter,
+                Year: params.Year,
+                CWE: params.CWE
+            })
+        }
+    }, [props.filter, advancedQuery])
+
     useDebounceEffect(
         () => {
-            if (advancedQuery) {
-                setParams({
-                    ...props.filter,
-                    Year: params.Year,
-                    CWE: params.CWE
-                })
-                setTimeout(() => {
-                    update(1)
-                }, 100)
-            }
+            update(1)
         },
-        [props.filter, advancedQuery],
+        [params],
         {wait: 200}
     )
 
@@ -216,16 +224,23 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                 width: 120,
                 render: (_, i: CVEDetail) => {
                     let color = "success"
-                    if (i.BaseCVSSv2Score > 8.0 || i.Severity === "CRITICAL" || i.Severity == "HIGH") {
+                    if (i.Severity === "严重") {
+                        color = "serious"
+                    }
+                    if (i.Severity === "高危") {
                         color = "danger"
-                    } else if (i.BaseCVSSv2Score > 6.0) {
+                    }
+                    if (i.Severity === "中危") {
                         color = "warning"
                     }
-                    return (
+                    return i.Severity === "-" ? (
+                        ""
+                    ) : (
                         <div
                             className={classNames(styles["cve-list-product-success"], {
                                 [styles["cve-list-product-warning"]]: color === "warning",
-                                [styles["cve-list-product-danger"]]: color === "danger"
+                                [styles["cve-list-product-danger"]]: color === "danger",
+                                [styles["cve-list-product-serious"]]: color === "serious"
                             })}
                         >
                             <div className={classNames(styles["cve-list-severity"])}>{i.Severity}</div>
@@ -325,7 +340,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                 />
                                 <Divider type='vertical' />
                                 <YakitButton type='primary' onClick={() => setDataBaseUpdateVisible(true)}>
-                                    <RefreshIcon />
+                                    <RefreshIcon className={styles["refresh-icon"]} />
                                     数据库更新
                                 </YakitButton>
                             </div>
@@ -351,7 +366,10 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                 <>
                     <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
                     <div className={styles["cve-list-btns"]}>
-                        <YakitEmpty title='暂无数据' description='点击下方按钮进行数据库初始化' />
+                        <YakitEmpty
+                            title='暂无数据'
+                            description='点击下方按钮进行数据库初始化,（如已经下载/更新CVE数据库，建议关掉tab后重新打开）'
+                        />
                         <YakitButton
                             type='outline1'
                             icon={<CloudDownloadIcon />}
@@ -373,34 +391,44 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
 })
 
 interface DatabaseUpdateModalProps {
-    available: boolean
+    available?: boolean
     visible: boolean
     setVisible: (b: boolean) => void
 }
 const url = "https://cve-db.oss-cn-beijing.aliyuncs.com/default-cve.db.gzip"
-const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
+export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
     const {available, visible, setVisible} = props
     const [token, setToken] = useState(randomString(40))
     const [messages, setMessages, getMessages] = useGetState<string[]>([])
     const [status, setStatus] = useState<"init" | "progress" | "done">("init")
-    const [error, setError] = useState(false)
+    const [error, setError] = useState<boolean>(false)
     const [percent, setPercent, getPercent] = useGetState<number>(0)
+
+    const [targetDate, setTargetDate] = useState<number>()
+    const [countdown] = useCountDown({
+        targetDate,
+        onEnd: () => {
+            setTargetDate(0)
+        }
+    })
+
     const errorMessage = useRef<string>("")
     const timer = useRef<number>(0) //超时处理
     const prePercent = useRef<number>(0) // 上一次的进度数值
+    useEffect(() => {
+        if (countdown === 0) setStatus("done")
+    }, [countdown])
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             if (!data.IsMessage) {
                 return
             }
-            console.log("data", data)
             if (getPercent() === prePercent.current) {
                 timer.current += 1
             } else {
                 prePercent.current = getPercent()
                 timer.current = 0
             }
-            console.log("timer.current", timer.current, prePercent.current, getPercent())
             if (timer.current > 30) {
                 setStatus("init")
                 setMessages([])
@@ -409,18 +437,17 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
                 timer.current = 0
             }
             setPercent(data.Progress)
-            setMessages([...getMessages(), Uint8ArrayToString(data.Message)])
+            setMessages([Uint8ArrayToString(data.Message), ...getMessages()])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
-            console.log("error", error)
             errorMessage.current = JSON.stringify(error).substring(0, 20)
             yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            console.log("end")
             if (!errorMessage.current.includes("client failed")) {
                 info("[UpdateCVEDatabase] finished")
-                setStatus("done")
+                const n = Math.round(Math.random() * 10 + 5) // 10-15随机数
+                setTargetDate(Date.now() + n * 1000)
             } else {
                 setStatus("init")
                 setMessages([])
@@ -465,6 +492,17 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
                             />
                         </div>
                         <div className={styles["database-update-messages"]}>
+                            {countdown === 0 ? (
+                                ""
+                            ) : (
+                                <p>
+                                    CVE 数据库 解压中：
+                                    <span style={{color: "var(--yakit-primary-5)"}}>
+                                        {Math.round(countdown / 1000)}
+                                    </span>{" "}
+                                    s
+                                </p>
+                            )}
                             {messages.map((i) => {
                                 return <p>{`${i}`}</p>
                             })}
@@ -472,7 +510,7 @@ const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((prop
                     </>
                 )
             case "done":
-                return <p>重启yakit后才生效</p>
+                return <p>需要重启Yakit才能生效，如果重启后还未加载出数据，建议关掉tab重新打开。</p>
             default:
                 break
         }

@@ -116,6 +116,16 @@
 }
 
 .cve-list-product-danger {
+    border: 1px solid #f3c2bf;
+    color: #f7544a;
+
+    .cve-list-severity {
+        border-right: 1px solid #f3c2bf;
+        background-color: rgba(246, 84, 74, 0.2);
+    }
+}
+
+.cve-list-product-serious {
     border: 1px solid #e99a95;
     color: #cb2318;
 
@@ -360,5 +370,12 @@
         .ant-tabs-content-holder {
             overflow-y: overlay;
         }
+    }
+}
+
+.refresh-icon {
+    svg {
+        width: 16px;
+        height: 16px;
     }
 }

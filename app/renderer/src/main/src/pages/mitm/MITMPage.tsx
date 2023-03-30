@@ -1,34 +1,34 @@
-import React, { useEffect, useRef, useState } from "react"
-import { Form, Modal, notification, Typography } from "antd"
-import { failed, info, success, yakitFailed } from "../../utils/notification"
-import { MITMFilterSchema } from "./MITMServerStartForm/MITMFilters"
-import { ExecResult } from "../invoker/schema"
-import { ExecResultLog } from "../invoker/batch/ExecMessageViewer"
-import { ExtractExecResultMessage } from "../../components/yakitLogSchema"
-import { YakExecutorParam } from "../invoker/YakExecutorParams"
+import React, {useEffect, useRef, useState} from "react"
+import {Form, Modal, notification, Typography} from "antd"
+import {failed, info, success, yakitFailed} from "../../utils/notification"
+import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
+import {ExecResult} from "../invoker/schema"
+import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
+import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
+import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import style from "./MITMPage.module.scss"
-import { useCreation, useGetState, useInViewport, useLatest, useMemoizedFn } from "ahooks"
-import { StatusCardProps } from "../yakitStore/viewers/base"
-import { ResizeBox } from "../../components/ResizeBox"
-import { enableMITMPluginMode, MITMServerHijacking } from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
-import { Uint8ArrayToString } from "@/utils/str"
-import { MITMRule } from "./MITMRule/MITMRule"
+import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
+import {StatusCardProps} from "../yakitStore/viewers/base"
+import {ResizeBox} from "../../components/ResizeBox"
+import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
+import {Uint8ArrayToString} from "@/utils/str"
+import {MITMRule} from "./MITMRule/MITMRule"
 import ReactResizeDetector from "react-resize-detector"
-import { MITMContentReplacerRule } from "./MITMRule/MITMRuleType"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
-import { RemoveIcon } from "@/assets/newIcon"
-import { setLocalValue } from "@/utils/kv"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { loadLocalYakitPluginCode, loadNucleiPoCFromLocal, loadYakitPluginCode } from "../yakitStore/YakitStorePage"
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
-import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import { YakitFormDragger } from "@/components/yakitUI/YakitForm/YakitForm"
-import { startExecYakCode } from "@/utils/basic"
-import { DownloadOnlinePluginProps } from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
-import { YakitAutoComplete } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import { queryYakScriptList } from "../yakitStore/network"
-import MITMHijackedContent, { MITMStatus } from "./MITMServerHijacking/MITMHijackedContent"
-import { MITMPluginHijackContent } from "./MITMServerHijacking/MITMPluginHijackContent"
+import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {RemoveIcon} from "@/assets/newIcon"
+import {setLocalValue} from "@/utils/kv"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {loadLocalYakitPluginCode, loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitStorePage"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {startExecYakCode} from "@/utils/basic"
+import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {queryYakScriptList} from "../yakitStore/network"
+import MITMHijackedContent, {MITMStatus} from "./MITMServerHijacking/MITMHijackedContent"
+import {MITMPluginHijackContent} from "./MITMServerHijacking/MITMPluginHijackContent"
 import {
     MITMPluginLocalList,
     PluginGroup,
@@ -36,14 +36,14 @@ import {
     YakFilterRemoteObj,
     YakModuleListHeard
 } from "./MITMServerHijacking/MITMPluginLocalList"
-import { ClientCertificate, MITMServerStartForm } from "./MITMServerStartForm/MITMServerStartForm"
+import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
 import classNames from "classnames"
 
-const { Text } = Typography
-const { Item } = Form
-const { ipcRenderer } = window.require("electron")
+const {Text} = Typography
+const {Item} = Form
+const {ipcRenderer} = window.require("electron")
 
-export interface MITMPageProp { }
+export interface MITMPageProp {}
 
 export interface MITMResponse extends MITMFilterSchema {
     isHttps: boolean
@@ -90,7 +90,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
             try {
                 info(Uint8ArrayToString(i))
-            } catch (e) { }
+            } catch (e) {}
         })
 
         return () => {
@@ -105,7 +105,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         ipcRenderer
             .invoke("mitm-have-current-stream")
             .then((data) => {
-                const { haveStream, host, port } = data
+                const {haveStream, host, port} = data
                 if (haveStream) {
                     setStatus("hijacking")
                     setHost(host)
@@ -130,13 +130,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     try {
                         // 解析 Object
                         const obj = JSON.parse(currentLog.data)
-                        const { id, data } = obj
+                        const {id, data} = obj
                         if (!data) {
                             statusMap.delete(`${id}`)
                         } else {
-                            statusMap.set(`${id}`, { Data: data, Id: id, Timestamp: currentLog.timestamp })
+                            statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
                         }
-                    } catch (e) { }
+                    } catch (e) {}
                     return
                 }
                 messages.push(currentLog)
@@ -219,7 +219,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             return ipcRenderer
                 .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs)
                 .catch((e: any) => {
-                    notification["error"]({ message: `启动中间人劫持失败：${e}` })
+                    notification["error"]({message: `启动中间人劫持失败：${e}`})
                 })
         }
     )
@@ -320,7 +320,7 @@ interface MITMServerProps {
     statusCards: StatusCardProps[]
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const { visible, setVisible, status, setStatus, logs, statusCards } = props
+    const {visible, setVisible, status, setStatus, logs, statusCards} = props
     /**
      * @description 插件勾选
      */
@@ -447,7 +447,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 Type: "mitm,port-scan",
                 Keyword: searchKeyword,
                 IncludedScriptNames: includedScriptNames,
-                Pagination: { Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at" }
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
             }
         )
     })
@@ -462,7 +462,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             setSelectGroup={setSelectGroup}
                             isSelectAll={isSelectAll}
                         />
-                        <div style={{ paddingRight: 9 }}>
+                        <div style={{paddingRight: 9}}>
                             <PluginSearch
                                 tag={tags}
                                 searchKeyword={searchKeyword}
@@ -473,7 +473,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 }}
                             />
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", paddingRight: 10 }}>
+                        <div style={{display: "flex", justifyContent: "space-between", paddingRight: 10}}>
                             <YakModuleListHeard
                                 onSelectAll={onSelectAll}
                                 setIsSelectAll={setIsSelectAll}
@@ -615,25 +615,25 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}
-                    style={{ display: isFullScreenSecondNode ? "none" : "" }}
+                    style={{display: isFullScreenSecondNode ? "none" : ""}}
                 >
                     {onRenderFirstNode()}
                     <div className={style["mitm-server-start-pre-line"]} />
                 </div>
             )}
-            lineStyle={{ display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : "" }}
+            lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={340}
             secondMinSize={400}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
-                    style={{ display: isFullScreenFirstNode ? "none" : "" }}
+                    style={{display: isFullScreenFirstNode ? "none" : ""}}
                 >
                     {onRenderSecondNode()}
                 </div>
             )}
-            secondNodeStyle={{ padding: isFullScreenFirstNode ? 0 : undefined }}
-            firstNodeStyle={{ padding: isFullScreenSecondNode ? 0 : undefined }}
+            secondNodeStyle={{padding: isFullScreenFirstNode ? 0 : undefined}}
+            firstNodeStyle={{padding: isFullScreenSecondNode ? 0 : undefined}}
             {...ResizeBoxProps}
         />
     )
@@ -648,7 +648,7 @@ const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY"
 const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH"
 const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH"
 export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((props) => {
-    const { visible, setVisible } = props
+    const {visible, setVisible} = props
     const [form] = Form.useForm()
     const [loadMode, setLoadMode] = useState<"giturl" | "local" | "local-nuclei" | "uploadId">("giturl")
     const [localPath, setLocalPath] = useState<string>("") // local
@@ -669,7 +669,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                         <Form.Item
                             name='nucleiGitUrl'
                             label='Yaml PoC URL'
-                            rules={[{ required: true, message: "该项为必填项" }]}
+                            rules={[{required: true, message: "该项为必填项"}]}
                             help='无代理设置推荐使用 ghproxy.com / gitee 镜像源'
                             initialValue='https://github.com/projectdiscovery/nuclei-templates'
                         >
@@ -696,7 +696,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             showUploadList={false}
                             setFileName={(val) => {
                                 setLocalPath(val)
-                                form.setFieldsValue({ localPath: val })
+                                form.setFieldsValue({localPath: val})
                             }}
                             fileName={localPath}
                         />
@@ -715,7 +715,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             showUploadList={false}
                             setFileName={(val) => {
                                 setLocalNucleiPath(val)
-                                form.setFieldsValue({ localNucleiPath: val })
+                                form.setFieldsValue({localNucleiPath: val})
                             }}
                             fileName={localNucleiPath}
                         />
@@ -748,11 +748,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
         if (["official", "giturl"].includes(loadMode)) {
             const params: YakExecutorParam[] = [
-                { Key: "giturl", Value: "" },
-                { Key: "nuclei-templates-giturl", Value: formValue.nucleiGitUrl }
+                {Key: "giturl", Value: ""},
+                {Key: "nuclei-templates-giturl", Value: formValue.nucleiGitUrl}
             ]
             if (formValue.proxy?.trim() !== "") {
-                params.push({ Value: formValue.proxy?.trim(), Key: "proxy" })
+                params.push({Value: formValue.proxy?.trim(), Key: "proxy"})
             }
             startExecYakCode("导入 Yak 插件", {
                 Script: loadYakitPluginCode,
@@ -766,7 +766,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }
             startExecYakCode("导入 Yak 插件（本地）", {
                 Script: loadLocalYakitPluginCode,
-                Params: [{ Key: "local-path", Value: formValue.localPath }]
+                Params: [{Key: "local-path", Value: formValue.localPath}]
             })
         }
 
@@ -777,7 +777,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }
             startExecYakCode("从 Nuclei Template Git 本地仓库更新", {
                 Script: loadNucleiPoCFromLocal,
-                Params: [{ Key: "local-path", Value: formValue.localNucleiPath }]
+                Params: [{Key: "local-path", Value: formValue.localNucleiPath}]
             })
         }
 
@@ -835,8 +835,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         >
             <Form
                 form={form}
-                labelCol={{ span: 5 }}
-                wrapperCol={{ span: 16 }}
+                labelCol={{span: 5}}
+                wrapperCol={{span: 16}}
                 className={style["import-local-plugin-form"]}
             >
                 {getRenderByLoadMode(loadMode)}
@@ -854,7 +854,7 @@ interface AddPluginGroupProps {
 }
 
 export const AddPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) => {
-    const { pugGroup, visible, setVisible, checkList, onOk } = props
+    const {pugGroup, visible, setVisible, checkList, onOk} = props
     const [name, setName] = useState<string>("")
     useEffect(() => {
         setName("")
@@ -874,7 +874,7 @@ export const AddPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) 
                         defaultActiveFirstOption={false}
                         value={name}
                         onChange={(value) => setName(value)}
-                        options={pugGroup.map((ele) => ({ value: ele.name, label: ele.name }))}
+                        options={pugGroup.map((ele) => ({value: ele.name, label: ele.name}))}
                         filterOption={(inputValue, option) => {
                             if (option?.value && typeof option?.value === "string") {
                                 return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
