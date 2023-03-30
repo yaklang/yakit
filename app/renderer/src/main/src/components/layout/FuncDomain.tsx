@@ -54,7 +54,7 @@ import {API} from "@/services/swagger/resposeType"
 import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage";
 
 import {isSimpleEnterprise} from "@/utils/envfile"
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {addToTab} from "@/pages/MainTabs";
@@ -158,8 +158,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
-            <div className={classnames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
-                {showDevTool() && <UIDevTool/>}
+            <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
+                {showDevTool() && <UIDevTool />}
 
                 {/* <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
                     <ScreensHotSvgIcon className={styles["icon-style"]} />
@@ -588,13 +588,13 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     return (
         <>
             <YakitPopover
-                overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
+                overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
                 placement={"bottom"}
                 content={menu}
                 onVisibleChange={(visible) => setShow(visible)}
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
-                    <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
                         <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
                     </div>
                 </div>
@@ -651,14 +651,14 @@ const UIDevTool: React.FC = React.memo(() => {
 
     return (
         <YakitPopover
-            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
             placement={"bottom"}
             content={menu}
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                    <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
                 </div>
             </div>
         </YakitPopover>
@@ -705,7 +705,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
     return (
         <div
-            className={classnames(styles["version-update-wrapper"], {
+            className={classNames(styles["version-update-wrapper"], {
                 [styles["version-has-update"]]: isUpdate && !isUpdateWait
             })}
         >
@@ -752,7 +752,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
             <div className={styles["update-content-wrapper"]}>
                 <div
-                    className={classnames({
+                    className={classNames({
                         [styles["update-content"]]: role !== "superAdmin",
                         [styles["update-admin-content"]]: role === "superAdmin"
                     })}
@@ -762,7 +762,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         content.map((item, index) => {
                             return (
-                                <div key={item} className={classnames({[styles["paragraph-spacing"]]: index !== 0})}>
+                                <div key={item} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
                                     {item}
                                 </div>
                             )
@@ -800,7 +800,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
     return (
         <div
-            className={classnames(styles["version-update-wrapper"], {
+            className={classNames(styles["version-update-wrapper"], {
                 [styles["version-has-update"]]: !isRemoteMode && (isUpdate || isKillEngine)
             })}
         >
@@ -846,7 +846,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
             <div className={styles["update-content-wrapper"]}>
                 <div
-                    className={classnames({
+                    className={classNames({
                         [styles["update-content"]]: role !== "superAdmin",
                         [styles["update-admin-content"]]: role === "superAdmin"
                     })}
@@ -856,7 +856,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         content.map((item, index) => {
                             return (
-                                <div key={item} className={classnames({[styles["paragraph-spacing"]]: index !== 0})}>
+                                <div key={item} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
                                     {item}
                                 </div>
                             )
@@ -1192,7 +1192,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {/* <div className={styles["notice-tabs-wrapper"]}>
                         <div className={styles["notice-tabs-body"]}>
                             <div
-                                className={classnames(styles["tabs-opt"], {
+                                className={classNames(styles["tabs-opt"], {
                                     [styles["tabs-opt-selected"]]: type === "letter"
                                 })}
                                 onClick={(e) => {
@@ -1205,7 +1205,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                 </Badge>
                             </div>
                             <div
-                                className={classnames(styles["tabs-opt"], {
+                                className={classNames(styles["tabs-opt"], {
                                     [styles["tabs-opt-selected"]]: type === "update"
                                 })}
                                 onClick={(e) => {
@@ -1324,7 +1324,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     return (
         <YakitPopover
-            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
             placement={"bottomRight"}
             content={notice}
             visible={show}
@@ -1334,7 +1334,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             }}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
                     <Badge dot={isUpdate}>
                         <VersionUpdateSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
                     </Badge>
@@ -1551,7 +1551,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                                         onClick={() => singleRead(item)}
                                     >
                                         <div
-                                            className={classnames(styles["opt-icon-style"], styles[`opt-${type}-icon`])}
+                                            className={classNames(styles["opt-icon-style"], styles[`opt-${type}-icon`])}
                                         >
                                             {item.Verbose}
                                         </div>
@@ -1591,13 +1591,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
     return (
         <YakitPopover
-            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
             placement={"bottomRight"}
             content={notice}
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
                     <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
                         <RiskStateSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
                     </Badge>

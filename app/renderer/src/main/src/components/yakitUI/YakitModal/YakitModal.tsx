@@ -4,7 +4,7 @@ import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {RemoveIcon} from "@/assets/newIcon"
 
 import styles from "./yakitModal.module.scss"
-import classnames from "classnames"
+import classNames from "classnames"
 
 export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
     cancelButtonProps?: YakitButtonProp
@@ -53,7 +53,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
     return (
         <Modal
             {...resetProps}
-            wrapClassName={classnames(styles["yakit-modal-wrapper"], typeClass, wrapClassName)}
+            wrapClassName={classNames(styles["yakit-modal-wrapper"], typeClass, wrapClassName)}
             closable={false}
             footer={null}
             onCancel={onCancel}

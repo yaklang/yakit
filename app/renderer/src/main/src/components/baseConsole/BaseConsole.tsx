@@ -3,7 +3,7 @@ import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
 import Draggable from "react-draggable"
 import {useSize} from "ahooks"
 import type {DraggableEvent, DraggableData} from "react-draggable"
-import classnames from "classnames"
+import classNames from "classnames"
 import {
     YakitConsoleShrinkSvgIcon,
     YakitConsoleLeftSvgIcon,
@@ -80,7 +80,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }, [xtermRef])
 
     return (
-        <div className={classnames(styles["engine-console"],{
+        <div className={classNames(styles["engine-console"],{
             [styles["engine-console-noMini"]]: !isMini,
         }) }>
             <ReactResizeDetector
@@ -152,7 +152,7 @@ export const RightIconMenu: React.FC<RightIconMenuProps> = (props) => {
     )
     return (
         <YakitPopover
-            overlayClassName={classnames(styles["right-icon-menu"])}
+            overlayClassName={classNames(styles["right-icon-menu"])}
             title={<span>停靠方位</span>}
             placement={"bottom"}
             content={menu}
@@ -187,7 +187,7 @@ export const RightIconBox: React.FC<RightIconBoxProps> = (props) => {
                         className={styles["span-icon-box"]}
                     >
                         <YakitConsoleShrinkSvgIcon
-                            className={classnames(styles["item-icon"], {
+                            className={classNames(styles["item-icon"], {
                                 [styles["item-icon-active"]]: activeSource === "shrink"
                             })}
                         />
@@ -201,7 +201,7 @@ export const RightIconBox: React.FC<RightIconBoxProps> = (props) => {
                         className={styles["span-icon-box"]}
                     >
                         <YakitConsoleLeftSvgIcon
-                            className={classnames(styles["item-icon"], {
+                            className={classNames(styles["item-icon"], {
                                 [styles["item-icon-active"]]: activeSource === "left"
                             })}
                         />
@@ -215,7 +215,7 @@ export const RightIconBox: React.FC<RightIconBoxProps> = (props) => {
                         className={styles["span-icon-box"]}
                     >
                         <YakitConsoleBottomSvgIcon
-                            className={classnames(styles["item-icon"], {
+                            className={classNames(styles["item-icon"], {
                                 [styles["item-icon-active"]]: activeSource === "bottom"
                             })}
                         />
@@ -229,7 +229,7 @@ export const RightIconBox: React.FC<RightIconBoxProps> = (props) => {
                         className={styles["span-icon-box"]}
                     >
                         <YakitConsoleRightSvgIcon
-                            className={classnames(styles["item-icon"], {
+                            className={classNames(styles["item-icon"], {
                                 [styles["item-icon-active"]]: activeSource === "right"
                             })}
                         />
@@ -388,7 +388,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
 
     return (
         <Draggable
-            defaultClassName={classnames(
+            defaultClassName={classNames(
                 styles["yaklang-console-modal"],
                 visible ? styles["engine-console-modal-wrapper"] : styles["engine-console-modal-hidden-wrapper"]
             )}
@@ -441,7 +441,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
 
                                             {size && (
                                                 <CloseOutlined
-                                                    className={classnames(
+                                                    className={classNames(
                                                         styles["header-close"],
                                                         size.width > 400
                                                             ? styles["header-close-long"]

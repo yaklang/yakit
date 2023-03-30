@@ -1,7 +1,6 @@
 import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
 import {Modal, ModalProps} from "antd"
 import style from "./YakitModalConfirm.module.scss"
-import classnames from "classnames"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {RemoveIcon} from "@/assets/newIcon"
 import {showModal, ShowModalProps} from "@/utils/showModal"

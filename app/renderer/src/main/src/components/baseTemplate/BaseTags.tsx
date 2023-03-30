@@ -5,7 +5,7 @@ import {useHotkeys} from "react-hotkeys-hook"
 import {} from "@ant-design/icons"
 
 import "./BaseTags.scss"
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./BaswButton.module.scss"
 export interface TagsListProps extends TagProps {
     data: string[]
@@ -74,7 +74,7 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             <div style={{overflow: "hidden", height: 0}} ref={tagListRef}>
                 {data.map((item) => (
                     <Tag
-                        className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                        className={classNames(styles[sizeClass], styles["base-tags-list-tag"], {
                             [styles[className || ""]]: !!className
                         })}
                         key={item}
@@ -86,7 +86,7 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             </div>
             <div style={{overflow: "hidden",display:"inline-block",position:"absolute", height: 0}} ref={tagEllipsis}>
                 <Tag
-                    className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                    className={classNames(styles[sizeClass], styles["base-tags-list-tag"], {
                         [styles[className || ""]]: !!className
                     })}
                     {...otherProps}
@@ -96,7 +96,7 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             </div>
             {dataSource.map((item) => (
                 <Tag
-                    className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                    className={classNames(styles[sizeClass], styles["base-tags-list-tag"], {
                         [styles[className || ""]]: !!className
                     })}
                     key={item}
@@ -108,7 +108,7 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
             {ellipsis && ellipsisTags.length > 0 && (
                 <Tooltip title={tooltipStr}>
                     <Tag
-                        className={classnames(styles[sizeClass], styles["base-tags-list-tag"], {
+                        className={classNames(styles[sizeClass], styles["base-tags-list-tag"], {
                             [styles[className || ""]]: !!className
                         })}
                         {...otherProps}
