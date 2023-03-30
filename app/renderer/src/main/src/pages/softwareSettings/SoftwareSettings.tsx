@@ -7,7 +7,7 @@ import {SoftwareRemoteSvgIcon} from "./icon"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {ProjectManageProp} from "./ProjectManage"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
@@ -88,7 +88,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
         <div className={styles["software-settings-wrapper"]}>
             <div className={styles["software-settings-container"]}>
                 <div
-                    className={classnames(styles["left-wrapper"], {
+                    className={classNames(styles["left-wrapper"], {
                         [styles["left-body"]]: !showMini,
                         [styles["left-mini-body"]]: showMini
                     })}
@@ -102,7 +102,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                             {SettingsMenu.map((item) => {
                                 return (
                                     <div
-                                        className={classnames(
+                                        className={classNames(
                                             styles["list-opt-body"],
                                             currentKey === item.key ? styles["list-opt-selected"] : styles["list-opt"]
                                         )}

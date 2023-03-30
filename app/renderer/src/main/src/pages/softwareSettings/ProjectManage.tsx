@@ -44,7 +44,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./ProjectManage.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -250,7 +250,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             }}
                         >
                             <div
-                                className={classnames(styles["project-table-filter"], {
+                                className={classNames(styles["project-table-filter"], {
                                     [styles["project-table-filter-dropdown"]]: typeShow
                                 })}
                             >
@@ -267,7 +267,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 render: (data, index) => {
                     return (
                         <div
-                            className={classnames(styles["project-table-body-wrapper"], styles["project-name-wrapper"])}
+                            className={classNames(styles["project-table-body-wrapper"], styles["project-name-wrapper"])}
                         >
                             {!data.Type || data.Type === "project" ? (
                                 <ProjectDocumentTextSvgIcon />
@@ -289,7 +289,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 render: (data, index) => {
                     return (
                         <div
-                            className={classnames(
+                            className={classNames(
                                 styles["project-table-body-wrapper"],
                                 styles["database-path-wrapper"]
                             )}
@@ -349,7 +349,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             }}
                         >
                             <div
-                                className={classnames(styles["project-table-filter"], {
+                                className={classNames(styles["project-table-filter"], {
                                     [styles["project-table-filter-dropdown"]]: timeShow
                                 })}
                             >
@@ -409,7 +409,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         }}
                     >
                         <div
-                            className={classnames(styles["btn-wrapper"], {
+                            className={classNames(styles["btn-wrapper"], {
                                 [styles["btn-focus-style"]]: operateShow >= 0 && operateShow === +Id
                             })}
                         >
@@ -437,7 +437,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         }}
                     >
                         <div
-                            className={classnames(styles["btn-wrapper"], {
+                            className={classNames(styles["btn-wrapper"], {
                                 [styles["btn-focus-style"]]: operateShow >= 0 && operateShow === +Id
                             })}
                         >
@@ -964,7 +964,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
                 <div className={styles["project-operate"]}>
                     <div
-                        className={classnames(styles["open-recent-wrapper"], {
+                        className={classNames(styles["open-recent-wrapper"], {
                             [styles["open-recent-focus-wrapper"]]: headerShow
                         })}
                     >
@@ -1050,7 +1050,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         }}
                                     >
                                         <div
-                                            className={classnames(styles["icon-body"], {
+                                            className={classNames(styles["icon-body"], {
                                                 [styles["icon-focus-body"]]: headerShow
                                             })}
                                         >
@@ -1063,7 +1063,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     </div>
 
                     <div
-                        className={classnames(styles["btn-wrapper"], styles["new-project-wrapper"])}
+                        className={classNames(styles["btn-wrapper"], styles["new-project-wrapper"])}
                         onClick={() => operateFunc("newProject")}
                     >
                         <div className={styles["btn-body"]}>
@@ -1078,7 +1078,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     </div>
 
                     <div
-                        className={classnames(styles["btn-wrapper"], styles["new-folder-wrapper"])}
+                        className={classNames(styles["btn-wrapper"], styles["new-folder-wrapper"])}
                         onClick={() => operateFunc("newFolder")}
                     >
                         <div className={styles["btn-body"]}>
@@ -1094,7 +1094,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
                     {engineMode !== "remote" && (
                         <div
-                            className={classnames(styles["btn-wrapper"], styles["import-wrapper"])}
+                            className={classNames(styles["btn-wrapper"], styles["import-wrapper"])}
                             onClick={() => operateFunc("import")}
                         >
                             <div className={styles["btn-body"]}>
@@ -1266,7 +1266,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                     <div
                                                         key={i.index}
                                                         style={{height: 48 + 1}}
-                                                        className={classnames(styles["table-opt"], {
+                                                        className={classNames(styles["table-opt"], {
                                                             [styles["table-opt-selected"]]:
                                                                 operateShow >= 0 && operateShow === +i.data.Id
                                                         })}
@@ -1748,7 +1748,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <YakitInput
                                 size='large'
                                 placeholder='未命名'
-                                className={classnames({
+                                className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !info.ProjectName
                                 })}
                                 value={info.ProjectName}
@@ -1816,7 +1816,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             className={styles["export-form-item-password-wrapper"]}
                         >
                             <YakitInput.Password
-                                className={classnames({
+                                className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !exportInfo.Password
                                 })}
                                 placeholder='为项目设置打开密码'
@@ -1854,7 +1854,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             }
                         >
                             <YakitInput
-                                className={classnames({
+                                className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !importInfo.ProjectFilePath
                                 })}
                                 size='large'
@@ -2050,7 +2050,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         <div className={visible ? styles["transfer-project-mask"] : styles["transfer-project-hidden-mask"]}>
             <div className={styles["transfer-project-mask-body"]}>
                 <div
-                    className={classnames(
+                    className={classNames(
                         {
                             [styles["project-export-modal"]]: isExport,
                             [styles["project-import-modal"]]: isImport
@@ -2086,7 +2086,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                                     return (
                                         <div
                                             key={item}
-                                            className={classnames({
+                                            className={classNames({
                                                 [styles["error-style"]]: item.indexOf("error") > -1
                                             })}
                                         >

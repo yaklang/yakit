@@ -1,7 +1,7 @@
 import React, {useMemo} from "react"
 import {Popover, PopoverProps} from "antd"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./yakitPopover.module.scss"
 
 export interface YakitPopoverProp extends PopoverProps {}
@@ -20,7 +20,7 @@ export const YakitPopover: React.FC<YakitPopoverProp> = React.memo((props) => {
     return (
         <Popover
             {...resePopover}
-            overlayClassName={classnames(styles[`yakit-popover-${direction}-wrapper`], {
+            overlayClassName={classNames(styles[`yakit-popover-${direction}-wrapper`], {
                 [overlayClassName || ""]: !!overlayClassName
             })}
             placement={placement}

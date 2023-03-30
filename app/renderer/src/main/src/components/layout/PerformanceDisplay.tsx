@@ -11,7 +11,7 @@ import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon, GooglePhotosLogoSvgIcon} from "./icons"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./performanceDisplay.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -178,7 +178,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     return (
         <YakitPopover
             visible={show}
-            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
             placement={"bottomRight"}
             content={
                 <div ref={listRef} className={styles["ui-engine-list-wrapper"]}>
@@ -273,8 +273,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                    <GooglePhotosLogoSvgIcon className={classnames({[styles["icon-rotate-animation"]]: !show})} />
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <GooglePhotosLogoSvgIcon className={classNames({[styles["icon-rotate-animation"]]: !show})} />
                 </div>
             </div>
         </YakitPopover>

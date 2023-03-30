@@ -12,7 +12,7 @@ import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
 import {isSimpleEnterprise} from "@/utils/envfile"
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -275,7 +275,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     return (
         <div className={isShow ? styles["update-mask"] : styles["hidden-update-mask"]}>
             <div
-                className={classnames(
+                className={classNames(
                     styles["yaklang-update-modal"],
                     isShowYakit ? styles["engine-hint-modal-wrapper"] : styles["modal-hidden-wrapper"]
                 )}
@@ -383,7 +383,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             </div>
 
             <div
-                className={classnames(
+                className={classNames(
                     styles["yaklang-update-modal"],
                     isShowYaklang && !isShowYakit ? styles["engine-hint-modal-wrapper"] : styles["modal-hidden-wrapper"]
                 )}
