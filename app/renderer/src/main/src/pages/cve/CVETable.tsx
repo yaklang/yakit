@@ -368,7 +368,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                     <div className={styles["cve-list-btns"]}>
                         <YakitEmpty
                             title='暂无数据'
-                            description='点击下方按钮进行数据库初始化,（如已经下载/更新CVE数据库，建议关掉t当前页面后重新打开）'
+                            description='点击下方按钮进行数据库初始化,（如已经下载/更新CVE数据库，建议关掉当前页面后重新打开）'
                         />
                         <YakitButton
                             type='outline1'
