@@ -182,7 +182,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setCurrentYakit(data)
                 })
                 ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
-                    setLatestYakit(data)
+                    isSimpleEnterprise?setLatestYakit(""):setLatestYakit(data)
                 })
 
                 ipcRenderer.invoke("get-current-yak").then((data: string) => {
