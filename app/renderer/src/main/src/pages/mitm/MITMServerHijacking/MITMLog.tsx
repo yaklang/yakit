@@ -515,7 +515,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         <div className={styles["mitm-log"]} ref={logRef}>
             <TableVirtualResize<HTTPFlow>
                 query={params}
-                titleHeight={44}
+                titleHeight={0.1}
                 renderTitle={<></>}
                 renderKey='Id'
                 data={data}

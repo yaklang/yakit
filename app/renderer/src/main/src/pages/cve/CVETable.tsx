@@ -368,7 +368,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                     <div className={styles["cve-list-btns"]}>
                         <YakitEmpty
                             title='暂无数据'
-                            description='点击下方按钮进行数据库初始化,（如已经下载/更新CVE数据库，建议关掉tab后重新打开）'
+                            description='点击下方按钮进行数据库初始化,（如已经下载/更新CVE数据库，建议关掉当前页面后重新打开）'
                         />
                         <YakitButton
                             type='outline1'
@@ -470,19 +470,43 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         setPercent(0)
         errorMessage.current = ""
     }, [visible])
+
+    const tipNode = useMemo(
+        () => (
+            <p>
+                如果更新失败，可点击该地址下载：
+                <a
+                    href={url}
+                    style={{color: "var(--yakit-primary-5)"}}
+                    onClick={() => {
+                        openExternalWebsite(url)
+                    }}
+                >
+                    {url}
+                </a>
+                , 下载后请将文件放在~/yakit-projects项目文件下
+            </p>
+        ),
+        []
+    )
+
     const HintContent = useMemoizedFn(() => {
         switch (status) {
             case "init":
                 return (
-                    <p>
-                        {available
-                            ? "点击“强制更新”，可更新本地CVE数据库"
-                            : "本地CVE数据库未初始化，请点击“初始化”下载CVE数据库"}
-                    </p>
+                    <>
+                        <p>
+                            {available
+                                ? "点击“强制更新”，可更新本地CVE数据库"
+                                : "本地CVE数据库未初始化，请点击“初始化”下载CVE数据库"}
+                        </p>
+                        {tipNode}
+                    </>
                 )
             case "progress":
                 return (
                     <>
+                        {tipNode}
                         <div className={styles["download-progress"]}>
                             <Progress
                                 strokeColor='#F28B44'
@@ -510,7 +534,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     </>
                 )
             case "done":
-                return <p>需要重启Yakit才能生效，如果重启后还未加载出数据，建议关掉tab重新打开。</p>
+                return <p>需要重启Yakit才能生效，如果重启后还未加载出数据，建议关掉当前页面重新打开。</p>
             default:
                 break
         }
@@ -577,26 +601,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             mask={false}
             cancelButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
             okButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
-            content={
-                <div className={styles["database-update-content"]}>
-                    {HintContent()}
-                    {error && (
-                        <div>
-                            如果更新失败，可点击该地址下载：
-                            <a
-                                href={url}
-                                style={{color: "var(--yakit-primary-5)"}}
-                                onClick={() => {
-                                    openExternalWebsite(url)
-                                }}
-                            >
-                                {url}
-                            </a>
-                            , 下载后请将文件放在~/yakit-projects项目文件下
-                        </div>
-                    )}
-                </div>
-            }
+            content={<div className={styles["database-update-content"]}>{HintContent()}</div>}
         />
     )
 })
