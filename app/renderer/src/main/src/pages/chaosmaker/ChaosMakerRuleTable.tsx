@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Form, Space, Table, Tag} from "antd";
+import {Form, Space, Table, Tabs, Tag} from "antd";
 import {ChaosMakerRule, ChaosMakerRuleGroup} from "@/pages/chaosmaker/ChaosMaker";
 import {useMemoizedFn} from "ahooks";
 import {
@@ -12,7 +12,10 @@ import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {showDrawer} from "@/utils/showModal";
 import {InputItem} from "@/utils/inputUtil";
-import {ChaosMakerOperators} from "@/pages/chaosmaker/ChaosMakerOperators";
+import {ChaosMakerOperators, ExecuteChaosMakerRuleRequest} from "@/pages/chaosmaker/ChaosMakerOperators";
+import {failed} from "@/utils/notification";
+import {ChaosMakerRunningSteps} from "@/pages/chaosmaker/ChaosMakerRunningSteps";
+import {AutoSpin} from "@/components/AutoSpin";
 
 export interface ChaosMakerRuleTableProp {
     groups?: ChaosMakerRuleGroup[]
@@ -33,6 +36,19 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
     const [params, setParams] = useState<QueryChaosMakerRulesRequest>({
         Pagination: genDefaultPagination(10), Keywords: [], RuleType: ""
     });
+    const [activeTab, setActiveTab] = useState<"tables" | "steps">("tables");
+    const [running, setRunning] = useState(false);
+    const [executeParam, setExecuteParams] = useState<ExecuteChaosMakerRuleRequest>();
+
+    useEffect(() => {
+        if (running) {
+            setActiveTab("steps")
+            setRunning(true)
+            return () => {
+                setActiveTab("tables")
+            }
+        }
+    }, [running])
 
     // 选中规则
     const [selectedRowKeys, setSelectedRowKeys] = useState<ChaosMakerRule>();
@@ -49,6 +65,8 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
             setData(r.Data);
             setPagination(r.Pagination)
             setTotal(r.Total)
+        }).catch(e => {
+            failed(`查询BAS规则失败: ${e}`)
         }).finally(() => setTimeout(() => setLoading(false), 300))
     })
 
@@ -74,63 +92,80 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
         </>}
         bodyStyle={{display: "flex", flexDirection: "column"}}
     >
-        <ChaosMakerOperators groups={(props.groups || [])}/>
-        <Table<ChaosMakerRule>
-            style={{flex: 1}}
-            columns={[
-                {title: "规则名", render: (i: ChaosMakerRule) => i.NameZh || i.Name},
-                {title: "规则类型", render: (i: ChaosMakerRule) => i.ClassType},
-                {title: "相关", render: (i: ChaosMakerRule) => (i["CVE"] || []).join(", ")},
-            ]}
-            rowKey={i => i["Id"]}
-            size={"small"}
-            dataSource={data}
-            rowSelection={{
-                type: "radio",
-                selectedRowKeys: selectedRowKeys?.Id ? [selectedRowKeys.Id] : [],
-                onChange: (keys) => {
-                    if (typeof keys === "object") {
-                        let found = false;
-                        data.forEach(i => {
-                            if (found) {
-                                return
-                            }
-                            if (`${i.Id}` === `${keys[0]}`) {
-                                if (!!i) {
-                                    showDrawer({
-                                        title: "流量规则详情",
-                                        width: "30%",
-                                        content: (
-                                            <div>
-                                                {JSON.stringify(i)}
-                                            </div>
-                                        )
-                                    })
-                                }
-                                setSelectedRowKeys(i)
-                                found = true
-                            }
-                        })
-                    }
-                },
-            }}
-            pagination={{
-                pageSize: limit,
-                simple: true,
-                showSizeChanger: true,
-                total, current: pagination.Page,
-                pageSizeOptions: ["5", "10", "20"],
-                onChange: (page: number, limit?: number) => {
-                    // dispatch({type: "updateParams", payload: {page, limit}})
-                    update(page, limit)
-                },
-                onShowSizeChange: (old, limit) => {
-                    // dispatch({type: "updateParams", payload: {page: 1, limit}})
-                    update(1, limit)
-                }
+        <ChaosMakerOperators running={running} groups={(props.groups || [])} onExecute={(data: ExecuteChaosMakerRuleRequest) => {
+            setExecuteParams(data);
+            setRunning(true)
+        }}/>
+        <Tabs
+            style={{height: "100%"}}
+            activeKey={activeTab}
+            type={"card"}
+            onChange={e => {
+
             }}
         >
+            <Tabs.TabPane disabled={running} key="tables" tab={"规则列表"}>
+                <Table<ChaosMakerRule>
+                    style={{flex: 1}}
+                    columns={[
+                        {title: "规则名", render: (i: ChaosMakerRule) => i.NameZh || i.Name},
+                        {title: "规则类型", render: (i: ChaosMakerRule) => i.ClassType},
+                        {title: "相关", render: (i: ChaosMakerRule) => (i["CVE"] || []).join(", ")},
+                    ]}
+                    rowKey={i => i["Id"]}
+                    size={"small"}
+                    dataSource={data}
+                    rowSelection={{
+                        type: "radio",
+                        selectedRowKeys: selectedRowKeys?.Id ? [selectedRowKeys.Id] : [],
+                        onChange: (keys) => {
+                            if (typeof keys === "object") {
+                                let found = false;
+                                data.forEach(i => {
+                                    if (found) {
+                                        return
+                                    }
+                                    if (`${i.Id}` === `${keys[0]}`) {
+                                        if (!!i) {
+                                            showDrawer({
+                                                title: "流量规则详情",
+                                                width: "30%",
+                                                content: (
+                                                    <div>
+                                                        {JSON.stringify(i)}
+                                                    </div>
+                                                )
+                                            })
+                                        }
+                                        setSelectedRowKeys(i)
+                                        found = true
+                                    }
+                                })
+                            }
+                        },
+                    }}
+                    pagination={{
+                        pageSize: limit,
+                        simple: true,
+                        showSizeChanger: true,
+                        total, current: pagination.Page,
+                        pageSizeOptions: ["5", "10", "20"],
+                        onChange: (page: number, limit?: number) => {
+                            // dispatch({type: "updateParams", payload: {page, limit}})
+                            update(page, limit)
+                        },
+                        onShowSizeChange: (old, limit) => {
+                            // dispatch({type: "updateParams", payload: {page: 1, limit}})
+                            update(1, limit)
+                        }
+                    }}
+                >
 
-        </Table>
+                </Table>
+            </Tabs.TabPane>
+            {running && <Tabs.TabPane key={"steps"} tab={"运行状态"}>
+                <ChaosMakerRunningSteps params={executeParam}/>
+            </Tabs.TabPane>}
+        </Tabs>
     </AutoCard>
 };

@@ -415,5 +415,12 @@ module.exports = (win, getClient) => {
         return await asyncImportChaosMakerRules(params)
     })
 
+    const handlerHelper = require("./handleStreamWithContext");
 
+    const streamExecuteChaosMakerRuleMap = new Map();
+    ipcMain.handle("cancel-ExecuteChaosMakerRule", handlerHelper.cancelHandler(streamExecuteChaosMakerRuleMap));
+    ipcMain.handle("ExecuteChaosMakerRule", (e, params, token) => {
+        let stream = getClient().ExecuteChaosMakerRule(params);
+        handlerHelper.registerHandler(win, stream, streamExecuteChaosMakerRuleMap, token)
+    })
 }

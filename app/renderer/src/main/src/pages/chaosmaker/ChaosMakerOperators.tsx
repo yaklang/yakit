@@ -10,10 +10,12 @@ import {failed} from "@/utils/notification";
 const {ipcRenderer} = window.require("electron");
 
 export interface ChaosMakerOperatorsProp {
+    running?: boolean
     groups: ChaosMakerRuleGroup[]
+    onExecute: (data: ExecuteChaosMakerRuleRequest) => any
 }
 
-interface ExecuteChaosMakerRuleRequest {
+export interface ExecuteChaosMakerRuleRequest {
     Groups: ChaosMakerRuleGroup[];
     ExtraOverrideDestinationAddress: string[];
     Concurrent: number;
@@ -25,13 +27,11 @@ interface ExecuteChaosMakerRuleRequest {
 
 export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) => {
     const [params, setParams] = useState<ExecuteChaosMakerRuleRequest>({
-        Concurrent: 0,
+        Concurrent: 10,
         ExtraOverrideDestinationAddress: [],
-        ExtraRepeat: 0,
-        GroupGapSeconds: 0,
-        Groups: [],
-        TrafficDelayMaxSeconds: 0,
-        TrafficDelayMinSeconds: 0
+        ExtraRepeat: -1,
+        GroupGapSeconds: 5,
+        Groups: [], TrafficDelayMaxSeconds: 0, TrafficDelayMinSeconds: 0
     });
     const [availableAddrs, setAvailableAddrs] = useState<IsRemoteAddrAvailableResponse[]>([]);
 
@@ -50,9 +50,9 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
     return <Form onSubmitCapture={e => {
         e.preventDefault()
 
-    }} layout={"vertical"}>
+    }} layout={"vertical"} disabled={props.running}>
         <Form.Item label={<div>
-            设置发起任务的参数 <YakitButton type={"outline2"}>额外参数</YakitButton>
+            设置发起任务的参数
         </div>} help={"如果添加探针，模拟攻击流量将会额外对探针进行发送"}>
             <Space>
                 {availableAddrs.map(i => {
@@ -100,10 +100,12 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                     border: '1px solid var(--yakit-primary-3)',
                     backgroundColor: '#F28B44',
                 }} hoverable={true} onClick={() => {
-                    alert(1)
+                    if (props.onExecute) {
+                        props.onExecute(params)
+                    }
                 }}>
                     <div style={{fontWeight: "bold", color: "#fff"}}>
-                        提交攻击模拟任务
+                        配置模拟攻击参数
                     </div>
                 </AutoCard>
             </Space>
