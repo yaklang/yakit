@@ -184,7 +184,24 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 <div ref={listRef} className={styles["ui-engine-list-wrapper"]}>
                     <div className={styles["ui-engine-list-body"]}>
                         <div className={styles["engine-list-header"]}>
-                            本地 Yak 进程管理 {psLoading && <LoadingOutlined className={styles["loading-icon"]} />}
+                            本地 Yak 进程管理
+                            <Popconfirm
+                                title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
+                                onConfirm={()=>{
+                                    process.map(i => {
+                                        ipcRenderer.invoke(`kill-yak-grpc`, i.pid)
+                                    })
+                                    ipcRenderer.invoke("RestoreEngineAndPlugin", {}).finally(()=>{
+                                        info("恢复引擎成功")
+                                        ipcRenderer.invoke("relaunch")
+                                    }).catch(e => {
+                                        failed(`恢复引擎失败：${e}`)
+                                    })
+                                }}
+                            >
+                                <YakitButton type={"danger"} style={{marginLeft: 8}}>重置引擎版本</YakitButton>
+                            </Popconfirm>
+                            {psLoading && <LoadingOutlined className={styles["loading-icon"]} />}
                         </div>
                         <div className={styles["engine-list-container"]}>
                             {process.map((i) => {
