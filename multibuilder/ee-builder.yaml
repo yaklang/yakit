@@ -1,0 +1,83 @@
+appId: 'io.yaklang.ee'
+productName: 'EnpriTrace'
+copyright: Copyright © 2021 EnpriTrace
+
+extraFiles:
+  - from: "bins/flag.txt"
+    to: "bins/flag.txt"
+  - from: "bins/engine-version.txt"
+    to: "bins/engine-version.txt"
+  - from: "bins/resources"
+    to: "bins/resources"
+    filter:
+      - "**/*"
+      - "*.txt"
+  - from: "bins/database/"
+    to: "bins/database/"
+    filter:
+      - "**/*"
+      - "*.txt"
+      - "*.gzip"
+      - "!*.db"
+
+directories:
+  buildResources: resources
+  output: release/
+  app: .
+
+asar: true
+
+publish:
+  - provider: "generic"
+    url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
+
+mac:
+  artifactName: ${productName}-${version}-darwin-${arch}.${ext}
+  extraFiles:
+    - from: "bins/flag.darwin.txt"
+      to: "bins/flag.darwin.txt"
+    - from: "bins/yak_darwin_amd64.zip"
+      to: "bins/yak.zip"
+    - from: "report/template.zip"
+      to: "report/template.zip"
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: "app/assets/yakitlogo.icns"
+
+linux:
+  artifactName: ${productName}-${version}-linux-amd64.${ext}
+  extraFiles:
+    - from: "bins/flag.linux.txt"
+      to: "bins/flag.linux.txt"
+    - from: "bins/yak_linux_amd64.zip"
+      to: "bins/yak.zip"
+    - from: "report/template.zip"
+      to: "report/template.zip"
+  target:
+    - target: AppImage
+      arch:
+        - x64
+
+win:
+  artifactName: ${productName}-${version}-windows-amd64.${ext}
+  extraFiles:
+    - from: "bins/flag.windows.txt"
+      to: "bins/flag.windows.txt"
+    - from: "bins/yak_windows_amd64.zip"
+      to: "bins/yak.zip"
+    - from: "report/template.zip"
+      to: "report/template.zip"
+  # requestedExecutionLevel: requireAdministrator
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: "app/assets/yakitlogo.ico"
+
+
+releaseInfo:
+  releaseName: ${version}
+  releaseNotes: "Fetch Release via Contacting US!"
