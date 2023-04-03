@@ -45,17 +45,22 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
     return <Space direction={"vertical"} style={{width: "100%"}}
     >
         {params && <Steps
-            className={"chaos-maker-rule-step"}
+            className={"chaos-maker-rule-steps"}
             current={step}
         >
             <Steps.Step
+                className={step === 0 ? "chaos-maker-rule-step-active" : "chaos-maker-rule-step"}
                 stepIndex={0} key={0} title={"参数"}
                 description={<div>
                     设置额外参数 <br/>
                     准备观察过程
                 </div>}
             />
-            <Steps.Step stepIndex={1} key={1} title={"进行模拟攻击"} description={(
+            <Steps.Step
+                className={step === 1 ? "chaos-maker-rule-step-active" : (
+                    step > 1 ?  "chaos-maker-rule-step" :  "chaos-maker-rule-step-unactive"
+                )}
+                stepIndex={1} key={1} title={"进行模拟攻击"} description={(
                 <>
                     {
                         step === 1 && <Popconfirm
@@ -74,7 +79,10 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                     }
                 </>
             )}/>
-            <Steps.Step stepIndex={2} key={2} title={"模拟攻击报告"}/>
+            <Steps.Step className={step === 2 ? "chaos-maker-rule-step-active" : (
+                step > 2 ?  "chaos-maker-rule-step" :  "chaos-maker-rule-step-unactive"
+            )} stepIndex={2}
+                        key={2} title={"模拟攻击报告"}/>
         </Steps>}
         {!params && <Empty description={"请您选中你想要执行的剧本规则"}/>}
         {step === 0 && <Form
