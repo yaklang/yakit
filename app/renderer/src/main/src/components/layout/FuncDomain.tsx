@@ -508,7 +508,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "network-detection",
                     label: "网络检测"
-                }
+                },
             ] : [
                 {
                     key: "pcapfix",
@@ -582,7 +582,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 {
                     key: "network-detection",
                     label: "网络检测"
-                }
+                },
             ]}
             onClick={({key}) => menuSelect(key)}
         />
