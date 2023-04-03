@@ -409,6 +409,9 @@ module.exports = (win, getClient) => {
     }
 
     ipcMain.handle("mitm-set-filter", async (e, params) => {
+        if (stream) {
+                stream.write({...params, updateFilter: true})
+        }
         return await asyncSetMITMFilter(params)
     })
     // 获取mitm filter
