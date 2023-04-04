@@ -1504,9 +1504,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     //删除 重置请求 ID
     const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
+        setLoading(true)
         ipcRenderer
             .invoke("DeleteHTTPFlows", { DeleteAll: true })
-            .then(() => { })
+            .then(() => setTimeout(() => setLoading(false), 500))
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
             })
@@ -1527,6 +1528,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 DeleteAll: false
             }
         }
+        setLoading(true)
         ipcRenderer
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
@@ -1540,7 +1542,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
-            })
+            }).finally(() => setTimeout(() => setLoading(false), 300))
         setLoading(true)
         info("正在删除...如自动刷新失败请手动刷新")
         setCompareLeft({ content: "", language: "http" })
