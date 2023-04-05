@@ -112,6 +112,7 @@ import {ProjectPage} from "@/pages/projects/ProjectPage"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker";
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
+import {YakScriptExecResultTable} from "@/components/YakScriptExecResultTable";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -390,8 +391,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <PortAssetTable/>
         case Route.DB_Domain:
             return <DomainAssetPage/>
-        case Route.DB_ExecResults:
-            return <YakScriptExecResultTable/>
+        // case Route.DB_ExecResults:
+        //     return <YakScriptExecResultTable/>
         // case Route.ReverseServer:
         //     return <ReverseServerPage />
         // case Route.PayloadGenerater:
@@ -718,13 +719,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 label: "HTTP History",
                 icon: <MenuHTTPHistoryIcon/>,
                 hoverIcon: <MenuSolidHTTPHistoryIcon/>
-            },
-            {
-                id: "9-9",
-                key: Route.DB_ChaosMaker,
-                label: "BAS 剧本管理（Beta*）",
-                icon: <MenuDefaultPluginIcon/>,
-                hoverIcon: <MenuSolidDefaultPluginIcon/>
             },
             {
                 id: "9-8",

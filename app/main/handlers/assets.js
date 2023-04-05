@@ -459,7 +459,6 @@ module.exports = (win, getClient) => {
         return await asyncQueryScreenRecorders(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext")
     const streamInstallScrecorderMap = new Map()
     ipcMain.handle("cancel-InstallScrecorder", handlerHelper.cancelHandler(streamInstallScrecorderMap))
     ipcMain.handle("InstallScrecorder", (e, params, token) => {

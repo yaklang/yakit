@@ -436,6 +436,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "refreshMenu":
                 ipcRenderer.invoke("change-main-menu")
                 return
+            case "bas-chaosmaker":
+                addToTab("**chaos-maker")
+                return
             case "screen-recorder":
                 addToTab("**screen-recorder")
                 return
@@ -524,8 +527,18 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     ]
                 },
                 {
-                    key: "screen-recorder",
-                    label: "录屏管理器",
+                    key: "explab",
+                    label: "试验性功能",
+                    children: [
+                        {
+                            key: "screen-recorder",
+                            label: "录屏管理器",
+                        },
+                        {
+                            key: "bas-chaosmaker",
+                            label: "BAS实验室",
+                        },
+                    ]
                 },
                 {
                     key: "system-manager",
