@@ -82,6 +82,30 @@ monaco.languages.registerCompletionItemProvider('http', {
                 return {
                     suggestions: [
                         {
+                            label: "date() 生成一个日期",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'date(YYYY-MM-dd)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "datetime() 生成一个日期(带时间)",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'datetime(YYYY-MM-dd HH:mm:ss)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "timestamp(s/ms/ns) 生成一个时间戳（秒/毫秒/纳秒）",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'timestamp(seconds)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "uuid(n) 生成 n 个 UUID",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'uuid(3)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
                             label: "int(整数范围)",
                             kind: monaco.languages.CompletionItemKind.Function,
                             insertText: 'int(${1:0}${2:,100})}}',
@@ -171,6 +195,18 @@ monaco.languages.registerCompletionItemProvider('http', {
                             insertText: 'repeat(${1:10})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         },
+                        {
+                            label: "repeat:str(data|n) 重复 data n 次，a|3 为 aaa",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'repeat:str(${1:abc}|10)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "repeat:range(data|n) a|3 为 ['' a aa aaa] 多次重复",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'repeat:range(${1:abc}|10)}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
                         // yso 生成提示
                         {
                             label: "yso:urldns(domain)",
@@ -212,6 +248,30 @@ monaco.languages.registerCompletionItemProvider('http', {
                             label: "headerauth // 回显链中需要添加此header头",
                             kind: monaco.languages.CompletionItemKind.Function,
                             insertText: 'headerauth}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "trim(...) 移除前后空格",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'trim(${1})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: "nullbyte(n) 生成长度为N的nullbyte，默认为1",
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'nullbyte(${1})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: `padding:zero(data|n) 为 data 长度不足的部分用 0 填充`,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'padding:zero(${1}|${2:6})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: `padding:null(data|n) 为 data 长度不足的部分用 null(ascii 0x00) 填充`,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'padding:null(${1}|${2:6})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         }
                     ]
