@@ -12,6 +12,20 @@ monaco.languages.registerCompletionItemProvider('http', {
         var suggestions = [
             {
                 kind: languages.CompletionItemKind.Snippet,
+                label: "Authorization: Basic ... 快速添加基础认证",
+                insertText: "Authorization: Basic {{base64(${1:username}:${2:password})}}",
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Authorization",
+            } as languages.CompletionItem,
+            {
+                kind: languages.CompletionItemKind.Snippet,
+                label: "Authorization: Bearer ... 快速添加 JWT",
+                insertText: "Authorization: Bearer ${1:...}",
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Authorization",
+            } as languages.CompletionItem,
+            {
+                kind: languages.CompletionItemKind.Snippet,
                 label: "User-Agent",
                 insertText: "User-Agent: ${1:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36}",
                 insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
@@ -272,6 +286,18 @@ monaco.languages.registerCompletionItemProvider('http', {
                             label: `padding:null(data|n) 为 data 长度不足的部分用 null(ascii 0x00) 填充`,
                             kind: monaco.languages.CompletionItemKind.Function,
                             insertText: 'padding:null(${1}|${2:6})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: `fuzz:pass(...|levelN) 根据材料生成密码（levelN 表示生成密码详细数量0-3级）`,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'fuzz:pass(${1:root,admin}|${2:0})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: `fuzz:user(...|levelN) 根据材料生成用户名（levelN 表示生成数量，0-3级）`,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'fuzz:pass(${1:root,admin}|${2:0})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                         }
                     ]
