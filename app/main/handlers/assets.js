@@ -3,6 +3,7 @@ const {htmlTemplateDir} = require("../filePath")
 const compressing = require("compressing")
 const fs = require("fs")
 const path = require("path")
+
 module.exports = (win, getClient) => {
     // asyncQueryPorts wrapper
     const asyncQueryPorts = (params) => {
@@ -283,7 +284,7 @@ module.exports = (win, getClient) => {
                 if (err) return reject(err)
                 fs.writeFile(src2, data, (err) => {
                     if (err) return reject(err)
-                    resolve("复制文件成功")
+                    resolve('复制文件成功')
                 })
             })
         })
@@ -380,10 +381,42 @@ module.exports = (win, getClient) => {
         return await asyncQueryAvailableReportFrom(params)
     })
 
+    // asyncQueryChaosMakerRule wrapper
+    const asyncQueryChaosMakerRule = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryChaosMakerRule(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
     // asyncIsScrecorderReady wrapper
     const asyncIsScrecorderReady = (params) => {
         return new Promise((resolve, reject) => {
             getClient().IsScrecorderReady(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    
+    ipcMain.handle("QueryChaosMakerRules", async (e, params) => {
+        return await asyncQueryChaosMakerRule(params)
+    })
+    ipcMain.handle("QueryChaosMakerRule", async (e, params) => {
+        return await asyncQueryChaosMakerRule(params)
+    })
+
+    // asyncImportChaosMakerRules wrapper
+    const asyncImportChaosMakerRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ImportChaosMakerRules(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -409,6 +442,19 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    ipcMain.handle("ImportChaosMakerRules", async (e, params) => {
+        return await asyncImportChaosMakerRules(params)
+    })
+
+    const handlerHelper = require("./handleStreamWithContext");
+
+    const streamExecuteChaosMakerRuleMap = new Map();
+    ipcMain.handle("cancel-ExecuteChaosMakerRule", handlerHelper.cancelHandler(streamExecuteChaosMakerRuleMap));
+    ipcMain.handle("ExecuteChaosMakerRule", (e, params, token) => {
+        let stream = getClient().ExecuteChaosMakerRule(params);
+        handlerHelper.registerHandler(win, stream, streamExecuteChaosMakerRuleMap, token)
+    })
+
     ipcMain.handle("QueryScreenRecorders", async (e, params) => {
         return await asyncQueryScreenRecorders(params)
     })

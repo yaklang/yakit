@@ -438,6 +438,18 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamUpdateCVEDatabaseMap, token)
     })
 
+    // asyncIsRemoteAddrAvailable wrapper
+    const asyncIsRemoteAddrAvailable = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsRemoteAddrAvailable(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
     // asyncSaveTextToTemporalFile wrapper
     const asyncSaveTextToTemporalFile = (params) => {
         return new Promise((resolve, reject) => {
@@ -450,6 +462,9 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    ipcMain.handle("IsRemoteAddrAvailable", async (e, params) => {
+        return await asyncIsRemoteAddrAvailable(params)
+    })
     ipcMain.handle("SaveTextToTemporalFile", async (e, params) => {
         return await asyncSaveTextToTemporalFile(params)
     })

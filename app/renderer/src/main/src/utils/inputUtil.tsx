@@ -26,9 +26,10 @@ import "./editableTagsGroup.css"
 import {randomColor} from "./randomUtil";
 import {LiteralUnion} from "antd/lib/_util/type";
 import {FormItemProps} from "@ant-design/compatible/lib/form";
-import {useThrottleFn} from "ahooks";
-import {setLocalValue} from "./kv";
-import {callCopyToClipboard} from "./basic";
+import "./inputUtil.scss";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 
 export interface OneLineProp {
     width?: string | number
@@ -322,7 +323,7 @@ export interface SelectOneProps extends InputBase {
     value?: any
     help?: string
     colon?: boolean
-    placeholder?:string
+    placeholder?: string
     size?: any
 
     setValue?(a: any): any
@@ -331,19 +332,56 @@ export interface SelectOneProps extends InputBase {
     formItemStyle?: CSSProperties
 }
 
-export const SelectOne: React.FC<SelectOneProps> = (p) => {
-    // const [current, setCurrent] = useState<any>();
-    return <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
-        <Radio.Group onChange={e => {
-            // setCurrent(e.target.value)
-            p.setValue && p.setValue(e.target.value)
-        }} value={p.value} buttonStyle="solid" size={p.size}>
-            {p.data.map(e => <Radio.Button
+/*
+* <Radio.Button
+                style={{borderRadius: "6px"}}
                 key={`${e.value}`}
                 // type={current == e.value ? "primary" : undefined}
                 disabled={(p.value === e.value ? false : !!p.disabled) || e.disabled}
-                value={e.value}>{e.text}</Radio.Button>)}
-        </Radio.Group>
+                value={e.value}>{e.text}</Radio.Button>
+* */
+export const SelectOne: React.FC<SelectOneProps> = (p) => {
+    // const [current, setCurrent] = useState<any>();
+    return <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
+        <YakitRadioButtons
+            className={"select-one"}
+            disabled={p.disabled}
+            size={p.size}
+            value={p.value}
+            onChange={(e) => {
+                // setCurrent(e.target.value)
+                p.setValue && p.setValue(e.target.value)
+            }}
+            buttonStyle='solid'
+            options={p.data.map(item => {
+                const info ={
+                    value:item.value,
+                    label:item.text,
+                    disabled:item.disabled
+                }
+                return info
+            })}
+        />
+        {/*<Radio.Group className={"select-one"} onChange={e => {*/}
+        {/*    // setCurrent(e.target.value)*/}
+        {/*    p.setValue && p.setValue(e.target.value)*/}
+        {/*}} value={p.value} buttonStyle="solid" size={p.size} style={{border: "unset", display: "inline-flex", gap: 4}}*/}
+        {/*>*/}
+
+        {/*    {p.data.map(e => {*/}
+        {/*        const active = e.value === p.value;*/}
+        {/*        return <YakitButton*/}
+        {/*            onClick={()=>{*/}
+        {/*                if (p.setValue) {*/}
+        {/*                    p.setValue(e.value)*/}
+        {/*                }*/}
+        {/*            }}*/}
+        {/*            value={e.value} key={`${e.value}`} size={p.size}  type={active ? "primary" : "outline2"}*/}
+        {/*            disabled={(p.value === e.value ? false : !!p.disabled) || e.disabled}>*/}
+        {/*            {e.text}*/}
+        {/*        </YakitButton>*/}
+        {/*    })}*/}
+        {/*</Radio.Group>*/}
     </Item>
 };
 
@@ -507,7 +545,7 @@ export interface InputFileNameItemProps {
 const {ipcRenderer} = window.require("electron");
 export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
     const [uploadLoading, setUploadLoading] = useState(false);
-    return <Item label={p.label} required={p.required} >
+    return <Item label={p.label} required={p.required}>
         <Upload.Dragger
             disabled={p.disabled}
             className='targets-upload-dragger'
@@ -559,7 +597,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
 
 export const SwitchItem: React.FC<SwitchItemProps> = p => {
     return <Item label={p.label} help={p.help} style={p.formItemStyle}>
-        <Switch checked={p.value} onChange={e => p.setValue(e)} size={p.size} disabled={p.disabled}/>
+        <YakitSwitch checked={p.value} onChange={e => p.setValue(e)} disabled={p.disabled}/>
     </Item>
 }
 
