@@ -1,4 +1,5 @@
-import React, {useEffect, useState, useRef} from "react"
+import {useMemoizedFn} from "ahooks"
+import React, {useEffect, useState, useRef, useMemo, useCallback} from "react"
 
 import "./ResizeLine.css"
 
@@ -32,6 +33,55 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
 
     const lineRef = useRef(null)
 
+    const isver = useMemo(() => {
+        return isVer
+    }, [isVer])
+
+    // const bodyMouse = (
+    //     event: any,
+    //     start: any,
+    //     first: any,
+    //     body: HTMLDivElement,
+    //     resize: HTMLDivElement,
+    //     line: HTMLDivElement
+    // ) => {
+    //     const bodyRect = body.getBoundingClientRect()
+    //     // 计算分割线距离body开始边框和结束边框的距离
+    //     const distance = [
+    //         isver ? event.clientY - bodyRect.top : event.clientX - bodyRect.left,
+    //         isver ? body.clientHeight - event.clientY + bodyRect.top : body.clientWidth - event.clientX + bodyRect.left
+    //     ]
+    //     if (distance[0] <= min || distance[1] <= max) return
+    //     const second = isver ? event.clientY : event.clientX
+    //     if (isver) line.style.top = `${start + second - first}px`
+    //     else line.style.left = `${start + second - first}px`
+    // }
+
+    // const documentMouse = (
+    //     event: any,
+    //     start: any,
+    //     first: any,
+    //     body: HTMLDivElement,
+    //     resize: HTMLDivElement,
+    //     line: HTMLDivElement
+    // ) => {
+    //     if (!isMove) return
+
+    //     if (e.clientY > window.innerWidth || e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerHeight) {
+    //     }
+    //     if (onEnd) onEnd()
+    //     line.style.display = "none"
+    //     body.onmousemove = null
+    //     const end = (isver ? line.style.top : line.style.left).split("px")[0] || start
+    //     if (end - start !== 0) onChangeSize(end - start)
+    //     isMove = false
+    // }
+    // const mouseDown = useMemoizedFn((e: any, body: HTMLDivElement, resize: HTMLDivElement, line: HTMLDivElement) => {})
+
+    const getIsVer = useMemoizedFn(() => {
+        return isVer
+    })
+
     const move = () => {
         if (!bodyRef || !bodyRef.current) return
         if (!resizeRef || !resizeRef.current) return
@@ -40,9 +90,9 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
         const body = bodyRef.current as unknown as HTMLDivElement
         const resize = resizeRef.current as unknown as HTMLDivElement
         const line = lineRef.current as unknown as HTMLDivElement
-
         resize.onmousedown = (e: any) => {
             if (onStart) onStart()
+            let isVer = getIsVer()
             let isMove = true
             const start = isVer ? e.layerY : e.layerX
             const first = isVer ? e.clientY : e.clientX
@@ -52,6 +102,7 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
             line.style.display = "inline-block"
 
             body.onmousemove = (event: any) => {
+                let isVer = getIsVer()
                 const bodyRect = body.getBoundingClientRect()
                 // 计算分割线距离body开始边框和结束边框的距离
                 const distance = [
@@ -67,6 +118,7 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
             }
 
             document.onmouseup = (e) => {
+                let isVer = getIsVer()
                 if (!isMove) return
 
                 if (e.clientY > window.innerWidth || e.clientY < 0 || e.clientX < 0 || e.clientX > window.innerHeight) {

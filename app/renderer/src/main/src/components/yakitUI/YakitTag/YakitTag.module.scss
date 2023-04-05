@@ -94,9 +94,15 @@
 }
 
 .yakit-tag-bluePurple {
-    background: rgba(95, 105, 221, 0.1);
-    border: 1px solid rgba(95, 105, 221, 0.3);
-    color: #5f69dd;
+    background: rgba(218, 95, 221, 0.1);
+    border: 1px solid rgba(218, 95, 221, 0.3);
+    color: #DA5FDD;
+}
+
+.yakit-tag-white {
+    background: #FFFFFF;
+    border: 1px solid #EAECF3;
+    color: #31343F;
 }
 
 .yakit-tag-disable {
@@ -133,12 +139,15 @@
             line-height: 18px;
             height: 20px;
         }
+
         .ant-tag-checkable {
             background-color: var(--yakit-background-color);
         }
+
         .ant-tag-checkable-checked {
             background-color: var(--yakit-primary-5);
         }
+
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
             color: var(--yakit-primary-5);
         }
@@ -147,22 +156,27 @@
 
 .yakit-checked-tag-disable {
     cursor: not-allowed;
+
     :global {
         .ant-tag-checkable {
             color: var(--yakit-disable-text-color);
         }
+
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
             color: var(--yakit-disable-text-color);
         }
     }
 }
+
 .yakit-checked-tag-checked-disable {
     cursor: not-allowed;
+
     :global {
         .ant-tag-checkable-checked {
             color: #fff;
             background-color: var(--yakit-disable-text-color);
         }
+
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
             color: #fff;
         }

@@ -14,7 +14,7 @@ import type {DraggableEvent, DraggableData} from "react-draggable"
 import {DownloadingState, YakitSystem} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
 import {showModal} from "@/utils/showModal";
@@ -223,7 +223,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     return (
         <div className={visible ? styles["install-engine-mask"] : styles["hidden-install-engine-mask"]}>
             <Draggable
-                defaultClassName={classnames(styles["install-update-modal"], styles["engine-hint-modal-wrapper"], {
+                defaultClassName={classNames(styles["install-update-modal"], styles["engine-hint-modal-wrapper"], {
                     [styles["modal-top-wrapper"]]: isTop === 0
                 })}
                 disabled={disabled}
@@ -322,12 +322,12 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                         )}
 
                                         <div
-                                            className={classnames(styles["hint-right-agreement"], {
+                                            className={classNames(styles["hint-right-agreement"], {
                                                 [styles["agr-shake-animation"]]: !agrCheck && isShake
                                             })}
                                         >
                                             <Checkbox
-                                                className={classnames(
+                                                className={classNames(
                                                     {[styles["agreement-checkbox"]]: !(!agrCheck && checkStatus)},
                                                     {
                                                         [styles["agreement-danger-checkbox"]]: !agrCheck && checkStatus
@@ -436,7 +436,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
 
     return (
         <Draggable
-            defaultClassName={classnames(
+            defaultClassName={classNames(
                 styles["yakit-agr-modal"],
                 {[styles["modal-top-wrapper"]]: isTop === 1},
                 visible ? styles["info-modal-wrapper"] : styles["modal-hidden-wrapper"]
@@ -450,7 +450,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                     <div className={styles["agreement-content-modal-wrapper"]}>
                         {system === "Darwin" ? (
                             <div
-                                className={classnames(styles["modal-header"], styles["mac-header"])}
+                                className={classNames(styles["modal-header"], styles["mac-header"])}
                                 onMouseEnter={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -475,7 +475,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                             </div>
                         ) : (
                             <div
-                                className={classnames(styles["modal-header"], styles["win-header"])}
+                                className={classNames(styles["modal-header"], styles["win-header"])}
                                 onMouseOver={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -575,7 +575,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
 
     return (
         <Draggable
-            defaultClassName={classnames(
+            defaultClassName={classNames(
                 styles["yaklang-qs-modal"],
                 {[styles["modal-top-wrapper"]]: isTop === 2},
                 visible ? styles["info-modal-wrapper"] : styles["modal-hidden-wrapper"]
@@ -589,7 +589,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     <div className={styles["question-modal-wrapper"]}>
                         {system === "Darwin" ? (
                             <div
-                                className={classnames(styles["modal-header"], styles["mac-header"])}
+                                className={classNames(styles["modal-header"], styles["mac-header"])}
                                 onMouseEnter={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -614,7 +614,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                             </div>
                         ) : (
                             <div
-                                className={classnames(styles["modal-header"], styles["win-header"])}
+                                className={classNames(styles["modal-header"], styles["win-header"])}
                                 onMouseOver={() => {
                                     if (disabled) setDisabled(false)
                                 }}

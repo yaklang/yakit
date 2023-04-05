@@ -15,7 +15,6 @@ import {BrutePage} from "../pages/brute/BrutePage"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
 import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
-import {YakScriptExecResultTable} from "../components/YakScriptExecResultTable"
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage"
 import {RiskPage} from "../pages/risks/RiskPage"
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage"
@@ -111,6 +110,8 @@ import {
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
 import {ProjectPage} from "@/pages/projects/ProjectPage"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker";
+import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
+import {CVEViewer} from "@/pages/cve/CVEViewer";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -156,10 +157,9 @@ export enum Route {
     DB_HTTPHistory = "db-http-request",
     DB_ChaosMaker = "db-chaosmaker",
     DB_Domain = "db-domains",
-    DB_ExecResults = "db-exec-results",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
-    DB_Projects = "db-projects",
+    DB_CVE = "cve",
 
     // Handler
     DataHandler = "data-handler", // include codec compare
@@ -195,6 +195,9 @@ export enum Route {
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output",
+
+    // 录屏管理器
+    ScreenRecorderPage = "screen-recorder-page",
 
     // 首页
     NewHome = "new-home"
@@ -449,6 +452,12 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.DB_ChaosMaker:
             // ChaosMaker 流量生成器
             return <ChaosMakerPage/>
+        case Route.ScreenRecorderPage:
+            return <ScreenRecorderPage/>
+        case Route.AttachEngineCombinedOutput:
+            return <EngineConsole />
+        case Route.DB_CVE:
+            return <CVEViewer/>
         default:
             return <div/>
     }
@@ -683,13 +692,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 hoverIcon: <MenuSolidReportIcon/>
             },
             {
-                id: "9-2",
-                key: Route.DB_ExecResults,
-                label: "插件执行结果",
-                icon: <MenuPlugExecutionResultsIcon/>,
-                hoverIcon: <MenuSolidPlugExecutionResultsIcon/>
-            },
-            {
                 id: "9-3",
                 key: Route.DB_Ports,
                 label: "端口资产",
@@ -717,27 +719,20 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 icon: <MenuHTTPHistoryIcon/>,
                 hoverIcon: <MenuSolidHTTPHistoryIcon/>
             },
-            // {
-            //     id: "9-7",
-            //     key: Route.AttachEngineCombinedOutput,
-            //     label: "引擎 Console",
-            //     icon: <MenuDefaultPluginIcon />,
-            //     hoverIcon: <MenuSolidDefaultPluginIcon />
-            // },
-            // {
-            //     id: "9-8",
-            //     key: Route.DB_Projects,
-            //     label: "项目管理(Beta*)",
-            //     icon: <MenuDefaultPluginIcon />,
-            //     hoverIcon: <MenuSolidDefaultPluginIcon />
-            // }
             {
                 id: "9-9",
                 key: Route.DB_ChaosMaker,
                 label: "BAS 剧本管理（Beta*）",
                 icon: <MenuDefaultPluginIcon/>,
                 hoverIcon: <MenuSolidDefaultPluginIcon/>
-            }
+            },
+            {
+                id: "9-8",
+                key: Route.DB_CVE,
+                label: "CVE 管理",
+                icon: <MenuHTTPHistoryIcon />,
+                hoverIcon: <MenuSolidHTTPHistoryIcon />
+            },
         ]
     },
 ]

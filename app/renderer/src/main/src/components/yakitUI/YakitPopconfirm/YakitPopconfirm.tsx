@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from "react"
 import {Popconfirm} from "antd"
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./YakitPopconfirm.module.scss"
 import {YakitPopconfirmProp} from "./YakitPopconfirmTypr"
 import {YakitButton} from "../YakitButton/YakitButton"
@@ -41,7 +41,7 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
             visible={visible}
             {...resePopover}
             placement={placement}
-            overlayClassName={classnames(
+            overlayClassName={classNames(
                 styles["yakit-popconfirm-wrapper"],
                 styles[`yakit-popconfirm-${direction}-wrapper`],
                 overlayClassName

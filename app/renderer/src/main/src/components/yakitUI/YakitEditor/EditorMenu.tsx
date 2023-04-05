@@ -6,7 +6,7 @@ import {ChevronRightIcon} from "@/assets/newIcon"
 import {MenuDividerType} from "rc-menu/lib/interface"
 import {YakitEditorKeyCode} from "./YakitEditorType"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "@/components/yakitUI/YakitMenu/yakitMenu.module.scss"
 
 export interface EditorMenuItemProps {
@@ -70,14 +70,14 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                     label: (
                         <div
                             style={itemWidth ? {width: itemWidth} : {}}
-                            className={classnames(styles["yakit-menu-item"])}
+                            className={classNames(styles["yakit-menu-item"])}
                         >
                             <div className={styles["yakit-submenu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
                                     <Tooltip zIndex={9999} title={hintTitle} placement='leftBottom'>
                                         <div
-                                            className={classnames(
+                                            className={classNames(
                                                 styles["yakit-menu-item-title"],
                                                 "yakit-single-line-ellipsis"
                                             )}
@@ -87,7 +87,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                                     </Tooltip>
                                 ) : (
                                     <div
-                                        className={classnames(
+                                        className={classNames(
                                             styles["yakit-menu-item-title"],
                                             "yakit-single-line-ellipsis"
                                         )}
@@ -102,7 +102,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                     key: info.key,
                     disabled: info.disabled,
                     children: [],
-                    popupClassName: classnames(
+                    popupClassName: classNames(
                         {
                             [styles["yakit-menu-primary"]]: type === "primary",
                             [styles["yakit-menu-secondary"]]: type === "secondary"
@@ -124,14 +124,14 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                     label: (
                         <div
                             style={itemWidth ? {width: itemWidth} : {}}
-                            className={classnames(styles["yakit-menu-item"])}
+                            className={classNames(styles["yakit-menu-item"])}
                         >
                             <div className={styles["yakit-menu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
                                     <Tooltip zIndex={9999} title={hintTitle} placement='leftBottom'>
                                         <div
-                                            className={classnames(
+                                            className={classNames(
                                                 styles["yakit-menu-item-title"],
                                                 "yakit-single-line-ellipsis"
                                             )}
@@ -141,7 +141,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                                     </Tooltip>
                                 ) : (
                                     <div
-                                        className={classnames(
+                                        className={classNames(
                                             styles["yakit-menu-item-title"],
                                             "yakit-single-line-ellipsis"
                                         )}
@@ -165,7 +165,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
 
     return (
         <div
-            className={classnames(
+            className={classNames(
                 styles["yakit-menu-div-wrapper"],
                 {
                     [styles["yakit-menu-primary"]]: type === "primary",
@@ -176,7 +176,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
         >
             <Menu
                 {...restMenu}
-                className={classnames(styles["yakit-menu-wrapper"], {[className || ""]: !!className})}
+                className={classNames(styles["yakit-menu-wrapper"], {[className || ""]: !!className})}
                 items={data && data.length > 0 ? items : restMenu.items}
             ></Menu>
         </div>

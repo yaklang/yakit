@@ -466,16 +466,38 @@ interface ScanPortFormProp {
     setParams: (p: PortScanParams) => any
     // 简易企业版显示
     isSimpleDetectShow?: boolean
+    // 简易版扫描速度
+    deepLevel?:number
+    // 简易版是否已修改速度
+    isSetPort?:boolean
 }
 
 export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
+    const { deepLevel,isSetPort } = props
     const isSimpleDetectShow = props.isSimpleDetectShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
-
+    const [_,setPortroupValue,getPortroupValue] = useGetState<any[]>([])
     useEffect(() => {
         if (!params) return
         props.setParams({...params})
     }, [params])
+
+    useEffect(()=>{
+        if(deepLevel&&isSetPort){
+            switch (deepLevel) {
+            case 1:
+                setPortroupValue(["top1000+"])
+            break;
+            case 2:
+                setPortroupValue(["topweb"])
+            break;
+            case 3:
+                setPortroupValue(["top100"])
+            break;
+        }
+        }
+        
+    },[deepLevel])
 
     return (
         <Form
@@ -527,7 +549,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         <>
                             <Form.Item label='预设端口' className='form-item-margin'>
                                 <Checkbox.Group
-                                    onChange={(value) => {
+                                    value={getPortroupValue()}
+                                    onChange={(value) => {                  
                                         let res: string = (value || [])
                                             .map((i) => {
                                                 // @ts-ignore
@@ -537,6 +560,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         if (!!res) {
                                             setParams({...params, Ports: res})
                                         }
+                                        setPortroupValue(value)
                                     }}
                                 >
                                     <Checkbox value={"top100"}>常见100端口</Checkbox>
@@ -544,6 +568,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     <Checkbox value={"top1000+"}>常见一两千</Checkbox>
                                     <Checkbox value={"topdb"}>常见数据库与 MQ</Checkbox>
                                     <Checkbox value={"topudp"}>常见 UDP 端口</Checkbox>
+                                    <Checkbox value={"defect"}>常见弱点端口</Checkbox>
                                 </Checkbox.Group>
                             </Form.Item>
 
@@ -559,7 +584,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         <a
                                             href={"#"}
                                             onClick={() => {
-                                                setParams({...params, Ports: defaultPorts})
+                                                setParams({...params, Ports: PresetPorts["top100"]})
                                             }}
                                         >
                                             <ReloadOutlined />

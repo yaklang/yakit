@@ -1,12 +1,13 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Form, Input, InputNumber} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {failed, warn} from "@/utils/notification"
+import {failed, info, warn} from "@/utils/notification"
 import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
 import {showModal} from "@/utils/showModal";
+import { LoadYakitPluginForm } from "@/pages/yakitStore/YakitStorePage"
 
 const layout = {
     labelCol: {span: 5},
@@ -30,6 +31,20 @@ export function onImportShare() {
     const m = showModal({
         title: "导入协作资源",
         content: <ShareImport onClose={() => m.destroy()}/>
+    })
+}
+export function onImportPlugin() {
+    const m = showModal({
+        title: "导入插件ID",
+        width: 800,
+        content: (
+            <div style={{width: 780}}>
+                <LoadYakitPluginForm onlyId={true} onFinished={() => {
+                    info("更新进程执行完毕")
+                    m.destroy()
+                }} />
+            </div>
+        )
     })
 }
 

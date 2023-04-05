@@ -455,6 +455,52 @@ service Yak {
   rpc QueryCVE(QueryCVERequest) returns (QueryCVEResponse);
   rpc GetCVE(GetCVERequest) returns (CVEDetailEx);
   rpc SaveTextToTemporalFile(SaveTextToTemporalFileRequest) returns (SaveTextToTemporalFileResponse);
+
+  // Screcorder
+  rpc IsScrecorderReady(IsScrecorderReadyRequest) returns (IsScrecorderReadyResponse);
+  rpc InstallScrecorder(InstallScrecorderRequest) returns (stream ExecResult);
+  rpc StartScrecorder(StartScrecorderRequest) returns (stream ExecResult);
+  rpc QueryScreenRecorders(QueryScreenRecorderRequest) returns (QueryScreenRecorderResponse);
+}
+
+message ScreenRecorder {
+  int64 Id = 1;
+  string Filename = 2;
+  string NoteInfo = 3;
+  string Project = 4;
+  int64 CreatedAt = 5;
+  int64 UpdatedAt = 6;
+}
+
+message QueryScreenRecorderRequest {
+  string Project = 1;
+  Paging Pagination = 2;
+}
+
+message QueryScreenRecorderResponse {
+  repeated ScreenRecorder Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message StartScrecorderRequest {
+  int64 Framerate = 1;
+  string ResolutionSize = 2;
+  double CoefficientPTS = 3;
+  bool DisableMouse = 4;
+}
+
+message InstallScrecorderRequest {
+  string Proxy = 1;
+}
+
+message IsScrecorderReadyRequest {
+
+}
+
+message IsScrecorderReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
 }
 
 message GetCVERequest {
@@ -2024,6 +2070,7 @@ message AddMenuRequest {
 message QueryAllMenuItemRequest {
   string Mode = 1;
   string Group = 2;
+  string Verbose = 3;
 }
 
 message ImportMenuItemRequest {
@@ -3019,6 +3066,7 @@ message ExecResult {
   int64 Id = 6;
 
   string RuntimeID = 7;
+  float Progress = 8;
 }
 
 message GetLicenseResponse {

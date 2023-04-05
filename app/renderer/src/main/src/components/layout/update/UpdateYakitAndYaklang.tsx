@@ -12,7 +12,7 @@ import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
 import {isSimpleEnterprise} from "@/utils/envfile"
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -67,7 +67,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             return yakitUpdateContent.content.split("\n")
         }
         return []
-    }, [])
+    }, [yakitUpdateContent])
     const yaklangContent: string[] = useMemo(() => {
         if (!yaklangUpdateContent.content) return []
         if (yaklangUpdateContent.version !== latestYaklang) return []
@@ -75,10 +75,12 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             return yaklangUpdateContent.content.split("\n")
         }
         return []
-    }, [])
+    }, [yaklangUpdateContent])
 
     /** 获取 yakit 更新内容 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
+        if (yakitUpdateContent.version) return
+
         NetWorkApi<FetchUpdateContentProp, any>({
             diyHome: "https://www.yaklang.com",
             method: "get",
@@ -89,7 +91,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 if (!res) return
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
-                    if (data.content === yakitUpdateContent.content) return
+                    if (data.version !== latestYakit) return
                     setYakitUpdateContent({...data})
                 } catch (error) {}
             })
@@ -97,6 +99,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     })
     /** 获取 yaklang 更新内容 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
+        if (yaklangUpdateContent.version) return
+
         NetWorkApi<FetchUpdateContentProp, any>({
             diyHome: "https://www.yaklang.com",
             method: "get",
@@ -107,7 +111,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 if (!res) return
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
-                    if (data.content === yaklangUpdateContent.content) return
+                    if (data.version !== latestYaklang) return
                     setYaklangUpdateContent({...data})
                 } catch (error) {}
             })
@@ -115,9 +119,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     })
 
     useEffect(() => {
-        fetchYakitLastVersion()
-        fetchYaklangLastVersion()
-    }, [])
+        if (latestYakit) fetchYakitLastVersion()
+        if (latestYaklang) fetchYaklangLastVersion()
+    }, [latestYakit, latestYaklang])
 
     useEffect(() => {
         ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
@@ -275,7 +279,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     return (
         <div className={isShow ? styles["update-mask"] : styles["hidden-update-mask"]}>
             <div
-                className={classnames(
+                className={classNames(
                     styles["yaklang-update-modal"],
                     isShowYakit ? styles["engine-hint-modal-wrapper"] : styles["modal-hidden-wrapper"]
                 )}
@@ -383,7 +387,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             </div>
 
             <div
-                className={classnames(
+                className={classNames(
                     styles["yaklang-update-modal"],
                     isShowYaklang && !isShowYakit ? styles["engine-hint-modal-wrapper"] : styles["modal-hidden-wrapper"]
                 )}
