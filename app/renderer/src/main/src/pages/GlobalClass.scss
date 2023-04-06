@@ -207,6 +207,26 @@
     --button-press-border-color: var(--yakit-primary-6);
 }
 
+.button-primary-danger {
+    --button-wave-shadow-color: var(--yakit-danger-2);
+
+    --button-background: var(--yakit-danger-5);
+    --button-color: var(--yakit-neutral10-color);
+    --button-border-color: transparent;
+
+    --button-hover-background: var(--yakit-danger-4);
+    --button-hover-color: var(--yakit-neutral10-color);
+    --button-hover-border-color: transparent;
+
+    --button-disable-background: var(--yakit-background-color);
+    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-border-color: transparent;
+
+    --button-press-background: var(--yakit-danger-6);
+    --button-press-color: var(--yakit-neutral10-color);
+    --button-press-border-color: transparent;
+}
+
 // ========================== Modal.confirm ==========================
 .modal-remove-icon {
     svg {

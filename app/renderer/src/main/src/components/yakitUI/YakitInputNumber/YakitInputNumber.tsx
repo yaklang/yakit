@@ -32,7 +32,17 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
         if (props.onBlur) props.onBlur(e)
     })
     return (
-        <div className={classNames(styles["yakit-input-number-wrapper"], wrapperClassName)}>
+        <div
+            className={classNames(
+                styles["yakit-input-number-wrapper"],
+                {
+                    [styles["yakit-input-number-wrapper-max-large"]]: size === "maxLarge",
+                    [styles["yakit-input-number-wrapper-large"]]: size === "large",
+                    [styles["yakit-input-number-wrapper-small"]]: size === "small"
+                },
+                wrapperClassName
+            )}
+        >
             {(type === "horizontal" && <YakitInputNumberHorizontal {...props} />) || (
                 <InputNumber
                     {...resProps}
@@ -46,7 +56,7 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
                             [styles["yakit-input-number-large"]]: size === "large",
                             [styles["yakit-input-number-small"]]: size === "small",
                             [styles["yakit-input-number-focus"]]: focus,
-                            [styles["yakit-input-number-disabled"]]: !!props.disabled,
+                            [styles["yakit-input-number-disabled"]]: !!props.disabled
                         },
                         className
                     )}
@@ -190,6 +200,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
             )}
             <YakitInputNumber
                 {...resProps}
+                size={size}
                 step={step}
                 value={value}
                 bordered={false}

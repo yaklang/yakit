@@ -1,16 +1,17 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Modal, Radio, Switch, InputNumber} from "antd"
-import {ShareIcon} from "@/assets/icons"
 import {useMemoizedFn, useHover} from "ahooks"
 import {useStore} from "@/store"
 import {warn, success, failed} from "@/utils/notification"
 import CopyToClipboard from "react-copy-to-clipboard"
-import "./index.scss"
+import styles from "./index.module.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {CopyableField} from "@/utils/inputUtil"
 import {showByCursorMenu} from "@/utils/showByCursor"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {ShareIcon} from "@/assets/newIcon"
 
 interface ShareDataProps {
     module: string // 新建tab类型
@@ -101,15 +102,15 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
 
     return (
         <>
-            <Button
-                size={"small"}
-                type='primary'
-                icon={<ShareIcon />}
+            <YakitButton
+                style={{padding: "4px 0px"}}
+                type='text'
+                icon={<ShareIcon className={styles["share-icon"]} />}
                 onClick={rightClick}
                 onContextMenuCapture={rightClick}
             >
                 分享 / 导入
-            </Button>
+            </YakitButton>
             <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>
                 <div className='content-value'>
                     <span className='label-text'>设置有效期：</span>

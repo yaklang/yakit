@@ -16,7 +16,9 @@ import {
     Popover,
     Checkbox,
     Tooltip,
-    InputNumber
+    InputNumber,
+    Divider,
+    Collapse
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -25,12 +27,12 @@ import {StringFuzzer} from "./StringFuzzer"
 import {InputFloat, InputInteger, InputItem, OneLine, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {DeleteOutlined, ProfileOutlined, HistoryOutlined} from "@ant-design/icons"
+import {DeleteOutlined, ProfileOutlined} from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -44,17 +46,38 @@ import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageE
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "./InsertFileFuzzTag"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
-import "./HTTPFuzzerPage.scss"
+import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareData} from "./components/ShareData"
 import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {SearchOutlined} from "@ant-design/icons/lib"
-import {ChevronLeftIcon, ChevronRightIcon, ChromeSvgIcon} from "@/assets/newIcon"
+import {
+    ChevronDownIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ChromeSvgIcon,
+    ClockIcon,
+    PaperAirplaneIcon,
+    PlusSmIcon
+} from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
 import {editor} from "monaco-editor"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
+import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
 
 const {ipcRenderer} = window.require("electron")
+const {Panel} = Collapse
 
 interface ShareValueProps {
     isHttps: boolean
@@ -116,7 +139,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: { Header: string; Value: string }[]
+    Headers: {Header: string; Value: string}[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -200,10 +223,10 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
     )
 }
 
-function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: { Url: string }) => {
+        .then((data: {Url: string}) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -259,11 +282,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
     const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
-    const [minDelaySeconds, setMinDelaySeconds] = useState(0)
-    const [maxDelaySeconds, setMaxDelaySeconds] = useState(0)
-    const [proxy, setProxy] = useState(props.fuzzerParams?.proxy || "")
-    const [actualHost, setActualHost] = useState(props.fuzzerParams?.actualHost || "")
-    const [advancedConfig, setAdvancedConfig] = useState(false)
+    const [minDelaySeconds, setMinDelaySeconds] = useState<number>(0)
+    const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
+    const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
+    const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
+    const [advancedConfig, setAdvancedConfig] = useState(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
     const [hotPatchCode, setHotPatchCode] = useState<string>("")
@@ -414,7 +437,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
-                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -600,8 +623,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {
-                }
+                } catch (error) {}
             }, 500)
         )
     }
@@ -652,8 +674,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = rsp!.Reason
-        } catch (e) {
-        }
+        } catch (e) {}
         return (
             <HTTPPacketEditor
                 title={
@@ -673,7 +694,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             value={affixSearch}
                             placeholder={"搜索定位响应"}
                             suffixNode={
-                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined/>}/>
+                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined />} />
                             }
                             setValue={(value) => {
                                 setAffixSearch(value)
@@ -729,7 +750,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 extra={
                     <Space size={0}>
-                        {loading && <Spin size={"small"} spinning={loading}/>}
+                        {loading && <Spin size={"small"} spinning={loading} />}
                         {onlyOneResponse ? (
                             <Space size={0}>
                                 {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
@@ -738,10 +759,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Tag>
                                 <Space key='single'>
                                     <Button
-                                        className='extra-chrome-btn'
+                                        className={styles["extra-chrome-btn"]}
                                         type={"text"}
                                         size={"small"}
-                                        icon={<ChromeSvgIcon/>}
+                                        icon={<ChromeSvgIcon />}
                                         onClick={() => {
                                             showResponseViaResponseRaw(rsp.ResponseRaw || "")
                                         }}
@@ -755,7 +776,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             })
                                         }}
                                         type={"primary"}
-                                        icon={<ProfileOutlined/>}
+                                        icon={<ProfileOutlined />}
                                     />
                                     {/*    详情*/}
                                     {/*</Button>*/}
@@ -768,7 +789,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             setFailedFuzzer([])
                                         }}
                                         danger={true}
-                                        icon={<DeleteOutlined/>}
+                                        icon={<DeleteOutlined />}
                                     />
                                 </Space>
                             </Space>
@@ -841,81 +862,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             )
         })
     })
-
-    // useEffect(() => {
-    //     if (!props.request) {
-    //         return
-    //     }
-    //
-    //     setLoading(true)
-    //     getRemoteValue(ALLOW_MULTIPART_DATA_ALERT)
-    //         .then((e) => {
-    //             if (e === "1") {
-    //                 setLoading(false)
-    //                 return
-    //             }
-    //             ipcRenderer
-    //                 .invoke("IsMultipartFormDataRequest", {
-    //                     Request: StringToUint8Array(props.request || "", "utf8")
-    //                 })
-    //                 .then((e: { IsMultipartFormData: boolean }) => {
-    //                     if (e.IsMultipartFormData) {
-    //                         const notify = showModal({
-    //                             title: "潜在的数据包编码问题提示",
-    //                             content: (
-    //                                 <Space direction={"vertical"}>
-    //                                     <Space>
-    //                                         <Typography>
-    //                                             <Text>当前数据包包含一个</Text>
-    //                                             <Text mark={true}>原始文件内容 mutlipart/form-data</Text>
-    //                                             <Text>文件中的不可见字符进入编辑器将会被编码导致丢失信息。</Text>
-    //                                         </Typography>
-    //                                     </Space>
-    //                                     <Typography>
-    //                                         <Text>一般来说，上传文件内容不包含不可见字符时，没有信息丢失风险</Text>
-    //                                     </Typography>
-    //                                     <Typography>
-    //                                         <Text>如果上传文件内容包含图片，将有可能导致</Text>
-    //                                         <Text mark={true}>PNG 格式的图片被异常编码，</Text>
-    //                                         <Text>破坏图片格式，导致</Text>
-    //                                         <Text mark={true}>图片马</Text>
-    //                                         <Text>上传失败</Text>
-    //                                     </Typography>
-    //                                     <br/>
-    //                                     <Space>
-    //                                         <Typography>
-    //                                             <Text>如需要插入具体文件内容，可右键</Text>
-    //                                             <Text mark={true}>插入文件</Text>
-    //                                         </Typography>
-    //                                     </Space>
-    //                                     <br/>
-    //                                     <Checkbox
-    //                                         onChange={(e) => {
-    //                                             if (e.target.checked) {
-    //                                                 setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "1", 3600 * 24 * 7)
-    //                                                 notify.destroy()
-    //                                             } else {
-    //                                                 setRemoteValueTTL(ALLOW_MULTIPART_DATA_ALERT, "0", 3600 * 24 * 7)
-    //                                             }
-    //                                         }}
-    //                                     >
-    //                                         一周内不提醒
-    //                                     </Checkbox>
-    //                                     <Button type={"primary"} onClick={() => notify.destroy()}>
-    //                                         我知道了
-    //                                     </Button>
-    //                                 </Space>
-    //                             ),
-    //                             width: "40%"
-    //                         })
-    //                     }
-    //                 })
-    //                 .finally(() => setLoading(false))
-    //         })
-    //         .catch((e) => {
-    //             setLoading(false)
-    //         })
-    // }, [props.request])
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
             isHttps,
@@ -962,7 +908,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: pageInt, Limit: 1}
             })
-            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
@@ -1001,53 +947,137 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             failed("初始化 EOL CRLF 失败")
         }
     }, [reqEditor])
-
+    const onInsertYakFuzzer = useMemoizedFn(() => {
+        const m = showModal({
+            width: "70%",
+            content: (
+                <>
+                    <StringFuzzer
+                        advanced={true}
+                        disableBasicMode={true}
+                        insertCallback={(template: string) => {
+                            if (!template) {
+                                Modal.warn({
+                                    title: "Payload 为空 / Fuzz 模版为空"
+                                })
+                            } else {
+                                if (reqEditor && template) {
+                                    reqEditor.trigger("keyboard", "type", {
+                                        text: template
+                                    })
+                                } else {
+                                    Modal.error({
+                                        title: "BUG: 编辑器失效"
+                                    })
+                                }
+                                m.destroy()
+                            }
+                        }}
+                    />
+                </>
+            )
+        })
+    })
+    /**
+     * @@description 获取高级配置中的Form values
+     */
+    const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
+        console.log("val", val)
+        // 请求包配置
+        setForceFuzz(val.isHttps)
+        setIsHttps(val.isHttps)
+        setNoFixContentLength(val.noFixContentLength)
+        setActualHost(val.actualHost)
+        setParamTimeout(val.timeout)
+        // 发包配置
+        setConcurrent(val.concurrent)
+        setProxy(val.proxy ? val.proxy?.join(",") : "")
+        setMinDelaySeconds(val.minDelaySeconds)
+        setMaxDelaySeconds(val.maxDelaySeconds)
+        // 重试配置
+        // retryCount
+        // retryConfiguration
+        // noRetryConfiguration
+        // 重定向配置
+        // redirectCount: 3,
+        // redirectConfiguration: undefined,
+        // noRedirectConfiguration: undefined,
+        // 过滤配置
+        setFilterMode(val.filterMode)
+        setFilter({
+            Keywords: val.keyWord?.split(",") || [],
+            MaxBodySize: val.maxBodySize,
+            MinBodySize: val.minBodySize,
+            Regexps: val.regexps?.split(",") || [],
+            StatusCode: val.statusCode?.split(",") || []
+        })
+    })
     return (
-        <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}>
-            <Row gutter={8} style={{marginBottom: 8}}>
-                <Col span={24} style={{textAlign: "left", marginTop: 4}}>
-                    <Space style={{width: "100%", display: "flex", flexDirection: "row"}}>
-                        {loading ? (
-                            <Button
-                                style={{width: 150}}
-                                onClick={() => {
-                                    cancelCurrentHTTPFuzzer()
-                                }}
-                                // size={"small"}
-                                danger={true}
-                                type={"primary"}
-                            >
-                                强制停止
-                            </Button>
-                        ) : (
-                            <Button
-                                style={{width: 150}}
-                                onClick={() => {
-                                    resetResponse()
-
-                                    setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
-                                    setRedirectedResponse(undefined)
-                                    sendFuzzerSettingInfo()
-                                    submitToHTTPFuzzer()
-                                    setCurrentPage(1)
-                                }}
-                                // size={"small"}
-                                type={"primary"}
-                            >
-                                发送数据包
-                            </Button>
-                        )}
-                        <Checkbox checked={isHttps} onChange={() => setIsHttps(!isHttps)}>
-                            强制 HTTPS
-                        </Checkbox>
-                        <SwitchItem
-                            label={"高级配置"}
-                            formItemStyle={{marginBottom: 0}}
-                            value={advancedConfig}
-                            setValue={setAdvancedConfig}
-                            size={"small"}
-                        />
-                        <ShareData module='fuzzer' getShareContent={getShareContent}/>
+        <div className={styles["http-fuzzer-body"]}>
+            <HttpQueryAdvancedConfig
+                defAdvancedConfigValue={{
+                    // 请求包配置
+                    forceFuzz,
+                    isHttps,
+                    noFixContentLength,
+                    actualHost,
+                    timeout,
+                    // 发包配置
+                    concurrent,
+                    proxy: proxy ? proxy?.split(",") : [],
+                    minDelaySeconds,
+                    maxDelaySeconds,
+                    // 重试配置
+                    retryCount: 3,
+                    retryConfiguration: {
+                        statusCode: "",
+                        keyWord: ""
+                    },
+                    noRetryConfiguration: {
+                        statusCode: "",
+                        keyWord: ""
+                    },
+                    // 重定向配置
+                    redirectCount: 3,
+                    redirectConfiguration: {
+                        statusCode: "",
+                        keyWord: ""
+                    },
+                    noRedirectConfiguration: {
+                        statusCode: "",
+                        keyWord: ""
+                    },
+                    // 过滤配置
+                    filterMode: _filterMode,
+                    statusCode: getFilter().StatusCode.join(",") || "",
+                    regexps: getFilter().Regexps.join(","),
+                    keyWord: getFilter().Keywords?.join(",") || "",
+                    minBodySize: getFilter().MinBodySize,
+                    maxBodySize: getFilter().MaxBodySize
+                }}
+                isHttps={isHttps}
+                setIsHttps={setIsHttps}
+                visible={advancedConfig}
+                setVisible={setAdvancedConfig}
+                onInsertYakFuzzer={onInsertYakFuzzer}
+                onValuesChange={onGetFormValue}
+            />
+            <div className={styles["http-fuzzer-page"]}>
+                <div className={styles["fuzzer-heard"]}>
+                    {!advancedConfig && (
+                        <div className={styles["display-flex"]}>
+                            <span>高级配置</span>
+                            <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
+                        </div>
+                    )}
+                    <div className={styles["fuzzer-heard-force"]}>
+                        <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
+                        <YakitCheckbox checked={isHttps} onChange={(e) => setIsHttps(e.target.checked)} />
+                    </div>
+                    <Divider type='vertical' style={{margin: 0, top: 1}} />
+                    <div className={styles["display-flex"]}>
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
+                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
@@ -1064,427 +1094,112 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}>
+                            <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
                                 历史
-                            </Button>
+                            </YakitButton>
                         </Popover>
+                    </div>
 
-                        {droppedCount > 0 && <Tag color={"red"}>已丢弃[{droppedCount}]个响应</Tag>}
-                        {onlyOneResponse && getFirstResponse().Ok && (
-                            <Form.Item style={{marginBottom: 0}}>
-                                <Button
-                                    onClick={() => {
-                                        setLoading(true)
-                                        ipcRenderer
-                                            .invoke("RedirectRequest", {
-                                                Request: request,
-                                                Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
-                                                IsHttps: isHttps,
-                                                PerRequestTimeoutSeconds: timeout,
-                                                NoFixContentLength: noFixContentLength,
-                                                Proxy: proxy
-                                            })
-                                            .then((rsp: FuzzerResponse) => {
-                                                setRedirectedResponse(rsp)
-                                            })
-                                            .catch((e) => {
-                                                failed(`"ERROR in: ${e}"`)
-                                            })
-                                            .finally(() => {
-                                                setTimeout(() => setLoading(false), 300)
-                                            })
-                                    }}
-                                >
-                                    跟随重定向
-                                </Button>
-                            </Form.Item>
-                        )}
-                        {loading && (
-                            <Space>
-                                <Spin size={"small"}/>
-                                <div style={{color: "#3a8be3"}}>sending packets</div>
-                            </Space>
-                        )}
-                        {proxy && <Tag>代理：{proxy}</Tag>}
-                        {/*<Popover*/}
-                        {/*    trigger={"click"}*/}
-                        {/*    content={*/}
-                        {/*    }*/}
-                        {/*>*/}
-                        {/*    <Button type={"link"} size={"small"}>*/}
-                        {/*        配置请求包*/}
-                        {/*    </Button>*/}
-                        {/*</Popover>*/}
-                        {actualHost !== "" && <Tag color={"red"}>请求 Host:{actualHost}</Tag>}
-                    </Space>
-                </Col>
-            </Row>
-
-            {advancedConfig && (
-                <Row style={{marginBottom: 8}} gutter={8}>
-                    <Col span={16}>
-                        {/*高级配置*/}
-                        <Card bordered={true} size={"small"}>
-                            <Spin style={{width: "100%"}} spinning={!reqEditor}>
-                                <Form
-                                    onSubmitCapture={(e) => e.preventDefault()}
-                                    // layout={"horizontal"}
-                                    size={"small"}
-                                    // labelCol={{span: 8}}
-                                    // wrapperCol={{span: 16}}
-                                >
-                                    <Row gutter={8}>
-                                        <Col span={12} xl={8}>
-                                            <Form.Item
-                                                label={<OneLine width={68}>Intruder</OneLine>}
-                                                style={{marginBottom: 4}}
-                                            >
-                                                <Button
-                                                    style={{backgroundColor: "#08a701"}}
-                                                    size={"small"}
-                                                    type={"primary"}
-                                                    onClick={() => {
-                                                        const m = showModal({
-                                                            width: "70%",
-                                                            content: (
-                                                                <>
-                                                                    <StringFuzzer
-                                                                        advanced={true}
-                                                                        disableBasicMode={true}
-                                                                        insertCallback={(template: string) => {
-                                                                            if (!template) {
-                                                                                Modal.warn({
-                                                                                    title: "Payload 为空 / Fuzz 模版为空"
-                                                                                })
-                                                                            } else {
-                                                                                if (reqEditor && template) {
-                                                                                    reqEditor.trigger(
-                                                                                        "keyboard",
-                                                                                        "type",
-                                                                                        {
-                                                                                            text: template
-                                                                                        }
-                                                                                    )
-                                                                                } else {
-                                                                                    Modal.error({
-                                                                                        title: "BUG: 编辑器失效"
-                                                                                    })
-                                                                                }
-                                                                                m.destroy()
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                </>
-                                                            )
-                                                        })
-                                                    }}
-                                                >
-                                                    插入 yak.fuzz 语法
-                                                </Button>
-                                            </Form.Item>
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <SwitchItem
-                                                label={<OneLine width={68}>渲染 fuzz</OneLine>}
-                                                setValue={(e) => {
-                                                    if (!e) {
-                                                        Modal.confirm({
-                                                            title: "确认关闭 Fuzz 功能吗？关闭之后，所有的 Fuzz 标签将会失效",
-                                                            onOk: () => {
-                                                                setForceFuzz(e)
-                                                            }
-                                                        })
-                                                        return
-                                                    }
-                                                    setForceFuzz(e)
-                                                }}
-                                                size={"small"}
-                                                value={forceFuzz}
-                                                formItemStyle={{marginBottom: 4}}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <InputInteger
-                                                label={<OneLine width={68}>并发线程</OneLine>}
-                                                size={"small"}
-                                                setValue={(e) => {
-                                                    setConcurrent(e)
-                                                }}
-                                                formItemStyle={{marginBottom: 4}} // width={40}
-                                                width={50}
-                                                value={concurrent}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <SwitchItem
-                                                label={<OneLine width={68}>HTTPS</OneLine>}
-                                                setValue={(e) => {
-                                                    setIsHttps(e)
-                                                }}
-                                                size={"small"}
-                                                value={isHttps}
-                                                formItemStyle={{marginBottom: 4}}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <SwitchItem
-                                                label={
-                                                    <OneLine width={70}>
-                                                        <Tooltip title={"不修复 Content-Length: 常用发送多个数据包"}>
-                                                            不修复长度
-                                                        </Tooltip>
-                                                    </OneLine>
-                                                }
-                                                setValue={(e) => {
-                                                    setNoFixContentLength(e)
-                                                }}
-                                                size={"small"}
-                                                value={noFixContentLength}
-                                                formItemStyle={{marginBottom: 4}}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <ItemSelects
-                                                item={{
-                                                    style: {marginBottom: 4},
-                                                    label: <OneLine width={68}>设置代理</OneLine>
-                                                }}
-                                                select={{
-                                                    style: {width: "100%"},
-                                                    allowClear: true,
-                                                    autoClearSearchValue: true,
-                                                    maxTagTextLength: 8,
-                                                    mode: "tags",
-                                                    data: [
-                                                        {text: "http://127.0.0.1:7890", value: "http://127.0.0.1:7890"},
-                                                        {text: "http://127.0.0.1:8080", value: "http://127.0.0.1:8080"},
-                                                        {text: "http://127.0.0.1:8082", value: "http://127.0.0.1:8082"}
-                                                    ],
-                                                    value: proxy ? proxy.split(",") : [],
-                                                    setValue: (value) => setProxy(value.join(",")),
-                                                    maxTagCount: "responsive"
-                                                }}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <InputItem
-                                                extraFormItemProps={{
-                                                    style: {marginBottom: 0}
-                                                }}
-                                                label={<OneLine width={68}>请求 Host</OneLine>}
-                                                setValue={setActualHost}
-                                                value={actualHost}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <InputFloat
-                                                formItemStyle={{marginBottom: 4}}
-                                                size={"small"}
-                                                label={<OneLine width={68}>超时时间</OneLine>}
-                                                setValue={setParamTimeout}
-                                                value={timeout}
-                                            />
-                                        </Col>
-                                        <Col span={12} xl={8}>
-                                            <Form.Item
-                                                label={<OneLine width={68}>随机延迟</OneLine>}
-                                                style={{marginBottom: 4}}
-                                            >
-                                                <Input.Group>
-                                                    <InputNumber
-                                                        style={{width: 95}}
-                                                        precision={1}
-                                                        value={minDelaySeconds}
-                                                        onChange={(e) => {
-                                                            setMinDelaySeconds(e as number)
-                                                        }}
-                                                        min={0}
-                                                        step={0.5}
-                                                        formatter={(e) => {
-                                                            return `min: ${e} s`
-                                                        }}
-                                                    />
-                                                    <InputNumber
-                                                        style={{width: 96}}
-                                                        precision={1}
-                                                        min={0}
-                                                        step={0.5}
-                                                        value={maxDelaySeconds}
-                                                        onChange={(e) => {
-                                                            setMaxDelaySeconds(e as number)
-                                                        }}
-                                                        formatter={(e) => {
-                                                            return `max: ${e} s`
-                                                        }}
-                                                    />
-                                                </Input.Group>
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
-                                </Form>
-                            </Spin>
-                        </Card>
-                    </Col>
-                    <Col span={8}>
-                        <AutoCard
-                            title={
-                                <Space>
-                                    <Tooltip title={"通过过滤匹配，丢弃无用数据包，保证界面性能！"}>
-                                        过滤器模式：
-                                    </Tooltip>
-                                    <Form onSubmitCapture={(e) => e.preventDefault()}>
-                                        <SelectOne
-                                            formItemStyle={{marginBottom: 0}}
-                                            label={""}
-                                            colon={false}
-                                            size={"small"}
-                                            data={[
-                                                {value: "drop", text: "丢弃"},
-                                                {value: "match", text: "保留"}
-                                            ]}
-                                            value={getFilterMode()}
-                                            setValue={(e) => setFilterMode(e)}
-                                        />
-                                    </Form>
-                                </Space>
-                            }
-                            bordered={false}
-                            size={"small"}
-                            bodyStyle={{paddingTop: 4}}
-                            style={{marginTop: 0, paddingTop: 0}}
+                    {loading ? (
+                        <YakitButton
+                            onClick={() => {
+                                cancelCurrentHTTPFuzzer()
+                            }}
+                            className='button-primary-danger'
+                            danger={true}
+                            type={"primary"}
                         >
-                            <Form size={"small"} onSubmitCapture={(e) => e.preventDefault()}>
-                                <Row gutter={20}>
-                                    <Col span={12}>
-                                        <InputItem
-                                            label={"状态码"}
-                                            placeholder={"200,300-399"}
-                                            disable={loading}
-                                            value={getFilter().StatusCode.join(",")}
-                                            setValue={(e) => {
-                                                setFilter({...getFilter(), StatusCode: e.split(",")})
-                                            }}
-                                            extraFormItemProps={{style: {marginBottom: 0}}}
-                                        />
-                                    </Col>
-                                    <Col span={12}>
-                                        <InputItem
-                                            label={"关键字"}
-                                            placeholder={"Login,登录成功"}
-                                            value={getFilter().Keywords.join(",")}
-                                            disable={loading}
-                                            setValue={(e) => {
-                                                setFilter({...getFilter(), Keywords: e.split(",")})
-                                            }}
-                                            extraFormItemProps={{style: {marginBottom: 0}}}
-                                        />
-                                    </Col>
-                                    <Col span={12}>
-                                        <InputItem
-                                            label={"正则"}
-                                            placeholder={`Welcome\\s+\\w+!`}
-                                            value={getFilter().Regexps.join(",")}
-                                            disable={loading}
-                                            setValue={(e) => {
-                                                setFilter({...getFilter(), Regexps: e.split(",")})
-                                            }}
-                                            extraFormItemProps={{style: {marginBottom: 0, marginTop: 2}}}
-                                        />
-                                    </Col>
-                                </Row>
-                            </Form>
-                        </AutoCard>
-                    </Col>
-                </Row>
-            )}
-            {/*<Divider style={{marginTop: 6, marginBottom: 8, paddingTop: 0}}/>*/}
-            <ResizeBox
-                firstMinSize={350}
-                secondMinSize={360}
-                style={{overflow: "hidden"}}
-                firstNode={
-                    <HTTPPacketEditor
-                        system={props.system}
-                        noHex={true}
-                        refreshTrigger={refreshTrigger}
-                        hideSearch={true}
-                        bordered={true}
-                        noMinimap={true}
-                        utf8={true}
-                        originValue={StringToUint8Array(request)}
-                        actions={[
-                            {
-                                id: "packet-from-url",
-                                label: "URL转数据包",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: () => {
-                                    setUrlPacketShow(true)
-                                }
-                            },
-                            {
-                                id: "copy-as-url",
-                                label: "复制为 URL",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: () => {
-                                    copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
-                                }
-                            },
-                            {
-                                id: "insert-intruder-tag",
-                                label: "插入模糊测试字典标签",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: (editor) => {
-                                    showDictsAndSelect((i) => {
-                                        monacoEditorWrite(editor, i, editor.getSelection())
+                            强制停止
+                        </YakitButton>
+                    ) : (
+                        <YakitButton
+                            onClick={() => {
+                                resetResponse()
+
+                                setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
+                                setRedirectedResponse(undefined)
+                                sendFuzzerSettingInfo()
+                                submitToHTTPFuzzer()
+                                setCurrentPage(1)
+                            }}
+                            icon={<PaperAirplaneIcon style={{height: 16}} />}
+                            type={"primary"}
+                        >
+                            发送数据包
+                        </YakitButton>
+                    )}
+                    {loading && (
+                        <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
+                            <YakitSpin size={"small"} style={{width: "auto"}} />
+                            sending packets
+                        </div>
+                    )}
+
+                    {onlyOneResponse && getFirstResponse().Ok && (
+                        <YakitButton
+                            onClick={() => {
+                                setLoading(true)
+                                ipcRenderer
+                                    .invoke("RedirectRequest", {
+                                        Request: request,
+                                        Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
+                                        IsHttps: isHttps,
+                                        PerRequestTimeoutSeconds: timeout,
+                                        NoFixContentLength: noFixContentLength,
+                                        Proxy: proxy
                                     })
-                                }
-                            },
-                            {
-                                id: "insert-nullbyte",
-                                label: "插入空字节标签: {{hexd(00)}}",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: (editor) => {
-                                    editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
-                                }
-                            },
-                            {
-                                id: "insert-hotpatch-tag",
-                                label: "插入热加载标签",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: (editor) => {
-                                    hotPatchTrigger()
-                                }
-                            },
-                            {
-                                id: "insert-fuzzfile-tag",
-                                label: "插入文件标签",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: (editor) => {
-                                    insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                                }
-                            },
-                            {
-                                id: "insert-temporary-file-tag",
-                                label: "插入临时字典",
-                                contextMenuGroupId: "1_urlPacket",
-                                run: (editor) => {
-                                    insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                                }
-                            },
-                        ]}
-                        onEditor={setReqEditor}
-                        onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                        extra={
+                                    .then((rsp: FuzzerResponse) => {
+                                        setRedirectedResponse(rsp)
+                                    })
+                                    .catch((e) => {
+                                        failed(`"ERROR in: ${e}"`)
+                                    })
+                                    .finally(() => {
+                                        setTimeout(() => setLoading(false), 300)
+                                    })
+                            }}
+                            type='outline2'
+                        >
+                            跟随重定向
+                        </YakitButton>
+                    )}
+                    <div className={styles["display-flex"]}>
+                        {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
+                        {proxy && (
+                            <Tooltip title={proxy}>
+                                <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
+                                    代理：{proxy}
+                                </YakitTag>
+                            </Tooltip>
+                        )}
+                        {actualHost && (
+                            <YakitTag
+                                color='danger'
+                                className={classNames(styles["actualHost-text"], "content-ellipsis")}
+                            >
+                                请求 Host:{actualHost}
+                            </YakitTag>
+                        )}
+                    </div>
+                </div>
+                {/*<Divider style={{marginTop: 6, marginBottom: 8, paddingTop: 0}}/>*/}
+                <ResizeCardBox
+                    firstMinSize={350}
+                    secondMinSize={360}
+                    style={{overflow: "hidden"}}
+                    firstNodeProps={{
+                        title: "Request",
+                        extra: (
                             <Space size={2}>
                                 <ChevronLeftIcon
-                                    className={classNames("chevron-icon", {
-                                        "chevron-icon-disable": currentPage === 0 || currentPage === 1
+                                    className={classNames(styles["chevron-icon"], {
+                                        [styles["chevron-icon-disable"]]: currentPage === 0 || currentPage === 1
                                     })}
                                     onClick={() => onPrePage()}
                                 />
                                 <ChevronRightIcon
-                                    className={classNames("chevron-icon", {
-                                        "chevron-icon-disable": currentPage == total
+                                    className={classNames(styles["chevron-icon"], {
+                                        [styles["chevron-icon-disable"]]: currentPage == total
                                     })}
                                     onClick={() => onNextPage()}
                                 />
@@ -1524,8 +1239,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 refreshRequest()
                                                             }
                                                         })
-                                                        .finally(() => {
-                                                        })
+                                                        .finally(() => {})
                                                 }}
                                                 size={"small"}
                                             >
@@ -1549,155 +1263,773 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     </Button>
                                 </Popover>
                                 {/* <Popover
-                                    trigger={"click"}
-                                    placement={"leftTop"}
-                                    destroyTooltipOnHide={true}
-                                    content={
-                                        <div style={{width: 400}}>
-                                            <HTTPFuzzerHistorySelector
-                                                onSelect={(e) => {
-                                                    loadHistory(e)
-                                                }}
-                                            />
-                                        </div>
-                                    }
-                                >
-                                    <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}/>
-                                </Popover> */}
-                            </Space>
+                        trigger={"click"}
+                        placement={"leftTop"}
+                        destroyTooltipOnHide={true}
+                        content={
+                            <div style={{width: 400}}>
+                                <HTTPFuzzerHistorySelector
+                                    onSelect={(e) => {
+                                        loadHistory(e)
+                                    }}
+                                />
+                            </div>
                         }
-                    />
-                }
-                secondNode={() => (
-                    <AutoSpin spinning={false}>
-                        {onlyOneResponse ? (
-                            <>
-                                {redirectedResponse
-                                    ? responseViewer(redirectedResponse)
-                                    : responseViewer(getFirstResponse())}
-                            </>
-                        ) : (
-                            <>
-                                {cachedTotal > 0 ? (
-                                    <HTTPFuzzerResultsCard
-                                        onSendToWebFuzzer={sendToFuzzer}
-                                        sendToPlugin={sendToPlugin}
-                                        setRequest={(r) => {
-                                            setRequest(r)
-                                            refreshRequest()
-                                        }}
-                                        extra={
-                                            <Space>
-                                                <Button
-                                                    size={"small"}
-                                                    onClick={() => {
-                                                        showExtractFuzzerResponseOperator(successFuzzer)
-                                                    }}
-                                                >
-                                                    提取响应数据
-                                                </Button>
-                                                <Popover
-                                                    title={"导出数据"}
-                                                    trigger={["click"]}
-                                                    content={
-                                                        <>
-                                                            <Space>
-                                                                <Button
-                                                                    size={"small"}
-                                                                    type={"primary"}
-                                                                    onClick={() => {
-                                                                        exportHTTPFuzzerResponse(successFuzzer)
-                                                                    }}
-                                                                >
-                                                                    导出所有请求
-                                                                </Button>
-                                                                <Button
-                                                                    size={"small"}
-                                                                    type={"primary"}
-                                                                    onClick={() => {
-                                                                        exportPayloadResponse(successFuzzer)
-                                                                    }}
-                                                                >
-                                                                    仅导出 Payload
-                                                                </Button>
-                                                            </Space>
-                                                        </>
-                                                    }
-                                                >
-                                                    <Button size={"small"}>导出数据</Button>
-                                                </Popover>
-                                                {/*<Input*/}
-                                                {/*    value={keyword}*/}
-                                                {/*    style={{maxWidth: 200}}*/}
-                                                {/*    allowClear*/}
-                                                {/*    placeholder="输入字符串或正则表达式"*/}
-                                                {/*    onChange={e => setKeyword(e.target.value)}*/}
-                                                {/*    addonAfter={*/}
-                                                {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
-                                                {/*                          onClick={downloadContent}/>*/}
-                                                {/*    }></Input>*/}
-                                            </Space>
-                                        }
-                                        failedResponses={failedFuzzer}
-                                        successResponses={
-                                            filterContent.length !== 0 ? filterContent : keyword ? [] : successFuzzer
-                                        }
-                                    />
-                                ) : (
-                                    <Result
-                                        status={"info"}
-                                        title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                        subTitle={
-                                            "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                        }
-                                    />
-                                )}
-                            </>
-                        )}
-                    </AutoSpin>
-                )}
-            />
-            <Modal
-                visible={urlPacketShow}
-                title='从 URL 加载数据包'
-                onCancel={() => setUrlPacketShow(false)}
-                footer={null}
-            >
-                <Form
-                    layout={"vertical"}
-                    onSubmitCapture={(e) => {
-                        e.preventDefault()
-
-                        ipcRenderer
-                            .invoke("Codec", {
-                                Type: "packet-from-url",
-                                Text: targetUrl
-                            })
-                            .then((e) => {
-                                if (e?.Result) {
-                                    setRequest(e.Result)
-                                    refreshRequest()
-                                    setUrlPacketShow(false)
-                                }
-                            })
-                            .finally(() => {
-                            })
+                    >
+                        <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}/>
+                    </Popover> */}
+                            </Space>
+                        )
                     }}
-                    size={"small"}
+                    secondNodeProps={{
+                        title: "Responses",
+                        extra: <div>fsdfdsf</div>
+                    }}
+                    firstNode={
+                        <HTTPPacketEditor
+                            system={props.system}
+                            noHex={true}
+                            noHeader={true}
+                            refreshTrigger={refreshTrigger}
+                            hideSearch={true}
+                            bordered={true}
+                            noMinimap={true}
+                            utf8={true}
+                            originValue={StringToUint8Array(request)}
+                            actions={[
+                                {
+                                    id: "packet-from-url",
+                                    label: "URL转数据包",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: () => {
+                                        setUrlPacketShow(true)
+                                    }
+                                },
+                                {
+                                    id: "copy-as-url",
+                                    label: "复制为 URL",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: () => {
+                                        copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
+                                    }
+                                },
+                                {
+                                    id: "insert-intruder-tag",
+                                    label: "插入模糊测试字典标签",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: (editor) => {
+                                        showDictsAndSelect((i) => {
+                                            monacoEditorWrite(editor, i, editor.getSelection())
+                                        })
+                                    }
+                                },
+                                {
+                                    id: "insert-nullbyte",
+                                    label: "插入空字节标签: {{hexd(00)}}",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: (editor) => {
+                                        editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
+                                    }
+                                },
+                                {
+                                    id: "insert-hotpatch-tag",
+                                    label: "插入热加载标签",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: (editor) => {
+                                        hotPatchTrigger()
+                                    }
+                                },
+                                {
+                                    id: "insert-fuzzfile-tag",
+                                    label: "插入文件标签",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: (editor) => {
+                                        insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                                    }
+                                },
+                                {
+                                    id: "insert-temporary-file-tag",
+                                    label: "插入临时字典",
+                                    contextMenuGroupId: "1_urlPacket",
+                                    run: (editor) => {
+                                        insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                                    }
+                                }
+                            ]}
+                            onEditor={setReqEditor}
+                            onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                        />
+                    }
+                    secondNode={() => (
+                        <AutoSpin spinning={false}>
+                            {onlyOneResponse ? (
+                                <>
+                                    {redirectedResponse
+                                        ? responseViewer(redirectedResponse)
+                                        : responseViewer(getFirstResponse())}
+                                </>
+                            ) : (
+                                <>
+                                    {cachedTotal > 0 ? (
+                                        <HTTPFuzzerResultsCard
+                                            onSendToWebFuzzer={sendToFuzzer}
+                                            sendToPlugin={sendToPlugin}
+                                            setRequest={(r) => {
+                                                setRequest(r)
+                                                refreshRequest()
+                                            }}
+                                            extra={
+                                                <Space>
+                                                    <Button
+                                                        size={"small"}
+                                                        onClick={() => {
+                                                            showExtractFuzzerResponseOperator(successFuzzer)
+                                                        }}
+                                                    >
+                                                        提取响应数据
+                                                    </Button>
+                                                    <Popover
+                                                        title={"导出数据"}
+                                                        trigger={["click"]}
+                                                        content={
+                                                            <>
+                                                                <Space>
+                                                                    <Button
+                                                                        size={"small"}
+                                                                        type={"primary"}
+                                                                        onClick={() => {
+                                                                            exportHTTPFuzzerResponse(successFuzzer)
+                                                                        }}
+                                                                    >
+                                                                        导出所有请求
+                                                                    </Button>
+                                                                    <Button
+                                                                        size={"small"}
+                                                                        type={"primary"}
+                                                                        onClick={() => {
+                                                                            exportPayloadResponse(successFuzzer)
+                                                                        }}
+                                                                    >
+                                                                        仅导出 Payload
+                                                                    </Button>
+                                                                </Space>
+                                                            </>
+                                                        }
+                                                    >
+                                                        <Button size={"small"}>导出数据</Button>
+                                                    </Popover>
+                                                    {/*<Input*/}
+                                                    {/*    value={keyword}*/}
+                                                    {/*    style={{maxWidth: 200}}*/}
+                                                    {/*    allowClear*/}
+                                                    {/*    placeholder="输入字符串或正则表达式"*/}
+                                                    {/*    onChange={e => setKeyword(e.target.value)}*/}
+                                                    {/*    addonAfter={*/}
+                                                    {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
+                                                    {/*                          onClick={downloadContent}/>*/}
+                                                    {/*    }></Input>*/}
+                                                </Space>
+                                            }
+                                            failedResponses={failedFuzzer}
+                                            successResponses={
+                                                filterContent.length !== 0
+                                                    ? filterContent
+                                                    : keyword
+                                                    ? []
+                                                    : successFuzzer
+                                            }
+                                        />
+                                    ) : (
+                                        <Result
+                                            status={"info"}
+                                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                            subTitle={
+                                                "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                            }
+                                        />
+                                    )}
+                                </>
+                            )}
+                        </AutoSpin>
+                    )}
+                />
+                <Modal
+                    visible={urlPacketShow}
+                    title='从 URL 加载数据包'
+                    onCancel={() => setUrlPacketShow(false)}
+                    footer={null}
                 >
-                    <InputItem
-                        label={"从 URL 构造请求"}
-                        value={targetUrl}
-                        setValue={setTargetUrl}
-                        extraFormItemProps={{style: {marginBottom: 8}}}
-                    ></InputItem>
-                    <Form.Item style={{marginBottom: 8}}>
-                        <Button type={"primary"} htmlType={"submit"}>
-                            构造请求
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </Modal>
+                    <Form
+                        layout={"vertical"}
+                        onSubmitCapture={(e) => {
+                            e.preventDefault()
+
+                            ipcRenderer
+                                .invoke("Codec", {
+                                    Type: "packet-from-url",
+                                    Text: targetUrl
+                                })
+                                .then((e) => {
+                                    if (e?.Result) {
+                                        setRequest(e.Result)
+                                        refreshRequest()
+                                        setUrlPacketShow(false)
+                                    }
+                                })
+                                .finally(() => {})
+                        }}
+                        size={"small"}
+                    >
+                        <InputItem
+                            label={"从 URL 构造请求"}
+                            value={targetUrl}
+                            setValue={setTargetUrl}
+                            extraFormItemProps={{style: {marginBottom: 8}}}
+                        ></InputItem>
+                        <Form.Item style={{marginBottom: 8}}>
+                            <Button type={"primary"} htmlType={"submit"}>
+                                构造请求
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+            </div>
         </div>
     )
 }
+interface AdvancedConfigValueProps {
+    // 请求包配置
+    forceFuzz?: boolean
+    isHttps: boolean
+    /**@name 不修复长度 */
+    noFixContentLength: boolean
+    actualHost: string
+    timeout: number
+    // 发包配置
+    concurrent: number
+    proxy: string[]
+    minDelaySeconds: number
+    maxDelaySeconds: number
+    // 重试配置
+    retryCount: number
+    retryConfiguration?: {
+        statusCode: string
+        keyWord: string
+    }
+    noRetryConfiguration?: {
+        statusCode: string
+        keyWord: string
+    }
+    // 重定向配置
+    redirectCount: number
+    redirectConfiguration?: {
+        statusCode: string
+        keyWord: string
+    }
+    noRedirectConfiguration?: {
+        statusCode: string
+        keyWord: string
+    }
+    // 过滤配置
+    filterMode: "drop" | "match"
+    statusCode: string
+    regexps: string
+    keyWord: string
+    minBodySize: number
+    maxBodySize: number
+}
+interface HttpQueryAdvancedConfigProps {
+    defAdvancedConfigValue: AdvancedConfigValueProps
+    isHttps: boolean
+    setIsHttps: (b: boolean) => void
+    visible: boolean
+    setVisible: (b: boolean) => void
+    onInsertYakFuzzer: () => void
+    onValuesChange: (v: AdvancedConfigValueProps) => void
+}
+const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
+    const {defAdvancedConfigValue, isHttps, setIsHttps, visible, setVisible, onInsertYakFuzzer, onValuesChange} = props
+
+    const [retrying, setRetrying] = useState<boolean>(true) // 重试条件
+    const [noRetrying, setNoRetrying] = useState<boolean>(false)
+    const [retryActive, setRetryActive] = useState<string[] | string>(["重试条件"])
+
+    const [redirect, setRedirect] = useState<boolean>(true)
+    const [noRedirect, setNoRedirect] = useState<boolean>(false)
+    const [redirectActive, setRedirectActive] = useState<string[] | string>(["重定向条件"])
+    const ruleContentRef = useRef<any>()
+    const [form] = Form.useForm()
+    useEffect(() => {
+        form.setFieldsValue({isHttps: isHttps})
+    }, [isHttps])
+    useUpdateEffect(() => {
+        const v = form.getFieldsValue()
+        onSetValue(v)
+    }, [retrying, noRetrying, redirect, noRedirect])
+    const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
+        let newValue: AdvancedConfigValueProps = {...allFields}
+        if (!retrying) {
+            newValue.retryConfiguration = undefined
+        }
+        if (!noRetrying) {
+            newValue.noRetryConfiguration = undefined
+        }
+        if (!redirect) {
+            newValue.redirectConfiguration = undefined
+        }
+        if (!noRedirect) {
+            newValue.noRedirectConfiguration = undefined
+        }
+        onValuesChange(newValue)
+    })
+    return (
+        <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}}>
+            <div className={styles["advanced-config-heard"]}>
+                <span>高级配置</span>
+                <YakitSwitch checked={visible} onChange={setVisible} />
+            </div>
+            <Form
+                form={form}
+                colon={false}
+                onValuesChange={(changedFields, allFields) => onSetValue(allFields)}
+                size='small'
+                labelCol={{span: 10}}
+                wrapperCol={{span: 14}}
+                style={{overflowY: "auto"}}
+                initialValues={{
+                    ...defAdvancedConfigValue
+                }}
+            >
+                <Collapse
+                    defaultActiveKey={["请求包配置"]}
+                    ghost
+                    expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                >
+                    <Panel
+                        header='请求包配置'
+                        key='请求包配置'
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const restValue = {
+                                        forceFuzz: true,
+                                        isHttps: false,
+                                        noFixContentLength: false,
+                                        actualHost: "",
+                                        timeout: 30
+                                    }
+                                    form.setFieldsValue({
+                                        ...restValue
+                                    })
+                                    const v = form.getFieldsValue()
+                                    onValuesChange({
+                                        ...v,
+                                        ...restValue
+                                    })
+                                }}
+                            >
+                                重置
+                            </YakitButton>
+                        }
+                    >
+                        <Form.Item label='Intruder'>
+                            <YakitButton
+                                size='small'
+                                type='outline1'
+                                onClick={() => onInsertYakFuzzer()}
+                                icon={<PlusSmIcon className={styles["plus-sm-icon"]} />}
+                            >
+                                插入 yak.fuzz 语法
+                            </YakitButton>
+                        </Form.Item>
+                        <Form.Item label='渲染 Fuzz' name='forceFuzz' valuePropName='checked'>
+                            <YakitSwitch />
+                        </Form.Item>
+                        <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
+                            <YakitSwitch onChange={setIsHttps} />
+                        </Form.Item>
+                        <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
+                            <YakitSwitch />
+                        </Form.Item>
+                        <Form.Item label='请求 Host' name='actualHost'>
+                            <YakitInput placeholder='请输入...' size='small' />
+                        </Form.Item>
+                        <Form.Item label='超时时长' name='timeout'>
+                            <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
+                    </Panel>
+                    <Panel
+                        header='发包配置'
+                        key='发包配置'
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const restValue = {
+                                        concurrent: 20,
+                                        proxy: [],
+                                        minDelaySeconds: undefined,
+                                        maxDelaySeconds: undefined
+                                    }
+                                    form.setFieldsValue({
+                                        ...restValue
+                                    })
+                                    const v = form.getFieldsValue()
+                                    onValuesChange({
+                                        ...v,
+                                        ...restValue
+                                    })
+                                }}
+                            >
+                                重置
+                            </YakitButton>
+                        }
+                    >
+                        <Form.Item label='并发线程' name='concurrent'>
+                            <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
+                        <Form.Item label='设置代理' name='proxy'>
+                            <YakitSelect
+                                options={[
+                                    {
+                                        label: "http://127.0.0.1:7890",
+                                        value: "http://127.0.0.1:7890"
+                                    },
+                                    {
+                                        label: "http://127.0.0.1:8080",
+                                        value: "http://127.0.0.1:8080"
+                                    },
+                                    {
+                                        label: "http://127.0.0.1:8082",
+                                        value: "http://127.0.0.1:8082"
+                                    }
+                                ]}
+                                placeholder='请输入...'
+                                mode='tags'
+                                size='small'
+                                maxTagCount={1}
+                            />
+                        </Form.Item>
+                        <Form.Item label='随机延迟'>
+                            <div className={styles["advanced-config-delay"]}>
+                                <Form.Item
+                                    name='minDelaySeconds'
+                                    noStyle
+                                    normalize={(value) => {
+                                        return value.replace(/\D/g, "")
+                                    }}
+                                >
+                                    <YakitInput
+                                        prefix='Min'
+                                        suffix='s'
+                                        size='small'
+                                        className={styles["delay-input-left"]}
+                                    />
+                                </Form.Item>
+                                <Form.Item
+                                    name='maxDelaySeconds'
+                                    noStyle
+                                    normalize={(value) => {
+                                        return value.replace(/\D/g, "")
+                                    }}
+                                >
+                                    <YakitInput
+                                        prefix='Max'
+                                        suffix='s'
+                                        size='small'
+                                        className={styles["delay-input-right"]}
+                                    />
+                                </Form.Item>
+                            </div>
+                        </Form.Item>
+                    </Panel>
+                    <Panel
+                        header='重试配置'
+                        key='重试配置'
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const restValue = {
+                                        retryCount: 3,
+                                        retryConfiguration: {
+                                            statusCode: undefined,
+                                            keyWord: undefined
+                                        },
+                                        noRetryConfiguration: {
+                                            statusCode: undefined,
+                                            keyWord: undefined
+                                        }
+                                    }
+                                    form.setFieldsValue({
+                                        ...restValue
+                                    })
+                                    const v = form.getFieldsValue()
+                                    onValuesChange({
+                                        ...v,
+                                        ...restValue
+                                    })
+                                }}
+                            >
+                                重置
+                            </YakitButton>
+                        }
+                    >
+                        <Form.Item label='重试次数' name='retryCount'>
+                            <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
+                        <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e)}>
+                            <Panel
+                                header={
+                                    <span className={styles["display-flex"]}>
+                                        <YakitCheckbox
+                                            checked={retrying}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                            onChange={(e) => {
+                                                const {checked} = e.target
+                                                setRetrying(checked)
+                                            }}
+                                        />
+                                        <span style={{marginLeft: 6}}>重试条件</span>
+                                    </span>
+                                }
+                                key='重试条件'
+                                style={{borderBottom: 0}}
+                            >
+                                <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />
+                                </Form.Item>
+                                <Form.Item label='关键字' name={["retryConfiguration", "keyWord"]}>
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />
+                                </Form.Item>
+                            </Panel>
+                            <Panel
+                                header={
+                                    <span className={styles["display-flex"]}>
+                                        <YakitCheckbox
+                                            checked={noRetrying}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                            onChange={(e) => {
+                                                setNoRetrying(e.target.checked)
+                                            }}
+                                        />
+                                        <span style={{marginLeft: 6}}>不重试条件</span>
+                                    </span>
+                                }
+                                key='不重试条件'
+                                style={{borderBottom: 0}}
+                            >
+                                <Form.Item label='状态码' name={["noRetryConfiguration", "statusCode"]}>
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRetrying} />
+                                </Form.Item>
+                                <Form.Item label='关键字' name={["noRetryConfiguration", "keyWord"]}>
+                                    <YakitInput placeholder='Login,登录成功' size='small' disabled={!noRetrying} />
+                                </Form.Item>
+                            </Panel>
+                        </Collapse>
+                    </Panel>
+                    <Panel
+                        header='重定向配置'
+                        key='重定向配置'
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const restValue = {
+                                        redirectCount: 3,
+                                        redirectConfiguration: {
+                                            statusCode: undefined,
+                                            keyWord: undefined
+                                        },
+                                        noRedirectConfiguration: {
+                                            statusCode: undefined,
+                                            keyWord: undefined
+                                        }
+                                    }
+                                    form.setFieldsValue({
+                                        ...restValue
+                                    })
+                                    const v = form.getFieldsValue()
+                                    onValuesChange({
+                                        ...v,
+                                        ...restValue
+                                    })
+                                }}
+                            >
+                                重置
+                            </YakitButton>
+                        }
+                    >
+                        <Form.Item label='重定向次数' name='redirectCount'>
+                            <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
+                        <Collapse ghost activeKey={redirectActive} onChange={(e) => setRedirectActive(e)}>
+                            <Panel
+                                header={
+                                    <span className={styles["display-flex"]}>
+                                        <YakitCheckbox
+                                            checked={redirect}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                            onChange={(e) => {
+                                                setRedirect(e.target.checked)
+                                            }}
+                                        />
+                                        <span style={{marginLeft: 6}}>重定向条件</span>
+                                    </span>
+                                }
+                                key='重定向条件'
+                                style={{borderBottom: 0}}
+                            >
+                                <Form.Item label='状态码' name={["redirectConfiguration", "statusCode"]}>
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!redirect} />
+                                </Form.Item>
+                                <Form.Item label='关键字' name={["redirectConfiguration", "keyWord"]}>
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!redirect} />
+                                </Form.Item>
+                            </Panel>
+                            <Panel
+                                header={
+                                    <span className={styles["display-flex"]}>
+                                        <YakitCheckbox
+                                            checked={noRedirect}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                            onChange={(e) => {
+                                                setNoRedirect(e.target.checked)
+                                            }}
+                                        />
+                                        <span style={{marginLeft: 6}}>不重定向条件</span>
+                                    </span>
+                                }
+                                key='不重定向条件'
+                                style={{borderBottom: 0}}
+                            >
+                                <Form.Item label='状态码' name={["noRedirectConfiguration", "statusCode"]}>
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRedirect} />
+                                </Form.Item>
+                                <Form.Item label='关键字' name={["noRedirectConfiguration", "keyWord"]}>
+                                    <YakitInput placeholder='Login,登录成功' size='small' disabled={!noRedirect} />
+                                </Form.Item>
+                            </Panel>
+                        </Collapse>
+                    </Panel>
+                    <Panel
+                        header='过滤配置'
+                        key='过滤配置'
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const restValue = {
+                                        filterMode: "drop",
+                                        statusCode: "",
+                                        Regexps: "",
+                                        keyWord: "",
+                                        MinBodySize: undefined,
+                                        MaxBodySize: undefined
+                                    }
+                                    form.setFieldsValue({
+                                        ...restValue
+                                    })
+                                    ruleContentRef?.current?.onSetValue("")
+                                    const v = form.getFieldsValue()
+                                    onValuesChange({
+                                        ...v,
+                                        ...restValue
+                                    })
+                                }}
+                            >
+                                重置
+                            </YakitButton>
+                        }
+                    >
+                        <Form.Item label='过滤器模式' name='filterMode'>
+                            <YakitRadioButtons
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: "drop",
+                                        label: "丢弃"
+                                    },
+                                    {
+                                        value: "match",
+                                        label: "保留"
+                                    }
+                                ]}
+                            />
+                        </Form.Item>
+                        <Form.Item label='状态码' name='statusCode'>
+                            <YakitInput placeholder='200,300-399' size='small' />
+                        </Form.Item>
+                        <Form.Item label='正则' name='Regexps'>
+                            <RuleContent
+                                ref={ruleContentRef}
+                                getRule={(val) => {
+                                    form.setFieldsValue({
+                                        Regexps: val
+                                    })
+                                }}
+                                inputProps={{
+                                    size: "small"
+                                }}
+                            />
+                        </Form.Item>
+                        <Form.Item label='关键字' name='keyWord'>
+                            <YakitInput placeholder='Login,登录成功' size='small' />
+                        </Form.Item>
+                        <Form.Item label='响应大小'>
+                            <div className={styles["advanced-config-delay"]}>
+                                <Form.Item
+                                    name='MinBodySize'
+                                    noStyle
+                                    normalize={(value) => {
+                                        return value.replace(/\D/g, "")
+                                    }}
+                                >
+                                    <YakitInput
+                                        prefix='Min'
+                                        suffix='s'
+                                        size='small'
+                                        className={styles["delay-input-left"]}
+                                    />
+                                </Form.Item>
+                                <Form.Item
+                                    name='MaxBodySize'
+                                    noStyle
+                                    normalize={(value) => {
+                                        return value.replace(/\D/g, "")
+                                    }}
+                                >
+                                    <YakitInput
+                                        prefix='Max'
+                                        suffix='s'
+                                        size='small'
+                                        className={styles["delay-input-right"]}
+                                    />
+                                </Form.Item>
+                            </div>
+                        </Form.Item>
+                    </Panel>
+                </Collapse>
+            </Form>
+        </div>
+    )
+})

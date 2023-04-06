@@ -26,7 +26,7 @@ const {Option} = Select
  * @param {CSSProperties} wrapperStyle Switch装饰div的style
  */
 export const YakitSelectCustom = <ValueType, OptionType>(
-    {className, size, wrapperClassName, wrapperStyle, dropdownRender, ...props}: YakitSelectProps<OptionType>,
+    {className, size='middle', wrapperClassName, wrapperStyle, dropdownRender, ...props}: YakitSelectProps<OptionType>,
     ref: React.Ref<BaseSelectRef>
 ) => {
     const [show, setShow] = useState<boolean>(false)
@@ -64,7 +64,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 tagRender={(props) => {
                     return (
                         <YakitTag size={size} {...props}>
-                            {props.label}
+                            <span className='content-ellipsis' style={{width:'100%'}}>{props.label}</span>
                         </YakitTag>
                     )
                 }}

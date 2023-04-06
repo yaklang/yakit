@@ -1,5 +1,6 @@
-import {ReactNode} from "react"
-import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
+import { YakitInputProps } from "@/components/yakitUI/YakitInput/YakitInputType"
+import { ReactNode } from "react"
+import { HTTPCookieSetting, HTTPHeader } from "../MITMContentReplacerHeaderOperator"
 
 export interface MITMContentReplacerRule {
     // 文本字符串，正则/Re2/字符串硬匹配
@@ -90,8 +91,9 @@ export interface CloseTipModalProps {
 }
 
 export interface RuleContentProps {
+    ref?: any
     getRule: (s: string) => void
-    // rule: string
+    inputProps?: YakitInputProps
 }
 
 export interface RuleExportAndImportButtonProps {

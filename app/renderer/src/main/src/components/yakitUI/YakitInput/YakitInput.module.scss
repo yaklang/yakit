@@ -92,7 +92,7 @@
     padding: 6px 12px;
     font-size: 14px;
     color: #31343f;
-
+    border-color: var(--yakit-border-color);
     :global {
         .ant-input {
             font-size: 12px;
@@ -108,8 +108,11 @@
 
 .yakit-input-small {
     height: 24px;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 16px;
 
-    :gllobal {
+    :global {
         .ant-input {
             height: 24px;
         }

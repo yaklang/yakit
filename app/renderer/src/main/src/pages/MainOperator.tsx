@@ -91,7 +91,7 @@ const singletonRoute: Route[] = [
     Route.ScreenRecorderPage,
 ]
 /** 不需要首页组件安全边距的页面 */
-const noPaddingPage = [
+export const noPaddingPage = [
     Route.PayloadGenerater_New,
     Route.DataCompare,
     Route.YakScript,
@@ -101,7 +101,8 @@ const noPaddingPage = [
     Route.TCPPortLog,
     Route.DNSLog,
     Route.NewHome,
-    Route.DB_CVE
+    Route.DB_CVE,
+    Route.HTTPFuzzer
 ]
 
 export const defaultUserInfo: UserInfoProps = {

@@ -1,5 +1,5 @@
 import {Col, Divider, Form, Row} from "antd"
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useImperativeHandle, useState} from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
 import {
@@ -283,7 +283,7 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
                                     setEditMatchedRegexp(matchedRegexp)
                                 }}
                             />
-                            <Divider type='vertical' />
+                            <Divider type='vertical' style={{top: 1}} />
                             <CheckIcon
                                 onClick={() => {
                                     onSave(matchedRegexp)
@@ -302,7 +302,7 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
                         <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
                             取消
                         </div>
-                        <Divider type='vertical' style={{margin: "0 8px", top: 2}} />
+                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
                         <div
                             className={styles["save-btn"]}
                             onClick={() => {
@@ -535,8 +535,13 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
     )
 })
 
-export const RuleContent: React.FC<RuleContentProps> = React.memo((props) => {
-    const {getRule} = props
+export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, ref) => {
+    useImperativeHandle(ref, () => ({
+        onSetValue: (v) => {
+            setRule(v)
+        }
+    }))
+    const {getRule, inputProps} = props
     const [rule, setRule] = useState<string>("")
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const onGetRule = useMemoizedFn((val: string) => {
@@ -544,9 +549,11 @@ export const RuleContent: React.FC<RuleContentProps> = React.memo((props) => {
         getRule(val)
         setRuleVisible(false)
     })
+
     return (
         <>
             <YakitInput
+                {...inputProps}
                 value={rule}
                 placeholder='可用右侧辅助工具，自动生成正则'
                 addonAfter={
