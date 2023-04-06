@@ -20,14 +20,14 @@ import {
     Divider,
     Collapse
 } from "antd"
-import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
+import {HTTPPacketEditor, HTTP_PACKET_EDITOR_FONT_SIZE, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
 import {InputFloat, InputInteger, InputItem, OneLine, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {DeleteOutlined, ProfileOutlined} from "@ant-design/icons"
+import {DeleteOutlined, EnterOutlined, ProfileOutlined} from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
@@ -56,8 +56,10 @@ import {
     ChevronRightIcon,
     ChromeSvgIcon,
     ClockIcon,
+    CogIcon,
     PaperAirplaneIcon,
-    PlusSmIcon
+    PlusSmIcon,
+    WrapIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
@@ -76,6 +78,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -337,6 +340,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [keyword, setKeyword] = useState<string>("")
     const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
     const [timer, setTimer] = useState<any>()
+
+    // editor
+    const [noWordwrap, setNoWordwrap] = useState(false)
+    const [fontSize, setFontSize] = useState<number>()
 
     useEffect(() => {
         if (props.shareContent) {
@@ -1014,6 +1021,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             StatusCode: val.statusCode?.split(",") || []
         })
     })
+
     return (
         <div className={styles["http-fuzzer-body"]}>
             <HttpQueryAdvancedConfig
@@ -1224,7 +1232,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 >
                                     热加载
                                 </YakitButton>
-                                <Popover
+                                <YakitPopover
                                     trigger={"click"}
                                     title={"从 URL 加载数据包"}
                                     content={
@@ -1249,16 +1257,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 }}
                                                 size={"small"}
                                             >
-                                                <InputItem
-                                                    label={"从 URL 构造请求"}
-                                                    value={targetUrl}
-                                                    setValue={setTargetUrl}
-                                                    extraFormItemProps={{style: {marginBottom: 8}}}
-                                                />
+                                                <Form.Item label={"从 URL 构造请求"}>
+                                                    <YakitInput
+                                                        value={targetUrl}
+                                                        onChange={(e) => setTargetUrl(e.target.value)}
+                                                    />
+                                                </Form.Item>
                                                 <Form.Item style={{marginBottom: 8}}>
-                                                    <Button type={"primary"} htmlType={"submit"}>
+                                                    <YakitButton type={"primary"} htmlType={"submit"}>
                                                         构造请求
-                                                    </Button>
+                                                    </YakitButton>
                                                 </Form.Item>
                                             </Form>
                                         </div>
@@ -1267,7 +1275,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <YakitButton size={"small"} type={"primary"}>
                                         URL
                                     </YakitButton>
-                                </Popover>
+                                </YakitPopover>
+                                <EditorsSetting
+                                    noWordwrap={noWordwrap}
+                                    setNoWordwrap={setNoWordwrap}
+                                    fontSize={fontSize}
+                                    setFontSize={setFontSize}
+                                />
                             </div>
                         )
                     }}
@@ -1348,6 +1362,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             ]}
                             onEditor={setReqEditor}
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                            noWordWrapState={noWordwrap}
+                            fontSizeState={fontSize}
                         />
                     }
                     secondNode={() => (
@@ -2012,5 +2028,98 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                 </Collapse>
             </Form>
         </div>
+    )
+})
+
+interface EditorsSettingProps {
+    noWordwrap: boolean
+    setNoWordwrap: (b: boolean) => void
+    fontSize?: number
+    setFontSize: (n: number) => void
+}
+/**
+ * @description 编辑器配置
+ */
+const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
+    const {noWordwrap, setNoWordwrap, fontSize, setFontSize} = props
+    useEffect(() => {
+        // 无落如何都会设置，最小为 12
+        getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
+            .then((data: string) => {
+                try {
+                    const size = parseInt(data)
+                    if (size > 0) {
+                        setFontSize(size)
+                    } else {
+                        setFontSize(12)
+                    }
+                } catch (e) {
+                    setFontSize(12)
+                }
+            })
+            .catch(() => {
+                setFontSize(12)
+            })
+    }, [])
+    return (
+        <>
+            <Tooltip title={"不自动换行"}>
+                <YakitButton
+                    size={"small"}
+                    type={noWordwrap ? "outline2" : "primary"}
+                    icon={<WrapIcon />}
+                    onClick={() => {
+                        setNoWordwrap(!noWordwrap)
+                    }}
+                    className={classNames(styles["editor-cog-icon"], {
+                        [styles["editor-wrap-icon"]]: !noWordwrap
+                    })}
+                />
+            </Tooltip>
+            <YakitPopover
+                title={"配置编辑器"}
+                content={
+                    <>
+                        <Form
+                            onSubmitCapture={(e) => {
+                                e.preventDefault()
+                            }}
+                            size={"small"}
+                            layout={"horizontal"}
+                            wrapperCol={{span: 16}}
+                            labelCol={{span: 8}}
+                        >
+                            {(fontSize || 0) > 0 && (
+                                <YakitRadioButtons
+                                    value={fontSize}
+                                    onChange={(e) => {
+                                        const size = e.target.value
+                                        setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
+                                        setFontSize(size)
+                                    }}
+                                    buttonStyle='solid'
+                                    options={[
+                                        {
+                                            value: 12,
+                                            label: "小"
+                                        },
+                                        {
+                                            value: 16,
+                                            label: "中"
+                                        },
+                                        {
+                                            value: 20,
+                                            label: "大"
+                                        }
+                                    ]}
+                                />
+                            )}
+                        </Form>
+                    </>
+                }
+            >
+                <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
+            </YakitPopover>
+        </>
     )
 })

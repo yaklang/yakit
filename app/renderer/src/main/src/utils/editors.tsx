@@ -23,7 +23,7 @@ import {HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./editors.css"
-import {useDebounceFn, useFocusWithin, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Buffer} from "buffer"
 import {failed, info} from "./notification"
 import {StringToUint8Array, Uint8ArrayToString} from "./str"
@@ -425,6 +425,11 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     utf8?: boolean
 
     defaultSearchKeyword?: string
+
+    /**@name 外部控制换行状态 */
+    noWordWrapState?: boolean
+    /**@name 外部控制字体大小 */
+    fontSizeState?: number
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
@@ -479,6 +484,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     // 操作系统类型
     const [system, setSystem] = useState<string>()
+
+    useUpdateEffect(() => {
+        setNoWordwrap(props.noWordWrapState || false)
+    }, [props.noWordWrapState])
+    useUpdateEffect(() => {
+        if (!props.fontSizeState) return
+        setFontSize(props.fontSizeState)
+    }, [props.fontSizeState])
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))

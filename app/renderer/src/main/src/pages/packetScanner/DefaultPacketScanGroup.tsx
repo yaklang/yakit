@@ -70,7 +70,9 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                 </Space>
             ]}
         >
-            <YakitButton size={"small"}>数据包扫描</YakitButton>
+            <YakitButton size={"small"} type='outline2'>
+                数据包扫描
+            </YakitButton>
         </YakitPopover>
     )
 }

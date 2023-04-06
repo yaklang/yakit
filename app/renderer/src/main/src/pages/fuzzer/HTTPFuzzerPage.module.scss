@@ -186,13 +186,42 @@
         .ant-form {
             color: var(--yakit-header-color);
         }
-        .ant-form-item-label > label{
+        .ant-form-item-label > label {
             color: var(--yakit-header-color);
         }
         .ant-form-item-explain,
         .ant-form-item-extra {
             color: var(--yakit-helper-text-color);
             font-size: 12px;
+        }
+    }
+}
+
+.editor-cog-icon {
+    padding: 0;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    svg {
+        height: 16px;
+        width: 16px;
+        color: var(--yakit-body-text-color);
+        &:hover {
+            color: var(--yakit-primary-4);
+        }
+        &:active {
+            color: var(--yakit-primary-6);
+        }
+    }
+}
+.editor-wrap-icon {
+    svg {
+        color: #fff;
+        &:hover {
+            color: #fff;
+        }
+        &:active {
+            color: #fff;
         }
     }
 }
