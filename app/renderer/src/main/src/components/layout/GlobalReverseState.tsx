@@ -6,7 +6,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {failed, info} from "@/utils/notification"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./globalReverseState.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -124,7 +124,7 @@ export const GlobalReverseState: React.FC<GlobalReverseStateProp> = React.memo((
 
     return (
         <div
-            className={classnames(
+            className={classNames(
                 styles["global-reserver-state-wrapper"],
                 {[styles["link-state"]]: isLink},
                 {[styles["unlink-stat"]]: !isLink}

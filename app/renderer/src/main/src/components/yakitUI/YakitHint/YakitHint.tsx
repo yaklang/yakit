@@ -4,7 +4,7 @@ import {YakitHintModal} from "./YakitHintModal"
 import {YakitHintProps} from "./YakitHintType"
 import {usePrevious} from "ahooks"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./YakitHint.module.scss"
 
 export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
@@ -46,7 +46,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
     return ReactDOM.createPortal(
         <div
             style={{backgroundColor: mask && maskColor ? maskColor : ""}}
-            className={classnames(visible ? styles["yakit-hint-wrapper"] : styles["yakit-hint-hidden-wrapper"], {
+            className={classNames(visible ? styles["yakit-hint-wrapper"] : styles["yakit-hint-hidden-wrapper"], {
                 [styles["yakit-hint-mask-wrapper"]]: mask
             })}
         >

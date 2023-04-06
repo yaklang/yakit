@@ -437,6 +437,15 @@ service Yak {
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
 
+  /*
+    ChaosMakerRule: Bas
+  */
+  rpc ImportChaosMakerRules(ImportChaosMakerRulesRequest) returns (Empty);
+  rpc QueryChaosMakerRule(QueryChaosMakerRuleRequest) returns (QueryChaosMakerRuleResponse);
+  rpc DeleteChaosMakerRuleByID(DeleteChaosMakerRuleByIDRequest) returns (Empty);
+  rpc ExecuteChaosMakerRule(ExecuteChaosMakerRuleRequest) returns (stream ExecResult);
+  rpc IsRemoteAddrAvailable(IsRemoteAddrAvailableRequest) returns (IsRemoteAddrAvailableResponse);
+
   // CVE
   rpc IsCVEDatabaseReady(IsCVEDatabaseReadyRequest) returns (IsCVEDatabaseReadyResponse);
   rpc UpdateCVEDatabase(UpdateCVEDatabaseRequest) returns (stream ExecResult);
@@ -446,6 +455,52 @@ service Yak {
   rpc QueryCVE(QueryCVERequest) returns (QueryCVEResponse);
   rpc GetCVE(GetCVERequest) returns (CVEDetailEx);
   rpc SaveTextToTemporalFile(SaveTextToTemporalFileRequest) returns (SaveTextToTemporalFileResponse);
+
+  // Screcorder
+  rpc IsScrecorderReady(IsScrecorderReadyRequest) returns (IsScrecorderReadyResponse);
+  rpc InstallScrecorder(InstallScrecorderRequest) returns (stream ExecResult);
+  rpc StartScrecorder(StartScrecorderRequest) returns (stream ExecResult);
+  rpc QueryScreenRecorders(QueryScreenRecorderRequest) returns (QueryScreenRecorderResponse);
+}
+
+message ScreenRecorder {
+  int64 Id = 1;
+  string Filename = 2;
+  string NoteInfo = 3;
+  string Project = 4;
+  int64 CreatedAt = 5;
+  int64 UpdatedAt = 6;
+}
+
+message QueryScreenRecorderRequest {
+  string Project = 1;
+  Paging Pagination = 2;
+}
+
+message QueryScreenRecorderResponse {
+  repeated ScreenRecorder Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message StartScrecorderRequest {
+  int64 Framerate = 1;
+  string ResolutionSize = 2;
+  double CoefficientPTS = 3;
+  bool DisableMouse = 4;
+}
+
+message InstallScrecorderRequest {
+  string Proxy = 1;
+}
+
+message IsScrecorderReadyRequest {
+
+}
+
+message IsScrecorderReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
 }
 
 message GetCVERequest {
@@ -530,6 +585,86 @@ message SaveTextToTemporalFileRequest {
 
 message SaveTextToTemporalFileResponse {
   string FileName = 1;
+}
+
+message ImportChaosMakerRulesRequest {
+  string Content = 1;
+  // suricata / http-request / icmp
+  string RuleType = 2;
+}
+
+message ChaosMakerRuleGroup {
+  string Title = 1;
+  string Description = 2;
+  string Keywords = 3;
+  repeated string Protocols = 4;
+  string Solution = 5;
+}
+
+message IsRemoteAddrAvailableRequest {
+  string Addr = 1;
+  int64 Timeout = 2;
+  string Probe = 3;
+}
+
+message IsRemoteAddrAvailableResponse {
+  string Addr = 1;
+  bool IsAvailable = 2;
+  string Reason = 3;
+  string Status = 4;
+}
+
+message ExecuteChaosMakerRuleRequest {
+  repeated ChaosMakerRuleGroup Groups = 1;
+  repeated string ExtraOverrideDestinationAddress = 2;
+
+  // 随机延迟
+  int64 Concurrent = 3;
+  int32 TrafficDelayMinSeconds = 4;
+  int32 TrafficDelayMaxSeconds = 5;
+
+  // 额外重复，如果为 -1 认为是永久重复
+  int64 ExtraRepeat = 6;
+
+  // 每组流量之间重复的次数
+  int64 GroupGapSeconds = 7;
+}
+
+message ChaosMakerRule {
+  int64 Id = 1;
+  string RawTrafficBeyondIpPacketBase64 = 2;
+  string RawTrafficBeyondLinkLayerBase64 = 3;
+  string RawTrafficBeyondHttpBase64 = 4;
+  string RuleType = 5;
+  string SuricataRaw = 6;
+  string Protocol = 7;
+  string Action = 8;
+  string Name = 9;
+  string NameZh = 10;
+  string ClassType = 11;
+  string ClassTypeZh = 12;
+  string Group = 13;
+  string Keywords = 15;
+  string KeywordsZh = 16;
+  string Description = 17;
+  string DescriptionZh = 18;
+  repeated string CVE = 19;
+}
+
+message QueryChaosMakerRuleResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated ChaosMakerRule Data = 3;
+}
+
+message DeleteChaosMakerRuleByIDRequest {
+  int64 Id = 1;
+}
+
+message QueryChaosMakerRuleRequest {
+  Paging Pagination = 1;
+  string RuleType = 2;
+  repeated string Keywords = 3;
 }
 
 message ImportsProfileDatabaseRequest {
@@ -1935,6 +2070,7 @@ message AddMenuRequest {
 message QueryAllMenuItemRequest {
   string Mode = 1;
   string Group = 2;
+  string Verbose = 3;
 }
 
 message ImportMenuItemRequest {
@@ -2930,6 +3066,7 @@ message ExecResult {
   int64 Id = 6;
 
   string RuntimeID = 7;
+  float Progress = 8;
 }
 
 message GetLicenseResponse {

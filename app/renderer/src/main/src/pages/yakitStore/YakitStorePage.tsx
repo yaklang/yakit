@@ -2562,11 +2562,11 @@ const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY"
 const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH"
 const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH"
 
-export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
+export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any, onlyId?: boolean}) => {
     const [gitUrl, setGitUrl] = useState("https://github.com/yaklang/yakit-store")
     const [nucleiGitUrl, setNucleiGitUrl] = useState("https://github.com/projectdiscovery/nuclei-templates")
     const [proxy, setProxy] = useState("")
-    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei" | "uploadId">("official")
+    const [loadMode, setLoadMode] = useState<"official" | "giturl" | "local" | "local-nuclei" | "uploadId">(p.onlyId ? "uploadId" : "official")
     const [localPath, setLocalPath] = useState("")
     const [localNucleiPath, setLocalNucleiPath] = useState("")
     const [localId, setLocalId] = useState<string>("")
@@ -2658,6 +2658,10 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                         .then(() => {
                             p.onFinished()
                             success("插件导入成功")
+                            ipcRenderer.invoke("send-to-tab", {
+                                type: "open-plugin-store",
+                                data:{ }
+                            })
                         })
                         .catch((e: any) => {
                             failed(`插件导入失败: ${e}`)
@@ -2665,7 +2669,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                 }
             }}
         >
-            <SelectOne
+            {!p.onlyId && <SelectOne
                 label={" "}
                 colon={false}
                 data={[
@@ -2677,7 +2681,7 @@ export const LoadYakitPluginForm = React.memo((p: {onFinished: () => any}) => {
                 ]}
                 value={loadMode}
                 setValue={setLoadMode}
-            />
+            />}
             {["official", "giturl"].includes(loadMode) && (
                 <>
                     {loadMode === "official" && (

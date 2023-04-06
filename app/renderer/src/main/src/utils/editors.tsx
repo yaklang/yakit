@@ -7,7 +7,7 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP"
 import "./monacoSpec/yakEditor"
 import "./monacoSpec/html"
-import {Button, Card, Empty, Form, Input, Modal, Popover, Space, Tag, Tooltip} from "antd"
+import {Button, Card, Empty, Form, Input, Modal, Popover, Space, Tag, Tooltip, Row, Col} from "antd"
 import {SelectOne} from "./inputUtil"
 import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {showDrawer} from "./showModal"
@@ -86,7 +86,9 @@ export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
         />
     )
 }
-
+export interface YakInteractiveEditorProp {
+    yakEditorProp: EditorProps
+}
 export const YakEditor: React.FC<EditorProps> = (props) => {
     const [editor, setEditor] = useState<IMonacoEditor>()
     const [reload, setReload] = useState(false)
@@ -398,6 +400,22 @@ export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: 
     )
 })
 
+export const YakInteractiveEditor: React.FC<YakInteractiveEditorProp> = React.memo(
+    (props: YakInteractiveEditorProp) => {
+        return (
+            <>
+                <Row style={{height: "100%"}}>
+                    <Col span={16}>
+                        <YakEditor {...{...props.yakEditorProp, noMiniMap: true}} />
+                    </Col>
+                    <Col span={8}>
+                        <div style={{flex: 1}}>变量预览</div>
+                    </Col>
+                </Row>
+            </>
+        )
+    }
+)
 export const HTTP_PACKET_EDITOR_FONT_SIZE = "HTTP_PACKET_EDITOR_FONT_SIZE"
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
@@ -545,7 +563,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             console.info("加载默认搜索字符串失败", props.defaultSearchKeyword)
         }
     }, [props.defaultSearchKeyword, monacoEditor])
-
     return (
         <div style={{width: "100%", height: "100%"}}>
             <Card

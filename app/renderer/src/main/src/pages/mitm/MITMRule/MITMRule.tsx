@@ -318,8 +318,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 width: 80,
                 render: (text, record: MITMContentReplacerRule) => (
                     <div className={classNames(styles["table-hit-color-content"])}>
-                        <div className={classNames(styles["table-hit-color"], HitColor[text].className)} />
-                        {HitColor[text].title}
+                        <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
+                        {HitColor[text]?.title || "-"}
                     </div>
                 )
             },

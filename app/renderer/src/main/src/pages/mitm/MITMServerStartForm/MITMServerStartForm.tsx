@@ -126,7 +126,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
             setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
         }
-        setLocalValue(WEB_FUZZ_PROXY, params.downstreamProxy)
+        // setLocalValue(WEB_FUZZ_PROXY, params.downstreamProxy)
         setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         // setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, params.downstreamProxy)

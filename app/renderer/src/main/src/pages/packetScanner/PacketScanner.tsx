@@ -138,8 +138,6 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
 })
 
 export const execPacketScan = (ids: number[], keyword?: string) => {
-    console.log("ids", ids, keyword)
-
     execPacketScanWithNewTab(ids, false, new Uint8Array(), keyword)
 }
 

@@ -1,0 +1,12 @@
+.select-one {
+  display: inline-flex;
+  gap: 6px;
+  .ant-radio-button-wrapper:not(:first-child)::before {
+    display: none;
+  }
+
+  .ant-radio-button-wrapper {
+    border-left-width: 1px;
+    border-radius: 4px !important;
+  }
+}

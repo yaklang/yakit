@@ -6,7 +6,7 @@ import {YakitHintModalProps} from "./YakitHintType"
 import {ShieldExclamationSvgIcon} from "@/assets/newIcon"
 import {YakitButton} from "../YakitButton/YakitButton"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./YakitHint.module.scss"
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
@@ -54,7 +54,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
 
     return (
         <Draggable
-            defaultClassName={classnames(
+            defaultClassName={classNames(
                 visible ? styles["yakit-hint-modal-wrapper"] : styles["yakit-hint-modal-hidden"],
                 {[styles["yakit-hint-modal-top"]]: isTop},
                 wrapClassName
@@ -65,7 +65,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         >
             <div style={{width: width || 448}} ref={draggleRef}>
                 <div
-                    className={classnames(styles["yakit-hint-modal-container"], {
+                    className={classNames(styles["yakit-hint-modal-container"], {
                         [styles["yakit-hint-modal-container-box-shadow"]]: !isMask
                     })}
                     onClick={() => {

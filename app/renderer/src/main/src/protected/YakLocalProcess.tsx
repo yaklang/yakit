@@ -6,6 +6,7 @@ import {showModal} from "../utils/showModal"
 import {YakUpgrade} from "../components/YakUpgrade"
 import {useMemoizedFn} from "ahooks"
 import {ToolOutlined} from "@ant-design/icons"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 
 export interface YakLocalProcessProp {
     onConnected?: (port: number, host: string) => any

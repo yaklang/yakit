@@ -1,7 +1,7 @@
 import React, {useMemo} from "react"
 import {Button, ButtonProps} from "antd"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./yakitButton.module.scss"
 
 /**
@@ -91,12 +91,12 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
     }, [size])
 
     return (
-        <div className={classnames(styles["yakit-button-wrapper"], styles[typeClass || ""], themeClass || "")}>
+        <div className={classNames(styles["yakit-button-wrapper"], styles[typeClass || ""], themeClass || "")}>
             <Button
                 {...resePopover}
                 size='middle'
                 type='default'
-                className={classnames(styles[sizeClass], styles["yakit-button"], styles["yakit-button-type"], {
+                className={classNames(styles[sizeClass], styles["yakit-button"], styles["yakit-button-type"], {
                     [className || ""]: !!className
                 })}
             >

@@ -605,7 +605,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         }
         if (isFullScreenFirstNode) {
             p.secondRatio = "0%"
-            p.firstRatio = "100%"
+            p.firstRatio = "calc(100% + 6px)"
         }
         return p
     }, [isFullScreenSecondNode, isFullScreenFirstNode])
@@ -623,7 +623,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             )}
             lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={340}
-            secondMinSize={400}
+            secondMinSize={620}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
@@ -632,6 +632,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     {onRenderSecondNode()}
                 </div>
             )}
+            secondNodeStyle={{padding: isFullScreenFirstNode ? 0 : undefined}}
+            firstNodeStyle={{padding: isFullScreenSecondNode ? 0 : undefined}}
             {...ResizeBoxProps}
         />
     )
