@@ -37,6 +37,19 @@
             line-height: 16px;
         }
     }
+    .fuzzer-firstNode-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .fuzzer-flipping-pages {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            .fuzzer-flipping-pages-tip {
+                color: var(--yakit-header-color);
+            }
+        }
+    }
 }
 
 .display-flex {
@@ -120,7 +133,7 @@
         .ant-form-item {
             margin-bottom: 12px;
         }
-        .ant-select.ant-select-in-form-item{
+        .ant-select.ant-select-in-form-item {
             height: auto;
         }
     }
@@ -161,6 +174,25 @@
         svg {
             width: 12px;
             height: 12px;
+        }
+    }
+}
+
+.http-fuzzer-hotPatch {
+    padding: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+    :global {
+        .ant-form {
+            color: var(--yakit-header-color);
+        }
+        .ant-form-item-label > label{
+            color: var(--yakit-header-color);
+        }
+        .ant-form-item-explain,
+        .ant-form-item-extra {
+            color: var(--yakit-helper-text-color);
+            font-size: 12px;
         }
     }
 }

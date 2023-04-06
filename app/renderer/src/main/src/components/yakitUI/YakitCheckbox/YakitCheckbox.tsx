@@ -14,13 +14,17 @@ import "./yakitCheckBoxAnimation.scss"
 /**
  * @description: 两种方式的数字输入
  * @augments CheckboxProps 继承antd的CheckboxProps默认属性
- * @param {string} wrapperClassName  
+ * @param {string} wrapperClassName
  */
 export const YakitCheckbox: React.FC<YakitCheckboxProps> = (props) => {
     const {wrapperClassName} = props
-    return (
-        <span className={classNames(styles["yakit-checkbox-wrapper"],wrapperClassName)}>
-            {(props.children && <Checkbox {...props}>{props.children}</Checkbox>) || <Checkbox {...props} />}
+    return props.children ? (
+        <span className={classNames(styles["yakit-checkbox-children-wrapper"],styles["yakit-checkbox-wrapper"], wrapperClassName)}>
+            <Checkbox {...props}>{props.children}</Checkbox>
+        </span>
+    ) : (
+        <span className={classNames(styles["yakit-checkbox-wrapper"], wrapperClassName)}>
+            <Checkbox {...props} />
         </span>
     )
 }

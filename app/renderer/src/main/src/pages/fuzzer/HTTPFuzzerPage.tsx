@@ -75,6 +75,7 @@ import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAut
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -836,11 +837,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [maxDelaySeconds])
 
     const hotPatchTrigger = useMemoizedFn(() => {
-        let m = showModal({
+        let m = showYakitModal({
             title: "调试 / 插入热加载代码",
             width: "80%",
+            footer: null,
             content: (
-                <div>
+                <div className={styles["http-fuzzer-hotPatch"]}>
                     <HTTPFuzzerHotPatch
                         initialHotPatchCode={hotPatchCode}
                         initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
@@ -995,7 +997,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setMinDelaySeconds(val.minDelaySeconds)
         setMaxDelaySeconds(val.maxDelaySeconds)
         // 重试配置
-        // retryCount
+        // maxRetryTimes
         // retryConfiguration
         // noRetryConfiguration
         // 重定向配置
@@ -1028,7 +1030,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     minDelaySeconds,
                     maxDelaySeconds,
                     // 重试配置
-                    retryCount: 3,
+                    maxRetryTimes: 3,
                     retryConfiguration: {
                         statusCode: "",
                         keyWord: ""
@@ -1190,34 +1192,38 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     firstNodeProps={{
                         title: "Request",
                         extra: (
-                            <Space size={2}>
-                                <ChevronLeftIcon
-                                    className={classNames(styles["chevron-icon"], {
-                                        [styles["chevron-icon-disable"]]: currentPage === 0 || currentPage === 1
-                                    })}
-                                    onClick={() => onPrePage()}
-                                />
-                                <ChevronRightIcon
-                                    className={classNames(styles["chevron-icon"], {
-                                        [styles["chevron-icon-disable"]]: currentPage == total
-                                    })}
-                                    onClick={() => onNextPage()}
-                                />
+                            <div className={styles["fuzzer-firstNode-extra"]}>
+                                <div className={styles["fuzzer-flipping-pages"]}>
+                                    <ChevronLeftIcon
+                                        className={classNames(styles["chevron-icon"], {
+                                            [styles["chevron-icon-disable"]]: currentPage === 0 || currentPage === 1
+                                        })}
+                                        onClick={() => onPrePage()}
+                                    />
+                                    <span className={styles["fuzzer-flipping-pages-tip"]}>
+                                        ID:{currentSelectId || "-"}
+                                    </span>
+                                    <ChevronRightIcon
+                                        className={classNames(styles["chevron-icon"], {
+                                            [styles["chevron-icon-disable"]]: currentPage == total
+                                        })}
+                                        onClick={() => onNextPage()}
+                                    />
+                                </div>
                                 <PacketScanButton
                                     packetGetter={() => {
                                         return {httpRequest: StringToUint8Array(request), https: isHttps}
                                     }}
                                 />
-                                <Button
-                                    style={{marginRight: 1}}
-                                    size={"small"}
-                                    type={"primary"}
+                                <YakitButton
+                                    size='small'
+                                    type='primary'
                                     onClick={() => {
                                         hotPatchTrigger()
                                     }}
                                 >
                                     热加载
-                                </Button>
+                                </YakitButton>
                                 <Popover
                                     trigger={"click"}
                                     title={"从 URL 加载数据包"}
@@ -1258,27 +1264,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         </div>
                                     }
                                 >
-                                    <Button size={"small"} type={"primary"}>
+                                    <YakitButton size={"small"} type={"primary"}>
                                         URL
-                                    </Button>
+                                    </YakitButton>
                                 </Popover>
-                                {/* <Popover
-                        trigger={"click"}
-                        placement={"leftTop"}
-                        destroyTooltipOnHide={true}
-                        content={
-                            <div style={{width: 400}}>
-                                <HTTPFuzzerHistorySelector
-                                    onSelect={(e) => {
-                                        loadHistory(e)
-                                    }}
-                                />
                             </div>
-                        }
-                    >
-                        <Button size={"small"} type={"link"} icon={<HistoryOutlined/>}/>
-                    </Popover> */}
-                            </Space>
                         )
                     }}
                     secondNodeProps={{
@@ -1418,16 +1408,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     >
                                                         <Button size={"small"}>导出数据</Button>
                                                     </Popover>
-                                                    {/*<Input*/}
-                                                    {/*    value={keyword}*/}
-                                                    {/*    style={{maxWidth: 200}}*/}
-                                                    {/*    allowClear*/}
-                                                    {/*    placeholder="输入字符串或正则表达式"*/}
-                                                    {/*    onChange={e => setKeyword(e.target.value)}*/}
-                                                    {/*    addonAfter={*/}
-                                                    {/*        <DownloadOutlined style={{cursor: "pointer"}}*/}
-                                                    {/*                          onClick={downloadContent}/>*/}
-                                                    {/*    }></Input>*/}
                                                 </Space>
                                             }
                                             failedResponses={failedFuzzer}
@@ -1511,7 +1491,7 @@ interface AdvancedConfigValueProps {
     minDelaySeconds: number
     maxDelaySeconds: number
     // 重试配置
-    retryCount: number
+    maxRetryTimes: number
     retryConfiguration?: {
         statusCode: string
         keyWord: string
@@ -1601,7 +1581,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                 }}
             >
                 <Collapse
-                    defaultActiveKey={["请求包配置"]}
+                    defaultActiveKey={["请求包配置", "发包配置", "过滤配置"]}
                     ghost
                     expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                 >
@@ -1748,7 +1728,8 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </div>
                         </Form.Item>
                     </Panel>
-                    <Panel
+                    {/* 以下重试配置、重定向配置，后期再调试 */}
+                    {/* <Panel
                         header='重试配置'
                         key='重试配置'
                         extra={
@@ -1758,7 +1739,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        retryCount: 3,
+                                        maxRetryTimes: 3,
                                         retryConfiguration: {
                                             statusCode: undefined,
                                             keyWord: undefined
@@ -1782,7 +1763,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </YakitButton>
                         }
                     >
-                        <Form.Item label='重试次数' name='retryCount'>
+                        <Form.Item label='重试次数' name='maxRetryTimes'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
                         <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e)}>
@@ -1928,7 +1909,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 </Form.Item>
                             </Panel>
                         </Collapse>
-                    </Panel>
+                    </Panel> */}
                     <Panel
                         header='过滤配置'
                         key='过滤配置'
