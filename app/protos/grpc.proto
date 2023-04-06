@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package ypb;
-
 option go_package = "/;ypb";
 
 message Empty {
@@ -17,7 +16,7 @@ message GeneralResponse {
 }
 
 message DeleteYakScriptRequest {
-  int64 Id = 3;
+  int64  Id = 3;
   repeated int64 Ids = 4;
 }
 
@@ -62,6 +61,9 @@ message ExecBatchYakScriptRequest {
   double BaseProgress = 16;
   // 这个很关键，不然会报错
   bool FromRecover = 17;
+
+  string YakScriptOnlineGroup = 18;
+  string TaskName = 19;
 }
 
 message ExecBatchYakScriptResult {
@@ -112,198 +114,213 @@ message GetYakScriptByOnlineIDRequest {
 
 service Yak {
   // version
-  rpc Version (Empty) returns (VersionResponse);
+  rpc Version(Empty) returns (VersionResponse);
 
   // echo 通常用于测试服务是否通畅
-  rpc Echo (EchoRequest) returns (EchoResposne);
+  rpc Echo(EchoRequest) returns(EchoResposne);
 
   // 中间人劫持
-  rpc MITM (stream MITMRequest) returns (stream MITMResponse);
-  rpc DownloadMITMCert (Empty) returns (MITMCert);
+  rpc MITM(stream MITMRequest) returns (stream MITMResponse);
+  rpc SetMITMFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
+  rpc GetMITMFilter(Empty) returns (SetMITMFilterRequest);
+  rpc DownloadMITMCert(Empty) returns (MITMCert);
 
   // 开启端口
-  rpc OpenPort (stream Input) returns (stream Output);
+  rpc OpenPort(stream Input) returns (stream Output);
 
   // Exec
-  rpc Exec (ExecRequest) returns (stream ExecResult);
-  rpc QueryExecHistory (ExecHistoryRequest) returns (ExecHistoryRecordResponse);
-  rpc RemoveExecHistory (Empty) returns (Empty);
-  rpc LoadNucleiTemplates (Empty) returns (Empty);
-  rpc AutoUpdateYakModule (Empty) returns (stream ExecResult);
-  rpc ExecYakScript (ExecRequest) returns (stream ExecResult);
-  rpc ExecBatchYakScript (ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
-  rpc GetExecBatchYakScriptUnfinishedTask (Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
-  rpc GetExecBatchYakScriptUnfinishedTaskByUid (GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
-  rpc PopExecBatchYakScriptUnfinishedTaskByUid (GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
-  rpc RecoverExecBatchYakScriptUnfinishedTask (RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecBatchYakScriptResult);
+  rpc Exec(ExecRequest) returns (stream ExecResult);
+  rpc QueryExecHistory(ExecHistoryRequest) returns (ExecHistoryRecordResponse);
+  rpc RemoveExecHistory(Empty) returns (Empty);
+  rpc LoadNucleiTemplates(Empty) returns (Empty);
+  rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
+  rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
+  rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
+  rpc GetExecBatchYakScriptUnfinishedTask(Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
+  rpc GetExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
+  rpc PopExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
+  rpc RecoverExecBatchYakScriptUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecBatchYakScriptResult);
 
   // yakScript
-  rpc QueryYakScript (QueryYakScriptRequest) returns (QueryYakScriptResponse);
-  rpc QueryYakScriptByYakScriptName (QueryYakScriptRequest) returns (stream YakScript);
-  rpc SaveYakScript (YakScript) returns (YakScript);
-  rpc DeleteYakScript (DeleteYakScriptRequest) returns (Empty);
-  rpc GetYakScriptById (GetYakScriptByIdRequest) returns (YakScript);
-  rpc GetYakScriptByName (GetYakScriptByNameRequest) returns (YakScript);
-  rpc GetYakScriptByOnlineID (GetYakScriptByOnlineIDRequest) returns (YakScript);
-  rpc IgnoreYakScript (DeleteYakScriptRequest) returns (Empty);
-  rpc UnIgnoreYakScript (DeleteYakScriptRequest) returns (Empty);
-  rpc ExportYakScript (ExportYakScriptRequest) returns (ExportYakScriptResponse);
-  rpc ExecutePacketYakScript (ExecutePacketYakScriptParams) returns (stream ExecResult);
-  rpc ExecuteBatchPacketYakScript (ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
-  rpc GetYakScriptTags (Empty) returns (GetYakScriptTagsResponse);
-  rpc QueryYakScriptLocalAndUser (QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
+  rpc QueryYakScriptByYakScriptName(QueryYakScriptRequest) returns (stream YakScript);
+  rpc SaveYakScript(YakScript) returns (YakScript);
+  rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
+  rpc GetYakScriptByName(GetYakScriptByNameRequest) returns (YakScript);
+  rpc GetYakScriptByOnlineID(GetYakScriptByOnlineIDRequest) returns (YakScript);
+  rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
+  rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
+  rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
+  rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
+  rpc QueryYakScriptLocalAndUser(QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptByOnlineGroup(QueryYakScriptByOnlineGroupRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
 
   // HTTPFlow
-  rpc GetHTTPFlowByHash (GetHTTPFlowByHashRequest) returns (HTTPFlow);
-  rpc GetHTTPFlowById (GetHTTPFlowByIdRequest) returns (HTTPFlow);
-  rpc GetHTTPFlowByIds (GetHTTPFlowByIdsRequest) returns (HTTPFlows);
-  rpc QueryHTTPFlows (QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
-  rpc DeleteHTTPFlows (DeleteHTTPFlowRequest) returns (Empty);
-  rpc SetTagForHTTPFlow (SetTagForHTTPFlowRequest) returns (Empty);
-  rpc QueryHTTPFlowsIds (QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
-  rpc HTTPFlowsFieldGroup (HTTPFlowsFieldGroupRequest) returns (HTTPFlowsFieldGroupResponse);
+  rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
+  rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
+  rpc GetHTTPFlowByIds(GetHTTPFlowByIdsRequest) returns (HTTPFlows);
+  rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
+  rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
+  rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
+  rpc QueryHTTPFlowsIds(QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
+  rpc HTTPFlowsFieldGroup(HTTPFlowsFieldGroupRequest) returns (HTTPFlowsFieldGroupResponse);
 
   // 从一个 FuzzerRequest 中提取 Url
-  rpc ExtractUrl (FuzzerRequest) returns (ExtractedUrl);
+  rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
 
   // Fuzzer
-  rpc GetHistoryHTTPFuzzerTask (GetHistoryHTTPFuzzerTaskRequest) returns (HistoryHTTPFuzzerTaskDetail);
-  rpc QueryHistoryHTTPFuzzerTask (Empty) returns (HistoryHTTPFuzzerTasks);
-  rpc QueryHistoryHTTPFuzzerTaskEx (QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
-  rpc DeleteHistoryHTTPFuzzerTask (DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
-  rpc HTTPFuzzer (FuzzerRequest) returns (stream FuzzerResponse);
-  rpc RedirectRequest (RedirectRequestParams) returns (FuzzerResponse);
-  rpc HTTPRequestMutate (HTTPRequestMutateParams) returns (MutateResult);
-  rpc HTTPResponseMutate (HTTPResponseMutateParams) returns (MutateResult);
-  rpc FixUploadPacket (FixUploadPacketRequest) returns (FixUploadPacketResponse);
-  rpc IsMultipartFormDataRequest (FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
-  rpc GenerateExtractRule (GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
-  rpc ExtractData (stream ExtractDataRequest) returns (stream ExtractDataResponse);
+  rpc GetHistoryHTTPFuzzerTask(GetHistoryHTTPFuzzerTaskRequest) returns (HistoryHTTPFuzzerTaskDetail);
+  rpc QueryHistoryHTTPFuzzerTask(Empty) returns (HistoryHTTPFuzzerTasks);
+  rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
+  rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
+  rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
+  rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
+  rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
+  rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
+  rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
+  rpc GenerateExtractRule(GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
+  rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
 
   // HTTPFuzzerResponse
   // 这个挺特殊的，因为数据包太多了，会卡，所以后端会保存一份，通过这个接口做缓存查询
-  rpc QueryHTTPFuzzerResponseByTaskId (QueryHTTPFuzzerResponseByTaskIdRequest) returns (QueryHTTPFuzzerResponseByTaskIdResponse);
+  rpc QueryHTTPFuzzerResponseByTaskId(QueryHTTPFuzzerResponseByTaskIdRequest) returns (QueryHTTPFuzzerResponseByTaskIdResponse) ;
 
   // WebSocket
-  rpc CreateWebsocketFuzzer (stream ClientWebsocketRequest) returns (stream ClientWebsocketResponse);
-  rpc QueryWebsocketFlowByHTTPFlowWebsocketHash (QueryWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (WebsocketFlows);
-  rpc DeleteWebsocketFlowByHTTPFlowWebsocketHash (DeleteWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (Empty);
-  rpc DeleteWebsocketFlowAll (Empty) returns (Empty);
+  rpc CreateWebsocketFuzzer(stream ClientWebsocketRequest) returns (stream ClientWebsocketResponse);
+  rpc QueryWebsocketFlowByHTTPFlowWebsocketHash(QueryWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (WebsocketFlows);
+  rpc DeleteWebsocketFlowByHTTPFlowWebsocketHash(DeleteWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (Empty);
+  rpc DeleteWebsocketFlowAll(Empty) returns (Empty);
 
   // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
-  rpc ConvertFuzzerResponseToHTTPFlow (FuzzerResponse) returns (HTTPFlow);
+  rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
 
   // 渲染 Fuzzer 模版
-  rpc StringFuzzer (StringFuzzerRequest) returns (StringFuzzerResponse);
+  rpc StringFuzzer(StringFuzzerRequest) returns (StringFuzzerResponse);
 
   // 分析一个 HTTP 请求详情
-  rpc HTTPRequestAnalyzer (HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
+  rpc HTTPRequestAnalyzer(HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
 
   // 编码解码
-  rpc Codec (CodecRequest) returns (CodecResponse);
+  rpc Codec(CodecRequest) returns (CodecResponse);
 
   // Payload 相关接口
-  rpc QueryPayload (QueryPayloadRequest) returns (QueryPayloadResponse);
-  rpc DeletePayloadByGroup (DeletePayloadByGroupRequest) returns (Empty);
-  rpc DeletePayload (DeletePayloadRequest) returns (Empty);
-  rpc SavePayload (SavePayloadRequest) returns (Empty);
-  rpc SavePayloadStream (SavePayloadRequest) returns (stream SavePayloadProgress);
-  rpc GetAllPayloadGroup (Empty) returns (GetAllPayloadGroupResponse);
-  rpc UpdatePayload (UpdatePayloadRequest) returns (Empty);
-  rpc GetAllPayload (GetAllPayloadRequest) returns (GetAllPayloadResponse);
+  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse);
+  rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
+  rpc SavePayload(SavePayloadRequest) returns (Empty);
+  rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
+  rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
+  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
+  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse);
 
   // 自动生成补全
-  rpc GetYakitCompletionRaw (Empty) returns (YakitCompletionRawResponse);
-  rpc GetYakVMBuildInMethodCompletion (GetYakVMBuildInMethodCompletionRequest) returns (GetYakVMBuildInMethodCompletionResponse);
-  rpc StaticAnalyzeError (StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
-  rpc YaklangCompileAndFormat (YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
+  rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
+  rpc GetYakVMBuildInMethodCompletion(GetYakVMBuildInMethodCompletionRequest) returns (GetYakVMBuildInMethodCompletionResponse);
+  rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
+  rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
   // 端口扫描的封装
-  rpc PortScan (PortScanRequest) returns (stream ExecResult);
-  rpc ViewPortScanCode (Empty) returns (SimpleScript);
+  rpc PortScan(PortScanRequest) returns (stream ExecResult);
+  rpc ViewPortScanCode(Empty) returns (SimpleScript);
+
+  rpc SimpleDetect(RecordPortScanRequest) returns (stream ExecResult);
+  rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
+
+  rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
+  rpc GetSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc PopSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc RecoverSimpleDetectUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecResult);
+
 
   // 资产管理
-  rpc QueryPorts (QueryPortsRequest) returns (QueryPortsResponse);
-  rpc DeletePorts (DeletePortsRequest) returns (Empty);
-  rpc QueryHosts (QueryHostsRequest) returns (QueryHostsResponse);
-  rpc DeleteHosts (DeleteHostsRequest) returns (Empty);
-  rpc QueryDomains (QueryDomainsRequest) returns (QueryDomainsResponse);
-  rpc DeleteDomains (DeleteDomainsRequest) returns (Empty);
+  rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
+  rpc DeletePorts(DeletePortsRequest) returns (Empty);
+  rpc QueryHosts(QueryHostsRequest) returns (QueryHostsResponse);
+  rpc DeleteHosts(DeleteHostsRequest) returns (Empty);
+  rpc QueryDomains(QueryDomainsRequest) returns(QueryDomainsResponse);
+  rpc DeleteDomains(DeleteDomainsRequest)returns(Empty);
 
   // Yakit Store
-  rpc UpdateFromYakitResource (UpdateFromYakitResourceRequest) returns (Empty);
-  rpc UpdateFromGithub (UpdateFromGithubRequest) returns (Empty);
+  rpc UpdateFromYakitResource(UpdateFromYakitResourceRequest) returns (Empty);
+  rpc UpdateFromGithub(UpdateFromGithubRequest) returns (Empty);
 
   // Menu
-  rpc AddToMenu (AddToMenuRequest) returns (Empty);
-  rpc RemoveFromMenu (RemoveFromMenuRequest) returns (Empty);
-  rpc YakScriptIsInMenu (YakScriptIsInMenuRequest) returns (Empty);
-  rpc GetAllMenuItem (Empty) returns (MenuByGroup);
-  rpc DeleteAllMenuItem (Empty) returns (Empty);
-  rpc ImportMenuItem (ImportMenuItemRequest) returns (Empty);
-  rpc ExportMenuItem (Empty) returns (ExportMenuItemResult);
-  rpc GetMenuItemById (GetMenuItemByIdRequest) returns (MenuItem);
-  rpc QueryGroupsByYakScriptId (QueryGroupsByYakScriptIdRequest) returns (GroupNames);
-  rpc AddMenus (AddMenuRequest) returns (Empty);
-  rpc QueryAllMenuItem (QueryAllMenuItemRequest) returns (MenuByGroup);
-  rpc DeleteAllMenu (QueryAllMenuItemRequest) returns (Empty);
+  rpc AddToMenu(AddToMenuRequest) returns (Empty);
+  rpc RemoveFromMenu(RemoveFromMenuRequest) returns (Empty);
+  rpc YakScriptIsInMenu(YakScriptIsInMenuRequest) returns (Empty);
+  rpc GetAllMenuItem(Empty) returns (MenuByGroup);
+  rpc DeleteAllMenuItem(Empty) returns (Empty);
+  rpc ImportMenuItem(ImportMenuItemRequest) returns (Empty);
+  rpc ExportMenuItem(Empty) returns (ExportMenuItemResult);
+  rpc GetMenuItemById(GetMenuItemByIdRequest) returns (MenuItem);
+  rpc QueryGroupsByYakScriptId(QueryGroupsByYakScriptIdRequest) returns (GroupNames);
+  rpc AddMenus(AddMenuRequest) returns (Empty);
+  rpc QueryAllMenuItem(QueryAllMenuItemRequest) returns (MenuByGroup);
+  rpc DeleteAllMenu(QueryAllMenuItemRequest) returns (Empty);
 
   // document
-  rpc SaveMarkdownDocument (SaveMarkdownDocumentRequest) returns (Empty);
-  rpc GetMarkdownDocument (GetMarkdownDocumentRequest) returns (GetMarkdownDocumentResponse);
-  rpc DeleteMarkdownDocument (GetMarkdownDocumentRequest) returns (Empty);
+  rpc SaveMarkdownDocument(SaveMarkdownDocumentRequest) returns (Empty);
+  rpc GetMarkdownDocument(GetMarkdownDocumentRequest) returns (GetMarkdownDocumentResponse);
+  rpc DeleteMarkdownDocument(GetMarkdownDocumentRequest) returns (Empty);
 
   // Crawler
-  rpc StartBasicCrawler (StartBasicCrawlerRequest) returns (ExecResult);
-  rpc ViewBasicCrawlerCode (Empty) returns (SimpleScript);
-  rpc GenerateWebsiteTree (GenerateWebsiteTreeRequest) returns (GenerateWebsiteTreeResponse);
+  rpc StartBasicCrawler(StartBasicCrawlerRequest)returns (ExecResult);
+  rpc ViewBasicCrawlerCode(Empty) returns (SimpleScript);
+  rpc GenerateWebsiteTree(GenerateWebsiteTreeRequest) returns (GenerateWebsiteTreeResponse);
 
   // 对插件结果的操作
-  rpc QueryYakScriptExecResult (QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
-  rpc QueryYakScriptNameInExecResult (Empty) returns (YakScriptNames);
-  rpc DeleteYakScriptExecResult (DeleteYakScriptExecResultRequest) returns (Empty);
-  rpc DeleteYakScriptExec (Empty) returns (Empty);
+  rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
+  rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
+  rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+  rpc DeleteYakScriptExec(Empty) returns (Empty);
 
   // Bruter
-  rpc StartBrute (StartBruteParams) returns (stream ExecResult);
-  rpc GetAvailableBruteTypes (Empty) returns (GetAvailableBruteTypesResponse);
+  rpc StartBrute(StartBruteParams) returns (stream ExecResult);
+  rpc GetAvailableBruteTypes(Empty) returns (GetAvailableBruteTypesResponse);
 
   // Tunnel Server RMI/DNSLog
-  rpc GetTunnelServerExternalIP (GetTunnelServerExternalIPParams) returns (GetTunnelServerExternalIPResponse);
-  rpc VerifyTunnelServerDomain (VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse);
-  rpc StartFacades (StartFacadesParams) returns (stream ExecResult);
-  rpc StartFacadesWithYsoObject (StartFacadesWithYsoParams) returns (stream ExecResult);
-  rpc ApplyClassToFacades (ApplyClassToFacadesParamsWithVerbose) returns (Empty);
-  rpc BytesToBase64 (BytesToBase64Request) returns (BytesToBase64Response);
-  rpc ConfigGlobalReverse (ConfigGlobalReverseParams) returns (stream Empty);
-  rpc AvailableLocalAddr (Empty) returns (AvailableLocalAddrResponse);
-  rpc GetGlobalReverseServer (Empty) returns (GetGlobalReverseServerResponse);
+  rpc GetTunnelServerExternalIP(GetTunnelServerExternalIPParams) returns (GetTunnelServerExternalIPResponse);
+  rpc VerifyTunnelServerDomain(VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse) ;
+  rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
+  rpc StartFacadesWithYsoObject(StartFacadesWithYsoParams) returns (stream ExecResult);
+  rpc ApplyClassToFacades(ApplyClassToFacadesParamsWithVerbose) returns (Empty);
+  rpc BytesToBase64(BytesToBase64Request) returns (BytesToBase64Response);
+  rpc ConfigGlobalReverse(ConfigGlobalReverseParams) returns (stream Empty);
+  rpc AvailableLocalAddr(Empty) returns (AvailableLocalAddrResponse);
+  rpc GetGlobalReverseServer(Empty) returns (GetGlobalReverseServerResponse);
 
   // Risk
-  rpc QueryRisks (QueryRisksRequest) returns (QueryRisksResponse);
-  rpc QueryRisk (QueryRiskRequest) returns (Risk);
-  rpc DeleteRisk (DeleteRiskRequest) returns (Empty);
-  rpc QueryAvailableRiskType (Empty) returns (Fields);
-  rpc QueryAvailableRiskLevel (Empty) returns (Fields);
-  rpc QueryRiskTableStats (Empty) returns (RiskTableStats);
-  rpc ResetRiskTableStats (Empty) returns (Empty);
-  rpc QueryAvailableTarget (Empty) returns (Fields);
-  rpc QueryNewRisk (QueryNewRiskRequest) returns (QueryNewRiskResponse);
-  rpc NewRiskRead (NewRiskReadRequest) returns (Empty);
+  rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
+  rpc QueryRisk(QueryRiskRequest) returns (Risk);
+  rpc DeleteRisk(DeleteRiskRequest) returns (Empty);
+  rpc QueryAvailableRiskType(Empty) returns (Fields);
+  rpc QueryAvailableRiskLevel(Empty) returns (Fields);
+  rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
+  rpc ResetRiskTableStats(Empty) returns (Empty);
+  rpc QueryAvailableTarget(Empty) returns (Fields);
+  rpc QueryNewRisk(QueryNewRiskRequest) returns (QueryNewRiskResponse);
+  rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
 
   // Report
-  rpc QueryReports (QueryReportsRequest) returns (QueryReportsResponse);
-  rpc QueryReport (QueryReportRequest) returns (Report);
-  rpc DeleteReport (DeleteReportRequest) returns (Empty);
-  rpc QueryAvailableReportFrom (Empty) returns (Fields);
+  rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
+  rpc QueryReport(QueryReportRequest) returns (Report);
+  rpc DeleteReport(DeleteReportRequest) returns (Empty);
+  rpc QueryAvailableReportFrom(Empty) returns (Fields);
+
+  rpc DownloadReport(DownloadReportRequest) returns (Empty);
 
   //Yso
-  rpc GetAllYsoGadgetOptions (Empty) returns (YsoOptionsWithVerbose);
-  rpc GetAllYsoClassOptions (YsoOptionsRequerstWithVerbose) returns (YsoOptionsWithVerbose);
-  rpc GetAllYsoClassGeneraterOptions (YsoOptionsRequerstWithVerbose) returns (YsoClassOptionsResponseWithVerbose);
-  rpc GenerateYsoCode (YsoOptionsRequerstWithVerbose) returns (YsoCodeResponse);
-  rpc GenerateYsoBytes (YsoOptionsRequerstWithVerbose) returns (YsoBytesResponse);
-  rpc YsoDump (YsoBytesObject) returns (YsoDumpResponse);
+  rpc GetAllYsoGadgetOptions(Empty) returns (YsoOptionsWithVerbose);
+  rpc GetAllYsoClassOptions(YsoOptionsRequerstWithVerbose) returns (YsoOptionsWithVerbose);
+  rpc GetAllYsoClassGeneraterOptions(YsoOptionsRequerstWithVerbose) returns (YsoClassOptionsResponseWithVerbose);
+  rpc GenerateYsoCode(YsoOptionsRequerstWithVerbose) returns (YsoCodeResponse);
+  rpc GenerateYsoBytes(YsoOptionsRequerstWithVerbose) returns (YsoBytesResponse);
+  rpc YsoDump(YsoBytesObject)returns(YsoDumpResponse);
 
   // WebShell Manager
   rpc CreateWebShell (WebShell) returns (Empty);
@@ -318,115 +335,281 @@ service Yak {
 
 
   // DNSLog / ICMP / RandomTrigger
-  rpc SetYakBridgeLogServer (YakDNSLogBridgeAddr) returns (Empty);
-  rpc GetCurrentYakBridgeLogServer (Empty) returns (YakDNSLogBridgeAddr);
-  rpc RequireDNSLogDomain (YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
-  rpc QueryDNSLogByToken (QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
-  rpc RequireICMPRandomLength (Empty) returns (RequireICMPRandomLengthResponse);
-  rpc QueryICMPTrigger (QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
-  rpc RequireRandomPortToken (Empty) returns (RandomPortInfo);
-  rpc QueryRandomPortTrigger (QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+  rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
+  rpc GetCurrentYakBridgeLogServer(Empty) returns (YakDNSLogBridgeAddr);
+  rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
+  rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+  rpc RequireICMPRandomLength(Empty) returns (RequireICMPRandomLengthResponse);
+  rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
+  rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
+  rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
 
   // 获取 Tags
-  rpc GetAvailableYakScriptTags (Empty) returns (Fields);
-  rpc ForceUpdateAvailableYakScriptTags (Empty) returns (Empty);
+  rpc GetAvailableYakScriptTags(Empty) returns (Fields);
+  rpc ForceUpdateAvailableYakScriptTags(Empty) returns (Empty);
 
   // 通用的漏洞检测技术方案
-  rpc ExecYakitPluginsByYakScriptFilter (ExecYakitPluginsByYakScriptFilterRequest) returns (stream ExecResult);
+  rpc ExecYakitPluginsByYakScriptFilter(ExecYakitPluginsByYakScriptFilterRequest) returns (stream ExecResult);
 
   // GenerateYakCodeByPacket
-  rpc GenerateYakCodeByPacket (GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+  rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
 
   // CSRF Generator
-  rpc GenerateCSRFPocByPacket (GenerateCSRFPocByPacketRequest) returns (GenerateCSRFPocByPacketResponse);
+  rpc GenerateCSRFPocByPacket(GenerateCSRFPocByPacketRequest) returns (GenerateCSRFPocByPacketResponse);
 
   // MITM 衍生功能：
   // Replacers 管理
-  rpc ExportMITMReplacerRules (Empty) returns (ExportMITMReplacerRulesResponse);
-  rpc ImportMITMReplacerRules (ImportMITMReplacerRulesRequest) returns (Empty);
-  rpc GetCurrentRules (Empty) returns (MITMContentReplacers);
-  rpc SetCurrentRules (MITMContentReplacers) returns (Empty);
+  rpc ExportMITMReplacerRules(Empty) returns (ExportMITMReplacerRulesResponse);
+  rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
+  rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
+  rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
 
-  rpc ExtractDataToFile (stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
+  rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
 
   // 尝试自动解码
-  rpc AutoDecode (AutoDecodeRequest) returns (AutoDecodeResponse);
+  rpc AutoDecode(AutoDecodeRequest) returns (AutoDecodeResponse);
 
-  rpc GetSystemProxy (Empty) returns (GetSystemProxyResult);
-  rpc SetSystemProxy (SetSystemProxyRequest) returns (Empty);
+  rpc GetSystemProxy(Empty) returns (GetSystemProxyResult);
+  rpc SetSystemProxy(SetSystemProxyRequest) returns (Empty);
 
   // 设置通用存储
-  rpc GetKey (GetKeyRequest) returns (GetKeyResult);
-  rpc SetKey (SetKeyRequest) returns (Empty);
-  rpc DelKey (GetKeyRequest) returns (Empty);
-  rpc GetAllProcessEnvKey (Empty) returns (GetProcessEnvKeyResult);
-  rpc SetProcessEnvKey (SetKeyRequest) returns (Empty);
+  rpc GetKey(GetKeyRequest) returns (GetKeyResult);
+  rpc SetKey(SetKeyRequest) returns (Empty);
+  rpc DelKey(GetKeyRequest) returns (Empty);
+  rpc GetAllProcessEnvKey(Empty) returns (GetProcessEnvKeyResult);
+  rpc SetProcessEnvKey(SetKeyRequest) returns (Empty);
 
   // Online
-  rpc GetOnlineProfile (Empty) returns (OnlineProfile);
-  rpc SetOnlineProfile (OnlineProfile) returns (Empty);
-  rpc DownloadOnlinePluginById (DownloadOnlinePluginByIdRequest) returns (Empty);
-  rpc DownloadOnlinePluginByIds (DownloadOnlinePluginByIdsRequest) returns (Empty);
-  rpc DownloadOnlinePluginAll (DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
-  rpc DeletePluginByUserID (DeletePluginByUserIDRequest) returns (Empty);
-  rpc DeleteAllLocalPlugins (Empty) returns (Empty);
-  rpc GetYakScriptTagsAndType (Empty) returns (GetYakScriptTagsAndTypeResponse);
-  rpc DeleteLocalPluginsByWhere (DeleteLocalPluginsByWhereRequest) returns (Empty);
-  rpc DownloadOnlinePluginByScriptNames (DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+  rpc GetOnlineProfile(Empty) returns (OnlineProfile);
+  rpc SetOnlineProfile(OnlineProfile) returns (Empty);
+  rpc DownloadOnlinePluginById(DownloadOnlinePluginByIdRequest) returns (Empty);
+  rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
+  rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
+  rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
+  rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+  rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
+  rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
+  rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
   // 新的扫描模式
-  rpc ExecPacketScan (ExecPacketScanRequest) returns (stream ExecResult);
+  rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
-  rpc GetEngineDefaultProxy (Empty) returns (DefaultProxyResult);
-  rpc SetEngineDefaultProxy (DefaultProxyResult) returns (Empty);
+  rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
+  rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
 
   // machine id
-  rpc GetMachineID (Empty) returns (GetMachineIDResponse);
+  rpc GetMachineID(Empty) returns (GetMachineIDResponse);
 
   // license
-  rpc GetLicense (Empty) returns (GetLicenseResponse);
-  rpc CheckLicense (CheckLicenseRequest) returns (Empty);
+  rpc GetLicense(Empty) returns (GetLicenseResponse);
+  rpc CheckLicense(CheckLicenseRequest) returns (Empty);
 
   // Response Body 的魔法操作
-  rpc GetRequestBodyByHTTPFlowID (DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
-  rpc GetResponseBodyByHTTPFlowID (DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
-  rpc GetHTTPPacketBody (GetHTTPPacketBodyRequest) returns (Bytes);
+  rpc GetRequestBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
+  rpc GetResponseBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
+  rpc GetHTTPPacketBody(GetHTTPPacketBodyRequest) returns (Bytes);
 
   // 注册一个 Facades HTTP 响应
-  rpc RegisterFacadesHTTP (RegisterFacadesHTTPRequest) returns (RegisterFacadesHTTPResponse);
+  rpc RegisterFacadesHTTP(RegisterFacadesHTTPRequest) returns (RegisterFacadesHTTPResponse);
 
   // 重置到恢复出厂设置
-  rpc ResetAndInvalidUserData (ResetAndInvalidUserDataRequest) returns (Empty);
+  rpc ResetAndInvalidUserData(ResetAndInvalidUserDataRequest) returns (Empty);
 
   // Yaklang Shell
   // 创建一个交互式 Shell
-  rpc CreateYaklangShell (stream YaklangShellRequest) returns (stream YaklangShellResponse);
+  rpc CreateYaklangShell(stream YaklangShellRequest) returns (stream YaklangShellResponse);
 
   // 接入标准输出和标准错误流
-  rpc AttachCombinedOutput (AttachCombinedOutputRequest) returns (stream ExecResult);
+  rpc AttachCombinedOutput(AttachCombinedOutputRequest) returns (stream ExecResult);
 
   // 判断当前引擎对网卡是否有操作权限？
   // 主要是能否发包等敏感操作
   // Windows 判断是否是管理员即可 I Am Admin
   // Linux 和 MacOS 应该尝试 pcap 打开网卡就行
-  rpc IsPrivilegedForNetRaw (Empty) returns (IsPrivilegedForNetRawResponse);
-  rpc PromotePermissionForUserPcap (Empty) returns (Empty);
+  rpc IsPrivilegedForNetRaw(Empty) returns (IsPrivilegedForNetRawResponse);
+  rpc PromotePermissionForUserPcap(Empty) returns (Empty);
 
   // 操作项目的相关接口，通过设置 ProjectDatabase
-  rpc SetCurrentProject (SetCurrentProjectRequest) returns (Empty);
-  rpc GetCurrentProject (Empty) returns (ProjectDescription);
-  rpc GetProjects (GetProjectsRequest) returns (GetProjectsResponse);
-  rpc NewProject (NewProjectRequest) returns (Empty);
-  rpc IsProjectNameValid (IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject (RemoveProjectRequest) returns (Empty);
+  rpc SetCurrentProject(SetCurrentProjectRequest) returns (Empty);
+  rpc GetCurrentProject(Empty) returns (ProjectDescription);
+  rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
+  rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
+  rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty);
+
+  rpc DeleteProject(DeleteProjectRequest) returns (Empty);
+  rpc GetDefaultProject(Empty) returns (ProjectDescription);
+  rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
-  rpc ExportProject (ExportProjectRequest) returns (stream ProjectIOProgress);
-  rpc ImportProject (ImportProjectRequest) returns (stream ProjectIOProgress);
+  rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
+  rpc ImportProject(ImportProjectRequest) returns (stream ProjectIOProgress);
   // 迁移旧数据库
-  rpc MigrateLegacyDatabase (Empty) returns (Empty);
+  rpc MigrateLegacyDatabase(Empty) returns (Empty);
 
   // 从规则中提取数据
-  rpc QueryMITMRuleExtractedData (QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+  rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+
+  // CVE
+  rpc IsCVEDatabaseReady(IsCVEDatabaseReadyRequest) returns (IsCVEDatabaseReadyResponse);
+  rpc UpdateCVEDatabase(UpdateCVEDatabaseRequest) returns (stream ExecResult);
+  rpc ExportsProfileDatabase(ExportsProfileDatabaseRequest) returns (stream ExecResult);
+  rpc ImportsProfileDatabase(ImportsProfileDatabaseRequest) returns (stream ExecResult);
+
+  rpc QueryCVE(QueryCVERequest) returns (QueryCVEResponse);
+  rpc GetCVE(GetCVERequest) returns (CVEDetailEx);
+  rpc SaveTextToTemporalFile(SaveTextToTemporalFileRequest) returns (SaveTextToTemporalFileResponse);
+
+  // Screcorder
+  rpc IsScrecorderReady(IsScrecorderReadyRequest) returns (IsScrecorderReadyResponse);
+  rpc InstallScrecorder(InstallScrecorderRequest) returns (stream ExecResult);
+  rpc StartScrecorder(StartScrecorderRequest) returns (stream ExecResult);
+  rpc QueryScreenRecorders(QueryScreenRecorderRequest) returns (QueryScreenRecorderResponse);
+}
+
+message ScreenRecorder {
+  int64 Id = 1;
+  string Filename = 2;
+  string NoteInfo = 3;
+  string Project = 4;
+  int64 CreatedAt = 5;
+  int64 UpdatedAt = 6;
+}
+
+message QueryScreenRecorderRequest {
+  string Project = 1;
+  Paging Pagination = 2;
+}
+
+message QueryScreenRecorderResponse {
+  repeated ScreenRecorder Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message StartScrecorderRequest {
+  int64 Framerate = 1;
+  string ResolutionSize = 2;
+  double CoefficientPTS = 3;
+  bool DisableMouse = 4;
+}
+
+message InstallScrecorderRequest {
+  string Proxy = 1;
+}
+
+message IsScrecorderReadyRequest {
+
+}
+
+message IsScrecorderReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message GetCVERequest {
+  string CVE = 1;
+}
+
+message QueryCVERequest {
+  Paging Pagination = 1;
+  // NETWORK/LOCAL/ADJACENT_NETWORK/PHYSICAL
+  string AccessVector = 2;
+  // HIGH/MIDDLE/LOW
+  string AccessComplexity = 3;
+  string CWE = 4;
+  string Year = 5;
+  string Severity = 6;
+  double Score = 7;
+  string Product = 8;
+
+  // by published_date
+  string AfterYear = 9;
+  bool ChineseTranslationFirst = 10;
+}
+
+message CWEDetail {
+  string CWE = 1;
+  string Name = 2;
+  string NameZh = 3;
+  //  repeated CWEDetail InterTo = 4;
+
+  string Status = 5;
+  bool Stable = 6;
+  bool Incomplete = 7;
+  string Description = 8;
+  string DescriptionZh = 9;
+  string LongDescription = 10;
+  string LongDescriptionZh = 11;
+  repeated string RelativeLanguage = 12;
+  string Solution = 13;
+  repeated string RelativeCVE = 14;
+}
+
+message CVEDetailEx {
+  CVEDetail CVE = 1;
+  repeated CWEDetail CWE = 2;
+}
+
+message CVEDetail {
+  string CVE = 1;
+  string DescriptionZh = 2;
+  string DescriptionOrigin = 3;
+  string Title = 4;
+  string Solution = 5;
+  string AccessVector = 7;
+  string AccessComplexity = 8;
+  string Authentication = 9;
+  string ConfidentialityImpact = 10;
+  string IntegrityImpact = 11;
+  string AvailabilityImpact = 12;
+  string Severity = 14;
+  int64 PublishedAt = 15;
+  string CWE = 16;
+  string CVSSVersion = 17;
+  string CVSSVectorString = 18;
+  double BaseCVSSv2Score = 19;
+  double ExploitabilityScore = 20;
+  bool ObtainAllPrivileged = 21;
+  bool ObtainUserPrivileged = 22;
+  bool ObtainOtherPrivileged = 23;
+  bool UserInteractionRequired = 24;
+  string Product = 25;
+}
+
+message QueryCVEResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated CVEDetail Data = 3;
+}
+
+message SaveTextToTemporalFileRequest {
+  bytes Text = 1;
+}
+
+message SaveTextToTemporalFileResponse {
+  string FileName = 1;
+}
+
+message ImportsProfileDatabaseRequest {
+  string LocalProfileFile = 1;
+}
+
+message ExportsProfileDatabaseRequest {
+  string LocalProfileFile = 1;
+}
+
+message UpdateCVEDatabaseRequest {
+  string Proxy = 1;
+}
+
+message IsCVEDatabaseReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+  bool ShouldUpdate = 3;
+}
+
+message IsCVEDatabaseReadyRequest {
+
 }
 
 message MITMRuleExtractedData {
@@ -453,6 +636,7 @@ message QueryMITMRuleExtractedDataRequest {
 message ExportProjectRequest {
   string ProjectName = 1;
   string Password = 2;
+  int64 Id = 3;
 }
 
 message ProjectIOProgress {
@@ -469,6 +653,8 @@ message ImportProjectRequest {
   string LocalProjectName = 1;
   string ProjectFilePath = 2;
   string Password = 3;
+  int64 FolderId = 4;
+  int64 ChildFolderId = 5;
 }
 
 message IsPrivilegedForNetRawResponse {
@@ -483,17 +669,32 @@ message RemoveProjectRequest {
 
 message IsProjectNameValidRequest {
   string ProjectName = 1;
+  int64 FolderId = 2;
+  int64 ChildFolderId = 3;
+  string Type = 4;
 }
 
 message NewProjectRequest {
   string ProjectName = 1;
   string Description = 2;
+  int64 FolderId = 3;
+  int64 ChildFolderId = 4;
+  string Type = 5;
+  int64  Id = 6;
+}
+
+message NewProjectResponse {
+  int64 Id = 1;
+  string ProjectName = 2;
 }
 
 message GetProjectsRequest {
   string ProjectName = 1;
   string Description = 2;
   Paging Pagination = 3;
+  int64 FolderId = 4;
+  int64 ChildFolderId = 5;
+  string Type = 6;
 }
 
 message ProjectDescription {
@@ -505,6 +706,13 @@ message ProjectDescription {
 
   // 创建时间
   int64 CreatedAt = 5;
+
+  int64 FolderId = 6;
+  int64 ChildFolderId = 7;
+  string Type = 8;
+  int64 UpdateAt = 9;
+  string FolderName = 10;
+  string ChildFolderName = 11;
 }
 
 message GetProjectsResponse {
@@ -512,12 +720,24 @@ message GetProjectsResponse {
   Paging Pagination = 2;
   int64 Total = 3;
   int64 TotalPage = 4;
+  int64 ProjectToTal = 9;
 }
 
 message SetCurrentProjectRequest {
   // ProjectName
   string ProjectName = 1;
+  int64 Id = 2;
 }
+
+message DeleteProjectRequest {
+  int64 Id = 1;
+  bool IsDeleteLocal = 2;
+}
+
+message QueryProjectDetailRequest {
+  int64 Id = 1;
+}
+
 
 message AttachCombinedOutputRequest {
 
@@ -598,7 +818,7 @@ message ExtractDataRequest {
 
 message GenerateExtractRuleRequest {
   // 要提取规则的样例数据
-  bytes Data = 1;
+  bytes Data = 1 ;
   // 选择的文本
   bytes Selected = 2;
   // 选择前后缀的偏移量
@@ -766,7 +986,7 @@ message DeletePluginByUserIDRequest {
 message DeleteLocalPluginsByWhereRequest {
   string Keywords = 1;
   string Type = 2;
-  int64 UserId = 3;
+  int64  UserId = 3;
   string UserName = 4;
 }
 
@@ -785,8 +1005,9 @@ message DownloadOnlinePluginByTokenRequest {
   string IsPrivate = 6;
   string Tags = 7;
   string UserName = 8;
-  int64 UserId = 9;
+  int64  UserId = 9;
   string TimeSearch = 10;
+  string Group = 11;
 }
 
 message DownloadOnlinePluginByIdRequest {
@@ -869,10 +1090,25 @@ message ExecBatchYakScriptUnfinishedTask {
   double Percent = 1;
   int64 CreatedAt = 2;
   string Uid = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+}
+
+message SimpleDetectUnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string Uid = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+  int64  LastRecordPtr = 6;
 }
 
 message GetExecBatchYakScriptUnfinishedTaskResponse {
   repeated ExecBatchYakScriptUnfinishedTask Tasks = 1;
+}
+
+message    GetSimpleDetectUnfinishedTaskResponse {
+  repeated SimpleDetectUnfinishedTask Tasks = 1;
 }
 
 message FixUploadPacketRequest {
@@ -922,6 +1158,10 @@ message QueryYakScriptLocalAndUserRequest {
 
 message QueryYakScriptLocalAndUserResponse {
   repeated YakScript Data = 1;
+}
+
+message QueryYakScriptByOnlineGroupRequest {
+  string OnlineGroup = 1;
 }
 
 message ExtractDataToFileRequest {
@@ -1095,20 +1335,20 @@ message Fields {
   repeated FieldName Values = 1;
 }
 //获取Gadget的Options
-message YsoOption {
+message YsoOption{
   string Name = 1;
   string NameVerbose = 2;
   string Help = 3;
 }
-message YsoOptionsWithVerbose {
+message YsoOptionsWithVerbose{
   repeated YsoOption Options = 1;
 }
 //已弃用
-message YsoOptions {
+message YsoOptions{
   repeated string Names = 1;
 }
 //类生成器的参数
-message YsoClassGeneraterOptionsWithVerbose {
+message YsoClassGeneraterOptionsWithVerbose{
   string Key = 1;
   string KeyVerbose = 2;
   string Help = 3;
@@ -1116,42 +1356,42 @@ message YsoClassGeneraterOptionsWithVerbose {
   string Type = 5;
   map<string, YsoClassOptionsResponseWithVerbose> BindOptions = 6;
 }
-message YsoClassOptionsResponseWithVerbose {
+message YsoClassOptionsResponseWithVerbose{
   repeated YsoClassGeneraterOptionsWithVerbose Options = 1;
 }
 //已弃用
-message YsoClassGeneraterOptions {
+message YsoClassGeneraterOptions{
   string Key = 1;
   string Value = 2;
   string Type = 3;
 }
 //已弃用
-message YsoClassOptionsResponse {
+message YsoClassOptionsResponse{
   repeated YsoClassGeneraterOptions Options = 1;
 }
 //生成代码和字节码
-message YsoOptionsRequerstWithVerbose {
+message YsoOptionsRequerstWithVerbose{
   string Gadget = 1;
   string Class = 2;
   repeated YsoClassGeneraterOptionsWithVerbose Options = 3;
 }
 //已弃用
-message YsoOptionsRequerst {
+message YsoOptionsRequerst{
   string Gadget = 1;
   string Class = 2;
   repeated YsoClassGeneraterOptions Options = 3;
 }
-message YsoBytesObject {
+message YsoBytesObject{
   bytes Data = 1;
 }
-message YsoDumpResponse {
+message YsoDumpResponse{
   string Data = 1;
 }
 
-message YsoCodeResponse {
+message YsoCodeResponse{
   string Code = 1;
 }
-message YsoBytesResponse {
+message YsoBytesResponse{
   string FileName = 1;
   bytes Bytes = 2;
 }
@@ -1191,9 +1431,9 @@ message WebShell {
   bool State = 9;
   string Tag = 10;
   //    Proxy
-//string Proxy = 11;
-  int64 CreatedAt = 11;
-  int64 UpdatedAt = 12;
+  string Proxy = 11;
+  int64 CreatedAt = 12;
+  int64 UpdatedAt = 13;
 }
 message WebShellRequest {
   int64 Id = 1;
@@ -1231,10 +1471,10 @@ message DeleteWebShellRequest {
   repeated int64 Ids = 2;
 }
 
-message BytesToBase64Request {
+message BytesToBase64Request{
   bytes Bytes = 1;
 }
-message BytesToBase64Response {
+message BytesToBase64Response{
   string Base64 = 1;
 }
 message QueryICMPTriggerRequest {
@@ -1272,7 +1512,7 @@ message HistoryHTTPFuzzerTask {
   int32 HTTPFlowSuccessCount = 4;
   int32 HTTPFlowFailedCount = 5;
   string Host = 6;
-  int32 Port = 7;
+  int32  Port = 7;
 }
 
 message HistoryHTTPFuzzerTasks {
@@ -1383,7 +1623,7 @@ message Risk {
 
   string IP = 2;
   string Url = 3;
-  int32 Port = 4;
+  int32  Port = 4;
   string Host = 5;
 
   string Title = 6;
@@ -1412,6 +1652,8 @@ message Risk {
   string RuntimeId = 22;
 
   string CVE = 23;
+  string Description = 24;
+  string Solution = 25;
 }
 
 message QueryRisksRequest {
@@ -1606,7 +1848,7 @@ message QueryDomainsRequest {
   string Network = 2;
   string DomainKeyword = 3;
   string Title = 4;
-  bool All = 5;
+  bool   All = 5;
 }
 
 message DeleteDomainsRequest {
@@ -1637,6 +1879,12 @@ message Host {
   int64 IPInteger = 3;
   bool IsInPublicNet = 4;
   repeated string Domains = 5;
+}
+
+message DownloadReportRequest {
+  string FileData = 1;
+  string FileName = 2;
+  string FileDir = 3;
 }
 
 message DeleteYakScriptExecResultRequest {
@@ -1795,7 +2043,7 @@ message MenuByGroup {
 }
 
 message YakScriptIsInMenuRequest {
-  string Group = 1;
+  string Group = 1 ;
   int64 YakScriptId = 2;
 }
 
@@ -1810,17 +2058,18 @@ message AddToMenuRequest {
   string Group = 2;
   string Verbose = 3;
   string Mode = 4;
-  int64 MenuSort = 5;
-  int64 GroupSort = 6;
+  int64  MenuSort = 5;
+  int64  GroupSort = 6;
 }
 
 message AddMenuRequest {
-  repeated MenuItemGroup Data = 1;
+  repeated MenuItemGroup  Data = 1;
 }
 
 message QueryAllMenuItemRequest {
   string Mode = 1;
   string Group = 2;
+  string Verbose = 3;
 }
 
 message ImportMenuItemRequest {
@@ -1844,6 +2093,17 @@ message UpdateFromGithubRequest {
 
 message SimpleScript {
   string Content = 1;
+}
+
+message LastRecord {
+  int64 LastRecordPtr = 1;
+  double Percent = 2;
+  string YakScriptOnlineGroup = 3;
+}
+
+message RecordPortScanRequest {
+  LastRecord LastRecord = 1;
+  PortScanRequest PortScanRequest = 2;
 }
 
 message PortScanRequest {
@@ -1899,6 +2159,8 @@ message PortScanRequest {
   // SYN Concurrent
   // 简易设置 SYN 每秒并发
   int64 SynConcurrent = 24;
+
+  string TaskName = 25;
 }
 
 message DeletePortsRequest {
@@ -1920,7 +2182,7 @@ message QueryPortsRequest {
   string Service = 4;
   string State = 5;
   string Title = 6;
-  bool All = 7;
+  bool   All = 7;
 }
 
 message QueryPortsResponse {
@@ -1993,7 +2255,7 @@ message SavePayloadRequest {
   repeated string FileName = 4;
 }
 
-message UpdatePayloadRequest {
+message UpdatePayloadRequest{
   string Group = 1;
   string OldGroup = 2;
 }
@@ -2050,6 +2312,8 @@ message QueryYakScriptRequest {
   bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
   int64 UserId = 13;
   string UserName = 14;
+
+  bool IgnoreGeneralModuleOrder = 15;
 }
 
 message QueryYakScriptResponse {
@@ -2102,7 +2366,7 @@ message YakScript {
   bool OnlineIsPrivate = 24;
   string HeadImg = 25;
   string OnlineBaseUrl = 26;
-  int64 BaseOnlineId = 27;
+  int64  BaseOnlineId = 27;
   bool OnlineOfficial = 28;
 }
 
@@ -2297,7 +2561,7 @@ message ExtractedUrl {
 message FuzzerResponse {
 
   string Method = 1;
-  int32 StatusCode = 2;
+  int32  StatusCode = 2;
   string Host = 3;
   string ContentType = 4;
   repeated HTTPHeader Headers = 5;
@@ -2408,7 +2672,7 @@ message DeleteHTTPFlowRequest {
 
   string URLPrefix = 3;
   QueryHTTPFlowRequest Filter = 5;
-  repeated string URLPrefixBatch = 6;
+  repeated string  URLPrefixBatch = 6;
 }
 
 message QueryHTTPFlowsIdsRequest {
@@ -2539,6 +2803,21 @@ message WebsocketFlow {
   bool IsProtobuf = 12;
 }
 
+message SetMITMFilterRequest {
+  repeated string includeHostname = 7;
+  repeated string excludeHostname = 8;
+  repeated string excludeSuffix = 9;
+  repeated string includeSuffix = 10;
+  repeated string excludeMethod = 11;
+  repeated string excludeContentTypes = 40;
+  repeated string excludeUri = 43;
+  repeated string includeUri = 44;
+}
+
+message SetMITMFilterResponse {
+
+}
+
 // 中间人劫持的问题
 message MITMRequest {
   bytes request = 1;
@@ -2610,6 +2889,11 @@ message MITMRequest {
   bool enableHttp2 = 42;
 
   repeated Certificate certificates = 45;
+
+  // gmtls config
+  bool enableGMTLS = 46;
+  bool onlyEnableGMTLS = 47;
+  bool preferGMTLS = 48;
 }
 
 message Certificate {
@@ -2786,6 +3070,7 @@ message ExecResult {
   int64 Id = 6;
 
   string RuntimeID = 7;
+  float Progress = 8;
 }
 
 message GetLicenseResponse {

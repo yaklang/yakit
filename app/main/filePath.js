@@ -1,7 +1,8 @@
+const {app} = require("electron");
+const electronIsDev = require("electron-is-dev");
 const os = require("os")
 const path = require("path")
 const process = require("process")
-
 /** 软件关联项目相关目录路径 */
 const homeDir = path.join(os.homedir(), "yakit-projects")
 /** 引擎和软件安装包路径 */
@@ -20,6 +21,23 @@ const getLocalYaklangEngine = () => {
     }
 }
 
+const loadExtraFilePath = (s) => {
+    if (electronIsDev) {
+        return s
+    }
+
+    switch (os.platform()) {
+        case "darwin":
+            return path.join(app.getAppPath(), "../..", s)
+        case "linux":
+            return path.join(app.getAppPath(), "../..", s)
+        case "win32":
+            return path.join(app.getAppPath(), "../..", s)
+        default:
+            return path.join(app.getAppPath(), s)
+    }
+}
+
 /** 所有缓存数据文件夹 */
 const basicDir = path.join(homeDir, "base")
 /** 本地缓存数据文件地址 */
@@ -34,6 +52,10 @@ const remoteLinkDir = path.join(homeDir, "auth")
 /** 远程连接引擎配置数据文件地址 */
 const remoteLinkFile = path.join(remoteLinkDir, "yakit-remote.json")
 
+/** Html模板文件地址 */
+// const yakitDir = path.join(os.homedir(), "AppData","Local","Programs","yakit")
+// const htmlTemplateDir = path.join(yakitDir, "report")
+const htmlTemplateDir = loadExtraFilePath(path.join("report"))
 module.exports = {
     yaklangEngineDir,
     getLocalYaklangEngine,
@@ -41,5 +63,6 @@ module.exports = {
     extraLocalCachePath,
     engineLog,
     remoteLinkDir,
-    remoteLinkFile
+    remoteLinkFile,
+    htmlTemplateDir
 }

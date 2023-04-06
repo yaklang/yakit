@@ -7,6 +7,8 @@ export interface Risk {
 
     Title: string
     TitleVerbose?: string
+    Description?: string
+    Solution?: string
     RiskType: string
     RiskTypeVerbose?: string
     Parameter?: string

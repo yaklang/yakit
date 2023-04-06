@@ -138,6 +138,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     NoResultReturn?: boolean
     UserId?: number
     UserName?: string
+
+    // 展示信息中，插件商店的顺序和本地顺序不应该一样
+    IgnoreGeneralModuleOrder?: boolean
 }
 
 /*
@@ -156,5 +159,6 @@ export interface ExecResult {
     Raw: Uint8Array
     IsMessage: boolean
     Message: Uint8Array
-    Id?: number
+    Id?: number,
+    Progress: number
 }

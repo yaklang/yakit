@@ -54,68 +54,133 @@
 .yakit-tag-danger {
     background: rgba(246, 84, 74, 0.08);
     border: 1px solid rgba(244, 115, 107, 0.3);
-    color: #F4736B;
+    color: #f4736b;
 }
 
 .yakit-tag-info {
     background: rgba(242, 139, 68, 0.06);
     border: 1px solid rgba(242, 139, 68, 0.3);
-    color: #F28B44;
+    color: #f28b44;
 }
 
 .yakit-tag-success {
     background: rgba(86, 201, 145, 0.1);
     border: 1px solid rgba(86, 201, 145, 0.3);
-    color: #56C991;
+    color: #56c991;
 }
 
 .yakit-tag-warning {
     background: rgba(255, 182, 96, 0.1);
     border: 1px solid rgba(255, 182, 96, 0.3);
-    color: #FFB660;
+    color: #ffb660;
 }
 
 .yakit-tag-purple {
     background: rgba(136, 99, 247, 0.1);
     border: 1px solid rgba(136, 99, 247, 0.3);
-    color: #8863F7;
+    color: #8863f7;
 }
 
 .yakit-tag-blue {
     background: rgba(74, 148, 248, 0.1);
     border: 1px solid rgba(74, 148, 248, 0.3);
-    color: #4A94F8;
+    color: #4a94f8;
 }
 
 .yakit-tag-cyan {
     background: rgba(53, 216, 238, 0.1);
     border: 1px solid rgba(53, 216, 238, 0.3);
-    color: #35D8EE;
+    color: #35d8ee;
 }
 
 .yakit-tag-bluePurple {
-    background: rgba(95, 105, 221, 0.1);
-    border: 1px solid rgba(95, 105, 221, 0.3);
-    color: #5F69DD;
+    background: rgba(218, 95, 221, 0.1);
+    border: 1px solid rgba(218, 95, 221, 0.3);
+    color: #DA5FDD;
+}
+
+.yakit-tag-white {
+    background: #FFFFFF;
+    border: 1px solid #EAECF3;
+    color: #31343F;
 }
 
 .yakit-tag-disable {
-    background: #F8F8F8;
-    border: 1px solid #F0F1F3;
-    color: #CCD2DE;
+    background: #f8f8f8;
+    border: 1px solid #f0f1f3;
+    color: #ccd2de;
     cursor: not-allowed;
 
     :global {
         .ant-tag-close-icon {
             cursor: not-allowed;
-            color: #CCD2DE;
+            color: #ccd2de;
         }
     }
-
 }
 
 // ========================== copy ==========================
 .yakit-copy {
     margin-left: 4px;
     height: 100%;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
 }
+
+// ========================== yakit-checked-tag   start ==========================
+.yakit-checked-tag-wrap {
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+
+    :global {
+        .ant-tag {
+            line-height: 18px;
+            height: 20px;
+        }
+
+        .ant-tag-checkable {
+            background-color: var(--yakit-background-color);
+        }
+
+        .ant-tag-checkable-checked {
+            background-color: var(--yakit-primary-5);
+        }
+
+        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+            color: var(--yakit-primary-5);
+        }
+    }
+}
+
+.yakit-checked-tag-disable {
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-checkable {
+            color: var(--yakit-disable-text-color);
+        }
+
+        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+            color: var(--yakit-disable-text-color);
+        }
+    }
+}
+
+.yakit-checked-tag-checked-disable {
+    cursor: not-allowed;
+
+    :global {
+        .ant-tag-checkable-checked {
+            color: #fff;
+            background-color: var(--yakit-disable-text-color);
+        }
+
+        .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+            color: #fff;
+        }
+    }
+}
+
+// ========================== yakit-checked-tag   end ==========================

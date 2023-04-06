@@ -5,17 +5,31 @@
         .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
             background-color: unset;
         }
+        .ant-dropdown-menu {
+            box-shadow: none;
+        }
     }
 }
 
+// 不同类型颜色配置
 .yakit-menu-primary {
     --menu-background: var(--yakit-primary-5);
     --menu-color: var(--yakit-neutral10-color);
 }
-
 .yakit-menu-secondary {
     --menu-background: var(--yakit-primary-1);
     --menu-color: var(--yakit-primary-5);
+}
+// 不同尺寸大小配置
+.yakit-menu-default-size {
+    --menu-height: 28px;
+    --menu-content-height: 16px;
+    --menu-padding: 6px 8px;
+}
+.yakit-menu-right-menu-size {
+    --menu-height: 24px;
+    --menu-content-height: 16px;
+    --menu-padding: 4px 8px;
 }
 
 .yakit-menu-wrapper {
@@ -35,6 +49,9 @@
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+            .icon-style {
+                color: var(--menu-color);
+            }
         }
 
         .ant-menu-item-selected {
@@ -47,6 +64,9 @@
             border-radius: 4px;
 
             span.anticon {
+                color: var(--menu-color);
+            }
+            .icon-style {
                 color: var(--menu-color);
             }
         }
@@ -81,7 +101,11 @@
             margin: 0 !important;
         }
 
-        // 兼容dropdown组件菜单样式(只考虑了单层结构，没有考虑双层结构)
+        .ant-menu-item-divider {
+            background-color: var(--yakit-border-color);
+        }
+
+        // 兼容dropdown组件菜单样式(该样式限制菜单层级为两层及以内)
         .ant-dropdown-menu-item .icon-style {
             color: var(--yakit-body-text-color);
         }
@@ -94,6 +118,18 @@
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+
+            span.anticon {
+                color: var(--menu-color);
+            }
+        }
+
+        .ant-dropdown-menu-item-disabled {
+            color: var(--yakit-disable-text-color) !important;
+
+            span.anticon {
+                color: var(--yakit-disable-text-color);
+            }
         }
 
         .ant-dropdown-menu-item-selected {
@@ -106,11 +142,50 @@
             padding: 0;
             margin: 0 !important;
         }
+
+        .ant-dropdown-menu-submenu-active {
+            background-color: var(--menu-background) !important;
+            color: var(--menu-color) !important;
+            border-radius: 4px;
+
+            span.anticon {
+                color: var(--menu-color);
+            }
+        }
+
+        .ant-dropdown-menu-submenu-selected {
+            color: var(--yakit-header-color);
+        }
+
+        .ant-dropdown-menu-submenu {
+            .ant-dropdown-menu-submenu-title {
+                height: 100%;
+                padding: 0;
+                margin: 0;
+            }
+
+            .ant-dropdown-menu-submenu-title:hover {
+                color: var(--menu-color);
+
+                span.anticon {
+                    color: var(--menu-color);
+                }
+            }
+
+            .ant-dropdown-menu-submenu-expand-icon {
+                display: none;
+            }
+        }
+
+        .ant-dropdown-menu-item-divider {
+            background-color: var(--yakit-border-color);
+        }
     }
 }
 
 // 暂时css效果只考虑两层结构菜单，多层结构菜单暂未考虑
 .yakit-menu-submenu {
+    padding: 0px;
     :global {
         .ant-menu {
             padding: 6px 4px 8px 4px;
@@ -127,12 +202,57 @@
             .ant-menu-item-selected:hover {
                 color: var(--menu-color);
             }
+
+            .ant-menu-submenu .icon-style {
+                color: var(--yakit-body-text-color);
+            }
+
+            .ant-menu-submenu-active {
+                background-color: var(--menu-background) !important;
+                color: var(--menu-color) !important;
+                border-radius: 4px;
+
+                span.anticon {
+                    color: var(--menu-color);
+                }
+                .icon-style {
+                    color: var(--menu-color);
+                }
+            }
+
+            .ant-menu-submenu-selected {
+                color: var(--yakit-header-color);
+            }
+
+            .ant-menu-submenu {
+                .ant-menu-submenu-title {
+                    height: 100%;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .ant-menu-submenu-title:hover {
+                    color: var(--menu-color);
+
+                    span.anticon {
+                        color: var(--menu-color);
+                    }
+                }
+
+                .ant-menu-submenu-arrow {
+                    display: none;
+                }
+            }
         }
 
         .ant-menu-item-active {
             background-color: var(--menu-background) !important;
             color: var(--menu-color) !important;
             border-radius: 4px;
+
+            .icon-style {
+                color: var(--menu-color);
+            }
         }
 
         .ant-menu-vertical.ant-menu-sub {
@@ -144,37 +264,86 @@
             padding: 0;
             margin: 0 !important;
         }
+
+        .ant-menu-item-divider {
+            background-color: var(--yakit-border-color);
+        }
+
+        // 兼容dropdown组件菜单样式(该样式限制菜单层级为两层及以内)
+        .ant-dropdown-menu {
+            padding: 6px 4px 8px 4px;
+            border: 1px solid var(--yakit-border-color);
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+            color: var(--yakit-header-color);
+
+            .ant-dropdown-menu-item-selected {
+                background-color: unset;
+                color: var(--menu-background);
+            }
+
+            .ant-dropdown-menu-item-selected:hover {
+                color: var(--menu-color);
+            }
+        }
+
+        ul {
+            margin: 0;
+        }
+
+        .ant-dropdown-menu-item-active {
+            background-color: var(--menu-background) !important;
+            color: var(--menu-color) !important;
+            border-radius: 4px;
+
+            span.anticon {
+                color: var(--menu-color);
+            }
+        }
+
+        .ant-dropdown-menu-vertical.ant-menu-sub {
+            min-width: 128px;
+        }
+
+        .ant-dropdown-menu-item {
+            height: 100%;
+            padding: 0;
+            margin: 0 !important;
+        }
+
+        .ant-dropdown-menu-item-divider {
+            background-color: var(--yakit-border-color);
+        }
     }
 }
 
 .yakit-menu-item {
-    height: 28px;
+    height: var(--menu-height);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 8px;
+    padding: var(--menu-padding);
     border-radius: 4px;
 
     .yakit-submenu-item-content {
         display: flex;
         align-items: center;
-        height: 16px;
+        gap: 8px;
+        height: var(--menu-content-height);
         max-width: calc(100% - 16px);
     }
 
     .yakit-menu-item-content {
         display: flex;
         align-items: center;
-        height: 16px;
+        gap: 8px;
+        height: var(--menu-content-height);
         max-width: 100%;
         flex: 1;
     }
 
     .yakit-menu-item-title {
         width: 100%;
-        // height: 100%;
-        // display: flex;
-        // align-items: center;
-        line-height: 16px;
+        line-height: var(--menu-content-height);
     }
 }

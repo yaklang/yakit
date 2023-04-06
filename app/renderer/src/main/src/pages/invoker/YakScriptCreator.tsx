@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react"
-import { Button, Checkbox, Col, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal } from "antd"
+import React, { useEffect, useState } from "react"
+import { Button, Checkbox, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal } from "antd"
 import { InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem } from "../../utils/inputUtil"
 import { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam } from "./schema"
 import { YakCodeEditor, YakEditor } from "../../utils/editors"
@@ -35,6 +35,8 @@ export interface YakScriptCreatorFormProp {
     noClose?: boolean
     showButton?: boolean
     setScript?: (i: YakScript) => any
+    /** 是否是新建插件 */
+    isCreate?: boolean
 }
 
 /*
@@ -65,14 +67,15 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
 const { ipcRenderer } = window.require("electron")
 
 const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
+    const yakScriptParams: YakScript = cloneDeep(data)
     const exec = (extraParams?: YakExecutorParam[]) => {
-        if (data.Params.length <= 0) {
+        if (yakScriptParams.Params.length <= 0) {
             showModal({
                 title: "立即执行",
                 width: 1000,
                 content: (
                     <>
-                        <YakScriptRunner debugMode={true} script={data} params={[...(extraParams || [])]} />
+                        <YakScriptRunner debugMode={true} script={yakScriptParams} params={[...(extraParams || [])]} />
                     </>
                 )
             })
@@ -83,7 +86,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
                 content: (
                     <>
                         <YakScriptParamsSetter
-                            {...data}
+                            {...yakScriptParams}
                             saveDebugParams={saveDebugParams}
                             onParamsConfirm={(params) => {
                                 m.destroy()
@@ -94,7 +97,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
                                         <>
                                             <YakScriptRunner
                                                 debugMode={true}
-                                                script={data}
+                                                script={yakScriptParams}
                                                 params={[...params, ...(extraParams || [])]}
                                             />
                                         </>
@@ -107,9 +110,9 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
             })
         }
     }
-    if (data.EnablePluginSelector) {
+    if (yakScriptParams.EnablePluginSelector) {
         queryYakScriptList(
-            data.PluginSelectorTypes || "mitm,port-scan",
+            yakScriptParams.PluginSelectorTypes || "mitm,port-scan",
             (i) => {
                 exec([{ Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: i.map((i) => i.ScriptName).join("|") }])
             },
@@ -158,7 +161,7 @@ const defParams = {
 }
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
-    const {showButton=true} = props
+    const {showButton=true, isCreate} = props
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
             labelCol: { span: 5 },
@@ -274,7 +277,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             })
             showButton&&getPluginDetail(props.modified?.OnlineId,props.modified?.UUID)
         }
-    }, [props.modified])
+    }, [props.modified, userInfo])
     const getPluginDetail = useMemoizedFn((pluginId,uuid) => {
         if (!userInfo.isLogin) return
         if (pluginId as number == 0) return
@@ -330,7 +333,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .then((data) => {
                 info("创建 / 保存 Yak 脚本成功")
                 setParams(data)
-                if (visible) {
+                if (visible || isCreate) {
                     // model提示保存后的处理
                     onCloseTab()
                     setVisible(false)
@@ -528,6 +531,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                     props.onCreated && props.onCreated(newSrcipt)
                                     props.onChanged && props.onChanged(newSrcipt)
                                 }}
+                                isCreate={isCreate}
                             >
                                 <Button>同步至云端</Button>
                             </SyncCloudButton>

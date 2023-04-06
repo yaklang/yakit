@@ -1,0 +1,116 @@
+.yakit-hint-wrapper {
+    z-index: 1001;
+    position: fixed;
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    .yakit-hint-body {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+}
+.yakit-hint-hidden-wrapper {
+    display: none;
+}
+.yakit-hint-mask-wrapper {
+    background: rgba(49, 52, 63, 0.3);
+}
+
+.yakit-hint-modal-top {
+    z-index: 999 !important;
+}
+.yakit-hint-modal-hidden {
+    display: none;
+}
+.yakit-hint-modal-wrapper {
+    z-index: 99;
+    width: 100%;
+    position: absolute;
+    top: 35vh;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+.yakit-hint-modal-container-box-shadow {
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+}
+.yakit-hint-modal-container {
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    border-radius: 4px;
+
+    .container-wrapper {
+        width: 100%;
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        position: relative;
+
+        .container-draggle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .container-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            .left-hint-icon {
+                width: 32px;
+                height: 32px;
+                svg {
+                    width: 32px;
+                    height: 32px;
+                }
+            }
+            // .left-hint-icon-extra {
+            // }
+        }
+
+        .container-right-wrapper {
+            flex: 1;
+
+            .right-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+
+            .right-content {
+                margin-top: 8px;
+
+                .default-content {
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: var(--yakit-body-text-color);
+                }
+            }
+
+            .right-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: space-between;
+
+                // .btn-extra {
+                // }
+
+                .btn-group-wrapper {
+                    display: flex;
+                    gap: 8px;
+                }
+            }
+        }
+    }
+}

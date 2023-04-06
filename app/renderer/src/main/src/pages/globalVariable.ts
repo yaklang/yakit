@@ -1,3 +1,5 @@
+import { Route } from "antd/lib/breadcrumb/Breadcrumb"
+
 export interface coordinateProps {
     screenX: number
     screenY: number
@@ -26,4 +28,20 @@ export const UserPlatformType: UserPlatformTypeProps = {
     wechat: {name: "wechatName", img: "wechatHeadImg"},
     qq: {name: "qqName", img: "qqHeadImg"},
     company: {name:"companyName",img:"companyHeadImg"},
+}
+
+interface info{
+    [key:string]:{status:boolean,info:string}
+}
+export let SimpleCloseInfo:info={}
+export const setSimpleInfo = (key:string,status:boolean,info:string)=>{
+    SimpleCloseInfo[key] = {
+            status,info
+        }
+}
+
+export const delSimpleInfo = (key:string) => {
+    if(SimpleCloseInfo[key]){
+        delete SimpleCloseInfo[key]
+    }
 }

@@ -1,15 +1,15 @@
-import React, {useEffect, useState} from "react"
-import {YakScript} from "./schema"
-import {YakExecutorParam} from "./YakExecutorParams"
-import {showDrawer} from "../../utils/showModal"
-import {randomString} from "../../utils/randomUtil"
-import {Space} from "antd"
-import {PluginResultUI} from "../yakitStore/viewers/base"
-import {useCreation} from "ahooks"
+import React, { useEffect, useState } from "react"
+import { YakScript } from "./schema"
+import { YakExecutorParam } from "./YakExecutorParams"
+import { showDrawer } from "../../utils/showModal"
+import { randomString } from "../../utils/randomUtil"
+import { Space } from "antd"
+import { PluginResultUI } from "../yakitStore/viewers/base"
+import { useCreation } from "ahooks"
 
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export interface YakScriptRunnerProp {
     script: YakScript
@@ -19,7 +19,7 @@ export interface YakScriptRunnerProp {
 
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     const token = useCreation(() => randomString(40), [])
-    const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream(
+    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
         "exec-script-immediately",
         "exec-yak-script",
         token,
@@ -30,7 +30,9 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
             ipcRenderer.invoke(
                 "exec-yak-script",
                 {
-                    Params: props.params,
+                    Params: props.params.filter((param: YakExecutorParam) => {
+                        return param.Value !== 'false'
+                    }),
                     YakScriptId: props.script.Id
                 },
                 token
@@ -45,7 +47,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     }, [])
 
     return (
-        <div style={{width: "100%", height: "100%"}}>
+        <div style={{ width: "100%", height: "100%" }}>
             <PluginResultUI
                 script={props.script}
                 debugMode={props.debugMode}
@@ -70,7 +72,7 @@ export const startExecuteYakScript = (script: YakScript, params: YakExecutorPara
         mask: false,
         content: (
             <>
-                <YakScriptRunner {...{script, params}} />
+                <YakScriptRunner {...{ script, params }} />
             </>
         )
     })

@@ -7,7 +7,8 @@ import {
     ExtraHTTPSelectProps,
     InputHTTPHeaderFormProps,
     MITMContentReplacerRule,
-    MITMRuleFromModalProps
+    MITMRuleFromModalProps,
+    RuleContentProps
 } from "./MITMRuleType"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {AdjustmentsIcon, CheckIcon, PencilAltIcon, PlusCircleIcon} from "@/assets/newIcon"
@@ -26,7 +27,7 @@ import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperato
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {colorSelectNode, HitColor} from "./MITMRule"
+import {colorSelectNode} from "./MITMRule"
 import {ValidateStatus} from "antd/lib/form/FormItem"
 
 const {ipcRenderer} = window.require("electron")
@@ -40,7 +41,7 @@ const {ipcRenderer} = window.require("electron")
  */
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const {modalVisible, onClose, currentItem, isEdit, rules, onSave} = props
-    const [ruleVisible, setRuleVisible] = useState<boolean>()
+
     const [form] = Form.useForm()
     const resultType = Form.useWatch("ResultType", form)
     const headers: HTTPHeader[] = Form.useWatch("ExtraHeaders", form) || []
@@ -69,7 +70,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         form.setFieldsValue({
             Rule: val
         })
-        setRuleVisible(false)
     })
     const getExtraHeaders = useMemoizedFn((val) => {
         form.setFieldsValue({
@@ -105,7 +105,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 width={720}
                 zIndex={1001}
                 onOk={() => onOk()}
-                wrapClassName='old-theme-html'
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
                     {/* <Form.Item
@@ -136,15 +135,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitInput />
                     </Form.Item>
                     <Form.Item label='规则内容' name='Rule' rules={[{required: true, message: "该项为必填"}]}>
-                        <YakitInput
-                            placeholder='可用右侧辅助工具，自动生成正则'
-                            addonAfter={
-                                <AdjustmentsIcon
-                                    className={styles["icon-adjustments"]}
-                                    onClick={() => setRuleVisible(true)}
-                                />
-                            }
-                        />
+                        <RuleContent getRule={getRule} />
                     </Form.Item>
                     <Row>
                         <Col span={5}>&nbsp;</Col>
@@ -198,40 +189,20 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         </Col>
                     </Row>
                     <Form.Item label='命中颜色' name='Color'>
-                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}} dropdownClassName='old-theme-html'>
+                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}}>
                             {colorSelectNode}
                         </YakitSelect>
                     </Form.Item>
                     <Form.Item label='标记 Tag' name='ExtraTag'>
-                        <YakitSelect
-                            size='middle'
-                            mode='tags'
-                            wrapperStyle={{width: "100%"}}
-                            dropdownClassName='old-theme-html'
-                        />
+                        <YakitSelect size='middle' mode='tags' wrapperStyle={{width: "100%"}} />
                     </Form.Item>
                 </Form>
             </YakitModal>
-            {modalVisible && (
-                <YakitModal
-                    title='自动提取正则'
-                    subTitle='在编译器中选中内容，即可自动生成正则'
-                    visible={ruleVisible}
-                    onCancel={() => setRuleVisible(false)}
-                    width={840}
-                    zIndex={1002}
-                    footer={null}
-                    closable={true}
-                    wrapClassName='old-theme-html'
-                >
-                    <ExtractRegular onSave={getRule} />
-                </YakitModal>
-            )}
         </>
     )
 }
 
-const ExtractRegular: React.FC<ExtractRegularProps> = (props) => {
+const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
     const {onSave} = props
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
     const [selected, setSelected] = useState<string>("")
@@ -346,9 +317,9 @@ const ExtractRegular: React.FC<ExtractRegularProps> = (props) => {
             </div>
         </div>
     )
-}
+})
 
-const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = (props) => {
+const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
     const {tip, onSave, list, onRemove} = props
     const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
     return (
@@ -381,9 +352,9 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = (props) => {
             )}
         </div>
     )
-}
+})
 
-const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
+const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
     const {visible, setVisible, onSave} = props
     const [form] = Form.useForm()
     return (
@@ -394,7 +365,6 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             zIndex={1002}
             footer={null}
             closable={true}
-            wrapClassName='old-theme-html'
         >
             <Form
                 labelCol={{span: 5}}
@@ -409,7 +379,6 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             >
                 <Form.Item label='HTTP Header' name='Header' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitAutoComplete
-                        dropdownClassName='old-theme-html'
                         options={[
                             "Authorization",
                             "Accept",
@@ -473,9 +442,9 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             </Form>
         </YakitModal>
     )
-}
+})
 
-const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
+const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
     const {visible, setVisible, onSave} = props
     const [form] = Form.useForm()
     const [advanced, setAdvanced] = useState(false)
@@ -488,7 +457,6 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             footer={null}
             closable={true}
             width={600}
-            wrapClassName='old-theme-html'
         >
             <Form
                 labelCol={{span: 5}}
@@ -503,7 +471,6 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             >
                 <Form.Item label='Cookie Key' name='Key' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitAutoComplete
-                        dropdownClassName='old-theme-html'
                         options={["JSESSION", "PHPSESSION", "SESSION", "admin", "test", "debug"].map((ele) => ({
                             value: ele,
                             label: ele
@@ -566,4 +533,43 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
             </Form>
         </YakitModal>
     )
-}
+})
+
+export const RuleContent: React.FC<RuleContentProps> = React.memo((props) => {
+    const {getRule} = props
+    const [rule, setRule] = useState<string>("")
+    const [ruleVisible, setRuleVisible] = useState<boolean>()
+    const onGetRule = useMemoizedFn((val: string) => {
+        setRule(val)
+        getRule(val)
+        setRuleVisible(false)
+    })
+    return (
+        <>
+            <YakitInput
+                value={rule}
+                placeholder='可用右侧辅助工具，自动生成正则'
+                addonAfter={
+                    <AdjustmentsIcon className={styles["icon-adjustments"]} onClick={() => setRuleVisible(true)} />
+                }
+                onChange={(e) => {
+                    const {value} = e.target
+                    setRule(value)
+                    getRule(value)
+                }}
+            />
+            <YakitModal
+                title='自动提取正则'
+                subTitle='在编译器中选中内容，即可自动生成正则'
+                visible={ruleVisible}
+                onCancel={() => setRuleVisible(false)}
+                width={840}
+                zIndex={1002}
+                footer={null}
+                closable={true}
+            >
+                <ExtractRegular onSave={onGetRule} />
+            </YakitModal>
+        </>
+    )
+})

@@ -11,16 +11,46 @@
     justify-content: space-between;
 }
 
-// ========================== monaco ==========================
-.monaco-editor,
-.monaco-editor-background,
-.monaco-editor .inputarea.ime-input {
-    background-color: #e8e9e8 !important;
+::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 8px;
+    /*高宽分别对应横竖滚动条的尺寸*/
+    height: 8px;
 }
 
-.monaco-editor .margin {
-    background-color: #e8e9e8 !important;
+::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 10px;
+    box-shadow: none;
+    background-clip: padding-box;
+    border: 1px solid transparent;
 }
+
+::-webkit-scrollbar-track {
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    border-color: #c1c1c1;
+}
+
+// ========================== drawer ==========================
+.ant-drawer-body {
+    margin-right: 2px;
+}
+
+// ========================== monaco ==========================
+// .monaco-editor,
+// .monaco-editor-background,
+// .monaco-editor .inputarea.ime-input {
+//     background-color: #e8e9e8 !important;
+// }
+
+// .monaco-editor .margin {
+//     background-color: #e8e9e8 !important;
+// }
 
 // ========================== ant ==========================
 .ant-dropdown {
@@ -67,35 +97,35 @@
 
 // ========================== color ==========================
 .bg-color-red-opacity {
-    background-color: #F4736B;
+    background-color: #f4736b;
 }
 
 .bg-color-green-opacity {
-    background-color: #56C991;
+    background-color: #56c991;
 }
 
 .bg-color-blue-opacity {
-    background-color: #4A94F8;
+    background-color: #4a94f8;
 }
 
 .bg-color-yellow-opacity {
-    background-color: #FFD583;
+    background-color: #ffd583;
 }
 
 .bg-color-orange-opacity {
-    background-color: #FFB660;
+    background-color: #ffb660;
 }
 
 .bg-color-purple-opacity {
-    background-color: #8863F7;
+    background-color: #8863f7;
 }
 
 .bg-color-cyan-opacity {
-    background-color: #35D8EE;
+    background-color: #35d8ee;
 }
 
 .bg-color-grey-opacity {
-    background-color: #B4BBCA;
+    background-color: #b4bbca;
 }
 
 // ========================== notification ==========================
@@ -107,7 +137,7 @@
     .ant-notification-notice-content {
         background: var(--yakit-danger-1);
         border: 1px solid var(--yakit-danger-3);
-        border-radius: 4px;
+
         padding: 16px 12px;
     }
 
@@ -137,5 +167,95 @@
         line-height: 16px;
         color: var(--yakit-body-text-color);
         padding-right: 32px;
+    }
+}
+
+.ant-notification-notice {
+    border-radius: 4px;
+}
+
+// ========================== button ==========================
+.button-text-danger {
+    --button-wave-shadow-color: var(--yakit-danger-2);
+
+    --button-background: #fff;
+    --button-color: var(--yakit-danger-5);
+    --button-border-color: var(--yakit-danger-5);
+
+    --button-hover-background: #fff;
+    --button-hover-color: var(--yakit-danger-4);
+    --button-hover-border-color: var(--yakit-danger-4);
+
+    --button-press-background: #fff;
+    --button-press-color: var(--yakit-danger-6);
+    --button-press-border-color: var(--yakit-danger-6);
+}
+
+.button-text-primary {
+    --button-wave-shadow-color: var(--yakit-primary-2);
+
+    --button-background: #fff;
+    --button-color: var(--yakit-primary-5);
+    --button-border-color: var(--yakit-primary-5);
+
+    --button-hover-background: #fff;
+    --button-hover-color: var(--yakit-primary-4);
+    --button-hover-border-color: var(--yakit-primary-4);
+
+    --button-press-background: #fff;
+    --button-press-color: var(--yakit-primary-6);
+    --button-press-border-color: var(--yakit-primary-6);
+}
+
+// ========================== Modal.confirm ==========================
+.modal-remove-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+        color: var(--yakit-helper-text-color);
+
+        &:hover {
+            color: var(--yakit-primary-4);
+        }
+    }
+}
+
+.modal-cancel-button {
+    border-radius: 4px;
+    color: var(--yakit-header-color);
+    text-shadow: none;
+    box-shadow: none;
+
+    &:hover {
+        color: var(--yakit-primary-color-hover);
+        border-color: var(--yakit-primary-color-hover);
+    }
+
+    &:focus {
+        color: var(--yakit-primary-color-press);
+        border-color: var(--yakit-primary-color-press);
+    }
+}
+
+.modal-ok-button {
+    border-radius: 4px;
+    border-color: var(--yakit-primary-color);
+    background: var(--yakit-primary-color);
+    text-shadow: none;
+    box-shadow: none;
+
+    &:hover {
+        border-color: var(--yakit-primary-color-hover);
+        background: var(--yakit-primary-color-hover);
+    }
+
+    &:focus {
+        border-color: var(--yakit-primary-color);
+        background: var(--yakit-primary-color);
+    }
+
+    &:active {
+        border-color: var(--yakit-primary-color-press);
+        background: var(--yakit-primary-color-press);
     }
 }

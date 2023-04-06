@@ -58,8 +58,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 5,
-        ExtraTag: ["login_pre_test"],
-        VerboseName: "login_pre_test"
+        ExtraTag: ["登陆点"],
+        VerboseName: "登陆点"
     },
     {
         Rule: "(?is)(\u003cform.*type=.*?text.*?type=.*?password.*?onclick=.*?\u003c/form.*?\u003e)",
@@ -69,8 +69,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 6,
-        ExtraTag: ["login_captcha_pre_test"],
-        VerboseName: "login_captcha_pre_test"
+        ExtraTag: ["登陆（验证码）"],
+        VerboseName: "登陆（验证码）"
     },
     {
         Rule: "(?is)\u003cform.*enctype=.*?multipart/form-data.*?type=.*?file.*?\u003c/form\u003e",
@@ -80,8 +80,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 7,
-        ExtraTag: ["file_upload_pre_test"],
-        VerboseName: "file_upload_pre_test"
+        ExtraTag: ["文件上传点"],
+        VerboseName: "文件上传点"
     },
     {
         Rule: "(file=|path=|url=|lang=|src=|menu=|meta-inf=|web-inf=|filename=|topic=|page=｜_FilePath=|target=)",
@@ -91,8 +91,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 8,
-        ExtraTag: ["file_include_pre_test"],
-        VerboseName: "file_include_pre_test"
+        ExtraTag: ["文件包含参数"],
+        VerboseName: "文件包含参数"
     },
     {
         Rule: "((cmd=)|(exec=)|(command=)|(execute=)|(ping=)|(query=)|(jump=)|(code=)|(reg=)|(do=)|(func=)|(arg=)|(option=)|(load=)|(process=)|(step=)|(read=)|(function=)|(feature=)|(exe=)|(module=)|(payload=)|(run=)|(daemon=)|(upload=)|(dir=)|(download=)|(log=)|(ip=)|(cli=))|(ipaddress=)|(txt=)|(case=)|(count=)",
@@ -102,8 +102,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 9,
-        ExtraTag: ["code_inject_pre_test"],
-        VerboseName: "code_inject_pre_test"
+        ExtraTag: ["命令注入参数"],
+        VerboseName: "命令注入参数"
     },
     {
         Rule: '\\b(([^\u003c\u003e()[\\]\\\\.,;:\\s@"]+(\\.[^\u003c\u003e()[\\]\\\\.,;:\\s@"]+)*)|(".+"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+(cn|com|edu|gov|int|mil|net|org|biz|info|pro|name|museum|coop|aero|xxx|idv)))\\b',
@@ -111,8 +111,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 10,
-        ExtraTag: ["emailleak_in_url"],
-        VerboseName: "emailleak_in_url"
+        ExtraTag: ["email泄漏"],
+        VerboseName: "email泄漏"
     },
     {
         Rule: "\\b(?:(?:\\+|00)86)?1(?:(?:3[\\d])|(?:4[5-79])|(?:5[0-35-9])|(?:6[5-7])|(?:7[0-8])|(?:8[\\d])|(?:9[189]))\\d{8}\\b",
@@ -120,8 +120,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 11,
-        ExtraTag: ["phoneleak_in_url"],
-        VerboseName: "phoneleak_in_url"
+        ExtraTag: ["手机号泄漏"],
+        VerboseName: "手机号泄漏"
     },
     {
         Rule: "((\\[client\\])|\\[(mysql\\])|(\\[mysqld\\]))",
@@ -131,8 +131,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 12,
-        ExtraTag: ["mysql_conf_in_url"],
-        VerboseName: "mysql_conf_in_url"
+        ExtraTag: ["MySQL配置"],
+        VerboseName: "MySQL配置"
     },
     {
         Rule: "\\b[1-9]\\d{5}(?:18|19|20)\\d{2}(?:0[1-9]|10|11|12)(?:0[1-9]|[1-2]\\d|30|31)\\d{3}[\\dXx]\\b",
@@ -140,8 +140,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 13,
-        ExtraTag: ["chinese_id_card_leak_in_url"],
-        VerboseName: "chinese_id_card_leak_in_url"
+        ExtraTag: ["身份证"],
+        VerboseName: "身份证"
     },
     {
         Rule: "[-]+BEGIN [^\\s]+ PRIVATE KEY[-]",
@@ -150,8 +150,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 14,
-        ExtraTag: ["ssh_rsa_private_key_in_url"],
-        VerboseName: "ssh_rsa_private_key_in_url"
+        ExtraTag: ["RSA私钥"],
+        VerboseName: "RSA私钥"
     },
     {
         Rule: "([A|a]ccess[K|k]ey[S|s]ecret)|([A|a]ccess[K|k]ey[I|i][d|D])|([Aa](ccess|CCESS)_?[Kk](ey|EY))|([Aa](ccess|CCESS)_?[sS](ecret|ECRET))|(([Aa](ccess|CCESS)_?(id|ID|Id)))|([Ss](ecret|ECRET)_?[Kk](ey|EY))",
@@ -159,8 +159,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 15,
-        ExtraTag: ["oss_in_url"],
-        VerboseName: "oss_in_url"
+        ExtraTag: ["OSS Key"],
+        VerboseName: "OSS Key"
     },
     {
         Rule: "[\\w-.]+\\.oss\\.aliyuncs\\.com",
@@ -169,8 +169,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 16,
-        ExtraTag: ["aliyun_oss_url_in_url"],
-        VerboseName: "aliyun_oss_url_in_url"
+        ExtraTag: ["AliyunOSS"],
+        VerboseName: "AliyunOSS"
     },
     {
         Rule: "\\b((127\\.0\\.0\\.1)|(localhost)|(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})|(172\\.((1[6-9])|(2\\d)|(3[01]))\\.\\d{1,3}\\.\\d{1,3})|(192\\.168\\.\\d{1,3}\\.\\d{1,3}))\\b",
@@ -180,8 +180,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 17,
-        ExtraTag: ["ip_address_in_url"],
-        VerboseName: "ip_address_in_url"
+        ExtraTag: ["IP地址"],
+        VerboseName: "IP地址"
     },
     {
         Rule: "(=deleteMe|rememberMe=)",
@@ -190,8 +190,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForHeader: true,
         Index: 18,
-        ExtraTag: ["shiro_pre_test"],
-        VerboseName: "shiro_pre_test"
+        ExtraTag: ["Shiro"],
+        VerboseName: "Shiro"
     },
     {
         Rule: "(?is)^{.*}$",
@@ -200,8 +200,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 19,
-        ExtraTag: ["json_req_pre_test"],
-        VerboseName: "json_req_pre_test"
+        ExtraTag: ["JSON传输"],
+        VerboseName: "JSON传输"
     },
     {
         Rule: "(?is)^\u003c\\?xml.*\u003csoap:Body\u003e",
@@ -209,8 +209,8 @@ const defaultConfig = [
         EnableForRequest: true,
         EnableForBody: true,
         Index: 20,
-        ExtraTag: ["soap_req_pre_test"],
-        VerboseName: "soap_req_pre_test"
+        ExtraTag: ["SOAP请求"],
+        VerboseName: "SOAP请求"
     },
     {
         Rule: "(?is)^\u003c\\?xml.*\u003e$",
@@ -218,8 +218,8 @@ const defaultConfig = [
         EnableForRequest: true,
         EnableForBody: true,
         Index: 21,
-        ExtraTag: ["xml_req_pre_test"],
-        VerboseName: "xml_req_pre_test"
+        ExtraTag: ["XML请求"],
+        VerboseName: "XML请求"
     },
     {
         Rule: "(?i)(Authorization: .*)|(www-Authenticate: ((Basic)|(Bearer)|(Digest)|(HOBA)|(Mutual)|(Negotiate)|(OAuth)|(SCRAM-SHA-1)|(SCRAM-SHA-256)|(vapid)))",
@@ -228,8 +228,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForHeader: true,
         Index: 22,
-        ExtraTag: ["authorization_header_pre_test"],
-        VerboseName: "authorization_header_pre_test"
+        ExtraTag: ["HTTP认证头"],
+        VerboseName: "HTTP认证头"
     },
     {
         Rule: "(GET.*\\w+=\\w+)|(?is)(POST.*\\n\\n.*\\w+=\\w+)",
@@ -239,8 +239,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 23,
-        ExtraTag: ["sql_Inject_pre_test"],
-        VerboseName: "sql_Inject_pre_test"
+        ExtraTag: ["SQL注入测试点"],
+        VerboseName: "SQL注入测试点"
     },
     {
         Rule: "(GET.*\\w+=\\w+)|(?is)(POST.*\\n\\n.*\\w+=\\w+)",
@@ -250,8 +250,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 24,
-        ExtraTag: ["xpath_inject_pre_test"],
-        VerboseName: "xpath_inject_pre_test"
+        ExtraTag: ["XPath注入测试点"],
+        VerboseName: "XPath注入测试点"
     },
     {
         Rule: "((POST.*?wsdl)|(GET.*?wsdl)|(xml=)|(\u003c\\?xml )|(\u0026lt;\\?xml))|((POST.*?asmx)|(GET.*?asmx))",
@@ -261,8 +261,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 25,
-        ExtraTag: ["xxe_pre_test"],
-        VerboseName: "xxe_pre_test"
+        ExtraTag: ["XXE测试点"],
+        VerboseName: "XXE测试点"
     },
     {
         Rule: "(file=|path=|url=|lang=|src=|menu=|meta-inf=|web-inf=|filename=|topic=|page=｜_FilePath=|target=｜filepath=)",
@@ -272,8 +272,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 26,
-        ExtraTag: ["file_download_pre_test"],
-        VerboseName: "file_download_pre_test"
+        ExtraTag: ["文件下载参数"],
+        VerboseName: "文件下载参数"
     },
     {
         Rule: "((ueditor\\.(config|all)\\.js))",
@@ -283,8 +283,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 27,
-        ExtraTag: ["ueditor_pre_test"],
-        VerboseName: "ueditor_pre_test"
+        ExtraTag: ["UEditor测试点"],
+        VerboseName: "UEditor测试点"
     },
     {
         Rule: "(kindeditor\\-(all\\-min|all)\\.js)",
@@ -294,8 +294,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 28,
-        ExtraTag: ["kindeditor_pre_test"],
-        VerboseName: "kindeditor_pre_test"
+        ExtraTag: ["KindEditor测试点"],
+        VerboseName: "KindEditor测试点"
     },
     {
         Rule: "((callback=)|(url=)|(request=)|(redirect_to=)|(jump=)|(to=)|(link=)|(domain=))",
@@ -305,8 +305,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 29,
-        ExtraTag: ["url_redirect_pre_test"],
-        VerboseName: "url_redirect_pre_test"
+        ExtraTag: ["Url重定向参数"],
+        VerboseName: "Url重定向参数"
     },
     {
         Rule: "(wap=|url=|link=|src=|source=|display=|sourceURl=|imageURL=|domain=)",
@@ -316,19 +316,19 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 30,
-        ExtraTag: ["ssrf_pre_test"],
-        VerboseName: "ssrf_pre_test"
+        ExtraTag: ["SSRF测试参数"],
+        VerboseName: "SSRF测试参数"
     },
     {
-        Rule: "((GET|POST|http[s]?).*\\.(do|action))",
+        Rule: "((GET|POST|http[s]?).*\\.(do|action))[^a-zA-Z]",
         Color: "red",
         EnableForRequest: true,
         EnableForResponse: true,
         EnableForHeader: true,
         EnableForBody: true,
         Index: 31,
-        ExtraTag: ["struts2_pre_test"],
-        VerboseName: "struts2_pre_test"
+        ExtraTag: ["Struts2测试点"],
+        VerboseName: "Struts2测试点"
     },
     {
         Rule: "((GET|POST|http[s]?).*?\\?.*?(token=|session\\w+=))",
@@ -338,8 +338,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 32,
-        ExtraTag: ["session_token_pre_test"],
-        VerboseName: "session_token_pre_test"
+        ExtraTag: ["Session/Token测试点"],
+        VerboseName: "Session/Token测试点"
     },
     {
         Rule: "((AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[a-zA-Z0-9]{16})",
@@ -349,8 +349,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 33,
-        ExtraTag: ["amazon_accesskey_id_in_url"],
-        VerboseName: "amazon_accesskey_id_in_url"
+        ExtraTag: ["Amazon AK"],
+        VerboseName: "Amazon AK"
     },
     {
         Rule: "(Directory listing for|Parent Directory|Index of|folder listing:)",
@@ -360,8 +360,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 34,
-        ExtraTag: ["dir_list_pre_test"],
-        VerboseName: "dir_list_pre_test"
+        ExtraTag: ["目录枚举点"],
+        VerboseName: "目录枚举点"
     },
     {
         Rule: "(\u003c.*?Unauthorized)",
@@ -371,8 +371,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 35,
-        ExtraTag: ["unauthorized_access_pre_test"],
-        VerboseName: "unauthorized_access_pre_test"
+        ExtraTag: ["非授权页面点"],
+        VerboseName: "非授权页面点"
     },
     {
         Rule: "((\"|')?[u](ser|name|ame|sername)(\"|'|\\s)?(:|=).*?,)",
@@ -382,8 +382,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 36,
-        ExtraTag: ["usernameleak_in_url"],
-        VerboseName: "usernameleak_in_url"
+        ExtraTag: ["用户名泄漏点"],
+        VerboseName: "用户名泄漏点"
     },
     {
         Rule: "((\"|')?[p](ass|wd|asswd|assword)(\"|'|\\s)?(:|=).*?,)",
@@ -393,8 +393,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 37,
-        ExtraTag: ["passwordeak_in_url"],
-        VerboseName: "passwordeak_in_url"
+        ExtraTag: ["密码泄漏点"],
+        VerboseName: "密码泄漏点"
     },
     {
         Rule: "(((([a-zA-Z0-9._-]+\\.s3|s3)(\\.|\\-)+[a-zA-Z0-9._-]+|[a-zA-Z0-9._-]+\\.s3|s3)\\.amazonaws\\.com)|(s3:\\/\\/[a-zA-Z0-9-\\.\\_]+)|(s3.console.aws.amazon.com\\/s3\\/buckets\\/[a-zA-Z0-9-\\.\\_]+)|(amzn\\.mws\\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|(ec2-[0-9-]+.cd-[a-z0-9-]+.compute.amazonaws.com)|(us[_-]?east[_-]?1[_-]?elb[_-]?amazonaws[_-]?com))",
@@ -404,8 +404,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 38,
-        ExtraTag: ["amazon_aws_url_in_url"],
-        VerboseName: "amazon_aws_url_in_url"
+        ExtraTag: ["Amazon AWS URL"],
+        VerboseName: "Amazon AWS URL"
     },
     {
         Rule: "(?is)(\u003cform.*type=.*?text.*?\u003c/form.*?\u003e)",
@@ -413,8 +413,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 39,
-        ExtraTag: ["http_xss_pre_test"],
-        VerboseName: "http_xss_pre_test"
+        ExtraTag: ["HTTP XSS测试点"],
+        VerboseName: "HTTP XSS测试点"
     },
     {
         Rule: "(?i)(\u003ctitle\u003e.*?(后台|admin).*?\u003c/title\u003e)",
@@ -424,8 +424,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 40,
-        ExtraTag: ["backend_http_login_pre_test"],
-        VerboseName: "backend_http_login_pre_test"
+        ExtraTag: ["后台登陆"],
+        VerboseName: "后台登陆"
     },
     {
         Rule: "((ghp|ghu)\\_[a-zA-Z0-9]{36})",
@@ -435,8 +435,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 41,
-        ExtraTag: ["github_access_token_in_url"],
-        VerboseName: "github_access_token_in_url"
+        ExtraTag: ["GithubAccessToken"],
+        VerboseName: "GithubAccessToken"
     },
     {
         Rule: "((access=)|(adm=)|(admin=)|(alter=)|(cfg=)|(clone=)|(config=)|(create=)|(dbg=)|(debug=)|(delete=)|(disable=)|(edit=)|(enable=)|(exec=)|(execute=)|(grant=)|(load=)|(make=)|(modify=)|(rename=)|(reset=)|(root=)|(shell=)|(test=)|(toggl=))",
@@ -446,8 +446,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 42,
-        ExtraTag: ["debug_logic_parameters_pre_test"],
-        VerboseName: "debug_logic_parameters_pre_test"
+        ExtraTag: ["调试参数"],
+        VerboseName: "调试参数"
     },
     {
         Rule: "(jdbc:[a-z:]+://[A-Za-z0-9\\.\\-_:;=/@?,\u0026]+)",
@@ -457,8 +457,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 43,
-        ExtraTag: ["jdbc_connection_string_in_url"],
-        VerboseName: "jdbc_connection_string_in_url"
+        ExtraTag: ["JDBC连接参数"],
+        VerboseName: "JDBC连接参数"
     },
     {
         Rule: "(ey[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9._-]{10,}|ey[A-Za-z0-9_\\/+-]{10,}\\.[A-Za-z0-9._\\/+-]{10,})",
@@ -468,8 +468,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 44,
-        ExtraTag: ["json_web_token_in_url"],
-        VerboseName: "json_web_token_in_url"
+        ExtraTag: ["JWT 测试点"],
+        VerboseName: "JWT 测试点"
     },
     {
         Rule: "(?i)(jsonp_[a-z0-9]+)|((_?callback|_cb|_call|_?jsonp_?)=)",
@@ -479,7 +479,7 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 45,
-        ExtraTag: ["jsonp_pre_test"],
+        ExtraTag: ["JSONP 测试点"],
         VerboseName: "jsonp_pre_test"
     },
     {
@@ -490,8 +490,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 46,
-        ExtraTag: ["wecom_key_in_url"],
-        VerboseName: "wecom_key_in_url"
+        ExtraTag: ["Wecom Key(Secret)"],
+        VerboseName: "Wecom Key(Secret)"
     },
     {
         Rule: "(https://outlook\\.office\\.com/webhook/[a-z0-9@-]+/IncomingWebhook/[a-z0-9-]+/[a-z0-9-]+)",
@@ -501,8 +501,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 47,
-        ExtraTag: ["microsoft_teams_webhook_in_url"],
-        VerboseName: "microsoft_teams_webhook_in_url"
+        ExtraTag: ["MicrosoftTeams Webhook"],
+        VerboseName: "MicrosoftTeams Webhook"
     },
     {
         Rule: "https://creator\\.zoho\\.com/api/[A-Za-z0-9/\\-_\\.]+\\?authtoken=[A-Za-z0-9]+",
@@ -512,8 +512,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 48,
-        ExtraTag: ["zoho_webhook_in_url"],
-        VerboseName: "zoho_webhook_in_url"
+        ExtraTag: ["Zoho Webhook"],
+        VerboseName: "Zoho Webhook"
     },
     {
         Rule: '([a-zA-Z]:\\\\(\\w+\\\\)+|[a-zA-Z]:\\\\\\\\(\\w+\\\\\\\\)+)|(/(bin|dev|home|media|opt|root|sbin|sys|usr|boot|data|etc|lib|mnt|proc|run|srv|tmp|var)/[^\u003c\u003e()[\\],;:\\s"]+/)',
@@ -522,8 +522,8 @@ const defaultConfig = [
         EnableForResponse: true,
         EnableForBody: true,
         Index: 49,
-        ExtraTag: ["windows/linux_file/dir_path_in_url"],
-        VerboseName: "windows/linux_file/dir_path_in_url"
+        ExtraTag: ["操作系统路径"],
+        VerboseName: "操作系统路径"
     },
     {
         Rule: "(javax\\.faces\\.ViewState)",
@@ -533,8 +533,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 50,
-        ExtraTag: ["java_deserialization_pre_test"],
-        VerboseName: "java_deserialization_pre_test"
+        ExtraTag: ["Java反序列化测试点"],
+        VerboseName: "Java反序列化测试点"
     },
     {
         Rule: "(sonar.{0,50}(?:\"|\\'|`)?[0-9a-f]{40}(?:\"|\\'|`)?)",
@@ -544,8 +544,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 51,
-        ExtraTag: ["sonarqube_token_in_url"],
-        VerboseName: "sonarqube_token_in_url"
+        ExtraTag: ["Sonarqube Token"],
+        VerboseName: "Sonarqube Token"
     },
     {
         Rule: "((us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\\d)",
@@ -555,8 +555,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 52,
-        ExtraTag: ["amazon_aws_region_pre_test"],
-        VerboseName: "amazon_aws_region_pre_test"
+        ExtraTag: ["Amazon AWS Region泄漏"],
+        VerboseName: "Amazon AWS Region泄漏"
     },
     {
         Rule: "(=(https?://.*|https?%3(a|A)%2(f|F)%2(f|F).*))",
@@ -566,8 +566,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 53,
-        ExtraTag: ["url_as_a_value_pre_test"],
-        VerboseName: "url_as_a_value_pre_test"
+        ExtraTag: ["URL作为参数"],
+        VerboseName: "URL作为参数"
     },
     {
         Rule: "(ya29\\.[0-9A-Za-z_-]+)",
@@ -577,8 +577,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 54,
-        ExtraTag: ["oauth_access_key_pre_test"],
-        VerboseName: "oauth_access_key_pre_test"
+        ExtraTag: ["Oauth Access Key"],
+        VerboseName: "Oauth Access Key"
     },
     {
         Rule: "(Error report|in your SQL syntax|mysql_fetch_array|mysql_connect()|org.apache.catalina)",
@@ -588,8 +588,8 @@ const defaultConfig = [
         EnableForHeader: true,
         EnableForBody: true,
         Index: 55,
-        ExtraTag: ["app_err_pre_test"],
-        VerboseName: "app_err_pre_test"
+        ExtraTag: ["网站出错"],
+        VerboseName: "网站出错"
     }
 ]
 
@@ -619,7 +619,6 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
             onOk={() => {
                 saveABSFileToOpen("yakit-mitm-replacer-rules-config.json", value)
             }}
-            wrapClassName='old-theme-html'
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>
@@ -631,11 +630,14 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
 }
 
 export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
-    const {visible, setVisible, onOk} = props
+    const {visible, setVisible, onOk, isUseDefRules} = props
     const [params, setParams] = useState<{JsonRaw: Uint8Array; ReplaceAll: boolean}>({
         JsonRaw: new Uint8Array(),
         ReplaceAll: false
     })
+    useEffect(() => {
+        if (isUseDefRules) onUseDefaultConfig()
+    }, [isUseDefRules])
     const [loading, setLoading] = useState(false)
     const onImport = useMemoizedFn(() => {
         if (!new Buffer(params.JsonRaw).toString("utf8")) {
@@ -689,14 +691,13 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
             onOk={() => onImport()}
             footerExtra={
                 <div className={styles["modal-footer-extra"]}>
-                    <span className={styles["modal-footer-extra-text"]}>全部替换</span>
+                    <span className={styles["modal-footer-extra-text"]}>覆盖现有规则</span>
                     <YakitSwitch
                         onChange={(ReplaceAll) => setParams({...params, ReplaceAll})}
                         checked={params.ReplaceAll}
                     />
                 </div>
             }
-            wrapClassName='old-theme-html'
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>

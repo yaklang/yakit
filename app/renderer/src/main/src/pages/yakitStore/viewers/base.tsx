@@ -106,6 +106,49 @@ const TooltipTitle: React.FC<TooltipTitleProps> = React.memo((props) => {
     )
 })
 
+const renderCard = (infoList, type) => {
+    switch (type) {
+        case 1:
+            return (
+                <>
+                    {infoList.length > 0 && (
+                        <Tooltip
+                            color='#fff'
+                            title={<TooltipTitle list={infoList}/>}
+                            overlayClassName='status-cards-info'
+                            placement='topLeft'
+                        >
+                            <Statistic
+                                valueStyle={{
+                                    color: idToColor(infoList[0].Id)
+                                }}
+                                key={infoList[0].Id}
+                                value={infoList[0].Data}
+                            />
+                        </Tooltip>
+                    )}
+                </>
+            )
+        default:
+            return (
+                <div style={{display: "flex", justifyContent: "space-between"}}>
+                    {infoList.map((info, infoIndex) => {
+                        return (
+                            <Statistic
+                                valueStyle={{
+                                    color: idToColor(info.Id)
+                                }}
+                                key={info.Id}
+                                title={infoList.length > 1 ? info.Id : ""}
+                                value={info.Data}
+                            />
+                        )
+                    })}
+                </div>
+            )
+    }
+}
+
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
     const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType} = props
     const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0")
@@ -156,48 +199,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
         })
         .splice(0, 25)
-    const renderCard = (infoList, type) => {
-        switch (type) {
-            case 1:
-                return (
-                    <>
-                        {infoList.length > 0 && (
-                            <Tooltip
-                                color='#fff'
-                                title={<TooltipTitle list={infoList}/>}
-                                overlayClassName='status-cards-info'
-                                placement='topLeft'
-                            >
-                                <Statistic
-                                    valueStyle={{
-                                        color: idToColor(infoList[0].Id)
-                                    }}
-                                    key={infoList[0].Id}
-                                    value={infoList[0].Data}
-                                />
-                            </Tooltip>
-                        )}
-                    </>
-                )
-            default:
-                return (
-                    <div style={{display: "flex", justifyContent: "space-between"}}>
-                        {infoList.map((info, infoIndex) => {
-                            return (
-                                <Statistic
-                                    valueStyle={{
-                                        color: idToColor(info.Id)
-                                    }}
-                                    key={info.Id}
-                                    title={infoList.length > 1 ? info.Id : ""}
-                                    value={info.Data}
-                                />
-                            )
-                        })}
-                    </div>
-                )
-        }
-    }
 
     return (
         <div style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
@@ -234,9 +235,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 </>
             )}
             {statusCards.length > 0 && (
-                <div className='status-cards-body'>
+                <div style={{margin:"8px 4px 4px"}}>
                     <Row gutter={8}>
                         {statusCards.map((card, cardIndex) => {
+                            console.log("card----",card)
                             return (
                                 <Col key={card.tag} span={8} style={{marginBottom: 8}}>
                                     <Card
@@ -246,7 +248,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             paddingBottom: 4,
                                             paddingLeft: 12,
                                             paddingRight: 12,
-                                            height: 80,
+                                            height: 100,
                                             display: "flex",
                                             flexDirection: "column",
                                             justifyContent: "space-between"
@@ -310,7 +312,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                 bodyStyle={{overflowY: "auto"}}
                             >
                                 <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                                    {(timelineItemProps || []).reverse().map((e, index) => {
+                                    {(timelineItemProps || []).reverse().filter((item)=>item.level!=="json-risk").map((e, index) => {
                                         return (
                                             <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
                                                 <YakitLogFormatter
@@ -331,12 +333,17 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <Tabs.TabPane tab={`漏洞与风险[${props.risks.length}]`} key={"risk"}>
                     <AutoCard bodyStyle={{overflowY: "auto"}}>
                         <Space direction={"vertical"} style={{width: "100%"}} size={12}>
-                            {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
+                            {
+                                props.risks.slice(0,10).map(i => {
+                                    return <RiskDetails info={i} shrink={true}/>
+                                })
+                            }
+                            {/* {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
                                 return <RiskDetails info={i} shrink={true}/>
                             })}
                             {props.risks.length>10&&<div style={{textAlign:"right"}}>
                                 <Pagination simple current={pageCode} onChange={(page)=>setPageCode(page)} total={props.risks.length} />  
-                            </div>}
+                            </div>} */}
                         </Space>
                     </AutoCard>
                 </Tabs.TabPane>}
@@ -610,4 +617,46 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
             )
     }
     return <div>Other</div>
+}
+
+interface SimpleCardBoxProps{
+    statusCards: StatusCardInfoProps[]
+}
+export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
+    const {statusCards} = props
+    return <>{statusCards.length > 0 && (
+        <div className='status-cards-body'>
+            <Row gutter={8}>
+                {statusCards.map((card, cardIndex) => {
+                    return (
+                        <Col key={card.tag} span={6} style={{marginBottom: 8}}>
+                            <Card
+                                hoverable={true}
+                                bodyStyle={{
+                                    paddingTop: 8,
+                                    paddingBottom: 4,
+                                    paddingLeft: 12,
+                                    paddingRight: 12,
+                                    height: 80,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "space-between"
+                                }}
+                            >
+                                <Tooltip
+                                    color='#fff'
+                                    title={<span className='font-color-000'>{card.tag}</span>}
+                                    placement='topLeft'
+                                >
+                                    <h2 className='status-cards-tag'
+                                        style={{marginBottom: 0, fontSize: 16}}>{card.tag}</h2>
+                                </Tooltip>
+                                {renderCard(card.info,undefined)}
+                            </Card>
+                        </Col>
+                    )
+                })}
+            </Row>
+        </div>
+    )}</>
 }

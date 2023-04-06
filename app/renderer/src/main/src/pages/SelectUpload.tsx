@@ -1,13 +1,11 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {Button, Input, Form, Select, Spin, Progress} from "antd"
 import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
-import {failed, success, warn, info} from "@/utils/notification"
-import {API} from "@/services/swagger/resposeType"
+import {failed, success} from "@/utils/notification"
 import {PaginationSchema} from "./invoker/schema"
-import {ProjectsResponse, ProjectDescription, ProjectIOProgress} from "./projects/ProjectPage"
 import {randomString} from "@/utils/randomUtil"
-import {NetWorkApi} from "@/services/fetch"
-import {} from "@ant-design/icons"
+import { ProjectDescription, ProjectIOProgress, ProjectsResponse } from "./softwareSettings/ProjectManage"
+
 const {Option} = Select
 const {ipcRenderer} = window.require("electron")
 
@@ -36,6 +34,9 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const [percent, setPercent] = useState<number>(0.0)
     const filePath = useRef<string>()
 
+    /** @name 导出实体项目文件过程是否产生错误(如果产生错误，阻止通道结束后的上传操作) */
+    const hasErrorRef = useRef<boolean>(false)
+
     const uploadFile = () => {
         ipcRenderer
             .invoke("upload-project", {path: filePath.current})
@@ -62,21 +63,21 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
             return
         }
         ipcRenderer.on(`${token}-data`, async (e, data: ProjectIOProgress) => {
-            filePath.current = data.TargetPath.replace(/\\/g, "\\")
-            if (!!data.Verbose) {
+            if (!!data.TargetPath) {
+                filePath.current = data.TargetPath.replace(/\\/g, "\\")
             }
             if (data.Percent > 0) {
                 setLoading(true)
                 setPercent(data.Percent*0.9)
             }
-            if (!!data.TargetPath) {
-            }
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
+            hasErrorRef.current = true
             setLoading(false)
             failed(`[ExportProject] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
+            if(hasErrorRef.current) return
             uploadFile()
         })
 
@@ -93,11 +94,12 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     }, [])
 
     const onFinish = useMemoizedFn((values) => {
+        hasErrorRef.current = false   
         ipcRenderer.invoke(
             "ExportProject",
             {
-                ProjectName: values.name,
-                Password: allowPassword === "1" ? values.password : ""
+                Id: values.name,
+                Password: allowPassword === "1" ? values.password || "" : ""
             },
             token
         )
@@ -119,6 +121,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         }
         ipcRenderer
             .invoke("GetProjects", {
+                Type: "project",
                 Pagination: {...paginationProps, Order: pagination.Order, OrderBy: pagination.OrderBy}
             })
             .then((rsp: ProjectsResponse) => {
@@ -172,7 +175,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                     dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                 >
                     {projectList.map((item) => (
-                        <Option key={item.Id} value={item.ProjectName}>
+                        <Option key={item.Id} value={item.Id}>
                             {item.ProjectName}
                         </Option>
                     ))}

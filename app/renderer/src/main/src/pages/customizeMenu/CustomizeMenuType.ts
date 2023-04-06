@@ -163,3 +163,9 @@ export interface PluginLocalItemProps {
     isDragDisabled: boolean
     onRemoveMenu: (m: MenuDataProps) => void
 }
+
+export interface PluginLocalInfoProps {
+    plugin: YakScript
+    wrapperClassName?: string
+    getScriptInfo?: (YakScript) => void
+}

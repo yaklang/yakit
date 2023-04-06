@@ -1,0 +1,91 @@
+.yakit-proto-switch-wrapper {
+    width: 20px;
+    height: 12px;
+    padding: 2px 2px 2px 10px;
+    margin: 2px;
+    background: var(--yakit-disable-text-color);
+    border: 1px solid var(--yakit-disable-text-color);
+    border-radius: 10px;
+    display: inline-flex;
+    position: relative;
+    cursor: pointer;
+    .yakit-proto-switch {
+        position: absolute;
+        top: 1px;
+        left: 2px;
+        width: 8px;
+        height: 8px;
+        transition: all 0.2s ease-in-out;
+
+        &::before {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            inset: 0;
+            background-color: #fff;
+            border-radius: 9px;
+            box-shadow: 0 2px 4px #00230b33;
+            transition: all 0.2s ease-in-out;
+            content: "";
+        }
+    }
+}
+
+.yakit-proto-switch-wrapper-focus {
+    box-shadow: 0 0 2px 2px var(--yakit-background-color);
+}
+.yakit-proto-switch-wrapper-checked-focus {
+    box-shadow: 0 0 2px 2px var(--yakit-primary-2);
+}
+
+.yakit-proto-switch-wrapper-checked {
+    background: var(--yakit-primary-5);
+    border: 1px solid var(--yakit-primary-5);
+    .yakit-proto-switch-checked {
+        transition: all 0.2s ease-in-out;
+        left: calc(100% - 10px);
+    }
+    &:hover {
+        background: var(--yakit-primary-4);
+    }
+    &:active {
+        background: var(--yakit-primary-6);
+    }
+    &:focus {
+        box-shadow: 0 0 2px 2px var(--yakit-primary-2);
+    }
+}
+
+.yakit-proto-switch-wrapper-disabled {
+    background: var(--yakit-background-color);
+    border: 1px solid var(--yakit-border-color);
+    cursor: not-allowed;
+    .yakit-proto-switch-disabled {
+        cursor: not-allowed;
+        &::before {
+            cursor: not-allowed;
+        }
+    }
+    &:hover {
+        background: var(--yakit-background-color);
+    }
+    &:active {
+        background: var(--yakit-background-color);
+    }
+    &:focus {
+        box-shadow: none;
+    }
+}
+
+.yakit-proto-switch-input {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    opacity: 0;
+}
+.yakit-proto-switch-input-disabled {
+    cursor: not-allowed;
+}

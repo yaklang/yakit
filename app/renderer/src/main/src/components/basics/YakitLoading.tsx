@@ -14,7 +14,7 @@ import {CheckIcon} from "@/assets/newIcon"
 import {UpdateYakitAndYaklang} from "../layout/update/UpdateYakitAndYaklang"
 import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -208,7 +208,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         }
 
         return false
-    }, [currentYakit, latestYakit, currentYaklang, latestYaklang, yakitStatus])
+    }, [currentYakit, latestYakit, currentYaklang, latestYaklang, yakitStatus, readyTime.current])
 
     const selectEngineMode = useMemoizedFn((key: string) => {
         if (key === "remote" && onEngineModeChange) {
@@ -701,7 +701,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
     return (
         <div className={visible ? styles["yakit-modal-mask"] : styles["hidden-yakit-modal-mask"]}>
             <Draggable
-                defaultClassName={classnames(styles["yaklang-update-modal"], styles["hint-modal-wrapper"], {
+                defaultClassName={classNames(styles["yaklang-update-modal"], styles["hint-modal-wrapper"], {
                     [styles["modal-top-wrapper"]]: isTop === 0
                 })}
                 disabled={disabled}
@@ -841,7 +841,7 @@ const DatabaseErrorHint: React.FC<DatabaseErrorHintProps> = React.memo((props) =
     return (
         <div className={visible ? styles["yakit-modal-mask"] : styles["hidden-yakit-modal-mask"]}>
             <Draggable
-                defaultClassName={classnames(styles["yaklang-update-modal"], styles["hint-modal-wrapper"], [
+                defaultClassName={classNames(styles["yaklang-update-modal"], styles["hint-modal-wrapper"], [
                     styles["modal-top-wrapper"]
                 ])}
                 disabled={disabled}

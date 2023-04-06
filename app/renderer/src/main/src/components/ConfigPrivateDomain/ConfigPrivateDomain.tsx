@@ -28,10 +28,12 @@ interface ConfigPrivateDomainProps {
     onSuccee?:() => void,
     // 是否为企业登录
     enterpriseLogin?:boolean|undefined
+    // 是否展示跳过
+    skipShow?:boolean
 }
 
 export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.memo((props) => {
-    const {onClose,onSuccee,enterpriseLogin = false} = props
+    const {onClose,onSuccee,enterpriseLogin = false,skipShow=false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
@@ -45,7 +47,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         getHttpSetting()
     }, [])
     // 全局监听登录状态
-    const {userInfo} = useStore()
+    const {userInfo,setStoreUserInfo} = useStore()
     const syncLoginOut = async () => {
         await loginOut(userInfo)
     }
@@ -63,6 +65,23 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 .then((res:API.UserData) => {
                     console.log("返回结果：", res)
                     ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
+                        const user = {
+                            isLogin: true,
+                            platform: res.from_platform,
+                            githubName: res.from_platform === "github" ? res.name : null,
+                            githubHeadImg: res.from_platform === "github" ? res.head_img : null,
+                            wechatName: res.from_platform === "wechat" ? res.name : null,
+                            wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
+                            qqName: res.from_platform === "qq" ? res.name : null,
+                            qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
+                            companyName: res.from_platform === "company" ? res.name : null,
+                            companyHeadImg: res.from_platform === "company" ? res.head_img : null,
+                            role: res.role,
+                            user_id: res.user_id,
+                            token: res.token,
+                            showStatusSearch: res?.showStatusSearch || false
+                        }
+                        setStoreUserInfo(user)
                         if(data?.next){
                             success("企业登录成功")
                             onCloseTab()
@@ -95,13 +114,13 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             ...values
         })
         .then((data) => {
-            syncLoginOut()
             ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
             setRemoteValue("httpSetting", JSON.stringify(values))
             addHttpHistoryList(values.BaseUrl)
             setFormValue(values)
             if(!enterpriseLogin){
                 success("私有域设置成功")
+                syncLoginOut()
                 onCloseTab()
                 onClose&&onClose()
             }
@@ -199,6 +218,11 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <Input.Password placeholder='请输入你的密码' allowClear />
                 </Form.Item>}
                 <div className="form-item-submit">
+                    {enterpriseLogin&&skipShow&&<Button style={{width:120,marginRight:12}} onClick={()=>{
+                        onSuccee&&onSuccee()
+                    }}>
+                        跳过
+                    </Button>}
                     <Button type='primary' htmlType='submit' style={{width:120}} loading={loading}>
                         {enterpriseLogin?"登录":"确定"}
                     </Button>

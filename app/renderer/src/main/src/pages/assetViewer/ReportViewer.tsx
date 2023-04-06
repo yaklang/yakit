@@ -1,14 +1,18 @@
 import React, {useEffect, useState, useRef} from "react"
 import {Report} from "./models"
-import {failed} from "../../utils/notification"
+import {failed, success} from "../../utils/notification"
 import {AutoCard} from "../../components/AutoCard"
-import {Button, Empty, Space, Tag,Spin} from "antd"
+import {Button, Empty, Space, Tag, Spin} from "antd"
 import {showModal} from "../../utils/showModal"
 import {YakEditor} from "../../utils/editors"
 import {ReportItem} from "./reportRenders/schema"
 import {ReportItemRender} from "./reportRenders/render"
 import html2pdf from "html2pdf.js"
-
+import styles from "./ReportViewer.module.scss"
+import classNames from "classnames"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {openABSFileLocated} from "../../utils/openWebsite"
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 export interface ReportViewerProp {
     id?: number
 }
@@ -17,7 +21,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     const [loading, setLoading] = useState(false)
-    const [SpinLoading,setSpinLoading] = useState(false)
+    const [SpinLoading, setSpinLoading] = useState(false)
     const [report, setReport] = useState<Report>({
         From: "",
         Hash: "",
@@ -31,6 +35,10 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     const divRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if ((props?.id || 0) <= 0) {
+            setReport({
+                ...report,
+                Id: 0,
+            })
             return
         }
 
@@ -84,60 +92,96 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         setSpinLoading(true)
         if (!divRef || !divRef.current) return
         const div = divRef.current
-        html2pdf().from(div).set(opt).save().then(()=>{
-            setSpinLoading(false)
-        }) // 导出
+        html2pdf()
+            .from(div)
+            .set(opt)
+            .save()
+            .then(() => {
+                setSpinLoading(false)
+            }) // 导出
     }
 
+    const downloadHtml = () => {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data: any) => {
+                if (data.filePaths.length) {
+                    setSpinLoading(true)
+                    let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+                    ipcRenderer
+                        .invoke("DownloadHtmlReport", {
+                            JsonRaw: report.JsonRaw,
+                            outputDir: absolutePath,
+                            reportName: report.Title
+                        })
+                        .then((r) => {
+                            console.log(r)
+                            if (r?.ok) {
+                                success("报告导出成功")
+                                r?.outputDir && openABSFileLocated(r.outputDir)
+                            }
+                        })
+                        .catch((e) => {
+                            failed(`Download Html Report failed ${e}`)
+                        })
+                        .finally(() => setTimeout(() => setSpinLoading(false), 300))
+                }
+            })
+    }
     return (
-        <Spin spinning={SpinLoading}>
-        <AutoCard
-            size={"small"}
-            bordered={false}
-            loading={loading}
-            title={
-                <Space>
-                    {report.Title} <Tag>{props.id}</Tag>
-                </Space>
-            }
-            bodyStyle={{overflow: "auto"}}
-            extra={
-                <Space>
-                    <a
-                        href={"#"}
-                        onClick={() => {
-                            showModal({
-                                title: "RAW DATA",
-                                content: (
-                                    <div style={{height: 300}}>
-                                        <YakEditor value={report.JsonRaw} />
-                                    </div>
-                                ),
-                                width: "50%"
-                            })
-                        }}
-                    >
-                        RAW
-                    </a>
-                    <a
-                        href={"#"}
-                        onClick={() => {
-                            downloadPdf()
-                        }}
-                    >
-                        下载
-                    </a>
-                </Space>
-            }
-        >
-            <div ref={divRef}>
-                <Space direction={"vertical"} style={{width: "100%"}}>
-                    {reportItems.map((i, index) => {
-                        return <ReportItemRender item={i} key={index} />
-                    })}
-                </Space>
-            </div>
-        </AutoCard>
-        </Spin>
+        <div className={styles["report-viewer"]}>
+            <Spin spinning={SpinLoading}>
+                <AutoCard
+                    size={"small"}
+                    bordered={false}
+                    loading={loading}
+                    title={
+                        <Space>
+                            {report.Title} <Tag>{props.id}</Tag>
+                        </Space>
+                    }
+                    bodyStyle={{overflow: "auto"}}
+                    extra={
+                        <Space>
+                            <a
+                                href={"#"}
+                                onClick={() => {
+                                    showModal({
+                                        title: "RAW DATA",
+                                        content: (
+                                            <div style={{height: 300}}>
+                                                <YakEditor value={report.JsonRaw} />
+                                            </div>
+                                        ),
+                                        width: "50%"
+                                    })
+                                }}
+                            >
+                                RAW
+                            </a>
+                            <a
+                                href={"#"}
+                                onClick={() => {
+                                    IsEnterprise ? downloadHtml() : downloadPdf()
+                                }}
+                            >
+                                下载
+                            </a>
+                        </Space>
+                    }
+                >
+                    <div ref={divRef}>
+                        <Space direction={"vertical"} style={{width: "100%"}}>
+                            {reportItems.map((i, index) => {
+                                return <ReportItemRender item={i} key={index} />
+                            })}
+                        </Space>
+                    </div>
+                </AutoCard>
+            </Spin>
+        </div>
     )
 }

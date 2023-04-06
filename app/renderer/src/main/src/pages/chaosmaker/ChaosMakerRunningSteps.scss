@@ -1,0 +1,29 @@
+.chaos-maker-rule-step {
+  .ant-steps-item-icon {
+    background: #FFFFFF;
+    border-color: var(--yakit-primary-5);
+
+    .anticon {
+      color: var(--yakit-primary-5) !important;
+    }
+  }
+}
+
+.chaos-maker-rule-step-active {
+  .ant-steps-item-icon {
+    background: var(--yakit-primary-5) !important;
+    border-color: var(--yakit-primary-5) !important;
+  }
+}
+
+.chaos-maker-rule-step-unactive {
+  .ant-steps-item-icon {
+    border-color: #EEEEEE !important;
+  }
+}
+
+.chaos-maker-rule-steps {
+  .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title::after {
+    background-color: var(--yakit-primary-5) !important;
+  }
+}

@@ -69,3 +69,13 @@ export const YakitStoreParams = create<YakitStoreParamsProps>((set, get) => ({
     },
     setYakitStoreParams: (info) => set({storeParams: info})
 }))
+
+interface simpleDetectParamsProps{
+    tabId:string
+}
+
+/**@name 企业简易版安全检测参数*/
+export let simpleDetectParams:simpleDetectParamsProps = {
+    /**导航栏currentKey传递*/
+    tabId:"",
+}

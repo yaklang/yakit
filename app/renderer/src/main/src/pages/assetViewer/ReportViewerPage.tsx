@@ -12,22 +12,21 @@ import {ReportViewer} from "./ReportViewer"
 import {SelectIcon} from "../../assets/icons"
 import {report} from "process"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-
 import "./ReportViewerPage.scss"
-
+import { ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 export interface ReportViewerPageProp {
 }
 
 export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
-    const [_, setReport, getReport] = useGetState<Report>()
-
+    const [_, setReport, getReport] = useGetState<Report|undefined>()
     return (
         <>
             <ResizeBox
                 isVer={false}
                 firstNode={<ReportList onClick={setReport} selectedId={getReport()?.Id}/>}
-                firstMinSize={"320px"}
-                firstRatio={"320px"}
+                firstMinSize={"330px"}
+                firstRatio={"330px"}
                 secondNode={(() => {
                     return <ReportViewer id={getReport()?.Id || 0}/>
                 })()}
@@ -37,7 +36,7 @@ export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
 }
 
 export interface ReportListProp {
-    onClick: (r: Report) => any
+    onClick: (r: Report|undefined) => any
     selectedId?: number
 }
 
@@ -51,6 +50,7 @@ interface QueryReports extends QueryGeneralRequest {
 const {ipcRenderer} = window.require("electron")
 
 export const ReportList: React.FC<ReportListProp> = (props) => {
+    const {onClick,selectedId} = props
     const [response, setResponse] = useState<QueryGeneralResponse<Report>>({
         Data: [],
         Pagination: genDefaultPagination(20),
@@ -84,6 +84,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
             })
             .then((rsp: QueryGeneralResponse<Report>) => {
                 if (rsp) {
+                    // console.log("列表",rsp)
                     setResponse(rsp)
                     setSelectedRowKeys([])
                 }
@@ -94,6 +95,16 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
+
+    useEffect(()=>{
+        ipcRenderer.on("fetch-simple-open-report", (e, reportId:number) => {
+            update()
+            reportId&&onClick({Id:reportId,Title:"",Hash:"",Owner:"",From:"",PublishedAt:0,JsonRaw:""})
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-new-tabs-color")
+        }
+    },[])
 
     const onSelect = useMemoizedFn((item: Report) => {
         const index = selectedRowKeys.findIndex((ele) => ele === item.Id)
@@ -115,6 +126,14 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
+                // 当为全部删除时 直接详情页置空
+                selectedRowKeys.length===0&&onClick(undefined)
+                // 当存在选中项时 如若选中项被删除则详情页置空
+                if(selectedId&&selectedRowKeys.length!==0){
+                    if(selectedRowKeys.includes(selectedId)){
+                        onClick(undefined)
+                    }
+                }
                 update()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
@@ -191,7 +210,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                                 />
                             </Tooltip>
 
-                            <Space>
+                            <Space wrap={true}>
                                 {item.Id && <Tag color={"red"}>ID:{item.Id}</Tag>}
                                 {item.Owner && <Tag color={"green"}>发起人:{item.Owner}</Tag>}
                                 {item.From && <Tag color={"orange"}>来源:{item.From}</Tag>}
@@ -203,6 +222,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                 pagination={{
                     size: "small",
                     pageSize: pagination?.Limit || 10,
+                    current:response.Pagination.Page,
                     simple: true,
                     total,
                     showTotal: (i) => <Tag>共{i}条历史记录</Tag>,

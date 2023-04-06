@@ -35,7 +35,9 @@ export enum RemoteGV {
     /** @name 登录账户Token(enterprise) */
     TokenOnlineEnterprise = "token-online-enterprise",
     /** @name 登录账户Token */
-    TokenOnline = "token-online"
+    TokenOnline = "token-online",
+    /** @name 连接的项目数据库 */
+    LinkDatabase = "link-database"
 }
 
 /** 项目逻辑全局变量 */
@@ -43,5 +45,14 @@ export enum CodeGV {
     /** @name 官网地址 */
     HomeWebsite = "https://www.yaklang.com",
     /** @name 远程连接配置信息文件路径 */
-    RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json"
+    RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json",
+    /** @name 历史版本下载页面 */
+    HistoricalVersion = "https://github.com/yaklang/yakit/releases",
+
+    /**
+     * @name 强制删除用户端的无效菜单项集合
+     * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
+     * @description 每个菜单项由 '|' 字符进行分割
+     */
+    InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|"
 }

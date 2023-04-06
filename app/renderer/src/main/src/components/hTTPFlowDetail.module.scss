@@ -3,3 +3,44 @@
         table-layout: fixed !important;
     }
 }
+
+.extra-chrome-btn {
+    :global {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.http-history-detail-wrapper {
+    height: 100%;
+    overflow: hidden;
+    :global {
+        .ant-col-24 {
+            height: 100%;
+        }
+        .ant-col-5 {
+            height: 100%;
+            .ant-table-wrapper{
+                height: 100%;
+                .ant-spin-nested-loading{
+                    height: 100%;
+                    .ant-table{
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        .ant-table-container{
+                            flex: 1;
+                            overflow: hidden;
+                            .ant-table-content{
+                                height: 100%;
+                                overflow: auto !important;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

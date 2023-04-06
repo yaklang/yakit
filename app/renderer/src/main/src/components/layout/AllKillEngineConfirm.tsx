@@ -6,7 +6,7 @@ import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {yakProcess} from "./PerformanceDisplay"
 import {Loading3QuartersSvgIcon, YaklangInstallHintSvgIcon} from "./icons"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./AllKillEngineConfirm.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -126,7 +126,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                 </div>
 
                 <div className={styles["confirm-body"]}>
-                    <div className={classnames(styles["body-title"], {[styles["loading-body-title"]]: loading})}>
+                    <div className={classNames(styles["body-title"], {[styles["loading-body-title"]]: loading})}>
                         {loading ? "进程关闭中，请稍等 ..." : "更新引擎，需关闭所有本地进程"}
                     </div>
                     {!loading && (

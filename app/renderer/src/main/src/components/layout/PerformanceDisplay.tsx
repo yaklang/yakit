@@ -11,7 +11,7 @@ import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon, GooglePhotosLogoSvgIcon} from "./icons"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./performanceDisplay.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -178,13 +178,30 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     return (
         <YakitPopover
             visible={show}
-            overlayClassName={classnames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
             placement={"bottomRight"}
             content={
                 <div ref={listRef} className={styles["ui-engine-list-wrapper"]}>
                     <div className={styles["ui-engine-list-body"]}>
                         <div className={styles["engine-list-header"]}>
-                            本地 Yak 进程管理 {psLoading && <LoadingOutlined className={styles["loading-icon"]} />}
+                            本地 Yak 进程管理
+                            <Popconfirm
+                                title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
+                                onConfirm={()=>{
+                                    process.map(i => {
+                                        ipcRenderer.invoke(`kill-yak-grpc`, i.pid)
+                                    })
+                                    ipcRenderer.invoke("RestoreEngineAndPlugin", {}).finally(()=>{
+                                        info("恢复引擎成功")
+                                        ipcRenderer.invoke("relaunch")
+                                    }).catch(e => {
+                                        failed(`恢复引擎失败：${e}`)
+                                    })
+                                }}
+                            >
+                                <YakitButton type={"danger"} style={{marginLeft: 8}}>重置引擎版本</YakitButton>
+                            </Popconfirm>
+                            {psLoading && <LoadingOutlined className={styles["loading-icon"]} />}
                         </div>
                         <div className={styles["engine-list-container"]}>
                             {process.map((i) => {
@@ -273,8 +290,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
-                <div className={classnames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                    <GooglePhotosLogoSvgIcon className={classnames({[styles["icon-rotate-animation"]]: !show})} />
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <GooglePhotosLogoSvgIcon className={classNames({[styles["icon-rotate-animation"]]: !show})} />
                 </div>
             </div>
         </YakitPopover>

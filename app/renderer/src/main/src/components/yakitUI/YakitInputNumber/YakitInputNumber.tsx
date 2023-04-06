@@ -21,12 +21,23 @@ import {useMemoizedFn, useMutationObserver} from "ahooks"
  * @param {YakitSizeType} size  horizontal 不支持max-large
  */
 export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
-    const {type, size, className} = props
+    const {type, size, className, wrapperClassName, ...resProps} = props
+    const [focus, setFocus] = useState<boolean>(false)
+    const onFocus = useMemoizedFn((e) => {
+        setFocus(true)
+        if (props.onFocus) props.onFocus(e)
+    })
+    const onBlur = useMemoizedFn((e) => {
+        setFocus(false)
+        if (props.onBlur) props.onBlur(e)
+    })
     return (
-        <div className={classNames(styles["yakit-input-number-wrapper"])}>
+        <div className={classNames(styles["yakit-input-number-wrapper"], wrapperClassName)}>
             {(type === "horizontal" && <YakitInputNumberHorizontal {...props} />) || (
                 <InputNumber
-                    {...props}
+                    {...resProps}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
                     size='middle'
                     className={classNames(
                         styles["yakit-input-number"],
@@ -34,7 +45,8 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
                             [styles["yakit-input-number-max-large"]]: size === "maxLarge",
                             [styles["yakit-input-number-large"]]: size === "large",
                             [styles["yakit-input-number-small"]]: size === "small",
-                            [styles["yakit-input-number-disabled"]]: !!props.disabled
+                            [styles["yakit-input-number-focus"]]: focus,
+                            [styles["yakit-input-number-disabled"]]: !!props.disabled,
                         },
                         className
                     )}
@@ -51,7 +63,7 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
  * @description:不支持 bordered false ，无边框模式
  */
 const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (props) => {
-    const {size, step = 1, controls, precision} = props
+    const {size, step = 1, controls, precision, ...resProps} = props
     const [value, setValue] = useState<ValueType | null | undefined>(props.value)
     const [focus, setFocus] = useState<boolean>(false)
     const precisionRef = useRef<number>(1)
@@ -177,7 +189,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
                 </>
             )}
             <YakitInputNumber
-                {...props}
+                {...resProps}
                 step={step}
                 value={value}
                 bordered={false}

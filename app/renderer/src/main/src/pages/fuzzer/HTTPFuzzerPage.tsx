@@ -3,7 +3,6 @@ import {
     Button,
     Card,
     Col,
-    Divider,
     Form,
     Input,
     Modal,
@@ -14,8 +13,6 @@ import {
     Spin,
     Tag,
     Typography,
-    Dropdown,
-    Menu,
     Popover,
     Checkbox,
     Tooltip,
@@ -23,37 +20,18 @@ import {
 } from "antd"
 import {HTTPPacketEditor, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {monacoEditorReplace, monacoEditorWrite} from "./fuzzerTemplates"
+import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {
-    CopyableField,
-    InputFloat,
-    InputInteger,
-    InputItem,
-    ManyMultiSelectForString,
-    OneLine,
-    SelectOne,
-    SwitchItem
-} from "../../utils/inputUtil"
+import {InputFloat, InputInteger, InputItem, OneLine, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {
-    ColumnWidthOutlined,
-    DeleteOutlined,
-    ProfileOutlined,
-    LeftOutlined,
-    RightOutlined,
-    DownOutlined,
-    HistoryOutlined,
-    DownloadOutlined,
-    QuestionCircleOutlined
-} from "@ant-design/icons"
+import {DeleteOutlined, ProfileOutlined, HistoryOutlined} from "@ant-design/icons"
 import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
-import {failed, info, success} from "../../utils/notification"
+import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue, setRemoteValueTTL} from "../../utils/kv"
+import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
@@ -64,19 +42,17 @@ import {AutoCard} from "../../components/AutoCard"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
-import {insertFileFuzzTag} from "./InsertFileFuzzTag"
-import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner"
+import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "./InsertFileFuzzTag"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import "./HTTPFuzzerPage.scss"
-import {ShareIcon} from "@/assets/icons"
 import {ShareData} from "./components/ShareData"
 import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {SearchOutlined} from "@ant-design/icons/lib"
-import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {ChevronLeftIcon, ChevronRightIcon, ChromeSvgIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
-import {editor} from "monaco-editor";
+import {editor} from "monaco-editor"
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -158,6 +134,7 @@ export interface FuzzerResponse {
     HeaderSimilarity?: number
     BodySimilarity?: number
     MatchedByFilter?: boolean
+    Url?: string
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -404,12 +381,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [historyTask])
 
     useEffect(() => {
-        // 缓存全局参数
+        // 缓存全局参数(将fuzz参数的缓存从本地文件替换到引擎数据库内)
         getLocalValue(WEB_FUZZ_PROXY).then((e) => {
-            if (!e) {
-                return
+            if (e) {
+                setLocalValue(WEB_FUZZ_PROXY, "")
+                setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
+                setProxy(`${e}`)
+            } else {
+                getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
+                    if (!e) {
+                        return
+                    }
+                    setProxy(`${e}`)
+                })
             }
-            setProxy(`${e}`)
         })
     }, [])
 
@@ -562,7 +547,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 IsHTTPS: data.IsHTTPS,
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
-                HeaderSimilarity: data.HeaderSimilarity
+                HeaderSimilarity: data.HeaderSimilarity,
+                Url: data.Url
             } as FuzzerResponse
 
             // 设置第一个 response
@@ -751,6 +737,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     {rsp.BodyLength}bytes / {rsp.DurationMs}ms
                                 </Tag>
                                 <Space key='single'>
+                                    <Button
+                                        className='extra-chrome-btn'
+                                        type={"text"}
+                                        size={"small"}
+                                        icon={<ChromeSvgIcon/>}
+                                        onClick={() => {
+                                            showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                                        }}
+                                    />
                                     <Button
                                         size={"small"}
                                         onClick={() => {
@@ -1002,7 +997,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
-        }catch (e) {
+        } catch (e) {
             failed("初始化 EOL CRLF 失败")
         }
     }, [reqEditor])
@@ -1030,6 +1025,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onClick={() => {
                                     resetResponse()
 
+                                    setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
                                     setRedirectedResponse(undefined)
                                     sendFuzzerSettingInfo()
                                     submitToHTTPFuzzer()
@@ -1466,7 +1462,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 run: (editor) => {
                                     insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
                                 }
-                            }
+                            },
+                            {
+                                id: "insert-temporary-file-tag",
+                                label: "插入临时字典",
+                                contextMenuGroupId: "1_urlPacket",
+                                run: (editor) => {
+                                    insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                                }
+                            },
                         ]}
                         onEditor={setReqEditor}
                         onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}

@@ -7,11 +7,16 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
+import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
+import {NetWorkApi} from "@/services/fetch"
 
-import classnames from "classnames"
+import {isSimpleEnterprise} from "@/utils/envfile"
+import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
 const {ipcRenderer} = window.require("electron")
+const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 export interface UpdateYakitAndYaklangProps {
     currentYakit: string
@@ -47,6 +52,77 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     const [installYaklang, setInstallYaklang] = useState<boolean>(false)
     const [yaklangLoading, setYaklangLoading] = useState<boolean>(false)
 
+    const [yakitUpdateContent, setYakitUpdateContent] = useState<UpdateContentProp>({
+        version: "",
+        content: ""
+    })
+    const [yaklangUpdateContent, setYaklangUpdateContent] = useState<UpdateContentProp>({
+        version: "",
+        content: ""
+    })
+    const yakitContent: string[] = useMemo(() => {
+        if (!yakitUpdateContent.content) return []
+        if (yakitUpdateContent.version !== latestYakit) return []
+        if (yakitUpdateContent.content) {
+            return yakitUpdateContent.content.split("\n")
+        }
+        return []
+    }, [yakitUpdateContent])
+    const yaklangContent: string[] = useMemo(() => {
+        if (!yaklangUpdateContent.content) return []
+        if (yaklangUpdateContent.version !== latestYaklang) return []
+        if (yaklangUpdateContent.content) {
+            return yaklangUpdateContent.content.split("\n")
+        }
+        return []
+    }, [yaklangUpdateContent])
+
+    /** 获取 yakit 更新内容 */
+    const fetchYakitLastVersion = useMemoizedFn(() => {
+        if (yakitUpdateContent.version) return
+
+        NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
+            method: "get",
+            url: "yak/versions",
+            params: {type: "yakit", source: isEnterprise ? "company" : "community"}
+        })
+            .then((res: any) => {
+                if (!res) return
+                try {
+                    const data: UpdateContentProp = JSON.parse(res)
+                    if (data.version !== latestYakit) return
+                    setYakitUpdateContent({...data})
+                } catch (error) {}
+            })
+            .catch((err) => {})
+    })
+    /** 获取 yaklang 更新内容 */
+    const fetchYaklangLastVersion = useMemoizedFn(() => {
+        if (yaklangUpdateContent.version) return
+
+        NetWorkApi<FetchUpdateContentProp, any>({
+            diyHome: "https://www.yaklang.com",
+            method: "get",
+            url: "yak/versions",
+            params: {type: "yaklang", source: "community"}
+        })
+            .then((res: any) => {
+                if (!res) return
+                try {
+                    const data: UpdateContentProp = JSON.parse(res)
+                    if (data.version !== latestYaklang) return
+                    setYaklangUpdateContent({...data})
+                } catch (error) {}
+            })
+            .catch((err) => {})
+    })
+
+    useEffect(() => {
+        if (latestYakit) fetchYakitLastVersion()
+        if (latestYaklang) fetchYaklangLastVersion()
+    }, [latestYakit, latestYaklang])
+
     useEffect(() => {
         ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
             if (isYakitBreak.current) return
@@ -65,6 +141,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
+        if (isSimpleEnterprise) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true
@@ -202,7 +279,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     return (
         <div className={isShow ? styles["update-mask"] : styles["hidden-update-mask"]}>
             <div
-                className={classnames(
+                className={classNames(
                     styles["yaklang-update-modal"],
                     isShowYakit ? styles["engine-hint-modal-wrapper"] : styles["modal-hidden-wrapper"]
                 )}
@@ -274,9 +351,17 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 <>
                                     <div className={styles["hint-right-title"]}>检测到 Yakit 版本升级</div>
                                     <div className={styles["hint-right-content"]}>
-                                        {`当前版本：v${currentYakit}`}
+                                        {/* {`当前版本：v${currentYakit}`}
                                         <br />
-                                        {`最新版本：${latestYakit}`}
+                                        {`最新版本：${latestYakit}`} */}
+                                        {`Yakit ${latestYakit} 更新说明 :`}
+                                    </div>
+                                    <div className={styles["hint-right-update-content"]}>
+                                        {yakitContent.length === 0
+                                            ? "管理员未编辑更新通知"
+                                            : yakitContent.map((item, index) => {
+                                                  return <div key={`${item}-${index}`}>{item}</div>
+                                              })}
                                     </div>
 
                                     <div className={styles["hint-right-btn"]}>
@@ -302,7 +387,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             </div>
 
             <div
-                className={classnames(
+                className={classNames(
                     styles["yaklang-update-modal"],
                     isShowYaklang && !isShowYakit ? styles["engine-hint-modal-wrapper"] : styles["modal-hidden-wrapper"]
                 )}
@@ -355,9 +440,17 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 <>
                                     <div className={styles["hint-right-title"]}>检测到引擎版本升级</div>
                                     <div className={styles["hint-right-content"]}>
-                                        {`当前版本：${currentYaklang}`}
+                                        {/* {`当前版本：${currentYaklang}`}
                                         <br />
-                                        {`最新版本：${latestYaklang}`}
+                                        {`最新版本：${latestYaklang}`} */}
+                                        {`Yaklang ${latestYaklang} 更新说明 :`}
+                                    </div>
+                                    <div className={styles["hint-right-update-content"]}>
+                                        {yaklangContent.length === 0
+                                            ? "管理员未编辑更新通知"
+                                            : yaklangContent.map((item, index) => {
+                                                  return <div key={`${item}-${index}`}>{item}</div>
+                                              })}
                                     </div>
 
                                     <div className={styles["hint-right-btn"]}>

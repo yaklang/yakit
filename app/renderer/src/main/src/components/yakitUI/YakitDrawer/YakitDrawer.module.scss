@@ -11,6 +11,10 @@
             color: var(--yakit-header-color);
             border-radius: 0;
         }
+        .ant-drawer-close {
+            margin-right: 8px;
+            padding: 0;
+        }
     }
 }
 
@@ -18,6 +22,19 @@
     :global {
         .ant-drawer-header {
             background-color: var(--yakit-card-background-color);
+        }
+    }
+}
+
+.yakit-drawer-icon {
+    color: var(--yakit-helper-text-color);
+    &:hover {
+        color: var(--yakit-primary-5);
+    }
+    .yakit-drawer-remove-icon {
+        svg {
+            width: 16px;
+            height: 16px;
         }
     }
 }

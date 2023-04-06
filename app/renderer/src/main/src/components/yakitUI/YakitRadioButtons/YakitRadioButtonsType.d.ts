@@ -10,4 +10,5 @@ import {RadioGroupProps} from "antd"
 export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, "size"> {
     size?: "small" | "middle" | "large" | "maxLarge"
     className?: string
+    wrapClassName?: string
 }

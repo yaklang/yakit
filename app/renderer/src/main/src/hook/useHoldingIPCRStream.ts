@@ -10,10 +10,11 @@ import {writeExecResultXTerm} from "../utils/xtermUtils"
 import {failed, info} from "../utils/notification"
 import {useGetState} from "ahooks"
 import {Risk} from "@/pages/risks/schema";
+import {isSimpleEnterprise} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
-interface InfoState {
+export interface InfoState {
     messageState: ExecResultLog[]
     processState: ExecResultProgress[]
     statusState: StatusCardInfoProps[]
@@ -189,6 +190,7 @@ export default function useHoldingIPCRStream(
                         try {
                             const risk = JSON.parse(logData.data) as Risk
                             riskMessages.current.unshift(risk)
+                            if (isSimpleEnterprise) riskMessages.current = riskMessages.current.slice(0,10)
                         } catch (e) {
                         }
                     }
@@ -248,5 +250,22 @@ export default function useHoldingIPCRStream(
         })
     }
 
-    return [infoState, {reset, setXtermRef}, xtermRef] as const
+    const resetAll = () => {
+        messages.current = []
+        featureMessages.current = []
+        featureTypes.current = []
+        processKVPair.current = new Map<string, number>()
+        statusKVPair.current = new Map<string, CacheStatusCardProps>()
+        riskMessages.current = []
+        setInfoState({
+            messageState: [],
+            processState: [],
+            statusState: [],
+            riskState: [],
+            featureMessageState: [],
+            featureTypeState: []
+        })
+    }
+
+    return [infoState, {reset, setXtermRef,resetAll}, xtermRef] as const
 }

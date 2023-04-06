@@ -1,6 +1,5 @@
 // ========================== wrapper ==========================
 .yakit-input-number-wrapper {
-
     --input-number-box-shadow-color: var(--yakit-primary-2);
     --input-number-box-shadow-error-color: var(--yakit-danger-2);
 
@@ -19,14 +18,16 @@
 
     --input-number-background-disabled-color: var(--yakit-background-color);
 
-
     :global {
+        .ant-input-number {
+            border-color: var(--input-number-border-color);
+        }
         .ant-input-number:hover {
-            border-color: var(--input-number-border-hover-color)
+            border-color: var(--input-number-border-hover-color);
         }
 
         .ant-input-number-focused {
-            border-color: var(--input-number-border-focus-color)
+            border-color: var(--input-number-border-focus-color);
         }
 
         .ant-input-number-handler:hover .ant-input-number-handler-up-inner,
@@ -36,13 +37,18 @@
 
         .ant-input-number:focus,
         .ant-input-number-focused {
-            box-shadow: 0 0 0 2px var(--input-number-box-shadow-color)
+            box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
+            z-index: 1;
         }
 
         .ant-input-number-disabled:hover {
             border-color: var(--input-number-border-disabled-color);
         }
     }
+}
+
+.yakit-input-number-focus {
+    border-radius: 4px;
 }
 
 // ========================== midden ==========================
@@ -53,9 +59,9 @@
     max-width: 88px;
     display: inline-flex;
     align-items: center;
+    font-size: 12px;
 
     :global {
-
         .ant-input-number-input {
             height: 28px;
         }
@@ -73,7 +79,6 @@
     max-width: 96px;
 
     :global {
-
         .ant-input-number-input {
             height: 40px;
         }
@@ -87,7 +92,6 @@
     max-width: 88px;
 
     :global {
-
         .ant-input-number-input {
             height: 32px;
         }
@@ -101,7 +105,6 @@
     max-width: 80px;
 
     :global {
-
         .ant-input-number-input {
             height: 24px;
         }
@@ -131,10 +134,10 @@
     transition: border 0.24s linear 0.14s;
 
     :global {
-
         .ant-input-number:focus,
         .ant-input-number-focused {
-            box-shadow: none
+            box-shadow: none;
+            z-index: 1;
         }
     }
 
@@ -148,7 +151,6 @@
 
     .icon-left {
         border-right: 1px solid var(--input-number-border-color);
-        ;
         border-radius: 4px 0px 0px 4px;
         cursor: pointer;
 
@@ -159,7 +161,6 @@
 
     .icon-right {
         border-left: 1px solid var(--input-number-border-color);
-        ;
         border-radius: 0px 4px 4px 0px;
         cursor: pointer;
 
@@ -168,9 +169,8 @@
         }
     }
 
-
     .icon-midden {
-        background: #FFFFFF;
+        background: #ffffff;
         width: 24px;
         height: 28px;
         line-height: 28px;
@@ -179,10 +179,7 @@
         &:active {
             background-color: #f4f4f4;
         }
-
-
     }
-
 
     .icon-large {
         width: 24px;
@@ -262,5 +259,4 @@
             box-shadow: 0 0 0 2px var(--input-number-box-shadow-error-color);
         }
     }
-
 }

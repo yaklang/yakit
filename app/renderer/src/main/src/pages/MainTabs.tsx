@@ -1,13 +1,30 @@
-import React, {memo, useEffect, useRef, useState} from "react"
+import React, {memo, useEffect, useRef, useState, ReactNode, useLayoutEffect} from "react"
 import {Input, Popover, Space, Tabs} from "antd"
 import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
-
+import {isSimpleEnterprise} from "@/utils/envfile"
 import "./MainTabs.scss"
+import {simpleDetectParams} from "@/store"
+import {useGetState} from "ahooks"
 
+const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
+
+interface InitTabIdProp {
+    children: ReactNode
+    id: string
+}
+
+const InitTabId: React.FC<InitTabIdProp> = (props) => {
+    useLayoutEffect(() => {
+        if (isSimpleEnterprise) {
+            simpleDetectParams.tabId = props.id
+        }
+    }, [])
+    return <>{props.children}</>
+}
 
 export interface MainTabsProp {
     currentTabKey: string
@@ -22,6 +39,11 @@ export interface MainTabsProp {
     updateCacheVerbose: (key: string, tabType: string, value: string) => void
 }
 
+interface SimpleDetectTabsProps {
+    tabId: string
+    status: "run" | "stop" | "success"
+}
+
 export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
     const {
         currentTabKey,
@@ -32,11 +54,13 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
         setCurrentKey,
         removePage,
         removeOtherPage,
-        onAddTab = () => {},
+        onAddTab = () => {
+        },
         updateCacheVerbose
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const tabsRef = useRef(null)
+    const [_, setSimpleDetectTabsStatus, getSimpleDetectTabsStatus] = useGetState<SimpleDetectTabsProps[]>([])
     useEffect(() => {
         setTimeout(() => {
             if (!tabsRef || !tabsRef.current) return
@@ -84,6 +108,57 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
             />
         )
     }
+
+    // 简易企业版 根据任务状态控制颜色
+    const judgeTabColor = (verbose: string, id: string) => {
+        if (isSimpleEnterprise) {
+            let itemArr = getSimpleDetectTabsStatus().filter((item) => item.tabId === id)
+            if (itemArr.length > 0 && itemArr[0].tabId !== currentKey) {
+                let status = itemArr[0].status
+                let color = ""
+                switch (status) {
+                    case "run":
+                        color = "blue"
+                        break;
+                    case "stop":
+                        color = "red"
+                        break;
+                    case "success":
+                        color = "green"
+                        break;
+                }
+                return <div style={{color}}>{verbose}</div>
+            }
+            return verbose
+        } else {
+            return verbose
+        }
+    }
+
+    useEffect(() => {
+        ipcRenderer.on("fetch-new-tabs-color", (e, data: SimpleDetectTabsProps) => {
+            let cacheData = [...getSimpleDetectTabsStatus()]
+            let isFind: boolean = cacheData.filter((item) => item.tabId === data.tabId).length > 0
+            if (isFind) {
+                cacheData = cacheData.map((item) => {
+                    if (item.tabId === data.tabId && item.status !== data.status) {
+                        return ({
+                            tabId: data.tabId,
+                            status: data.status
+                        })
+                    }
+                    return item
+                })
+                setSimpleDetectTabsStatus(cacheData)
+            } else {
+                setSimpleDetectTabsStatus([...getSimpleDetectTabsStatus(), data])
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-new-tabs-color")
+        }
+    }, [])
+
     return (
         <AutoSpin spinning={loading}>
             <div
@@ -132,7 +207,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                             <TabPane
                                 forceRender={true}
                                 key={item.id}
-                                tab={item.verbose}
+                                tab={judgeTabColor(item.verbose, item.id)}
                                 closeIcon={
                                     <Space>
                                         <Popover
@@ -150,7 +225,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                                                 </>
                                             }
                                         >
-                                            <EditOutlined className='main-container-cion' />
+                                            <EditOutlined className='main-container-cion'/>
                                         </Popover>
                                         <CloseOutlined
                                             className='main-container-cion'
@@ -166,7 +241,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                                         maxHeight: "100%"
                                     }}
                                 >
-                                    {item.node}
+                                    <InitTabId children={item.node} id={item.id}/>
                                 </div>
                             </TabPane>
                         )
@@ -176,3 +251,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
         </AutoSpin>
     )
 })
+
+export const addToTab = (type: string, data?: any) => {
+    ipcRenderer.invoke("send-to-tab", {type, data})
+}

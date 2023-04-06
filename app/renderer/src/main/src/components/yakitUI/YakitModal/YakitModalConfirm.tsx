@@ -1,7 +1,6 @@
 import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
 import {Modal, ModalProps} from "antd"
 import style from "./YakitModalConfirm.module.scss"
-import classnames from "classnames"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {RemoveIcon} from "@/assets/newIcon"
 import {showModal, ShowModalProps} from "@/utils/showModal"
@@ -41,6 +40,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                                 div.parentNode.removeChild(div)
                             }
                         }}
+                        title={null}
                     >
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
@@ -122,8 +122,6 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
 
     return (
         <YakitModal
-            {...props}
-            title={null}
             footerStyle={{backgroundColor: "#fff", borderTop: 0, padding: 0}}
             footer={
                 <div className={style["modal-confirm-btns"]}>
@@ -159,6 +157,66 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
             visible={visible}
             closable={true}
             destroyOnClose={true}
+            {...props}
         />
     )
+}
+
+export const showYakitModal = (props: ShowModalProps) => {
+    const div = document.createElement("div")
+    document.body.appendChild(div)
+
+    let setter: (r: boolean) => any = () => {}
+    const render = (targetConfig: ShowModalProps) => {
+        setTimeout(() => {
+            ReactDOM.render(
+                <>
+                    <YakitBaseModal
+                        {...(targetConfig as ModalProps)}
+                        onVisibleSetter={(r) => {
+                            setter = r
+                        }}
+                        afterClose={() => {
+                            if (props.modalAfterClose) props.modalAfterClose()
+                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                            if (unmountResult && div.parentNode) {
+                                div.parentNode.removeChild(div)
+                            }
+                        }}
+                    >
+                        <ErrorBoundary
+                            FallbackComponent={({error, resetErrorBoundary}) => {
+                                if (!error) {
+                                    return <div>未知错误</div>
+                                }
+                                return (
+                                    <div>
+                                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                                        <pre>{error?.message}</pre>
+                                    </div>
+                                )
+                            }}
+                        >
+                            {targetConfig.content}
+                        </ErrorBoundary>
+                    </YakitBaseModal>
+                </>,
+                div
+            )
+        })
+    }
+    render(props)
+    return {
+        destroy: () => {
+            if (setter) {
+                setter(false)
+            }
+            setTimeout(() => {
+                const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                if (unmountResult && div.parentNode) {
+                    div.parentNode.removeChild(div)
+                }
+            }, 400)
+        }
+    }
 }

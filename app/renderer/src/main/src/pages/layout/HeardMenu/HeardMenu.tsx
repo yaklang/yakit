@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     HeardMenuProps,
     RouteMenuDataItemProps,
@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route,SimpleDataBaseMenu} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -27,7 +27,7 @@ import {
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Divider, Dropdown, Tabs, Tooltip, Form, Upload, Modal, Spin} from "antd"
 import {
     MenuBasicCrawlerIcon,
@@ -63,6 +63,8 @@ import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
+import {isSimpleEnterprise} from "@/utils/envfile"
+import { CodeGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,21 +136,42 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftInnerRef = useRef<any>()
 
     const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
-
+    
+    /** 登录用户信息 */
+    const {userInfo} = useStore()
     useEffect(() => {
-        getRemoteValue("PatternMenu").then((patternMenu) => {
+        // 当为企业简易版
+        if(isSimpleEnterprise){
+            let currentMenuList: MenuDataProps[] = [...SimpleDataBaseMenu]
+            if(userInfo.role!=="admin"){
+                // 简易企业版非管理员 无需插件权限
+                currentMenuList = currentMenuList.filter((item)=>item.id!=="4")
+            }
+            setRouteMenu(currentMenuList)
+            setSubMenuData(currentMenuList[0].subMenuData||[])
+            setMenuId(currentMenuList[0].id)
+        }
+        else{
+            getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setRemoteValue("PatternMenu", menuMode)
             setPatternMenu(menuMode)
             init(menuMode)
         })
+        }
+        
     }, [])
     useEffect(() => {
-        ipcRenderer.on("fetch-new-main-menu", (e) => {
-            init(getPatternMenu(), true)
-        })
+        if(!isSimpleEnterprise){
+            ipcRenderer.on("fetch-new-main-menu", (e) => {
+                init(getPatternMenu(), true)
+            })
+        }
+        
         return () => {
-            ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            if(!isSimpleEnterprise){
+                ipcRenderer.removeAllListeners("fetch-new-main-menu")
+            }
         }
     }, [])
     useUpdateEffect(() => {
@@ -184,18 +207,30 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("QueryAllMenuItem", {Mode: menuMode})
                     .then((rsp: MenuByGroupProps) => {
+                        // 存放开发者已经废弃的页面菜单项(但这些菜单项在用户数据中存在)
+                        const invalidMenuItem: string[] = []
+                        
                         if (rsp.Groups.length === 0) {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
                         } else {
-                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除
+                            // 默认菜单中，有新增的菜单，前提：系统内置菜单不可删除 企业简易版管理员默认展示所有菜单
                             let currentMenuList: MenuDataProps[] = [...DefaultRouteMenuData]
+                            // 新手版菜单-novice
                             if (menuMode == "new") {
-                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.isNovice)
+                                currentMenuList = [...DefaultRouteMenuData].filter((item) => item.menuPattern?.includes("novice"))
                             }
                             const newMenuList: MenuItem[] = [] // 用来判断是否有新增菜单
                             const addMenuScripName: string[] = [] // 用来判断是否有新增的插件菜单
                             for (let i = 0; i < rsp.Groups.length; i++) {
+                                // 对用户菜单项数据进行过滤(过滤开发者已经废弃的页面菜单项)
+                                const filterChild: MenuItem[] = (rsp.Groups[i].Items || []).filter(item => {
+                                    const flag = CodeGV.InvalidPageMenuItem.indexOf(item.Verbose) > -1
+                                    if(flag) invalidMenuItem.push(item.Verbose)
+                                    return !flag
+                                })
+                                rsp.Groups[i].Items = filterChild
+
                                 const onlineMenuItem = rsp.Groups[i]
                                 const localMenuItem = currentMenuList.find((ele) => ele.label === onlineMenuItem.Group)
                                 if (localMenuItem && localMenuItem.subMenuData) {
@@ -234,6 +269,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 setSubMenuData(firstMenu.subMenuData || [])
                                 setMenuId(firstMenu.id)
                             }
+
+                            // 开始清除用户数据中的无效页面菜单项
+                            if (invalidMenuItem.length > 0) {
+                                const invalidMenus = Array.from(new Set(invalidMenuItem))
+                                for (let menuName of invalidMenus) {
+                                    ipcRenderer
+                                        .invoke("DeleteAllMenu", {Verbose: menuName})
+                                        .then(() => { })
+                                        .catch((e: any) => { })
+                                }
+                            }
+
                             setTimeout(() => setLoading(false), 300)
                         }
                     })
@@ -261,7 +308,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         // 获取没有key的菜单名称
         let listMenu: MenuDataProps[] = menuList
         if (menuMode == "new") {
-            listMenu = menuList.filter((item) => item.isNovice)
+            listMenu = menuList.filter((item) => item.menuPattern?.includes("novice"))
         }
         listMenu.forEach((item) => {
             if (item.subMenuData && item.subMenuData.length > 0) {
@@ -280,8 +327,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
         onDownPluginByScriptNames(listMenu, noDownPluginScriptNames, menuMode)
     })
-    /** 登录用户信息 */
-    const {userInfo} = useStore()
     /**
      * @description: 通过名字下载插件
      */
@@ -598,6 +643,41 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onRefMenu = useMemoizedFn(() => {
         init(getPatternMenu(), true)
     })
+    
+    const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
+    const importMenuSelect = useMemoizedFn((type: string) => {
+        switch (type) {
+            case "import-plugin":
+                onImportPlugin()
+                setImportMenuShow(false)
+                return
+            case "import-fuzzer":
+                onImportShare()
+                setImportMenuShow(false)
+                return
+
+            default:
+                return
+        }
+    })
+
+    const importMenu = useMemo(() =>
+        <YakitMenu
+            width={142}
+            selectedKeys={[]}
+            data={[
+                {
+                    key: "import-plugin",
+                    label: "导入插件"
+                },
+                {
+                    key: "import-fuzzer",
+                    label: "导入 WebFuzzer"
+                },
+            ]}
+            onClick={({key}) => importMenuSelect(key)}
+        />
+    , [])
 
     return (
         <div className={style["heard-menu-body"]}>
@@ -659,14 +739,25 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    <YakitButton
-                        type='text'
-                        className={style["heard-menu-theme"]}
-                        onClick={() => onImportShare()}
-                        icon={<SaveIcon />}
+                    {!isSimpleEnterprise&&<>
+                    <YakitPopover
+                        overlayClassName={style['import-resource-menu-popover']}
+                        overlayStyle={{paddingTop: 4}}
+                        placement={"bottom"}
+                        trigger={"click"}
+                        content={importMenu}
+                        visible={importMenuShow}
+                        onVisibleChange={(visible) => setImportMenuShow(visible)}
                     >
-                        导入协作资源
-                    </YakitButton>
+                        <YakitButton
+                            type='text'
+                            className={style["heard-menu-theme"]}
+                            onClick={(e) => e.stopPropagation()}
+                            icon={<SaveIcon />}
+                        >
+                            导入协作资源
+                        </YakitButton>
+                    </YakitPopover>
                     <YakitButton
                         type='secondary2'
                         className={style["heard-menu-grey"]}
@@ -749,6 +840,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             </div>
                         </YakitButton>
                     </Dropdown>
+                    </>}
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
                             {!isExpand && <SortDescendingIcon />}

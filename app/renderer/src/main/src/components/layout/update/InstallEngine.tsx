@@ -7,15 +7,17 @@ import {
     YakitCopySvgIcon,
     YaklangInstallHintSvgIcon
 } from "../icons"
-import {Checkbox, Progress} from "antd"
+import {Button, Checkbox, Popconfirm, Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {DownloadingState, YakitSystem} from "@/yakitGVDefine"
-import {failed, success} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
+import {showModal} from "@/utils/showModal";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -28,6 +30,11 @@ export interface InstallEngineProps {
 
 export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) => {
     const {system, visible, onSuccess, onRemoreLink} = props
+
+
+    const [buildInEngineVersion, setBuildInEngineVersion] = useState("");
+    const haveBuildInEngine = buildInEngineVersion !== "";
+    const [extractingBuildInEngine, setExtractingBuildInEngine] = useState(false)
 
     /** 是否弹窗置顶 */
     const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
@@ -84,6 +91,8 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             if (isBreakDownload.current) return
             setDownloadProgress(state)
         })
+
+        ipcRenderer.invoke("GetBuildInEngineVersion").then(ver => setBuildInEngineVersion(ver))
 
         return () => {
             ipcRenderer.removeAllListeners("download-yak-engine-progress")
@@ -165,6 +174,25 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         fetchEngineLatestVersion(() => downloadEngine())
     })
 
+    const initBuildInEngine = useMemoizedFn(() => {
+        setExtractingBuildInEngine(true)
+        ipcRenderer.invoke("InitBuildInEngine", {}).then(() => {
+            info(`解压内置引擎成功`)
+            showModal({
+                title: "引擎解压成功，需要重启", content: (
+                    <div><YakitButton onClick={() => {
+                        ipcRenderer.invoke("relaunch").then(() => {
+                        }).catch(e => {
+                            failed(`重启失败: ${e}`)
+                        })
+                    }}>点此立即重启</YakitButton></div>
+                ), closable: false, maskClosable: false
+            })
+        }).catch(e => {
+            failed(`初始化内置引擎失败：${e}`)
+        }).finally(() => setTimeout(() => setExtractingBuildInEngine(false), 300))
+    })
+
     /** 取消事件 */
     const onClose = useMemoizedFn(() => {
         setCancelLoading(true)
@@ -195,7 +223,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     return (
         <div className={visible ? styles["install-engine-mask"] : styles["hidden-install-engine-mask"]}>
             <Draggable
-                defaultClassName={classnames(styles["install-update-modal"], styles["engine-hint-modal-wrapper"], {
+                defaultClassName={classNames(styles["install-update-modal"], styles["engine-hint-modal-wrapper"], {
                     [styles["modal-top-wrapper"]]: isTop === 0
                 })}
                 disabled={disabled}
@@ -216,7 +244,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
+                                    <YaklangInstallHintSvgIcon/>
                                 </div>
                                 <div
                                     className={styles["qs-icon"]}
@@ -226,7 +254,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                         setIsTop(2)
                                     }}
                                 >
-                                    <HelpSvgIcon style={{fontSize: 20}} />
+                                    <HelpSvgIcon style={{fontSize: 20}}/>
                                 </div>
                             </div>
 
@@ -267,9 +295,11 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className={styles["hint-right-title"]}>未安装引擎</div>
+                                        <div className={styles["hint-right-title"]}>{
+                                            haveBuildInEngine ? "本地引擎未初始化" : "未安装引擎"
+                                        }</div>
                                         <div className={styles["hint-right-content"]}>
-                                            你可选择安装 Yak 引擎启动软件，或远程连接启动
+                                            {haveBuildInEngine ? `授权使用内置引擎: ${buildInEngineVersion}，或远程连接启动` : "你可选择安装 Yak 引擎启动软件，或远程连接"}
                                         </div>
 
                                         {platformArch === "darwin-arm64" && (
@@ -278,13 +308,13 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                     <div className={styles["mac-arm-hint"]}>
                                                         当前系统为(darwin-arm64)，如果未安装 Rosetta 2, 将无法运行 Yak
                                                         核心引擎
-                                                        <br />
+                                                        <br/>
                                                         运行以下命令可手动安装 Rosetta，如已安装可忽略
                                                     </div>
                                                     <div className={styles["mac-arm-command"]}>
                                                         softwareupdate --install-rosetta
                                                         <div className={styles["copy-icon"]} onClick={copyCommand}>
-                                                            <YakitCopySvgIcon />
+                                                            <YakitCopySvgIcon/>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -292,12 +322,12 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                         )}
 
                                         <div
-                                            className={classnames(styles["hint-right-agreement"], {
+                                            className={classNames(styles["hint-right-agreement"], {
                                                 [styles["agr-shake-animation"]]: !agrCheck && isShake
                                             })}
                                         >
                                             <Checkbox
-                                                className={classnames(
+                                                className={classNames(
                                                     {[styles["agreement-checkbox"]]: !(!agrCheck && checkStatus)},
                                                     {
                                                         [styles["agreement-danger-checkbox"]]: !agrCheck && checkStatus
@@ -318,6 +348,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 >
                                                     《用户协议》
                                                 </span>
+                                                以继续使用
                                             </span>
                                         </div>
 
@@ -326,6 +357,12 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 <YakitButton size='max' type='outline2' onClick={remoteLink}>
                                                     远程连接
                                                 </YakitButton>
+                                                {haveBuildInEngine &&
+                                                <Popconfirm title={"网络安装需要公网环境，请知晓，请优先使用内置引擎（初始化引擎）"} onConfirm={installEngine}>
+                                                    <Button type={"link"} size='small' style={{fontSize: 12}} disabled={!agrCheck}>
+                                                        联网安装
+                                                    </Button>
+                                                </Popconfirm>}
                                             </div>
                                             <div className={styles["btn-group-wrapper"]}>
                                                 <YakitButton
@@ -335,9 +372,16 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 >
                                                     取消
                                                 </YakitButton>
-                                                <YakitButton size='max' onClick={installEngine}>
+                                                <>{/* 无内置引擎 */}</>
+                                                {!haveBuildInEngine && <YakitButton size='max' onClick={installEngine}>
                                                     一键安装
-                                                </YakitButton>
+                                                </YakitButton>}
+                                                <>{/* 无内置引擎 */}</>
+                                                {haveBuildInEngine &&
+                                                <YakitButton size='max' loading={extractingBuildInEngine}
+                                                             disabled={!agrCheck} onClick={initBuildInEngine}>
+                                                    初始化引擎
+                                                </YakitButton>}
                                             </div>
                                         </div>
                                     </>
@@ -354,7 +398,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                 visible={agrShow}
                 setVisible={setAgrShow}
             />
-            <QuestionModal isTop={isTop} setIsTop={setIsTop} system={system} visible={qsShow} setVisible={setQSShow} />
+            <QuestionModal isTop={isTop} setIsTop={setIsTop} system={system} visible={qsShow} setVisible={setQSShow}/>
         </div>
     )
 })
@@ -392,7 +436,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
 
     return (
         <Draggable
-            defaultClassName={classnames(
+            defaultClassName={classNames(
                 styles["yakit-agr-modal"],
                 {[styles["modal-top-wrapper"]]: isTop === 1},
                 visible ? styles["info-modal-wrapper"] : styles["modal-hidden-wrapper"]
@@ -406,7 +450,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                     <div className={styles["agreement-content-modal-wrapper"]}>
                         {system === "Darwin" ? (
                             <div
-                                className={classnames(styles["modal-header"], styles["mac-header"])}
+                                className={classNames(styles["modal-header"], styles["mac-header"])}
                                 onMouseEnter={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -420,7 +464,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                                     onClick={() => setVisible(false)}
                                 >
                                     {show ? (
-                                        <MacUIOpCloseSvgIcon />
+                                        <MacUIOpCloseSvgIcon/>
                                     ) : (
                                         <div className={styles["close-btn"]}>
                                             <div className={styles["btn-icon"]}></div>
@@ -431,7 +475,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                             </div>
                         ) : (
                             <div
-                                className={classnames(styles["modal-header"], styles["win-header"])}
+                                className={classNames(styles["modal-header"], styles["win-header"])}
                                 onMouseOver={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -440,7 +484,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                             >
                                 <span className={styles["header-title"]}>用户协议</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
-                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
+                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]}/>
                                 </div>
                             </div>
                         )}
@@ -449,26 +493,26 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                             <div className={styles["body-content"]}>
                                 1. 本工具仅面向 <span className={styles["sign-content"]}>合法授权</span>{" "}
                                 的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
-                                <br />
+                                <br/>
                                 2. 在使用本工具进行检测时，您应确保该行为符合当地的法律法规，并且已经取得了足够的授权。
                                 <span className={styles["underline-content"]}>请勿对非授权目标进行扫描。</span>
-                                <br />
+                                <br/>
                                 3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
-                                <br />
+                                <br/>
                                 <span className={styles["sign-bold-content"]}>
                                     如果发现上述禁止行为，我们将保留追究您法律责任的权利。
                                 </span>
-                                <br />
+                                <br/>
                                 如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
-                                <br />
+                                <br/>
                                 在安装并使用本工具前，请您{" "}
                                 <span className={styles["sign-bold-content"]}>务必审慎阅读、充分理解各条款内容。</span>
-                                <br />
+                                <br/>
                                 限制、免责条款或者其他涉及您重大权益的条款可能会以{" "}
                                 <span className={styles["sign-bold-content"]}>加粗</span>、
                                 <span className={styles["underline-content"]}>加下划线</span>
                                 等形式提示您重点注意。
-                                <br />
+                                <br/>
                                 除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。
                             </div>
                         </div>
@@ -512,7 +556,8 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
             .then((data: string) => setLatestVersion(data.startsWith("v") ? data.slice(1) : data))
-            .catch((e: any) => {})
+            .catch((e: any) => {
+            })
     }, [])
 
     const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
@@ -530,7 +575,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
 
     return (
         <Draggable
-            defaultClassName={classnames(
+            defaultClassName={classNames(
                 styles["yaklang-qs-modal"],
                 {[styles["modal-top-wrapper"]]: isTop === 2},
                 visible ? styles["info-modal-wrapper"] : styles["modal-hidden-wrapper"]
@@ -544,7 +589,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     <div className={styles["question-modal-wrapper"]}>
                         {system === "Darwin" ? (
                             <div
-                                className={classnames(styles["modal-header"], styles["mac-header"])}
+                                className={classNames(styles["modal-header"], styles["mac-header"])}
                                 onMouseEnter={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -558,7 +603,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                     onClick={() => setVisible(false)}
                                 >
                                     {show ? (
-                                        <MacUIOpCloseSvgIcon />
+                                        <MacUIOpCloseSvgIcon/>
                                     ) : (
                                         <div className={styles["close-btn"]}>
                                             <div className={styles["btn-icon"]}></div>
@@ -569,7 +614,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                             </div>
                         ) : (
                             <div
-                                className={classnames(styles["modal-header"], styles["win-header"])}
+                                className={classNames(styles["modal-header"], styles["win-header"])}
                                 onMouseOver={() => {
                                     if (disabled) setDisabled(false)
                                 }}
@@ -578,14 +623,14 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                             >
                                 <span className={styles["header-title"]}>Yak 核心引擎下载链接</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
-                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
+                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]}/>
                                 </div>
                             </div>
                         )}
                         <div className={styles["modal-body"]}>
                             <div className={styles["body-hint"]}>
                                 <span className={styles["hint-sign"]}>如遇网络问题无法下载，可手动下载安装：</span>
-                                <br />
+                                <br/>
                                 Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别 MacOS /
                                 Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
                             </div>
@@ -599,7 +644,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersion || "latest"}
                                         /yak_windows_amd64.exe
                                         <div className={styles["copy-icon"]} onClick={() => copyCommand("Windows_NT")}>
-                                            <YakitCopySvgIcon />
+                                            <YakitCopySvgIcon/>
                                         </div>
                                     </div>
                                 </div>
@@ -611,7 +656,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersion || "latest"}
                                         /yak_darwin_amd64
                                         <div className={styles["copy-icon"]} onClick={() => copyCommand("Darwin")}>
-                                            <YakitCopySvgIcon />
+                                            <YakitCopySvgIcon/>
                                         </div>
                                     </div>
                                 </div>
@@ -623,7 +668,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersion || "latest"}
                                         /yak_linux_amd64
                                         <div className={styles["copy-icon"]} onClick={() => copyCommand("Linux")}>
-                                            <YakitCopySvgIcon />
+                                            <YakitCopySvgIcon/>
                                         </div>
                                     </div>
                                 </div>

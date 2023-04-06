@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {MacUIOpCloseSvgIcon, MacUIOpMaxSvgIcon, MacUIOpMinSvgIcon, MacUIOpRestoreSvgIcon} from "./icons"
 import {useMemoizedFn} from "ahooks"
-import classnames from "classnames"
+import classNames from "classnames"
 import styles from "./uiOperate.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -42,7 +42,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                         <MacUIOpCloseSvgIcon />
                     ) : (
                         <div className={styles["op-hidn-btn"]}>
-                            <div className={classnames(styles["btn-icon"], styles["close-bg-color"])}></div>
+                            <div className={classNames(styles["btn-icon"], styles["close-bg-color"])}></div>
                         </div>
                     )}
                 </div>
@@ -51,7 +51,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                         <MacUIOpMinSvgIcon />
                     ) : (
                         <div className={styles["op-hidn-btn"]}>
-                            <div className={classnames(styles["btn-icon"], styles["min-bg-color"])}></div>
+                            <div className={classNames(styles["btn-icon"], styles["min-bg-color"])}></div>
                         </div>
                     )}
                 </div>
@@ -64,7 +64,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                         )
                     ) : (
                         <div className={styles["op-hidn-btn"]}>
-                            <div className={classnames(styles["btn-icon"], styles["max-bg-color"])}></div>
+                            <div className={classNames(styles["btn-icon"], styles["max-bg-color"])}></div>
                         </div>
                     )}
                 </div>

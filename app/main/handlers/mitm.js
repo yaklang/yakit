@@ -391,4 +391,44 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SetCurrentRules", async (e, params) => {
         return await asyncSetCurrentRules(params)
     })
+
+    // 设置mitm filter
+    const asyncSetMITMFilter = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetMITMFilter(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+
+
+
+                resolve(data)
+            })
+        })
+    }
+
+    ipcMain.handle("mitm-set-filter", async (e, params) => {
+        if (stream) {
+                stream.write({...params, updateFilter: true})
+        }
+        return await asyncSetMITMFilter(params)
+    })
+    // 获取mitm filter
+    const asyncGetMITMFilter = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetMITMFilter(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+
+
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("mitm-get-filter", async (e, params) => {
+        return await asyncGetMITMFilter(params)
+    })
 }

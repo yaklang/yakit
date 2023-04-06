@@ -16,6 +16,7 @@ import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
+import { coordinate } from "./pages/globalVariable"
 
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 /** 快捷键目录 */
@@ -49,7 +50,6 @@ const InterceptKeyword = [
 ]
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
-const EnterpriseJudgeLogin = lazy(() => import("./pages/EnterpriseJudgeLogin"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,7 +65,27 @@ function NewApp() {
     const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
     const agrTimeRef = useRef<any>(null)
     /** 私有域是否设置成功 */
-    const [onlineProfileStatus,setOnlineProfileStatus] = useState<boolean>(false)
+    const [onlineProfileStatus, setOnlineProfileStatus] = useState<boolean>(false)
+
+    // 全局记录鼠标坐标位置(为右键菜单提供定位)
+    const coordinateTimer = useRef<any>(null)
+    useEffect(() => {
+        document.onmousemove = (e) => {
+            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+            if (coordinateTimer.current) {
+                clearTimeout(coordinateTimer.current)
+                coordinateTimer.current = null
+            }
+            coordinateTimer.current = setTimeout(() => {
+                coordinate.screenX = screenX
+                coordinate.screenY = screenY
+                coordinate.clientX = clientX
+                coordinate.clientY = clientY
+                coordinate.pageX = pageX
+                coordinate.pageY = pageY
+            }, 50)
+        }
+    }, [])
 
     /** 是否展示用户协议 */
     useEffect(() => {
@@ -87,12 +107,10 @@ function NewApp() {
             .catch(() => {})
     }, [])
 
-    // 企业版-连接引擎后验证license=>展示企业登录
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(IsEnterprise)
-
     /** 将渲染进程的环境变量传入主进程 */
     useEffect(() => {
         ipcRenderer.invoke("callback-process-env", fetchEnv())
+        ipcRenderer.invoke("callback-process-envs", fetchEnv())
     }, [])
 
     /** 全局拦截快捷键(补全内容) */
@@ -133,7 +151,6 @@ function NewApp() {
                     .finally(() => {
                         setOnlineProfileStatus(true)
                     })
-                    
             } else {
                 const values = JSON.parse(setting)
                 ipcRenderer
@@ -283,11 +300,7 @@ function NewApp() {
     return (
         <UILayout linkSuccess={linkSuccess}>
             <Suspense fallback={<div>Loading Main</div>}>
-                {isJudgeLicense ? (
-                    <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
-                ) : (
-                    <Main onErrorConfirmed={() => {}} setJudgeLicense={setJudgeLicense}/>
-                )}
+                <Main onErrorConfirmed={() => {}} />
             </Suspense>
         </UILayout>
     )
