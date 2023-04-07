@@ -108,7 +108,6 @@ import {
     MenuSolidYsoJavaHackIcon,
     MenuSolidBatchVulnerabilityDetectionIcon,
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
-import {ProjectPage} from "@/pages/projects/ProjectPage"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker";
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
