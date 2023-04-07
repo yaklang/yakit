@@ -1,34 +1,40 @@
-import React, {useEffect, useState} from "react";
-import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage";
-import {showModal} from "@/utils/showModal";
-import {YakEditor} from "@/utils/editors";
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
-import {useDebounceEffect, useGetState} from "ahooks";
-import {editor} from "monaco-editor";
-import {Alert, Button, Divider, Popconfirm, Space, Tag, Typography} from "antd";
-import {AutoCard} from "@/components/AutoCard";
-import {failed, info} from "@/utils/notification";
-import {randomString} from "@/utils/randomUtil";
-import {ExecResult} from "@/pages/invoker/schema";
-import {ResizeBox} from "@/components/ResizeBox";
-import {saveABSFileToOpen} from "@/utils/openWebsite";
-import {SelectOne} from "@/utils/inputUtil";
+import React, {useEffect, useState} from "react"
+import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {showModal} from "@/utils/showModal"
+import {YakEditor} from "@/utils/editors"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {useDebounceEffect, useGetState} from "ahooks"
+import {editor} from "monaco-editor"
+import {Alert, Button, Divider, Popconfirm, Space, Tag, Typography} from "antd"
+import {AutoCard} from "@/components/AutoCard"
+import {failed, info} from "@/utils/notification"
+import {randomString} from "@/utils/randomUtil"
+import {ExecResult} from "@/pages/invoker/schema"
+import {ResizeBox} from "@/components/ResizeBox"
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {SelectOne} from "@/utils/inputUtil"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {RegexpInput} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
+import styles from "./extractor.module.scss"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
-const {Text} = Typography;
+const {Text} = Typography
 
 export const showExtractFuzzerResponseOperator = (resp: FuzzerResponse[]) => {
     if (resp.length == 0) {
-        showModal({title: "无 Web Fuzzer Response 以供提取信息"})
+        showYakitModal({title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null})
         return
     }
 
-    const m = showModal({
+    const m = showYakitModal({
         title: `提取响应数据包中内容`,
         width: "80%",
         maskClosable: false,
-        content: (
-            <WebFuzzerResponseExtractor responses={resp}/>
-        )
+        footer: null,
+        content: <WebFuzzerResponseExtractor responses={resp} />
     })
 }
 
@@ -36,25 +42,25 @@ export interface WebFuzzerResponseExtractorProp {
     responses: FuzzerResponse[]
 }
 
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp> = (props) => {
-    const {responses} = props;
-    const sampleResponse = responses[0];
-    const [editor, setEditor] = useGetState<editor.IStandaloneCodeEditor>();
-    const [selected, setSelected] = useGetState<string>("");
-    const [_responseStr, setResponseStr, getResponseStr] = useGetState<string>("");
+    const {responses} = props
+    const sampleResponse = responses[0]
+    const [editor, setEditor] = useGetState<editor.IStandaloneCodeEditor>()
+    const [selected, setSelected] = useGetState<string>("")
+    const [_responseStr, setResponseStr, getResponseStr] = useGetState<string>("")
     const [mode, setMode] = useState<"regexp" | "regexp-between">("regexp-between")
 
     // 用户匹配数据前后缀提取正则
-    const [prefix, setPrefix] = useState("");
-    const [suffix, setSuffix] = useState("");
+    const [prefix, setPrefix] = useState("")
+    const [suffix, setSuffix] = useState("")
 
     // 用户选择的数据转换成的正则
-    const [matchedRegexp, setMatchedRegexp] = useState<string>("");
+    const [matchedRegexp, setMatchedRegexp] = useState<string>("")
 
     // 存放提取出来的数据
-    const [extracted, setExtracted] = useState<string[]>([]);
+    const [extracted, setExtracted] = useState<string[]>([])
 
     // stream token
     const [_token, setToken, getToken] = useGetState(randomString(40))
@@ -90,36 +96,40 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         }
     }, [editor])
 
-    useDebounceEffect(() => {
-        if (!selected) {
-            setPrefix("")
-            setSuffix("")
-            return
-        }
+    useDebounceEffect(
+        () => {
+            if (!selected) {
+                setPrefix("")
+                setSuffix("")
+                return
+            }
 
-        ipcRenderer.invoke("GenerateExtractRule", {
-            Data: StringToUint8Array(getResponseStr()),
-            Selected: StringToUint8Array(selected),
-        }).then((e: {
-            PrefixRegexp: string, SuffixRegexp: string,
-            SelectedRegexp: string,
-        }) => {
-            setPrefix(e.PrefixRegexp)
-            setSuffix(e.SuffixRegexp)
-            setMatchedRegexp(e.SelectedRegexp)
-        }).catch(e => {
-            failed(`无法生成数据提取规则: ${e}`)
-        })
-    }, [selected], {wait: 500})
+            ipcRenderer
+                .invoke("GenerateExtractRule", {
+                    Data: StringToUint8Array(getResponseStr()),
+                    Selected: StringToUint8Array(selected)
+                })
+                .then((e: {PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string}) => {
+                    setPrefix(e.PrefixRegexp)
+                    setSuffix(e.SuffixRegexp)
+                    setMatchedRegexp(e.SelectedRegexp)
+                })
+                .catch((e) => {
+                    failed(`无法生成数据提取规则: ${e}`)
+                })
+        },
+        [selected],
+        {wait: 500}
+    )
 
     useEffect(() => {
         if (!_token) {
             return
         }
-        const token = getToken();
-        const extractedCache: string[] = [];
-        let extractedCountLastUpdated = 0;
-        ipcRenderer.on(`${token}-data`, async (e, data: { Extracted: Uint8Array, Token: string }) => {
+        const token = getToken()
+        const extractedCache: string[] = []
+        let extractedCountLastUpdated = 0
+        ipcRenderer.on(`${token}-data`, async (e, data: {Extracted: Uint8Array; Token: string}) => {
             extractedCache.push(Uint8ArrayToString(data.Extracted))
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -140,7 +150,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
             }
         }, 500)
         return () => {
-            clearInterval(extractedDataCacheId);
+            clearInterval(extractedDataCacheId)
 
             ipcRenderer.invoke("cancel-ExtractData", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
@@ -149,122 +159,175 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         }
     }, [_token])
 
-    return <Space style={{width: "100%"}} direction={"vertical"}>
-        <AutoCard
-            size={"small"}
-            title={(
-                <Space>
-                    <div>
-                        自动生成提取规则
-                    </div>
-                    <SelectOne size={"small"} data={[
-                        {value: "regexp-between", text: "前后缀正则提取"},
-                        {value: "regexp", text: "单正则提取"}
-                    ]} value={mode} setValue={setMode} formItemStyle={{marginBottom: 0}}/>
-                </Space>
-            )}
-            extra={(
-                <Space>
-                    <Tag>共{responses.length}个响应</Tag>
-                    <Button type={"primary"} size={"small"} onClick={() => {
-                        responses.forEach(i => {
-                            ipcRenderer.invoke("ExtractData", {
-                                Mode: mode,
-                                PrefixRegexp: prefix,
-                                SuffixRegexp: suffix,
-                                MatchRegexp: matchedRegexp,
-                                Data: i.ResponseRaw,
-                                Token: i.UUID,
-                            }, getToken()).then(() => {
-                            })
-                        })
-                    }}>
-                        提取数据
-                    </Button>
-                </Space>
-            )}
-        >
-            {mode === "regexp-between" && <Space direction={"vertical"} style={{width: "100%"}}>
-                <Space>
-                    <div>
-                        前缀(正则)：
-                    </div>
-                    <Text
-                        editable={{onChange: setPrefix}}
-                        code={true}
-                    >{prefix}</Text>
-                </Space>
-                <Space>
-                    <div>后缀(正则)：</div>
-                    <Text
-                        editable={{onChange: setSuffix}}
-                        code={true}
-                    >{suffix}</Text>
-                </Space>
-                <Space>
-                    {selected ? <Text code={true} copyable={true}>{selected}</Text> : <Tag>未选中提取规则</Tag>}
-                </Space>
-            </Space>}
-            {mode === "regexp" && <Space direction={"vertical"} style={{width: "100%"}}>
-                <Space>
-                    <div>
-                        自动提取正则：
-                    </div>
-                    <Text
-                        editable={{onChange: setMatchedRegexp}}
-                        code={true}
-                    >{matchedRegexp}</Text>
-                </Space>
-            </Space>}
-        </AutoCard>
-        <div style={{height: 400}}>
-            <ResizeBox
-                firstNode={(
-                    <YakEditor
-                        editorDidMount={e => {
-                            setEditor(e)
-                        }}
-                        readOnly={true} noMiniMap={true}
-                        noLineNumber={true}
-                        type={"html"} value={Uint8ArrayToString(sampleResponse.ResponseRaw)}
-                    />
-                )}
-                secondRatio={"30%"}
-                secondNode={(
-                    <AutoCard size={"small"} bordered={false} title={(
-                        <Space>
-                            <Tag>
-                                已提/总量：
-                                {extracted.length}/{responses.length}
-                            </Tag>
-                        </Space>
-                    )} extra={(
-                        <Space>
-                            <Popconfirm
-                                title={"确定要清除已提取数据？"}
-                                onConfirm={() => {
-                                    setToken(randomString(46))
-                                    setExtracted([])
-                                }}
-                            >
-                                <Button size={"small"} danger={true}>清空</Button>
-                            </Popconfirm>
-                            <Button
-                                size={"small"} type={"link"}
-                                onClick={() => {
-                                    saveABSFileToOpen("webfuzzer-extract-data.txt", extracted.join("\n"))
-                                }}
-                            >下载文件</Button>
-                        </Space>
-                    )} bodyStyle={{margin: 0, padding: 0}}>
-                        <YakEditor
-                            readOnly={true} noMiniMap={true}
-                            noLineNumber={true} triggerId={extracted}
-                            type={"html"} value={extracted.join("\n")}
+    return (
+        <Space style={{width: "100%", padding: 24}} direction={"vertical"}>
+            <AutoCard
+                size={"small"}
+                title={
+                    <Space>
+                        <div>自动生成提取规则</div>
+                        <YakitRadioButtons
+                            value={mode}
+                            onChange={(e) => setMode(e.target.value)}
+                            size='small'
+                            options={[
+                                {
+                                    label: "前后缀正则提取",
+                                    value: "regexp-between"
+                                },
+                                {
+                                    label: "单正则提取",
+                                    value: "regexp"
+                                }
+                            ]}
+                            buttonStyle='solid'
                         />
-                    </AutoCard>
+                    </Space>
+                }
+                extra={
+                    <Space>
+                        <YakitTag>共{responses.length}个响应</YakitTag>
+                        <YakitButton
+                            type={"primary"}
+                            size={"small"}
+                            onClick={() => {
+                                responses.forEach((i) => {
+                                    ipcRenderer
+                                        .invoke(
+                                            "ExtractData",
+                                            {
+                                                Mode: mode,
+                                                PrefixRegexp: prefix,
+                                                SuffixRegexp: suffix,
+                                                MatchRegexp: matchedRegexp,
+                                                Data: i.ResponseRaw,
+                                                Token: i.UUID
+                                            },
+                                            getToken()
+                                        )
+                                        .then(() => {})
+                                })
+                            }}
+                        >
+                            提取数据
+                        </YakitButton>
+                    </Space>
+                }
+            >
+                {mode === "regexp-between" && (
+                    <Space direction={"vertical"} style={{width: "100%", justifyContent: "center"}}>
+                        <div className={styles["space-item"]}>
+                            <span>前缀(正则)：</span>
+                            <div style={{flex: 1, maxWidth: "90%"}}>
+                                <RegexpInput
+                                    initialTagShow={true}
+                                    regexp={prefix}
+                                    onSure={setPrefix}
+                                    onSave={() => {}}
+                                />
+                            </div>
+                        </div>
+                        <div className={styles["space-item"]}>
+                            <span>后缀(正则)：</span>
+                            <div style={{flex: 1, maxWidth: "90%"}}>
+                                <RegexpInput
+                                    initialTagShow={true}
+                                    regexp={suffix}
+                                    onSure={setSuffix}
+                                    onSave={() => {}}
+                                />
+                            </div>
+                        </div>
+                        <Space>
+                            {selected ? (
+                                <YakitTag copyText={selected} enableCopy={true} iconColor='var(--yakit-primary-5)' />
+                            ) : (
+                                <YakitTag>未选中提取规则</YakitTag>
+                            )}
+                        </Space>
+                    </Space>
                 )}
-            />
-        </div>
-    </Space>
-};
+                {mode === "regexp" && (
+                    <Space direction={"vertical"} style={{width: "100%"}}>
+                        <div className={styles["space-item"]}>
+                            <span>自动提取正则：</span>
+                            <div style={{flex: 1, maxWidth: "90%"}}>
+                                <RegexpInput
+                                    initialTagShow={true}
+                                    regexp={matchedRegexp}
+                                    onSure={setMatchedRegexp}
+                                    onSave={() => {}}
+                                />
+                            </div>
+                        </div>
+                    </Space>
+                )}
+            </AutoCard>
+            <div style={{height: 400}}>
+                <ResizeBox
+                    firstNode={
+                        <YakEditor
+                            editorDidMount={(e) => {
+                                setEditor(e)
+                            }}
+                            readOnly={true}
+                            noMiniMap={true}
+                            noLineNumber={true}
+                            type={"html"}
+                            value={Uint8ArrayToString(sampleResponse.ResponseRaw)}
+                        />
+                    }
+                    secondRatio={"30%"}
+                    secondNode={
+                        <AutoCard
+                            size={"small"}
+                            bordered={false}
+                            title={
+                                <Space>
+                                    <YakitTag>
+                                        已提/总量：
+                                        {extracted.length}/{responses.length}
+                                    </YakitTag>
+                                </Space>
+                            }
+                            extra={
+                                <Space>
+                                    <YakitPopconfirm
+                                        title={"确定要清除已提取数据？"}
+                                        onConfirm={() => {
+                                            setToken(randomString(46))
+                                            setExtracted([])
+                                        }}
+                                    >
+                                        <YakitButton size={"small"} type='outline2' className='button-text-danger'>
+                                            清空
+                                        </YakitButton>
+                                    </YakitPopconfirm>
+                                    <YakitButton
+                                        size={"small"}
+                                        type='text'
+                                        onClick={() => {
+                                            saveABSFileToOpen("webfuzzer-extract-data.txt", extracted.join("\n"))
+                                        }}
+                                    >
+                                        下载文件
+                                    </YakitButton>
+                                </Space>
+                            }
+                            bodyStyle={{margin: 0, padding: 0}}
+                        >
+                            <YakEditor
+                                readOnly={true}
+                                noMiniMap={true}
+                                noLineNumber={true}
+                                triggerId={extracted}
+                                type={"html"}
+                                value={extracted.join("\n")}
+                            />
+                        </AutoCard>
+                    }
+                />
+            </div>
+        </Space>
+    )
+}

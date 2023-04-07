@@ -32,7 +32,7 @@ import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
-import {useCreation, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useGetState, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -57,8 +57,10 @@ import {
     ChromeSvgIcon,
     ClockIcon,
     CogIcon,
+    FilterIcon,
     PaperAirplaneIcon,
     PlusSmIcon,
+    SearchIcon,
     TrashIcon,
     WrapIcon
 } from "@/assets/newIcon"
@@ -80,6 +82,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {Size} from "re-resizable"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -349,6 +352,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // editor Second Editor
     const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
     const [fontSizeSecondEditor, setFontSizeSecondEditor] = useState<number>()
+
+    // second Node
+    const secondNodeRef = useRef(null)
+    const secondNodeSize = useSize(secondNodeRef)
+    const [showSuccess, setShowSuccess] = useState(true)
 
     useEffect(() => {
         if (props.shareContent) {
@@ -895,6 +903,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             failed("初始化 EOL CRLF 失败")
         }
     }, [reqEditor])
+    /**@description 插入 yak.fuzz 语法 */
     const onInsertYakFuzzer = useMemoizedFn(() => {
         const m = showModal({
             width: "70%",
@@ -959,82 +968,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             StatusCode: val.statusCode?.split(",") || []
         })
     })
-    const renderSecondNodeExtra = useCreation<ReactNode>(() => {
-        const rsp = redirectedResponse ? redirectedResponse : getFirstResponse()
-        if (onlyOneResponse) {
-            return (
-                <div className={styles["fuzzer-secondNode-extra"]}>
-                    <YakitInput.Search
-                        size='small'
-                        placeholder='请输定位响应'
-                        value={affixSearch}
-                        onChange={(e) => {
-                            const {value} = e.target
-                            setAffixSearch(value)
-                            if (value === "" && defaultResponseSearch !== "") {
-                                setDefaultResponseSearch("")
-                            }
-                        }}
-                        style={{maxWidth: 200}}
-                        onSearch={() => setDefaultResponseSearch(affixSearch)}
-                        onPressEnter={() => setDefaultResponseSearch(affixSearch)}
-                    />
-                    <Divider type='vertical' style={{margin: 0, top: 1}} />
-                    <ChromeSvgIcon
-                        className={styles["extra-chrome-btn"]}
-                        onClick={() => {
-                            showResponseViaResponseRaw(rsp.ResponseRaw || "")
-                        }}
-                    />
-                    <YakitButton
-                        type='primary'
-                        onClick={() => {
-                            analyzeFuzzerResponse(rsp, () => {})
-                        }}
-                        size='small'
-                    >
-                        详情
-                    </YakitButton>
-                    <Divider type='vertical' style={{margin: 0, top: 1}} />
-                    <YakitButton
-                        type='outline2'
-                        size='small'
-                        icon={<TrashIcon />}
-                        className={classNames("button-text-danger", styles["trash-icon-btn"])}
-                        onClick={() => {
-                            setSuccessFuzzer([])
-                            setFailedFuzzer([])
-                        }}
-                    />
-                    <EditorsSetting
-                        fontSize={fontSizeSecondEditor}
-                        setFontSize={setFontSizeSecondEditor}
-                        noWordwrap={noWordwrapSecondEditor}
-                        setNoWordwrap={setNoWordwrapSecondEditor}
-                    />
-                </div>
-            )
-        }
-        if (!onlyOneResponse && cachedTotal > 0) {
-            return <div>cachedTotal</div>
-        }
-        return <></>
-    }, [onlyOneResponse, cachedTotal,noWordwrapSecondEditor,fontSizeSecondEditor])
-    /**
-     * @description 右边的返回内容 头部left内容
-     */
-    const renderSecondNodeTitle = useCreation<ReactNode>(() => {
-        const rsp = redirectedResponse ? redirectedResponse : getFirstResponse()
-        if (!rsp.BodyLength) return <></>
-        return (
-            <>
-                {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
-                <YakitTag>
-                    {rsp.BodyLength}bytes / {rsp.DurationMs}ms
-                </YakitTag>
-            </>
-        )
-    }, [redirectedResponse, getFirstResponse()])
 
     return (
         <div className={styles["http-fuzzer-body"]}>
@@ -1300,14 +1233,50 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )
                     }}
                     secondNodeProps={{
-                        // title: "Responses",
                         title: (
                             <div>
                                 <span style={{marginRight: 8}}>Responses</span>
-                                {renderSecondNodeTitle}
+                                <SecondNodeTitle
+                                    onlyOneResponse={onlyOneResponse}
+                                    rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
+                                    successFuzzerLength={(successFuzzer || []).length}
+                                    failedFuzzerLength={(failedFuzzer || []).length}
+                                    showSuccess={showSuccess}
+                                    setShowSuccess={setShowSuccess}
+                                />
                             </div>
                         ),
-                        extra: renderSecondNodeExtra
+                        extra: (
+                            <div className={styles["fuzzer-secondNode-extra"]}>
+                                <SecondNodeExtra
+                                    onlyOneResponse={onlyOneResponse}
+                                    cachedTotal={cachedTotal}
+                                    rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
+                                    valueSearch={affixSearch}
+                                    onSearchValueChange={(value) => {
+                                        setAffixSearch(value)
+                                        if (value === "" && defaultResponseSearch !== "") {
+                                            setDefaultResponseSearch("")
+                                        }
+                                    }}
+                                    onSearch={() => setDefaultResponseSearch(affixSearch)}
+                                    onRemove={() => {
+                                        setSuccessFuzzer([])
+                                        setFailedFuzzer([])
+                                    }}
+                                    successFuzzer={successFuzzer}
+                                    secondNodeSize={secondNodeSize}
+                                />
+                                {onlyOneResponse && (
+                                    <EditorsSetting
+                                        fontSize={fontSizeSecondEditor}
+                                        setFontSize={setFontSizeSecondEditor}
+                                        noWordwrap={noWordwrapSecondEditor}
+                                        setNoWordwrap={setNoWordwrapSecondEditor}
+                                    />
+                                )}
+                            </div>
+                        )
                     }}
                     firstNode={
                         <HTTPPacketEditor
@@ -1387,86 +1356,49 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         />
                     }
                     secondNode={
-                        <>
-                            {onlyOneResponse ? (
-                                <>
-                                    {redirectedResponse
-                                        ? responseViewer(redirectedResponse)
-                                        : responseViewer(getFirstResponse())}
-                                </>
-                            ) : (
-                                <>
-                                    {cachedTotal > 0 ? (
-                                        <HTTPFuzzerResultsCard
-                                            onSendToWebFuzzer={sendToFuzzer}
-                                            sendToPlugin={sendToPlugin}
-                                            setRequest={(r) => {
-                                                setRequest(r)
-                                                refreshRequest()
-                                            }}
-                                            extra={
-                                                <Space>
-                                                    <Button
-                                                        size={"small"}
-                                                        onClick={() => {
-                                                            showExtractFuzzerResponseOperator(successFuzzer)
-                                                        }}
-                                                    >
-                                                        提取响应数据
-                                                    </Button>
-                                                    <Popover
-                                                        title={"导出数据"}
-                                                        trigger={["click"]}
-                                                        content={
-                                                            <>
-                                                                <Space>
-                                                                    <Button
-                                                                        size={"small"}
-                                                                        type={"primary"}
-                                                                        onClick={() => {
-                                                                            exportHTTPFuzzerResponse(successFuzzer)
-                                                                        }}
-                                                                    >
-                                                                        导出所有请求
-                                                                    </Button>
-                                                                    <Button
-                                                                        size={"small"}
-                                                                        type={"primary"}
-                                                                        onClick={() => {
-                                                                            exportPayloadResponse(successFuzzer)
-                                                                        }}
-                                                                    >
-                                                                        仅导出 Payload
-                                                                    </Button>
-                                                                </Space>
-                                                            </>
-                                                        }
-                                                    >
-                                                        <Button size={"small"}>导出数据</Button>
-                                                    </Popover>
-                                                </Space>
-                                            }
-                                            failedResponses={failedFuzzer}
-                                            successResponses={
-                                                filterContent.length !== 0
-                                                    ? filterContent
-                                                    : keyword
-                                                    ? []
-                                                    : successFuzzer
-                                            }
-                                        />
-                                    ) : (
-                                        <Result
-                                            status={"info"}
-                                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                            subTitle={
-                                                "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                            }
-                                        />
-                                    )}
-                                </>
-                            )}
-                        </>
+                        <div ref={secondNodeRef} style={{height: "100%"}}>
+                            <YakitSpin spinning={loading} style={{height: "100%"}}>
+                                {onlyOneResponse ? (
+                                    <>
+                                        {redirectedResponse
+                                            ? responseViewer(redirectedResponse)
+                                            : responseViewer(getFirstResponse())}
+                                    </>
+                                ) : (
+                                    <>
+                                        {cachedTotal > 0 ? (
+                                            // <HTTPFuzzerResultsCard
+                                            //     showSuccess={showSuccess}
+                                            //     setShowSuccess={setShowSuccess}
+                                            //     onSendToWebFuzzer={sendToFuzzer}
+                                            //     sendToPlugin={sendToPlugin}
+                                            //     setRequest={(r) => {
+                                            //         setRequest(r)
+                                            //         refreshRequest()
+                                            //     }}
+                                            //     failedResponses={failedFuzzer}
+                                            //     successResponses={
+                                            //         filterContent.length !== 0
+                                            //             ? filterContent
+                                            //             : keyword
+                                            //             ? []
+                                            //             : successFuzzer
+                                            //     }
+                                            // />
+                                            <div>表格</div>
+                                        ) : (
+                                            <Result
+                                                status={"info"}
+                                                title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                                subTitle={
+                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                                }
+                                            />
+                                        )}
+                                    </>
+                                )}
+                            </YakitSpin>
+                        </div>
                     }
                 />
                 <Modal
@@ -1513,6 +1445,202 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </div>
     )
 }
+interface SecondNodeExtraProps {
+    rsp: FuzzerResponse
+    onlyOneResponse: boolean
+    cachedTotal: number
+    valueSearch: string
+    onSearchValueChange: (s: string) => void
+    onSearch: () => void
+    onRemove: () => void
+    successFuzzer: FuzzerResponse[]
+    secondNodeSize?: Size
+}
+/**
+ * @description 右边的返回内容 头部 extra
+ */
+const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
+    const {
+        rsp,
+        onlyOneResponse,
+        cachedTotal,
+        valueSearch,
+        onSearchValueChange,
+        onSearch,
+        onRemove,
+        successFuzzer,
+        secondNodeSize
+    } = props
+    if (onlyOneResponse) {
+        return (
+            <>
+                <YakitInput.Search
+                    size='small'
+                    placeholder='请输入定位响应'
+                    value={valueSearch}
+                    onChange={(e) => {
+                        const {value} = e.target
+                        onSearchValueChange(value)
+                    }}
+                    style={{maxWidth: 200}}
+                    onSearch={() => onSearch()}
+                    onPressEnter={() => onSearch()}
+                />
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <ChromeSvgIcon
+                    className={styles["extra-chrome-btn"]}
+                    onClick={() => {
+                        showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                    }}
+                />
+                <YakitButton
+                    type='primary'
+                    onClick={() => {
+                        analyzeFuzzerResponse(rsp, () => {})
+                    }}
+                    size='small'
+                >
+                    详情
+                </YakitButton>
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <YakitButton
+                    type='outline2'
+                    size='small'
+                    icon={<TrashIcon />}
+                    className={classNames("button-text-danger", styles["trash-icon-btn"])}
+                    onClick={() => onRemove()}
+                />
+            </>
+        )
+    }
+    if (!onlyOneResponse && cachedTotal > 0) {
+        const searchNode = (
+            <YakitInput.Search
+                size='small'
+                placeholder='请输入关键词搜索'
+                // value={affixSearch}
+                // onChange={(e) => {
+                //     const {value} = e.target
+                //     setAffixSearch(value)
+                //     if (value === "" && defaultResponseSearch !== "") {
+                //         setDefaultResponseSearch("")
+                //     }
+                // }}
+                style={{minWidth: 130}}
+                // onSearch={() => setDefaultResponseSearch(affixSearch)}
+                // onPressEnter={() => setDefaultResponseSearch(affixSearch)}
+            />
+        )
+        return (
+            <>
+                {(secondNodeSize?.width || 0) > 620 && searchNode}
+                {(secondNodeSize?.width || 0) < 620 && (
+                    <YakitPopover content={searchNode}>
+                        <YakitButton
+                            icon={<SearchIcon />}
+                            size='small'
+                            type='outline2'
+                            className={styles["editor-cog-icon"]}
+                        />
+                    </YakitPopover>
+                )}
+                <YakitButton icon={<FilterIcon />} size='small' type='outline2' className={styles["editor-cog-icon"]} />
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <YakitButton
+                    type='outline2'
+                    size='small'
+                    onClick={() => {
+                        showExtractFuzzerResponseOperator(successFuzzer)
+                    }}
+                >
+                    提取响应数据
+                </YakitButton>
+                <YakitPopover
+                    title={"导出数据"}
+                    trigger={["click"]}
+                    content={
+                        <>
+                            <Space>
+                                <YakitButton
+                                    size={"small"}
+                                    type={"primary"}
+                                    onClick={() => {
+                                        exportHTTPFuzzerResponse(successFuzzer)
+                                    }}
+                                >
+                                    导出所有请求
+                                </YakitButton>
+                                <YakitButton
+                                    size={"small"}
+                                    type={"primary"}
+                                    onClick={() => {
+                                        exportPayloadResponse(successFuzzer)
+                                    }}
+                                >
+                                    仅导出 Payload
+                                </YakitButton>
+                            </Space>
+                        </>
+                    }
+                >
+                    <YakitButton type='outline2' size='small'>
+                        导出数据
+                    </YakitButton>
+                </YakitPopover>
+            </>
+        )
+    }
+    return <></>
+})
+interface SecondNodeTitleProps {
+    rsp: FuzzerResponse
+    onlyOneResponse: boolean
+    successFuzzerLength: number
+    failedFuzzerLength: number
+    showSuccess: boolean
+    setShowSuccess: (b: boolean) => void
+}
+
+/**
+ * @description 右边的返回内容 头部left内容
+ */
+const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
+    const {rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} = props
+    if (!rsp.BodyLength) return <></>
+    if (onlyOneResponse) {
+        return (
+            <>
+                {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
+                <YakitTag>
+                    {rsp.BodyLength}bytes / {rsp.DurationMs}ms
+                </YakitTag>
+            </>
+        )
+    } else {
+        return (
+            <div className={styles["second-node-title"]}>
+                <YakitRadioButtons
+                    size='small'
+                    value={showSuccess}
+                    onChange={(e) => {
+                        setShowSuccess(e.target.value)
+                    }}
+                    buttonStyle='solid'
+                    options={[
+                        {
+                            value: true,
+                            label: `成功[${successFuzzerLength}]`
+                        },
+                        {
+                            value: false,
+                            label: `失败[${failedFuzzerLength}]`
+                        }
+                    ]}
+                />
+            </div>
+        )
+    }
+})
 interface AdvancedConfigValueProps {
     // 请求包配置
     forceFuzz?: boolean
