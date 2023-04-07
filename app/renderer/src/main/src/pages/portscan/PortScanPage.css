@@ -35,6 +35,9 @@
 .scan-port-tabs .scan-port-body .right-container .form-submit-style {
     margin: 0 0 4px 7px;
 }
+.scan-port-tabs .ant-tabs-ink-bar{
+    background: var(--yakit-primary-5)
+}
 
 .link-button-bfc{
     padding: 4px 0;

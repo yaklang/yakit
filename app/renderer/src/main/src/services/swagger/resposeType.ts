@@ -462,6 +462,8 @@ export declare namespace API {
      */
     time_search?: string;
     group?: string;
+    delete_uuid?: string[];
+    delete_dump?: boolean;
   }
   export interface GetPluginUnloggedWhere {
     keywords?: string;

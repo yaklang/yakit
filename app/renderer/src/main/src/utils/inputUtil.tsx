@@ -344,7 +344,7 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
     // const [current, setCurrent] = useState<any>();
     return <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
         <YakitRadioButtons
-            className={"select-one"}
+            className={"old-theme-html select-one"}
             disabled={p.disabled}
             size={p.size}
             value={p.value}
@@ -596,7 +596,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
 }
 
 export const SwitchItem: React.FC<SwitchItemProps> = p => {
-    return <Item label={p.label} help={p.help} style={p.formItemStyle}>
+    return <Item className="old-theme-html" label={p.label} help={p.help} style={p.formItemStyle}>
         <YakitSwitch checked={p.value} onChange={e => p.setValue(e)} disabled={p.disabled}/>
     </Item>
 }

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, memo, ReactNode, useLayoutEffect} from "react"
+import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
 import {
     Alert,
     Button,
@@ -100,6 +100,8 @@ import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import {OutputPluginForm} from "./PluginOperator"
 import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {isSimpleEnterprise} from "@/utils/envfile"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 const {Search} = Input
@@ -3625,6 +3627,66 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
             setRefresh(!refresh)
         }, 100)
     })
+
+    /**
+     * plugin-store batch del related logic
+     */
+    const isShowDelBtn = useMemo(() => {
+        if(["admin", "superAdmin"].includes(userInfo.role || "")) return true
+        if(userInfo.showStatusSearch) return true
+        return false
+    }, [userInfo])
+    const delDisabled = useMemo(() => {
+        if(isSelectAllOnline) return false
+        if(selectedRowKeysRecordOnline.length > 0) return false
+        return true
+    }, [isSelectAllOnline, selectedRowKeysRecordOnline])
+    const [batchDelShow, setBatchDelShow] = useState<boolean>(false)
+    const onBatchDel = useMemoizedFn((isDel: boolean) => {
+        let params: API.GetPluginWhere = {bind_me: false, recycle: false}
+
+        if (isSelectAllOnline) {
+            params = {...params, ...queryOnline, delete_dump: isDel}
+            NetWorkApi<API.GetPluginWhere, API.ActionSucceeded>({
+                method: "delete",
+                url: "yakit/plugin",
+                data: params
+            })
+                .then((res) => {
+                    onResetList()
+                })
+                .catch((err) => {
+                    failed("删除失败:" + err)
+                })
+                .finally(() => {
+                    setBatchDelShow(false)
+                })
+        } else {
+            if (selectedRowKeysRecordOnline.length > 0) {
+                params = {
+                    ...params,
+                    delete_uuid: selectedRowKeysRecordOnline.map((item) => item.uuid),
+                    delete_dump: isDel
+                }
+
+                NetWorkApi<API.GetPluginWhere, API.ActionSucceeded>({
+                    method: "delete",
+                    url: "yakit/plugin",
+                    data: params
+                })
+                    .then((res) => {
+                        onResetList()
+                    })
+                    .catch((err) => {
+                        failed("删除失败:" + err)
+                    })
+                    .finally(() => {
+                        setBatchDelShow(false)
+                    })
+            }
+        }
+    })
+
     return (
         <div className='height-100'>
             <Row className='row-body' gutter={12}>
@@ -3690,6 +3752,9 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             isFilter={isFilter}
                         />
                     )}
+                    {isShowDelBtn && <YakitButton type="danger"
+                    disabled={delDisabled}
+                    onClick={() => setBatchDelShow(true)}>删除</YakitButton>}
                     <AddAllPlugin
                         selectedRowKeysRecord={selectedRowKeysRecordOnline}
                         setListLoading={setListLoading}
@@ -3739,6 +3804,30 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                     onSetUser={onSetUser}
                 />
             </div>
+            <YakitHint
+                visible={batchDelShow}
+                title="删除插件"
+                content={
+                    <>
+                        {`是否需要彻底删除插件,彻底删除后将`}
+                        <span style={{color: "var(--yakit-danger-5)"}}>
+                            无法恢复
+                        </span>
+                    </>}
+                okButtonText='放入回收站'
+                cancelButtonText='删除'
+                footerExtra={
+                    <YakitButton
+                        size='max'
+                        type='outline2'
+                        onClick={() => setBatchDelShow(false)}
+                    >
+                        取消
+                    </YakitButton>
+                }
+                onOk={() => onBatchDel(false)}
+                onCancel={() => onBatchDel(true)}
+            />
         </div>
     )
 }
