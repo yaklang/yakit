@@ -15,7 +15,10 @@ export enum LocalGV {
     YaklangRemoteEngineCredential = "yaklang-remote-engine-credential",
 
     /** @name 是否自启最新版本检测 */
-    NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check"
+    NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check",
+
+    /** @name 未安装引擎提示框内的用户协议是否勾选 */
+    IsCheckedUserAgreement = "is-checked-user-agreement"
 }
 
 /** 引擎数据库缓存数据-键值变量 */
