@@ -50,6 +50,11 @@
             }
         }
     }
+    .fuzzer-secondNode-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 }
 
 .display-flex {
@@ -224,4 +229,13 @@
             color: #fff;
         }
     }
+}
+.trash-icon-btn {
+    padding: 0;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    --button-border-color: var(--yakit-border-color);
+    --button-hover-border-color: var(--yakit-border-color);
+    --button-press-border-color: var(--yakit-border-color);
 }

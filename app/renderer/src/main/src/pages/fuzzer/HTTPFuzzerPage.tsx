@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {
     Button,
     Card,
@@ -32,7 +32,7 @@ import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, info} from "../../utils/notification"
 import {AutoSpin} from "../../components/AutoSpin"
 import {ResizeBox} from "../../components/ResizeBox"
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -59,6 +59,7 @@ import {
     CogIcon,
     PaperAirplaneIcon,
     PlusSmIcon,
+    TrashIcon,
     WrapIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
@@ -341,9 +342,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
     const [timer, setTimer] = useState<any>()
 
-    // editor
-    const [noWordwrap, setNoWordwrap] = useState(false)
-    const [fontSize, setFontSize] = useState<number>()
+    // editor First Editor
+    const [noWordwrapFirstEditor, setNoWordwrapFirstEditor] = useState(false)
+    const [fontSizeFirstEditor, setFontSizeFirstEditor] = useState<number>()
+
+    // editor Second Editor
+    const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
+    const [fontSizeSecondEditor, setFontSizeSecondEditor] = useState<number>()
 
     useEffect(() => {
         if (props.shareContent) {
@@ -685,42 +690,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } catch (e) {}
         return (
             <HTTPPacketEditor
-                title={
-                    <Form
-                        size={"small"}
-                        layout={"inline"}
-                        onSubmitCapture={(e) => {
-                            e.preventDefault()
-
-                            setDefaultResponseSearch(affixSearch)
-                        }}
-                    >
-                        <InputItem
-                            width={150}
-                            allowClear={true}
-                            label={""}
-                            value={affixSearch}
-                            placeholder={"搜索定位响应"}
-                            suffixNode={
-                                <Button size={"small"} type='link' htmlType='submit' icon={<SearchOutlined />} />
-                            }
-                            setValue={(value) => {
-                                setAffixSearch(value)
-                                if (value === "" && defaultResponseSearch !== "") {
-                                    setDefaultResponseSearch("")
-                                }
-                            }}
-                            extraFormItemProps={{style: {marginBottom: 0}}}
-                        />
-                    </Form>
-                }
                 defaultSearchKeyword={defaultResponseSearch}
                 system={props.system}
                 originValue={rsp.ResponseRaw}
-                bordered={true}
+                bordered={false}
                 hideSearch={true}
                 isResponse={true}
                 noHex={true}
+                noHeader={true}
                 emptyOr={
                     !rsp?.Ok && (
                         <Result
@@ -760,47 +737,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <Space size={0}>
                         {loading && <Spin size={"small"} spinning={loading} />}
                         {onlyOneResponse ? (
-                            <Space size={0}>
-                                {rsp.IsHTTPS && <Tag>{rsp.IsHTTPS ? "https" : ""}</Tag>}
-                                <Tag>
-                                    {rsp.BodyLength}bytes / {rsp.DurationMs}ms
-                                </Tag>
-                                <Space key='single'>
-                                    <Button
-                                        className={styles["extra-chrome-btn"]}
-                                        type={"text"}
-                                        size={"small"}
-                                        icon={<ChromeSvgIcon />}
-                                        onClick={() => {
-                                            showResponseViaResponseRaw(rsp.ResponseRaw || "")
-                                        }}
-                                    />
-                                    <Button
-                                        size={"small"}
-                                        onClick={() => {
-                                            analyzeFuzzerResponse(rsp, (bool, r) => {
-                                                // setRequest(r)
-                                                // refreshRequest()
-                                            })
-                                        }}
-                                        type={"primary"}
-                                        icon={<ProfileOutlined />}
-                                    />
-                                    {/*    详情*/}
-                                    {/*</Button>*/}
-                                    <Button
-                                        type={"primary"}
-                                        size={"small"}
-                                        onClick={() => {
-                                            // setContent([])
-                                            setSuccessFuzzer([])
-                                            setFailedFuzzer([])
-                                        }}
-                                        danger={true}
-                                        icon={<DeleteOutlined />}
-                                    />
-                                </Space>
-                            </Space>
+                            <></>
                         ) : (
                             <Space key='list'>
                                 <Tag color={"green"}>成功:{getSuccessCount()}</Tag>
@@ -826,6 +763,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )}
                     </Space>
                 }
+                fontSizeState={fontSizeSecondEditor}
+                noWordWrapState={noWordwrapSecondEditor}
             />
         )
     })
@@ -991,7 +930,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * @@description 获取高级配置中的Form values
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
-        console.log("val", val)
         // 请求包配置
         setForceFuzz(val.isHttps)
         setIsHttps(val.isHttps)
@@ -1021,6 +959,82 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             StatusCode: val.statusCode?.split(",") || []
         })
     })
+    const renderSecondNodeExtra = useCreation<ReactNode>(() => {
+        const rsp = redirectedResponse ? redirectedResponse : getFirstResponse()
+        if (onlyOneResponse) {
+            return (
+                <div className={styles["fuzzer-secondNode-extra"]}>
+                    <YakitInput.Search
+                        size='small'
+                        placeholder='请输定位响应'
+                        value={affixSearch}
+                        onChange={(e) => {
+                            const {value} = e.target
+                            setAffixSearch(value)
+                            if (value === "" && defaultResponseSearch !== "") {
+                                setDefaultResponseSearch("")
+                            }
+                        }}
+                        style={{maxWidth: 200}}
+                        onSearch={() => setDefaultResponseSearch(affixSearch)}
+                        onPressEnter={() => setDefaultResponseSearch(affixSearch)}
+                    />
+                    <Divider type='vertical' style={{margin: 0, top: 1}} />
+                    <ChromeSvgIcon
+                        className={styles["extra-chrome-btn"]}
+                        onClick={() => {
+                            showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                        }}
+                    />
+                    <YakitButton
+                        type='primary'
+                        onClick={() => {
+                            analyzeFuzzerResponse(rsp, () => {})
+                        }}
+                        size='small'
+                    >
+                        详情
+                    </YakitButton>
+                    <Divider type='vertical' style={{margin: 0, top: 1}} />
+                    <YakitButton
+                        type='outline2'
+                        size='small'
+                        icon={<TrashIcon />}
+                        className={classNames("button-text-danger", styles["trash-icon-btn"])}
+                        onClick={() => {
+                            setSuccessFuzzer([])
+                            setFailedFuzzer([])
+                        }}
+                    />
+                    <EditorsSetting
+                        fontSize={fontSizeSecondEditor}
+                        setFontSize={setFontSizeSecondEditor}
+                        noWordwrap={noWordwrapSecondEditor}
+                        setNoWordwrap={setNoWordwrapSecondEditor}
+                    />
+                </div>
+            )
+        }
+        if (!onlyOneResponse && cachedTotal > 0) {
+            return <div>cachedTotal</div>
+        }
+        return <></>
+    }, [onlyOneResponse, cachedTotal,noWordwrapSecondEditor,fontSizeSecondEditor])
+    /**
+     * @description 右边的返回内容 头部left内容
+     */
+    const renderSecondNodeTitle = useCreation<ReactNode>(() => {
+        const rsp = redirectedResponse ? redirectedResponse : getFirstResponse()
+        if (!rsp.BodyLength) return <></>
+        return (
+            <>
+                {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
+                <YakitTag>
+                    {rsp.BodyLength}bytes / {rsp.DurationMs}ms
+                </YakitTag>
+            </>
+        )
+    }, [redirectedResponse, getFirstResponse()])
 
     return (
         <div className={styles["http-fuzzer-body"]}>
@@ -1277,17 +1291,23 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     </YakitButton>
                                 </YakitPopover>
                                 <EditorsSetting
-                                    noWordwrap={noWordwrap}
-                                    setNoWordwrap={setNoWordwrap}
-                                    fontSize={fontSize}
-                                    setFontSize={setFontSize}
+                                    noWordwrap={noWordwrapFirstEditor}
+                                    setNoWordwrap={setNoWordwrapFirstEditor}
+                                    fontSize={fontSizeFirstEditor}
+                                    setFontSize={setFontSizeFirstEditor}
                                 />
                             </div>
                         )
                     }}
                     secondNodeProps={{
-                        title: "Responses",
-                        extra: <div>fsdfdsf</div>
+                        // title: "Responses",
+                        title: (
+                            <div>
+                                <span style={{marginRight: 8}}>Responses</span>
+                                {renderSecondNodeTitle}
+                            </div>
+                        ),
+                        extra: renderSecondNodeExtra
                     }}
                     firstNode={
                         <HTTPPacketEditor
@@ -1362,12 +1382,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             ]}
                             onEditor={setReqEditor}
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                            noWordWrapState={noWordwrap}
-                            fontSizeState={fontSize}
+                            noWordWrapState={noWordwrapFirstEditor}
+                            fontSizeState={fontSizeFirstEditor}
                         />
                     }
-                    secondNode={() => (
-                        <AutoSpin spinning={false}>
+                    secondNode={
+                        <>
                             {onlyOneResponse ? (
                                 <>
                                     {redirectedResponse
@@ -1446,8 +1466,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     )}
                                 </>
                             )}
-                        </AutoSpin>
-                    )}
+                        </>
+                    }
                 />
                 <Modal
                     visible={urlPacketShow}
