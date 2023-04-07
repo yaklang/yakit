@@ -3631,6 +3631,11 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     /**
      * plugin-store batch del related logic
      */
+    const isShowDelBtn = useMemo(() => {
+        if(["admin", "superAdmin"].includes(userInfo.role || "")) return true
+        if(userInfo.showStatusSearch) return true
+        return false
+    }, [userInfo])
     const delDisabled = useMemo(() => {
         if(isSelectAllOnline) return false
         if(selectedRowKeysRecordOnline.length > 0) return false
@@ -3639,8 +3644,23 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
     const [batchDelShow, setBatchDelShow] = useState<boolean>(false)
     const onBatchDel = useMemoizedFn((isDel: boolean) => {
         let params: API.GetPluginWhere = {bind_me: false, recycle: false}
+
         if (isSelectAllOnline) {
             params = {...params, ...queryOnline, delete_dump: isDel}
+            NetWorkApi<API.GetPluginWhere, API.ActionSucceeded>({
+                method: "delete",
+                url: "yakit/plugin",
+                data: params
+            })
+                .then((res) => {
+                    onResetList()
+                })
+                .catch((err) => {
+                    failed("删除失败:" + err)
+                })
+                .finally(() => {
+                    setBatchDelShow(false)
+                })
         } else {
             if (selectedRowKeysRecordOnline.length > 0) {
                 params = {
@@ -3732,7 +3752,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                             isFilter={isFilter}
                         />
                     )}
-                    {["admin", "superAdmin",""].includes(userInfo.role || "") && <YakitButton type="danger"
+                    {isShowDelBtn && <YakitButton type="danger"
                     disabled={delDisabled}
                     onClick={() => setBatchDelShow(true)}>删除</YakitButton>}
                     <AddAllPlugin
