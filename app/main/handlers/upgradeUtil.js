@@ -431,10 +431,6 @@ module.exports = {
             return `${process.platform}-${process.arch}`;
         })
 
-        ipcMain.handle("install-yakit", async (e, params) => {
-            return shell.openPath(yakEngineDir)
-        })
-
         // 获取yak code文件根目录路径
         ipcMain.handle("fetch-code-path", () => {
             return codeDir
