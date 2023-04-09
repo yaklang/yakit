@@ -44,18 +44,20 @@ export const OnlinePluginRecycleBin: React.FC = () => {
     })
     const onReduction = (item: API.YakitPluginDetail) => {
         setCurrentItem(item)
-        const params: API.DeletePluginUuid = {
-            is_recycle: true,
-            dump: false,
-            uuid: [item.uuid]
+        const params: API.GetPluginWhere = {
+            bind_me: false,
+            recycle: true,
+            delete_dump: false,
+            delete_uuid: [item.uuid]
         }
         onReductionOrRemove(params)
     }
     const onBatchOperation = useMemoizedFn((type: boolean) => {
-        let params: API.DeletePluginUuid = {
-            uuid: [],
-            is_recycle: true,
-            dump: type,
+        let params: API.GetPluginWhere = {
+            bind_me: false,
+            delete_uuid: [],
+            recycle: true,
+            delete_dump: type,
         }
         if (isSelectAll || selectedRowKeysRecord.length === 0) {
             params = {
@@ -67,15 +69,15 @@ export const OnlinePluginRecycleBin: React.FC = () => {
         } else {
             params = {
                 ...params,
-                uuid: selectedRowKeysRecord.map(ele => ele.uuid)
+                delete_uuid: selectedRowKeysRecord.map(ele => ele.uuid)
             }
             onReductionOrRemove(params)
         }
     })
-    const onReductionOrRemove = (params: API.DeletePluginUuid) => {
+    const onReductionOrRemove = (params: API.GetPluginWhere) => {
         setRecycleLoading(true)
 
-        NetWorkApi<API.DeletePluginUuid, API.ActionSucceeded>({
+        NetWorkApi<API.GetPluginWhere, API.ActionSucceeded>({
             method: "delete",
             url: "yakit/plugin",
             data: {...params}

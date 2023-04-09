@@ -53,7 +53,7 @@ import {
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
 import {isSimpleEnterprise} from "@/utils/envfile"
-import { YakitHint } from "../yakitUI/YakitHint/YakitHint"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -182,7 +182,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setCurrentYakit(data)
                 })
                 ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
-                    isSimpleEnterprise?setLatestYakit(""):setLatestYakit(data)
+                    isSimpleEnterprise ? setLatestYakit("") : setLatestYakit(data)
                 })
 
                 ipcRenderer.invoke("get-current-yak").then((data: string) => {
@@ -269,6 +269,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (!isEngineInstalled.current) {
                     setEngineMode(undefined)
                     outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+                    getCacheEngineMode()
                     setTimeout(() => {
                         setYakitStatus("install")
                         cacheYakitStatus.current = "install"
@@ -348,7 +349,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (engineMode) {
             case "local":
                 outputToWelcomeConsole(`本地普通权限引擎模式，开始启动本地引擎: ${localPort}`)
-                setCredential({...getCredential(), Port: localPort, Mode: "local"})
+                setCredential({
+                    Host: "127.0.0.1",
+                    IsTLS: false,
+                    Password: "",
+                    PemBytes: undefined,
+                    Port: localPort,
+                    Mode: "local"
+                })
                 setTimeout(() => {
                     setStartAdminEngine(false)
                     setYakitStatus("ready")
@@ -361,7 +369,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
             case "admin":
                 outputToWelcomeConsole(`管理员模式，启动本地引擎: ${adminPort}`)
-                setCredential({...getCredential(), Port: adminPort, Mode: "admin"})
+                setCredential({
+                    Host: "127.0.0.1",
+                    IsTLS: false,
+                    Password: "",
+                    PemBytes: undefined,
+                    Port: adminPort,
+                    Mode: "admin"
+                })
                 setTimeout(() => {
                     setStartAdminEngine(false)
                     setYakitStatus("ready")
@@ -692,19 +707,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) {
-            isSimpleEnterprise?setEngineLink(true):
-            getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
-                if (id) {
-                    ipcRenderer.invoke("SetCurrentProject", {Id: +id})
-                    setLinkDatabase(false)
-                    setYakitMode("")
-                    fetchCurrentProject()
-                } else {
-                    setLinkDatabase(true)
-                    setYakitMode("soft")
-                }
-                setTimeout(() => setEngineLink(true), 100)
-            })
+            isSimpleEnterprise
+                ? setEngineLink(true)
+                : getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
+                      if (id) {
+                          ipcRenderer.invoke("SetCurrentProject", {Id: +id})
+                          setLinkDatabase(false)
+                          setYakitMode("")
+                          fetchCurrentProject()
+                      } else {
+                          setLinkDatabase(true)
+                          setYakitMode("soft")
+                      }
+                      setTimeout(() => setEngineLink(true), 100)
+                  })
         }
 
         if (latestYakit) setLatestYakit("")
@@ -795,16 +811,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                     {engineLink && (
                                         <>
-                                            {!isSimpleEnterprise && <div
-                                                className={classNames(styles["yakit-mode-icon"], {
-                                                    [styles["yakit-mode-selected"]]: yakitMode === "soft"
-                                                })}
-                                                onClick={() => changeYakitMode("soft")}
-                                            >
-                                                <HomeSvgIcon
-                                                    className={yakitMode === "soft" ? styles["mode-icon-selected"] : ""}
-                                                />
-                                            </div>}
+                                            {!isSimpleEnterprise && (
+                                                <div
+                                                    className={classNames(styles["yakit-mode-icon"], {
+                                                        [styles["yakit-mode-selected"]]: yakitMode === "soft"
+                                                    })}
+                                                    onClick={() => changeYakitMode("soft")}
+                                                >
+                                                    <HomeSvgIcon
+                                                        className={
+                                                            yakitMode === "soft" ? styles["mode-icon-selected"] : ""
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
 
                                             {/* <div
                                         className={classNames(styles["yakit-mode-icon"], {
@@ -857,8 +877,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 typeCallback={typeCallback}
                                                 showProjectManage={linkDatabase}
                                             />
-                                            {!linkDatabase && <><div className={styles["divider-wrapper"]}></div>
-                                            <GlobalReverseState isEngineLink={engineLink} /></>}
+                                            {!linkDatabase && (
+                                                <>
+                                                    <div className={styles["divider-wrapper"]}></div>
+                                                    <GlobalReverseState isEngineLink={engineLink} />
+                                                </>
+                                            )}
                                         </>
                                     )}
                                 </div>
@@ -879,16 +903,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <>
                                             {!linkDatabase && <GlobalReverseState isEngineLink={engineLink} />}
 
-                                            {!isSimpleEnterprise && <div
-                                                className={classNames(styles["yakit-mode-icon"], {
-                                                    [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
-                                                })}
-                                                onClick={() => changeYakitMode("soft")}
-                                            >
-                                                <HomeSvgIcon
-                                                    className={yakitMode === "soft" ? styles["mode-icon-selected"] : ""}
-                                                />
-                                            </div>}
+                                            {!isSimpleEnterprise && (
+                                                <div
+                                                    className={classNames(styles["yakit-mode-icon"], {
+                                                        [styles["yakit-mode-selected"]]: false && yakitMode === "soft"
+                                                    })}
+                                                    onClick={() => changeYakitMode("soft")}
+                                                >
+                                                    <HomeSvgIcon
+                                                        className={
+                                                            yakitMode === "soft" ? styles["mode-icon-selected"] : ""
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
 
                                             {/* <div
                                     className={classNames(styles["yakit-mode-icon"], {
@@ -1076,8 +1104,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             
             <YakitHint
                 visible={linkDatabaseHint}
-                title="是否进入项目管理"
-                content="如果有正在进行中的任务，回到项目管理页则都会停止，确定回到项目管理页面吗?"
+                title='是否进入项目管理'
+                content='如果有正在进行中的任务，回到项目管理页则都会停止，确定回到项目管理页面吗?'
                 onOk={() => {
                     setYakitMode("soft")
                     setLinkDatabase(true)

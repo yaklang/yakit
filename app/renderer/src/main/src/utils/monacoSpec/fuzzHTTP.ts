@@ -299,7 +299,19 @@ monaco.languages.registerCompletionItemProvider('http', {
                             kind: monaco.languages.CompletionItemKind.Function,
                             insertText: 'fuzz:pass(${1:root,admin}|${2:0})}}',
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        }
+                        },
+                        {
+                            label: `gzip:encode(...) gzip 编码`,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'gzip(${1})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
+                        {
+                            label: `gzip:decode(...) gzip 解码`,
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: 'gzip:decode(${1})}}',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        },
                     ]
                 }
             }

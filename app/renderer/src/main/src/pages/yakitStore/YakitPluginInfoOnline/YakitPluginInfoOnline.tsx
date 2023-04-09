@@ -218,9 +218,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const onRemove = useMemoizedFn((isDel: boolean) => {
         if (!plugin) return
         if (["admin", "superAdmin"].includes(userInfo.role || "") || plugin?.user_id === userInfo.user_id) {
-            const deletedParams: API.DeletePluginUuid = {
-                uuid: plugin.uuid ? [plugin.uuid] : [],
-                dump: isDel
+            const deletedParams: API.GetPluginWhere = {
+                bind_me: false,
+                recycle: false,
+                delete_uuid: plugin.uuid ? [plugin.uuid] : [],
+                delete_dump: isDel
             }
             setLoading(true)
             // 查询本地数据
@@ -240,7 +242,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     const onRemoveOnline = useMemoizedFn((plugin, deletedParams, newSrcipt) => {
         // 删除线上的
-        NetWorkApi<API.DeletePluginUuid, API.ActionSucceeded>({
+        NetWorkApi<API.GetPluginWhere, API.ActionSucceeded>({
             method: "delete",
             url: "yakit/plugin",
             data: deletedParams
