@@ -5,7 +5,7 @@
 }
 
 .main-container-cion:hover {
-    color: var(--yakit-primary-color-hover);
+    color: var(--yakit-primary-4);
 }
 
 .yakit-layout-tabs .yakit-main-tabs.ant-tabs {
@@ -20,7 +20,7 @@
         line-height: 16px;
     }
     .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-        color: var(--yakit-primary-color);
+        color: var(--yakit-primary-5);
     }
     .ant-tabs-tab-remove {
         padding: 0 6px;
@@ -42,7 +42,7 @@
     border-bottom: 1px solid var(--yakit-border-color);
 }
 .yakit-layout-tabs .yakit-main-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
-    border-bottom: 2px solid var(--yakit-primary-color);
+    border-bottom: 2px solid var(--yakit-primary-5);
     background: rgba(242, 139, 68, 0.06);
 }
 .yakit-layout-tabs .yakit-main-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {

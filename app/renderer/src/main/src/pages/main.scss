@@ -22,7 +22,7 @@
 }
 
 .main-container-cion:hover {
-    color: var(--yakit-primary-color-hover);
+    color: var(--yakit-primary-4);
 }
 
 // 首页Tabs组件相关样式
@@ -55,7 +55,7 @@
     border-bottom: 1px solid var(--yakit-border-color);
 }
 .yakit-layout-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
-    border-top: 2px solid var(--yakit-primary-color);
+    border-top: 2px solid var(--yakit-primary-5);
     border-bottom: 0;
     background: var(--yakit-neutral10-color);
 }
@@ -172,7 +172,7 @@
         line-height: 16px;
     }
     .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-        color: var(--yakit-primary-color);
+        color: var(--yakit-primary-5);
     }
     .ant-tabs-tab-remove {
         padding: 0 6px;
@@ -194,7 +194,7 @@
     border-bottom: 1px solid var(--yakit-border-color);
 }
 .httphacker-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
-    border-bottom: 2px solid var(--yakit-primary-color);
+    border-bottom: 2px solid var(--yakit-primary-5);
     background: rgba(242, 139, 68, 0.06);
 }
 .httphacker-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
@@ -245,7 +245,7 @@
     border-bottom: 1px solid var(--yakit-border-color);
 }
 .yakit-layout-tabs .no-theme-tabs.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
-    border-bottom: 2px solid var(--yakit-primary-color);
+    border-bottom: 2px solid var(--yakit-primary-5);
     background: rgba(242, 139, 68, 0.06);
 }
 .yakit-layout-tabs .no-theme-tabs.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {

@@ -14,15 +14,15 @@
             }
 
             .close-bg-color {
-                background-color: var(--yakit-danger-color);
+                background-color: var(--yakit-danger-5);
                 border: 1px solid #ea4439;
             }
             .min-bg-color {
-                background-color: var(--yakit-warning-color);
+                background-color: var(--yakit-warning-5);
                 border: 1px solid #f8a94d;
             }
             .max-bg-color {
-                background-color: var(--yakit-success-color);
+                background-color: var(--yakit-success-5);
                 border: 1px solid #4bbb84;
             }
         }
@@ -61,7 +61,7 @@
         }
         .op-btn:hover {
             .icon-style {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
     }
