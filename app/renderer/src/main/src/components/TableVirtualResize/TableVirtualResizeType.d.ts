@@ -33,6 +33,7 @@ import { SelectProps } from "antd"
  * @property {boolean} enableDragSort 是否拖拽排序
  * @event   onMoveRowEnd 拖拽结束
  * @property {boolean}  useUpAndDown 是否启用上下建
+ * @property {string}  containerClassName 容器得类样式
  */
 export interface TableVirtualResizeProps<T> {
     size?: "small" | "middle" | "large"
@@ -68,6 +69,7 @@ export interface TableVirtualResizeProps<T> {
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
     useUpAndDown?: boolean
+    containerClassName?:string
 }
 
 export interface SortProps {

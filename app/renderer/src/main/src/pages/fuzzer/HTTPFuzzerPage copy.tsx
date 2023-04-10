@@ -1579,6 +1579,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <>
                                 {cachedTotal > 0 ? (
                                     <HTTPFuzzerResultsCard
+                                        setShowSuccess={()=>{}}
+                                        showSuccess={true}
                                         onSendToWebFuzzer={sendToFuzzer}
                                         sendToPlugin={sendToPlugin}
                                         setRequest={(r) => {

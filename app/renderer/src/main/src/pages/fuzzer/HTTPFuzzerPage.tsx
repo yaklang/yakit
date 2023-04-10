@@ -83,6 +83,7 @@ import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {Size} from "re-resizable"
+import {HTTPFuzzerPageTable} from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -741,36 +742,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     )
                 }
                 readOnly={true}
-                extra={
-                    <Space size={0}>
-                        {loading && <Spin size={"small"} spinning={loading} />}
-                        {onlyOneResponse ? (
-                            <></>
-                        ) : (
-                            <Space key='list'>
-                                <Tag color={"green"}>成功:{getSuccessCount()}</Tag>
-                                <Input
-                                    size={"small"}
-                                    value={search}
-                                    onChange={(e) => {
-                                        setSearch(e.target.value)
-                                    }}
-                                />
-                                {/*<Tag>当前请求结果数[{(content || []).length}]</Tag>*/}
-                                <Button
-                                    size={"small"}
-                                    onClick={() => {
-                                        // setContent([])
-                                        setSuccessFuzzer([])
-                                        setFailedFuzzer([])
-                                    }}
-                                >
-                                    清除数据
-                                </Button>
-                            </Space>
-                        )}
-                    </Space>
-                }
                 fontSizeState={fontSizeSecondEditor}
                 noWordWrapState={noWordwrapSecondEditor}
             />
@@ -1141,8 +1112,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </div>
                 {/*<Divider style={{marginTop: 6, marginBottom: 8, paddingTop: 0}}/>*/}
                 <ResizeCardBox
-                    firstMinSize={350}
-                    secondMinSize={360}
+                    firstMinSize={420}
+                    secondMinSize={480}
                     style={{overflow: "hidden"}}
                     firstNodeProps={{
                         title: "Request",
@@ -1234,7 +1205,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }}
                     secondNodeProps={{
                         title: (
-                            <div>
+                            <>
                                 <span style={{marginRight: 8}}>Responses</span>
                                 <SecondNodeTitle
                                     onlyOneResponse={onlyOneResponse}
@@ -1244,7 +1215,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     showSuccess={showSuccess}
                                     setShowSuccess={setShowSuccess}
                                 />
-                            </div>
+                            </>
                         ),
                         extra: (
                             <div className={styles["fuzzer-secondNode-extra"]}>
@@ -1254,12 +1225,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
                                     valueSearch={affixSearch}
                                     onSearchValueChange={(value) => {
+                                        console.log("value", value)
                                         setAffixSearch(value)
                                         if (value === "" && defaultResponseSearch !== "") {
                                             setDefaultResponseSearch("")
                                         }
                                     }}
-                                    onSearch={() => setDefaultResponseSearch(affixSearch)}
+                                    onSearch={() => {
+                                        console.log("affixSearch", affixSearch)
+                                        setDefaultResponseSearch(affixSearch)
+                                    }}
                                     onRemove={() => {
                                         setSuccessFuzzer([])
                                         setFailedFuzzer([])
@@ -1276,7 +1251,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     />
                                 )}
                             </div>
-                        )
+                        ),
                     }}
                     firstNode={
                         <HTTPPacketEditor
@@ -1367,7 +1342,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 ) : (
                                     <>
                                         {cachedTotal > 0 ? (
-                                            // <HTTPFuzzerResultsCard
+                                            <>
+                                                {/* // <HTTPFuzzerResultsCard
                                             //     showSuccess={showSuccess}
                                             //     setShowSuccess={setShowSuccess}
                                             //     onSendToWebFuzzer={sendToFuzzer}
@@ -1384,11 +1360,34 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             //             ? []
                                             //             : successFuzzer
                                             //     }
-                                            // />
-                                            <div>表格</div>
+                                            // /> */}
+                                                {showSuccess && !loading && (
+                                                    <HTTPFuzzerPageTable
+                                                        onSendToWebFuzzer={sendToFuzzer}
+                                                        success={showSuccess}
+                                                        data={
+                                                            filterContent.length !== 0
+                                                                ? filterContent
+                                                                : keyword
+                                                                ? []
+                                                                : successFuzzer
+                                                        }
+                                                    />
+                                                )}
+                                                {!showSuccess && !loading && (
+                                                    <HTTPFuzzerPageTable
+                                                        success={showSuccess}
+                                                        // setRequest={(s) => {
+                                                        //     setRequest(s)
+                                                        //     refreshRequest()
+                                                        // }}
+                                                        data={failedFuzzer}
+                                                    />
+                                                )}
+                                            </>
                                         ) : (
                                             <Result
-                                                status={"info"}
+                                                status={"warning"}
                                                 title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
                                                 subTitle={
                                                     "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
@@ -1472,20 +1471,36 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         secondNodeSize
     } = props
     if (onlyOneResponse) {
+        const searchNode = (
+            <YakitInput.Search
+                size='small'
+                placeholder='请输入定位响应'
+                value={valueSearch}
+                onChange={(e) => {
+                    const {value} = e.target
+                    onSearchValueChange(value)
+                }}
+                style={{maxWidth: 200}}
+                onSearch={() => onSearch()}
+                onPressEnter={(e) => {
+                    e.preventDefault()
+                    onSearch()
+                }}
+            />
+        )
         return (
             <>
-                <YakitInput.Search
-                    size='small'
-                    placeholder='请输入定位响应'
-                    value={valueSearch}
-                    onChange={(e) => {
-                        const {value} = e.target
-                        onSearchValueChange(value)
-                    }}
-                    style={{maxWidth: 200}}
-                    onSearch={() => onSearch()}
-                    onPressEnter={() => onSearch()}
-                />
+                {(secondNodeSize?.width || 0) > 620 && searchNode}
+                {(secondNodeSize?.width || 0) < 620 && (
+                    <YakitPopover content={searchNode}>
+                        <YakitButton
+                            icon={<SearchIcon />}
+                            size='small'
+                            type='outline2'
+                            className={styles["editor-cog-icon"]}
+                        />
+                    </YakitPopover>
+                )}
                 <Divider type='vertical' style={{margin: 0, top: 1}} />
                 <ChromeSvgIcon
                     className={styles["extra-chrome-btn"]}
@@ -1606,7 +1621,7 @@ interface SecondNodeTitleProps {
  */
 const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
     const {rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} = props
-    if (!rsp.BodyLength) return <></>
+    // if (!rsp.BodyLength) return <></>
     if (onlyOneResponse) {
         return (
             <>
@@ -1616,7 +1631,8 @@ const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
                 </YakitTag>
             </>
         )
-    } else {
+    }
+    if (successFuzzerLength > 0 || failedFuzzerLength > 0) {
         return (
             <div className={styles["second-node-title"]}>
                 <YakitRadioButtons
@@ -1640,6 +1656,7 @@ const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
             </div>
         )
     }
+    return <></>
 })
 interface AdvancedConfigValueProps {
     // 请求包配置

@@ -403,7 +403,7 @@ const formatJson = (filterVal, jsonData) => {
 }
 
 // 升序
-const compareAsc = (value1: object, value2: object, text: string) => {
+export const compareAsc = (value1: object, value2: object, text: string) => {
     if (value1[text] < value2[text]) {
         return -1
     } else if (value1[text] > value2[text]) {
@@ -414,7 +414,7 @@ const compareAsc = (value1: object, value2: object, text: string) => {
 }
 
 // 降序
-const compareDesc = (value1: object, value2: object, text: string) => {
+export const compareDesc = (value1: object, value2: object, text: string) => {
     if (value1[text] > value2[text]) {
         return -1
     } else if (value1[text] < value2[text]) {

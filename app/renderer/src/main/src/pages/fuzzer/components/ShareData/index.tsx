@@ -12,6 +12,12 @@ import {showByCursorMenu} from "@/utils/showByCursor"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ShareIcon} from "@/assets/newIcon"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 
 interface ShareDataProps {
     module: string // 新建tab类型
@@ -86,12 +92,25 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     })
 
     const rightClick = useMemoizedFn((e: {clientX: number; clientY: number}) => {
-        showByCursorMenu(
+        showByRightContext(
             {
-                content: [
-                    {title: "分享当前 Web Fuzzer", onClick: getValue},
-                    {title: "导入 Web Fuzzer", onClick: onImportShare}
-                ]
+                width: 150,
+                data: [
+                    {key: "share", label: "分享当前 Web Fuzzer"},
+                    {key: "import", label: "导入 Web Fuzzer"}
+                ],
+                onClick: ({key}) => {
+                    switch (key) {
+                        case "share":
+                            getValue()
+                            break
+                        case "import":
+                            onImportShare()
+                            break
+                        default:
+                            break
+                    }
+                }
             },
             e.clientX,
             e.clientY
@@ -111,72 +130,92 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             >
                 分享 / 导入
             </YakitButton>
-            <Modal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null}>
-                <div className='content-value'>
-                    <span className='label-text'>设置有效期：</span>
-                    <Radio.Group
-                        disabled={disabled}
-                        value={expiredTime}
-                        onChange={(e) => setExpiredTime(e.target.value)}
-                    >
-                        <Radio.Button value={5}>5分钟</Radio.Button>
-                        <Radio.Button value={15}>15分钟</Radio.Button>
-                        <Radio.Button value={60}>1小时</Radio.Button>
-                        <Radio.Button value={1440}>1天</Radio.Button>
-                    </Radio.Group>
-                </div>
-                <div className='content-value'>
-                    <span className='label-text'>密码：</span>
-                    <Switch disabled={disabled} checked={pwd} onChange={(checked) => setPwd(checked)} />
-                </div>
-                <div className='content-value'>
-                    <span className='label-text'>限制分享次数：</span>
-                    <Switch disabled={disabled} checked={shareNumber} onChange={(checked) => setShareNumber(checked)} />
-                    &emsp;
-                    {shareNumber && (
-                        <InputNumber
-                            min={1}
-                            value={limit_num}
-                            onChange={(v) => setLimit_num(v as number)}
-                            size='small'
-                            formatter={(value) => `${value}次`}
+            <YakitModal title='分享' visible={isModalVisible} onCancel={handleCancel} footer={null} closable={true}>
+                <div style={{padding: 24}}>
+                    <div className={styles["content-value"]}>
+                        <span className={styles["label-text"]}>设置有效期：</span>
+                        <YakitRadioButtons
+                            disabled={disabled}
+                            value={expiredTime}
+                            onChange={(e) => setExpiredTime(e.target.value)}
+                            options={[
+                                {
+                                    label: "5分钟",
+                                    value: 5
+                                },
+                                {
+                                    label: "15分钟",
+                                    value: 15
+                                },
+                                {
+                                    label: "1小时",
+                                    value: 60
+                                },
+                                {
+                                    label: "1天",
+                                    value: 1440
+                                }
+                            ]}
                         />
-                    )}
-                </div>
-                {shareResData.share_id && (
-                    <div className='content-value'>
-                        <span className='label-text'>分享id：</span>
-                        <span>
-                            <CopyableField text={shareResData.share_id}></CopyableField>
-                        </span>
                     </div>
-                )}
-                {shareResData.extract_code && (
-                    <div className='content-value'>
-                        <span className='label-text'>密码：</span>
-                        <span>{shareResData.extract_code}</span>
+                    <div className={styles["content-value"]}>
+                        <span className={styles["label-text"]}>密码：</span>
+                        <YakitSwitch disabled={disabled} checked={pwd} onChange={(checked) => setPwd(checked)} />
                     </div>
-                )}
-                <div className='btn-footer'>
-                    <Button type='primary' onClick={onShare} loading={shareLoading} disabled={disabled}>
-                        生成分享密令
-                    </Button>
+                    <div className={styles["content-value"]}>
+                        <span className={styles["label-text"]}>限制分享次数：</span>
+                        <YakitSwitch
+                            disabled={disabled}
+                            checked={shareNumber}
+                            onChange={(checked) => setShareNumber(checked)}
+                        />
+                        &emsp;
+                        {shareNumber && (
+                            <YakitInputNumber
+                                min={1}
+                                value={limit_num}
+                                onChange={(v) => setLimit_num(v as number)}
+                                size='small'
+                                formatter={(value) => `${value}次`}
+                                disabled={disabled}
+                            />
+                        )}
+                    </div>
                     {shareResData.share_id && (
-                        <CopyToClipboard
-                            text={
-                                shareResData.extract_code
-                                    ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
-                                    : `${shareResData.share_id}`
-                            }
-                            onCopy={(text, ok) => {
-                                if (ok) success("已复制到粘贴板")
-                            }}
-                        >
-                            <Button type={disabled ? "primary" : "default"}>复制分享</Button>
-                        </CopyToClipboard>
+                        <div className={styles["content-value"]}>
+                            <span className={styles["label-text"]}>分享id：</span>
+                            <span className={styles["display-flex"]}>
+                                {shareResData.share_id} <CopyComponents copyText={shareResData.share_id} />
+                            </span>
+                        </div>
                     )}
+                    {shareResData.extract_code && (
+                        <div className={styles["content-value"]}>
+                            <span className={styles["label-text"]}>密码：</span>
+                            <span>{shareResData.extract_code}</span>
+                        </div>
+                    )}
+                    <div className={styles["btn-footer"]}>
+                        <YakitButton type='primary' onClick={onShare} loading={shareLoading} disabled={disabled}>
+                            生成分享密令
+                        </YakitButton>
+                        {shareResData.share_id && (
+                            <CopyToClipboard
+                                text={
+                                    shareResData.extract_code
+                                        ? `${shareResData.share_id}\r\n密码：${shareResData.extract_code}`
+                                        : `${shareResData.share_id}`
+                                }
+                                onCopy={(text, ok) => {
+                                    if (ok) success("已复制到粘贴板")
+                                }}
+                            >
+                                <YakitButton type={disabled ? "primary" : "outline1"}>复制分享</YakitButton>
+                            </CopyToClipboard>
+                        )}
+                    </div>
                 </div>
-            </Modal>
+            </YakitModal>
         </>
     )
 }

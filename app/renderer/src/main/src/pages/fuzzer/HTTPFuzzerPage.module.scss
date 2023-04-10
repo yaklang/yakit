@@ -9,6 +9,17 @@
     flex-direction: column;
     overflow: hidden;
     padding: 12px;
+    :global {
+        .ant-result-warning .ant-result-icon > .anticon {
+            color: var(--yakit-warning-5);
+        }
+        .ant-result-error .ant-result-icon > .anticon {
+            color: var(--yakit-danger-5);
+        }
+        .resize-box .resize-split-line:hover {
+            border: 1px solid var(--yakit-primary-5);
+        }
+    }
     .fuzzer-heard {
         display: flex;
         align-items: center;

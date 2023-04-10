@@ -22,6 +22,9 @@
         .resize-card-heard-extra {
             display: flex;
             align-items: center;
+            flex: 1;
+            overflow: hidden;
+            justify-content: flex-end;
         }
     }
     .resize-card-icon {

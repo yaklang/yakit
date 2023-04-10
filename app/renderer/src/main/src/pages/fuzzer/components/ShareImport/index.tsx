@@ -6,8 +6,11 @@ import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
-import {showModal} from "@/utils/showModal";
-import { LoadYakitPluginForm } from "@/pages/yakitStore/YakitStorePage"
+import {showModal} from "@/utils/showModal"
+import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const layout = {
     labelCol: {span: 5},
@@ -28,21 +31,26 @@ interface pwdRequestProps {
 }
 
 export function onImportShare() {
-    const m = showModal({
+    const m = showYakitModal({
         title: "导入协作资源",
-        content: <ShareImport onClose={() => m.destroy()}/>
+        content: <ShareImport onClose={() => m.destroy()} />,
+        footer: null
     })
 }
 export function onImportPlugin() {
-    const m = showModal({
+    const m = showYakitModal({
         title: "导入插件ID",
         width: 800,
+        footer: null,
         content: (
             <div style={{width: 780}}>
-                <LoadYakitPluginForm onlyId={true} onFinished={() => {
-                    info("更新进程执行完毕")
-                    m.destroy()
-                }} />
+                <LoadYakitPluginForm
+                    onlyId={true}
+                    onFinished={() => {
+                        info("更新进程执行完毕")
+                        m.destroy()
+                    }}
+                />
             </div>
         )
     })
@@ -128,19 +136,19 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     })
     return (
         <>
-            <Form {...layout} name='control-hooks' onFinish={onFinish}>
+            <Form {...layout} name='control-hooks' onFinish={onFinish} style={{padding: 24}}>
                 <Form.Item name='share_id' label='分享id' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入分享id'/>
+                    <YakitInput placeholder='请输入分享id' />
                 </Form.Item>
                 {isShowPassword && (
                     <Form.Item name='extract_code' label='密码' rules={[{required: true, message: "该项为必填"}]}>
-                        <Input placeholder='请输入密码' allowClear/>
+                        <YakitInput placeholder='请输入密码' allowClear />
                     </Form.Item>
                 )}
                 <Form.Item {...tailLayout}>
-                    <Button type='primary' htmlType='submit' className='btn-sure' loading={loading}>
+                    <YakitButton type='primary' htmlType='submit' className='btn-sure' loading={loading}>
                         确定
-                    </Button>
+                    </YakitButton>
                 </Form.Item>
             </Form>
         </>

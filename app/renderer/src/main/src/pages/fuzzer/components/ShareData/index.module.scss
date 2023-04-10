@@ -14,6 +14,7 @@
     margin-top: 12px;
     height: 24px;
     line-height: 24px;
+    color: var(--yakit-header-color);
 
     .label-text {
         margin-right: 6px;
@@ -27,4 +28,9 @@
         width: 16px;
         height: 16px;
     }
+}
+
+.display-flex{
+    display: flex;
+    align-items: center;
 }
