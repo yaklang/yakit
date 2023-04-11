@@ -6,6 +6,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
+import {yakitFailed} from "@/utils/notification"
+import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
@@ -55,10 +57,31 @@ export interface HTTPFuzzerPageTableQuery {
     bodyLengthUnit: "B" | "k" | "M"
 }
 
+const sorterFunction = (list, sorterTable) => {
+    // ------------  排序 开始  ------------
+    let newList = list
+    // 重置
+    if (sorterTable?.order === "none") {
+        newList = list.sort((a, b) => compareAsc(a, b, "Count"))
+    }
+    // 升序
+    if (sorterTable?.order === "asc") {
+        newList = list.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy))
+    }
+    // 降序
+    if (sorterTable?.order === "desc") {
+        newList = list.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy))
+    }
+    // ------------  排序 结束  ------------
+    return newList
+}
+
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
     const {data, success, query, setQuery, isRefresh} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
+    const [sorterTable, setSorterTable] = useState<SortProps>()
+
     const bodyLengthRef = useRef<any>()
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return success
@@ -207,7 +230,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   },
                   {
                       title: "Content-Type",
-                      dataKey: "Content-Type",
+                      dataKey: "ContentType",
                       width: 300
                   },
                   {
@@ -229,9 +252,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   type='text'
                                   onClick={(e) => {
                                       e.stopPropagation()
-                                      if ((record || []).length > 0 && props.onSendToWebFuzzer) {
-                                          analyzeFuzzerResponse(record[0], props.onSendToWebFuzzer, index, record)
-                                      }
+                                      onDetails(record, index)
                                   }}
                               >
                                   详情
@@ -260,31 +281,19 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   }
               ]
     }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.bodyLengthUnit])
+    const onDetails = useMemoizedFn((record, index: number) => {
+        if (props.onSendToWebFuzzer) {
+            analyzeFuzzerResponse(record, props.onSendToWebFuzzer, index, data)
+        }
+    })
     const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
-        console.log("sorter", sorter, filters, extra)
         const l = bodyLengthRef?.current?.getValue() || {}
         setQuery({
             ...query,
             ...filters,
             ...l
         })
-        // 重置
-        if (sorter.order === "none") {
-            setListTable([...data])
-            return
-        }
-        // 升序
-        if (sorter.order === "asc") {
-            const ascList = listTable.sort((a, b) => compareAsc(a, b, sorter.orderBy))
-            setListTable([...ascList])
-            return
-        }
-        // 降序
-        if (sorter.order === "desc") {
-            const descList = listTable.sort((a, b) => compareDesc(a, b, sorter.orderBy))
-            setListTable([...descList])
-            return
-        }
+        setSorterTable(sorter)
     })
     useEffect(() => {
         update()
@@ -296,16 +305,86 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         if (!query) return
         update()
     }, [query])
+
     /**
      * @description 前端搜索
      */
     const update = useDebounceFn(
         () => {
-            console.log("query", query)
             setLoading(true)
-            setTimeout(() => {
-                setLoading(false)
-            }, 200)
+            new Promise((resolve, reject) => {
+                try {
+                    // ------------  搜索 开始  ------------
+
+                    // 有搜索条件才循环
+                    if (
+                        query?.keyWord ||
+                        (query?.StatusCode && query?.StatusCode?.length > 0) ||
+                        query?.afterBodyLength ||
+                        query?.beforeBodyLength
+                    ) {
+                        const newDataTable = sorterFunction(listTable, sorterTable) || []
+                        const l = newDataTable.length
+                        const searchList: FuzzerResponse[] = []
+                        for (let index = 0; index < l; index++) {
+                            const record = newDataTable[index]
+                            // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
+                            let keyWordIsPush = true
+                            let statusCodeIsPush = true
+                            let bodyLengthMinIsPush = true
+                            let bodyLengthMaxIsPush = true
+                            // 搜索满足条件 交集
+                            // 关键字搜索
+                            if (query?.keyWord) {
+                                const responseString = Uint8ArrayToString(record.ResponseRaw)
+                                keyWordIsPush = responseString.includes(query.keyWord)
+                            }
+                            // 状态码搜索
+                            if (query?.StatusCode && query?.StatusCode?.length > 0) {
+                                const codeArr: number[] = query.StatusCode.join("-")
+                                    .split("-")
+                                    .map((n) => parseInt(n))
+                                const maxCode = Math.max(...codeArr)
+                                const minCode = Math.min(...codeArr)
+                                if (record.StatusCode >= minCode && record.StatusCode <= maxCode) {
+                                    statusCodeIsPush = true
+                                } else {
+                                    statusCodeIsPush = false
+                                }
+                            }
+                            // 响应大小搜索
+                            if (query?.afterBodyLength) {
+                                // 最小
+                                bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
+                            }
+                            if (query?.beforeBodyLength) {
+                                // 最大
+                                bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
+                            }
+                            // 搜索同时为true时，push新数组
+                            if (keyWordIsPush && statusCodeIsPush && bodyLengthMinIsPush && bodyLengthMaxIsPush) {
+                                searchList.push(record)
+                            }
+                        }
+                        setListTable([...searchList])
+                    } else {
+                        const newData = sorterFunction(data, sorterTable) || []
+                        setListTable([...newData])
+                    }
+                    // ------------  搜索 结束  ------------
+                    resolve(true)
+                } catch (error) {
+                    reject(error)
+                }
+            })
+                .catch((e) => {
+                    yakitFailed("搜索失败:" + e)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
         },
         {
             wait: 200

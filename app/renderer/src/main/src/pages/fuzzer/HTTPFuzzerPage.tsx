@@ -1356,24 +1356,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <>
                                         {cachedTotal > 0 ? (
                                             <>
-                                                {/* // <HTTPFuzzerResultsCard
-                                            //     showSuccess={showSuccess}
-                                            //     setShowSuccess={setShowSuccess}
-                                            //     onSendToWebFuzzer={sendToFuzzer}
-                                            //     sendToPlugin={sendToPlugin}
-                                            //     setRequest={(r) => {
-                                            //         setRequest(r)
-                                            //         refreshRequest()
-                                            //     }}
-                                            //     failedResponses={failedFuzzer}
-                                            //     successResponses={
-                                            //         filterContent.length !== 0
-                                            //             ? filterContent
-                                            //             : keyword
-                                            //             ? []
-                                            //             : successFuzzer
-                                            //     }
-                                            // /> */}
                                                 {showSuccess && !loading && (
                                                     <HTTPFuzzerPageTable
                                                         onSendToWebFuzzer={sendToFuzzer}
@@ -1393,10 +1375,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 {!showSuccess && !loading && (
                                                     <HTTPFuzzerPageTable
                                                         success={showSuccess}
-                                                        // setRequest={(s) => {
-                                                        //     setRequest(s)
-                                                        //     refreshRequest()
-                                                        // }}
                                                         data={failedFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}

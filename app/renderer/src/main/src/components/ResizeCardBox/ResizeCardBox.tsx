@@ -8,8 +8,8 @@ import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 interface ResizeCardNodeProps {
     title?: ReactNode
     extra?: ReactNode
-    className?:string
-    heardClassName?:string
+    className?: string
+    heardClassName?: string
 }
 /**
  * @description ResizeCardBox的属性
@@ -46,12 +46,15 @@ export const ResizeCardBox: React.FC<ResizeCardBoxProps> = (props) => {
     return (
         <ResizeBox
             {...resProps}
-            lineStyle={{display: firstFull ? "none" : ""}}
+            lineStyle={{display: firstFull || secondFull ? "none" : ""}}
             secondNodeStyle={{padding: firstFull ? 0 : undefined}}
             firstNodeStyle={{padding: secondFull ? 0 : undefined}}
             firstNode={
-                <div className={classNames(styles["resize-card"],firstNodeProps?.className||'')} style={{display: secondFull ? "none" : ""}}>
-                    <div className={classNames(styles["resize-card-heard"],firstNodeProps?.heardClassName||'')}>
+                <div
+                    className={classNames(styles["resize-card"], firstNodeProps?.className || "")}
+                    style={{display: secondFull ? "none" : ""}}
+                >
+                    <div className={classNames(styles["resize-card-heard"], firstNodeProps?.heardClassName || "")}>
                         <div className={styles["resize-card-heard-title"]}>{firstNodeProps?.title}</div>
                         <div className={styles["resize-card-heard-extra"]}>
                             {firstNodeProps?.extra}
@@ -64,8 +67,11 @@ export const ResizeCardBox: React.FC<ResizeCardBoxProps> = (props) => {
                 </div>
             }
             secondNode={
-                <div className={classNames(styles["resize-card"],secondNodeProps?.className||'')} style={{display: firstFull ? "none" : ""}}>
-                    <div className={classNames(styles["resize-card-heard"],secondNodeProps?.heardClassName||'')}>
+                <div
+                    className={classNames(styles["resize-card"], secondNodeProps?.className || "")}
+                    style={{display: firstFull ? "none" : ""}}
+                >
+                    <div className={classNames(styles["resize-card-heard"], secondNodeProps?.heardClassName || "")}>
                         <div className={styles["resize-card-heard-title"]}>{secondNodeProps?.title}</div>
                         <div className={styles["resize-card-heard-extra"]}>
                             {secondNodeProps?.extra}
