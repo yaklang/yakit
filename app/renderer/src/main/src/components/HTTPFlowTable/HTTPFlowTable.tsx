@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -1223,64 +1223,46 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filterProps: {
                     filterKey: "bodyLength",
                     filterRender: () => (
-                        <div className={style["table-body-length-filter"]}>
-                            <Input.Group compact size='small' className={style["input-group"]}>
-                                <YakitInputNumber
-                                    className={style["input-left"]}
-                                    placeholder='Minimum'
-                                    min={0}
-                                    value={getAfterBodyLength()}
-                                    onChange={(v) => setAfterBodyLength(v as number)}
-                                    size='small'
-                                />
-                                {/* <YakitInput className={style["input-split"]} placeholder='~' disabled /> */}
-                                <div className={style["input-split"]}>~</div>
-                                <YakitInputNumber
-                                    className={style["input-right"]}
-                                    placeholder='Maximum'
-                                    min={getAfterBodyLength()}
-                                    value={getBeforeBodyLength()}
-                                    onChange={(v) => {
-                                        setBeforeBodyLength(v as number)
-                                    }}
-                                    size='small'
-                                />
+                        <RangeInputNumberTable
+                            minNumber={getAfterBodyLength()}
+                            setMinNumber={setAfterBodyLength}
+                            maxNumber={getBeforeBodyLength()}
+                            setMaxNumber={setBeforeBodyLength}
+                            onReset={() => {
+                                setParams({
+                                    ...getParams(),
+                                    AfterBodyLength: getAfterBodyLength(),
+                                    BeforeBodyLength: getBeforeBodyLength()
+                                })
+                                setBeforeBodyLength(undefined)
+                                setAfterBodyLength(undefined)
+                                setBodyLengthUnit("B")
+                            }}
+                            onSure={() => {
+                                setParams({
+                                    ...getParams(),
+                                    AfterBodyLength: getAfterBodyLength(),
+                                    BeforeBodyLength: getBeforeBodyLength()
+                                })
+                                setTimeout(() => {
+                                    update(1)
+                                }, 100)
+                            }}
+                            extra={
                                 <YakitSelect
                                     value={getBodyLengthUnit()}
                                     onSelect={(val) => {
                                         setBodyLengthUnit(val)
                                     }}
                                     wrapperClassName={style["unit-select"]}
+                                    size='small'
                                 >
                                     <YakitSelect value='B'>B</YakitSelect>
                                     <YakitSelect value='k'>K</YakitSelect>
                                     <YakitSelect value='M'>M</YakitSelect>
                                 </YakitSelect>
-                            </Input.Group>
-                            <FooterBottom
-                                className={style["input-footer"]}
-                                onReset={() => {
-                                    setParams({
-                                        ...getParams(),
-                                        AfterBodyLength: getAfterBodyLength(),
-                                        BeforeBodyLength: getBeforeBodyLength()
-                                    })
-                                    setBeforeBodyLength(undefined)
-                                    setAfterBodyLength(undefined)
-                                    setBodyLengthUnit("B")
-                                }}
-                                onSure={() => {
-                                    setParams({
-                                        ...getParams(),
-                                        AfterBodyLength: getAfterBodyLength(),
-                                        BeforeBodyLength: getBeforeBodyLength()
-                                    })
-                                    setTimeout(() => {
-                                        update(1)
-                                    }, 100)
-                                }}
-                            />
-                        </div>
+                            }
+                        />
                     )
                 },
                 render: (_, rowData) => {
@@ -1505,7 +1487,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteHTTPFlows", { DeleteAll: true })
+            .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => setTimeout(() => setLoading(false), 500))
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
@@ -1541,7 +1523,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
-            }).finally(() => setTimeout(() => setLoading(false), 300))
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
         setLoading(true)
         info("正在删除...如自动刷新失败请手动刷新")
         setCompareLeft({content: "", language: "http"})
@@ -1896,11 +1879,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
-        <div
-            ref={ref as Ref<any>}
-            tabIndex={-1}
-            style={{width: "100%", height: "100%", overflow: "hidden"}}
-        >
+        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -2640,6 +2619,58 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
         </div>
     )
 }
+interface RangeInputNumberProps {
+    minNumber?: number
+    setMinNumber?: (b: number) => void
+    maxNumber?: number
+    setMaxNumber?: (b: number) => void
+    extra?: ReactNode
+    onReset?: () => void
+    onSure?: () => void
+    showFooter?: boolean
+}
+export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo((props) => {
+    const {minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter} = props
+    return (
+        <div className={style["table-body-length-filter"]}>
+            <Input.Group compact size='small' className={style["input-group"]}>
+                <YakitInputNumber
+                    className={style["input-left"]}
+                    placeholder='Minimum'
+                    min={0}
+                    value={minNumber}
+                    onChange={(v) => {
+                        if (setMinNumber) setMinNumber(v as number)
+                    }}
+                    size='small'
+                />
+                <div className={style["input-split"]}>~</div>
+                <YakitInputNumber
+                    className={style["input-right"]}
+                    placeholder='Maximum'
+                    min={minNumber}
+                    value={maxNumber}
+                    onChange={(v) => {
+                        if (setMaxNumber) setMaxNumber(v as number)
+                    }}
+                    size='small'
+                />
+                {extra}
+            </Input.Group>
+            {showFooter !== false && (
+                <FooterBottom
+                    className={style["input-footer"]}
+                    onReset={() => {
+                        if (onReset) onReset()
+                    }}
+                    onSure={() => {
+                        if (onSure) onSure()
+                    }}
+                />
+            )}
+        </div>
+    )
+})
 
 // 发送web fuzzerconst
 export const onSendToTab = (rowData) => {

@@ -83,7 +83,11 @@ import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {Size} from "re-resizable"
-import {HTTPFuzzerPageTable} from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {
+    BodyLengthInputNumber,
+    HTTPFuzzerPageTable,
+    HTTPFuzzerPageTableQuery
+} from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -358,6 +362,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
     const [showSuccess, setShowSuccess] = useState(true)
+    const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>({
+        bodyLengthUnit: "B"
+    })
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     useEffect(() => {
         if (props.shareContent) {
@@ -1213,7 +1221,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     successFuzzerLength={(successFuzzer || []).length}
                                     failedFuzzerLength={(failedFuzzer || []).length}
                                     showSuccess={showSuccess}
-                                    setShowSuccess={setShowSuccess}
+                                    setShowSuccess={(v) => {
+                                        setShowSuccess(v)
+                                        setQuery({
+                                            bodyLengthUnit: "B"
+                                        })
+                                    }}
                                 />
                             </>
                         ),
@@ -1225,14 +1238,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
                                     valueSearch={affixSearch}
                                     onSearchValueChange={(value) => {
-                                        console.log("value", value)
                                         setAffixSearch(value)
                                         if (value === "" && defaultResponseSearch !== "") {
                                             setDefaultResponseSearch("")
                                         }
                                     }}
                                     onSearch={() => {
-                                        console.log("affixSearch", affixSearch)
                                         setDefaultResponseSearch(affixSearch)
                                     }}
                                     onRemove={() => {
@@ -1241,6 +1252,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }}
                                     successFuzzer={successFuzzer}
                                     secondNodeSize={secondNodeSize}
+                                    query={query}
+                                    setQuery={(q) => setQuery({...q})}
                                 />
                                 {onlyOneResponse && (
                                     <EditorsSetting
@@ -1251,7 +1264,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     />
                                 )}
                             </div>
-                        ),
+                        )
                     }}
                     firstNode={
                         <HTTPPacketEditor
@@ -1372,6 +1385,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 ? []
                                                                 : successFuzzer
                                                         }
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        isRefresh={isRefresh}
                                                     />
                                                 )}
                                                 {!showSuccess && !loading && (
@@ -1382,6 +1398,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         //     refreshRequest()
                                                         // }}
                                                         data={failedFuzzer}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        isRefresh={isRefresh}
                                                     />
                                                 )}
                                             </>
@@ -1454,6 +1473,8 @@ interface SecondNodeExtraProps {
     onRemove: () => void
     successFuzzer: FuzzerResponse[]
     secondNodeSize?: Size
+    query?: HTTPFuzzerPageTableQuery
+    setQuery: (h: HTTPFuzzerPageTableQuery) => void
 }
 /**
  * @description 右边的返回内容 头部 extra
@@ -1468,8 +1489,32 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         onSearch,
         onRemove,
         successFuzzer,
-        secondNodeSize
+        secondNodeSize,
+        query,
+        setQuery
     } = props
+
+    const [keyWord, setKeyWord] = useState<string>()
+    const [statusCode, setStatusCode] = useState<string[]>()
+    const [bodyLength, setBodyLength] = useState<HTTPFuzzerPageTableQuery>({
+        afterBodyLength: undefined,
+        beforeBodyLength: undefined,
+        bodyLengthUnit: "B"
+    })
+
+    const bodyLengthRef = useRef<any>()
+
+    useEffect(() => {
+        console.log("SecondNodeExtra", query)
+        setStatusCode(query?.StatusCode)
+        setKeyWord(query?.keyWord)
+        setBodyLength({
+            afterBodyLength: query?.afterBodyLength,
+            beforeBodyLength: query?.beforeBodyLength,
+            bodyLengthUnit: query?.bodyLengthUnit || "B"
+        })
+    }, [query])
+
     if (onlyOneResponse) {
         const searchNode = (
             <YakitInput.Search
@@ -1528,38 +1573,131 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
             </>
         )
     }
+
     if (!onlyOneResponse && cachedTotal > 0) {
         const searchNode = (
             <YakitInput.Search
                 size='small'
                 placeholder='请输入关键词搜索'
-                // value={affixSearch}
-                // onChange={(e) => {
-                //     const {value} = e.target
-                //     setAffixSearch(value)
-                //     if (value === "" && defaultResponseSearch !== "") {
-                //         setDefaultResponseSearch("")
-                //     }
-                // }}
+                value={keyWord}
+                onChange={(e) => {
+                    setKeyWord(e.target.value)
+                }}
                 style={{minWidth: 130}}
-                // onSearch={() => setDefaultResponseSearch(affixSearch)}
-                // onPressEnter={() => setDefaultResponseSearch(affixSearch)}
+                onSearch={(v) => {
+                    setQuery({
+                        ...query,
+                        bodyLengthUnit: query?.bodyLengthUnit || "B",
+                        keyWord: v
+                    })
+                    setKeyWord(v)
+                }}
+                onPressEnter={(e) => {
+                    e.preventDefault()
+                    setQuery({
+                        ...query,
+                        bodyLengthUnit: query?.bodyLengthUnit || "B",
+                        keyWord: keyWord
+                    })
+                }}
             />
         )
         return (
             <>
                 {(secondNodeSize?.width || 0) > 620 && searchNode}
                 {(secondNodeSize?.width || 0) < 620 && (
-                    <YakitPopover content={searchNode}>
+                    <YakitPopover
+                        content={searchNode}
+                        onVisibleChange={(b) => {
+                            if (!b) {
+                                setQuery({
+                                    ...query,
+                                    bodyLengthUnit: query?.bodyLengthUnit || "B",
+                                    keyWord: keyWord
+                                })
+                            }
+                        }}
+                    >
                         <YakitButton
                             icon={<SearchIcon />}
                             size='small'
                             type='outline2'
-                            className={styles["editor-cog-icon"]}
+                            className={classNames(styles["editor-cog-icon"], {
+                                [styles["active-icon"]]: query?.keyWord
+                            })}
                         />
                     </YakitPopover>
                 )}
-                <YakitButton icon={<FilterIcon />} size='small' type='outline2' className={styles["editor-cog-icon"]} />
+                <YakitPopover
+                    content={
+                        <div className={styles["second-node-search-content"]}>
+                            <div className={styles["second-node-search-item"]}>
+                                <span>状态码</span>
+                                <YakitSelect
+                                    value={statusCode}
+                                    onChange={setStatusCode}
+                                    size='small'
+                                    mode='tags'
+                                    allowClear
+                                    options={[
+                                        {
+                                            value: "100-200",
+                                            label: "100-200"
+                                        },
+                                        {
+                                            value: "200-300",
+                                            label: "200-300"
+                                        },
+                                        {
+                                            value: "300-400",
+                                            label: "300-400"
+                                        },
+                                        {
+                                            value: "400-500",
+                                            label: "400-500"
+                                        },
+                                        {
+                                            value: "500-600",
+                                            label: "500-600"
+                                        }
+                                    ]}
+                                />
+                            </div>
+                            <div className={styles["second-node-search-item"]}>
+                                <span>响应大小</span>
+                                <BodyLengthInputNumber
+                                    ref={bodyLengthRef}
+                                    query={bodyLength}
+                                    setQuery={() => {}}
+                                    showFooter={false}
+                                />
+                            </div>
+                        </div>
+                    }
+                    onVisibleChange={(b) => {
+                        if (!b) {
+                            const l = bodyLengthRef?.current?.getValue() || {}
+                            setQuery({
+                                ...l,
+                                keyWord: keyWord,
+                                StatusCode: statusCode
+                            })
+                        }
+                    }}
+                >
+                    <YakitButton
+                        icon={<FilterIcon />}
+                        size='small'
+                        type='outline2'
+                        className={classNames(styles["editor-cog-icon"], {
+                            [styles["active-icon"]]:
+                                (query?.StatusCode?.length || 0) > 0 ||
+                                query?.afterBodyLength ||
+                                query?.beforeBodyLength
+                        })}
+                    />
+                </YakitPopover>
+
                 <Divider type='vertical' style={{margin: 0, top: 1}} />
                 <YakitButton
                     type='outline2'

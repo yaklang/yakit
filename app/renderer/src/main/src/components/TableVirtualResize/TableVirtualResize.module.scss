@@ -577,8 +577,6 @@
                 background: var(--yakit-card-background-color);
                 color: var(--yakit-primary-5);
             }
-
-            .select-item-text {}
         }
 
         .no-data {
@@ -724,6 +722,10 @@
     .select-sure {
         color: var(--yakit-primary-5);
     }
+}
+
+.input-search {
+    padding: 0 12px 12px 12px;
 }
 
 /* 内容过长省略样式 */

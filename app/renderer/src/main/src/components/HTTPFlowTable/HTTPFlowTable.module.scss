@@ -609,42 +609,6 @@
                 border-radius: 4px;
             }
         }
-        .unit-select {
-            width: 60px;
-            :global {
-                .ant-select-arrow {
-                    z-index: 1;
-                }
-                .ant-select-selector {
-                    border-left-width: 0 !important;
-                    border-top-left-radius: 0 !important;
-                    border-bottom-left-radius: 0 !important;
-                    &:hover,
-                    &:focus,
-                    &:active {
-                        border-left-width: 1px !important;
-                        border-top-left-radius: 4px !important;
-                        border-bottom-left-radius: 4px !important;
-                    }
-                }
-                .ant-select-focused {
-                    .ant-select-selector {
-                        z-index: 1;
-                        border-left-width: 1px !important;
-                        border-top-left-radius: 4px !important;
-                        border-bottom-left-radius: 4px !important;
-                    }
-                }
-                .ant-select-open {
-                    .ant-select-selector {
-                        z-index: 1;
-                        border-left-width: 1px !important;
-                        border-top-left-radius: 4px !important;
-                        border-bottom-left-radius: 4px !important;
-                    }
-                }
-            }
-        }
     }
 
     .input-footer {
@@ -692,5 +656,42 @@
     svg {
         height: 16px;
         width: 16px;
+    }
+}
+
+.unit-select {
+    width: 60px;
+    :global {
+        .ant-select-arrow {
+            z-index: 1;
+        }
+        .ant-select-selector {
+            border-left-width: 0 !important;
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            &:hover,
+            &:focus,
+            &:active {
+                border-left-width: 1px !important;
+                border-top-left-radius: 4px !important;
+                border-bottom-left-radius: 4px !important;
+            }
+        }
+        .ant-select-focused {
+            .ant-select-selector {
+                z-index: 1;
+                border-left-width: 1px !important;
+                border-top-left-radius: 4px !important;
+                border-bottom-left-radius: 4px !important;
+            }
+        }
+        .ant-select-open {
+            .ant-select-selector {
+                z-index: 1;
+                border-left-width: 1px !important;
+                border-top-left-radius: 4px !important;
+                border-bottom-left-radius: 4px !important;
+            }
+        }
     }
 }

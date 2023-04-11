@@ -1,21 +1,26 @@
-import {DurationMsToColor, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {FilterIcon} from "@/assets/newIcon"
+import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import moment from "moment"
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {analyzeFuzzerResponse, FuzzerResponse} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 
 interface HTTPFuzzerPageTableProps {
+    query?: HTTPFuzzerPageTableQuery
     data: FuzzerResponse[]
     success?: boolean
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    setQuery: (h: HTTPFuzzerPageTableQuery) => void
+    isRefresh: boolean
 }
 
 /**
@@ -34,18 +39,27 @@ const convertBodyLength = (val: string) => {
     } else if (limit < 0.1 * 1024 * 1024 * 1024) {
         //小于0.1GB，则转化成MB
         size = (limit / (1024 * 1024)).toFixed(2) + "MB"
-    } else {
-        //其他转化成GB
-        size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB"
     }
+    // else {
+    //     //其他转化成GB
+    //     size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+    // }
     return size
 }
 
+export interface HTTPFuzzerPageTableQuery {
+    keyWord?: string
+    afterBodyLength?: number
+    beforeBodyLength?: number
+    StatusCode?: string[]
+    bodyLengthUnit: "B" | "k" | "M"
+}
+
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success} = props
+    const {data, success, query, setQuery, isRefresh} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
-    const [params, setParams] = useState()
+    const bodyLengthRef = useRef<any>()
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return success
             ? [
@@ -77,15 +91,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       filterProps: {
                           filterMultiple: true,
                           filtersType: "select",
-                          filterSearchInputProps: {
-                              size: "small"
-                          },
-                          filterOptionRender: (item: FiltersItemProps) => (
-                              <div>
-                                  <span>{item.value}</span>
-                                  <span>{item.total}</span>
-                              </div>
-                          ),
                           filters: [
                               {
                                   value: "100-200",
@@ -114,7 +119,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "响应大小",
                       dataKey: "BodyLength",
                       width: 120,
-
                       render: (val) => {
                           return (
                               <>
@@ -135,13 +139,37 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           sorter: true
                       },
                       filterProps: {
-                          filtersType: "input"
+                          filterKey: "bodyLength",
+                          filterIcon: (
+                              <FilterIcon
+                                  className={classNames(styles["filter-icon"], {
+                                      [styles["active-icon"]]: query?.afterBodyLength || query?.beforeBodyLength
+                                  })}
+                              />
+                          ),
+                          filterRender: () => (
+                              <BodyLengthInputNumber
+                                  ref={bodyLengthRef}
+                                  query={query}
+                                  setQuery={(q) => {
+                                      setQuery({
+                                          ...q
+                                      })
+                                  }}
+                                  onSure={() => {
+                                      setTimeout(() => {
+                                          update()
+                                      }, 100)
+                                  }}
+                                  showFooter={true}
+                              />
+                          )
                       }
                   },
                   {
                       title: "响应相似度",
                       dataKey: "BodySimilarity",
-                      width: 120,
+                      width: 150,
                       render: (v) => {
                           const text = parseFloat(`${v}`).toFixed(3)
                           return (
@@ -158,7 +186,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "HTTP头相似度",
                       dataKey: "HeaderSimilarity",
                       render: (v) => parseFloat(`${v}`).toFixed(3),
-                      width: 100
+                      width: 150,
+                      sorterProps: {
+                          sorter: true
+                      }
                   },
                   {
                       title: "Payloads",
@@ -228,9 +259,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       dataKey: "Payloads"
                   }
               ]
-    }, [success])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.bodyLengthUnit])
     const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
         console.log("sorter", sorter, filters, extra)
+        const l = bodyLengthRef?.current?.getValue() || {}
+        setQuery({
+            ...query,
+            ...filters,
+            ...l
+        })
         // 重置
         if (sorter.order === "none") {
             setListTable([...data])
@@ -239,21 +276,47 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         // 升序
         if (sorter.order === "asc") {
             const ascList = listTable.sort((a, b) => compareAsc(a, b, sorter.orderBy))
-            console.log("ascList", ascList)
             setListTable([...ascList])
+            return
         }
         // 降序
         if (sorter.order === "desc") {
             const descList = listTable.sort((a, b) => compareDesc(a, b, sorter.orderBy))
-            console.log("descList", descList)
             setListTable([...descList])
+            return
         }
     })
+    useEffect(() => {
+        update()
+    }, [isRefresh])
+    /**
+     * @description 搜索防抖
+     */
+    useEffect(() => {
+        if (!query) return
+        update()
+    }, [query])
+    /**
+     * @description 前端搜索
+     */
+    const update = useDebounceFn(
+        () => {
+            console.log("query", query)
+            setLoading(true)
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        },
+        {
+            wait: 200
+        }
+    ).run
 
     return (
         <div style={{overflowY: "hidden"}}>
             <TableVirtualResize<FuzzerResponse>
-                query={params}
+                query={query}
+                isRefresh={isRefresh}
                 titleHeight={4}
                 renderTitle={<></>}
                 renderKey='UUID'
@@ -274,3 +337,91 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         </div>
     )
 })
+
+interface BodyLengthInputNumberProps {
+    query?: HTTPFuzzerPageTableQuery
+    setQuery: (h: HTTPFuzzerPageTableQuery) => void
+    onSure?: () => void
+    showFooter?: boolean
+    ref?: any
+}
+export const BodyLengthInputNumber: React.FC<BodyLengthInputNumberProps> = React.memo(
+    React.forwardRef((props, ref) => {
+        const {query, setQuery, showFooter} = props
+        // 响应大小
+        const [afterBodyLength, setAfterBodyLength] = useState<number>()
+        const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
+        const [bodyLengthUnit, setBodyLengthUnit] = useState<"B" | "k" | "M">("B")
+        useEffect(() => {
+            setAfterBodyLength(query?.afterBodyLength)
+            setBeforeBodyLength(query?.beforeBodyLength)
+            setBodyLengthUnit(query?.bodyLengthUnit || "B")
+        }, [query])
+        useImperativeHandle(
+            ref,
+            () => ({
+                getValue: () => {
+                    const objLength = {
+                        afterBodyLength: afterBodyLength ? getLength(afterBodyLength) : undefined,
+                        beforeBodyLength: beforeBodyLength ? getLength(beforeBodyLength) : undefined,
+                        bodyLengthUnit
+                    }
+                    return objLength
+                }
+            }),
+            [afterBodyLength, beforeBodyLength, bodyLengthUnit]
+        )
+        const getLength = useMemoizedFn((length: number) => {
+            switch (bodyLengthUnit) {
+                case "k":
+                    return length * 1024
+                case "M":
+                    return length * 1024 * 1024
+                default:
+                    return length
+            }
+        })
+        return (
+            <RangeInputNumberTable
+                showFooter={showFooter}
+                minNumber={afterBodyLength}
+                setMinNumber={setAfterBodyLength}
+                maxNumber={beforeBodyLength}
+                setMaxNumber={setBeforeBodyLength}
+                onReset={() => {
+                    setQuery({
+                        ...query,
+                        afterBodyLength,
+                        beforeBodyLength,
+                        bodyLengthUnit
+                    })
+                    setBeforeBodyLength(undefined)
+                    setAfterBodyLength(undefined)
+                    setBodyLengthUnit("B")
+                }}
+                onSure={() => {
+                    setQuery({
+                        ...query,
+                        afterBodyLength,
+                        beforeBodyLength,
+                        bodyLengthUnit
+                    })
+                }}
+                extra={
+                    <YakitSelect
+                        value={bodyLengthUnit}
+                        onSelect={(val) => {
+                            setBodyLengthUnit(val)
+                        }}
+                        wrapperClassName={styles["unit-select"]}
+                        size='small'
+                    >
+                        <YakitSelect value='B'>B</YakitSelect>
+                        <YakitSelect value='k'>K</YakitSelect>
+                        <YakitSelect value='M'>M</YakitSelect>
+                    </YakitSelect>
+                }
+            />
+        )
+    })
+)

@@ -1,6 +1,7 @@
 import { ReactNode } from "react"
 import { SearchProps } from "antd/lib/input"
 import { SelectProps } from "antd"
+import { YakitInputProps } from "../yakitUI/YakitInput/YakitInputType"
 
 /**
  * @description:表格的props描述，包裹虚拟表格的父元素需要设置高度
@@ -146,6 +147,7 @@ export interface SorterProps {
  * @property {FilterSearchMultipleProps}  filterMultipleProps  继承antd的SelectProps
  * @property {boolean}  filterMultiple  是否多选 filtersType 为select才有效
  * @property {ReactNode}  filterIcon  自定义 filter 图标
+ * @property {YakitInputProps}  filterInputProps  input的props属性
  */
 export interface FilterProps {
     filterRender?: () => ReactNode
@@ -159,6 +161,7 @@ export interface FilterProps {
     filterMultipleProps?: FilterSearchMultipleProps // input的props属性
     filterMultiple?: boolean // 是否多选 filtersType 为select才有效
     filterIcon?: ReactNode // 自定义 filter 图标
+    filterInputProps?: YakitInputProps // input的props属性
 }
 /**
  *  @property {boolean} isAll 是否全选

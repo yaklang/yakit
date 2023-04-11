@@ -693,6 +693,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return (
             <div className={styles["input-search"]}>
                 <YakitInput
+                    {...columnsItem.filterProps?.filterInputProps}
                     value={filters[filterKey]}
                     onChange={(e) => {
                         setFilters({
@@ -1638,7 +1639,7 @@ export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) a
     props: TableVirtualResizeProps<T> & {ref?: React.ForwardedRef<HTMLUListElement>}
 ) => ReturnType<typeof TableVirtualResizeFunction>
 
-export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
+export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
     const {originalList, onSelect, value, filterProps, onClose} = props
     const {
         filterOptionRender,
@@ -1834,14 +1835,14 @@ export const SelectSearch: React.FC<SelectSearchProps> = (props) => {
     })
 
     return <div className={styles["select-search"]}>{(filterMultiple && renderMultiple()) || renderSingle()}</div>
-}
+})
 
 interface FooterBottomProps {
     onReset: () => void
     onSure: () => void
     className?: string
 }
-export const FooterBottom: React.FC<FooterBottomProps> = (props) => {
+export const FooterBottom: React.FC<FooterBottomProps> = React.memo((props) => {
     const {onReset, onSure, className} = props
     return (
         <div className={classNames(styles["select-footer"], className)}>
@@ -1853,4 +1854,4 @@ export const FooterBottom: React.FC<FooterBottomProps> = (props) => {
             </div>
         </div>
     )
-}
+})
