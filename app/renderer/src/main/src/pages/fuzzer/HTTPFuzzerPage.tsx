@@ -2350,39 +2350,42 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                             }}
                             size={"small"}
                             layout={"horizontal"}
-                            wrapperCol={{span: 16}}
-                            labelCol={{span: 8}}
+                            wrapperCol={{span: 18}}
+                            labelCol={{span: 6}}
                         >
                             {(fontSize || 0) > 0 && (
-                                <YakitRadioButtons
-                                    value={fontSize}
-                                    onChange={(e) => {
-                                        const size = e.target.value
-                                        setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
-                                        setFontSize(size)
-                                    }}
-                                    buttonStyle='solid'
-                                    options={[
-                                        {
-                                            value: 12,
-                                            label: "小"
-                                        },
-                                        {
-                                            value: 16,
-                                            label: "中"
-                                        },
-                                        {
-                                            value: 20,
-                                            label: "大"
-                                        }
-                                    ]}
-                                />
+                                <Form.Item label='字号'>
+                                    <YakitRadioButtons
+                                        value={fontSize}
+                                        onChange={(e) => {
+                                            const size = e.target.value
+                                            setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
+                                            setFontSize(size)
+                                        }}
+                                        buttonStyle='solid'
+                                        options={[
+                                            {
+                                                value: 12,
+                                                label: "小"
+                                            },
+                                            {
+                                                value: 16,
+                                                label: "中"
+                                            },
+                                            {
+                                                value: 20,
+                                                label: "大"
+                                            }
+                                        ]}
+                                    />
+                                </Form.Item>
                             )}
                         </Form>
                     </>
                 }
-                overlayInnerStyle={{width: 160}}
+                overlayInnerStyle={{width: 200}}
                 overlayClassName={styles["editor-cog-popover"]}
+                placement="bottomRight"
             >
                 <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
             </YakitPopover>
