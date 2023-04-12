@@ -189,6 +189,7 @@
     }
     .advanced-config-input-number {
         width: 100%;
+        max-width: none;
     }
     .advanced-config-delay {
         display: flex;
@@ -288,4 +289,12 @@
     --button-border-color: var(--yakit-border-color);
     --button-hover-border-color: var(--yakit-border-color);
     --button-press-border-color: var(--yakit-border-color);
+}
+
+.editor-cog-popover {
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px;
+        }
+    }
 }

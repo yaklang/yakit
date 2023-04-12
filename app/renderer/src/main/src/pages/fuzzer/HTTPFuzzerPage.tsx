@@ -1947,6 +1947,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         </Form.Item>
                         <Form.Item label='设置代理' name='proxy'>
                             <YakitSelect
+                                allowClear
                                 options={[
                                     {
                                         label: "http://127.0.0.1:7890",
@@ -2000,7 +2001,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </div>
                         </Form.Item>
                     </Panel>
-                    {/* 以下重试配置、重定向配置，后期再调试 */}
+                    {/* 以下重试配置、重定向配置，后期再调试 勿删 */}
                     {/* <Panel
                         header='重试配置'
                         key='重试配置'
@@ -2337,6 +2338,7 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 content={
                     <>
                         <Form
+                            style={{textAlign: "center"}}
                             onSubmitCapture={(e) => {
                                 e.preventDefault()
                             }}
@@ -2373,6 +2375,8 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                         </Form>
                     </>
                 }
+                overlayInnerStyle={{width: 160}}
+                overlayClassName={styles["editor-cog-popover"]}
             >
                 <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
             </YakitPopover>
