@@ -1,6 +1,6 @@
-appId: 'io.yaklang.bas'
-productName: 'BreachTrace'
-copyright: Copyright © 2021 BreachTrace
+appId: 'io.yaklang.enpritrace'
+productName: 'EnpriTrace'
+copyright: Copyright © EnpriTrace
 
 extraFiles:
   - from: "bins/flag.txt"

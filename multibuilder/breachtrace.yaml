@@ -1,6 +1,6 @@
-appId: 'io.yaklang.ee'
-productName: 'EnpriTrace'
-copyright: Copyright © 2021 EnpriTrace
+appId: 'io.yaklang.breachtrace'
+productName: 'BreachTrace'
+copyright: Copyright © BreachTrace
 
 extraFiles:
   - from: "bins/flag.txt"
@@ -26,10 +26,6 @@ directories:
   app: .
 
 asar: true
-
-publish:
-  - provider: "generic"
-    url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
 
 mac:
   artifactName: ${productName}-${version}-darwin-${arch}.${ext}
