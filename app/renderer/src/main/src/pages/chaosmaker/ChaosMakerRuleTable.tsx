@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Form, Space, Table, Tabs, Tag} from "antd";
+import {Space, Table, Tabs, Tag} from "antd";
 import {ChaosMakerRule, ChaosMakerRuleGroup} from "@/pages/chaosmaker/ChaosMaker";
 import {useMemoizedFn} from "ahooks";
 import {
@@ -9,16 +9,14 @@ import {
     QueryGeneralResponse
 } from "@/pages/invoker/schema";
 import {AutoCard} from "@/components/AutoCard";
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {showDrawer} from "@/utils/showModal";
-import {InputItem} from "@/utils/inputUtil";
 import {ChaosMakerOperators, ExecuteChaosMakerRuleRequest} from "@/pages/chaosmaker/ChaosMakerOperators";
 import {failed} from "@/utils/notification";
 import {ChaosMakerRunningSteps} from "@/pages/chaosmaker/ChaosMakerRunningSteps";
-import {AutoSpin} from "@/components/AutoSpin";
 
 export interface ChaosMakerRuleTableProp {
     groups?: ChaosMakerRuleGroup[]
+    onReset?: () => any
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -92,10 +90,16 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
         </>}
         bodyStyle={{display: "flex", flexDirection: "column"}}
     >
-        <ChaosMakerOperators running={running} groups={(props.groups || [])} onExecute={(data: ExecuteChaosMakerRuleRequest) => {
-            setExecuteParams(data);
-            setRunning(true)
-        }}/>
+        <ChaosMakerOperators
+            running={running}
+            groups={(props.groups || [])}
+            onExecute={(data: ExecuteChaosMakerRuleRequest) => {
+                setExecuteParams(data);
+                setRunning(true)
+            }}
+            couldBeenReset={activeTab !== "tables"}
+            onReset={props.onReset}
+        />
         <Tabs
             style={{height: "100%"}}
             activeKey={activeTab}
