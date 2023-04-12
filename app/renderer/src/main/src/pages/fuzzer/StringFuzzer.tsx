@@ -165,155 +165,119 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
 
     return (
         <Spin spinning={loading}>
-            <Tabs defaultActiveKey={advanced}>
-                <Tabs.TabPane tab={"简易模式"} key={"ordinary"} disabled={props.disableBasicMode}>
-                    <PageHeader
-                        title={<div style={{fontSize: 14}}>简易模式适合复制 Fuzz 过后的 Payload 来查看结果</div>}
-                    />
-                    <Form
-                        onSubmitCapture={(e) => {
-                            e.preventDefault()
-                            submit()
-                        }}
-                        labelCol={{span: 7}}
-                        wrapperCol={{span: 15}}
-                    >
-                        <Form.Item label={"Fuzz模版"}>
-                            <YakitInput
-                                placeholder={"{{randstr}}"}
-                                value={template}
-                                onChange={(e) => setTemplate(e.target.value)}
-                            />
-                        </Form.Item>
-                        <Form.Item label={" "} colon={false}>
-                            <Space>
-                                <YakitButton type={"primary"} htmlType={"submit"}>
-                                    查看 Fuzz 结果
-                                </YakitButton>
-                            </Space>
-                        </Form.Item>
-                    </Form>
-                </Tabs.TabPane>
-                <Tabs.TabPane key={"advanced"} tab={"调试模式"}>
-                    <PageHeader
-                        title={"调试模式"}
-                        subTitle={"调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用"}
-                    />
-                    <Space direction={"vertical"} style={{width: "100%"}} size={24}>
-                        <div style={{height: 120}}>
-                            <YakEditor type={"http"} value={template} readOnly={false} setValue={setTemplate} />
-                        </div>
-                        <Form
-                            layout={"horizontal"}
-                            onSubmitCapture={(e) => {
-                                e.preventDefault()
-                                submit()
+            <Space direction={"vertical"} style={{width: "100%"}} size={24}>
+                <div style={{height: 120}}>
+                    <YakEditor type={"http"} value={template} readOnly={false} setValue={setTemplate} />
+                </div>
+                <Form
+                    layout={"horizontal"}
+                    onSubmitCapture={(e) => {
+                        e.preventDefault()
+                        submit()
+                    }}
+                    labelCol={{span: 7}}
+                    wrapperCol={{span: 14}}
+                >
+                    <Form.Item label={`选择基础 Fuzz 标签`}>
+                        <YakitSelect
+                            value={buildTemp}
+                            onChange={(v) => {
+                                setBuildTemp(v)
+                                setEncodeTemp(undefined)
                             }}
-                            labelCol={{span: 7}}
-                            wrapperCol={{span: 14}}
-                        >
-                            <Form.Item label={`选择基础 Fuzz 标签`}>
-                                <YakitSelect
-                                    value={buildTemp}
-                                    onChange={(v) => {
-                                        setBuildTemp(v)
-                                        setEncodeTemp(undefined)
-                                    }}
-                                    options={fuzzOperators.map((i) => {
-                                        return {value: i.name, label: i.name}
-                                    })}
-                                />
-                            </Form.Item>
-                            {buildTemp && (
-                                <Form.Item label={" "} colon={false}>
-                                    <Card
-                                        bordered={true}
-                                        title={"基础标签"}
-                                        size={"small"}
-                                        extra={[
-                                            <YakitButton
-                                                type='outline2'
-                                                className='button-outline2-danger'
-                                                onClick={() => {
-                                                    removeBuildTemplateTag()
-                                                }}
-                                            >
-                                                移除编码标签
-                                            </YakitButton>
-                                        ]}
-                                    >
-                                        {(() => {
-                                            if (!buildTemp) {
-                                                return
-                                            }
-                                            const res = fuzzOperators.filter((i) => i.name === buildTemp)
-                                            // @ts-ignore
-                                            if (res.length > 0 && res[0].optionsRender) {
-                                                return res[0].optionsRender(template, setTemplate)
-                                            }
-                                        })()}
-                                    </Card>
-                                </Form.Item>
-                            )}
-                            <Form.Item label={"Payload 编码 / 编码标签"}>
-                                <YakitSelect
-                                    disabled={!!encodeTemp}
-                                    value={encodeTemp}
-                                    onChange={(v) => {
-                                        setEncodeTemp(v)
-                                    }}
-                                    options={encodeOperators.map((i) => {
-                                        return {value: i.name, label: i.name}
-                                    })}
-                                />
-                            </Form.Item>
-                            {
-                                <div style={{display: "none"}}>
-                                    {(() => {
-                                        if (encodeTemp) {
-                                            const res = encodeOperators.filter((i) => i.name === encodeTemp)
-                                            // @ts-ignore
-                                            if (res.length > 0 && res[0].optionsRender) {
-                                                return res[0].optionsRender(template, setTemplate)
-                                            }
-                                        }
-                                    })()}
-                                </div>
-                            }
-                            <Form.Item label={" "} colon={false}>
-                                <Space>
-                                    <YakitButton type='outline2' htmlType={"submit"}>
-                                        查看生成后的 Payload
-                                    </YakitButton>
-                                    {props.insertCallback && (
-                                        <YakitButton
-                                            type={"primary"}
-                                            onClick={() => {
-                                                if (props.insertCallback) {
-                                                    props.insertCallback(template)
-                                                }
-                                            }}
-                                        >
-                                            插入标签所在位置
-                                        </YakitButton>
-                                    )}
-                                    <YakitPopconfirm
-                                        title={"确认要重置你的 Payload 吗？"}
-                                        onConfirm={() => {
-                                            setBuildTemp("")
-                                            setEncodeTemp("")
-                                            setTemplate("")
+                            options={fuzzOperators.map((i) => {
+                                return {value: i.name, label: i.name}
+                            })}
+                        />
+                    </Form.Item>
+                    {buildTemp && (
+                        <Form.Item label={" "} colon={false}>
+                            <Card
+                                bordered={true}
+                                title={"基础标签"}
+                                size={"small"}
+                                extra={[
+                                    <YakitButton
+                                        type='outline2'
+                                        className='button-outline2-danger'
+                                        onClick={() => {
+                                            removeBuildTemplateTag()
                                         }}
-                                        placement='top'
                                     >
-                                        <YakitButton type='outline2'>重置</YakitButton>
-                                    </YakitPopconfirm>
-                                </Space>
-                            </Form.Item>
-                        </Form>
-                    </Space>
-                </Tabs.TabPane>
-            </Tabs>
+                                        移除编码标签
+                                    </YakitButton>
+                                ]}
+                            >
+                                {(() => {
+                                    if (!buildTemp) {
+                                        return
+                                    }
+                                    const res = fuzzOperators.filter((i) => i.name === buildTemp)
+                                    // @ts-ignore
+                                    if (res.length > 0 && res[0].optionsRender) {
+                                        return res[0].optionsRender(template, setTemplate)
+                                    }
+                                })()}
+                            </Card>
+                        </Form.Item>
+                    )}
+                    <Form.Item label={"Payload 编码 / 编码标签"}>
+                        <YakitSelect
+                            disabled={!!encodeTemp}
+                            value={encodeTemp}
+                            onChange={(v) => {
+                                setEncodeTemp(v)
+                            }}
+                            options={encodeOperators.map((i) => {
+                                return {value: i.name, label: i.name}
+                            })}
+                        />
+                    </Form.Item>
+                    {
+                        <div style={{display: "none"}}>
+                            {(() => {
+                                if (encodeTemp) {
+                                    const res = encodeOperators.filter((i) => i.name === encodeTemp)
+                                    // @ts-ignore
+                                    if (res.length > 0 && res[0].optionsRender) {
+                                        return res[0].optionsRender(template, setTemplate)
+                                    }
+                                }
+                            })()}
+                        </div>
+                    }
+                    <Form.Item label={" "} colon={false}>
+                        <Space>
+                            <YakitButton type='outline2' htmlType={"submit"}>
+                                查看生成后的 Payload
+                            </YakitButton>
+                            {props.insertCallback && (
+                                <YakitButton
+                                    type={"primary"}
+                                    onClick={() => {
+                                        if (props.insertCallback) {
+                                            props.insertCallback(template)
+                                        }
+                                    }}
+                                >
+                                    插入标签所在位置
+                                </YakitButton>
+                            )}
+                            <YakitPopconfirm
+                                title={"确认要重置你的 Payload 吗？"}
+                                onConfirm={() => {
+                                    setBuildTemp("")
+                                    setEncodeTemp("")
+                                    setTemplate("")
+                                }}
+                                placement='top'
+                            >
+                                <YakitButton type='outline2'>重置</YakitButton>
+                            </YakitPopconfirm>
+                        </Space>
+                    </Form.Item>
+                </Form>
+            </Space>
         </Spin>
     )
 }

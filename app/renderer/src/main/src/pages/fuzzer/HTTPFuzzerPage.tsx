@@ -1,22 +1,10 @@
-import React, { useEffect, useRef, useState} from "react"
-import {
-    Button,
-    Form,
-    Modal,
-    notification,
-    Result,
-    Space,
-    Typography,
-    Popover,
-    Tooltip,
-    Divider,
-    Collapse
-} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Button, Form, Modal, notification, Result, Space, Typography, Popover, Tooltip, Divider, Collapse} from "antd"
 import {HTTPPacketEditor, HTTP_PACKET_EDITOR_FONT_SIZE, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {InputItem, } from "../../utils/inputUtil"
+import {InputItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info} from "../../utils/notification"
@@ -873,8 +861,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             title: "Fuzzer Tag 调试工具",
             width: "70%",
             footer: null,
+            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
             content: (
-                <div  style={{padding: 24}}>
+                <div style={{padding: 24}}>
                     <StringFuzzer
                         advanced={true}
                         disableBasicMode={true}
