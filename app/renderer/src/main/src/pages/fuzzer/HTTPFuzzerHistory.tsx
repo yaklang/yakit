@@ -151,7 +151,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             </div>
             <Divider style={{marginTop: 10, marginBottom: 6}} />
             <List<HTTPFuzzerTaskDetail>
-                className={styles["tasks-list"]}
+                className='yakit-list'
                 loading={loading}
                 dataSource={tasks}
                 // pagination={{total: tasks.length, size: "small", pageSize: 10}}

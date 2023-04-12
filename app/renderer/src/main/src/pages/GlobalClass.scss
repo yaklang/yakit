@@ -207,6 +207,26 @@
     --button-press-border-color: var(--yakit-primary-6);
 }
 
+.button-outline2-danger {
+    --button-wave-shadow-color: var(--yakit-danger-2);
+
+    --button-background: var(--yakit-neutral10-color);
+    --button-color: var(--yakit-danger-5);
+    --button-border-color: var(--yakit-danger-5);
+
+    --button-hover-background: var(--yakit-neutral10-color);
+    --button-hover-color: var(--yakit-danger-4);
+    --button-hover-border-color: var(--yakit-danger-4);
+
+    --button-disable-background: var(--yakit-neutral10-color);
+    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-border-color: var(--yakit-border-color);
+
+    --button-press-background: var(--yakit-neutral10-color);
+    --button-press-color: var(--yakit-danger-6);
+    --button-press-border-color: var(--yakit-danger-6);
+}
+
 .button-primary-danger {
     --button-wave-shadow-color: var(--yakit-danger-2);
 
@@ -278,4 +298,81 @@
         border-color: var(--yakit-primary-6);
         background: var(--yakit-primary-6);
     }
+}
+
+// ========================== antd list to yakit ==========================
+.yakit-list {
+    .ant-spin {
+        color: var(--yakit-primary-5);
+    }
+    .ant-spin-dot-item {
+        background-color: var(--yakit-primary-5);
+    }
+    .ant-pagination-item:hover a {
+        color: var(--yakit-primary-5);
+    }
+    .ant-pagination-prev:hover .ant-pagination-item-link,
+    .ant-pagination-next:hover .ant-pagination-item-link {
+        color: var(--yakit-primary-5);
+    }
+    .ant-pagination-item a {
+        color: var(--yakit-header-color);
+    }
+    .ant-pagination-item-active {
+        border-color: var(--yakit-primary-5);
+    }
+    .ant-pagination-item-active a {
+        color: var(--yakit-primary-5);
+    }
+    .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon,
+    .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon {
+        color: var(--yakit-primary-5);
+    }
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+        border-color: var(--yakit-border-color);
+        border-radius: 4px;
+        color: var(--yakit-header-color);
+        &:hover {
+            border-color: var(--yakit-primary-4);
+        }
+    }
+    .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+        border: 1px solid var(--yakit-primary-4);
+        box-shadow: 0 0 0 2px var(--yakit-primary-2);
+    }
+
+    // ----------------------------------------- popup------------------------------------------
+
+    .ant-select-item-option-content:hover {
+        color: var(--yakit-primary-5);
+    }
+
+    .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+        background-color: transparent;
+    }
+
+    .ant-select-item {
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 0 4px;
+
+        &:hover {
+            background-color: var(--yakit-background-color);
+            color: var(--yakit-primary-5);
+        }
+    }
+
+    .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+        font-weight: 400;
+        background-color: var(--yakit-primary-2);
+        color: var(--yakit-primary-5);
+        &:hover {
+            background-color: var(--yakit-background-color);
+            color: var(--yakit-primary-5);
+        }
+    }
+}
+.yakit-list-bordered  {
+    border: 1px solid var(--yakit-border-color);
+    border-radius: 4px;
 }

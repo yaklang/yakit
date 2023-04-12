@@ -1,22 +1,14 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, { useEffect, useRef, useState} from "react"
 import {
     Button,
-    Card,
-    Col,
     Form,
-    Input,
     Modal,
     notification,
     Result,
-    Row,
     Space,
-    Spin,
-    Tag,
     Typography,
     Popover,
-    Checkbox,
     Tooltip,
-    InputNumber,
     Divider,
     Collapse
 } from "antd"
@@ -24,23 +16,17 @@ import {HTTPPacketEditor, HTTP_PACKET_EDITOR_FONT_SIZE, IMonacoEditor} from "../
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {InputFloat, InputInteger, InputItem, OneLine, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {InputItem, } from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {DeleteOutlined, EnterOutlined, ProfileOutlined} from "@ant-design/icons"
-import {HTTPFuzzerResultsCard} from "./HTTPFuzzerResultsCard"
 import {failed, info} from "../../utils/notification"
-import {AutoSpin} from "../../components/AutoSpin"
-import {ResizeBox} from "../../components/ResizeBox"
-import {useCreation, useGetState, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useGetState, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
-import {ItemSelects} from "../../components/baseTemplate/FormItemUtil"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
-import {AutoCard} from "../../components/AutoCard"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
@@ -49,7 +35,6 @@ import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareData} from "./components/ShareData"
 import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
-import {SearchOutlined} from "@ant-design/icons/lib"
 import {
     ChevronDownIcon,
     ChevronLeftIcon,
@@ -884,10 +869,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [reqEditor])
     /**@description 插入 yak.fuzz 语法 */
     const onInsertYakFuzzer = useMemoizedFn(() => {
-        const m = showModal({
+        const m = showYakitModal({
+            title: "Fuzzer Tag 调试工具",
             width: "70%",
+            footer: null,
             content: (
-                <>
+                <div  style={{padding: 24}}>
                     <StringFuzzer
                         advanced={true}
                         disableBasicMode={true}
@@ -910,7 +897,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }
                         }}
                     />
-                </>
+                </div>
             )
         })
     })
@@ -1483,7 +1470,6 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
     const bodyLengthRef = useRef<any>()
 
     useEffect(() => {
-        console.log("SecondNodeExtra", query)
         setStatusCode(query?.StatusCode)
         setKeyWord(query?.keyWord)
         setBodyLength({

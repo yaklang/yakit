@@ -55,6 +55,9 @@
         .ant-input-number-affix-wrapper > div.ant-input-number {
             height: 26px;
         }
+        .ant-input-number-handler{
+            border-color: var(--input-number-border-color);
+        }
     }
 }
 .yakit-input-number-wrapper-small {

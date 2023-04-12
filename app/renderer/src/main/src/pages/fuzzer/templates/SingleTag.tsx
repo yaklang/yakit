@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from "react";
-import {RandStrWithLenProp} from "./Rand";
-import {Form, Typography} from "antd";
-import {InputItem} from "@/utils/inputUtil";
+import React, {useEffect, useState} from "react"
+import {RandStrWithLenProp} from "./Rand"
+import {Form, Typography} from "antd"
+import {InputItem} from "@/utils/inputUtil"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
-const {Text} = Typography;
+const {Text} = Typography
 
 export interface SingleTagProp extends RandStrWithLenProp {
     tag: string
@@ -15,19 +16,19 @@ export interface SingleTagProp extends RandStrWithLenProp {
 }
 
 export const SingleTag: React.FC<SingleTagProp> = (props) => {
-    const [input, setInput] = useState(props.defaultInput || "");
+    const [input, setInput] = useState(props.defaultInput || "")
 
     useEffect(() => {
         if (props.enableInput) {
             return
         }
 
-        let tag = `{{${props.tag}}}`;
+        let tag = `{{${props.tag}}}`
         if ((props.origin || "").includes(tag)) {
             return
         }
 
-        const {origin, setOrigin} = props;
+        const {origin, setOrigin} = props
 
         if (origin === "") {
             tag = ""
@@ -35,34 +36,39 @@ export const SingleTag: React.FC<SingleTagProp> = (props) => {
         setOrigin(tag)
     }, [props])
 
-    useEffect(()=>{
+    useEffect(() => {
         if (props.enableInput) {
             props.setOrigin(`{{${props.tag}(${props.defaultInput})}}`)
         }
     }, [])
 
-    return <>
-        {props.help && <Form.Item label={"标签介绍"}>
-            <Text mark={true}>{props.help}</Text>
-        </Form.Item>}
-        {props.enableInput && <InputItem
-            label={props.label}
-            value={input}
-            setValue={value => {
-                setInput(value)
-                props.setOrigin(`{{${props.tag}(${value})}}`)
-            }}
-            help={props.exampleInput}
-        />}
-    </>
-};
-
-export interface EncodeTagProp extends SingleTagProp {
-
+    return (
+        <>
+            {props.help && (
+                <Form.Item label={"标签介绍"}>
+                    <Text mark={true}>{props.help}</Text>
+                </Form.Item>
+            )}
+            {props.enableInput && (
+                <Form.Item label={props.label} help={props.exampleInput}>
+                    <YakitInput
+                        value={input}
+                        onChange={(e) => {
+                            const {value} = e.target
+                            setInput(value)
+                            props.setOrigin(`{{${props.tag}(${value})}}`)
+                        }}
+                    />
+                </Form.Item>
+            )}
+        </>
+    )
 }
 
+export interface EncodeTagProp extends SingleTagProp {}
+
 export const EncodeTag: React.FC<EncodeTagProp> = (props) => {
-    const [origin, setOrigin] = useState(props.origin);
+    const [origin, setOrigin] = useState(props.origin)
 
     useEffect(() => {
         if (!origin) {
@@ -78,9 +84,13 @@ export const EncodeTag: React.FC<EncodeTagProp> = (props) => {
         setOrigin(props.origin)
     }, [props])
 
-    return <>
-        {props.help && <Form.Item label={"编码标签介绍"}>
-            <Text mark={true}>{props.help}</Text>
-        </Form.Item>}
-    </>
-};
+    return (
+        <>
+            {props.help && (
+                <Form.Item label={"编码标签介绍"}>
+                    <Text mark={true}>{props.help}</Text>
+                </Form.Item>
+            )}
+        </>
+    )
+}

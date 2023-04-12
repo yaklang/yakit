@@ -118,6 +118,11 @@
             background-color: var(--select-background-color);
             color: var(--yakit-primary-5);
         }
+
+        // ------------ 滚动条 ----------
+        .rc-virtual-list-scrollbar-thumb {
+            background: #c1c1c1 !important;
+        }
     }
 }
 
