@@ -1320,8 +1320,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         />
                     }
                     secondNode={
-                        <div ref={secondNodeRef} style={{height: "100%"}}>
-                            <YakitSpin spinning={loading} style={{height: "100%"}}>
+                        <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
+                            <YakitSpin spinning={false} style={{height: "100%"}}>
                                 {onlyOneResponse ? (
                                     <>
                                         {redirectedResponse
@@ -1332,7 +1332,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <>
                                         {cachedTotal > 0 ? (
                                             <>
-                                                {showSuccess && !loading && (
+                                                {showSuccess && (
                                                     <HTTPFuzzerPageTable
                                                         onSendToWebFuzzer={sendToFuzzer}
                                                         success={showSuccess}
@@ -1348,7 +1348,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         isRefresh={isRefresh}
                                                     />
                                                 )}
-                                                {!showSuccess && !loading && (
+                                                {!showSuccess && (
                                                     <HTTPFuzzerPageTable
                                                         success={showSuccess}
                                                         data={failedFuzzer}

@@ -50,3 +50,11 @@
 .active-icon {
     color: var(--yakit-primary-5);
 }
+
+.fail-reason {
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
+}

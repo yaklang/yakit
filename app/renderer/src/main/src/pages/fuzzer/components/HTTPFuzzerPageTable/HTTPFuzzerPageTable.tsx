@@ -4,12 +4,12 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useMemoizedFn, useThrottleEffect} from "ahooks"
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
@@ -266,13 +266,23 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   {
                       title: "Method",
                       dataKey: "Method",
-                      width: 100
+                      width: 100,
+                      sorterProps: {
+                          sorter: true
+                      }
                   },
                   {
                       title: "失败原因",
                       dataKey: "Reason",
                       render: (v) => {
-                          return v ? <YakitTag color='danger' enableCopy={true} copyText={v} /> : "-"
+                          return v ? (
+                              <YakitTag color='danger' style={{maxWidth: "100%"}}>
+                                  <span className={styles["fail-reason"]}>{v}</span>
+                                  <CopyComponents copyText={v} />
+                              </YakitTag>
+                          ) : (
+                              "-"
+                          )
                       }
                   },
                   {
@@ -281,6 +291,24 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   }
               ]
     }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.bodyLengthUnit])
+
+    useThrottleEffect(
+        () => {
+            setListTable(data)
+        },
+        [data],
+        {wait: 200}
+    )
+    useEffect(() => {
+        update()
+    }, [isRefresh])
+    /**
+     * @description 搜索防抖
+     */
+    useEffect(() => {
+        if (!query) return
+        update()
+    }, [query])
     const onDetails = useMemoizedFn((record, index: number) => {
         if (props.onSendToWebFuzzer) {
             analyzeFuzzerResponse(record, props.onSendToWebFuzzer, index, data)
@@ -295,17 +323,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         })
         setSorterTable(sorter)
     })
-    useEffect(() => {
-        update()
-    }, [isRefresh])
-    /**
-     * @description 搜索防抖
-     */
-    useEffect(() => {
-        if (!query) return
-        update()
-    }, [query])
-
     /**
      * @description 前端搜索
      */
@@ -323,7 +340,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         query?.afterBodyLength ||
                         query?.beforeBodyLength
                     ) {
-                        const newDataTable = sorterFunction(listTable, sorterTable) || []
+                        const newDataTable = sorterFunction(data, sorterTable) || []
                         const l = newDataTable.length
                         const searchList: FuzzerResponse[] = []
                         for (let index = 0; index < l; index++) {
@@ -341,16 +358,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             }
                             // 状态码搜索
                             if (query?.StatusCode && query?.StatusCode?.length > 0) {
-                                const codeArr: number[] = query.StatusCode.join("-")
-                                    .split("-")
-                                    .map((n) => parseInt(n))
-                                const maxCode = Math.max(...codeArr)
-                                const minCode = Math.min(...codeArr)
-                                if (record.StatusCode >= minCode && record.StatusCode <= maxCode) {
-                                    statusCodeIsPush = true
-                                } else {
-                                    statusCodeIsPush = false
+                                const cLength = query.StatusCode
+                                const codeIsPushArr: boolean[] = []
+                                for (let index = 0; index < cLength.length; index++) {
+                                    const element = query.StatusCode[index]
+                                    const codeArr = element.split("-")
+                                    if (record.StatusCode >= codeArr[0] && record.StatusCode <= codeArr[1]) {
+                                        codeIsPushArr.push(true)
+                                    } else {
+                                        codeIsPushArr.push(false)
+                                    }
                                 }
+                                statusCodeIsPush = codeIsPushArr.includes(true)
                             }
                             // 响应大小搜索
                             if (query?.afterBodyLength) {
@@ -396,20 +415,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             <TableVirtualResize<FuzzerResponse>
                 query={query}
                 isRefresh={isRefresh}
-                titleHeight={4}
+                titleHeight={0.01}
                 renderTitle={<></>}
                 renderKey='UUID'
                 data={listTable}
                 loading={loading}
                 enableDrag={true}
                 columns={columns}
-                // pagination={{
-                //     page: pagination.Page,
-                //     limit: pagination.Limit,
-                //     total,
-                //     onChange: update
-                // }}
-                // currentSelectItem={currentSelectItem}
                 onChange={onTableChange}
                 containerClassName={styles["table-container"]}
             />
