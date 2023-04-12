@@ -43,7 +43,7 @@ export function onImportPlugin() {
         width: 800,
         footer: null,
         content: (
-            <div style={{width: 780}}>
+            <div style={{width: 780,padding:24}}>
                 <LoadYakitPluginForm
                     onlyId={true}
                     onFinished={() => {

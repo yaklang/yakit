@@ -903,8 +903,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 发包配置
         setConcurrent(val.concurrent)
         setProxy(val.proxy ? val.proxy?.join(",") : "")
-        setMinDelaySeconds(val.minDelaySeconds)
-        setMaxDelaySeconds(val.maxDelaySeconds)
+        setMinDelaySeconds(val.minDelaySeconds ? Number(val.minDelaySeconds) : 0)
+        setMaxDelaySeconds(val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0)
         // 重试配置
         // maxRetryTimes
         // retryConfiguration
@@ -917,8 +917,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilterMode(val.filterMode)
         setFilter({
             Keywords: val.keyWord?.split(",") || [],
-            MaxBodySize: val.maxBodySize,
-            MinBodySize: val.minBodySize,
+            MaxBodySize: val.maxBodySize ? Number(val.maxBodySize) : 0,
+            MinBodySize: val.minBodySize ? Number(val.minBodySize) : 0,
             Regexps: val.regexps?.split(",") || [],
             StatusCode: val.statusCode?.split(",") || []
         })
@@ -1814,6 +1814,10 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     useEffect(() => {
         form.setFieldsValue({isHttps: isHttps})
     }, [isHttps])
+    useEffect(() => {
+        form.setFieldsValue({...defAdvancedConfigValue})
+        ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
+    }, [defAdvancedConfigValue])
     useUpdateEffect(() => {
         const v = form.getFieldsValue()
         onSetValue(v)
@@ -2233,12 +2237,14 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         <Form.Item label='状态码' name='statusCode'>
                             <YakitInput placeholder='200,300-399' size='small' />
                         </Form.Item>
-                        <Form.Item label='正则' name='Regexps'>
+                        <Form.Item label='正则' name='regexps'>
                             <RuleContent
                                 ref={ruleContentRef}
                                 getRule={(val) => {
-                                    form.setFieldsValue({
-                                        Regexps: val
+                                    const v = form.getFieldsValue()
+                                    onValuesChange({
+                                        ...v,
+                                        regexps: val
                                     })
                                 }}
                                 inputProps={{
@@ -2252,7 +2258,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         <Form.Item label='响应大小'>
                             <div className={styles["advanced-config-delay"]}>
                                 <Form.Item
-                                    name='MinBodySize'
+                                    name='minBodySize'
                                     noStyle
                                     normalize={(value) => {
                                         return value.replace(/\D/g, "")
@@ -2266,7 +2272,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     />
                                 </Form.Item>
                                 <Form.Item
-                                    name='MaxBodySize'
+                                    name='maxBodySize'
                                     noStyle
                                     normalize={(value) => {
                                         return value.replace(/\D/g, "")
