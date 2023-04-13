@@ -2,8 +2,8 @@ import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {getRemoteValue,setRemoteValue} from "./kv"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
-const IsEnterprise:boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
+import {GetReleaseEdition, isCommunityEdition, globalUserLogout} from "@/utils/envfile"
+import {RemoteGV} from "@/yakitGV";
 const {ipcRenderer} = window.require("electron")
 
 export const loginOut = (userInfo: UserInfoProps) => {
@@ -16,9 +16,7 @@ export const loginOut = (userInfo: UserInfoProps) => {
             loginOutLocal(userInfo)
         })
         .catch((e) => {})
-        .finally(() => {
-            IsEnterprise?setRemoteValue("token-online-enterprise", ""):setRemoteValue("token-online", "")
-        })
+        .finally(globalUserLogout)
 }
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {

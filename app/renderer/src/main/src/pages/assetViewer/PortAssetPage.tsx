@@ -32,7 +32,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-import {isYakit} from "@/utils/envfile"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -453,7 +453,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             删除端口
                                         </Button>
                                     </Popconfirm>
-                                    {isYakit() && <DropdownMenu
+                                    {isCommunityEdition() && <DropdownMenu
                                         menu={{
                                             data: [
                                                 {key: "bug-test", title: "发送到漏洞检测"},

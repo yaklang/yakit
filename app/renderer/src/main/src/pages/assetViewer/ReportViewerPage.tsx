@@ -13,8 +13,6 @@ import {SelectIcon} from "../../assets/icons"
 import {report} from "process"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import "./ReportViewerPage.scss"
-import { PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
-const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 export interface ReportViewerPageProp {
 }
 

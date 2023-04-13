@@ -64,8 +64,6 @@ import {
     useDebounceFn,
     useGetState,
     useMemoizedFn,
-    useThrottleFn,
-    useVirtualList,
     useDebounceEffect,
     useDebounce,
     useSize
@@ -91,7 +89,11 @@ import {
     onLocalScriptToOnlinePlugin,
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition, isYakit, isEnpriTraceAgent} from "@/utils/envfile"
+import {
+    isCommunityEdition,
+    isEnpriTraceAgent,
+    isEnterpriseEdition
+} from "@/utils/envfile"
 import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
@@ -101,8 +103,6 @@ import {OutputPluginForm} from "./PluginOperator"
 import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-
-const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 
 const {Search} = Input
 const {Option} = Select
@@ -890,7 +890,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        if (isYakit() && queryName === "group") {
+                                        if (isCommunityEdition() && queryName === "group") {
                                             return <></>
                                         }
 
@@ -925,8 +925,8 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                             plugSource === "online" &&
                                             !boolAdmin &&
                                             userInfo.showStatusSearch !== true
-                                        if (!IsEnterprise && (UserIsPrivate || OnlineAdmin)) return <></>
-                                        if (IsEnterprise && (UserIsPrivate || OnlineStatusSearch)) return <></>
+                                        if (isCommunityEdition() && (UserIsPrivate || OnlineAdmin)) return <></>
+                                        if (isEnterpriseEdition() && (UserIsPrivate || OnlineStatusSearch)) return <></>
 
                                         if (!Array.isArray(current)) {
                                             current = current.split(",")
@@ -1293,10 +1293,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
 
     const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
         const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
-        if (IsEnterprise && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
+        if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }
-        if (!IsEnterprise && params.OnlineId) {
+        if (isCommunityEdition() && params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }
         return new Promise((resolve) => {
@@ -4120,7 +4120,7 @@ export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) =
         )
     }
 
-    if (!userInfo.isLogin && IsEnterprise && !baseUrl.startsWith("https://www.yaklang.com")) {
+    if (!userInfo.isLogin && isEnterpriseEdition() && !baseUrl.startsWith("https://www.yaklang.com")) {
         return (
             <List
                 dataSource={[]}
@@ -4569,10 +4569,10 @@ const PluginFilter: React.FC<PluginFilterProps> = (props) => {
 
 const adminUpOnline = async (params: YakScript, url: string, type: number, baseUrl: string, userInfo) => {
     const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
-    if (IsEnterprise && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
+    if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
         onlineParams.id = parseInt(`${params.OnlineId}`)
     }
-    if (!IsEnterprise && params.OnlineId) {
+    if (isCommunityEdition() && params.OnlineId) {
         onlineParams.id = parseInt(`${params.OnlineId}`)
     }
     return new Promise((resolve) => {

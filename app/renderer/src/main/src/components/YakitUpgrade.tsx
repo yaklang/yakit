@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from "react";
 import {Alert, Button, Card, Modal, Popconfirm, Progress, Space, Spin, Tag} from "antd";
 import {failed, success} from "../utils/notification";
-import { PRODUCT_RELEASE_EDITION,GetReleaseEdition } from "@/utils/envfile";
+import {isEnterpriseEdition} from "@/utils/envfile";
+
 const {ipcRenderer} = window.require("electron");
+
 // 是否为企业版
-const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace===GetReleaseEdition()
 export interface YakitUpgradeProp {
     onFinished: () => any
 }
@@ -136,7 +137,7 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                             title={`确定要更新版本: ${latestVersion}`}
                             onConfirm={e => {
                                 setDownloading(true)
-                                ipcRenderer.invoke("download-latest-yakit", latestVersion,isEnterprise).then(() => {
+                                ipcRenderer.invoke("download-latest-yakit", latestVersion, isEnterpriseEdition()).then(() => {
                                     success("下载完毕")
                                     install(latestVersion)
                                 }).catch((e: any) => {
@@ -160,8 +161,8 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                     <div style={{width: "100%", textAlign: "right"}}>
                         <Button type="link" danger={true} onClick={() => {
                             ipcRenderer.invoke("install-yakit", latestVersion).then(() => {
-                                }).catch((err: any) => {
-                                })
+                            }).catch((err: any) => {
+                            })
                         }}>
                             删除安装包
                         </Button>

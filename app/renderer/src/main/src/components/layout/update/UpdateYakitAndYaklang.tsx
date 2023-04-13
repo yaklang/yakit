@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition, isEnpriTraceAgent} from "@/utils/envfile"
+import {GetReleaseEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
@@ -15,7 +15,6 @@ import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
 const {ipcRenderer} = window.require("electron")
-const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 
 export interface UpdateYakitAndYaklangProps {
     currentYakit: string
@@ -84,7 +83,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
-            params: {type: "yakit", source: isEnterprise ? "company" : "community"}
+            params: {type: "yakit", source: isEnterpriseEdition() ? "company" : "community"}
         })
             .then((res: any) => {
                 if (!res) return

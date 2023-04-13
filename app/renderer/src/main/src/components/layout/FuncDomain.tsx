@@ -38,7 +38,13 @@ import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
-import {isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
+import {
+    getReleaseEditionName,
+    isCommunityEdition,
+    isEnpriTraceAgent,
+    isEnterpriseEdition,
+    showDevTool
+} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {CodeGV, LocalGV} from "@/yakitGV"
@@ -48,7 +54,6 @@ import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 import {GithubSvgIcon, PencilAltIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage";
@@ -57,10 +62,7 @@ import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {addToTab} from "@/pages/MainTabs";
-import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
-
-const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 
 const {ipcRenderer} = window.require("electron")
 
@@ -876,7 +878,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         <div
                             className={styles["edit-func"]}
                             onClick={() => {
-                                if (onUpdateEdit) onUpdateEdit("yaklang", isEnterprise)
+                                if (onUpdateEdit) onUpdateEdit("yaklang", isEnterpriseEdition())
                             }}
                         >
                             <PencilAltIcon className={styles["edit-icon"]}/>
@@ -1285,9 +1287,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         isUpdateWait={isYakitUpdateWait}
                                         onDownload={onDownload}
                                         isSimple={true}
-                                        isEnterprise={!isEnterprise}
+                                        isEnterprise={isCommunityEdition()}
                                         role={userInfo.role}
-                                        updateContent={!isEnterprise ? companyYakit : communityYakit}
+                                        updateContent={isCommunityEdition() ? companyYakit : communityYakit}
                                         onUpdateEdit={UpdateContentEdit}
                                     />
                                 )}
@@ -1296,9 +1298,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
                                     onDownload={onDownload}
-                                    isEnterprise={isEnterprise}
+                                    isEnterprise={isEnterpriseEdition()}
                                     role={userInfo.role}
-                                    updateContent={isEnterprise ? companyYakit : communityYakit}
+                                    updateContent={isEnterpriseEdition() ? companyYakit : communityYakit}
                                     onUpdateEdit={UpdateContentEdit}
                                 />}
                                 <UIOpUpdateYaklang
@@ -1307,7 +1309,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     localVersion={yaklangLocalVersion}
                                     isRemoteMode={isRemoteMode}
                                     onDownload={onDownload}
-                                    isEnterprise={isEnterprise}
+                                    isEnterprise={isEnterpriseEdition()}
                                     role={userInfo.role}
                                     updateContent={communityYaklang}
                                     onUpdateEdit={UpdateContentEdit}
@@ -1384,7 +1386,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <YakitModal
                 title={
                     editShow.type === "yakit"
-                        ? `${isEnterprise ? "企业版" : "社区版"} Yakit ${yakitLastVersion} 更新通知`
+                        ? `${getReleaseEditionName()} ${yakitLastVersion} 更新通知`
                         : `Yaklang ${yaklangLastVersion} 更新通知`
                 }
                 centered={true}

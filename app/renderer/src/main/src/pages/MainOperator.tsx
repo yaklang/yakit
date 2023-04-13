@@ -33,7 +33,7 @@ import {refreshToken} from "@/utils/login"
 import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import {globalUserLogin, isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
@@ -745,9 +745,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            shouldVerifyEnpriTraceLogin()
-                ? setRemoteValue("token-online-enterprise", res.token)
-                : setRemoteValue("token-online", res.token)
+            globalUserLogin(res.token)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-signin-token")

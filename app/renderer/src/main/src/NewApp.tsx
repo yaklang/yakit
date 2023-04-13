@@ -12,13 +12,12 @@ import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {PRODUCT_RELEASE_EDITION, fetchEnv, GetReleaseEdition} from "@/utils/envfile"
+import {isCommunityEdition} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
 import { coordinate } from "./pages/globalVariable"
 
-const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 /** 快捷键目录 */
 const InterceptKeyword = [
     // "KeyA",
@@ -107,12 +106,6 @@ function NewApp() {
             .catch(() => {})
     }, [])
 
-    /** 将渲染进程的环境变量传入主进程 */
-    useEffect(() => {
-        ipcRenderer.invoke("callback-process-env", fetchEnv())
-        ipcRenderer.invoke("callback-process-envs", fetchEnv())
-    }, [])
-
     /** 全局拦截快捷键(补全内容) */
     useHotkeys("alt+a", (e) => {
         const a = getCompletions()
@@ -172,7 +165,7 @@ function NewApp() {
 
     const refreshLogin = useMemoizedFn(() => {
         // 获取引擎中的token(区分企业版与社区版)
-        const TokenSource = IsEnterprise ? RemoteGV.TokenOnlineEnterprise : RemoteGV.TokenOnline
+        const TokenSource = isCommunityEdition() ? RemoteGV.TokenOnline : RemoteGV.TokenOnlineEnterprise
         getRemoteValue(TokenSource)
             .then((resToken) => {
                 if (!resToken) {

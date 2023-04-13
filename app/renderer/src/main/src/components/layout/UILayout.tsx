@@ -41,7 +41,7 @@ import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition, isEnpriTraceAgent} from "@/utils/envfile"
+import {GetReleaseEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
 import {HomeSvgIcon} from "@/assets/newIcon"
@@ -57,8 +57,6 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 
-// 是否为企业版
-const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 const {ipcRenderer} = window.require("electron")
 
 export interface UILayoutProp {
@@ -765,18 +763,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     // 企业版-连接引擎后验证license=>展示企业登录
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterprise)
-    // useEffect(() => {
-    //     // 监听是否退出登录 重新打开License控件验证身份
-    //     ipcRenderer.on("fetch-judge-license", (e, v: boolean) => {
-    //         setJudgeLicense(v)
-    //     })
-    //     return () => {
-    //         ipcRenderer.removeAllListeners("fetch-judge-license")
-    //     }
-    // }, [])
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
 
-    // outputToWelcomeConsole("UILayout 刷新")
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <div className={styles["ui-layout-container"]}>
@@ -1552,7 +1540,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                     if (version.startsWith("v")) version = version.substr(1)
 
                     ipcRenderer
-                        .invoke("download-latest-yakit", version, isEnterprise)
+                        .invoke("download-latest-yakit", version, isEnterpriseEdition())
                         .then(() => {
                             if (!isBreakRef.current) return
                             success("下载完毕")

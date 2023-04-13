@@ -9,10 +9,8 @@ import {ReportItem} from "./reportRenders/schema"
 import {ReportItemRender} from "./reportRenders/render"
 import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
-import classNames from "classnames"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
+import {isEnterpriseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "../../utils/openWebsite"
-const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 export interface ReportViewerProp {
     id?: number
 }
@@ -165,7 +163,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             <a
                                 href={"#"}
                                 onClick={() => {
-                                    IsEnterprise ? downloadHtml() : downloadPdf()
+                                    isEnterpriseEdition() ? downloadHtml() : downloadPdf()
                                 }}
                             >
                                 下载

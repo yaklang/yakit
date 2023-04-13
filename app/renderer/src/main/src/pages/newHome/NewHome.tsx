@@ -37,19 +37,10 @@ import {
     AddCountIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
 import CountUp from "react-countup"
-import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
-// echarts
-// import * as echarts from "echarts/core"
-// import {TooltipComponent, TooltipComponentOption, LegendComponent, LegendComponentOption} from "echarts/components"
-// import {PieChart, PieSeriesOption} from "echarts/charts"
-// import {LabelLayout} from "echarts/features"
-// import {CanvasRenderer} from "echarts/renderers"
-// echarts.use([TooltipComponent, LegendComponent, PieChart, CanvasRenderer, LabelLayout])
-// type EChartsOption = echarts.ComposeOption<TooltipComponentOption | LegendComponentOption | PieSeriesOption>
+import {isCommunityEdition, isEnterpriseEdition} from "@/utils/envfile"
 
 import * as echarts from "echarts"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 const {ipcRenderer} = window.require("electron")
 
 interface RouteTitleProps {
@@ -361,7 +352,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
 
     const getPluginSearch = useMemoizedFn(() => {
         let url = "plugin/search/unlogged"
-        if (IsEnterprise || userInfo.isLogin) {
+        if (isEnterpriseEdition() || userInfo.isLogin) {
             url = "plugin/search"
         }
         NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
@@ -644,7 +635,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         if (inViewport) {
             setHotError(false)
             getPlugInShopHot()
-            !IsEnterprise && getPlugInShopNewIncre()
+            isCommunityEdition() && getPlugInShopNewIncre()
         }
     }, [inViewport])
 
@@ -652,7 +643,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         ipcRenderer.on("refresh-new-home", (e, res: any) => {
             setHotError(false)
             getPlugInShopHot()
-            !IsEnterprise && getPlugInShopNewIncre()
+            isCommunityEdition() && getPlugInShopNewIncre()
         })
         return () => {
             ipcRenderer.removeAllListeners("refresh-new-home")
@@ -739,8 +730,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             <div className={styles["show-top-box"]}>
                 <div
                     className={classNames({
-                        [styles["add-box-show"]]: !IsEnterprise,
-                        [styles["add-box-hidden"]]: IsEnterprise
+                        [styles["add-box-show"]]: isCommunityEdition(),
+                        [styles["add-box-hidden"]]: isEnterpriseEdition()
                     })}
                 >
                     <div className={styles["add-count-box"]}>
@@ -796,8 +787,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                 </div>
                 <div
                     className={classNames({
-                        [styles["chart-box-show"]]: !IsEnterprise,
-                        [styles["chart-box-hidden"]]: IsEnterprise
+                        [styles["chart-box-show"]]: isCommunityEdition(),
+                        [styles["chart-box-hidden"]]: isEnterpriseEdition()
                     })}
                     ref={listHeightRef}
                 >

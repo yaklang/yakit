@@ -63,7 +63,7 @@ import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isEnpriTraceAgent, isYakit} from "@/utils/envfile"
+import {isEnpriTraceAgent, isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
@@ -163,7 +163,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     useEffect(() => {
         // 社区版本才会获取新的 menu
-        if (isYakit()) {
+        if (isCommunityEdition()) {
             ipcRenderer.on("fetch-new-main-menu", (e) => {
                 init(getPatternMenu(), true)
             })
@@ -740,7 +740,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {isYakit() && <>
+                    {isCommunityEdition() && <>
                         <YakitPopover
                             overlayClassName={style['import-resource-menu-popover']}
                             overlayStyle={{paddingTop: 4}}
