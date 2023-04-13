@@ -40,7 +40,7 @@ import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
 import {YakEditor} from "@/utils/editors"
 import {YakScript} from "@/pages/invoker/schema"
 import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {GetReleaseEdition, isEnterpriseEdition} from "@/utils/envfile"
 import Login from "@/pages/Login"
 import {fail} from "assert"
 import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
@@ -283,8 +283,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isShowAdmin = (isAdmin || userInfo.showStatusSearch) && !plugin.is_private
     // 是否为企业版
-    const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
-
+    const isEnterprise = isEnterpriseEdition()
     return (
         <div className={`plugin-info`} id='plugin-info-scroll'>
             <Spin spinning={loading} style={{height: "100%"}}>

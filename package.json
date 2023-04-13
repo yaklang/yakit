@@ -12,6 +12,7 @@
     "build-render": "cd app/renderer/src/main && yarn build",
     "build-test-render": "cd app/renderer/src/main && yarn build-test",
     "build-render-enterprise": "cd app/renderer/src/main && yarn build-enterprise",
+    "build-render-breachtrace": "cd app/renderer/src/main && yarn build-breachtrace",
     "build-render-test-enterprise": "cd app/renderer/src/main && yarn build-test-enterprise",
     "build-render-simple-enterprise": "cd app/renderer/src/main && yarn build-simple-enterprise",
     "build-render-test-simple-enterprise": "cd app/renderer/src/main && yarn build-test-simple-enterprise",

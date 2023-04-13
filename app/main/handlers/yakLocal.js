@@ -68,7 +68,7 @@ module.exports = {
     clearing: () => {
     },
     register: (win, getClient) => {
-        ipcMain.handle("callback-process-env",(e,type)=>{
+        ipcMain.handle("set-release-edition-raw",(e,type)=>{
             dbFile = type === "enterprise" ?  "company-default-yakit.db" : "default-yakit.db"
             return""
         })

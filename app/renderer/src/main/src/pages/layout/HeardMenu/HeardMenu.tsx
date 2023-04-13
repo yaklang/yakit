@@ -8,7 +8,7 @@ import {
     DownloadOnlinePluginByScriptNamesResponse
 } from "./HeardMenuType"
 import style from "./HeardMenu.module.scss"
-import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route,SimpleDataBaseMenu} from "@/routes/routeSpec"
+import {DefaultRouteMenuData, HiddenMenuData, MenuDataProps, Route, SimpleDataBaseMenu} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {
     AcademicCapIcon,
@@ -63,38 +63,38 @@ import {failed} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isSimpleEnterprise} from "@/utils/envfile"
-import { CodeGV } from "@/yakitGV"
+import {isEnpriTraceAgent, isCommunityEdition} from "@/utils/envfile"
+import {CodeGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
 export const getScriptIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
-            return <MenuBasicCrawlerIcon />
+            return <MenuBasicCrawlerIcon/>
         case "空间引擎: Hunter": //中文
-            return <MenuSpaceEngineHunterIcon />
+            return <MenuSpaceEngineHunterIcon/>
         case "子域名收集":
-            return <MenuSubDomainCollectionIcon />
+            return <MenuSubDomainCollectionIcon/>
         case "综合目录扫描与爆破":
-            return <MenuComprehensiveCatalogScanningAndBlastingIcon />
+            return <MenuComprehensiveCatalogScanningAndBlastingIcon/>
         default:
-            return <MenuDefaultPluginIcon />
+            return <MenuDefaultPluginIcon/>
     }
 }
 
 export const getScriptHoverIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
-            return <MenuSolidBasicCrawlerIcon />
+            return <MenuSolidBasicCrawlerIcon/>
         case "空间引擎: Hunter": //中文
-            return <MenuSolidSpaceEngineHunterIcon />
+            return <MenuSolidSpaceEngineHunterIcon/>
         case "子域名收集":
-            return <MenuSolidSubDomainCollectionIcon />
+            return <MenuSolidSubDomainCollectionIcon/>
         case "综合目录扫描与爆破":
-            return <MenuSolidComprehensiveCatalogScanningAndBlastingIcon />
+            return <MenuSolidComprehensiveCatalogScanningAndBlastingIcon/>
         default:
-            return <MenuSolidDefaultPluginIcon />
+            return <MenuSolidDefaultPluginIcon/>
     }
 }
 
@@ -136,44 +136,43 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const menuLeftInnerRef = useRef<any>()
 
     const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
-    
+
     /** 登录用户信息 */
     const {userInfo} = useStore()
     useEffect(() => {
         // 当为企业简易版
-        if(isSimpleEnterprise){
+        if (isEnpriTraceAgent()) {
             let currentMenuList: MenuDataProps[] = [...SimpleDataBaseMenu]
-            if(userInfo.role!=="admin"){
+            if (userInfo.role !== "admin") {
                 // 简易企业版非管理员 无需插件权限
-                currentMenuList = currentMenuList.filter((item)=>item.id!=="4")
+                currentMenuList = currentMenuList.filter((item) => item.id !== "4")
             }
             setRouteMenu(currentMenuList)
-            setSubMenuData(currentMenuList[0].subMenuData||[])
+            setSubMenuData(currentMenuList[0].subMenuData || [])
             setMenuId(currentMenuList[0].id)
+            return
         }
-        else{
-            getRemoteValue("PatternMenu").then((patternMenu) => {
+
+        getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setRemoteValue("PatternMenu", menuMode)
             setPatternMenu(menuMode)
             init(menuMode)
         })
-        }
-        
     }, [])
+
     useEffect(() => {
-        if(!isSimpleEnterprise){
+        // 社区版本才会获取新的 menu
+        if (isCommunityEdition()) {
             ipcRenderer.on("fetch-new-main-menu", (e) => {
                 init(getPatternMenu(), true)
             })
-        }
-        
-        return () => {
-            if(!isSimpleEnterprise){
+            return ()=>{
                 ipcRenderer.removeAllListeners("fetch-new-main-menu")
             }
         }
     }, [])
+
     useUpdateEffect(() => {
         getRouteKeyToLabel()
     }, [routeMenu])
@@ -201,7 +200,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         // 获取老版的菜单数据，兼容
         ipcRenderer
             .invoke("QueryAllMenuItem", {Mode: ""})
-            .then((data: {Groups: MenuItemGroup[]}) => {
+            .then((data: { Groups: MenuItemGroup[] }) => {
                 oldMenuData = data.Groups
                 //获取模式菜单 如果获取的菜单数据为空，则新增默认菜单数据
                 ipcRenderer
@@ -209,7 +208,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     .then((rsp: MenuByGroupProps) => {
                         // 存放开发者已经废弃的页面菜单项(但这些菜单项在用户数据中存在)
                         const invalidMenuItem: string[] = []
-                        
+
                         if (rsp.Groups.length === 0) {
                             // 获取的数据为空，先使用默认数据覆盖，然后再通过名字下载，然后保存菜单数据
                             onInitMenuData(menuMode, oldMenuData)
@@ -226,7 +225,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 // 对用户菜单项数据进行过滤(过滤开发者已经废弃的页面菜单项)
                                 const filterChild: MenuItem[] = (rsp.Groups[i].Items || []).filter(item => {
                                     const flag = CodeGV.InvalidPageMenuItem.indexOf(item.Verbose) > -1
-                                    if(flag) invalidMenuItem.push(item.Verbose)
+                                    if (flag) invalidMenuItem.push(item.Verbose)
                                     return !flag
                                 })
                                 rsp.Groups[i].Items = filterChild
@@ -276,8 +275,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 for (let menuName of invalidMenus) {
                                     ipcRenderer
                                         .invoke("DeleteAllMenu", {Verbose: menuName})
-                                        .then(() => { })
-                                        .catch((e: any) => { })
+                                        .then(() => {
+                                        })
+                                        .catch((e: any) => {
+                                        })
                                 }
                             }
 
@@ -566,14 +567,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         {
             key: "new",
             label: "扫描模式",
-            itemIcon: <UserIcon />,
+            itemIcon: <UserIcon/>,
             tip: "复原扫描模式",
             onRestoreMenu: () => onRestoreMenu()
         },
         {
             key: "expert",
             label: "专家模式",
-            itemIcon: <AcademicCapIcon />,
+            itemIcon: <AcademicCapIcon/>,
             tip: "复原专家模式",
             onRestoreMenu: () => onRestoreMenu()
         }
@@ -643,7 +644,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onRefMenu = useMemoizedFn(() => {
         init(getPatternMenu(), true)
     })
-    
+
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
     const importMenuSelect = useMemoizedFn((type: string) => {
         switch (type) {
@@ -662,22 +663,22 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     })
 
     const importMenu = useMemo(() =>
-        <YakitMenu
-            width={142}
-            selectedKeys={[]}
-            data={[
-                {
-                    key: "import-plugin",
-                    label: "导入插件"
-                },
-                {
-                    key: "import-fuzzer",
-                    label: "导入 WebFuzzer"
-                },
-            ]}
-            onClick={({key}) => importMenuSelect(key)}
-        />
-    , [])
+            <YakitMenu
+                width={142}
+                selectedKeys={[]}
+                data={[
+                    {
+                        key: "import-plugin",
+                        label: "导入插件"
+                    },
+                    {
+                        key: "import-fuzzer",
+                        label: "导入 WebFuzzer"
+                    },
+                ]}
+                onClick={({key}) => importMenuSelect(key)}
+            />
+        , [])
 
     return (
         <div className={style["heard-menu-body"]}>
@@ -739,111 +740,111 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {!isSimpleEnterprise&&<>
-                    <YakitPopover
-                        overlayClassName={style['import-resource-menu-popover']}
-                        overlayStyle={{paddingTop: 4}}
-                        placement={"bottom"}
-                        trigger={"click"}
-                        content={importMenu}
-                        visible={importMenuShow}
-                        onVisibleChange={(visible) => setImportMenuShow(visible)}
-                    >
-                        <YakitButton
-                            type='text'
-                            className={style["heard-menu-theme"]}
-                            onClick={(e) => e.stopPropagation()}
-                            icon={<SaveIcon />}
+                    {isCommunityEdition() && <>
+                        <YakitPopover
+                            overlayClassName={style['import-resource-menu-popover']}
+                            overlayStyle={{paddingTop: 4}}
+                            placement={"bottom"}
+                            trigger={"click"}
+                            content={importMenu}
+                            visible={importMenuShow}
+                            onVisibleChange={(visible) => setImportMenuShow(visible)}
                         >
-                            导入协作资源
-                        </YakitButton>
-                    </YakitPopover>
-                    <YakitButton
-                        type='secondary2'
-                        className={style["heard-menu-grey"]}
-                        onClick={() => onRouteMenuSelect(Route.PayloadManager)}
-                        icon={<MenuPayloadIcon />}
-                    >
-                        Payload
-                    </YakitButton>
-                    <YakitButton
-                        type='secondary2'
-                        className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}
-                        onClick={() => onRouteMenuSelect(Route.YakScript)}
-                        icon={<MenuYakRunnerIcon />}
-                    >
-                        Yak Runner
-                    </YakitButton>
-                    <Dropdown
-                        overlayClassName={style["customize-drop-menu"]}
-                        overlay={
-                            <>
-                                {CustomizeMenuData.map((item) => (
-                                    <div
-                                        key={item.key}
-                                        className={classNames(style["customize-item"], {
-                                            [style["customize-item-select"]]: patternMenu === item.key
-                                        })}
-                                        onClick={() => onCustomizeMenuClick(item.key)}
-                                    >
-                                        <div className={style["customize-item-left"]}>
-                                            {item.itemIcon}
-                                            <span className={style["customize-item-label"]}>{item.label}</span>
-                                        </div>
-                                        {patternMenu === item.key && <CheckIcon />}
-                                    </div>
-                                ))}
-                                <Divider style={{margin: "6px 0"}} />
-                                <YakitSpin spinning={loading} tip='Loading...' size='small'>
-                                    <div
-                                        className={classNames(style["customize-item"])}
-                                        onClick={() =>
-                                            CustomizeMenuData.find((ele) => patternMenu === ele.key)?.onRestoreMenu()
-                                        }
-                                    >
-                                        {CustomizeMenuData.find((ele) => patternMenu === ele.key)?.tip}
-                                    </div>
-                                    <div
-                                        className={classNames(style["customize-item"])}
-                                        onClick={() => onGoCustomize()}
-                                    >
-                                        编辑菜单
-                                    </div>
-                                    <div
-                                        className={classNames(style["customize-item"])}
-                                        onClick={() => {
-                                            setVisibleImport(true)
-                                            setMenuDataString("")
-                                            setFileName("")
-                                            setRefreshTrigger(!refreshTrigger)
-                                        }}
-                                    >
-                                        导入 JSON 配置
-                                    </div>
-                                </YakitSpin>
-                            </>
-                        }
-                        onVisibleChange={(e) => {
-                            setCustomizeVisible(e)
-                        }}
-                    >
+                            <YakitButton
+                                type='text'
+                                className={style["heard-menu-theme"]}
+                                onClick={(e) => e.stopPropagation()}
+                                icon={<SaveIcon/>}
+                            >
+                                导入协作资源
+                            </YakitButton>
+                        </YakitPopover>
                         <YakitButton
                             type='secondary2'
-                            className={classNames(style["heard-menu-customize"], {
-                                [style["margin-right-0"]]: isExpand,
-                                [style["heard-menu-customize-menu"]]: customizeVisible
-                            })}
-                            icon={<CursorClickIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                            className={style["heard-menu-grey"]}
+                            onClick={() => onRouteMenuSelect(Route.PayloadManager)}
+                            icon={<MenuPayloadIcon/>}
                         >
-                            <div className={style["heard-menu-customize-content"]}>
-                                自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
-                            </div>
+                            Payload
                         </YakitButton>
-                    </Dropdown>
+                        <YakitButton
+                            type='secondary2'
+                            className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}
+                            onClick={() => onRouteMenuSelect(Route.YakScript)}
+                            icon={<MenuYakRunnerIcon/>}
+                        >
+                            Yak Runner
+                        </YakitButton>
+                        <Dropdown
+                            overlayClassName={style["customize-drop-menu"]}
+                            overlay={
+                                <>
+                                    {CustomizeMenuData.map((item) => (
+                                        <div
+                                            key={item.key}
+                                            className={classNames(style["customize-item"], {
+                                                [style["customize-item-select"]]: patternMenu === item.key
+                                            })}
+                                            onClick={() => onCustomizeMenuClick(item.key)}
+                                        >
+                                            <div className={style["customize-item-left"]}>
+                                                {item.itemIcon}
+                                                <span className={style["customize-item-label"]}>{item.label}</span>
+                                            </div>
+                                            {patternMenu === item.key && <CheckIcon/>}
+                                        </div>
+                                    ))}
+                                    <Divider style={{margin: "6px 0"}}/>
+                                    <YakitSpin spinning={loading} tip='Loading...' size='small'>
+                                        <div
+                                            className={classNames(style["customize-item"])}
+                                            onClick={() =>
+                                                CustomizeMenuData.find((ele) => patternMenu === ele.key)?.onRestoreMenu()
+                                            }
+                                        >
+                                            {CustomizeMenuData.find((ele) => patternMenu === ele.key)?.tip}
+                                        </div>
+                                        <div
+                                            className={classNames(style["customize-item"])}
+                                            onClick={() => onGoCustomize()}
+                                        >
+                                            编辑菜单
+                                        </div>
+                                        <div
+                                            className={classNames(style["customize-item"])}
+                                            onClick={() => {
+                                                setVisibleImport(true)
+                                                setMenuDataString("")
+                                                setFileName("")
+                                                setRefreshTrigger(!refreshTrigger)
+                                            }}
+                                        >
+                                            导入 JSON 配置
+                                        </div>
+                                    </YakitSpin>
+                                </>
+                            }
+                            onVisibleChange={(e) => {
+                                setCustomizeVisible(e)
+                            }}
+                        >
+                            <YakitButton
+                                type='secondary2'
+                                className={classNames(style["heard-menu-customize"], {
+                                    [style["margin-right-0"]]: isExpand,
+                                    [style["heard-menu-customize-menu"]]: customizeVisible
+                                })}
+                                icon={<CursorClickIcon style={{color: "var(--yakit-body-text-color)"}}/>}
+                            >
+                                <div className={style["heard-menu-customize-content"]}>
+                                    自定义{(customizeVisible && <ChevronUpIcon/>) || <ChevronDownIcon/>}
+                                </div>
+                            </YakitButton>
+                        </Dropdown>
                     </>}
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
-                            {!isExpand && <SortDescendingIcon />}
+                            {!isExpand && <SortDescendingIcon/>}
                         </div>
                     )}
                 </div>
@@ -853,12 +854,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <Tabs
                         tabBarExtraContent={
                             <div className={style["heard-menu-sort"]} onClick={() => setIsExpand(false)}>
-                                <SortAscendingIcon />
+                                <SortAscendingIcon/>
                             </div>
                         }
                         onTabClick={onTabClick}
                         popupClassName={style["heard-sub-menu-popup"]}
-                        moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
+                        moreIcon={<DotsHorizontalIcon className={style["dots-icon"]}/>}
                     >
                         {subMenuData.map((item, index) => {
                             const nodeLabel = (
@@ -912,7 +913,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                 >
                                                     <div className={style["sub-menu-expand-item-icon"]}>
                                                         <span className={style["item-icon"]}>
-                                                            {(loading && <LoadingOutlined />) || item.icon}
+                                                            {(loading && <LoadingOutlined/>) || item.icon}
                                                         </span>
                                                     </div>
                                                     {(loading && nodeLabel) || (
@@ -923,7 +924,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                 </div>
                                             )}
                                             {index !== subMenuData.length - 1 && (
-                                                <div className={style["sub-menu-expand-item-line"]} />
+                                                <div className={style["sub-menu-expand-item-line"]}/>
                                             )}
                                         </div>
                                     }
@@ -1101,7 +1102,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                     })}
                 >
                     更多
-                    {(show && <ChevronUpIcon />) || <ChevronDownIcon />}
+                    {(show && <ChevronUpIcon/>) || <ChevronDownIcon/>}
                 </div>
             </YakitPopover>
         </div>

@@ -1,9 +1,9 @@
-import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
-import {Form, Modal, notification, Spin, Tabs, Typography} from "antd"
+import React, {lazy, Suspense, useEffect, useState} from "react"
+import {Form, Modal, Typography} from "antd"
 
 // by types
 import {yakEcho} from "./utils/yakEcho"
-import {failed, info, success} from "./utils/notification"
+import {failed, info} from "./utils/notification"
 import {AutoSpin} from "./components/AutoSpin"
 import {useHotkeys} from "react-hotkeys-hook"
 import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema"
@@ -15,10 +15,9 @@ import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
-// import {EnterpriseJudgeLogin} from "./pages/EnterpriseJudgeLogin"
-import {ENTERPRISE_STATUS, fetchEnv, getJuageEnvFile} from "@/utils/envfile"
-import * as process from "process";
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import {globalUserLogin, globalUserLogout, isCommunityEdition, isEnterpriseEdition} from "@/utils/envfile"
+import {RemoteGV} from "@/yakitGV";
+
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
@@ -128,11 +127,7 @@ function App() {
     const [readingSeconds, setReadingSeconds] = useState<number>(1)
 
     // 企业版-连接引擎后验证license=>展示企业登录
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(IsEnterprise)
-
-    useEffect(()=>{
-        ipcRenderer.invoke("callback-process-env",fetchEnv())
-    },[])
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
 
     useEffect(() => {
         setLoading(true)
@@ -141,7 +136,8 @@ function App() {
             .then((value: any) => {
                 setAgreed(!!value)
             })
-            .catch(() => {})
+            .catch(() => {
+            })
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [])
 
@@ -153,7 +149,7 @@ function App() {
             width: "100%",
             content: (
                 <div style={{height: 600}}>
-                    <YakCodeEditor readOnly={true} originValue={Buffer.from(JSON.stringify(a), "utf8")} />
+                    <YakCodeEditor readOnly={true} originValue={Buffer.from(JSON.stringify(a), "utf8")}/>
                 </div>
             )
         })
@@ -213,7 +209,7 @@ function App() {
 
     const refreshLogin = useMemoizedFn(() => {
         // 获取引擎中的token(区分企业版与社区版)
-        const TokenSource = IsEnterprise ? "token-online-enterprise" : "token-online"
+        const TokenSource = isEnterpriseEdition() ? RemoteGV.TokenOnlineEnterprise : RemoteGV.TokenOnline
         getRemoteValue(TokenSource)
             .then((resToken) => {
                 // console.log("resToken", resToken)
@@ -229,9 +225,8 @@ function App() {
                     }
                 })
                     .then((res) => {
-                        IsEnterprise
-                            ? setRemoteValue("token-online-enterprise", resToken)
-                            : setRemoteValue("token-online", resToken)
+                        globalUserLogin(resToken)
+
                         const user = {
                             isLogin: true,
                             platform: res.from_platform,
@@ -253,13 +248,11 @@ function App() {
                         refreshToken(user)
                     })
                     .catch((e) => {
-                        IsEnterprise
-                            ? setRemoteValue("token-online-enterprise", "")
-                            : setRemoteValue("token-online", "")
+                        globalUserLogout()
                     })
             })
             .catch((e) => {
-                IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
+                globalUserLogout()
             })
     })
 
@@ -283,12 +276,10 @@ function App() {
 
     useEffect(() => {
         ipcRenderer.on("client-echo-yak", async (e: any, ok: boolean, text: string) => {
-            if (ok) {
-                // success("Yakit Server 认证成功")
-            } else {
+            if (!ok) {
                 failed(`Yakit Server 认证失败：${text}`)
             }
-            setJudgeLicense(IsEnterprise)
+            setJudgeLicense(isEnterpriseEdition())
             setConnected(ok)
             setTimeout(() => setLoading(false), 500)
         })
@@ -348,7 +339,8 @@ function App() {
     return connected ? (
         <Suspense fallback={<div>Loading Main</div>}>
             {isJudgeLicense ? (
-                <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v:boolean)=>{}}/>
+                <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {
+                }}/>
             ) : (
                 <Main
                     onErrorConfirmed={() => {
@@ -361,7 +353,7 @@ function App() {
         <Suspense
             fallback={
                 <div style={{width: "100%", marginTop: 200, textAlign: "center"}}>
-                    <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} />
+                    <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."}/>
                 </div>
             }
         >
