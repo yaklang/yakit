@@ -16,10 +16,12 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
     onSelect: (i: number, page: number) => any
+    onDeleteAllCallback: () => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -64,6 +66,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             .then(() => {
                 info("Delete History")
                 reload(1, limit)
+                props.onDeleteAllCallback()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -101,7 +104,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                             reload(1, limit)
                         }}
                     />
-                    <Popconfirm
+                    <YakitPopconfirm
                         title={"确定删除吗？"}
                         onConfirm={() => {
                             deleteAll()
@@ -109,7 +112,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         className='button-text-danger'
                     >
                         <YakitButton type='text' size={"small"} danger={true} icon={<DeleteOutlined />} />
-                    </Popconfirm>
+                    </YakitPopconfirm>
                 </Space>
             }
             style={{color: "var(--yakit-header-color)"}}

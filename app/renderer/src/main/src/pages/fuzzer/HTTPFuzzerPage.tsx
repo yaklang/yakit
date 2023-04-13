@@ -558,7 +558,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
-            console.log('fuzzer-data',data)
+            console.log("fuzzer-data", data)
             if (data.Ok) {
                 successCount++
             } else {
@@ -851,11 +851,27 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         getList(currentPage - 1)
     })
     const onNextPage = useMemoizedFn(() => {
+        if (!total) return
         if (currentPage == total) {
             return
         }
         setCurrentPage(currentPage + 1)
         getList(currentPage + 1)
+    })
+
+    useEffect(() => {
+        getTotal()
+    }, [])
+
+    const getTotal = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("QueryHistoryHTTPFuzzerTaskEx", {
+                Pagination: {Page: 1, Limit: 1}
+            })
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
+                console.log("data.Total", data.Total)
+                setTotal(data.Total)
+            })
     })
 
     useEffect(() => {
@@ -1005,7 +1021,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onClick={() => {
                                 cancelCurrentHTTPFuzzer()
                             }}
-                            icon={<StopIcon className={styles['stop-icon']} />}
+                            icon={<StopIcon className={styles["stop-icon"]} />}
                             className='button-primary-danger'
                             danger={true}
                             type={"primary"}
@@ -1056,6 +1072,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         onSelect={(e, page) => {
                                             setCurrentPage(page)
                                             loadHistory(e)
+                                        }}
+                                        onDeleteAllCallback={() => {
+                                            setCurrentPage(0)
+                                            getTotal()
                                         }}
                                     />
                                 </div>
@@ -1138,7 +1158,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     />
                                     <ChevronRightIcon
                                         className={classNames(styles["chevron-icon"], {
-                                            [styles["chevron-icon-disable"]]: currentPage == total
+                                            [styles["chevron-icon-disable"]]: currentPage == total || !total
                                         })}
                                         onClick={() => onNextPage()}
                                     />

@@ -1059,6 +1059,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             setCurrentPage(page)
                                             loadHistory(e)
                                         }}
+                                        onDeleteAllCallback={()=>{}}
                                     />
                                 </div>
                             }
