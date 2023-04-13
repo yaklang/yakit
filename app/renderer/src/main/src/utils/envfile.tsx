@@ -14,7 +14,7 @@ export enum EDITION_STATUS {
     IS_NEW_UI = 2
 }
 
-export const getJuageEnvFile = () => {
+export const getJudgeEnvFile = () => {
     switch (process.env?.REACT_APP_PLATFORM) {
         case "enterprise":
             return ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS

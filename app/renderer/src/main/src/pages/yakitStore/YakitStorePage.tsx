@@ -91,7 +91,7 @@ import {
     onLocalScriptToOnlinePlugin,
     SyncCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
 import {fullscreen} from "@uiw/react-md-editor"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
@@ -102,7 +102,7 @@ import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalLis
 import {isSimpleEnterprise} from "@/utils/envfile"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
 
 const {Search} = Input
 const {Option} = Select

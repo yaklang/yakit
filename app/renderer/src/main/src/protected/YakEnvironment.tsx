@@ -10,7 +10,7 @@ import {showModal} from "../utils/showModal"
 import {YakUpgrade} from "../components/YakUpgrade"
 import {UserProtocol} from "../App"
 import {YakitUpgrade} from "../components/YakitUpgrade"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
 import {LoadYakitRemoteConfig} from "@/protected/LoadYakitRemoteConfig";
 
 const {Text} = Typography
@@ -112,7 +112,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
 
     if (!connected) {
         // 是否为企业版
-        const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+        const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
         return (
             <Spin spinning={localLoading}>
                 <div

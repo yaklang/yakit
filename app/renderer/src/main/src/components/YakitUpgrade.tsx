@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
 import {Alert, Button, Card, Modal, Popconfirm, Progress, Space, Spin, Tag} from "antd";
 import {failed, success} from "../utils/notification";
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import { ENTERPRISE_STATUS,getJudgeEnvFile } from "@/utils/envfile";
 const {ipcRenderer} = window.require("electron");
 // 是否为企业版
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()
+const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJudgeEnvFile()
 export interface YakitUpgradeProp {
     onFinished: () => any
 }

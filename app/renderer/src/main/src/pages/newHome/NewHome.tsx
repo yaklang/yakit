@@ -37,7 +37,7 @@ import {
     AddCountIcon
 } from "@/pages/customizeMenu/icon/homeIcon"
 import CountUp from "react-countup"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
 // echarts
 // import * as echarts from "echarts/core"
 // import {TooltipComponent, TooltipComponentOption, LegendComponent, LegendComponentOption} from "echarts/components"
@@ -49,7 +49,7 @@ import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
 
 import * as echarts from "echarts"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 interface RouteTitleProps {

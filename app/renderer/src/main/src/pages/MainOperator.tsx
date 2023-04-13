@@ -54,7 +54,7 @@ import {getRemoteValue, setRemoteValue, setLocalValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 // import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
-import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {EDITION_STATUS, ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
 import HeardMenu, {getScriptHoverIcon, getScriptIcon} from "./layout/HeardMenu/HeardMenu"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {LocalGV} from "@/yakitGV"
@@ -62,7 +62,7 @@ import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {isSimpleEnterprise} from "@/utils/envfile"
 import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect";
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
 
 const {ipcRenderer} = window.require("electron")
 const MenuItem = Menu.Item

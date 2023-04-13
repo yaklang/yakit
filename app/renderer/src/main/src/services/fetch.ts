@@ -3,8 +3,8 @@ import {setRemoteValue} from "@/utils/kv"
 import {loginOut, loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
+const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
 const {ipcRenderer} = window.require("electron")
 
 interface AxiosResponseInfoProps {

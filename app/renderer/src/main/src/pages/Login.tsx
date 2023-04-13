@@ -10,7 +10,7 @@ import {randomString} from "@/utils/randomUtil"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
 import {showModal} from "../utils/showModal"
 import yakitImg from "../assets/yakit.jpg"
-import { ENTERPRISE_STATUS,getJuageEnvFile } from "@/utils/envfile";
+import { ENTERPRISE_STATUS,getJudgeEnvFile } from "@/utils/envfile";
 const {ipcRenderer} = window.require("electron")
 
 export interface LoginProp {
@@ -40,7 +40,7 @@ const Login: React.FC<LoginProp> = (props) => {
     }
     {/* 屏蔽企业登录选择 将登录直接替换为企业登录 */}
     useLayoutEffect(()=>{
-        if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJuageEnvFile()){
+        if(ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS===getJudgeEnvFile()){
             openEnterpriseModal()
         }
     },[])

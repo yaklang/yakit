@@ -48,7 +48,7 @@ import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 import {GithubSvgIcon, PencilAltIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage";
@@ -61,7 +61,7 @@ import {addToTab} from "@/pages/MainTabs";
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
 
 const {ipcRenderer} = window.require("electron")
 

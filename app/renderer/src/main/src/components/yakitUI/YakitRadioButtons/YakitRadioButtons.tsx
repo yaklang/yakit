@@ -3,9 +3,9 @@ import React from "react"
 import {YakitRadioButtonsProps} from "./YakitRadioButtonsType"
 import styles from "./YakitRadioButtons.module.scss"
 import classNames from "classnames"
-import {EDITION_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {EDITION_STATUS, getJudgeEnvFile} from "@/utils/envfile"
 
-// const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJuageEnvFile()
+// const IsNewUI: boolean = EDITION_STATUS.IS_NEW_UI === getJudgeEnvFile()
 
 /**
  * 更新说明
