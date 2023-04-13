@@ -143,6 +143,10 @@ module.exports = {
                 isTLS: !!global.caPem
             }
         })
+
+        /** 登录相关监听 */
+        require("./handlers/userInfo")(win, getClient)
+
         /** 注册本地缓存数据查改通信 */
         require("./localCache").register(win, getClient)
         /** 启动、连接引擎 */

@@ -5,6 +5,9 @@
 .main-content-tabs .ant-tabs-content.ant-tabs-content-top {
     height: 100%;
 }
+.main-content-tabs .ant-tabs-ink-bar{
+    background: var(--yakit-primary-5);
+}
 .main-home-svg-icon{
     position: relative;
     top: 2px;
