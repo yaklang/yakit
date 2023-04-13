@@ -558,6 +558,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
+            console.log('fuzzer-data',data)
             if (data.Ok) {
                 successCount++
             } else {
@@ -753,19 +754,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             />
         )
     })
-
-    // 设置最大延迟最小延迟
-    useEffect(() => {
-        if (minDelaySeconds > maxDelaySeconds) {
-            setMaxDelaySeconds(minDelaySeconds)
-        }
-    }, [minDelaySeconds])
-
-    useEffect(() => {
-        if (maxDelaySeconds < minDelaySeconds) {
-            setMinDelaySeconds(maxDelaySeconds)
-        }
-    }, [maxDelaySeconds])
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
