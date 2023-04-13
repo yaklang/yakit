@@ -2890,6 +2890,11 @@ message MITMRequest {
   bool enableHttp2 = 42;
 
   repeated Certificate certificates = 45;
+
+  // gmtls config
+  bool enableGMTLS = 46;
+  bool onlyEnableGMTLS = 47;
+  bool preferGMTLS = 48;
 }
 
 message Certificate {
