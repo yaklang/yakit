@@ -20,8 +20,6 @@ import {ExportExcel} from "../../components/DataExport/DataExport"
 import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
-import {ColumnType} from "antd/lib/table"
-import {isSimpleEnterprise} from "@/utils/envfile"
 
 import "./RiskTable.css"
 
@@ -861,11 +859,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                 <div>{info.Host || "-"}</div>
             </Descriptions.Item>
             <Descriptions.Item label='类型'>
-                {isSimpleEnterprise ? (
-                    <div>{(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}</div>
-                ) : (
-                    <div>{info?.RiskTypeVerbose || info.RiskType}</div>
-                )}
+                <div>{(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}</div>
             </Descriptions.Item>
             <Descriptions.Item label='来源'>
                 <div>{info?.FromYakScript || "漏洞检测"}</div>

@@ -4,7 +4,7 @@ import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
-import {isSimpleEnterprise} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import "./MainTabs.scss"
 import {simpleDetectParams} from "@/store"
 import {useGetState} from "ahooks"
@@ -19,7 +19,7 @@ interface InitTabIdProp {
 
 const InitTabId: React.FC<InitTabIdProp> = (props) => {
     useLayoutEffect(() => {
-        if (isSimpleEnterprise) {
+        if (isEnpriTraceAgent()) {
             simpleDetectParams.tabId = props.id
         }
     }, [])
@@ -111,7 +111,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
 
     // 简易企业版 根据任务状态控制颜色
     const judgeTabColor = (verbose: string, id: string) => {
-        if (isSimpleEnterprise) {
+        if (isEnpriTraceAgent()) {
             let itemArr = getSimpleDetectTabsStatus().filter((item) => item.tabId === id)
             if (itemArr.length > 0 && itemArr[0].tabId !== currentKey) {
                 let status = itemArr[0].status
@@ -130,9 +130,9 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                 return <div style={{color}}>{verbose}</div>
             }
             return verbose
-        } else {
-            return verbose
         }
+        return verbose
+
     }
 
     useEffect(() => {

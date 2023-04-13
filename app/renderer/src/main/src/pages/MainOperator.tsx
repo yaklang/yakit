@@ -1,18 +1,9 @@
-import React, {forwardRef, ReactNode, useEffect, useRef, useState} from "react"
-import {Button, Input, Layout, Menu, Modal, Popover, Space, Spin, Tabs, Typography, Upload, Avatar, Alert} from "antd"
-import {
-    ContentByRoute,
-    DefaultRouteMenuData,
-    MenuDataProps,
-    NoScrollRoutes,
-    Route,
-    RouteNameToVerboseName
-} from "../routes/routeSpec"
-import {CloseOutlined, EditOutlined, EllipsisOutlined, CameraOutlined} from "@ant-design/icons"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
+import {Alert, Avatar, Button, Layout, Modal, Space, Tabs, Upload} from "antd"
+import {ContentByRoute, NoScrollRoutes, Route, RouteNameToVerboseName} from "../routes/routeSpec"
+import {CameraOutlined, CloseOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
-// import {YakLogoBanner} from "../utils/logo"
-// import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
 import {
     CompletionTotal,
     MethodSuggestion,
@@ -21,51 +12,35 @@ import {
 } from "../utils/monacoSpec/yakCompletionSchema"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
-import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
+import {QueryYakScriptsResponse} from "./invoker/schema"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useGetState, useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
-import cloneDeep from "lodash/cloneDeep"
-// import {RiskStatsTag} from "../utils/RiskStatsTag"
 import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
 import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
-import {coordinate, UserPlatformType} from "./globalVariable"
 import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
-// import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import {UnfinishedBatchTask,UnfinishedSimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
-// import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
-// import {showConfigMenuItems} from "../utils/ConfigMenuItems"
-// import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
+import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
 import "./GlobalClass.scss"
-import {loginOut, refreshToken} from "@/utils/login"
-import {getRemoteValue, setRemoteValue, setLocalValue} from "@/utils/kv"
-// import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-// import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
-// import {onImportShare} from "./fuzzer/components/ShareImport"
-// import {ShareImportIcon} from "@/assets/icons"
+import {refreshToken} from "@/utils/login"
+import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-// import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
-import {EDITION_STATUS, ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
-import HeardMenu, {getScriptHoverIcon, getScriptIcon} from "./layout/HeardMenu/HeardMenu"
-import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
+import {isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-import {isSimpleEnterprise} from "@/utils/envfile"
-import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect";
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect";
 
 const {ipcRenderer} = window.require("electron")
-const MenuItem = Menu.Item
 const {Content} = Layout
 
 const FuzzerCache = "fuzzer-list-cache"
@@ -73,7 +48,6 @@ const FuzzerCache = "fuzzer-list-cache"
 const singletonRoute: Route[] = [
     Route.HTTPHacker,
     Route.ShellReceiver,
-    // Route.ReverseServer,
     Route.PayloadManager,
     Route.ModManager,
     Route.ModManagerLegacy,
@@ -227,7 +201,7 @@ export interface SetUserInfoProp {
 export const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
+        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg}/>
     ) : (
         <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
@@ -260,7 +234,8 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             .catch((err) => {
                 failed("头像更换失败：" + err)
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     })
 
     // 修改头像
@@ -290,12 +265,14 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                     .catch((err) => {
                         failed("头像更换失败：" + err)
                     })
-                    .finally(() => {})
+                    .finally(() => {
+                    })
             })
             .catch((err) => {
                 failed("头像上传失败")
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     })
     return (
         <div className='dropdown-menu-user-info'>
@@ -317,7 +294,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             >
                 <div className='img-box'>
                     <div className='img-box-mask'>{judgeAvatar(userInfo)}</div>
-                    <CameraOutlined className='hover-icon' />
+                    <CameraOutlined className='hover-icon'/>
                 </div>
             </Upload.Dragger>
 
@@ -336,20 +313,48 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = React.memo((props) => {
-    const [loading, setLoading] = useState(false)
+const getInitPageCache = () => {
+    if (isEnpriTraceAgent()) {
+        return []
+    }
 
-    const [notification, setNotification] = useState("")
+    if (isBreachTrace()) {
+        return [
+            {
+                verbose: "入侵模拟",
+                route: Route.DB_ChaosMaker,
+                singleNode: ContentByRoute(Route.DB_ChaosMaker),
+                multipleNode: []
+            }
+        ]
+    }
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimpleEnterprise?[]:[
+    return [
         {
             verbose: "首页",
             route: Route.NewHome,
             singleNode: ContentByRoute(Route.NewHome),
             multipleNode: []
         }
-    ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimpleEnterprise?"":Route.NewHome)
+    ]
+}
+
+const getInitActiveTabKey = () => {
+    if (isEnpriTraceAgent()) {
+        return ""
+    }
+
+    return Route.NewHome
+}
+
+
+const Main: React.FC<MainProp> = React.memo((props) => {
+    const [loading, setLoading] = useState(false)
+
+    const [notification, setNotification] = useState("")
+
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(getInitPageCache())
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(getInitActiveTabKey())
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -364,9 +369,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
-    
-    useEffect(()=>{
-        if(isSimpleEnterprise){
+
+    useEffect(() => {
+        if (isEnpriTraceAgent()) {
             // 简易企业版页面控制
             addTabPage(Route.SimpleDetect)
             // 简易企业版判断本地插件数-导入弹窗
@@ -377,19 +382,22 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 UserId: 0
             }
             ipcRenderer
-            .invoke("QueryYakScript", newParams)
-            .then((item: QueryYakScriptsResponse) => {
-                if(item.Data.length===0){
-                    const m = showModal({
-                        title: "导入插件",
-                        content: <DownloadAllPlugin type="modal" onClose={() => m.destroy()} />
-                    })
-                    return m 
-                }
-            })
-            
+                .invoke("QueryYakScript", newParams)
+                .then((item: QueryYakScriptsResponse) => {
+                    if (item.Data.length === 0) {
+                        const m = showModal({
+                            title: "导入插件",
+                            content: <DownloadAllPlugin type="modal" onClose={() => m.destroy()}/>
+                        })
+                        return m
+                    }
+                })
         }
-    },[])
+
+        if (isBreachTrace()) {
+            addTabPage(Route.DB_ChaosMaker)
+        }
+    }, [])
 
     // 监听console方向打开
     useEffect(() => {
@@ -468,7 +476,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                             type={"link"}
                                             onClick={() => {
                                                 m.destroy()
-                                                setRemoteValue(firstUseProjectFlag, "1").catch((e) => {})
+                                                setRemoteValue(firstUseProjectFlag, "1").catch((e) => {
+                                                })
                                             }}
                                         >
                                             知道了，不再提示
@@ -728,12 +737,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // }, [])
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
+    const IsEnpriTrace = shouldVerifyEnpriTraceLogin();
+
+
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            IsEnterprise
+            shouldVerifyEnpriTraceLogin()
                 ? setRemoteValue("token-online-enterprise", res.token)
                 : setRemoteValue("token-online", res.token)
         })
@@ -744,7 +756,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     useEffect(() => {
         // 企业版初始进入页面（已登录）已获取用户信息 因此刷新
-        if (IsEnterprise) {
+        if (shouldVerifyEnpriTraceLogin()) {
             ipcRenderer.send("company-refresh-in")
         }
     }, [])
@@ -752,7 +764,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            if (IsEnterprise) {
+            if (IsEnpriTrace) {
                 ipcRenderer.invoke("update-judge-license", true)
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
@@ -761,7 +773,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 removePage(Route.TrustListPage, false)
                 removePage(Route.PlugInAdminPage, false)
             }
-            IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
+            IsEnpriTrace ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
         return () => {
             ipcRenderer.removeAllListeners("login-out")
@@ -774,7 +786,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     ])
 
     useEffect(() => {
-        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
+        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo}/>
         // 非企业管理员登录
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
@@ -913,7 +925,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         // 开发环境不展示fuzzer缓存
         ipcRenderer
             .invoke("is-dev")
-            .then((flag) => {})
+            .then((flag) => {
+            })
             .finally(() => {
                 fetchFuzzerList()
             })
@@ -924,7 +937,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
@@ -937,7 +950,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
 
         //
-        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: {Suggestions: MethodSuggestion[]}) => {
+        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: { Suggestions: MethodSuggestion[] }) => {
             try {
                 if (!data) {
                     return
@@ -972,7 +985,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e} />
+                                                <MDEditor.Markdown source={e}/>
                                             </>
                                         )
                                     })
@@ -1025,7 +1038,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
         addTabPage(Route.WebsocketFuzzer, {
             hideAdd: false,
             isRecord: false,
@@ -1108,7 +1121,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
@@ -1201,11 +1215,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "add-yak-running") addYakRunning(data)
             if (type === "**screen-recorder") addTabPage(Route.ScreenRecorderPage)
             if (type === "**chaos-maker") addTabPage(Route.DB_ChaosMaker)
-            if (type === "open-plugin-store"){
+            if (type === "open-plugin-store") {
                 const flag = getPageCache().filter(item => item.route === Route.ModManager).length
-                if(flag === 0 ){ addTabPage(Route.ModManager) }
-                else{
-                    removePage(Route.AddYakitScript, false) 
+                if (flag === 0) {
+                    addTabPage(Route.ModManager)
+                } else {
+                    removePage(Route.AddYakitScript, false)
                     setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50);
                 }
             }
@@ -1235,15 +1250,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache(isSimpleEnterprise?[]:[
-                    {
-                        verbose: "首页",
-                        route: Route.NewHome,
-                        singleNode: ContentByRoute(Route.NewHome),
-                        multipleNode: []
-                    }
-                ])
-                setCurrentTabKey(isSimpleEnterprise?"":Route.NewHome)
+                setPageCache(getInitPageCache())
+                setCurrentTabKey(getInitActiveTabKey())
             }
         })
     })
@@ -1253,20 +1261,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                if(isSimpleEnterprise){
-                    setPageCache([...arr])
-                }
-                if(!isSimpleEnterprise){
-                    setPageCache([
-                    {
+                if (!isEnpriTraceAgent()) {
+                    arr.unshift({
                         verbose: "首页",
                         route: Route.NewHome,
                         singleNode: ContentByRoute(Route.NewHome),
                         multipleNode: []
-                    },
-                    ...arr
-                ])
+                    })
                 }
+                setPageCache(arr)
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })
@@ -1340,7 +1343,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
                 {isShowCustomizeMenu && (
-                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
+                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)}/>
                 )}
                 <div style={{display: isShowCustomizeMenu ? "none" : "flex", flexDirection: "column", height: "100%"}}>
                     <HeardMenu
@@ -1456,7 +1459,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             }}
                                                         >
                                                             {i.singleNode ? (
-                                                                        i.singleNode
+                                                                i.singleNode
                                                             ) : (
                                                                 <MainTabs
                                                                     currentTabKey={currentTabKey}
@@ -1535,12 +1538,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             setBugTestValue(
                                 value
                                     ? [
-                                          {
-                                              filter: record?.filter,
-                                              key: record?.key,
-                                              title: record?.title
-                                          }
-                                      ]
+                                        {
+                                            filter: record?.filter,
+                                            key: record?.key,
+                                            title: record?.title
+                                        }
+                                    ]
                                     : []
                             )
                         }
@@ -1558,7 +1561,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 onCancel={() => setPasswordShow(false)}
                 footer={null}
             >
-                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo}/>
             </Modal>
         </Layout>
     )

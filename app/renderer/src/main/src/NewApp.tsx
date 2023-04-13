@@ -12,13 +12,13 @@ import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {ENTERPRISE_STATUS, fetchEnv, getJudgeEnvFile} from "@/utils/envfile"
+import {PRODUCT_RELEASE_EDITION, fetchEnv, GetReleaseEdition} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
 import { coordinate } from "./pages/globalVariable"
 
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 /** 快捷键目录 */
 const InterceptKeyword = [
     // "KeyA",

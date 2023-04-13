@@ -37,8 +37,8 @@ import {Risk} from "@/pages/risks/schema"
 import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
-import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
-import {showDevTool} from "@/utils/envfile"
+import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
+import {isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {CodeGV, LocalGV} from "@/yakitGV"
@@ -48,12 +48,11 @@ import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 import {GithubSvgIcon, PencilAltIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
+import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage";
 
-import {isSimpleEnterprise} from "@/utils/envfile"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
@@ -61,7 +60,7 @@ import {addToTab} from "@/pages/MainTabs";
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 
 const {ipcRenderer} = window.require("electron")
 
@@ -78,7 +77,15 @@ export interface FuncDomainProp {
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
-    const {isEngineLink, isReverse = false, engineMode, isRemoteMode, onEngineModeChange, typeCallback, showProjectManage = false} = props
+    const {
+        isEngineLink,
+        isReverse = false,
+        engineMode,
+        isRemoteMode,
+        onEngineModeChange,
+        typeCallback,
+        showProjectManage = false
+    } = props
 
     /** 登录用户信息 */
     const {userInfo, setStoreUserInfo} = useStore()
@@ -123,18 +130,27 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
         // 企业用户管理员登录
         else if (userInfo.role === "admin" && userInfo.platform === "company") {
-            let cacheMenu = [
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "upload-plugin", title: "同步插件"},
-                {key: "upload-data", title: "上传数据"},
-                {key: "role-admin", title: "角色管理"},
-                {key: "account-admin", title: "用户管理"},
-                {key: "set-password", title: "修改密码"},
-                {key: "sign-out", title: "退出登录"}
-            ]
-            if (isSimpleEnterprise) {
-                cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
-            }
+            let cacheMenu = (() => {
+                if (isEnpriTraceAgent()) {
+                    return [
+                        {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                        {key: "upload-plugin", title: "同步插件"},
+                        {key: "role-admin", title: "角色管理"},
+                        {key: "account-admin", title: "用户管理"},
+                        {key: "set-password", title: "修改密码"},
+                        {key: "sign-out", title: "退出登录"},
+                    ]
+                }
+                return [
+                    {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
+                    {key: "upload-plugin", title: "同步插件"},
+                    {key: "upload-data", title: "上传数据"},
+                    {key: "role-admin", title: "角色管理"},
+                    {key: "account-admin", title: "用户管理"},
+                    {key: "set-password", title: "修改密码"},
+                    {key: "sign-out", title: "退出登录"}
+                ]
+            })()
             setUserMenu(cacheMenu)
         }
         // 企业用户非管理员登录
@@ -145,7 +161,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "set-password", title: "修改密码"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if (isSimpleEnterprise) {
+            if (isEnpriTraceAgent()) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
             }
             setUserMenu(cacheMenu)
@@ -162,7 +178,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
-                {showDevTool() && <UIDevTool />}
+                {showDevTool() && <UIDevTool/>}
 
                 {/* <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
                     <ScreensHotSvgIcon className={styles["icon-style"]} />
@@ -189,80 +205,82 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
-                    {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
-                    <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} />
+                    {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink}/>}
+                    <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode}/>
                     {!showProjectManage && <UIOpSetting
                         engineMode={engineMode}
                         onEngineModeChange={onEngineModeChange}
                         typeCallback={typeCallback}
                     />}
                 </div>
-                {!showProjectManage && <><div className={styles["divider-wrapper"]}></div>
-                <div className={styles["user-wrapper"]}>
-                    {userInfo.isLogin ? (
-                        <div className={styles["user-info"]}>
-                            <DropdownMenu
-                                menu={{
-                                    data: userMenu
-                                }}
-                                dropdown={{
-                                    placement: "bottomCenter",
-                                    trigger: ["click"]
-                                }}
-                                onClick={(key) => {
-                                    if (key === "sign-out") {
-                                        setStoreUserInfo(defaultUserInfo)
-                                        loginOut(userInfo)
-                                        setTimeout(() => success("已成功退出账号"), 500)
-                                    }
-                                    if (key === "trust-list") {
-                                        const key = Route.TrustListPage
-                                        openMenu(key)
-                                    }
-                                    if (key === "set-password") setPasswordShow(true)
-                                    if (key === "upload-data") setUploadModalShow(true)
-                                    if (key === "role-admin") {
-                                        const key = Route.RoleAdminPage
-                                        openMenu(key)
-                                    }
-                                    if (key === "account-admin") {
-                                        const key = Route.AccountAdminPage
-                                        openMenu(key)
-                                    }
-                                    if (key === "license-admin") {
-                                        const key = Route.LicenseAdminPage
-                                        openMenu(key)
-                                    }
-                                    if (key === "plugIn-admin") {
-                                        const key = Route.PlugInAdminPage
-                                        openMenu(key)
-                                    }
-                                    if (key === "upload-plugin") {
-                                        const m = showModal({
-                                            title: "同步本地插件",
-                                            content: <AdminUpOnlineBatch userInfo={userInfo}
-                                                                         onClose={() => m.destroy()}/>
-                                        })
-                                        return m
-                                    }
-                                }}
-                            >
-                                {userInfo.platform === "company" ? (
-                                    judgeAvatar(userInfo)
-                                ) : (
-                                    <img
-                                        src={userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg}
-                                        style={{width: 24, height: 24, borderRadius: "50%"}}
-                                    />
-                                )}
-                            </DropdownMenu>
-                        </div>
-                    ) : (
-                        <div className={styles["user-show"]} onClick={() => setLoginShow(true)}>
-                            <UnLoginSvgIcon/>
-                        </div>
-                    )}
-                </div></>}
+                {!showProjectManage && <>
+                    <div className={styles["divider-wrapper"]}></div>
+                    <div className={styles["user-wrapper"]}>
+                        {userInfo.isLogin ? (
+                            <div className={styles["user-info"]}>
+                                <DropdownMenu
+                                    menu={{
+                                        data: userMenu
+                                    }}
+                                    dropdown={{
+                                        placement: "bottomCenter",
+                                        trigger: ["click"]
+                                    }}
+                                    onClick={(key) => {
+                                        if (key === "sign-out") {
+                                            setStoreUserInfo(defaultUserInfo)
+                                            loginOut(userInfo)
+                                            setTimeout(() => success("已成功退出账号"), 500)
+                                        }
+                                        if (key === "trust-list") {
+                                            const key = Route.TrustListPage
+                                            openMenu(key)
+                                        }
+                                        if (key === "set-password") setPasswordShow(true)
+                                        if (key === "upload-data") setUploadModalShow(true)
+                                        if (key === "role-admin") {
+                                            const key = Route.RoleAdminPage
+                                            openMenu(key)
+                                        }
+                                        if (key === "account-admin") {
+                                            const key = Route.AccountAdminPage
+                                            openMenu(key)
+                                        }
+                                        if (key === "license-admin") {
+                                            const key = Route.LicenseAdminPage
+                                            openMenu(key)
+                                        }
+                                        if (key === "plugIn-admin") {
+                                            const key = Route.PlugInAdminPage
+                                            openMenu(key)
+                                        }
+                                        if (key === "upload-plugin") {
+                                            const m = showModal({
+                                                title: "同步本地插件",
+                                                content: <AdminUpOnlineBatch userInfo={userInfo}
+                                                                             onClose={() => m.destroy()}/>
+                                            })
+                                            return m
+                                        }
+                                    }}
+                                >
+                                    {userInfo.platform === "company" ? (
+                                        judgeAvatar(userInfo)
+                                    ) : (
+                                        <img
+                                            src={userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg}
+                                            style={{width: 24, height: 24, borderRadius: "50%"}}
+                                        />
+                                    )}
+                                </DropdownMenu>
+                            </div>
+                        ) : (
+                            <div className={styles["user-show"]} onClick={() => setLoginShow(true)}>
+                                <UnLoginSvgIcon/>
+                            </div>
+                        )}
+                    </div>
+                </>}
             </div>
 
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)}/>}
@@ -361,6 +379,135 @@ interface UIOpSettingProp {
     typeCallback: (type: YakitSettingCallbackType) => any
 }
 
+const GetUIOpSettingMenu = () => {
+    if (isEnpriTraceAgent()) {
+        return [
+            {
+                key: "pcapfix",
+                label: "网卡权限修复"
+            },
+            {
+                key: "plugin",
+                label: "配置插件源",
+                children: [
+                    {label: "外部", key: "external"},
+                    {label: "插件商店", key: "store"}
+                ]
+            },
+            {
+                key: "link",
+                label: "切换连接模式",
+                children: [
+                    {label: "本地", key: "local"},
+                    {label: "远程", key: "remote"}
+                ]
+            },
+            {
+                key: "refreshMenu",
+                label: "刷新菜单"
+            },
+            {
+                key: "settingMenu",
+                label: "配置菜单栏"
+            },
+            {
+                key: "system-manager",
+                label: "进程与缓存管理",
+                children: [{key: "invalidCache", label: "删除缓存数据"}]
+            },
+            {
+                key: "network-detection",
+                label: "网络检测"
+            },
+        ]
+    }
+    return [
+        {
+            key: "pcapfix",
+            label: "网卡权限修复"
+        },
+        {
+            key: "project",
+            label: "项目管理",
+            children: [
+                {label: "切换项目", key: "changeProject"},
+                {label: "加密导出", key: "encryptionProject"},
+                {label: "明文导出", key: "plaintextProject"}
+            ]
+        },
+        {
+            key: "explab",
+            label: "试验性功能",
+            children: [
+                {
+                    key: "screen-recorder",
+                    label: "录屏管理器",
+                },
+                {
+                    key: "bas-chaosmaker",
+                    label: "BAS实验室",
+                },
+            ]
+        },
+        {
+            key: "system-manager",
+            label: "进程与缓存管理",
+            children: [{key: "invalidCache", label: "删除缓存数据"}]
+        },
+        {type: "divider"},
+        {
+            key: "reverse",
+            label: "全局反连"
+        },
+        {
+            key: "agent",
+            label: "系统代理"
+        },
+        {
+            key: "engineAgent",
+            label: "引擎扫描代理"
+        },
+        {
+            key: "engineVar",
+            label: "引擎环境变量"
+        },
+        {type: "divider"},
+        {
+            key: "plugin",
+            label: "配置插件源",
+            children: [
+                {label: "插件商店", key: "store"},
+                {label: "CVE 数据库", key: "cve-database-download"},
+                {label: "外部", key: "external"}
+            ]
+        },
+        {
+            key: "link",
+            label: "切换连接模式",
+            children: [
+                {label: "本地", key: "local"},
+                {label: "远程", key: "remote"}
+            ]
+        },
+        {
+            key: "refreshMenu",
+            label: "刷新菜单"
+        },
+        {
+            key: "otherMode",
+            label: "其他操作",
+            children: [
+                {label: "管理员模式", key: "adminMode"},
+                {label: "旧版本迁移", key: "migrateLegacy"}
+            ]
+        },
+        {
+            key: "network-detection",
+            label: "网络检测"
+        },
+    ]
+}
+
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const {engineMode, onEngineModeChange, typeCallback} = props
 
@@ -373,7 +520,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const onIsCVEDatabaseReady = useMemoizedFn(() => {
         ipcRenderer
             .invoke("IsCVEDatabaseReady")
-            .then((rsp: {Ok: boolean; Reason: string; ShouldUpdate: boolean}) => {
+            .then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
                 setAvailable(rsp.Ok)
             })
             .catch((err) => {
@@ -462,7 +609,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "network-detection":
                 const n = showModal({
                     title: "网络检测",
-                    content: <NetworkDetection onClose={() => n.destroy()} />
+                    content: <NetworkDetection onClose={() => n.destroy()}/>
                 })
                 return n
             default:
@@ -474,129 +621,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         <YakitMenu
             width={142}
             selectedKeys={[engineMode]}
-            data={isSimpleEnterprise ? [
-                {
-                    key: "pcapfix",
-                    label: "网卡权限修复"
-                },
-                {
-                    key: "plugin",
-                    label: "配置插件源",
-                    children: [
-                        {label: "外部", key: "external"},
-                        {label: "插件商店", key: "store"}
-                    ]
-                },
-                {
-                    key: "link",
-                    label: "切换连接模式",
-                    children: [
-                        {label: "本地", key: "local"},
-                        {label: "远程", key: "remote"}
-                    ]
-                },
-                {
-                    key: "refreshMenu",
-                    label: "刷新菜单"
-                },
-                {
-                    key: "settingMenu",
-                    label: "配置菜单栏"
-                },
-                {
-                    key: "system-manager",
-                    label: "进程与缓存管理",
-                    children: [{key: "invalidCache", label: "删除缓存数据"}]
-                },
-                {
-                    key: "network-detection",
-                    label: "网络检测"
-                },
-            ] : [
-                {
-                    key: "pcapfix",
-                    label: "网卡权限修复"
-                },
-                {
-                    key: "project",
-                    label: "项目管理",
-                    children: [
-                        {label: "切换项目", key: "changeProject"},
-                        {label: "加密导出", key: "encryptionProject"},
-                        {label: "明文导出", key: "plaintextProject"}
-                    ]
-                },
-                {
-                    key: "explab",
-                    label: "试验性功能",
-                    children: [
-                        {
-                            key: "screen-recorder",
-                            label: "录屏管理器",
-                        },
-                        {
-                            key: "bas-chaosmaker",
-                            label: "BAS实验室",
-                        },
-                    ]
-                },
-                {
-                    key: "system-manager",
-                    label: "进程与缓存管理",
-                    children: [{key: "invalidCache", label: "删除缓存数据"}]
-                },
-                {type: "divider"},
-                {
-                    key: "reverse",
-                    label: "全局反连"
-                },
-                {
-                    key: "agent",
-                    label: "系统代理"
-                },
-                {
-                    key: "engineAgent",
-                    label: "引擎扫描代理"
-                },
-                {
-                    key: "engineVar",
-                    label: "引擎环境变量"
-                },
-                {type: "divider"},
-                {
-                    key: "plugin",
-                    label: "配置插件源",
-                    children: [
-                        {label: "插件商店", key: "store"},
-                        {label: "CVE 数据库", key: "cve-database-download"},
-                        {label: "外部", key: "external"}
-                    ]
-                },
-                {
-                    key: "link",
-                    label: "切换连接模式",
-                    children: [
-                        {label: "本地", key: "local"},
-                        {label: "远程", key: "remote"}
-                    ]
-                },
-                {
-                    key: "refreshMenu",
-                    label: "刷新菜单"
-                },
-                {
-                    key: "otherMode",
-                    label: "其他操作",
-                    children: [
-                        {label: "管理员模式", key: "adminMode"},
-                        {label: "旧版本迁移", key: "migrateLegacy"}
-                    ]
-                },
-                {
-                    key: "network-detection",
-                    label: "网络检测"
-                },
-            ]}
+            data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
             onClick={({key}) => menuSelect(key)}
         />
     )
@@ -611,7 +636,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                        <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                        <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
                     </div>
                 </div>
             </YakitPopover>
@@ -674,7 +699,7 @@ const UIDevTool: React.FC = React.memo(() => {
         >
             <div className={styles["ui-op-btn-wrapper"]}>
                 <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                    <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                    <UISettingSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
                 </div>
             </div>
         </YakitPopover>
@@ -1253,7 +1278,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
-                                {userInfo.role === "superAdmin" && !isSimpleEnterprise && (
+                                {userInfo.role === "superAdmin" && !isEnpriTraceAgent() && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastVersion}
@@ -1266,7 +1291,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         onUpdateEdit={UpdateContentEdit}
                                     />
                                 )}
-                                {!isSimpleEnterprise && <UIOpUpdateYakit
+                                {!isEnpriTraceAgent() && <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -1332,7 +1357,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdate = useMemo(() => {
         return (
-            isSimpleEnterprise ? (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion) :
+            isEnpriTraceAgent() ? (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion) :
                 (yakitLastVersion !== "" && yakitLastVersion !== yakitVersion) ||
                 (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion)
         )

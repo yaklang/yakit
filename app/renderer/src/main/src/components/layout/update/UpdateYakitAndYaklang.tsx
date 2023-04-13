@@ -7,16 +7,15 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
+import {PRODUCT_RELEASE_EDITION, GetReleaseEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
-import {isSimpleEnterprise} from "@/utils/envfile"
 import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
 const {ipcRenderer} = window.require("electron")
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 
 export interface UpdateYakitAndYaklangProps {
     currentYakit: string
@@ -141,7 +140,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
-        if (isSimpleEnterprise) return false
+        if (isEnpriTraceAgent()) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true

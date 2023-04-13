@@ -10,9 +10,9 @@ import {ReportItemRender} from "./reportRenders/render"
 import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
 import classNames from "classnames"
-import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
+import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "../../utils/openWebsite"
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 export interface ReportViewerProp {
     id?: number
 }

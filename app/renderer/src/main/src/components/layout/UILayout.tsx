@@ -41,7 +41,7 @@ import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
-import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
+import {PRODUCT_RELEASE_EDITION, GetReleaseEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
 import {HomeSvgIcon} from "@/assets/newIcon"
@@ -52,14 +52,13 @@ import {
     ProjectDescription,
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
-import {isSimpleEnterprise} from "@/utils/envfile"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 
 // 是否为企业版
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+const isEnterprise = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 const {ipcRenderer} = window.require("electron")
 
 export interface UILayoutProp {
@@ -182,7 +181,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setCurrentYakit(data)
                 })
                 ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
-                    isSimpleEnterprise ? setLatestYakit("") : setLatestYakit(data)
+                    isEnpriTraceAgent() ? setLatestYakit("") : setLatestYakit(data)
                 })
 
                 ipcRenderer.invoke("get-current-yak").then((data: string) => {
@@ -707,7 +706,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) {
-            isSimpleEnterprise
+            isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
                       if (id) {
@@ -811,7 +810,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                     {engineLink && (
                                         <>
-                                            {!isSimpleEnterprise && (
+                                            {!isEnpriTraceAgent() && (
                                                 <div
                                                     className={classNames(styles["yakit-mode-icon"], {
                                                         [styles["yakit-mode-selected"]]: yakitMode === "soft"
@@ -903,7 +902,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <>
                                             {!linkDatabase && <GlobalReverseState isEngineLink={engineLink} />}
 
-                                            {!isSimpleEnterprise && (
+                                            {!isEnpriTraceAgent() && (
                                                 <div
                                                     className={classNames(styles["yakit-mode-icon"], {
                                                         [styles["yakit-mode-selected"]]: false && yakitMode === "soft"

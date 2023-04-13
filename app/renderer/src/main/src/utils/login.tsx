@@ -2,8 +2,8 @@ import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {getRemoteValue,setRemoteValue} from "./kv"
-import {ENTERPRISE_STATUS, getJudgeEnvFile} from "@/utils/envfile"
-const IsEnterprise:boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+import {PRODUCT_RELEASE_EDITION, GetReleaseEdition} from "@/utils/envfile"
+const IsEnterprise:boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 const {ipcRenderer} = window.require("electron")
 
 export const loginOut = (userInfo: UserInfoProps) => {

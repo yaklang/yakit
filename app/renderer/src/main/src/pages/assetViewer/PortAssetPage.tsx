@@ -32,7 +32,8 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-import {isSimpleEnterprise} from "@/utils/envfile"
+import {isYakit} from "@/utils/envfile"
+
 const {ipcRenderer} = window.require("electron")
 
 export interface PortAssetTableProp {
@@ -122,7 +123,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             .catch((e: any) => {
                 failed("QueryPorts failed: " + `${e}`)
             })
-            .finally(() => {})
+            .finally(() => {
+            })
     }
 
     const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
@@ -154,7 +156,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             title: "网络地址",
             dataIndex: "Host",
             filteredValue: (getParams()["Hosts"] && ["Host"]) || null,
-            render: (_, i: PortAsset) => <CopyableField text={`${i.Host}:${i.Port}`} />,
+            render: (_, i: PortAsset) => <CopyableField text={`${i.Host}:${i.Port}`}/>,
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
                     params &&
@@ -173,7 +175,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             },
             width: 200,
             filterIcon: (filtered) => {
-                return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
             }
         },
         {
@@ -202,7 +204,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             filterIcon: (filtered) => {
                 return (
                     params &&
-                    !!setParams && <SearchOutlined style={{color: !!params["Ports"] ? "#1890ff" : undefined}} />
+                    !!setParams && <SearchOutlined style={{color: !!params["Ports"] ? "#1890ff" : undefined}}/>
                 )
             }
         }
@@ -214,7 +216,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             render: (_, i: PortAsset) =>
                 i.ServiceType ? (
                     <div style={{width: 230, overflow: "auto"}}>
-                        <CopyableField text={i.Reason} />
+                        <CopyableField text={i.Reason}/>
                     </div>
                 ) : (
                     ""
@@ -236,7 +238,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 render: (_, i: PortAsset) =>
                     i.ServiceType ? (
                         <div style={{width: 230, overflowX: "hidden"}}>
-                            <CopyableField noCopy={true} text={i.ServiceType} />
+                            <CopyableField noCopy={true} text={i.ServiceType}/>
                         </div>
                     ) : (
                         ""
@@ -261,7 +263,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     )
                 },
                 filterIcon: (filtered) => {
-                    return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                 }
             },
             {
@@ -270,7 +272,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 render: (_, i: PortAsset) =>
                     i.ServiceType ? (
                         <div style={{width: 150, overflow: "auto"}}>
-                            <CopyableField noCopy={true} text={i.HtmlTitle} />
+                            <CopyableField noCopy={true} text={i.HtmlTitle}/>
                         </div>
                     ) : (
                         ""
@@ -295,7 +297,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     )
                 },
                 filterIcon: (filtered) => {
-                    return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                    return params && !!setParams && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
                 }
             },
             {
@@ -402,7 +404,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     端口资产列表
                                     <Tooltip title='刷新会重置所有查询条件'>
                                         <Button
-                                            icon={<ReloadOutlined />}
+                                            icon={<ReloadOutlined/>}
                                             size={"small"}
                                             type={"link"}
                                             onClick={() => {
@@ -437,7 +439,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             </Col>
                             <Col span={12} style={{textAlign: "right"}}>
                                 <Space>
-                                    <ExportExcel getData={getData} btnProps={{size: "small"}} />
+                                    <ExportExcel getData={getData} btnProps={{size: "small"}}/>
                                     <Popconfirm
                                         title={
                                             checkedAll
@@ -451,7 +453,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             删除端口
                                         </Button>
                                     </Popconfirm>
-                                   {!isSimpleEnterprise&&<DropdownMenu
+                                    {isYakit() && <DropdownMenu
                                         menu={{
                                             data: [
                                                 {key: "bug-test", title: "发送到漏洞检测"},
@@ -471,7 +473,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             })
                                         }}
                                     >
-                                        <Button type='link' icon={<LineMenunIcon />}></Button>
+                                        <Button type='link' icon={<LineMenunIcon/>}></Button>
                                     </DropdownMenu>}
                                 </Space>
                             </Col>
@@ -491,7 +493,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }
             }}
             expandable={{
-                expandedRowRender: (record) => <PortAssetDescription port={record} />
+                expandedRowRender: (record) => <PortAssetDescription port={record}/>
             }}
             loading={loading}
             columns={columns || []}
@@ -542,28 +544,28 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
             style={{marginLeft: 20}}
         >
             <Descriptions.Item label={<Tag>状态</Tag>}>
-                <CopyableField text={`${port.State}`} />
+                <CopyableField text={`${port.State}`}/>
             </Descriptions.Item>
             {port.HtmlTitle && (
                 <Descriptions.Item label={<Tag>Title</Tag>}>
-                    <CopyableField text={`${port.HtmlTitle}`} />
+                    <CopyableField text={`${port.HtmlTitle}`}/>
                 </Descriptions.Item>
             )}
             {port.ServiceType && (
                 <Descriptions.Item span={2} label={<Tag>应用</Tag>}>
-                    <CopyableField text={`${port.ServiceType}`} />
+                    <CopyableField text={`${port.ServiceType}`}/>
                 </Descriptions.Item>
             )}
             {port.Reason && (
                 <Descriptions.Item span={2} label={<Tag>失败原因</Tag>}>
-                    <CopyableField text={`${port.Reason}`} />
+                    <CopyableField text={`${port.Reason}`}/>
                 </Descriptions.Item>
             )}
             {port.CPE.join("|") !== "" ? (
                 <Descriptions.Item span={2} label={<Tag>CPE</Tag>}>
                     <Space direction={"vertical"}>
                         {port.CPE.map((e) => {
-                            return <CopyableField text={`${e}`} />
+                            return <CopyableField text={`${e}`}/>
                         })}
                     </Space>
                 </Descriptions.Item>
@@ -571,7 +573,7 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
             {port.Fingerprint && (
                 <Descriptions.Item span={2} label={<Tag>指纹信息</Tag>}>
                     <div style={{height: 200}}>
-                        <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} />
+                        <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true}/>
                     </div>
                 </Descriptions.Item>
             )}

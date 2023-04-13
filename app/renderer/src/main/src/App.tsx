@@ -16,9 +16,9 @@ import {API} from "./services/swagger/resposeType"
 import {useStore} from "./store"
 import {refreshToken} from "./utils/login"
 // import {EnterpriseJudgeLogin} from "./pages/EnterpriseJudgeLogin"
-import {ENTERPRISE_STATUS, fetchEnv, getJudgeEnvFile} from "@/utils/envfile"
+import {PRODUCT_RELEASE_EDITION, fetchEnv, GetReleaseEdition} from "@/utils/envfile"
 import * as process from "process";
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJudgeEnvFile()
+const IsEnterprise: boolean = PRODUCT_RELEASE_EDITION.EnpriTrace === GetReleaseEdition()
 const InterceptKeyword = [
     // "KeyA",
     // "KeyB",
