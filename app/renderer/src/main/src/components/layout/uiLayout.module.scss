@@ -99,13 +99,13 @@
                     }
 
                     .icon-hover-style {
-                        color: var(--yakit-primary-color);
+                        color: var(--yakit-primary-5);
                     }
                 }
 
                 .ui-op-btn-wrapper:hover {
                     .icon-style {
-                        color: var(--yakit-primary-color);
+                        color: var(--yakit-primary-5);
                     }
                     .op-btn-body {
                         background-color: var(--yakit-background-color);
@@ -256,7 +256,7 @@
             }
 
             .qs-icon:hover {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
 
@@ -360,7 +360,7 @@
                     width: 12px;
                     height: 12px;
                     border-radius: 50%;
-                    background-color: var(--yakit-danger-color);
+                    background-color: var(--yakit-danger-5);
                 }
             }
         }
@@ -385,7 +385,7 @@
 
         .close-wrapper:hover {
             .icon-style {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
     }
@@ -399,7 +399,7 @@
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
-                color: var(--yakit-danger-color);
+                color: var(--yakit-danger-5);
             }
 
             .yakit-update-link {
@@ -453,7 +453,7 @@
 
     :global {
         .ant-spin-dot-item {
-            background-color: var(--yakit-primary-color);
+            background-color: var(--yakit-primary-5);
         }
     }
 
@@ -516,7 +516,7 @@
                     .ant-select-focused {
                         .ant-select-selector {
                             height: 30px;
-                            box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
+                            box-shadow: 0 0 0 2px var(--yakit-primary-2);
                         }
                     }
                 }
@@ -535,15 +535,15 @@
                     color: var(--yakit-header-color);
                 }
 
-                --antd-wave-shadow-color: var(--yakit-primary-color);
+                --antd-wave-shadow-color: var(--yakit-primary-5);
 
                 .ant-switch-checked {
-                    background: var(--yakit-primary-color);
+                    background: var(--yakit-primary-5);
                 }
             }
 
             .error-border {
-                border: 1px solid var(--yakit-danger-color) !important;
+                border: 1px solid var(--yakit-danger-5) !important;
             }
 
             .input-style {
@@ -554,7 +554,7 @@
             }
 
             .input-style:focus {
-                box-shadow: 0 0 0 2px var(--yakit-primary-color-focus);
+                box-shadow: 0 0 0 2px var(--yakit-primary-2);
             }
 
             .pem-title {
@@ -570,7 +570,7 @@
                 .icon-show-style {
                     margin: 0 4px;
                     font-size: 16px;
-                    color: var(--yakit-primary-color);
+                    color: var(--yakit-primary-5);
                 }
             }
 
@@ -648,7 +648,7 @@
             .link-open {
                 height: 20px;
                 line-height: 20px;
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
                 cursor: pointer;
             }
         }

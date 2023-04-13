@@ -71,7 +71,7 @@
         color: var(--yakit-body-text-color);
     }
     .icon-hover-style {
-        color: var(--yakit-primary-color);
+        color: var(--yakit-primary-5);
     }
 
     :global {
@@ -89,7 +89,7 @@
 }
 .ui-op-btn-wrapper:hover {
     .icon-style {
-        color: var(--yakit-primary-color);
+        color: var(--yakit-primary-5);
     }
     .op-btn-body {
         background-color: var(--yakit-background-color);
@@ -162,12 +162,12 @@
                         background: var(--yakit-neutral10-color);
                         box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
                         border-radius: 4px;
-                        color: var(--yakit-primary-color);
+                        color: var(--yakit-primary-5);
                         :global {
                             .ant-badge {
                                 font-weight: 500;
                                 font-size: 12px;
-                                color: var(--yakit-primary-color);
+                                color: var(--yakit-primary-5);
                             }
                         }
                     }
@@ -297,23 +297,23 @@
 
                     .opt-critical-icon {
                         background: rgba(246, 84, 74, 0.08);
-                        color: var(--yakit-serious-color);
+                        color: var(--yakit-serious-5);
                     }
                     .opt-high-icon {
                         background: rgba(246, 84, 74, 0.08);
-                        color: var(--yakit-danger-color);
+                        color: var(--yakit-danger-5);
                     }
                     .opt-middle-icon {
                         background: rgba(255, 213, 131, 0.08);
-                        color: var(--yakit-primary-color);
+                        color: var(--yakit-primary-5);
                     }
                     .opt-low-icon {
                         background: rgba(255, 213, 131, 0.08);
-                        color: var(--yakit-warning-color);
+                        color: var(--yakit-warning-5);
                     }
                     .opt-info-icon {
                         background: rgba(86, 201, 145, 0.08);
-                        color: var(--yakit-success-color);
+                        color: var(--yakit-success-5);
                     }
                 }
             }
@@ -333,7 +333,7 @@
                     cursor: pointer;
                 }
                 .risk-footer-btn:hover {
-                    color: var(--yakit-primary-color);
+                    color: var(--yakit-primary-5);
                 }
             }
         }
@@ -363,7 +363,7 @@
                 width: 28px;
                 height: 28px;
                 border-radius: 50%;
-                background: var(--yakit-primary-color);
+                background: var(--yakit-primary-5);
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -489,19 +489,19 @@
     }
 }
 .version-has-update {
-    border: 1px solid var(--yakit-primary-border-color);
+    border: 1px solid var(--yakit-primary-3);
     .update-header-wrapper {
-        background: var(--yakit-primary-color-focus);
+        background: var(--yakit-primary-2);
         .header-info {
             .update-title {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
             .update-time {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
         .header-btn {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
             .update-btn {
                 height: 28px;
                 display: flex;
@@ -525,7 +525,7 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: var(--yakit-primary-color-focus);
+            background: var(--yakit-primary-2);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -541,7 +541,7 @@
                     cursor: pointer;
                 }
                 .accent-content:hover {
-                    color: var(--yakit-primary-color);
+                    color: var(--yakit-primary-5);
                 }
             }
             .content-commit {

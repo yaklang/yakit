@@ -1,13 +1,12 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 
 module.exports = (win, callback, getClient) => {
-    ipcMain.handle("connect-yak", async (e, {
-        host, port, password, caPem,
-    }) => {
-        callback(`${host}:${port}`, password, caPem)
-    })
+    /**
+     * 对引擎进程进行连接检测
+     * err情况下有部分状态码的详细描述错误内容
+     */
     ipcMain.handle("echo-yak", async (e, txt) => {
-        let client = getClient();
+        let client = getClient()
         try {
             client.Echo({text: txt}, (err, result) => {
                 if (err) {

@@ -71,15 +71,15 @@
                 height: 100%;
             }
             .ant-spin {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
 
             .ant-spin-text {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
 
             .ant-spin-dot-item {
-                background-color: var(--yakit-primary-color);
+                background-color: var(--yakit-primary-5);
             }
         }
     }
@@ -110,7 +110,7 @@
         color: var(--yakit-helper-text-color);
         margin-left: 16px;
         span {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
         }
     }
 }
@@ -144,7 +144,7 @@
                 height: 16px;
 
                 &:hover {
-                    color: var(--yakit-primary-color);
+                    color: var(--yakit-primary-5);
                 }
             }
         }
@@ -163,7 +163,7 @@
 
         span {
             margin: 0 2px;
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
         }
     }
 
@@ -266,13 +266,13 @@
                 margin-right: 8px;
             }
             svg {
-                color: var(--yakit-danger-color);
+                color: var(--yakit-danger-5);
                 cursor: pointer;
             }
         }
         &:hover {
             padding: 0 4px;
-            background-color: var(--yakit-primary-color);
+            background-color: var(--yakit-primary-5);
             .plugin-group-item-name {
                 color: #fff;
             }
@@ -286,7 +286,7 @@
     }
     .plugin-group-item-select {
         .plugin-group-item-name {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
         }
     }
 }

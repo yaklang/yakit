@@ -39,7 +39,6 @@ import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/lay
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
-import {saveAuthInfo} from "@/protected/YakRemoteAuth"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {GetReleaseEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
@@ -442,7 +441,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 tls: info.tls,
                 name: info.linkName || ""
             }
-            saveAuthInfo({...params})
+            ipcRenderer.invoke("save-yakit-remote-auth", {...params}).then().catch((e: any) => {
+                console.info(e)
+            })
         }
         setRemoteConnectLoading(true)
         ipcRenderer.invoke("engine-ready-link")
