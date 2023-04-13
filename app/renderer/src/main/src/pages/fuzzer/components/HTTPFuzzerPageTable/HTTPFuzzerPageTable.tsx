@@ -217,7 +217,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   {
                       title: "Payloads",
                       dataKey: "Payloads",
-                      width: 300
+                      width: 300,
+                      render: (v) => v.join(",")
                   },
                   {
                       title: "延迟(ms)",
@@ -287,7 +288,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   },
                   {
                       title: "Payloads",
-                      dataKey: "Payloads"
+                      dataKey: "Payloads",
+                      render: (v) => v.join(",")
                   }
               ]
     }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.bodyLengthUnit])

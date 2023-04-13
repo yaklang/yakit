@@ -56,9 +56,6 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            .fuzzer-flipping-pages-tip {
-                color: var(--yakit-header-color);
-            }
         }
     }
     .fuzzer-secondNode-extra {
@@ -219,6 +216,18 @@
             height: 12px;
         }
     }
+    .advanced-config-form-label {
+        display: flex;
+        align-items: center;
+
+        .info-icon {
+            margin-left: 4px;
+            cursor: help;
+            svg {
+                color: var(--yakit-helper-text-color);
+            }
+        }
+    }
 }
 
 .http-fuzzer-hotPatch {
@@ -247,8 +256,6 @@
     display: flex;
     justify-content: center;
     svg {
-        height: 12px;
-        width: 12px;
         color: var(--yakit-body-text-color);
         &:hover {
             color: var(--yakit-primary-4);
@@ -283,12 +290,16 @@
 }
 .trash-icon-btn {
     padding: 0;
-    width: 24px;
+    width: 20px;
     display: flex;
     justify-content: center;
     --button-border-color: var(--yakit-border-color);
     --button-hover-border-color: var(--yakit-border-color);
     --button-press-border-color: var(--yakit-border-color);
+    svg {
+        width: 14px;
+        height: 14px;
+    }
 }
 
 .editor-cog-popover {
@@ -298,3 +309,4 @@
         }
     }
 }
+

@@ -672,6 +672,40 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
     }
     return newData
 }
+/**
+ * @description 根据单位转为对应的值
+ * @returns {number}
+ */
+export const onConvertBodySizeByUnit = (length: number, unit: "B" | "K" | "M") => {
+    switch (unit) {
+        case "K":
+            return Number(length) * 1024
+        case "M":
+            return Number(length) * 1024 * 1024
+        default:
+            return Number(length)
+    }
+}
+
+/**
+ * @description 根据单位转为B
+ * @returns {number}
+ */
+export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
+    let v = length
+    switch (unit) {
+        case "K":
+            v = Number(length) / 1024
+            break
+        case "M":
+            v = Number(length) / 1024 / 1024
+            break
+        default:
+            v = Number(length)
+            break
+    }
+    return Math.ceil(v)
+}
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
@@ -705,7 +739,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         data: []
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "k" | "M">("B")
+    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "K" | "M">("B")
     const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
@@ -860,8 +894,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     paginationProps.Page == 1
                         ? undefined
                         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
-                AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
-                BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
+                AfterBodyLength: params.AfterBodyLength
+                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                    : undefined,
+                BeforeBodyLength: params.BeforeBodyLength
+                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                    : undefined
             }
 
             if (checkBodyLength && !query.AfterBodyLength) {
@@ -961,8 +999,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ...params,
             Tags: params.Tags,
             Color: color ? [color] : undefined,
-            AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
-            BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined,
+            AfterBodyLength: params.AfterBodyLength
+                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                : undefined,
+            BeforeBodyLength: params.BeforeBodyLength
+                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                : undefined,
             // SourceType: "mitm",
             SourceType: props.params?.SourceType || "mitm",
             AfterId: maxId, // 用于计算增量的
@@ -1076,16 +1118,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         },
         {wait: 200}
     ).run
-    const getLength = useMemoizedFn((length: number) => {
-        switch (getBodyLengthUnit()) {
-            case "k":
-                return length * 1024
-            case "M":
-                return length * 1024 * 1024
-            default:
-                return length
-        }
-    })
 
     const onCheckThan0 = useDebounceFn(
         (check: boolean) => {

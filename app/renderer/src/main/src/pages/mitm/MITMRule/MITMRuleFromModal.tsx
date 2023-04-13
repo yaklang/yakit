@@ -608,7 +608,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 footer={null}
                 closable={true}
             >
-                <ExtractRegular onSave={onGetRule} />
+                <ExtractRegular onSave={(v)=>onGetRule(v)} />
             </YakitModal>
         </>
     )

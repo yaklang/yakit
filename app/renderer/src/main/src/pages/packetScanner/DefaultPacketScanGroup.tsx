@@ -48,7 +48,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
             visible={visible}
             content={[
                 <Space direction={"vertical"} style={{width: 150}}>
-                    {packetScanDefaultValue.map((i) => {
+                    {packetScanDefaultValue.map((i,n) => {
                         return (
                             <YakitButton
                                 themeClass={styles["yakit-button-theme"]}
@@ -62,6 +62,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                                     }, 300)
                                     execPacketScanFromRaw(https, httpRequest, i.Keyword)
                                 }}
+                                key={`${i.Verbose}+${n}`}
                             >
                                 {i.Verbose}
                             </YakitButton>

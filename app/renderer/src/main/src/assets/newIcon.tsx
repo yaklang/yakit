@@ -1413,14 +1413,14 @@ export const PlusSmIcon = (props: Partial<IconProps>) => {
 }
 
 const Wrap = () => (
-    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
-            d='M14.5 5.43924V10.4392C14.5 11.5438 13.6046 12.4392 12.5 12.4392H6.5'
+            d='M12.5 3.43921V8.43921C12.5 9.54378 11.6046 10.4392 10.5 10.4392H4.5'
             stroke='currentColor'
             strokeLinecap='round'
         />
         <path
-            d='M7.62134 10.3179L5.64144 12.2978C5.56333 12.3759 5.56333 12.5026 5.64144 12.5807L7.62134 14.5606'
+            d='M5.62134 8.31789L3.64144 10.2978C3.56333 10.3759 3.56333 10.5025 3.64144 10.5806L5.62134 12.5605'
             stroke='currentColor'
             strokeLinecap='round'
         />

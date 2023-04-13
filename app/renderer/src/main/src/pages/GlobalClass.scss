@@ -375,8 +375,62 @@
         }
     }
 }
-.yakit-list-bordered  {
+.yakit-list-bordered {
     border: 1px solid var(--yakit-border-color);
     border-radius: 4px;
 }
 // ========================== antd list to yakit end ==========================
+
+// ========================== antd input-group select - yakit start ==========================
+.yakit-input-group {
+    display: flex !important;
+
+    .ant-input-affix-wrapper {
+        border-radius: 0;
+    }
+    > :first-child {
+        .ant-input-affix-wrapper {
+            border-radius: 4px 0 0 4px;
+        }
+    }
+    > :last-child {
+        .ant-input-affix-wrapper {
+            border-radius: 0 4px 4px 0;
+        }
+    }
+    > *:not(:last-child) {
+        margin-right: 0 !important;
+    }
+    .ant-select-arrow {
+        // z-index: 1;
+    }
+    .ant-select-selector {
+        border-left-width: 0 !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        &:hover,
+        &:focus,
+        &:active {
+            border-left-width: 1px !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 4px !important;
+        }
+    }
+    .ant-select-focused {
+        .ant-select-selector {
+            // z-index: 1;
+            border-left-width: 1px !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 4px !important;
+        }
+    }
+    .ant-select-open {
+        .ant-select-selector {
+            // z-index: 1;
+            border-left-width: 1px !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 4px !important;
+        }
+    }
+}
+// ========================== antd input-group select - yakit end ==========================

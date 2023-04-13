@@ -1,5 +1,18 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Form, Modal, notification, Result, Space, Typography, Popover, Tooltip, Divider, Collapse} from "antd"
+import {
+    Button,
+    Form,
+    Modal,
+    notification,
+    Result,
+    Space,
+    Typography,
+    Popover,
+    Tooltip,
+    Divider,
+    Collapse,
+    Input
+} from "antd"
 import {HTTPPacketEditor, HTTP_PACKET_EDITOR_FONT_SIZE, IMonacoEditor} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -31,6 +44,7 @@ import {
     ClockIcon,
     CogIcon,
     FilterIcon,
+    InformationCircleIcon,
     PaperAirplaneIcon,
     PlusSmIcon,
     SearchIcon,
@@ -61,6 +75,7 @@ import {
     HTTPFuzzerPageTable,
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {onConvertBodySizeByUnit, onConvertBodySizeToB} from "@/components/HTTPFlowTable/HTTPFlowTable"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -190,6 +205,16 @@ interface FuzzResponseFilter {
     Regexps: string[]
     Keywords: string[]
     StatusCode: string[]
+
+    /**@name 前端显示的响应大小最小值 */
+    minBodySizeInit?: number
+    /**@name 前端显示的响应大小最大值 */
+    maxBodySizeInit?: number
+
+    /**@name 响应大小最小值单位 */
+    minBodySizeUnit?: "B" | "K" | "M"
+    /**@name 响应大小最大值单位 */
+    maxBodySizeUnit?: "B" | "K" | "M"
 }
 
 function removeEmptyFiledFromFuzzResponseFilter(i: FuzzResponseFilter): FuzzResponseFilter {
@@ -457,31 +482,29 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
         setDroppedCount(0)
-        ipcRenderer.invoke(
-            "HTTPFuzzer",
-            {
-                // Request: request,
-                RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
-                ForceFuzz: forceFuzz,
-                IsHTTPS: isHttps,
-                Concurrent: concurrent,
-                PerRequestTimeoutSeconds: timeout,
-                NoFixContentLength: noFixContentLength,
-                Proxy: proxy,
-                ActualAddr: actualHost,
-                HotPatchCode: hotPatchCode,
-                HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
-                Filter: {
-                    ...getFilter(),
-                    StatusCode: getFilter().StatusCode.filter((i) => !!i),
-                    Keywords: getFilter().Keywords.filter((i) => !!i),
-                    Regexps: getFilter().Regexps.filter((i) => !!i)
-                },
-                DelayMinSeconds: minDelaySeconds,
-                DelayMaxSeconds: maxDelaySeconds
+        const params = {
+            // Request: request,
+            RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
+            ForceFuzz: forceFuzz,
+            IsHTTPS: isHttps,
+            Concurrent: concurrent,
+            PerRequestTimeoutSeconds: timeout,
+            NoFixContentLength: noFixContentLength,
+            Proxy: proxy,
+            ActualAddr: actualHost,
+            HotPatchCode: hotPatchCode,
+            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
+            Filter: {
+                ...getFilter(),
+                StatusCode: getFilter().StatusCode.filter((i) => !!i),
+                Keywords: getFilter().Keywords.filter((i) => !!i),
+                Regexps: getFilter().Regexps.filter((i) => !!i)
             },
-            fuzzToken
-        )
+            DelayMinSeconds: minDelaySeconds,
+            DelayMaxSeconds: maxDelaySeconds
+        }
+        console.log("params", params)
+        ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
@@ -565,7 +588,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }),
                 DurationMs: data.DurationMs,
                 BodyLength: data.BodyLength,
-                UUID: data.UUID,
+                UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
                 Timestamp: data.Timestamp,
                 ResponseRaw: data.ResponseRaw,
                 RequestRaw: data.RequestRaw,
@@ -591,6 +614,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // setContent([...buffer])
         })
         ipcRenderer.on(endToken, () => {
+            console.log("end")
             updateData()
             successBuffer = []
             failedBuffer = []
@@ -895,7 +919,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
         // 请求包配置
-        setForceFuzz(val.isHttps)
+        setForceFuzz(val.forceFuzz || false)
         setIsHttps(val.isHttps)
         setNoFixContentLength(val.noFixContentLength)
         setActualHost(val.actualHost)
@@ -917,13 +941,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilterMode(val.filterMode)
         setFilter({
             Keywords: val.keyWord?.split(",") || [],
-            MaxBodySize: val.maxBodySize ? Number(val.maxBodySize) : 0,
-            MinBodySize: val.minBodySize ? Number(val.minBodySize) : 0,
+            MaxBodySize: val.maxBodySizeInit
+                ? onConvertBodySizeByUnit(Number(val.maxBodySizeInit), val.maxBodySizeUnit)
+                : 0,
+            MinBodySize: val.minBodySizeInit
+                ? onConvertBodySizeByUnit(Number(val.minBodySizeInit), val.minBodySizeUnit)
+                : 0,
+            maxBodySizeInit: val.maxBodySizeInit ? val.maxBodySizeInit : 0,
+            minBodySizeInit: val.minBodySizeInit ? val.minBodySizeInit : 0,
+            minBodySizeUnit: val.minBodySizeUnit || "B",
+            maxBodySizeUnit: val.maxBodySizeUnit || "B",
             Regexps: val.regexps?.split(",") || [],
             StatusCode: val.statusCode?.split(",") || []
         })
     })
-
     return (
         <div className={styles["http-fuzzer-body"]}>
             <HttpQueryAdvancedConfig
@@ -965,7 +996,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     regexps: getFilter().Regexps.join(","),
                     keyWord: getFilter().Keywords?.join(",") || "",
                     minBodySize: getFilter().MinBodySize,
-                    maxBodySize: getFilter().MaxBodySize
+                    maxBodySize: getFilter().MaxBodySize,
+                    minBodySizeInit: onConvertBodySizeToB(getFilter().MinBodySize, getFilter().minBodySizeUnit || "B"),
+                    maxBodySizeInit: onConvertBodySizeToB(getFilter().MaxBodySize, getFilter().maxBodySizeUnit || "B"),
+                    minBodySizeUnit: getFilter().minBodySizeUnit || "B",
+                    maxBodySizeUnit: getFilter().maxBodySizeUnit || "B"
                 }}
                 isHttps={isHttps}
                 setIsHttps={setIsHttps}
@@ -1110,9 +1145,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         })}
                                         onClick={() => onPrePage()}
                                     />
-                                    <span className={styles["fuzzer-flipping-pages-tip"]}>
-                                        ID:{currentSelectId || "-"}
-                                    </span>
                                     <ChevronRightIcon
                                         className={classNames(styles["chevron-icon"], {
                                             [styles["chevron-icon-disable"]]: currentPage == total
@@ -1787,8 +1819,18 @@ interface AdvancedConfigValueProps {
     statusCode: string
     regexps: string
     keyWord: string
+    /**@name 转换后转给后端的的响应大小最大值 */
     minBodySize: number
+    /**@name 转换后转给后端的的响应大小最小值 */
     maxBodySize: number
+    /**@name 前端显示的响应大小最小值 */
+    minBodySizeInit?: number
+    /**@name 前端显示的响应大小最大值 */
+    maxBodySizeInit?: number
+    /**@name 响应大小最小值单位 */
+    minBodySizeUnit: "B" | "K" | "M"
+    /**@name 响应大小最大值单位 */
+    maxBodySizeUnit: "B" | "K" | "M"
 }
 interface HttpQueryAdvancedConfigProps {
     defAdvancedConfigValue: AdvancedConfigValueProps
@@ -1809,6 +1851,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     const [redirect, setRedirect] = useState<boolean>(true)
     const [noRedirect, setNoRedirect] = useState<boolean>(false)
     const [redirectActive, setRedirectActive] = useState<string[] | string>(["重定向条件"])
+
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
     useEffect(() => {
@@ -1901,7 +1944,18 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 插入 yak.fuzz 语法
                             </YakitButton>
                         </Form.Item>
-                        <Form.Item label='渲染 Fuzz' name='forceFuzz' valuePropName='checked'>
+                        <Form.Item
+                            label={
+                                <span className={styles["advanced-config-form-label"]}>
+                                    渲染 Fuzz
+                                    <Tooltip title='关闭之后，所有的 Fuzz 标签将会失效' overlayStyle={{width: 150}}>
+                                        <InformationCircleIcon className={styles["info-icon"]} />
+                                    </Tooltip>
+                                </span>
+                            }
+                            name='forceFuzz'
+                            valuePropName='checked'
+                        >
                             <YakitSwitch />
                         </Form.Item>
                         <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
@@ -1949,7 +2003,20 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         <Form.Item label='并发线程' name='concurrent'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
-                        <Form.Item label='设置代理' name='proxy'>
+                        <Form.Item
+                            label={
+                                <span className={styles["advanced-config-form-label"]}>
+                                    设置代理
+                                    <Tooltip
+                                        title='设置多个代理时，会智能选择能用的代理进行发包'
+                                        overlayStyle={{width: 150}}
+                                    >
+                                        <InformationCircleIcon className={styles["info-icon"]} />
+                                    </Tooltip>
+                                </span>
+                            }
+                            name='proxy'
+                        >
                             <YakitSelect
                                 allowClear
                                 options={[
@@ -2199,15 +2266,17 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     const restValue = {
                                         filterMode: "drop",
                                         statusCode: "",
-                                        Regexps: "",
+                                        regexps: "",
                                         keyWord: "",
-                                        MinBodySize: undefined,
-                                        MaxBodySize: undefined
+                                        minBodySizeInit: undefined,
+                                        minBodySizeUnit:'B',
+                                        maxBodySizeInit: undefined,
+                                        maxBodySizeUnit:'B',
                                     }
                                     form.setFieldsValue({
                                         ...restValue
                                     })
-                                    ruleContentRef?.current?.onSetValue("")
+                                    ruleContentRef?.current?.onSetValue('')
                                     const v = form.getFieldsValue()
                                     onValuesChange({
                                         ...v,
@@ -2256,36 +2325,43 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             <YakitInput placeholder='Login,登录成功' size='small' />
                         </Form.Item>
                         <Form.Item label='响应大小'>
-                            <div className={styles["advanced-config-delay"]}>
+                            <Input.Group compact className='yakit-input-group'>
                                 <Form.Item
-                                    name='minBodySize'
+                                    name='minBodySizeInit'
                                     noStyle
                                     normalize={(value) => {
                                         return value.replace(/\D/g, "")
                                     }}
                                 >
-                                    <YakitInput
-                                        prefix='Min'
-                                        suffix='s'
-                                        size='small'
-                                        className={styles["delay-input-left"]}
-                                    />
+                                    <YakitInput prefix='Min' size='small' />
                                 </Form.Item>
+                                <Form.Item name='minBodySizeUnit'>
+                                    <YakitSelect size='small' style={{width: 50}}>
+                                        <YakitSelect value='B'>B</YakitSelect>
+                                        <YakitSelect value='K'>K</YakitSelect>
+                                        <YakitSelect value='M'>M</YakitSelect>
+                                    </YakitSelect>
+                                </Form.Item>
+                            </Input.Group>
+
+                            <Input.Group compact className='yakit-input-group'>
                                 <Form.Item
-                                    name='maxBodySize'
+                                    name='maxBodySizeInit'
                                     noStyle
                                     normalize={(value) => {
                                         return value.replace(/\D/g, "")
                                     }}
                                 >
-                                    <YakitInput
-                                        prefix='Max'
-                                        suffix='s'
-                                        size='small'
-                                        className={styles["delay-input-right"]}
-                                    />
+                                    <YakitInput prefix='Max' size='small' />
                                 </Form.Item>
-                            </div>
+                                <Form.Item name='maxBodySizeUnit'>
+                                    <YakitSelect size='small' style={{width: 50}}>
+                                        <YakitSelect value='B'>B</YakitSelect>
+                                        <YakitSelect value='K'>K</YakitSelect>
+                                        <YakitSelect value='M'>M</YakitSelect>
+                                    </YakitSelect>
+                                </Form.Item>
+                            </Input.Group>
                         </Form.Item>
                     </Panel>
                 </Collapse>
@@ -2385,7 +2461,7 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 }
                 overlayInnerStyle={{width: 200}}
                 overlayClassName={styles["editor-cog-popover"]}
-                placement="bottomRight"
+                placement='bottomRight'
             >
                 <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
             </YakitPopover>
