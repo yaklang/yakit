@@ -1,0 +1,90 @@
+name: BreachTrace-CI
+
+on:
+  push:
+    branches:
+      - "ci/breachtrace*"
+
+jobs:
+  build_breachtrace:
+    #    strategy:
+    #      matrix:
+    #        os:
+    #          - windows-latest
+    #          - macos-latest
+    #          - ubuntu-latest
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.10.0
+      - run: echo ${{ github.ref }}
+      - run: brew install wget curl zip
+      - name: "Download Yak Engine via wget(MacOS)"
+        id: download-darwin-engine
+        run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+      - name: "Download Yak Engine via wget(Linux)"
+        id: download-linux-engine
+        run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+      - name: "Download Yak Engine via wget(Windows)"
+        id: download-windows-engine
+        run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+      - name: "Fetch Latest EngineVersion"
+        id: fetch-version-engine
+        run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+      - run: ls ./bins && cat bins/engine-version.txt
+      # Enterprise
+      - name: Extract Version
+        id: extract_version
+        uses: Saionaro/extract-package-version@v1.1.1
+      - name: Echo Branch Package Version
+        run: echo ${{ steps.extract_version.outputs.version }}
+      - run: yarn install && yarn install-render
+        working-directory: ./
+        name: "Install Dependencies"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - run: wget -O bins/database/default-cve.db.gzip https://cve-db.oss-accelerate.aliyuncs.com/default-cve.db.gzip
+        name: "Download CVE(Include CWE) Data"
+      # 企业版
+      - run: yarn build-render-breachtrace
+        working-directory: ./
+        name: "Build Enterprise"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - name: Build BreachTrace (MultiPlatform)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: ./
+        run: |
+          yarn add -D dmg-license && yarn release-breachtrace
+      - name: View Published Content
+        run: ls ./release
+      # start Enterprise Edition
+      - name: Upload BreachTrace(Enterprise) Artifacts Windows
+        uses: actions/upload-artifact@v2
+        with:
+          # BreachTrace-1.0.3-beta24-win32-x64.exe
+          name: BreachTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/BreachTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      - name: Upload BreachTrace(Enterprise) Artifacts Mac(m1)
+        uses: actions/upload-artifact@v2
+        with:
+          # BreachTrace-1.0.3-beta24-win32-x64.exe
+          name: BreachTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          path: ./release/BreachTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+      - name: Upload BreachTrace(Enterprise) Artifacts Mac(intel)
+        uses: actions/upload-artifact@v2
+        with:
+          # BreachTrace-1.0.3-beta24-win32-x64.exe
+          name: BreachTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          path: ./release/BreachTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+      - name: Upload BreachTrace(Enterprise) Artifacts Linux
+        uses: actions/upload-artifact@v2
+        with:
+          # BreachTrace-1.0.3-beta24-win32-x64.exe
+          name: BreachTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          path: ./release/BreachTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage

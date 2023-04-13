@@ -82,9 +82,12 @@
         "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-test": "env-cmd -e devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-enterprise": "env-cmd -e enterprise -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-enpritrace": "env-cmd -e enterprise -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-test-enterprise": "env-cmd -e enterprise,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-simple-enterprise": "env-cmd -e simpleEE -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-enpritrace-agent": "env-cmd -e simpleEE -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-test-simple-enterprise": "env-cmd -e simpleEE,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+        "build-breachtrace": "env-cmd -e breachtrace -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject"
     },
