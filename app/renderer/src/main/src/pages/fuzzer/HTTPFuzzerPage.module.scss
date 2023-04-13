@@ -47,6 +47,13 @@
             display: inline-block;
             line-height: 16px;
         }
+        .stop-icon {
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
     }
     .fuzzer-firstNode-extra {
         display: flex;
@@ -134,6 +141,15 @@
 }
 
 .extra-chrome-btn {
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
     svg {
         width: 16px;
         height: 16px;
@@ -168,6 +184,9 @@
         }
         .ant-collapse-ghost > .ant-collapse-item {
             border-bottom: 1px solid var(--yakit-border-color);
+            &:last-child {
+                border-bottom: 0;
+            }
         }
         .ant-form-item {
             margin-bottom: 12px;
@@ -309,4 +328,3 @@
         }
     }
 }
-

@@ -68,8 +68,8 @@ export const ResizeCardBox: React.FC<ResizeCardBoxProps> = (props) => {
             }
             secondNode={
                 <div
-                    className={classNames(styles["resize-card"], secondNodeProps?.className || "")}
-                    style={{display: firstFull ? "none" : ""}}
+                    className={classNames(styles["resize-card"],styles['resize-card-second'], secondNodeProps?.className || "")}
+                    style={{display: firstFull ? "none" : ""}} 
                 >
                     <div className={classNames(styles["resize-card-heard"], secondNodeProps?.heardClassName || "")}>
                         <div className={styles["resize-card-heard-title"]}>{secondNodeProps?.title}</div>

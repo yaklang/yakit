@@ -48,6 +48,7 @@ import {
     PaperAirplaneIcon,
     PlusSmIcon,
     SearchIcon,
+    StopIcon,
     TrashIcon,
     WrapIcon
 } from "@/assets/newIcon"
@@ -1011,6 +1012,37 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
+                    {loading ? (
+                        <YakitButton
+                            onClick={() => {
+                                cancelCurrentHTTPFuzzer()
+                            }}
+                            icon={<StopIcon className={styles['stop-icon']} />}
+                            className='button-primary-danger'
+                            danger={true}
+                            type={"primary"}
+                            size='large'
+                        >
+                            强制停止
+                        </YakitButton>
+                    ) : (
+                        <YakitButton
+                            onClick={() => {
+                                resetResponse()
+
+                                setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
+                                setRedirectedResponse(undefined)
+                                sendFuzzerSettingInfo()
+                                submitToHTTPFuzzer()
+                                setCurrentPage(1)
+                            }}
+                            icon={<PaperAirplaneIcon style={{height: 16}} />}
+                            type={"primary"}
+                            size='large'
+                        >
+                            发送数据包
+                        </YakitButton>
+                    )}
                     {!advancedConfig && (
                         <div className={styles["display-flex"]}>
                             <span>高级配置</span>
@@ -1046,35 +1078,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </YakitButton>
                         </Popover>
                     </div>
-
-                    {loading ? (
-                        <YakitButton
-                            onClick={() => {
-                                cancelCurrentHTTPFuzzer()
-                            }}
-                            className='button-primary-danger'
-                            danger={true}
-                            type={"primary"}
-                        >
-                            强制停止
-                        </YakitButton>
-                    ) : (
-                        <YakitButton
-                            onClick={() => {
-                                resetResponse()
-
-                                setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
-                                setRedirectedResponse(undefined)
-                                sendFuzzerSettingInfo()
-                                submitToHTTPFuzzer()
-                                setCurrentPage(1)
-                            }}
-                            icon={<PaperAirplaneIcon style={{height: 16}} />}
-                            type={"primary"}
-                        >
-                            发送数据包
-                        </YakitButton>
-                    )}
                     {loading && (
                         <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
                             <YakitSpin size={"small"} style={{width: "auto"}} />
@@ -1281,7 +1284,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             noHeader={true}
                             refreshTrigger={refreshTrigger}
                             hideSearch={true}
-                            bordered={true}
+                            bordered={false}
                             noMinimap={true}
                             utf8={true}
                             originValue={StringToUint8Array(request)}
@@ -2269,14 +2272,14 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         regexps: "",
                                         keyWord: "",
                                         minBodySizeInit: undefined,
-                                        minBodySizeUnit:'B',
+                                        minBodySizeUnit: "B",
                                         maxBodySizeInit: undefined,
-                                        maxBodySizeUnit:'B',
+                                        maxBodySizeUnit: "B"
                                     }
                                     form.setFieldsValue({
                                         ...restValue
                                     })
-                                    ruleContentRef?.current?.onSetValue('')
+                                    ruleContentRef?.current?.onSetValue("")
                                     const v = form.getFieldsValue()
                                     onValuesChange({
                                         ...v,
