@@ -1040,7 +1040,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             type={"primary"}
                             size='large'
                         >
-                            发送数据包
+                            发送请求
                         </YakitButton>
                     )}
                     {!advancedConfig && (
