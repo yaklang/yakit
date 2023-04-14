@@ -76,6 +76,8 @@ const singletonRoute: Route[] = [
     Route.AccountAdminPage,
     // 角色管理
     Route.RoleAdminPage,
+    // 漏洞汇总
+    Route.HoleCollectPage,
     // License管理
     Route.LicenseAdminPage,
     // 信任用户管理
@@ -778,64 +780,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             ipcRenderer.removeAllListeners("login-out")
         }
     }, [])
-
-    const [userMenu, setUserMenu] = useState<MenuItemType[]>([
-        {key: "sign-out", title: "退出登录"},
-        {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
-    ])
-
-    useEffect(() => {
-        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo}/>
-        // 非企业管理员登录
-        if (userInfo.role === "admin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 非企业超级管理员登录
-        else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "trust-list", title: "用户管理"},
-                {key: "license-admin", title: "License管理"},
-                {key: "plugIn-admin", title: "插件权限"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 非企业license管理员
-        else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "license-admin", title: "License管理"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 企业用户管理员登录
-        else if (userInfo.role === "admin" && userInfo.platform === "company") {
-            setUserMenu([
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "role-admin", title: "角色管理"},
-                {key: "account-admin", title: "用户管理"},
-                {key: "set-password", title: "修改密码"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 企业用户非管理员登录
-        else if (userInfo.role !== "admin" && userInfo.platform === "company") {
-            setUserMenu([
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "set-password", title: "修改密码"},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        } else {
-            setUserMenu([
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-    }, [userInfo.role, userInfo.companyHeadImg])
 
     // 全局注册快捷键功能
     const documentKeyDown = useMemoizedFn((e: any) => {

@@ -5,15 +5,17 @@ import {failed} from "../../utils/notification"
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "../../pages/invoker/schema"
 import {useMemoizedFn} from "ahooks"
 import "./DataExport.css"
-
+import {YakitButton,YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 interface ExportExcelProps {
     btnProps?: ButtonProps
+    newBtnProps?: YakitButtonProp
     getData: (query: PaginationSchema) => Promise<any>
     fileName?: string
     pageSize?: number
     showButton?: boolean
     text?: string
     openModal?: boolean
+    newUI?: boolean
 }
 
 interface resProps {
@@ -31,7 +33,17 @@ interface PaginationProps {
 const maxCellNumber = 100000 // 最大单元格10w
 
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
-    const {btnProps, getData, fileName = "端口资产", pageSize = 100000, showButton = true, text,openModal=false} = props
+    const {
+        btnProps,
+        newBtnProps,
+        getData,
+        fileName = "端口资产",
+        pageSize = 100000,
+        showButton = true,
+        text,
+        openModal = false,
+        newUI = false
+    } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     const [frequency, setFrequency] = useState<number>(0)
@@ -111,9 +123,21 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     return (
         <>
             {showButton ? (
-                <Button onClick={() => toExcel()} loading={loading} {...btnProps}>
+                <>
+                    {newUI ? (
+                        <YakitButton loading={loading} type='outline2' onClick={() => toExcel()} {...newBtnProps}>
+                            {text || "导出Excel"}
+                        </YakitButton>
+                    ) : (
+                        <Button onClick={() => toExcel()} loading={loading} {...btnProps}>
+                            {text || "导出Excel"}
+                        </Button>
+                    )}
+                </>
+            ) : newUI ? (
+                <YakitButton loading={loading} type='outline2' onClick={() => toExcel()} {...newBtnProps}>
                     {text || "导出Excel"}
-                </Button>
+                </YakitButton>
             ) : (
                 <span onClick={() => toExcel()}>{text || "导出Excel"}</span>
             )}

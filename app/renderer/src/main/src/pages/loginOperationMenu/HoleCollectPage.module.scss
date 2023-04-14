@@ -1,0 +1,20 @@
+.hole-collect {
+    .table-title {
+        display: flex;
+        justify-content: space-between;
+    }
+    .filter-box {
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+        .filter-box-form {
+        }
+        .filter-btn {
+            // width: 120px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            // justify-content: flex-end;
+        }
+    }
+}
