@@ -702,6 +702,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         onRowClick={onSetCurrentRow}
                         onMoveRow={onMoveRow}
                         enableDragSort={true}
+                        enableDrag={true}
                         onMoveRowEnd={onMoveRowEnd}
                     />
                 </div>
