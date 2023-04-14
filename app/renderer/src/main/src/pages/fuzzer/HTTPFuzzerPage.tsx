@@ -504,7 +504,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             DelayMinSeconds: minDelaySeconds,
             DelayMaxSeconds: maxDelaySeconds
         }
-        console.log("params", params)
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
@@ -558,7 +557,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
-            console.log("fuzzer-data", data)
             if (data.Ok) {
                 successCount++
             } else {
@@ -616,7 +614,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // setContent([...buffer])
         })
         ipcRenderer.on(endToken, () => {
-            console.log("end")
             updateData()
             successBuffer = []
             failedBuffer = []
@@ -869,7 +866,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Pagination: {Page: 1, Limit: 1}
             })
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
-                console.log("data.Total", data.Total)
                 setTotal(data.Total)
             })
     })
