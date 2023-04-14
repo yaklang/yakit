@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -23,7 +23,7 @@ import {HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./editors.css"
-import {useDebounceFn, useFocusWithin, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Buffer} from "buffer"
 import {failed, info} from "./notification"
 import {StringToUint8Array, Uint8ArrayToString} from "./str"
@@ -37,7 +37,7 @@ import ITextModel = editor.ITextModel
 import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import IModelDecoration = editor.IModelDecoration;
+import IModelDecoration = editor.IModelDecoration
 
 const {ipcRenderer} = window.require("electron")
 
@@ -138,33 +138,30 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
 
         if (props.type === "http") {
             if (!model) {
-                return;
+                return
             }
-            let current: string[] = [];
+            let current: string[] = []
             const applyKeywordDecoration = () => {
-                const text = model.getValue();
-                const keywordRegExp = /\r?\n/g;
-                const decorations: IModelDecoration[] = [];
-                let match;
+                const text = model.getValue()
+                const keywordRegExp = /\r?\n/g
+                const decorations: IModelDecoration[] = []
+                let match
 
                 while ((match = keywordRegExp.exec(text)) !== null) {
-                    const start = model.getPositionAt(match.index);
-                    const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf";
-                    const end = model.getPositionAt(match.index + match[0].length);
+                    const start = model.getPositionAt(match.index)
+                    const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
+                    const end = model.getPositionAt(match.index + match[0].length)
                     decorations.push({
-                        id: 'keyword' + match.index,
+                        id: "keyword" + match.index,
                         ownerId: 1,
-                        range: new monaco.Range(
-                            start.lineNumber, start.column,
-                            end.lineNumber, end.column,
-                        ),
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                         options: {beforeContentClassName: className}
-                    } as IModelDecoration);
+                    } as IModelDecoration)
                 }
                 // 使用 deltaDecorations 应用装饰
-                current = model.deltaDecorations(current, decorations);
+                current = model.deltaDecorations(current, decorations)
             }
-            model.onDidChangeContent(e => {
+            model.onDidChangeContent((e) => {
                 applyKeywordDecoration()
             })
             applyKeywordDecoration()
@@ -249,7 +246,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("YaklangCompileAndFormat", {Code: allContent})
-                .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
+                .then((e: {Errors: YakStaticAnalyzeErrorResult[]; Code: string}) => {
                     console.info(e)
                     if (e.Code !== "") {
                         model.setValue(e.Code)
@@ -284,7 +281,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
+                .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                     if (e && e.Result.length > 0) {
                         const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                         // console.info(markers)
@@ -425,6 +422,11 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     utf8?: boolean
 
     defaultSearchKeyword?: string
+
+    /**@name 外部控制换行状态 */
+    noWordWrapState?: boolean
+    /**@name 外部控制字体大小 */
+    fontSizeState?: number
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
@@ -479,6 +481,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     // 操作系统类型
     const [system, setSystem] = useState<string>()
+
+    useUpdateEffect(() => {
+        setNoWordwrap(props.noWordWrapState || false)
+    }, [props.noWordWrapState])
+    useUpdateEffect(() => {
+        if (!props.fontSizeState) return
+        setFontSize(props.fontSizeState)
+    }, [props.fontSizeState])
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
@@ -615,7 +625,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     !props.noHeader && (
                         <Space>
                             {!props.noTitle &&
-                            (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
+                                (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
                             {!props.simpleMode ? (
                                 !props.noHex && (
                                     <SelectOne
@@ -672,7 +682,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <Button
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled/>}
+                                    icon={<ThunderboltFilled />}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -693,7 +703,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <Button
                                     size={"small"}
                                     type={noWordwrap ? "link" : "primary"}
-                                    icon={<EnterOutlined/>}
+                                    icon={<EnterOutlined />}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -710,8 +720,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 }}
                                                 size={"small"}
                                                 layout={"horizontal"}
-                                                wrapperCol={{span: 16}}
-                                                labelCol={{span: 8}}
+                                                wrapperCol={{span: 18}}
+                                                labelCol={{span: 6}}
                                             >
                                                 {(fontSize || 0) > 0 && (
                                                     <SelectOne
@@ -733,7 +743,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     <Button
                                                         size={"small"}
                                                         type={"link"}
-                                                        icon={<FullscreenOutlined/>}
+                                                        icon={<FullscreenOutlined />}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -758,9 +768,10 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     onVisibleChange={(v) => {
                                         setPopoverVisible(v)
                                     }}
+                                    overlayInnerStyle={{width: 220}}
                                     visible={popoverVisible}
                                 >
-                                    <Button icon={<SettingOutlined/>} type={"link"} size={"small"}/>
+                                    <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
                                 </Popover>
                             )}
                         </Space>
@@ -795,7 +806,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                            monaco.KeyCode.KEY_R
+                                                monaco.KeyCode.KEY_R
                                         ],
                                         id: "new-web-fuzzer-tab",
                                         run: (e) => {
@@ -851,7 +862,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 if (props.readOnly && props.originValue) {
                                                     ipcRenderer
                                                         .invoke("GetHTTPPacketBody", {PacketRaw: props.originValue})
-                                                        .then((bytes: { Raw: Uint8Array }) => {
+                                                        .then((bytes: {Raw: Uint8Array}) => {
                                                             saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                         })
                                                         .catch((e) => {
@@ -870,7 +881,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 }
                                                 ipcRenderer
                                                     .invoke("GetHTTPPacketBody", {Packet: text})
-                                                    .then((bytes: { Raw: Uint8Array }) => {
+                                                    .then((bytes: {Raw: Uint8Array}) => {
                                                         saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                     })
                                             } catch (e) {

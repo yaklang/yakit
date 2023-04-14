@@ -1,0 +1,36 @@
+.btn-footer {
+    margin-top: 24px;
+    margin-left: 106px;
+    margin-bottom: 32px;
+
+    button {
+        margin-right: 12px;
+    }
+}
+
+.content-value {
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+    height: 24px;
+    line-height: 24px;
+    color: var(--yakit-header-color);
+
+    .label-text {
+        margin-right: 6px;
+        width: 100px;
+        text-align: right;
+    }
+}
+.share-icon {
+    height: 16px;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.display-flex{
+    display: flex;
+    align-items: center;
+}

@@ -40,9 +40,45 @@
             box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
             z-index: 1;
         }
+        .ant-input-number-affix-wrapper:focus,
+        .ant-input-number-affix-wrapper-focused {
+            box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
+            border-color: var(--yakit-primary-4);
+        }
 
+        .ant-input-number-affix-wrapper:not(.ant-input-number-affix-wrapper-disabled):hover {
+            border-color: var(--yakit-primary-4);
+        }
         .ant-input-number-disabled:hover {
             border-color: var(--input-number-border-disabled-color);
+        }
+        .ant-input-number-affix-wrapper > div.ant-input-number {
+            height: 26px;
+        }
+        .ant-input-number-handler {
+            border-color: var(--input-number-border-color);
+        }
+    }
+}
+.yakit-input-number-wrapper-small {
+    :global {
+        .ant-input-number-affix-wrapper > div.ant-input-number {
+            height: 22px;
+        }
+    }
+}
+.yakit-input-number-wrapper-large {
+    :global {
+        .ant-input-number-affix-wrapper > div.ant-input-number {
+            height: 30px;
+        }
+    }
+}
+
+.yakit-input-number-wrapper-max-large {
+    :global {
+        .ant-input-number-affix-wrapper > div.ant-input-number {
+            height: 38px;
         }
     }
 }
@@ -56,7 +92,6 @@
     height: 28px;
     border-radius: 4px;
     line-height: 28px;
-    max-width: 88px;
     display: inline-flex;
     align-items: center;
     font-size: 12px;
@@ -69,6 +104,10 @@
         .ant-input-number-input {
             padding: 0 12px;
         }
+        .ant-input-number-input-wrap {
+            flex: 1;
+            margin-right: 24px;
+        }
     }
 }
 
@@ -76,7 +115,6 @@
 .yakit-input-number-max-large {
     height: 40px;
     line-height: 40px;
-    max-width: 96px;
 
     :global {
         .ant-input-number-input {
@@ -89,7 +127,6 @@
 .yakit-input-number-large {
     height: 32px;
     line-height: 32px;
-    max-width: 88px;
 
     :global {
         .ant-input-number-input {
@@ -102,11 +139,14 @@
 .yakit-input-number-small {
     height: 24px;
     line-height: 24px;
-    max-width: 80px;
 
     :global {
         .ant-input-number-input {
             height: 24px;
+        }
+        .ant-input-number-affix-wrapper > div.ant-input-number {
+            height: 22px;
+            border-radius: 0;
         }
     }
 }
@@ -132,6 +172,7 @@
     align-items: center;
     user-select: none;
     transition: border 0.24s linear 0.14s;
+    flex: 1;
 
     :global {
         .ant-input-number:focus,
@@ -139,10 +180,29 @@
             box-shadow: none;
             z-index: 1;
         }
+        .ant-input-number-input-wrap {
+            margin-right: 0;
+        }
+        .ant-input-number-input {
+            padding: 0 4px;
+            text-align: center;
+        }
+        .ant-input-number-handler-down {
+            border: 0;
+        }
+        .ant-input-number-handler {
+            border-left: 0;
+        }
     }
 
     &:hover {
         border-color: var(--input-number-border-hover-color);
+        .icon-left {
+            opacity: 1;
+        }
+        .icon-right {
+            opacity: 1;
+        }
     }
 
     &:focus {
@@ -153,6 +213,8 @@
         border-right: 1px solid var(--input-number-border-color);
         border-radius: 4px 0px 0px 4px;
         cursor: pointer;
+        opacity: 0;
+        color: var(--yakit-body-text-color);
 
         &:hover {
             color: var(--input-number-hover-color);
@@ -163,6 +225,8 @@
         border-left: 1px solid var(--input-number-border-color);
         border-radius: 0px 4px 4px 0px;
         cursor: pointer;
+        opacity: 0;
+        color: var(--yakit-body-text-color);
 
         &:hover {
             color: var(--input-number-hover-color);
@@ -170,7 +234,7 @@
     }
 
     .icon-midden {
-        background: #ffffff;
+        background-color: var(--yakit-card-background-color);
         width: 24px;
         height: 28px;
         line-height: 28px;
@@ -194,8 +258,10 @@
     }
 
     .yakit-input-number-wrapper {
-        width: 64px;
+        width: auto;
         border-radius: 0;
+        flex: 1;
+        min-width: 32px;
 
         :global {
             .ant-input-number-handler-wrap {

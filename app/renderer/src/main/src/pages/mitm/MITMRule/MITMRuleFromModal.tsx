@@ -1,5 +1,5 @@
 import {Col, Divider, Form, Row} from "antd"
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useImperativeHandle, useState} from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
 import {
@@ -29,6 +29,9 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {colorSelectNode} from "./MITMRule"
 import {ValidateStatus} from "antd/lib/form/FormItem"
+import {InternalTextAreaProps} from "@/components/yakitUI/YakitInput/YakitInputType"
+import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
+import {SizeType} from "antd/lib/config-provider/SizeContext"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -207,10 +210,10 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
     const [selected, setSelected] = useState<string>("")
     const [_responseStr, setResponseStr] = useState<string>("")
-    const [isEdit, setIsEdit] = useState<boolean>(false)
+
     //用户选择的数据转换成的正则
     const [matchedRegexp, setMatchedRegexp] = useState<string>("")
-    const [editMatchedRegexp, setEditMatchedRegexp] = useState<string>("")
+
     useEffect(() => {
         if (!editor) {
             return
@@ -270,48 +273,78 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
                     type={"html"}
                 />
             </div>
-            <div className={styles["yakit-editor-regexp"]}>
-                {!isEdit && matchedRegexp && (
-                    <div className={styles["yakit-editor-regexp-tag"]}>
-                        <div className={styles["yakit-editor-regexp-value"]} title={matchedRegexp}>
-                            {matchedRegexp}
-                        </div>
-                        <div className={styles["yakit-editor-icon"]}>
-                            <PencilAltIcon
-                                onClick={() => {
-                                    setIsEdit(true)
-                                    setEditMatchedRegexp(matchedRegexp)
-                                }}
-                            />
-                            <Divider type='vertical' />
-                            <CheckIcon
-                                onClick={() => {
-                                    onSave(matchedRegexp)
-                                }}
-                            />
-                        </div>
+            <RegexpInput regexp={matchedRegexp} tagSize="large" showCheck={true} onSave={onSave} onSure={setMatchedRegexp} />
+        </div>
+    )
+})
+interface RegexpInputProps {
+    regexp: string
+    inputSize?: SizeType
+    onSave: (s: string) => void
+    onSure: (s: string) => void
+    showCheck?: boolean
+    /**@name 初始是否显示 编辑icon/初始文字tag */
+    initialTagShow?: boolean
+    textAreaProps?: InternalTextAreaProps
+    tagSize?: YakitSizeType
+}
+
+export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
+    const {regexp, inputSize, tagSize = "middle", onSave, onSure, showCheck, initialTagShow} = props
+    const [isEdit, setIsEdit] = useState<boolean>(false)
+    const [tagShow, setTagShow] = useState<boolean>(initialTagShow || false)
+    const [editMatchedRegexp, setEditMatchedRegexp] = useState<string>("")
+    useEffect(() => {
+        if (regexp) setTagShow(true)
+    }, [regexp])
+    return (
+        <div className={styles["yakit-editor-regexp"]}>
+            {!isEdit && tagShow && (
+                <YakitTag size={tagSize} className={styles["yakit-editor-regexp-tag"]}>
+                    <div className={styles["yakit-editor-regexp-value"]} title={regexp}>
+                        {regexp}
                     </div>
-                )}
-                <div className={styles["yakit-editor-text-area"]} style={{display: isEdit ? "" : "none"}}>
-                    <YakitInput.TextArea
-                        value={editMatchedRegexp}
-                        onChange={(e) => setEditMatchedRegexp(e.target.value)}
-                        autoSize={{minRows: 1, maxRows: 3}}
-                    />
-                    <div className={styles["yakit-editor-btn"]}>
-                        <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
-                            取消
-                        </div>
-                        <Divider type='vertical' style={{margin: "0 8px", top: 2}} />
-                        <div
-                            className={styles["save-btn"]}
+                    <div className={styles["yakit-editor-icon"]}>
+                        <PencilAltIcon
                             onClick={() => {
-                                setIsEdit(false)
-                                setMatchedRegexp(editMatchedRegexp)
+                                setIsEdit(true)
+                                setTagShow(true)
+                                setEditMatchedRegexp(regexp)
                             }}
-                        >
-                            确定
-                        </div>
+                        />
+                        {showCheck && (
+                            <>
+                                <Divider type='vertical' style={{top: 1}} />
+                                <CheckIcon
+                                    onClick={() => {
+                                        onSave(regexp)
+                                    }}
+                                />
+                            </>
+                        )}
+                    </div>
+                </YakitTag>
+            )}
+            <div className={styles["yakit-editor-text-area"]} style={{display: isEdit ? "" : "none"}}>
+                <YakitInput.TextArea
+                    value={editMatchedRegexp}
+                    onChange={(e) => setEditMatchedRegexp(e.target.value)}
+                    autoSize={{minRows: 1, maxRows: 3}}
+                    size={inputSize}
+                />
+                <div className={styles["yakit-editor-btn"]}>
+                    <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
+                        取消
+                    </div>
+                    <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
+                    <div
+                        className={styles["save-btn"]}
+                        onClick={() => {
+                            setIsEdit(false)
+                            onSure(editMatchedRegexp)
+                        }}
+                    >
+                        确定
                     </div>
                 </div>
             </div>
@@ -535,8 +568,13 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
     )
 })
 
-export const RuleContent: React.FC<RuleContentProps> = React.memo((props) => {
-    const {getRule} = props
+export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, ref) => {
+    useImperativeHandle(ref, () => ({
+        onSetValue: (v) => {
+            setRule(v)
+        }
+    }))
+    const {getRule, inputProps} = props
     const [rule, setRule] = useState<string>("")
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const onGetRule = useMemoizedFn((val: string) => {
@@ -544,9 +582,11 @@ export const RuleContent: React.FC<RuleContentProps> = React.memo((props) => {
         getRule(val)
         setRuleVisible(false)
     })
+
     return (
         <>
             <YakitInput
+                {...inputProps}
                 value={rule}
                 placeholder='可用右侧辅助工具，自动生成正则'
                 addonAfter={
@@ -568,7 +608,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.memo((props) => {
                 footer={null}
                 closable={true}
             >
-                <ExtractRegular onSave={onGetRule} />
+                <ExtractRegular onSave={(v)=>onGetRule(v)} />
             </YakitModal>
         </>
     )

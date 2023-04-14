@@ -128,7 +128,7 @@
     background-color: #b4bbca;
 }
 
-// ========================== notification ==========================
+// ========================== notification start ==========================
 .yakit-notification-failed {
     background: rgba(255, 255, 255, 0.9);
     box-shadow: 0px 4px 8px rgb(133 137 158 / 12%);
@@ -173,8 +173,9 @@
 .ant-notification-notice {
     border-radius: 4px;
 }
+// ========================== notification end ==========================
 
-// ========================== button ==========================
+// ========================== button start ==========================
 .button-text-danger {
     --button-wave-shadow-color: var(--yakit-danger-2);
 
@@ -207,7 +208,48 @@
     --button-press-border-color: var(--yakit-primary-6);
 }
 
-// ========================== Modal.confirm ==========================
+.button-outline2-danger {
+    --button-wave-shadow-color: var(--yakit-danger-2);
+
+    --button-background: var(--yakit-neutral10-color);
+    --button-color: var(--yakit-danger-5);
+    --button-border-color: var(--yakit-danger-5);
+
+    --button-hover-background: var(--yakit-neutral10-color);
+    --button-hover-color: var(--yakit-danger-4);
+    --button-hover-border-color: var(--yakit-danger-4);
+
+    --button-disable-background: var(--yakit-neutral10-color);
+    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-border-color: var(--yakit-border-color);
+
+    --button-press-background: var(--yakit-neutral10-color);
+    --button-press-color: var(--yakit-danger-6);
+    --button-press-border-color: var(--yakit-danger-6);
+}
+
+.button-primary-danger {
+    --button-wave-shadow-color: var(--yakit-danger-2);
+
+    --button-background: var(--yakit-danger-5);
+    --button-color: var(--yakit-neutral10-color);
+    --button-border-color: transparent;
+
+    --button-hover-background: var(--yakit-danger-4);
+    --button-hover-color: var(--yakit-neutral10-color);
+    --button-hover-border-color: transparent;
+
+    --button-disable-background: var(--yakit-background-color);
+    --button-disable-color: var(--yakit-disable-text-color);
+    --button-disable-border-color: transparent;
+
+    --button-press-background: var(--yakit-danger-6);
+    --button-press-color: var(--yakit-neutral10-color);
+    --button-press-border-color: transparent;
+}
+// ========================== button end ==========================
+
+// ========================== Modal.confirm start ==========================
 .modal-remove-icon {
     svg {
         width: 16px;
@@ -259,3 +301,136 @@
         background: var(--yakit-primary-6);
     }
 }
+// ========================== Modal.confirm end ==========================
+
+// ========================== antd list to yakit start ==========================
+.yakit-list {
+    .ant-spin {
+        color: var(--yakit-primary-5);
+    }
+    .ant-spin-dot-item {
+        background-color: var(--yakit-primary-5);
+    }
+    .ant-pagination-item:hover a {
+        color: var(--yakit-primary-5);
+    }
+    .ant-pagination-prev:hover .ant-pagination-item-link,
+    .ant-pagination-next:hover .ant-pagination-item-link {
+        color: var(--yakit-primary-5);
+    }
+    .ant-pagination-item a {
+        color: var(--yakit-header-color);
+    }
+    .ant-pagination-item-active {
+        border-color: var(--yakit-primary-5);
+    }
+    .ant-pagination-item-active a {
+        color: var(--yakit-primary-5);
+    }
+    .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon,
+    .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon {
+        color: var(--yakit-primary-5);
+    }
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+        border-color: var(--yakit-border-color);
+        border-radius: 4px;
+        color: var(--yakit-header-color);
+        &:hover {
+            border-color: var(--yakit-primary-4);
+        }
+    }
+    .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+        border: 1px solid var(--yakit-primary-4);
+        box-shadow: 0 0 0 2px var(--yakit-primary-2);
+    }
+
+    // ----------------------------------------- popup------------------------------------------
+
+    .ant-select-item-option-content:hover {
+        color: var(--yakit-primary-5);
+    }
+
+    .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+        background-color: transparent;
+    }
+
+    .ant-select-item {
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 0 4px;
+
+        &:hover {
+            background-color: var(--yakit-background-color);
+            color: var(--yakit-primary-5);
+        }
+    }
+
+    .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+        font-weight: 400;
+        background-color: var(--yakit-primary-2);
+        color: var(--yakit-primary-5);
+        &:hover {
+            background-color: var(--yakit-background-color);
+            color: var(--yakit-primary-5);
+        }
+    }
+}
+.yakit-list-bordered {
+    border: 1px solid var(--yakit-border-color);
+    border-radius: 4px;
+}
+// ========================== antd list to yakit end ==========================
+
+// ========================== antd input-group select - yakit start ==========================
+.yakit-input-group {
+    display: flex !important;
+
+    .ant-input-affix-wrapper {
+        border-radius: 0;
+    }
+    > :first-child {
+        .ant-input-affix-wrapper {
+            border-radius: 4px 0 0 4px;
+        }
+    }
+    > :last-child {
+        .ant-input-affix-wrapper {
+            border-radius: 0 4px 4px 0;
+        }
+    }
+    > *:not(:last-child) {
+        margin-right: 0 !important;
+    }
+    .ant-select-arrow {
+        // z-index: 1;
+    }
+    .ant-select-selector {
+        border-left-width: 0 !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        &:hover,
+        &:focus,
+        &:active {
+            border-left-width: 1px !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 4px !important;
+        }
+    }
+    .ant-select-focused {
+        .ant-select-selector {
+            // z-index: 1;
+            border-left-width: 1px !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 4px !important;
+        }
+    }
+    .ant-select-open {
+        .ant-select-selector {
+            // z-index: 1;
+            border-left-width: 1px !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 4px !important;
+        }
+    }
+}
+// ========================== antd input-group select - yakit end ==========================

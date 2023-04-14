@@ -11,7 +11,9 @@
         .ant-input-borderless {
             border: none;
         }
-
+        .ant-input-group {
+            display: flex;
+        }
         .ant-input-group-wrapper {
             padding: 0 !important;
         }
@@ -19,6 +21,7 @@
         .ant-input-group-addon {
             border-radius: 4px;
             border-color: var(--input-border-color);
+            color: var(--yakit-header-color);
         }
 
         .ant-input-group > .ant-input:first-child,
@@ -31,6 +34,11 @@
         .ant-input-group-addon:last-child {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
+            min-width: 24px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .ant-input {
@@ -48,8 +56,16 @@
         .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
         .ant-input-affix-wrapper-focused,
         .ant-input-affix-wrapper:focus {
-            border-color: var(--input-hover-border-color);
+            border-color: var(--input-hover-border-color) !important;
             box-shadow: 0 0 0 2px var(--input-box-shadow-color);
+        }
+        .ant-input-affix-wrapper {
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            color: var(--yakit-header-color);
+            border-color: var(--input-border-color);
+            border-radius: 4px;
         }
     }
 
@@ -92,7 +108,7 @@
     padding: 6px 12px;
     font-size: 14px;
     color: #31343f;
-
+    border-color: var(--yakit-border-color);
     :global {
         .ant-input {
             font-size: 12px;
@@ -104,12 +120,21 @@
 
 .yakit-input-wrapper-small {
     height: 26px;
+    :global {
+        .ant-input-affix-wrapper .ant-input {
+            height: 16px;
+            line-height: 16px;
+        }
+    }
 }
 
 .yakit-input-small {
     height: 24px;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 16px;
 
-    :gllobal {
+    :global {
         .ant-input {
             height: 24px;
         }
@@ -211,6 +236,9 @@
         .ant-input-search .ant-input-group .ant-input-affix-wrapper:not(:last-child) {
             border-top-left-radius: 4px;
             border-bottom-left-radius: 4px;
+        }
+        .ant-input-search-button .anticon-search{
+            height: 12px;
         }
     }
 }

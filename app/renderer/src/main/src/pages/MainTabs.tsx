@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useRef, useState, ReactNode, useLayoutEffect} from "react"
 import {Input, Popover, Space, Tabs} from "antd"
-import {multipleNodeInfo} from "./MainOperator"
+import {multipleNodeInfo, noPaddingPage} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
@@ -233,6 +233,9 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                                         />
                                     </Space>
                                 }
+                                style={{
+                                    padding: noPaddingPage.includes(tabType as any) ? 0 : "8px 16px 13px 16px"
+                                }}
                             >
                                 <div
                                     style={{

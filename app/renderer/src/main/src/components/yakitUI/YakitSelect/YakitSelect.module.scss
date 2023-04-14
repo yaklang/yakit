@@ -1,7 +1,7 @@
 // ========================== select ==========================
 .yakit-select {
     --select-box-shadow-color: var(--yakit-primary-2);
-    --select-border-primary-color: var(--yakit-primary-3);
+    --select-border-primary-color: var(--yakit-primary-4);
     --select-border-color: var(--yakit-border-color);
 
     --select-primary-font-color: var(--yakit-primary-1);
@@ -21,6 +21,9 @@
         .ant-select {
             display: flex;
             font-size: 12px;
+        }
+        .ant-tag {
+            width: 100%;
         }
 
         .ant-select-selector {
@@ -67,6 +70,15 @@
             line-height: 20px;
         }
 
+        .ant-select-multiple .ant-select-selection-item {
+            align-items: center;
+            border-radius: 4px;
+            border: 1px solid var(--select-border-color);
+            background: var(--yakit-card-background-color);
+            margin-top: 1px;
+            color: var(--yakit-body-text-color);
+        }
+
         // ========================== disabled ==========================
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
             background: var(--select-background-disabled-color);
@@ -106,6 +118,11 @@
             background-color: var(--select-background-color);
             color: var(--yakit-primary-5);
         }
+
+        // ------------ 滚动条 ----------
+        .rc-virtual-list-scrollbar-thumb {
+            background: #c1c1c1 !important;
+        }
     }
 }
 
@@ -143,10 +160,17 @@
 
         .ant-select-selection-overflow-item {
             height: 24px;
+            line-height: 24px;
+            margin-top: 3px !important;
         }
         .ant-select-multiple .ant-select-selection-item {
             height: 24px;
             line-height: 24px;
+            margin-top: 0;
+        }
+        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+            height: 26px;
+            line-height: 26px;
         }
     }
 }
@@ -170,10 +194,15 @@
 
         .ant-select-selection-overflow-item {
             height: 20px;
+            line-height: 20px;
         }
         .ant-select-multiple .ant-select-selection-item {
             height: 20px;
             line-height: 20px;
+        }
+        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+            height: 22px;
+            line-height: 22px;
         }
     }
 }
@@ -198,6 +227,7 @@
 
         .ant-select-selection-overflow-item {
             height: 16px;
+            line-height: 16px;
         }
 
         .ant-select-multiple .ant-select-selector::after {
@@ -206,6 +236,12 @@
         .ant-select-multiple .ant-select-selection-item {
             height: 16px;
             line-height: 16px;
+            margin-top: 1px;
+            border-radius: 2px;
+        }
+        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+            height: 18px;
+            line-height: 18px;
         }
     }
 }
@@ -241,9 +277,14 @@
         }
 
         .ant-select-selection-overflow-item {
-            margin-top: 3px;
-            display: inline-flex;
+            margin-top: 1px;
+            // display: inline-flex;
+            display: inline-block;
             align-items: center;
+            margin-right: 4px;
+        }
+        .ant-tag {
+            margin-right: 0;
         }
     }
 }
