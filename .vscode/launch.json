@@ -17,20 +17,5 @@
       "program": "${workspaceRoot}/app/main/index.js",
       "protocol": "inspector"
     },
-    {
-      "name": "Debug Renderer Process",
-      "type": "chrome",
-      "request": "launch",
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-      "windows": {
-        "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
-      },
-      "runtimeArgs": [
-        "http://localhost:3000",
-        "--remote-debugging-port=9222"
-      ],
-      "sourceMaps": true,
-      "webRoot": "${workspaceRoot}"
-    }
   ]
 }

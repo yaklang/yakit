@@ -100,6 +100,10 @@ const batchMenuData: YakitMenuItemProps[] = [
         label: "不替换"
     },
     {
+        key: "replace",
+        label: "替换"
+    },
+    {
         key: "remove",
         label: "删除"
     }
@@ -378,14 +382,21 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setRules(newRules)
     })
     const onMenuSelect = useMemoizedFn((key: string) => {
-        if (key === "ban") {
-            onBatchNoReplaceOrBan(true, "Disabled")
-        }
-        if (key === "no-replace") {
-            onBatchNoReplaceOrBan(false, "NoReplace")
-        }
-        if (key === "remove") {
-            onBatchRemove()
+        switch (key) {
+            case "ban":
+                onBatchNoReplaceOrBan(true, "Disabled")
+                break
+            case "replace":
+                onBatchNoReplaceOrBan(false, "NoReplace")
+                break
+            case "no-replace":
+                onBatchNoReplaceOrBan(true, "NoReplace")
+                break
+            case "remove":
+                onBatchRemove()
+                break
+            default:
+                break
         }
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
@@ -553,7 +564,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             e.stopPropagation()
                             Modal.destroyAll()
                         }}
-                        className="modal-remove-icon"
+                        className='modal-remove-icon'
                     >
                         <RemoveIcon />
                     </div>
