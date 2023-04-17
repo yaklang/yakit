@@ -2499,6 +2499,7 @@ message FuzzerRequest {
   bool NoFollowRedirect = 9;
   bool NoFollowMetaRedirect = 10;
   bool FollowJSRedirect = 11;
+  double RedirectTimes = 27;
 
   // 如果从历史加载，就用这个！
   int32 HistoryWebFuzzerId = 12;
@@ -2523,6 +2524,8 @@ message FuzzerRequest {
   int64 MaxRetryTimes = 20; // 最大重试次数
   string RetryInStatusCode = 21; // 命中这些状态码的时候，重试
   string RetryNotInStatusCode = 22; // 不是这些状态的时候，重试
+  double RetryWaitSeconds = 25; // 重试等待时间
+  double RetryMaxWaitSeconds = 26; // 最大重试等待时间
 
   // Response Charset
   // 默认或者不填为 UTF8

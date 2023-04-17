@@ -141,7 +141,7 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: {Header: string; Value: string}[]
+    Headers: { Header: string; Value: string }[]
     ResponseRaw: Uint8Array
     RequestRaw: Uint8Array
     BodyLength: number
@@ -235,10 +235,10 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
     )
 }
 
-function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
+function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: {Url: string}) => {
+        .then((data: { Url: string }) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -291,6 +291,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         props.fuzzerParams?.request || props.request || defaultPostTemplate
     )
 
+    // params
     const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
     const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
@@ -305,6 +306,17 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
+    // 重试
+    const [retryMaxTimes, setRetryMaxTimes] = useState(0);
+    const [retryInStatusCode, setRetryInStatusCode] = useState("");
+    const [retryNotInStatusCode, setRetryNotInStatusCode] = useState("");
+    const [retryWaitSeconds, setRetryWaitSeconds] = useState(0); // float
+    const [retryMaxWaitSeconds, setRetryMaxWaitSeconds] = useState(0);
+    // 重定向配置
+    const [redirectMaxTimes, setRedirectMaxTimes] = useState(0);
+    const [noFollowRedirect, setNoFollowRedirect] = useState(true);
+    const [noFollowMetaRedirect, setNoFollowMetaRedirect] = useState(true);
+    const [followJSRedirect, setFollowJSRedirect] = useState(false);
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
 
@@ -466,7 +478,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
-                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
+                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -502,7 +514,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Regexps: getFilter().Regexps.filter((i) => !!i)
             },
             DelayMinSeconds: minDelaySeconds,
-            DelayMaxSeconds: maxDelaySeconds
+            DelayMaxSeconds: maxDelaySeconds,
+
+            // retry config
+            MaxRetryTimes: retryMaxTimes,
+            RetryInStatusCode: retryInStatusCode,
+            RetryNotInStatusCode: retryNotInStatusCode,
+            RetryWaitSeconds: retryWaitSeconds,
+            RetryMaxWaitSeconds: retryMaxWaitSeconds,
+
+            // redirect config
+            NoFollowRedirect: noFollowRedirect,
+            NoFollowMetaRedirect: noFollowMetaRedirect,
+            FollowJSRedirect: followJSRedirect,
+            RedirectTimes: redirectMaxTimes,
         }
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
@@ -649,7 +674,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
                     })
                     setFilterContent(filters)
-                } catch (error) {}
+                } catch (error) {
+                }
             }, 500)
         )
     }
@@ -700,7 +726,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let reason = "未知原因"
         try {
             reason = rsp!.Reason
-        } catch (e) {}
+        } catch (e) {
+        }
         return (
             <HTTPPacketEditor
                 defaultSearchKeyword={defaultResponseSearch}
@@ -826,7 +853,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: pageInt, Limit: 1}
             })
-            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
+            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
@@ -865,7 +892,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: 1, Limit: 1}
             })
-            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
+            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
                 setTotal(data.Total)
             })
     })
@@ -931,13 +958,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setMinDelaySeconds(val.minDelaySeconds ? Number(val.minDelaySeconds) : 0)
         setMaxDelaySeconds(val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0)
         // 重试配置
-        // maxRetryTimes
-        // retryConfiguration
-        // noRetryConfiguration
+        if (val.maxRetryTimes > 0) {
+            setRetryMaxTimes(val.maxRetryTimes)
+        } else {
+            setRetryMaxTimes(0)
+        }
+        setRetryInStatusCode(val.retryConfiguration?.statusCode || "")
+        setRetryNotInStatusCode(val.noRetryConfiguration?.statusCode || "")
+        setRetryWaitSeconds(val.retryConfiguration?.waitTime || 0)
+        setRetryMaxWaitSeconds(val.retryConfiguration?.maxWaitTime || 0)
+
         // 重定向配置
-        // redirectCount: 3,
-        // redirectConfiguration: undefined,
-        // noRedirectConfiguration: undefined,
+        setRedirectMaxTimes(val.redirectCount || 0)
+        setNoFollowRedirect(val.noFollowRedirect)
+        setNoFollowMetaRedirect(val.noFollowMetaRedirect)
+        setFollowJSRedirect(val.followJSRedirect)
+
         // 过滤配置
         setFilterMode(val.filterMode)
         setFilter({
@@ -972,17 +1008,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     minDelaySeconds,
                     maxDelaySeconds,
                     // 重试配置
-                    maxRetryTimes: 3,
+                    maxRetryTimes: retryMaxTimes,
                     retryConfiguration: {
-                        statusCode: "",
+                        statusCode: retryInStatusCode,
                         keyWord: ""
                     },
                     noRetryConfiguration: {
-                        statusCode: "",
+                        statusCode: retryNotInStatusCode,
                         keyWord: ""
                     },
                     // 重定向配置
-                    redirectCount: 3,
+                    redirectCount: redirectMaxTimes,
+                    noFollowRedirect: noFollowRedirect,
+                    noFollowMetaRedirect: noFollowMetaRedirect,
+                    followJSRedirect: followJSRedirect,
                     redirectConfiguration: {
                         statusCode: "",
                         keyWord: ""
@@ -1017,7 +1056,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onClick={() => {
                                 cancelCurrentHTTPFuzzer()
                             }}
-                            icon={<StopIcon className={styles["stop-icon"]} />}
+                            icon={<StopIcon className={styles["stop-icon"]}/>}
                             className='button-primary-danger'
                             danger={true}
                             type={"primary"}
@@ -1036,7 +1075,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 submitToHTTPFuzzer()
                                 setCurrentPage(1)
                             }}
-                            icon={<PaperAirplaneIcon style={{height: 16}} />}
+                            icon={<PaperAirplaneIcon style={{height: 16}}/>}
                             type={"primary"}
                             size='large'
                         >
@@ -1046,17 +1085,17 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {!advancedConfig && (
                         <div className={styles["display-flex"]}>
                             <span>高级配置</span>
-                            <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
+                            <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig}/>
                         </div>
                     )}
                     <div className={styles["fuzzer-heard-force"]}>
                         <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
-                        <YakitCheckbox checked={isHttps} onChange={(e) => setIsHttps(e.target.checked)} />
+                        <YakitCheckbox checked={isHttps} onChange={(e) => setIsHttps(e.target.checked)}/>
                     </div>
-                    <Divider type='vertical' style={{margin: 0, top: 1}} />
+                    <Divider type='vertical' style={{margin: 0, top: 1}}/>
                     <div className={styles["display-flex"]}>
-                        <ShareData module='fuzzer' getShareContent={getShareContent} />
-                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
+                        <ShareData module='fuzzer' getShareContent={getShareContent}/>
+                        <Divider type='vertical' style={{margin: "0 8px", top: 1}}/>
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
@@ -1077,14 +1116,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
+                            <YakitButton type='text' icon={<ClockIcon/>} style={{padding: "4px 0px"}}>
                                 历史
                             </YakitButton>
                         </Popover>
                     </div>
                     {loading && (
                         <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
-                            <YakitSpin size={"small"} style={{width: "auto"}} />
+                            <YakitSpin size={"small"} style={{width: "auto"}}/>
                             sending packets
                         </div>
                     )}
@@ -1194,7 +1233,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 refreshRequest()
                                                             }
                                                         })
-                                                        .finally(() => {})
+                                                        .finally(() => {
+                                                        })
                                                 }}
                                                 size={"small"}
                                             >
@@ -1379,8 +1419,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                             filterContent.length !== 0
                                                                 ? filterContent
                                                                 : keyword
-                                                                ? []
-                                                                : successFuzzer
+                                                                    ? []
+                                                                    : successFuzzer
                                                         }
                                                         query={query}
                                                         setQuery={setQuery}
@@ -1435,7 +1475,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         setUrlPacketShow(false)
                                     }
                                 })
-                                .finally(() => {})
+                                .finally(() => {
+                                })
                         }}
                         size={"small"}
                     >
@@ -1456,6 +1497,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </div>
     )
 }
+
 interface SecondNodeExtraProps {
     rsp: FuzzerResponse
     onlyOneResponse: boolean
@@ -1469,6 +1511,7 @@ interface SecondNodeExtraProps {
     query?: HTTPFuzzerPageTableQuery
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
 }
+
 /**
  * @description 右边的返回内容 头部 extra
  */
@@ -1531,14 +1574,14 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 {(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover content={searchNode}>
                         <YakitButton
-                            icon={<SearchIcon />}
+                            icon={<SearchIcon/>}
                             size='small'
                             type='outline2'
                             className={styles["editor-cog-icon"]}
                         />
                     </YakitPopover>
                 )}
-                <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <Divider type='vertical' style={{margin: 0, top: 1}}/>
                 <ChromeSvgIcon
                     className={styles["extra-chrome-btn"]}
                     onClick={() => {
@@ -1548,17 +1591,18 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 <YakitButton
                     type='primary'
                     onClick={() => {
-                        analyzeFuzzerResponse(rsp, () => {})
+                        analyzeFuzzerResponse(rsp, () => {
+                        })
                     }}
                     size='small'
                 >
                     详情
                 </YakitButton>
-                <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <Divider type='vertical' style={{margin: 0, top: 1}}/>
                 <YakitButton
                     type='outline2'
                     size='small'
-                    icon={<TrashIcon />}
+                    icon={<TrashIcon/>}
                     className={classNames("button-text-danger", styles["trash-icon-btn"])}
                     onClick={() => onRemove()}
                 />
@@ -1611,7 +1655,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         }}
                     >
                         <YakitButton
-                            icon={<SearchIcon />}
+                            icon={<SearchIcon/>}
                             size='small'
                             type='outline2'
                             className={classNames(styles["editor-cog-icon"], {
@@ -1660,7 +1704,8 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                                 <BodyLengthInputNumber
                                     ref={bodyLengthRef}
                                     query={bodyLength}
-                                    setQuery={() => {}}
+                                    setQuery={() => {
+                                    }}
                                     showFooter={false}
                                 />
                             </div>
@@ -1678,19 +1723,19 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                     }}
                 >
                     <YakitButton
-                        icon={<FilterIcon />}
+                        icon={<FilterIcon/>}
                         size='small'
                         type='outline2'
                         className={classNames(styles["editor-cog-icon"], {
                             [styles["active-icon"]]:
-                                (query?.StatusCode?.length || 0) > 0 ||
-                                query?.afterBodyLength ||
-                                query?.beforeBodyLength
+                            (query?.StatusCode?.length || 0) > 0 ||
+                            query?.afterBodyLength ||
+                            query?.beforeBodyLength
                         })}
                     />
                 </YakitPopover>
 
-                <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <Divider type='vertical' style={{margin: 0, top: 1}}/>
                 <YakitButton
                     type='outline2'
                     size='small'
@@ -1737,6 +1782,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
     }
     return <></>
 })
+
 interface SecondNodeTitleProps {
     rsp: FuzzerResponse
     onlyOneResponse: boolean
@@ -1788,6 +1834,7 @@ const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
     }
     return <></>
 })
+
 interface AdvancedConfigValueProps {
     // 请求包配置
     forceFuzz?: boolean
@@ -1806,6 +1853,8 @@ interface AdvancedConfigValueProps {
     retryConfiguration?: {
         statusCode: string
         keyWord: string
+        waitTime?: number
+        maxWaitTime?: number
     }
     noRetryConfiguration?: {
         statusCode: string
@@ -1813,6 +1862,9 @@ interface AdvancedConfigValueProps {
     }
     // 重定向配置
     redirectCount: number
+    noFollowRedirect: boolean
+    noFollowMetaRedirect: boolean
+    followJSRedirect: boolean
     redirectConfiguration?: {
         statusCode: string
         keyWord: string
@@ -1839,6 +1891,7 @@ interface AdvancedConfigValueProps {
     /**@name 响应大小最大值单位 */
     maxBodySizeUnit: "B" | "K" | "M"
 }
+
 interface HttpQueryAdvancedConfigProps {
     defAdvancedConfigValue: AdvancedConfigValueProps
     isHttps: boolean
@@ -1848,6 +1901,7 @@ interface HttpQueryAdvancedConfigProps {
     onInsertYakFuzzer: () => void
     onValuesChange: (v: AdvancedConfigValueProps) => void
 }
+
 const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
     const {defAdvancedConfigValue, isHttps, setIsHttps, visible, setVisible, onInsertYakFuzzer, onValuesChange} = props
 
@@ -1892,7 +1946,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}}>
             <div className={styles["advanced-config-heard"]}>
                 <span>高级配置</span>
-                <YakitSwitch checked={visible} onChange={setVisible} />
+                <YakitSwitch checked={visible} onChange={setVisible}/>
             </div>
             <Form
                 form={form}
@@ -1909,7 +1963,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                 <Collapse
                     defaultActiveKey={["请求包配置", "发包配置", "过滤配置"]}
                     ghost
-                    expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                    expandIcon={(e) => (e.isActive ? <ChevronDownIcon/> : <ChevronRightIcon/>)}
                 >
                     <Panel
                         header='请求包配置'
@@ -1941,12 +1995,12 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </YakitButton>
                         }
                     >
-                        <Form.Item label='Intruder'>
+                        <Form.Item label='Fuzztag 辅助'>
                             <YakitButton
                                 size='small'
                                 type='outline1'
                                 onClick={() => onInsertYakFuzzer()}
-                                icon={<PlusSmIcon className={styles["plus-sm-icon"]} />}
+                                icon={<PlusSmIcon className={styles["plus-sm-icon"]}/>}
                             >
                                 插入 yak.fuzz 语法
                             </YakitButton>
@@ -1956,30 +2010,30 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 <span className={styles["advanced-config-form-label"]}>
                                     渲染 Fuzz
                                     <Tooltip title='关闭之后，所有的 Fuzz 标签将会失效' overlayStyle={{width: 150}}>
-                                        <InformationCircleIcon className={styles["info-icon"]} />
+                                        <InformationCircleIcon className={styles["info-icon"]}/>
                                     </Tooltip>
                                 </span>
                             }
                             name='forceFuzz'
                             valuePropName='checked'
                         >
-                            <YakitSwitch />
+                            <YakitSwitch/>
                         </Form.Item>
                         <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
-                            <YakitSwitch onChange={setIsHttps} />
+                            <YakitSwitch onChange={setIsHttps}/>
                         </Form.Item>
                         <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
-                            <YakitSwitch />
+                            <YakitSwitch/>
                         </Form.Item>
                         <Form.Item label='请求 Host' name='actualHost'>
-                            <YakitInput placeholder='请输入...' size='small' />
+                            <YakitInput placeholder='请输入...' size='small'/>
                         </Form.Item>
                         <Form.Item label='超时时长' name='timeout'>
-                            <YakitInputNumber type='horizontal' size='small' />
+                            <YakitInputNumber type='horizontal' size='small'/>
                         </Form.Item>
                     </Panel>
                     <Panel
-                        header='发包配置'
+                        header='并发配置'
                         key='发包配置'
                         extra={
                             <YakitButton
@@ -2008,7 +2062,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         }
                     >
                         <Form.Item label='并发线程' name='concurrent'>
-                            <YakitInputNumber type='horizontal' size='small' />
+                            <YakitInputNumber type='horizontal' size='small'/>
                         </Form.Item>
                         <Form.Item
                             label={
@@ -2018,7 +2072,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         title='设置多个代理时，会智能选择能用的代理进行发包'
                                         overlayStyle={{width: 150}}
                                     >
-                                        <InformationCircleIcon className={styles["info-icon"]} />
+                                        <InformationCircleIcon className={styles["info-icon"]}/>
                                     </Tooltip>
                                 </span>
                             }
@@ -2080,7 +2134,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         </Form.Item>
                     </Panel>
                     {/* 以下重试配置、重定向配置，后期再调试 勿删 */}
-                    {/* <Panel
+                    <Panel
                         header='重试配置'
                         key='重试配置'
                         extra={
@@ -2115,7 +2169,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         }
                     >
                         <Form.Item label='重试次数' name='maxRetryTimes'>
-                            <YakitInputNumber type='horizontal' size='small' />
+                            <YakitInputNumber type='horizontal' size='small'/>
                         </Form.Item>
                         <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e)}>
                             <Panel
@@ -2138,11 +2192,11 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 style={{borderBottom: 0}}
                             >
                                 <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying}/>
                                 </Form.Item>
-                                <Form.Item label='关键字' name={["retryConfiguration", "keyWord"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />
-                                </Form.Item>
+                                {/*<Form.Item label='关键字' name={["retryConfiguration", "keyWord"]}>*/}
+                                {/*    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />*/}
+                                {/*</Form.Item>*/}
                             </Panel>
                             <Panel
                                 header={
@@ -2163,11 +2217,11 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 style={{borderBottom: 0}}
                             >
                                 <Form.Item label='状态码' name={["noRetryConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRetrying} />
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRetrying}/>
                                 </Form.Item>
-                                <Form.Item label='关键字' name={["noRetryConfiguration", "keyWord"]}>
-                                    <YakitInput placeholder='Login,登录成功' size='small' disabled={!noRetrying} />
-                                </Form.Item>
+                                {/*<Form.Item label='关键字' name={["noRetryConfiguration", "keyWord"]}>*/}
+                                {/*    <YakitInput placeholder='Login,登录成功' size='small' disabled={!noRetrying} />*/}
+                                {/*</Form.Item>*/}
                             </Panel>
                         </Collapse>
                     </Panel>
@@ -2181,7 +2235,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        redirectCount: 3,
+                                        redirectCount: 0,
                                         redirectConfiguration: {
                                             statusCode: undefined,
                                             keyWord: undefined
@@ -2205,64 +2259,73 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </YakitButton>
                         }
                     >
-                        <Form.Item label='重定向次数' name='redirectCount'>
-                            <YakitInputNumber type='horizontal' size='small' />
+                        <Form.Item label='禁用重定向' name='noFollowRedirect'>
+                            <YakitSwitch/>
                         </Form.Item>
-                        <Collapse ghost activeKey={redirectActive} onChange={(e) => setRedirectActive(e)}>
-                            <Panel
-                                header={
-                                    <span className={styles["display-flex"]}>
-                                        <YakitCheckbox
-                                            checked={redirect}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                            onChange={(e) => {
-                                                setRedirect(e.target.checked)
-                                            }}
-                                        />
-                                        <span style={{marginLeft: 6}}>重定向条件</span>
-                                    </span>
-                                }
-                                key='重定向条件'
-                                style={{borderBottom: 0}}
-                            >
-                                <Form.Item label='状态码' name={["redirectConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!redirect} />
-                                </Form.Item>
-                                <Form.Item label='关键字' name={["redirectConfiguration", "keyWord"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!redirect} />
-                                </Form.Item>
-                            </Panel>
-                            <Panel
-                                header={
-                                    <span className={styles["display-flex"]}>
-                                        <YakitCheckbox
-                                            checked={noRedirect}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                            onChange={(e) => {
-                                                setNoRedirect(e.target.checked)
-                                            }}
-                                        />
-                                        <span style={{marginLeft: 6}}>不重定向条件</span>
-                                    </span>
-                                }
-                                key='不重定向条件'
-                                style={{borderBottom: 0}}
-                            >
-                                <Form.Item label='状态码' name={["noRedirectConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRedirect} />
-                                </Form.Item>
-                                <Form.Item label='关键字' name={["noRedirectConfiguration", "keyWord"]}>
-                                    <YakitInput placeholder='Login,登录成功' size='small' disabled={!noRedirect} />
-                                </Form.Item>
-                            </Panel>
-                        </Collapse>
-                    </Panel> */}
+                        <Form.Item label='重定向次数' name='redirectCount'>
+                            <YakitInputNumber type='horizontal' size='small'/>
+                        </Form.Item>
+                        <Form.Item label='忽略 meta 重定向' name='noFollowMetaRedirect'>
+                            <YakitSwitch/>
+                        </Form.Item>
+                        <Form.Item label='JS 重定向' name='followJSRedirect'>
+                            <YakitSwitch/>
+                        </Form.Item>
+                        {/*<Collapse ghost activeKey={redirectActive} onChange={(e) => setRedirectActive(e)}>*/}
+                        {/*    <Panel*/}
+                        {/*        header={*/}
+                        {/*            <span className={styles["display-flex"]}>*/}
+                        {/*                <YakitCheckbox*/}
+                        {/*                    checked={redirect}*/}
+                        {/*                    onClick={(e) => {*/}
+                        {/*                        e.stopPropagation()*/}
+                        {/*                    }}*/}
+                        {/*                    onChange={(e) => {*/}
+                        {/*                        setRedirect(e.target.checked)*/}
+                        {/*                    }}*/}
+                        {/*                />*/}
+                        {/*                <span style={{marginLeft: 6}}>重定向条件</span>*/}
+                        {/*            </span>*/}
+                        {/*        }*/}
+                        {/*        key='重定向条件'*/}
+                        {/*        style={{borderBottom: 0}}*/}
+                        {/*    >*/}
+                        {/*        <Form.Item label='状态码' name={["redirectConfiguration", "statusCode"]}>*/}
+                        {/*            <YakitInput placeholder='200,300-399' size='small' disabled={!redirect} />*/}
+                        {/*        </Form.Item>*/}
+                        {/*        <Form.Item label='关键字' name={["redirectConfiguration", "keyWord"]}>*/}
+                        {/*            <YakitInput placeholder='200,300-399' size='small' disabled={!redirect} />*/}
+                        {/*        </Form.Item>*/}
+                        {/*    </Panel>*/}
+                        {/*    <Panel*/}
+                        {/*        header={*/}
+                        {/*            <span className={styles["display-flex"]}>*/}
+                        {/*                <YakitCheckbox*/}
+                        {/*                    checked={noRedirect}*/}
+                        {/*                    onClick={(e) => {*/}
+                        {/*                        e.stopPropagation()*/}
+                        {/*                    }}*/}
+                        {/*                    onChange={(e) => {*/}
+                        {/*                        setNoRedirect(e.target.checked)*/}
+                        {/*                    }}*/}
+                        {/*                />*/}
+                        {/*                <span style={{marginLeft: 6}}>不重定向条件</span>*/}
+                        {/*            </span>*/}
+                        {/*        }*/}
+                        {/*        key='不重定向条件'*/}
+                        {/*        style={{borderBottom: 0}}*/}
+                        {/*    >*/}
+                        {/*        <Form.Item label='状态码' name={["noRedirectConfiguration", "statusCode"]}>*/}
+                        {/*            <YakitInput placeholder='200,300-399' size='small' disabled={!noRedirect} />*/}
+                        {/*        </Form.Item>*/}
+                        {/*        <Form.Item label='关键字' name={["noRedirectConfiguration", "keyWord"]}>*/}
+                        {/*            <YakitInput placeholder='Login,登录成功' size='small' disabled={!noRedirect} />*/}
+                        {/*        </Form.Item>*/}
+                        {/*    </Panel>*/}
+                        {/*</Collapse>*/}
+                    </Panel>
                     <Panel
-                        header='过滤配置'
+                        header='过滤配置(丢包)'
                         key='过滤配置'
                         extra={
                             <YakitButton
@@ -2311,7 +2374,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             />
                         </Form.Item>
                         <Form.Item label='状态码' name='statusCode'>
-                            <YakitInput placeholder='200,300-399' size='small' />
+                            <YakitInput placeholder='200,300-399' size='small'/>
                         </Form.Item>
                         <Form.Item label='正则' name='regexps'>
                             <RuleContent
@@ -2329,7 +2392,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             />
                         </Form.Item>
                         <Form.Item label='关键字' name='keyWord'>
-                            <YakitInput placeholder='Login,登录成功' size='small' />
+                            <YakitInput placeholder='Login,登录成功' size='small'/>
                         </Form.Item>
                         <Form.Item label='响应大小'>
                             <Input.Group compact className='yakit-input-group'>
@@ -2340,7 +2403,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         return value.replace(/\D/g, "")
                                     }}
                                 >
-                                    <YakitInput prefix='Min' size='small' />
+                                    <YakitInput prefix='Min' size='small'/>
                                 </Form.Item>
                                 <Form.Item name='minBodySizeUnit'>
                                     <YakitSelect size='small' style={{width: 50}}>
@@ -2359,7 +2422,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         return value.replace(/\D/g, "")
                                     }}
                                 >
-                                    <YakitInput prefix='Max' size='small' />
+                                    <YakitInput prefix='Max' size='small'/>
                                 </Form.Item>
                                 <Form.Item name='maxBodySizeUnit'>
                                     <YakitSelect size='small' style={{width: 50}}>
@@ -2383,6 +2446,7 @@ interface EditorsSettingProps {
     fontSize?: number
     setFontSize: (n: number) => void
 }
+
 /**
  * @description 编辑器配置
  */
@@ -2413,7 +2477,7 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 <YakitButton
                     size={"small"}
                     type={noWordwrap ? "outline2" : "primary"}
-                    icon={<WrapIcon />}
+                    icon={<WrapIcon/>}
                     onClick={() => {
                         setNoWordwrap(!noWordwrap)
                     }}
@@ -2470,7 +2534,7 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 overlayClassName={styles["editor-cog-popover"]}
                 placement='bottomRight'
             >
-                <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
+                <YakitButton icon={<CogIcon/>} type='outline2' className={styles["editor-cog-icon"]}/>
             </YakitPopover>
         </>
     )
