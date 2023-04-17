@@ -313,9 +313,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [retryWaitSeconds, setRetryWaitSeconds] = useState(0); // float
     const [retryMaxWaitSeconds, setRetryMaxWaitSeconds] = useState(0);
     // 重定向配置
-    const [redirectMaxTimes, setRedirectMaxTimes] = useState(0);
+    const [redirectMaxTimes, setRedirectMaxTimes] = useState(3);
     const [noFollowRedirect, setNoFollowRedirect] = useState(true);
-    const [noFollowMetaRedirect, setNoFollowMetaRedirect] = useState(true);
     const [followJSRedirect, setFollowJSRedirect] = useState(false);
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
@@ -525,7 +524,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             // redirect config
             NoFollowRedirect: noFollowRedirect,
-            NoFollowMetaRedirect: noFollowMetaRedirect,
             FollowJSRedirect: followJSRedirect,
             RedirectTimes: redirectMaxTimes,
         }
@@ -971,7 +969,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 重定向配置
         setRedirectMaxTimes(val.redirectCount || 0)
         setNoFollowRedirect(val.noFollowRedirect)
-        setNoFollowMetaRedirect(val.noFollowMetaRedirect)
         setFollowJSRedirect(val.followJSRedirect)
 
         // 过滤配置
@@ -1020,7 +1017,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     // 重定向配置
                     redirectCount: redirectMaxTimes,
                     noFollowRedirect: noFollowRedirect,
-                    noFollowMetaRedirect: noFollowMetaRedirect,
                     followJSRedirect: followJSRedirect,
                     redirectConfiguration: {
                         statusCode: "",
@@ -1863,7 +1859,6 @@ interface AdvancedConfigValueProps {
     // 重定向配置
     redirectCount: number
     noFollowRedirect: boolean
-    noFollowMetaRedirect: boolean
     followJSRedirect: boolean
     redirectConfiguration?: {
         statusCode: string
@@ -2235,7 +2230,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        redirectCount: 0,
+                                        redirectCount: 3,
                                         redirectConfiguration: {
                                             statusCode: undefined,
                                             keyWord: undefined
@@ -2259,16 +2254,16 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </YakitButton>
                         }
                     >
-                        <Form.Item label='禁用重定向' name='noFollowRedirect'>
+                        <Form.Item label='禁用重定向' name='noFollowRedirect' valuePropName={"checked"}>
                             <YakitSwitch/>
                         </Form.Item>
                         <Form.Item label='重定向次数' name='redirectCount'>
                             <YakitInputNumber type='horizontal' size='small'/>
                         </Form.Item>
-                        <Form.Item label='忽略 meta 重定向' name='noFollowMetaRedirect'>
-                            <YakitSwitch/>
-                        </Form.Item>
-                        <Form.Item label='JS 重定向' name='followJSRedirect'>
+                        <Form.Item
+                            label='JS 重定向' name='followJSRedirect'
+                            valuePropName={"checked"}
+                        >
                             <YakitSwitch/>
                         </Form.Item>
                         {/*<Collapse ghost activeKey={redirectActive} onChange={(e) => setRedirectActive(e)}>*/}
