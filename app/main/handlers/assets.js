@@ -229,6 +229,23 @@ module.exports = (win, getClient) => {
         return await asyncSetRiskInfoRead(params)
     })
 
+    const asyncUploadRiskToOnline= (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UploadRiskToOnline(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    /** 同步数据 */
+    ipcMain.handle("upload-risk-to-online", async (e, params) => {
+        return await asyncUploadRiskToOnline(params)
+    })
+
     // asyncDeleteHistoryHTTPFuzzerTask wrapper
     const asyncDeleteHistoryHTTPFuzzerTask = (params) => {
         return new Promise((resolve, reject) => {

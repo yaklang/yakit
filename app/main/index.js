@@ -1,7 +1,7 @@
 const {app, BrowserWindow, dialog, nativeImage} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
-const {registerIPC, clearing} = require("./ipc")
+const {registerIPC, clearing,closeYakitGrpc} = require("./ipc")
 const process = require("process")
 const {
     initExtraLocalCache,
@@ -11,6 +11,8 @@ const {
 } = require("./localCache")
 const { engineLog } = require("./filePath")
 const fs = require("fs")
+const {USER_INFO} = require("./state")
+const {getLocalCacheValue} = require("./localCache")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -91,7 +93,7 @@ const createWindow = () => {
                     } else if (res.response === 1) {
                         win = null
                         clearing()
-                        app.exit()
+                        app.quit()
                     } else {
                         e.preventDefault()
                         return
@@ -100,7 +102,7 @@ const createWindow = () => {
         } else {
             win = null
             clearing()
-            app.exit()
+            app.quit()
         }
     })
     win.on("minimize", (e) => {
@@ -146,4 +148,14 @@ app.on("window-all-closed", function () {
     app.quit()
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
+})
+
+app.on("before-quit", function (event) {
+    event.preventDefault()
+    if(USER_INFO.isLogin&&getLocalCacheValue("REACT_APP_PLATFORM")==="simple-enterprise"){
+        closeYakitToGrpc({Token:USER_INFO.token}).then(()=>{}).finally(()=>{app.exit()})
+    }
+    else{
+        app.exit()
+    }
 })
