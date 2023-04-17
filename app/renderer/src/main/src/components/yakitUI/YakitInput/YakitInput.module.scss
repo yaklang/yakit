@@ -22,6 +22,7 @@
             border-radius: 4px;
             border-color: var(--input-border-color);
             color: var(--yakit-header-color);
+            width: auto;
         }
 
         .ant-input-group > .ant-input:first-child,
@@ -35,7 +36,7 @@
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             min-width: 24px;
-            padding: 0;
+            padding: 0 4px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -237,7 +238,7 @@
             border-top-left-radius: 4px;
             border-bottom-left-radius: 4px;
         }
-        .ant-input-search-button .anticon-search{
+        .ant-input-search-button .anticon-search {
             height: 12px;
         }
     }
