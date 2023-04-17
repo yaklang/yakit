@@ -2275,7 +2275,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        redirectCount: 3,
+                                        redirectCount: 0,
                                         redirectConfiguration: {
                                             statusCode: undefined,
                                             keyWord: undefined
