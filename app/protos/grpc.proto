@@ -2498,7 +2498,7 @@ message FuzzerRequest {
   // redirect setting
   bool NoFollowRedirect = 9;
   // 这个弃用了，Meta 自动归类到 Redirect 里面
-  // bool NoFollowMetaRedirect = 10;
+  bool NoFollowMetaRedirect = 10;
   bool FollowJSRedirect = 11;
   double RedirectTimes = 27;
 
