@@ -14,6 +14,7 @@ import { Divider, Form, Modal, Upload } from "antd"
 import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 import { ExportIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon } from "@/assets/newIcon"
 import { ExclamationCircleOutlined } from "@ant-design/icons"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
