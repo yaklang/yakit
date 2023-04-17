@@ -20,8 +20,8 @@ import {StringFuzzer} from "./StringFuzzer"
 import {InputItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {failed, info} from "../../utils/notification"
-import {useGetState, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {failed, info, yakitFailed} from "../../utils/notification"
+import {useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -171,6 +171,7 @@ Host: www.example.com
 export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
+const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -281,6 +282,11 @@ const emptyFuzzer = {
     UUID: ""
 }
 
+interface SelectOptionProps {
+    label: string
+    value: string
+}
+
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // params
     const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
@@ -318,7 +324,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [followJSRedirect, setFollowJSRedirect] = useState(false);
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
-
+    /**@name 是否刷新高级配置中的代理列表 */
+    const [refreshProxy, setRefreshProxy] = useState<boolean>(false)
     // filter
     const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
         Keywords: [],
@@ -489,7 +496,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 更新默认搜索
         setDefaultResponseSearch(affixSearch)
 
-        // saveValue(WEB_FUZZ_PROXY, proxy)
         setLoading(true)
         setDroppedCount(0)
         const params = {
@@ -525,8 +531,54 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             FollowJSRedirect: followJSRedirect,
             RedirectTimes: redirectMaxTimes,
         }
-        console.log("params", params)
+        if (params.Proxy) {
+            const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
+            getProxyList(proxyToArr)
+        }
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
+    })
+
+    const getProxyList = useMemoizedFn((proxyList) => {
+        getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
+            try {
+                const preProxyList = remoteData
+                    ? JSON.parse(remoteData)
+                    : [
+                          {
+                              label: "http://127.0.0.1:7890",
+                              value: "http://127.0.0.1:7890"
+                          },
+                          {
+                              label: "http://127.0.0.1:8080",
+                              value: "http://127.0.0.1:8080"
+                          },
+                          {
+                              label: "http://127.0.0.1:8082",
+                              value: "http://127.0.0.1:8082"
+                          }
+                      ]
+
+                const list = [...proxyList, ...preProxyList]
+                const newProxyList: SelectOptionProps[] = []
+                const l = list.length
+
+                for (let i = 0; i < l; i++) {
+                    const oldElement = list[i]
+                    const index = newProxyList.findIndex((ele) => ele.value === oldElement.value)
+                    if (index === -1) {
+                        newProxyList.push(oldElement)
+                    }
+                    if (i >= 9) {
+                        break
+                    }
+                }
+                setRemoteValue(WEB_FUZZ_PROXY_LIST, JSON.stringify(newProxyList)).then(() => {
+                    setRefreshProxy(!refreshProxy)
+                })
+            } catch (error) {
+                yakitFailed("代理列表获取失败:" + error)
+            }
+        })
     })
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
@@ -939,6 +991,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             )
         })
     })
+
     /**
      * @@description 获取高级配置中的Form values
      */
@@ -980,8 +1033,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // MinBodySize: val.minBodySizeInit
             //     ? onConvertBodySizeByUnit(Number(val.minBodySizeInit), val.minBodySizeUnit)
             //     : 0,
-            MaxBodySize:Number(val.maxBodySize) || 0,
-            MinBodySize:Number(val.minBodySize) || 0,
+            MaxBodySize: Number(val.maxBodySize) || 0,
+            MinBodySize: Number(val.minBodySize) || 0,
             // maxBodySizeInit: val.maxBodySizeInit ? val.maxBodySizeInit : 0,
             // minBodySizeInit: val.minBodySizeInit ? val.minBodySizeInit : 0,
             // minBodySizeUnit: val.minBodySizeUnit || "B",
@@ -1045,6 +1098,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setVisible={setAdvancedConfig}
                 onInsertYakFuzzer={onInsertYakFuzzer}
                 onValuesChange={onGetFormValue}
+                refreshProxy={refreshProxy}
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
@@ -1574,7 +1628,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
     const [statusCode, setStatusCode] = useState<string[]>()
     const [bodyLength, setBodyLength] = useState<HTTPFuzzerPageTableQuery>({
         afterBodyLength: undefined,
-        beforeBodyLength: undefined,
+        beforeBodyLength: undefined
         // bodyLengthUnit: "B"
     })
 
@@ -1585,7 +1639,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         setKeyWord(query?.keyWord)
         setBodyLength({
             afterBodyLength: query?.afterBodyLength,
-            beforeBodyLength: query?.beforeBodyLength,
+            beforeBodyLength: query?.beforeBodyLength
             // bodyLengthUnit: query?.bodyLengthUnit || "B"
         })
     }, [query])
@@ -1939,10 +1993,21 @@ interface HttpQueryAdvancedConfigProps {
     setVisible: (b: boolean) => void
     onInsertYakFuzzer: () => void
     onValuesChange: (v: AdvancedConfigValueProps) => void
+    /**刷新设置代理的list */
+    refreshProxy: boolean
 }
 
 const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const {defAdvancedConfigValue, isHttps, setIsHttps, visible, setVisible, onInsertYakFuzzer, onValuesChange} = props
+    const {
+        defAdvancedConfigValue,
+        isHttps,
+        setIsHttps,
+        visible,
+        setVisible,
+        onInsertYakFuzzer,
+        onValuesChange,
+        refreshProxy
+    } = props
 
     const [retrying, setRetrying] = useState<boolean>(true) // 重试条件
     const [noRetrying, setNoRetrying] = useState<boolean>(false)
@@ -1952,8 +2017,39 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     const [noRedirect, setNoRedirect] = useState<boolean>(false)
     const [redirectActive, setRedirectActive] = useState<string[] | string>(["重定向条件"])
 
+    const [proxyList, setProxyList] = useState<SelectOptionProps[]>([])
+
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
+    const queryRef = useRef(null)
+    const [inViewport] = useInViewport(queryRef)
+    useEffect(() => {
+        // 代理数据 最近10条
+        getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
+            try {
+                setProxyList(
+                    remoteData
+                        ? JSON.parse(remoteData)
+                        : [
+                              {
+                                  label: "http://127.0.0.1:7890",
+                                  value: "http://127.0.0.1:7890"
+                              },
+                              {
+                                  label: "http://127.0.0.1:8080",
+                                  value: "http://127.0.0.1:8080"
+                              },
+                              {
+                                  label: "http://127.0.0.1:8082",
+                                  value: "http://127.0.0.1:8082"
+                              }
+                          ]
+                )
+            } catch (error) {
+                yakitFailed("代理列表获取失败:" + error)
+            }
+        })
+    }, [inViewport, refreshProxy])
     useEffect(() => {
         form.setFieldsValue({isHttps: isHttps})
     }, [isHttps])
@@ -1979,10 +2075,12 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         if (!noRedirect) {
             newValue.noRedirectConfiguration = undefined
         }
-        onValuesChange(newValue)
+        onValuesChange({
+            ...newValue
+        })
     })
     return (
-        <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}}>
+        <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>
                 <span>高级配置</span>
                 <YakitSwitch checked={visible} onChange={setVisible}/>
@@ -2024,7 +2122,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         ...restValue
                                     })
                                     const v = form.getFieldsValue()
-                                    onValuesChange({
+                                    onSetValue({
                                         ...v,
                                         ...restValue
                                     })
@@ -2090,7 +2188,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         ...restValue
                                     })
                                     const v = form.getFieldsValue()
-                                    onValuesChange({
+                                    onSetValue({
                                         ...v,
                                         ...restValue
                                     })
@@ -2119,20 +2217,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         >
                             <YakitSelect
                                 allowClear
-                                options={[
-                                    {
-                                        label: "http://127.0.0.1:7890",
-                                        value: "http://127.0.0.1:7890"
-                                    },
-                                    {
-                                        label: "http://127.0.0.1:8080",
-                                        value: "http://127.0.0.1:8080"
-                                    },
-                                    {
-                                        label: "http://127.0.0.1:8082",
-                                        value: "http://127.0.0.1:8082"
-                                    }
-                                ]}
+                                options={proxyList}
                                 placeholder='请输入...'
                                 mode='tags'
                                 size='small'
@@ -2197,7 +2282,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         ...restValue
                                     })
                                     const v = form.getFieldsValue()
-                                    onValuesChange({
+                                    onSetValue({
                                         ...v,
                                         ...restValue
                                     })
@@ -2288,7 +2373,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         ...restValue
                                     })
                                     const v = form.getFieldsValue()
-                                    onValuesChange({
+                                    onSetValue({
                                         ...v,
                                         ...restValue
                                     })
@@ -2387,7 +2472,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     })
                                     ruleContentRef?.current?.onSetValue("")
                                     const v = form.getFieldsValue()
-                                    onValuesChange({
+                                    onSetValue({
                                         ...v,
                                         ...restValue
                                     })
@@ -2420,7 +2505,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 ref={ruleContentRef}
                                 getRule={(val) => {
                                     const v = form.getFieldsValue()
-                                    onValuesChange({
+                                    onSetValue({
                                         ...v,
                                         regexps: val
                                     })
