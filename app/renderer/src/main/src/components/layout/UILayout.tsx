@@ -441,9 +441,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 tls: info.tls,
                 name: info.linkName || ""
             }
-            ipcRenderer.invoke("save-yakit-remote-auth", {...params}).then().catch((e: any) => {
-                console.info(e)
-            })
+            ipcRenderer
+                .invoke("save-yakit-remote-auth", {...params})
+                .then()
+                .catch((e: any) => {
+                    console.info(e)
+                })
         }
         setRemoteConnectLoading(true)
         ipcRenderer.invoke("engine-ready-link")
@@ -536,6 +539,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     failed("当前项目无关键信息，无法导出!")
                     return
                 }
+                setLinkDatabase(true)
                 setProjectModalInfo({visible: true, isNew: false, isExport: true, project: currentProject})
                 return
             case "plaintextProject":
@@ -543,6 +547,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     failed("当前项目无关键信息，无法导出!")
                     return
                 }
+                setLinkDatabase(true)
                 setProjectTransferShow({
                     visible: true,
                     isExport: true,
@@ -1089,7 +1094,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }}
                 setVisible={(open: boolean) => setProjectTransferShow({visible: open})}
             />
-            
+
             <YakitHint
                 visible={linkDatabaseHint}
                 title='是否进入项目管理'
