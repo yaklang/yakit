@@ -54,7 +54,7 @@ export interface HTTPFuzzerPageTableQuery {
     afterBodyLength?: number
     beforeBodyLength?: number
     StatusCode?: string[]
-    bodyLengthUnit: "B" | "k" | "M"
+    // bodyLengthUnit: "B" | "k" | "M"
 }
 
 const sorterFunction = (list, sorterTable) => {
@@ -142,22 +142,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "响应大小",
                       dataKey: "BodyLength",
                       width: 120,
-                      render: (val) => {
-                          return (
-                              <>
-                                  {/* 1M 以上的话，是红色*/}
-                                  {val !== -1 && (
-                                      <div
-                                          className={classNames({
-                                              [styles["body-length-text-red"]]: val > 1000000
-                                          })}
-                                      >
-                                          {convertBodyLength(val)}
-                                      </div>
-                                  )}
-                              </>
-                          )
-                      },
                       sorterProps: {
                           sorter: true
                       },
@@ -292,7 +276,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   }
               ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.bodyLengthUnit])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength])
 
     useThrottleEffect(
         () => {
@@ -449,77 +433,49 @@ export const BodyLengthInputNumber: React.FC<BodyLengthInputNumberProps> = React
         // 响应大小
         const [afterBodyLength, setAfterBodyLength] = useState<number>()
         const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
-        const [bodyLengthUnit, setBodyLengthUnit] = useState<"B" | "k" | "M">("B")
         useEffect(() => {
             setAfterBodyLength(query?.afterBodyLength)
             setBeforeBodyLength(query?.beforeBodyLength)
-            setBodyLengthUnit(query?.bodyLengthUnit || "B")
         }, [query])
         useImperativeHandle(
             ref,
             () => ({
                 getValue: () => {
                     const objLength = {
-                        afterBodyLength: afterBodyLength ? getLength(afterBodyLength) : undefined,
-                        beforeBodyLength: beforeBodyLength ? getLength(beforeBodyLength) : undefined,
-                        bodyLengthUnit
+                        afterBodyLength,
+                        beforeBodyLength
                     }
                     return objLength
                 }
             }),
-            [afterBodyLength, beforeBodyLength, bodyLengthUnit]
+            [afterBodyLength, beforeBodyLength]
         )
-        const getLength = useMemoizedFn((length: number) => {
-            switch (bodyLengthUnit) {
-                case "k":
-                    return length * 1024
-                case "M":
-                    return length * 1024 * 1024
-                default:
-                    return length
-            }
-        })
         return (
-            <RangeInputNumberTable
-                showFooter={showFooter}
-                minNumber={afterBodyLength}
-                setMinNumber={setAfterBodyLength}
-                maxNumber={beforeBodyLength}
-                setMaxNumber={setBeforeBodyLength}
-                onReset={() => {
-                    setQuery({
-                        ...query,
-                        afterBodyLength,
-                        beforeBodyLength,
-                        bodyLengthUnit
-                    })
-                    setBeforeBodyLength(undefined)
-                    setAfterBodyLength(undefined)
-                    setBodyLengthUnit("B")
-                }}
-                onSure={() => {
-                    setQuery({
-                        ...query,
-                        afterBodyLength,
-                        beforeBodyLength,
-                        bodyLengthUnit
-                    })
-                }}
-                extra={
-                    <YakitSelect
-                        value={bodyLengthUnit}
-                        onSelect={(val) => {
-                            setBodyLengthUnit(val)
-                        }}
-                        wrapperClassName={styles["unit-select"]}
-                        size='small'
-                    >
-                        <YakitSelect value='B'>B</YakitSelect>
-                        <YakitSelect value='k'>K</YakitSelect>
-                        <YakitSelect value='M'>M</YakitSelect>
-                    </YakitSelect>
-                }
-            />
+            <div className={styles["range-input-number"]}>
+                <RangeInputNumberTable
+                    showFooter={showFooter}
+                    minNumber={afterBodyLength}
+                    setMinNumber={setAfterBodyLength}
+                    maxNumber={beforeBodyLength}
+                    setMaxNumber={setBeforeBodyLength}
+                    onReset={() => {
+                        setQuery({
+                            ...query,
+                            afterBodyLength,
+                            beforeBodyLength
+                        })
+                        setBeforeBodyLength(undefined)
+                        setAfterBodyLength(undefined)
+                    }}
+                    onSure={() => {
+                        setQuery({
+                            ...query,
+                            afterBodyLength,
+                            beforeBodyLength
+                        })
+                    }}
+                />
+            </div>
         )
     })
 )

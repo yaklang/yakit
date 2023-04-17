@@ -909,6 +909,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
+                    console.log("rsp?.Data", rsp?.Data)
                     // if (rsp?.Data.length === 0) return
                     if (paginationProps.Page == 1) {
                         setTotal(rsp.Total)
@@ -1520,11 +1521,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setLoading(true)
         ipcRenderer
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
-            .then(() => setTimeout(() => setLoading(false), 500))
+            .then(() => {
+                update(1)
+            })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
             })
-            .finally(() => update(1))
+            .finally(() => {
+                setTimeout(() => setLoading(false), 500)
+            })
     })
     // 不重置请求 ID
     const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any) => {
@@ -1552,18 +1557,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ExcludeInUrl: params.ExcludeInUrl
                 }
                 setParams({...newParams})
+                update(1)
             })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
             })
-            .finally(() => setTimeout(() => setLoading(false), 300))
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
         setLoading(true)
         info("正在删除...如自动刷新失败请手动刷新")
         setCompareLeft({content: "", language: "http"})
         setCompareRight({content: "", language: "http"})
         setCompareState(0)
         setTimeout(() => {
-            update(1)
             if (props.onSelected) props.onSelected(undefined)
         }, 400)
     })

@@ -58,3 +58,18 @@
     overflow: hidden;
     word-break: break-all;
 }
+
+.range-input-number {
+    :global {
+        .ant-input-group.ant-input-group-compact > *:nth-child(3) {
+            .ant-input-number {
+                border-radius: 0 4px 4px 0;
+                &:hover,
+                &:focus,
+                &:active {
+                    border-radius: 4px;
+                }
+            }
+        }
+    }
+}

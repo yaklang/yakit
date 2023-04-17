@@ -207,15 +207,15 @@ interface FuzzResponseFilter {
     Keywords: string[]
     StatusCode: string[]
 
-    /**@name 前端显示的响应大小最小值 */
-    minBodySizeInit?: number
-    /**@name 前端显示的响应大小最大值 */
-    maxBodySizeInit?: number
+    // /**@name 前端显示的响应大小最小值 */
+    // minBodySizeInit?: number
+    // /**@name 前端显示的响应大小最大值 */
+    // maxBodySizeInit?: number
 
-    /**@name 响应大小最小值单位 */
-    minBodySizeUnit?: "B" | "K" | "M"
-    /**@name 响应大小最大值单位 */
-    maxBodySizeUnit?: "B" | "K" | "M"
+    // /**@name 响应大小最小值单位 */
+    // minBodySizeUnit?: "B" | "K" | "M"
+    // /**@name 响应大小最大值单位 */
+    // maxBodySizeUnit?: "B" | "K" | "M"
 }
 
 function removeEmptyFiledFromFuzzResponseFilter(i: FuzzResponseFilter): FuzzResponseFilter {
@@ -372,9 +372,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
     const [showSuccess, setShowSuccess] = useState(true)
-    const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>({
-        bodyLengthUnit: "B"
-    })
+    const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     useEffect(() => {
@@ -527,6 +525,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             FollowJSRedirect: followJSRedirect,
             RedirectTimes: redirectMaxTimes,
         }
+        console.log("params", params)
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
@@ -975,16 +974,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilterMode(val.filterMode)
         setFilter({
             Keywords: val.keyWord?.split(",") || [],
-            MaxBodySize: val.maxBodySizeInit
-                ? onConvertBodySizeByUnit(Number(val.maxBodySizeInit), val.maxBodySizeUnit)
-                : 0,
-            MinBodySize: val.minBodySizeInit
-                ? onConvertBodySizeByUnit(Number(val.minBodySizeInit), val.minBodySizeUnit)
-                : 0,
-            maxBodySizeInit: val.maxBodySizeInit ? val.maxBodySizeInit : 0,
-            minBodySizeInit: val.minBodySizeInit ? val.minBodySizeInit : 0,
-            minBodySizeUnit: val.minBodySizeUnit || "B",
-            maxBodySizeUnit: val.maxBodySizeUnit || "B",
+            // MaxBodySize: val.maxBodySizeInit
+            //     ? onConvertBodySizeByUnit(Number(val.maxBodySizeInit), val.maxBodySizeUnit)
+            //     : 0,
+            // MinBodySize: val.minBodySizeInit
+            //     ? onConvertBodySizeByUnit(Number(val.minBodySizeInit), val.minBodySizeUnit)
+            //     : 0,
+            MaxBodySize:Number(val.maxBodySize) || 0,
+            MinBodySize:Number(val.minBodySize) || 0,
+            // maxBodySizeInit: val.maxBodySizeInit ? val.maxBodySizeInit : 0,
+            // minBodySizeInit: val.minBodySizeInit ? val.minBodySizeInit : 0,
+            // minBodySizeUnit: val.minBodySizeUnit || "B",
+            // maxBodySizeUnit: val.maxBodySizeUnit || "B",
             Regexps: val.regexps?.split(",") || [],
             StatusCode: val.statusCode?.split(",") || []
         })
@@ -1032,11 +1033,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     regexps: getFilter().Regexps.join(","),
                     keyWord: getFilter().Keywords?.join(",") || "",
                     minBodySize: getFilter().MinBodySize,
-                    maxBodySize: getFilter().MaxBodySize,
-                    minBodySizeInit: onConvertBodySizeToB(getFilter().MinBodySize, getFilter().minBodySizeUnit || "B"),
-                    maxBodySizeInit: onConvertBodySizeToB(getFilter().MaxBodySize, getFilter().maxBodySizeUnit || "B"),
-                    minBodySizeUnit: getFilter().minBodySizeUnit || "B",
-                    maxBodySizeUnit: getFilter().maxBodySizeUnit || "B"
+                    maxBodySize: getFilter().MaxBodySize
+                    // minBodySizeInit: onConvertBodySizeToB(getFilter().MinBodySize, getFilter().minBodySizeUnit || "B"),
+                    // maxBodySizeInit: onConvertBodySizeToB(getFilter().MaxBodySize, getFilter().maxBodySizeUnit || "B"),
+                    // minBodySizeUnit: getFilter().minBodySizeUnit || "B",
+                    // maxBodySizeUnit: getFilter().maxBodySizeUnit || "B"
                 }}
                 isHttps={isHttps}
                 setIsHttps={setIsHttps}
@@ -1319,9 +1320,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     showSuccess={showSuccess}
                                     setShowSuccess={(v) => {
                                         setShowSuccess(v)
-                                        setQuery({
-                                            bodyLengthUnit: "B"
-                                        })
+                                        setQuery(undefined)
                                     }}
                                 />
                             </>
@@ -1576,7 +1575,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
     const [bodyLength, setBodyLength] = useState<HTTPFuzzerPageTableQuery>({
         afterBodyLength: undefined,
         beforeBodyLength: undefined,
-        bodyLengthUnit: "B"
+        // bodyLengthUnit: "B"
     })
 
     const bodyLengthRef = useRef<any>()
@@ -1587,7 +1586,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         setBodyLength({
             afterBodyLength: query?.afterBodyLength,
             beforeBodyLength: query?.beforeBodyLength,
-            bodyLengthUnit: query?.bodyLengthUnit || "B"
+            // bodyLengthUnit: query?.bodyLengthUnit || "B"
         })
     }, [query])
 
@@ -1664,7 +1663,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 onSearch={(v) => {
                     setQuery({
                         ...query,
-                        bodyLengthUnit: query?.bodyLengthUnit || "B",
+                        // bodyLengthUnit: query?.bodyLengthUnit || "B",
                         keyWord: v
                     })
                     setKeyWord(v)
@@ -1673,7 +1672,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                     e.preventDefault()
                     setQuery({
                         ...query,
-                        bodyLengthUnit: query?.bodyLengthUnit || "B",
+                        // bodyLengthUnit: query?.bodyLengthUnit || "B",
                         keyWord: keyWord
                     })
                 }}
@@ -1689,7 +1688,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                             if (!b) {
                                 setQuery({
                                     ...query,
-                                    bodyLengthUnit: query?.bodyLengthUnit || "B",
+                                    // bodyLengthUnit: query?.bodyLengthUnit || "B",
                                     keyWord: keyWord
                                 })
                             }
@@ -1922,14 +1921,14 @@ interface AdvancedConfigValueProps {
     minBodySize: number
     /**@name 转换后转给后端的的响应大小最小值 */
     maxBodySize: number
-    /**@name 前端显示的响应大小最小值 */
-    minBodySizeInit?: number
-    /**@name 前端显示的响应大小最大值 */
-    maxBodySizeInit?: number
-    /**@name 响应大小最小值单位 */
-    minBodySizeUnit: "B" | "K" | "M"
-    /**@name 响应大小最大值单位 */
-    maxBodySizeUnit: "B" | "K" | "M"
+    // /**@name 前端显示的响应大小最小值 */
+    // minBodySizeInit?: number
+    // /**@name 前端显示的响应大小最大值 */
+    // maxBodySizeInit?: number
+    // /**@name 响应大小最小值单位 */
+    // minBodySizeUnit: "B" | "K" | "M"
+    // /**@name 响应大小最大值单位 */
+    // maxBodySizeUnit: "B" | "K" | "M"
 }
 
 interface HttpQueryAdvancedConfigProps {
@@ -2378,10 +2377,10 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         statusCode: "",
                                         regexps: "",
                                         keyWord: "",
-                                        minBodySizeInit: undefined,
-                                        minBodySizeUnit: "B",
-                                        maxBodySizeInit: undefined,
-                                        maxBodySizeUnit: "B"
+                                        maxBodySize: undefined,
+                                        // minBodySizeUnit: "B",
+                                        minBodySize: undefined
+                                        // maxBodySizeUnit: "B"
                                     }
                                     form.setFieldsValue({
                                         ...restValue
@@ -2435,43 +2434,26 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             <YakitInput placeholder='Login,登录成功' size='small'/>
                         </Form.Item>
                         <Form.Item label='响应大小'>
-                            <Input.Group compact className='yakit-input-group'>
-                                <Form.Item
-                                    name='minBodySizeInit'
-                                    noStyle
-                                    normalize={(value) => {
-                                        return value.replace(/\D/g, "")
-                                    }}
-                                >
-                                    <YakitInput prefix='Min' size='small'/>
-                                </Form.Item>
-                                <Form.Item name='minBodySizeUnit'>
-                                    <YakitSelect size='small' style={{width: 50}}>
-                                        <YakitSelect value='B'>B</YakitSelect>
-                                        <YakitSelect value='K'>K</YakitSelect>
-                                        <YakitSelect value='M'>M</YakitSelect>
-                                    </YakitSelect>
-                                </Form.Item>
-                            </Input.Group>
+                            {/* className='yakit-input-group' */}
+                            <Form.Item
+                                name='minBodySize'
+                                noStyle
+                                normalize={(value) => {
+                                    return value.replace(/\D/g, "")
+                                }}
+                            >
+                                <YakitInput prefix='Min' size='small' />
+                            </Form.Item>
 
-                            <Input.Group compact className='yakit-input-group'>
-                                <Form.Item
-                                    name='maxBodySizeInit'
-                                    noStyle
-                                    normalize={(value) => {
-                                        return value.replace(/\D/g, "")
-                                    }}
-                                >
-                                    <YakitInput prefix='Max' size='small'/>
-                                </Form.Item>
-                                <Form.Item name='maxBodySizeUnit'>
-                                    <YakitSelect size='small' style={{width: 50}}>
-                                        <YakitSelect value='B'>B</YakitSelect>
-                                        <YakitSelect value='K'>K</YakitSelect>
-                                        <YakitSelect value='M'>M</YakitSelect>
-                                    </YakitSelect>
-                                </Form.Item>
-                            </Input.Group>
+                            <Form.Item
+                                name='maxBodySize'
+                                noStyle
+                                normalize={(value) => {
+                                    return value.replace(/\D/g, "")
+                                }}
+                            >
+                                <YakitInput prefix='Max' size='small' />
+                            </Form.Item>
                         </Form.Item>
                     </Panel>
                 </Collapse>
