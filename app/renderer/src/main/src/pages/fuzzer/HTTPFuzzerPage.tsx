@@ -346,8 +346,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     /**/
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [fuzzToken, setFuzzToken] = useState("")
-    const [search, setSearch] = useState("")
     const [targetUrl, setTargetUrl] = useState("")
+    const [curlCommandLine, setCurlCommandLine] = useState("")
 
     const [refreshTrigger, setRefreshTrigger] = useState(false)
     const refreshRequest = () => {
@@ -1251,6 +1251,51 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 >
                                     <YakitButton size={"small"} type={"primary"}>
                                         URL
+                                    </YakitButton>
+                                </YakitPopover>
+                                <YakitPopover
+                                    trigger={"click"}
+                                    title={"从 cURL 命令行加载数据包"}
+                                    content={
+                                        <div style={{width: 400}}>
+                                            <Form
+                                                layout={"vertical"}
+                                                onSubmitCapture={(e) => {
+                                                    e.preventDefault()
+
+                                                    ipcRenderer
+                                                        .invoke("Codec", {
+                                                            Type: "packet-from-curl",
+                                                            Text: curlCommandLine
+                                                        })
+                                                        .then((e) => {
+                                                            if (e?.Result) {
+                                                                setRequest(e.Result)
+                                                                refreshRequest()
+                                                            }
+                                                        })
+                                                        .finally(() => {
+                                                        })
+                                                }}
+                                                size={"small"}
+                                            >
+                                                <Form.Item>
+                                                    <YakitInput
+                                                        value={curlCommandLine}
+                                                        onChange={(e) => setCurlCommandLine(e.target.value)}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item style={{marginBottom: 8}}>
+                                                    <YakitButton type={"primary"} htmlType={"submit"}>
+                                                        构造数据包
+                                                    </YakitButton>
+                                                </Form.Item>
+                                            </Form>
+                                        </div>
+                                    }
+                                >
+                                    <YakitButton size={"small"} type={"primary"}>
+                                        cURL
                                     </YakitButton>
                                 </YakitPopover>
                                 <EditorsSetting
