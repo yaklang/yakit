@@ -205,30 +205,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 >
                     <YakitSwitch size='large'/>
                 </Item>
-                {enableGMTLS && (
-                    <>
-                        <Item
-                            label={"国密TLS优先"}
-                            name='preferGMTLS'
-                            help={
-                                "启用此选项将优先选择国密TLS，当连接失败后，自动降级为普通 TLS，关闭后优先普通 TLS"
-                            }
-                            valuePropName='checked'
-                        >
-                            <YakitSwitch size='large'/>
-                        </Item>
-                        <Item
-                            label={"仅国密 TLS"}
-                            name='onlyEnableGMTLS'
-                            help={
-                                "此选项开启后，将不支持除国密算法的 TLS 外其安全传输层"
-                            }
-                            valuePropName='checked'
-                        >
-                            <YakitSwitch size='large'/>
-                        </Item>
-                    </>
-                )}
                 <Item
                     label={"代理认证"}
                     name='enableProxyAuth'
