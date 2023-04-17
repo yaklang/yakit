@@ -16,6 +16,7 @@ import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
 import ReactResizeDetector from "react-resize-detector"
+import {useWatch} from "antd/es/form/Form";
 
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -29,7 +30,8 @@ export interface MITMServerStartFormProp {
         downstreamProxy: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
-        clientCertificates: ClientCertificate[]
+        clientCertificates: ClientCertificate[],
+        extra?: object
     ) => any
     visible: boolean
     setVisible: (b: boolean) => void
@@ -62,6 +64,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const ruleButtonRef = useRef<any>()
 
     const [form] = Form.useForm()
+    const enableGMTLS = useWatch<boolean>('enableGMTLS', form);
 
     useEffect(() => {
         // 设置 MITM 初始启动插件选项
@@ -119,7 +122,12 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.downstreamProxy,
             params.enableInitialPlugin,
             params.enableHttp2,
-            params.certs
+            params.certs,
+            {
+                enableGMTLS: params.enableGMTLS,
+                onlyEnableGMTLS: params.onlyEnableGMTLS,
+                preferGMTLS: params.preferGMTLS,
+            }
         )
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
         if (index === -1) {
@@ -181,6 +189,41 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 >
                     <YakitSwitch size='large' />
                 </Item>
+                <Item
+                    label={"国密劫持"}
+                    name='enableGMTLS'
+                    initialValue={true}
+                    help={
+                        "适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"
+                    }
+                    valuePropName='checked'
+                >
+                    <YakitSwitch size='large' />
+                </Item>
+                {enableGMTLS && (
+                    <>
+                        <Item
+                            label={"国密TLS优先"}
+                            name='preferGMTLS'
+                            help={
+                                "启用此选项将优先选择国密TLS，当连接失败后，自动降级为普通 TLS，关闭后优先普通 TLS"
+                            }
+                            valuePropName='checked'
+                        >
+                            <YakitSwitch size='large' />
+                        </Item>
+                        <Item
+                            label={"仅国密 TLS"}
+                            name='onlyEnableGMTLS'
+                            help={
+                                "此选项开启后，将不支持除国密算法的 TLS 外其安全传输层"
+                            }
+                            valuePropName='checked'
+                        >
+                            <YakitSwitch size='large' />
+                        </Item>
+                    </>
+                )}
                 <Item
                     label={"内容规则"}
                     help={
