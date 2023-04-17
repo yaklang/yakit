@@ -16,6 +16,7 @@ import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
 
 import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -23,19 +24,24 @@ const {ipcRenderer} = window.require("electron")
 const LoadingTitle: string[] = [
     "没有困难的工作，只有勇敢的打工人。",
     "打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。",
-    "亲们，起床打工了！",
     "打工不仅能致富，还能交友娶媳妇",
     "今天搬砖不狠，明天地位不稳",
     "打工可能会少活十年，不打工你一天也活不下去。",
-    "早点睡，打工人。",
     "有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!",
-    "累吗，累就对了，舒服是留给有钱人的，早安，打工人!",
-    "爱情不是我生活的全部，打工才是。早安，打工人。",
     "打工人，打工魂，打工人是人上人",
     "@所有人，据说用了Yakit后就不必再卷了！",
     "再不用Yakit，卷王就是别人的了",
     "来用Yakit啦？安全圈还是你最成功",
-    "这届网安人，人手一个Yakit，香惨了！"
+    "这届网安人，人手一个Yakit，香惨了！",
+
+    "webfuzzer时根目录插入字典，会有意想不到的收获",
+    "yakit写监听参数时不必写socks的版本号",
+    "使用热标签，可以中间处理des aes等加密，无需再碰py",
+    "Yakit，为您提供渗透问题的完美解决方案",
+    "热加载fuzz快速定位，轻松挖洞无压力",
+    "别让无聊占据你的时间，来探索新世界吧！",
+    "<script>alert('Hello Yakit!')</script>",
+    "你的鼠标，掌控世界！"
 ]
 
 export const EngineModeVerbose = (m: YaklangEngineMode) => {
@@ -511,7 +517,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["body-content"]}>
                     <div className={styles["yakit-loading-title"]}>
                         <div className={styles["title-style"]}>欢迎使用 Yakit</div>
-                        <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>
+                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
                     </div>
 
                     <div className={styles["yakit-loading-icon-wrapper"]}>

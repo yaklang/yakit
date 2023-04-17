@@ -93,7 +93,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       width: 80,
                       sorterProps: {
                           sorter: true
-                      }
+                      },
+                      fixed: "left"
                   },
                   {
                       title: "Method",
@@ -174,6 +175,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       }
                   },
                   {
+                      title: "Payloads",
+                      dataKey: "Payloads",
+                      width: 300,
+                      render: (v) => v.join(",")
+                  },
+                  {
                       title: "响应相似度",
                       dataKey: "BodySimilarity",
                       width: 150,
@@ -198,12 +205,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           sorter: true
                       }
                   },
-                  {
-                      title: "Payloads",
-                      dataKey: "Payloads",
-                      width: 300,
-                      render: (v) => v.join(",")
-                  },
+
                   {
                       title: "延迟(ms)",
                       dataKey: "DurationMs",
