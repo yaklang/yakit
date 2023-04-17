@@ -102,7 +102,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const [total, setTotal] = useState(0)
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
 
-    const [searchType, setSearchType] = useState<string>("Year")
+    const [searchType, setSearchType] = useState<string>("Keywords")
     const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
     const [dataBaseUpdateLatestMode, setDataBaseUpdateLatestMode] = useState<boolean>(false)
 
@@ -120,7 +120,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         if (advancedQuery) return
         setParams({
             ...defQueryCVERequest,
-            Year: params.Year,
+            Keywords: params.Keywords,
             CWE: params.CWE
         })
         setTimeout(() => {
@@ -137,7 +137,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         if (advancedQuery) {
             setParams({
                 ...props.filter,
-                Year: params.Year,
+                Keywords: params.Keywords,
                 CWE: params.CWE
             })
         }
@@ -167,7 +167,6 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             ipcRenderer
                 .invoke("QueryCVE", finalParams)
                 .then((r: QueryGeneralResponse<CVEDetail>) => {
-                    console.info("QueryCVE", finalParams, r)
                     const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
                     setData(d)
                     setPagination(r.Pagination)
@@ -298,7 +297,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     valueBeforeOption={searchType}
                                     afterModuleType='input'
                                     onSelectBeforeOption={(o) => {
-                                        if (o === "Year") {
+                                        if (o === "Keywords") {
                                             setParams({
                                                 ...params,
                                                 CWE: ""
@@ -307,7 +306,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                         if (o === "CWE") {
                                             setParams({
                                                 ...params,
-                                                Year: ""
+                                                Keywords: ""
                                             })
                                         }
                                         setSearchType(o)
@@ -315,7 +314,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     addonBeforeOption={[
                                         {
                                             label: "CVE",
-                                            value: "Year"
+                                            value: "Keywords"
                                         },
                                         {
                                             label: "CWE",
@@ -325,6 +324,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     inputSearchModuleTypeProps={{
                                         size: "middle",
                                         value: params[searchType],
+                                        placeholder: searchType === "Keywords" ? "CVE编号或关键字搜索" : "CEW编号搜索",
                                         onChange: (e) => {
                                             setParams({
                                                 ...params,

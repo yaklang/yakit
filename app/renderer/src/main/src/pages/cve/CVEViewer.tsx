@@ -26,6 +26,7 @@ export interface QueryCVERequest {
     // Score: number
     Product: string
     // ChineseTranslationFirst: boolean
+    Keywords: string
 }
 
 export interface CVEViewerProp {}
@@ -78,15 +79,16 @@ interface CVEQueryProp {
     advancedQuery: boolean //是否开启高级查询
     setAdvancedQuery: (b: boolean) => void
 }
-export const defQueryCVERequest = {
+export const defQueryCVERequest:QueryCVERequest = {
     AccessComplexity: "LOW",
     AccessVector: "NETWORK,ADJACENT_NETWORK",
     CWE: "",
     Product: "",
     // Score: 6.0,
     Severity: "HIGH",
-    Year: ""
+    Year: "",
     // ChineseTranslationFirst: true
+    Keywords: ""
 }
 const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     const {advancedQuery, setAdvancedQuery} = props
