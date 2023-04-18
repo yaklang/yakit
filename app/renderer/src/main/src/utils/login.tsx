@@ -6,14 +6,14 @@ import {GetReleaseEdition, isCommunityEdition, globalUserLogout,isEnpriTraceAgen
 import {RemoteGV} from "@/yakitGV";
 const {ipcRenderer} = window.require("electron")
 
-export const loginOut = (userInfo: UserInfoProps) => {
+export const loginOut = async(userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
+    await aboutLoginUpload(userInfo.token)
     NetWorkApi<null, API.ActionSucceeded>({
         method: "get",
         url: "logout/online"
     })
         .then((res) => {
-            aboutLoginUpload(userInfo.token)
             loginOutLocal(userInfo)
         })
         .catch((e) => {})
@@ -51,5 +51,11 @@ export const refreshToken = (userInfo: UserInfoProps) => {
 //企业简易版 登录/退出登录前时调用同步
 export const aboutLoginUpload = (Token:string) => {
     if (!isEnpriTraceAgent()) return
-    ipcRenderer.invoke("upload-risk-to-online", {Token})
+    return new Promise((resolve, reject) => {
+        ipcRenderer.invoke("upload-risk-to-online", {Token}).then((res)=>{
+        // console.log("登录/退出登录前时调用同步",res);
+        }).finally(() => {
+            resolve(true)
+        })
+    })
 }
