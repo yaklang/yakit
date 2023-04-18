@@ -519,7 +519,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                 , 下载后请将文件放在~/yakit-projects项目文件下
             </p>
         ),
-        []
+        [props.latestMode]
     )
 
     const latestUpdate = props.latestMode;
