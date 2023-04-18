@@ -909,7 +909,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
-                    console.log("rsp?.Data", rsp?.Data)
                     // if (rsp?.Data.length === 0) return
                     if (paginationProps.Page == 1) {
                         setTotal(rsp.Total)

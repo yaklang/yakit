@@ -1,6 +1,9 @@
 .table-container {
     border: 0 !important;
 }
+.table-container-border {
+    border-bottom: 1px solid var(--yakit-border-color) !important;
+}
 
 .body-length-text-red {
     color: var(--yakit-danger-5);

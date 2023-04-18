@@ -1,15 +1,17 @@
 import {FilterIcon} from "@/assets/newIcon"
 import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {ResizeBox} from "@/components/ResizeBox"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
+import {HTTPPacketEditor} from "@/utils/editors"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {useDebounceFn, useGetState, useMemoizedFn, useThrottleEffect} from "ahooks"
+import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useThrottleEffect} from "ahooks"
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
@@ -81,6 +83,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
+
+    const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
+    const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
 
     const bodyLengthRef = useRef<any>()
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
@@ -282,7 +287,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     useThrottleEffect(
         () => {
-            // setListTable(data)
             queryData()
         },
         [data],
@@ -403,20 +407,58 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         // ------------  搜索 结束  ------------
     })
 
+    const onRowClick = useMemoizedFn((val) => {
+        setCurrentSelectItem(val)
+        setFirstFull(false)
+    })
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (firstFull) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [firstFull])
     return (
         <div style={{overflowY: "hidden"}}>
-            <TableVirtualResize<FuzzerResponse>
-                query={query}
-                isRefresh={isRefresh||loading}
-                titleHeight={0.01}
-                renderTitle={<></>}
-                renderKey='UUID'
-                data={listTable}
-                loading={loading}
-                enableDrag={true}
-                columns={columns}
-                onChange={onTableChange}
-                containerClassName={styles["table-container"]}
+            <ResizeBox
+                isVer={true}
+                lineStyle={{display: firstFull ? "none" : ""}}
+                firstNodeStyle={{padding: firstFull ? 0 : undefined}}
+                firstNode={
+                    <TableVirtualResize<FuzzerResponse>
+                        query={query}
+                        isRefresh={isRefresh || loading}
+                        titleHeight={0.01}
+                        renderTitle={<></>}
+                        renderKey='UUID'
+                        data={listTable}
+                        loading={loading}
+                        enableDrag={true}
+                        columns={columns}
+                        onChange={onTableChange}
+                        containerClassName={classNames(styles["table-container"], {
+                            [styles["table-container-border"]]: currentSelectItem?.ResponseRaw
+                        })}
+                        onRowClick={onRowClick}
+                        currentSelectItem={currentSelectItem}
+                    />
+                }
+                secondNode={
+                    <HTTPPacketEditor
+                        readOnly={true}
+                        hideSearch={true}
+                        noHex={true}
+                        noHeader={true}
+                        // originValue={new Buffer(flow.Response)}
+                        originValue={currentSelectItem?.ResponseRaw || new Buffer([])}
+                    />
+                }
+                {...ResizeBoxProps}
             />
         </div>
     )
