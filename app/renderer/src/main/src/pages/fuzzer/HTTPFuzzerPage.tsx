@@ -182,6 +182,7 @@ export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
+const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -2046,12 +2047,24 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     const [noRedirect, setNoRedirect] = useState<boolean>(false)
     const [redirectActive, setRedirectActive] = useState<string[] | string>(["重定向条件"])
 
-    const [proxyList, setProxyList] = useState<SelectOptionProps[]>([])
+    const [proxyList, setProxyList] = useState<SelectOptionProps[]>([]) // 代理代表
+    const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
     const queryRef = useRef(null)
     const [inViewport] = useInViewport(queryRef)
+
+    useEffect(() => {
+        getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
+            try {
+                setActiveKey(data ? JSON.parse(data) : "请求包配置")
+            } catch (error) {
+                yakitFailed("获取折叠面板的激活key失败:" + error)
+            }
+        })
+    }, [])
+
     useEffect(() => {
         // 代理数据 最近10条
         getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
@@ -2108,6 +2121,13 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
             ...newValue
         })
     })
+    /**
+     * @description 切换折叠面板，缓存activeKey
+     */
+    const onSwitchCollapse = useMemoizedFn((key) => {
+        setActiveKey(key)
+        setRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey, JSON.stringify(key))
+    })
     return (
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>
@@ -2127,7 +2147,8 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                 }}
             >
                 <Collapse
-                    defaultActiveKey={["请求包配置"]}
+                    activeKey={activeKey}
+                    onChange={(key) => onSwitchCollapse(key)}
                     ghost
                     expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                 >
@@ -2322,7 +2343,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         }
                     >
                         <Form.Item label='重试次数' name='maxRetryTimes'>
-                            <YakitInputNumber type='horizontal' size='small' min={0}/>
+                            <YakitInputNumber type='horizontal' size='small' min={0} />
                         </Form.Item>
                         <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e)}>
                             <Panel
