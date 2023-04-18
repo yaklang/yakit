@@ -21,7 +21,7 @@ import {InputItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed} from "../../utils/notification"
-import {useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useGetState, useInViewport, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -170,6 +170,9 @@ export interface FuzzerResponse {
     BodySimilarity?: number
     MatchedByFilter?: boolean
     Url?: string
+
+    /**@name 提取响应数据*/
+    extracted?: string
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -372,11 +375,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRefreshTrigger(!refreshTrigger)
     }
     const [urlPacketShow, setUrlPacketShow] = useState<boolean>(false)
-
-    // filter
-    const [keyword, setKeyword] = useState<string>("")
-    const [filterContent, setFilterContent] = useState<FuzzerResponse[]>([])
-    const [timer, setTimer] = useState<any>()
 
     // editor First Editor
     const [noWordwrapFirstEditor, setNoWordwrapFirstEditor] = useState(false)
@@ -721,40 +719,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-
-    const searchContent = (keyword: string) => {
-        if (timer) {
-            clearTimeout(timer)
-            setTimer(null)
-        }
-        setTimer(
-            setTimeout(() => {
-                try {
-                    const filters = successFuzzer.filter((item) => {
-                        return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
-                    })
-                    setFilterContent(filters)
-                } catch (error) {}
-            }, 500)
-        )
-    }
-
+    const [extractedMap, {setAll}] = useMap<string, string>()
     useEffect(() => {
-        if (!!keyword) {
-            searchContent(keyword)
-        } else {
-            setFilterContent([])
+        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: {extractedMap: Map<string, string>}) => {
+            setAll(data.extractedMap)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
-    }, [keyword])
-
-    useEffect(() => {
-        if (keyword && successFuzzer.length !== 0) {
-            const filters = successFuzzer.filter((item) => {
-                return Buffer.from(item.ResponseRaw).toString("utf8").match(new RegExp(keyword, "g"))
-            })
-            setFilterContent(filters)
-        }
-    }, [successFuzzer])
+    }, [])
 
     const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
 
@@ -1542,16 +1515,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     <HTTPFuzzerPageTable
                                                         onSendToWebFuzzer={sendToFuzzer}
                                                         success={showSuccess}
-                                                        data={
-                                                            filterContent.length !== 0
-                                                                ? filterContent
-                                                                : keyword
-                                                                ? []
-                                                                : successFuzzer
-                                                        }
+                                                        data={successFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
                                                         isRefresh={isRefresh}
+                                                        extractedMap={extractedMap}
                                                     />
                                                 )}
                                                 {!showSuccess && (
@@ -1561,6 +1529,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         query={query}
                                                         setQuery={setQuery}
                                                         isRefresh={isRefresh}
+                                                        extractedMap={new Map()}
                                                     />
                                                 )}
                                             </>

@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {showModal} from "@/utils/showModal"
 import {YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {useDebounceEffect, useGetState} from "ahooks"
+import {useDebounceEffect, useGetState, useMap} from "ahooks"
 import {editor} from "monaco-editor"
 import {Alert, Button, Divider, Popconfirm, Space, Tag, Typography} from "antd"
 import {AutoCard} from "@/components/AutoCard"
@@ -121,7 +121,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         [selected],
         {wait: 500}
     )
-
+    const [extractedMap, {setAll}] = useMap<string, string>()
     useEffect(() => {
         if (!_token) {
             return
@@ -129,13 +129,22 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         const token = getToken()
         const extractedCache: string[] = []
         let extractedCountLastUpdated = 0
+        let extractedMap = new Map<string, string>()
         ipcRenderer.on(`${token}-data`, async (e, data: {Extracted: Uint8Array; Token: string}) => {
+            const item = extractedMap.get(data.Token)
+            if (item) {
+                extractedMap.set(data.Token, item + "," + Uint8ArrayToString(data.Extracted))
+            } else {
+                extractedMap.set(data.Token, Uint8ArrayToString(data.Extracted))
+            }
+
             extractedCache.push(Uint8ArrayToString(data.Extracted))
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`[ExtractData] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
+            setAll(extractedMap)
             info("[ExtractData] finished")
         })
 
@@ -191,7 +200,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                             type={"primary"}
                             size={"small"}
                             onClick={() => {
-                                responses.forEach((i) => {
+                                responses.forEach((i, number) => {
                                     ipcRenderer
                                         .invoke(
                                             "ExtractData",
@@ -205,7 +214,11 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                             },
                                             getToken()
                                         )
-                                        .then(() => {})
+                                        .then(() => {
+                                            if (number === responses.length - 1) {
+                                                ipcRenderer.invoke("ExtractData", {End: true}, getToken())
+                                            }
+                                        })
                                 })
                             }}
                         >
@@ -291,7 +304,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                 </Space>
                             }
                             extra={
-                                <Space>
+                                <>
                                     <YakitPopconfirm
                                         title={"确定要清除已提取数据？"}
                                         onConfirm={() => {
@@ -309,10 +322,22 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                         onClick={() => {
                                             saveABSFileToOpen("webfuzzer-extract-data.txt", extracted.join("\n"))
                                         }}
+                                        style={{marginLeft: 6}}
                                     >
                                         下载文件
                                     </YakitButton>
-                                </Space>
+                                    {extracted.length > 0 && (
+                                        <YakitButton
+                                            size={"small"}
+                                            type='text'
+                                            onClick={() => {
+                                                ipcRenderer.invoke("send-extracted-to-table", {extractedMap})
+                                            }}
+                                        >
+                                            在表中展示
+                                        </YakitButton>
+                                    )}
+                                </>
                             }
                             bodyStyle={{margin: 0, padding: 0}}
                         >

@@ -25,6 +25,8 @@ interface HTTPFuzzerPageTableProps {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
     isRefresh: boolean
+    /**@name 提取的数据 */
+    extractedMap:Map<string, string>
 }
 
 /**
@@ -44,10 +46,6 @@ const convertBodyLength = (val: string) => {
         //小于0.1GB，则转化成MB
         size = (limit / (1024 * 1024)).toFixed(2) + "MB"
     }
-    // else {
-    //     //其他转化成GB
-    //     size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB"
-    // }
     return size
 }
 
@@ -79,7 +77,7 @@ const sorterFunction = (list, sorterTable) => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh} = props
+    const {data, success, query, setQuery, isRefresh,extractedMap} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -186,6 +184,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   },
                   {
+                    title: "提取数据",
+                    dataKey: "extracted",
+                    width: 300,
+                    render: (_,record) =>extractedMap.get(record['UUID']) 
+                },
+                  {
                       title: "响应相似度",
                       dataKey: "BodySimilarity",
                       width: 150,
@@ -283,7 +287,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   }
               ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength,extractedMap])
 
     useThrottleEffect(
         () => {
