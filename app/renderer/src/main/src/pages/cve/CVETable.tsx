@@ -36,6 +36,8 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {openExternalWebsite} from "@/utils/openWebsite"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext";
+import {showByContextMenu} from "@/components/functionTemplate/showByContext";
 
 export interface CVETableProp {
     available: boolean
@@ -66,7 +68,7 @@ export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
                             setSelected={setSelected}
                         />
                     }
-                    secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected} />}
+                    secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected}/>}
                 />
             ) : (
                 <CVETableList
@@ -90,6 +92,7 @@ interface CVETableListProps {
     advancedQuery: boolean //是否开启高级查询
     setAdvancedQuery: (b: boolean) => void
 }
+
 const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const {available, selected, setSelected, advancedQuery, setAdvancedQuery} = props
     const [params, setParams] = useState<QueryCVERequest>({...props.filter})
@@ -101,6 +104,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
 
     const [searchType, setSearchType] = useState<string>("Year")
     const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
+    const [dataBaseUpdateLatestMode, setDataBaseUpdateLatestMode] = useState<boolean>(false)
 
     const [currentSelectItem, setCurrentSelectItem] = useState<CVEDetail>()
 
@@ -280,7 +284,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                 {!advancedQuery && (
                                     <div className={styles["cve-list-title-query"]}>
                                         <span className={styles["cve-list-title-query-text"]}>高级查询</span>
-                                        <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
+                                        <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
                                     </div>
                                 )}
                                 <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
@@ -338,9 +342,28 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                         }
                                     }}
                                 />
-                                <Divider type='vertical' />
-                                <YakitButton type='primary' onClick={() => setDataBaseUpdateVisible(true)}>
-                                    <RefreshIcon className={styles["refresh-icon"]} />
+                                <Divider type='vertical'/>
+                                <YakitButton type='primary' onClick={() => {
+                                    // setDataBaseUpdateVisible(true)
+                                    showByRightContext({
+                                        data: [
+                                            {label: "只更新最新数据", key: "update-latest-data"},
+                                            {label: "全量更新", key: "update-full-data"}
+                                        ],
+                                        onClick: e => {
+                                            switch (e.key) {
+                                                case "update-latest-data":
+                                                    setDataBaseUpdateLatestMode(true)
+                                                    setDataBaseUpdateVisible(true)
+                                                    return
+                                                case "update-full-data":
+                                                    setDataBaseUpdateVisible(true)
+                                                    return
+                                            }
+                                        }
+                                    })
+                                }}>
+                                    <RefreshIcon className={styles["refresh-icon"]}/>
                                     数据库更新
                                 </YakitButton>
                             </div>
@@ -372,7 +395,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                         />
                         <YakitButton
                             type='outline1'
-                            icon={<CloudDownloadIcon />}
+                            icon={<CloudDownloadIcon/>}
                             onClick={() => setDataBaseUpdateVisible(true)}
                             style={{marginTop: 16}}
                         >
@@ -383,6 +406,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             )}
             <DatabaseUpdateModal
                 available={available}
+                latestMode={dataBaseUpdateLatestMode}
                 visible={dataBaseUpdateVisible}
                 setVisible={setDataBaseUpdateVisible}
             />
@@ -391,10 +415,12 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
 })
 
 interface DatabaseUpdateModalProps {
+    latestMode?: boolean
     available?: boolean
     visible: boolean
     setVisible: (b: boolean) => void
 }
+
 const url = "https://cve-db.oss-cn-beijing.aliyuncs.com/default-cve.db.gzip"
 export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
     const {available, visible, setVisible} = props
@@ -473,7 +499,13 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
 
     const tipNode = useMemo(
         () => (
-            <p>
+            props.latestMode ? <p>
+                差量更新数据仅更新最新数据
+                <br/>
+                （OpenAI 可能暂未翻译）
+                <br/>
+                被拒绝的 CVE 将不会更新
+            </p> : <p>
                 如果更新失败，可点击该地址下载：
                 <a
                     href={url}
@@ -490,6 +522,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         []
     )
 
+    const latestUpdate = props.latestMode;
+
     const HintContent = useMemoizedFn(() => {
         switch (status) {
             case "init":
@@ -497,7 +531,9 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     <>
                         <p>
                             {available
-                                ? "点击“强制更新”，可更新本地CVE数据库"
+                                ? (
+                                    latestUpdate ? "差量更新数据库仅更新最新数据" : "点击“强制更新”，可更新本地CVE数据库"
+                                )
                                 : "本地CVE数据库未初始化，请点击“初始化”下载CVE数据库"}
                         </p>
                         {tipNode}
@@ -541,18 +577,23 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     })
     const heardIconRender = useMemoizedFn(() => {
         if (status === "done") {
-            return <CheckCircleIcon style={{color: "var(--yakit-success-5)"}} />
+            return <CheckCircleIcon style={{color: "var(--yakit-success-5)"}}/>
         }
         if (available) {
-            return <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}} />
+            return <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}}/>
         } else {
-            return <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}} />
+            return <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}}/>
         }
     })
     const titleRender = useMemoizedFn(() => {
         if (status === "done") {
             return "更新完成"
         }
+
+        if (props.latestMode) {
+            return "CVE 差量最新数据更新"
+        }
+
         if (available) {
             return "CVE数据库更新"
         } else {
@@ -563,6 +604,11 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         if (status === "done") {
             return "重启"
         }
+
+        if (props.latestMode) {
+            return "更新最新数据"
+        }
+
         if (available) {
             return "强制更新"
         } else {
@@ -582,15 +628,17 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                 if (status === "done") {
                     ipcRenderer
                         .invoke("relaunch")
-                        .then(() => {})
+                        .then(() => {
+                        })
                         .catch((e) => {
                             failed(`重启失败: ${e}`)
                         })
                 } else {
                     setStatus("progress")
                     ipcRenderer
-                        .invoke("UpdateCVEDatabase", {Proxy: ""}, token)
-                        .then(() => {})
+                        .invoke("UpdateCVEDatabase", {Proxy: "", JustUpdateLatestCVE: props.latestMode}, token)
+                        .then(() => {
+                        })
                         .catch((e) => {
                             failed(`更新 CVE 数据库失败！${e}`)
                         })
