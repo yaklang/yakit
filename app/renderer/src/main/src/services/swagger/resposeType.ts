@@ -233,31 +233,31 @@ export declare namespace API {
   }
   export interface RiskUploadRequest {
     token: string;
-    rish_hash: string;
-    ip: string;
-    ip_integer: number;
-    url: string;
-    port: number;
-    host: string;
-    title: string;
-    title_verbose: string;
-    risk_type: string;
-    risk_type_verbose: string;
-    parameter: string;
-    payload: string;
-    details: string;
-    severity: string;
-    from_yak_script: string;
-    waiting_verified: boolean;
-    reverse_token: string;
-    runtime_id: string;
-    quoted_request: string;
-    quoted_response: string;
-    is_potential: boolean;
-    cve: string;
-    description: string;
-    solution: string;
-    risk_created_at: number;
+    risk_hash: string;
+    ip?: string;
+    ip_integer?: number;
+    url?: string;
+    port?: number;
+    host?: string;
+    title?: string;
+    title_verbose?: string;
+    risk_type?: string;
+    risk_type_verbose?: string;
+    parameter?: string;
+    payload?: string;
+    details?: string;
+    severity?: string;
+    from_yak_script?: string;
+    waiting_verified?: boolean;
+    reverse_token?: string;
+    runtime_id?: string;
+    quoted_request?: string;
+    quoted_response?: string;
+    is_potential?: boolean;
+    cve?: string;
+    description?: string;
+    solution?: string;
+    risk_created_at?: number;
   }
   export interface RiskTypes {
     risk_type: string;

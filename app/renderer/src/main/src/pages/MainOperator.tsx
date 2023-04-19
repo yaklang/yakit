@@ -769,6 +769,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 ipcRenderer.invoke("update-judge-license", true)
                 removePage(Route.AccountAdminPage, false)
                 removePage(Route.RoleAdminPage, false)
+                removePage(Route.HoleCollectPage, false)
             } else {
                 removePage(Route.LicenseAdminPage, false)
                 removePage(Route.TrustListPage, false)

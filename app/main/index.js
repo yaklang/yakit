@@ -1,7 +1,7 @@
 const {app, BrowserWindow, dialog, nativeImage} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
-const {registerIPC, clearing,closeYakitGrpc} = require("./ipc")
+const {registerIPC, clearing,closeYakitToGrpc} = require("./ipc")
 const process = require("process")
 const {
     initExtraLocalCache,
