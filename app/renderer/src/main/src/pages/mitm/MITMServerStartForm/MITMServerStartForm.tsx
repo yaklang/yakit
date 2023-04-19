@@ -59,17 +59,14 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
 
-    const [advancedValue, setAdvancedValue] = useState<AdvancedConfigurationFromValue>({
-        certs: [],
-        preferGMTLS: false,
-        onlyEnableGMTLS: false
-    })
+    // 高级配置 关闭后存的最新的form值
+    const [advancedValue, setAdvancedValue] = useState<AdvancedConfigurationFromValue>()
 
     const ruleButtonRef = useRef<any>()
+    const advancedFormRef = useRef<any>()
 
     const [form] = Form.useForm()
     const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
-    const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
 
     useEffect(() => {
         if (props.status !== "idle") return
@@ -121,10 +118,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         props.setEnableInitialPlugin(checked)
     })
     const onStartMITM = useMemoizedFn((values) => {
+        // 获取高级配置的默认值
+        const advancedFormValue = advancedFormRef.current?.getValue()
+
         let params = {
             ...values,
+            ...advancedFormValue,
             ...advancedValue
         }
+
         props.onStartMITMServer(
             params.host,
             params.port,
@@ -141,6 +143,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 proxyPassword: params.proxyPassword
             }
         )
+        
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
         if (index === -1) {
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
@@ -212,33 +215,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 >
                     <YakitSwitch size='large' />
                 </Item>
-                <Item
-                    label={"代理认证"}
-                    name='enableProxyAuth'
-                    initialValue={false}
-                    help={"为劫持代理启动认证，需要在代理客户端配置代理认证信息"}
-                    valuePropName='checked'
-                >
-                    <YakitSwitch size='large' />
-                </Item>
-                {enableProxyAuth && (
-                    <>
-                        <Item
-                            label={"代理认证用户名"}
-                            rules={[{required: enableProxyAuth, message: "该项为必填"}]}
-                            name='proxyUsername'
-                        >
-                            <YakitAutoComplete options={[{label: "admin", value: "admin"}]} placeholder='请输入' />
-                        </Item>
-                        <Item
-                            label={"代理认证密码"}
-                            rules={[{required: enableProxyAuth, message: "该项为必填"}]}
-                            name='proxyPassword'
-                        >
-                            <YakitAutoComplete options={[]} placeholder='请输入' />
-                        </Item>
-                    </>
-                )}
+
                 <Item
                     label={"内容规则"}
                     help={
@@ -309,6 +286,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         setAdvancedFormVisible(false)
                     }}
                     enableGMTLS={enableGMTLS}
+                    ref={advancedFormRef}
                 />
             </React.Suspense>
         </div>

@@ -7,5 +7,8 @@ export enum MITMConsts {
     MITMDefaultHostHistoryList = "YAKIT_MITMDefaultHostHistoryList",
     MITMDefaultClientCertificates = "YAKIT_MITMDefaultClientCertificates",
     MITMDefaultPreferGMTLS = "YAKIT_MITMDefaultPreferGMTLS",
-    MITMDefaultOnlyEnableGMTLS = "YAKIT_MITMDefaultOnlyEnableGMTLS"
+    MITMDefaultOnlyEnableGMTLS = "YAKIT_MITMDefaultOnlyEnableGMTLS",
+    MITMDefaultEnableProxyAuth = "YAKIT_MITMDefaultEnableProxyAuth",
+    MITMDefaultProxyUsername = "YAKIT_MITMDefaultProxyUsername",
+    MITMDefaultProxyPassword = "YAKIT_MITMDefaultProxyPassword",
 }
