@@ -2909,9 +2909,9 @@ message MITMRequest {
   bool preferGMTLS = 48;
 
   // 代理用户名和密码
-  bool EnableProxyAuth = 51;
-  string ProxyUsername = 49;
-  string ProxyPassword = 50;
+  bool enableProxyAuth = 51;
+  string proxyUsername = 49;
+  string proxyPassword = 50;
 }
 
 message Certificate {
