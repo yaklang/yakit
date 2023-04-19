@@ -1119,6 +1119,7 @@ message DownloadOnlinePluginByScriptName {
 message OnlineProfile {
   string BaseUrl = 1;
   string Password = 2;
+  string Proxy = 3;
 }
 
 message SetKeyRequest {
