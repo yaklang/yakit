@@ -270,6 +270,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         },
         {wait: 500}
     ).run
+    console.log('data',data)
     return (
         <div className={styles["cve-list"]}>
             {available ? (
@@ -287,6 +288,10 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     </div>
                                 )}
                                 <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
+                                <div className={styles["cve-list-total"]}>
+                                    <span>Total</span>
+                                    <span className={styles['cve-list-total-number']}>{total}</span>
+                                </div>
                             </div>
                             <div className={styles["cve-list-title-extra"]}>
                                 <YakitCombinationSearch
