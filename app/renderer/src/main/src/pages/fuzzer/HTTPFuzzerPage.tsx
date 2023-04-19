@@ -367,7 +367,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     /**/
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [fuzzToken, setFuzzToken] = useState("")
-    const [targetUrl, setTargetUrl] = useState("")
     const [curlCommandLine, setCurlCommandLine] = useState("")
 
     const [refreshTrigger, setRefreshTrigger] = useState(false)
@@ -1088,7 +1087,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         keyWord: ""
                     },
                     // 过滤配置
-                    filterMode: _filterMode||'drop',
+                    filterMode: _filterMode || "drop",
                     statusCode: getFilter().StatusCode.join(",") || "",
                     regexps: getFilter().Regexps.join(","),
                     keyWord: getFilter().Keywords?.join(",") || "",
@@ -1277,13 +1276,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <div style={{width: 400}}>
                                             <Form
                                                 layout={"vertical"}
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-
+                                                onFinish={(v) => {
                                                     ipcRenderer
                                                         .invoke("Codec", {
-                                                            Type: "packet-from-url",
-                                                            Text: targetUrl
+                                                            ...v
                                                         })
                                                         .then((e) => {
                                                             if (e?.Result) {
@@ -1295,13 +1291,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 }}
                                                 size={"small"}
                                             >
-                                                <Form.Item label={"从 URL 构造请求"}>
-                                                    <YakitInput
-                                                        value={targetUrl}
-                                                        onChange={(e) => setTargetUrl(e.target.value)}
-                                                    />
-                                                </Form.Item>
-                                                <Form.Item style={{marginBottom: 8}}>
+                                                <Input.Group compact className='yakit-input-group'>
+                                                    <Form.Item noStyle name='Text'>
+                                                        <YakitInput size='small' />
+                                                    </Form.Item>
+                                                    <Form.Item noStyle name='Type' initialValue={"URL"}>
+                                                        <YakitSelect size='small' style={{width: 80}}>
+                                                            <YakitSelect value='packet-from-url'>URL</YakitSelect>
+                                                            <YakitSelect value='packet-from-curl'>CURL</YakitSelect>
+                                                        </YakitSelect>
+                                                    </Form.Item>
+                                                </Input.Group>
+                                                <Form.Item style={{marginBottom: 8, marginTop: 8}}>
                                                     <YakitButton type={"primary"} htmlType={"submit"}>
                                                         构造请求
                                                     </YakitButton>
@@ -1311,52 +1312,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }
                                 >
                                     <YakitButton size={"small"} type={"primary"}>
-                                        URL
-                                    </YakitButton>
-                                </YakitPopover>
-                                <YakitPopover
-                                    trigger={"click"}
-                                    title={"从 cURL 命令行加载数据包"}
-                                    content={
-                                        <div style={{width: 400}}>
-                                            <Form
-                                                layout={"vertical"}
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-
-                                                    ipcRenderer
-                                                        .invoke("Codec", {
-                                                            Type: "packet-from-curl",
-                                                            Text: curlCommandLine
-                                                        })
-                                                        .then((e) => {
-                                                            if (e?.Result) {
-                                                                setRequest(e.Result)
-                                                                refreshRequest()
-                                                            }
-                                                        })
-                                                        .finally(() => {
-                                                        })
-                                                }}
-                                                size={"small"}
-                                            >
-                                                <Form.Item>
-                                                    <YakitInput
-                                                        value={curlCommandLine}
-                                                        onChange={(e) => setCurlCommandLine(e.target.value)}
-                                                    />
-                                                </Form.Item>
-                                                <Form.Item style={{marginBottom: 8}}>
-                                                    <YakitButton type={"primary"} htmlType={"submit"}>
-                                                        构造数据包
-                                                    </YakitButton>
-                                                </Form.Item>
-                                            </Form>
-                                        </div>
-                                    }
-                                >
-                                    <YakitButton size={"small"} type={"primary"}>
-                                        cURL
+                                        构造请求
                                     </YakitButton>
                                 </YakitPopover>
                                 <EditorsSetting
@@ -1433,14 +1389,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             utf8={true}
                             originValue={StringToUint8Array(request)}
                             actions={[
-                                {
-                                    id: "packet-from-url",
-                                    label: "URL转数据包",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: () => {
-                                        setUrlPacketShow(true)
-                                    }
-                                },
                                 {
                                     id: "copy-as-url",
                                     label: "复制为 URL",
@@ -1548,46 +1496,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                     }
                 />
-                <Modal
-                    visible={urlPacketShow}
-                    title='从 URL 加载数据包'
-                    onCancel={() => setUrlPacketShow(false)}
-                    footer={null}
-                >
-                    <Form
-                        layout={"vertical"}
-                        onSubmitCapture={(e) => {
-                            e.preventDefault()
-
-                            ipcRenderer
-                                .invoke("Codec", {
-                                    Type: "packet-from-url",
-                                    Text: targetUrl
-                                })
-                                .then((e) => {
-                                    if (e?.Result) {
-                                        setRequest(e.Result)
-                                        refreshRequest()
-                                        setUrlPacketShow(false)
-                                    }
-                                })
-                                .finally(() => {})
-                        }}
-                        size={"small"}
-                    >
-                        <InputItem
-                            label={"从 URL 构造请求"}
-                            value={targetUrl}
-                            setValue={setTargetUrl}
-                            extraFormItemProps={{style: {marginBottom: 8}}}
-                        ></InputItem>
-                        <Form.Item style={{marginBottom: 8}}>
-                            <Button type={"primary"} htmlType={"submit"}>
-                                构造请求
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </Modal>
             </div>
         </div>
     )

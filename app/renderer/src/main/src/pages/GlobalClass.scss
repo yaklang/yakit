@@ -392,9 +392,15 @@
         .ant-input-affix-wrapper {
             border-radius: 4px 0 0 4px;
         }
+        .ant-input{
+            border-radius: 4px 0 0 4px;
+        }
     }
     > :last-child {
         .ant-input-affix-wrapper {
+            border-radius: 0 4px 4px 0;
+        }
+        .ant-input{
             border-radius: 0 4px 4px 0;
         }
     }
