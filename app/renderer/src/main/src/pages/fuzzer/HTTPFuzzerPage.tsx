@@ -1088,7 +1088,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         keyWord: ""
                     },
                     // 过滤配置
-                    filterMode: _filterMode,
+                    filterMode: _filterMode||'drop',
                     statusCode: getFilter().StatusCode.join(",") || "",
                     regexps: getFilter().Regexps.join(","),
                     keyWord: getFilter().Keywords?.join(",") || "",
