@@ -458,7 +458,10 @@ export const YakInteractiveEditor: React.FC<YakInteractiveEditorProp> = React.me
         )
     }
 )
+/**@name 字体大小 */
 export const HTTP_PACKET_EDITOR_FONT_SIZE = "HTTP_PACKET_EDITOR_FONT_SIZE"
+/**@name 获取换行符是否显示 */
+export const HTTP_PACKET_EDITOR_Line_Breaks = "HTTP_PACKET_EDITOR_Line_Breaks"
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
     const isResponse = props.isResponse

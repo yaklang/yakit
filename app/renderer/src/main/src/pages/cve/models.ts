@@ -39,6 +39,7 @@ export interface CVEDetail {
     AvailabilityImpact: string
     Severity: string
     PublishedAt: number
+    UpdatedAt:number
     CWE: string
     CVSSVersion: string
     CVSSVectorString: string

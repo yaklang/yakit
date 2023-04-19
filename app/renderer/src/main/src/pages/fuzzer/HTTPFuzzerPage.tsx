@@ -13,7 +13,12 @@ import {
     Collapse,
     Input
 } from "antd"
-import {HTTPPacketEditor, HTTP_PACKET_EDITOR_FONT_SIZE, IMonacoEditor} from "../../utils/editors"
+import {
+    HTTPPacketEditor,
+    HTTP_PACKET_EDITOR_FONT_SIZE,
+    HTTP_PACKET_EDITOR_Line_Breaks,
+    IMonacoEditor
+} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
@@ -378,10 +383,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // editor First Editor
     const [noWordwrapFirstEditor, setNoWordwrapFirstEditor] = useState(false)
     const [fontSizeFirstEditor, setFontSizeFirstEditor] = useState<number>()
+    const [showLineBreaksFirstEditor, setShowLineBreaksFirstEditor] = useState<boolean>(true)
 
     // editor Second Editor
     const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
     const [fontSizeSecondEditor, setFontSizeSecondEditor] = useState<number>()
+    const [showLineBreaksSecondEditor, setShowLineBreaksSecondEditor] = useState<boolean>(true)
 
     // second Node
     const secondNodeRef = useRef(null)
@@ -1320,6 +1327,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setNoWordwrap={setNoWordwrapFirstEditor}
                                     fontSize={fontSizeFirstEditor}
                                     setFontSize={setFontSizeFirstEditor}
+                                    showLineBreaks={showLineBreaksFirstEditor}
+                                    setShowLineBreaks={setShowLineBreaksFirstEditor}
                                 />
                             </div>
                         )
@@ -1372,6 +1381,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         setFontSize={setFontSizeSecondEditor}
                                         noWordwrap={noWordwrapSecondEditor}
                                         setNoWordwrap={setNoWordwrapSecondEditor}
+                                        showLineBreaks={showLineBreaksSecondEditor}
+                                        setShowLineBreaks={setShowLineBreaksSecondEditor}
                                     />
                                 )}
                             </div>
@@ -2473,17 +2484,22 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
 })
 
 interface EditorsSettingProps {
+    /**@name 是否换行 */
     noWordwrap: boolean
     setNoWordwrap: (b: boolean) => void
+    /**@name 字体大小 */
     fontSize?: number
     setFontSize: (n: number) => void
+    /**@name 是否显示换行符 */
+    showLineBreaks: boolean
+    setShowLineBreaks: (b: boolean) => void
 }
 
 /**
  * @description 编辑器配置
  */
 const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
-    const {noWordwrap, setNoWordwrap, fontSize, setFontSize} = props
+    const {noWordwrap, setNoWordwrap, fontSize, setFontSize, showLineBreaks, setShowLineBreaks} = props
     useEffect(() => {
         // 无落如何都会设置，最小为 12
         getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
@@ -2502,6 +2518,13 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
             .catch(() => {
                 setFontSize(12)
             })
+        // getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
+        //     .then((data) => {
+        //         setShowLineBreaks(data === "true")
+        //     })
+        //     .catch(() => {
+        //         setShowLineBreaks(true)
+        //     })
     }, [])
     return (
         <>
@@ -2559,6 +2582,15 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                                     />
                                 </Form.Item>
                             )}
+                            {/* <Form.Item label='是否显示换行符'>
+                                <YakitSwitch
+                                    checked={showLineBreaks}
+                                    onChange={(checked) => {
+                                        setRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks, `${checked}`)
+                                        setShowLineBreaks(checked)
+                                    }}
+                                />
+                            </Form.Item> */}
                         </Form>
                     </>
                 }

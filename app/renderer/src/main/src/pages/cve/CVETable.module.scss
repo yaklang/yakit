@@ -65,10 +65,17 @@
         font-size: 12px;
         line-height: 16px;
         color: var(--yakit-helper-text-color);
+        margin-right: 8px;
         .cve-list-total-number {
             color: var(--yakit-primary-5);
             margin-left: 4px;
         }
+    }
+    .cve-list-time {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-helper-text-color);
     }
 }
 
