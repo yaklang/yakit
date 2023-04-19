@@ -2305,6 +2305,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         ...v,
                                         ...restValue
                                     })
+                                    setNoRetrying(false)
                                 }}
                             >
                                 重置
