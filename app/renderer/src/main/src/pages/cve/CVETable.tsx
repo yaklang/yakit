@@ -525,6 +525,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         ipcRenderer.on(`${token}-end`, (e, data) => {
             if (!errorMessage.current.includes("client failed")) {
                 info("[UpdateCVEDatabase] finished")
+                if (props.latestMode) {
+                    setStatus("done")
+                    return
+                } // 差量更新不需要倒计时
                 const n = Math.round(Math.random() * 10 + 5) // 10-15随机数
                 setTargetDate(Date.now() + n * 1000)
             } else {
@@ -540,7 +544,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [])
+    }, [props.latestMode])
     useEffect(() => {
         if (!visible) return
         setStatus("init")
@@ -701,7 +705,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             okButtonText={okButtonTextRender()}
             isDrag={true}
             mask={false}
-            cancelButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
+            cancelButtonProps={{style: {display: status === "progress" && !props.latestMode ? "none" : "flex"}}}
             okButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
             content={<div className={styles["database-update-content"]}>{HintContent()}</div>}
         />
