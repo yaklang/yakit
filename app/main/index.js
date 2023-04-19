@@ -1,7 +1,7 @@
 const {app, BrowserWindow, dialog, nativeImage} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
-const {registerIPC, clearing,closeYakitToGrpc} = require("./ipc")
+const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
 const {
     initExtraLocalCache,
@@ -93,7 +93,7 @@ const createWindow = () => {
                     } else if (res.response === 1) {
                         win = null
                         clearing()
-                        app.quit()
+                        app.exit()
                     } else {
                         e.preventDefault()
                         return
@@ -102,7 +102,7 @@ const createWindow = () => {
         } else {
             win = null
             clearing()
-            app.quit()
+            app.exit()
         }
     })
     win.on("minimize", (e) => {
@@ -148,14 +148,4 @@ app.on("window-all-closed", function () {
     app.quit()
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
-})
-
-app.on("before-quit", function (event) {
-    event.preventDefault()
-    if(USER_INFO.isLogin&&getLocalCacheValue("REACT_APP_PLATFORM")==="simple-enterprise"){
-        closeYakitToGrpc({Token:USER_INFO.token}).then(()=>{}).finally(()=>{app.exit()})
-    }
-    else{
-        app.exit()
-    }
 })

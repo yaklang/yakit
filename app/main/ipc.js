@@ -102,27 +102,8 @@ function testRemoteClient(params, callback) {
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
 
-// 关闭yakit时GRPC同步信息
-const closeYakitToGrpc= (params) => {
-    try {
-        return new Promise((resolve, reject) => {
-            getClient().UploadRiskToOnline(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    } catch (error) {
-        app.exit()
-    }
-    
-}
-
 module.exports = {
     testRemoteClient,
-    closeYakitToGrpc,
     clearing: () => {
         require("./handlers/yakLocal").clearing()
     },
