@@ -305,6 +305,7 @@ service Yak {
   rpc QueryAvailableTarget(Empty) returns (Fields);
   rpc QueryNewRisk(QueryNewRiskRequest) returns (QueryNewRiskResponse);
   rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
+  rpc UploadRiskToOnline(UploadRiskToOnlineRequest) returns (Empty);
 
   // Report
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
@@ -522,6 +523,7 @@ message QueryCVERequest {
   // by published_date
   string AfterYear = 9;
   bool ChineseTranslationFirst = 10;
+  string Keywords = 11;
 }
 
 message CWEDetail {
@@ -677,6 +679,7 @@ message ExportsProfileDatabaseRequest {
 
 message UpdateCVEDatabaseRequest {
   string Proxy = 1;
+  bool JustUpdateLatestCVE = 2;
 }
 
 message IsCVEDatabaseReadyResponse {
@@ -1698,6 +1701,10 @@ message NewRisk {
 message NewRiskReadRequest {
   int64 AfterId = 1;
   repeated int64 Ids = 2;
+}
+
+message UploadRiskToOnlineRequest {
+  string Token = 1;
 }
 
 message VerifyTunnelServerDomainParams {
