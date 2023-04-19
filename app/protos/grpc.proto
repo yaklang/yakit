@@ -677,6 +677,7 @@ message ExportsProfileDatabaseRequest {
 
 message UpdateCVEDatabaseRequest {
   string Proxy = 1;
+  bool JustUpdateLatestCVE = 2;
 }
 
 message IsCVEDatabaseReadyResponse {
