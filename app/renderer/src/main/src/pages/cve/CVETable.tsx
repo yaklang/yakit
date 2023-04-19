@@ -357,6 +357,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                                     setDataBaseUpdateVisible(true)
                                                     return
                                                 case "update-full-data":
+                                                    setDataBaseUpdateLatestMode(false)
                                                     setDataBaseUpdateVisible(true)
                                                     return
                                             }
