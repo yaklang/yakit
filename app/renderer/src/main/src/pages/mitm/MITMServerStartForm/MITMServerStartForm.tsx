@@ -47,6 +47,7 @@ export interface ClientCertificate {
     KeyPem: Uint8Array
     CaCertificates: Uint8Array[]
 }
+
 const defHost = "127.0.0.1"
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
     const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
@@ -65,6 +66,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const [form] = Form.useForm()
     const enableGMTLS = useWatch<boolean>('enableGMTLS', form);
+    const enableProxyAuth = useWatch<boolean>('enableProxyAuth', form);
 
     useEffect(() => {
         // 设置 MITM 初始启动插件选项
@@ -102,7 +104,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const getRules = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetCurrentRules", {})
-            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+            .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
                 setRules(newRules)
             })
@@ -127,6 +129,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 enableGMTLS: params.enableGMTLS,
                 onlyEnableGMTLS: params.onlyEnableGMTLS,
                 preferGMTLS: params.preferGMTLS,
+                enableProxyAuth: params.enableProxyAuth,
+                proxyUsername: params.proxyUsername,
+                proxyPassword: params.proxyPassword,
             }
         )
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
@@ -187,7 +192,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }
                     valuePropName='checked'
                 >
-                    <YakitSwitch size='large' />
+                    <YakitSwitch size='large'/>
                 </Item>
                 <Item
                     label={"国密劫持"}
@@ -198,7 +203,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }
                     valuePropName='checked'
                 >
-                    <YakitSwitch size='large' />
+                    <YakitSwitch size='large'/>
                 </Item>
                 {enableGMTLS && (
                     <>
@@ -210,7 +215,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             }
                             valuePropName='checked'
                         >
-                            <YakitSwitch size='large' />
+                            <YakitSwitch size='large'/>
                         </Item>
                         <Item
                             label={"仅国密 TLS"}
@@ -220,21 +225,45 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             }
                             valuePropName='checked'
                         >
-                            <YakitSwitch size='large' />
+                            <YakitSwitch size='large'/>
                         </Item>
                     </>
                 )}
                 <Item
                     label={"代理认证"}
                     name='enableProxyAuth'
-                    initialValue={true}
+                    initialValue={false}
                     help={
-                        "适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"
+                        "为劫持代理启动认证，需要在代理客户端配置代理认证信息"
                     }
                     valuePropName='checked'
                 >
-                    <YakitSwitch size='large' />
+                    <YakitSwitch size='large'/>
                 </Item>
+                {enableProxyAuth && (
+                    <>
+                        <Item
+                            label={"代理认证用户名"}
+                            rules={[{required: enableProxyAuth, message: "该项为必填"}]}
+                            name='proxyUsername'
+                        >
+                            <YakitAutoComplete
+                                options={[{label: "admin", value: "admin"}]}
+                                placeholder='请输入'
+                            />
+                        </Item>
+                        <Item
+                            label={"代理认证密码"}
+                            rules={[{required: enableProxyAuth, message: "该项为必填"}]}
+                            name='proxyPassword'
+                        >
+                            <YakitAutoComplete
+                                options={[]}
+                                placeholder='请输入'
+                            />
+                        </Item>
+                    </>
+                )}
                 <Item
                     label={"内容规则"}
                     help={
@@ -248,7 +277,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 }}
                             >
                                 默认配置&nbsp;
-                                <RefreshIcon />
+                                <RefreshIcon/>
                             </span>
                         </span>
                     }
@@ -257,7 +286,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <div className={styles["form-rule"]} onClick={() => props.setVisible(true)}>
                             <div className={styles["form-rule-text"]}>现有规则 {rules.length} 条</div>
                             <div className={styles["form-rule-icon"]}>
-                                <CogIcon />
+                                <CogIcon/>
                             </div>
                         </div>
                     </div>
@@ -271,7 +300,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     </div>
                 </Item>
                 <Item label='启用插件' name='enableInitialPlugin' valuePropName='checked'>
-                    <YakitSwitch size='large' onChange={(checked) => onSwitchPlugin(checked)} />
+                    <YakitSwitch size='large' onChange={(checked) => onSwitchPlugin(checked)}/>
                 </Item>
                 <Item label={" "} colon={false}>
                     <Space>
