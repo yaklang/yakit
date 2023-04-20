@@ -477,6 +477,21 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         otherHelpNode={
                             <>
                                 <span
+                                    className={styles["help-hint-title"]}
+                                >
+                                    <Checkbox
+                                        onClick={(e) => {
+                                            setParams({
+                                                ...params,
+                                                SkippedHostAliveScan: !params.SkippedHostAliveScan
+                                            })
+                                        }}
+                                        checked={params.SkippedHostAliveScan}
+                                    >
+                                    跳过主机存活检测
+                                    </Checkbox>
+                                </span>
+                                <span
                                     onClick={() => {
                                         let m = showDrawer({
                                             title: "设置高级参数",
