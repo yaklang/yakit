@@ -385,6 +385,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [noWordwrapFirstEditor, setNoWordwrapFirstEditor] = useState(false)
     const [fontSizeFirstEditor, setFontSizeFirstEditor] = useState<number>()
     const [showLineBreaksFirstEditor, setShowLineBreaksFirstEditor] = useState<boolean>(true)
+    const [urlType, setUrlType] = useState<string>("")
 
     // editor Second Editor
     const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
@@ -1290,7 +1291,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </YakitButton>
                                 <YakitPopover
                                     trigger={"click"}
-                                    title={"从 URL 加载数据包"}
                                     content={
                                         <div style={{width: 400}}>
                                             <Form
@@ -1310,17 +1310,24 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 }}
                                                 size={"small"}
                                             >
-                                                <Input.Group compact className='yakit-input-group'>
-                                                    <Form.Item noStyle name='Text'>
-                                                        <YakitInput size='small' />
-                                                    </Form.Item>
-                                                    <Form.Item noStyle name='Type' initialValue={"URL"}>
-                                                        <YakitSelect size='small' style={{width: 80}}>
-                                                            <YakitSelect value='packet-from-url'>URL</YakitSelect>
-                                                            <YakitSelect value='packet-from-curl'>CURL</YakitSelect>
-                                                        </YakitSelect>
-                                                    </Form.Item>
-                                                </Input.Group>
+                                                <Form.Item name='Type' initialValue='packet-from-url'>
+                                                    <YakitRadioButtons
+                                                        buttonStyle='solid'
+                                                        options={[
+                                                            {
+                                                                value: "packet-from-url",
+                                                                label: "URL"
+                                                            },
+                                                            {
+                                                                value: "packet-from-curl",
+                                                                label: "cURL"
+                                                            }
+                                                        ]}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item name='Text'>
+                                                    <YakitInput size='small' />
+                                                </Form.Item>
                                                 <Form.Item style={{marginBottom: 8, marginTop: 8}}>
                                                     <YakitButton type={"primary"} htmlType={"submit"}>
                                                         构造请求
