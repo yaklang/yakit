@@ -396,6 +396,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                         <YakitSelect defaultValue='all' style={{width: 180}}>
                                             <Option value='all'>全部</Option>
                                             <Option value='info'>信息/指纹</Option>
+                                            <Option value='critical'>严重</Option>
                                             <Option value='high'>高危</Option>
                                             <Option value='warning'>中危</Option>
                                             <Option value='low'>低危</Option>
