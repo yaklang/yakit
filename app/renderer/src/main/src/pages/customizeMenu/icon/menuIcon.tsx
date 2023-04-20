@@ -865,7 +865,7 @@ const SpaceEngineHunter = () => (
 )
 
 /**
- * @description:空间引擎: Hunter
+ * @description:空间引擎集成版本
  */
 export const MenuSpaceEngineHunterIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SpaceEngineHunter} {...props} />
