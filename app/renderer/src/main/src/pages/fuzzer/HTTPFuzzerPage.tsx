@@ -1455,6 +1455,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                             noWordWrapState={noWordwrapFirstEditor}
                             fontSizeState={fontSizeFirstEditor}
+                            showLineBreaksState={showLineBreaksFirstEditor}
                         />
                     }
                     secondNode={
@@ -2518,13 +2519,13 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
             .catch(() => {
                 setFontSize(12)
             })
-        // getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
-        //     .then((data) => {
-        //         setShowLineBreaks(data === "true")
-        //     })
-        //     .catch(() => {
-        //         setShowLineBreaks(true)
-        //     })
+        getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
+            .then((data) => {
+                setShowLineBreaks(data === "true")
+            })
+            .catch(() => {
+                setShowLineBreaks(true)
+            })
     }, [])
     return (
         <>
@@ -2546,14 +2547,13 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 content={
                     <>
                         <Form
-                            style={{textAlign: "center"}}
                             onSubmitCapture={(e) => {
                                 e.preventDefault()
                             }}
                             size={"small"}
                             layout={"horizontal"}
-                            wrapperCol={{span: 18}}
-                            labelCol={{span: 6}}
+                            wrapperCol={{span: 14}}
+                            labelCol={{span: 10}}
                         >
                             {(fontSize || 0) > 0 && (
                                 <Form.Item label='字号'>
@@ -2582,7 +2582,7 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                                     />
                                 </Form.Item>
                             )}
-                            {/* <Form.Item label='是否显示换行符'>
+                            <Form.Item label='是否显示换行符'>
                                 <YakitSwitch
                                     checked={showLineBreaks}
                                     onChange={(checked) => {
@@ -2590,11 +2590,11 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                                         setShowLineBreaks(checked)
                                     }}
                                 />
-                            </Form.Item> */}
+                            </Form.Item>
                         </Form>
                     </>
                 }
-                overlayInnerStyle={{width: 200}}
+                overlayInnerStyle={{width: 300}}
                 overlayClassName={styles["editor-cog-popover"]}
                 placement='bottomRight'
             >

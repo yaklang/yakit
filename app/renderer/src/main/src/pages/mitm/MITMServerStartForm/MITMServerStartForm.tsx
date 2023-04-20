@@ -126,7 +126,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             ...advancedFormValue,
             ...advancedValue
         }
-
         props.onStartMITMServer(
             params.host,
             params.port,
@@ -157,7 +156,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
     })
-    const getAdvancedValue = useMemoizedFn(() => {})
     const [width, setWidth] = useState<number>(0)
     return (
         <div className={styles["mitm-server-start-form"]}>

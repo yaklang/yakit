@@ -515,7 +515,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                 yakitFailed(`[UpdateCVEDatabase] error:连接超时`)
                 timer.current = 0
             }
-            setPercent(data.Progress)
+            setPercent(Math.ceil(data.Progress))
             setMessages([Uint8ArrayToString(data.Message), ...getMessages()])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {

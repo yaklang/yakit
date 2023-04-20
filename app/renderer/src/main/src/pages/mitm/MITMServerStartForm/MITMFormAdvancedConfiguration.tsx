@@ -227,7 +227,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             }
             const newValue = {
                 certs,
-                ...formValue
+                ...formValue,
+                proxyUsername:formValue.proxyUsername||'',
+                proxyPassword:formValue.proxyPassword||'',
             }
             if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                 Modal.confirm({

@@ -582,7 +582,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setVisible(false)
         }
     })
-
     return (
         <>
             <YakitDrawer
@@ -812,25 +811,25 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
                 {props.Result}
             </div>
         )
-        // if (
-        //     (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
-        //     (props.ExtraCookies && props.ExtraCookies.length > 0)
-        // ) {
-        //     node = (
-        //         <div>
-        //             {props.ExtraHeaders.length > 0 && (
-        //                 <YakitTag size='small' color='purple' disable={props.disabled}>
-        //                     HTTP Header: {props.ExtraHeaders.length}
-        //                 </YakitTag>
-        //             )}
-        //             {props.ExtraCookies.length > 0 && (
-        //                 <YakitTag size='small' color='success' disable={props.disabled}>
-        //                     HTTP Cookie: {props.ExtraCookies.length}
-        //                 </YakitTag>
-        //             )}
-        //         </div>
-        //     )
-        // }
+        if (
+            (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
+            (props.ExtraCookies && props.ExtraCookies.length > 0)
+        ) {
+            node = (
+                <div>
+                    {props.ExtraHeaders.length > 0 && (
+                        <YakitTag size='small' color='purple' disable={props.disabled}>
+                            HTTP Header: {props.ExtraHeaders.length}
+                        </YakitTag>
+                    )}
+                    {props.ExtraCookies.length > 0 && (
+                        <YakitTag size='small' color='success' disable={props.disabled}>
+                            HTTP Cookie: {props.ExtraCookies.length}
+                        </YakitTag>
+                    )}
+                </div>
+            )
+        }
         return (
             <div className={styles["table-result"]}>
                 {node}
