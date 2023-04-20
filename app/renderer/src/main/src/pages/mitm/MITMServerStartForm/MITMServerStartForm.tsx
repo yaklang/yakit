@@ -120,7 +120,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const onStartMITM = useMemoizedFn((values) => {
         // 获取高级配置的默认值
         const advancedFormValue = advancedFormRef.current?.getValue()
-
         let params = {
             ...values,
             ...advancedFormValue,
@@ -142,7 +141,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 proxyPassword: params.proxyPassword
             }
         )
-        
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
         if (index === -1) {
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
@@ -193,6 +191,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         wrapperClassName={styles["form-input-number"]}
                         style={{width: "100%", maxWidth: "none"}}
                     />
+                </Item>
+                <Item
+                    label='下游代理'
+                    name='downstreamProxy'
+                    help={
+                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"
+                    }
+                >
+                    <YakitInput placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
                 </Item>
                 <Item
                     label={"HTTP/2.0 支持"}
