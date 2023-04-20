@@ -50,7 +50,7 @@ import {RiskDetails} from "@/pages/risks/RiskTable"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ResizeBox} from "../../components/ResizeBox"
 import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVariable"
-import {PresetPorts} from "@/pages/portscan/schema"
+import {DeepPorts} from "@/pages/portscan/schema"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -159,15 +159,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         switch (getScanDeep()) {
             // 快速
             case 3:
-                setParams({...params, Ports: PresetPorts["top100"]})
+                setParams({...params, Ports: DeepPorts["fast"]})
                 break
             // 适中
             case 2:
-                setParams({...params, Ports: PresetPorts["topweb"]})
+                setParams({...params, Ports: DeepPorts["middle"]})
                 break
             // 慢速
             case 1:
-                setParams({...params, Ports: PresetPorts["top1000+"]})
+                setParams({...params, Ports: DeepPorts["slow"]})
                 break
         }
     }, [getScanDeep()])
