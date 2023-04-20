@@ -36,7 +36,7 @@ noWeakPassWordRisks = []
 // 风险漏洞分组
 // env.Get("YAK_RUNTIME_ID")
 for riskInstance = range risk.YieldRiskByCreateAt(int64(createAt)) {
-    //println(riskInstance.IP)
+    // println(riskInstance.IP)
     // 按照级别分类 Risk
     // printf("#%v\\n", riskInstance)
     if severityToRisks[riskInstance.Severity] == undefined {
@@ -215,6 +215,81 @@ reportInstance.Markdown("#### 漏洞汇总")
 reportInstance.Raw({"type": "bar-graph", "data": [{"name": "严重漏洞", "value": criticalLens}, {"name": "高危漏洞", "value": highLens},  {"name": "中危漏洞", "value": warningLens}, {"name": "低危漏洞", "value": lowLens}], "color": ["#f70208","#f9c003","#2ab150","#5c9cd5"]})
 
 
+ipRisksTable = \`| IP地址 | 严重风险 | 高风险 | 中风险 | 低风险 | 总计 |
+|  ----  | ----  |  ----  | ----  |  ----  | ----  |
+\`
+// 为了加上颜色
+ipRisksContent = \`|  %v   |  <span style="color:#8B0000;font-weight:bold">%v 个</font>  |  <span style="color:#FF4500;font-weight:bold">%v个</span>  |  <span style="color:#FFA500;font-weight:bold">%v个</span>  | <span style="color:#008000;font-weight:bold">%v个</span> |  %v 个 |\`
+
+// IP 漏洞信息统计
+ipRisksStr = ""
+
+// 漏洞等级分类数组
+criticalRisks = []
+highRisks = []
+warningRisks = []
+lowRisks = []
+// 合规检查等级分类数组
+criticalPotentialRisks = []
+highPotentialRisks = []
+warningPotentialRisks = []
+lowPotentialRisks = []
+
+
+for target,risks = range targetToRisks {
+    if target == "" {
+        continue
+    }
+    criticalCount = 0
+    highCount = 0
+    warningCount = 0
+    lowCount = 0
+    for _,riskIns :=range risks{
+        if str.Contains(riskIns.Severity, "critical") {
+            criticalCount++
+            if parseBool(riskIns.IsPotential) {
+                criticalPotentialRisks = append(criticalPotentialRisks, riskIns)
+            } else {
+                criticalRisks = append(criticalRisks, riskIns)
+            }
+        }
+        if str.Contains(riskIns.Severity, "high") {
+            highCount++
+            if parseBool(riskIns.IsPotential) {
+                highPotentialRisks = append(highPotentialRisks, riskIns)
+            } else {
+                highRisks = append(highRisks, riskIns)
+            }
+        }
+        if str.Contains(riskIns.Severity, "warning") {
+            warningCount++
+            if parseBool(riskIns.IsPotential) {
+                warningPotentialRisks = append(warningPotentialRisks, riskIns)
+            } else {
+                warningRisks = append(warningRisks, riskIns)
+            }
+        }
+        if str.Contains(riskIns.Severity, "low") {
+            lowCount++
+            if parseBool(riskIns.IsPotential) {
+                lowPotentialRisks = append(lowPotentialRisks, riskIns)
+            } else {
+                lowRisks = append(lowRisks, riskIns)
+            }
+        }
+        
+    }
+    allCount = criticalCount +highCount + warningCount + lowCount
+    res = sprintf(ipRisksContent ,target,criticalCount,highCount,warningCount,lowCount,allCount)
+    ipRisksStr += res + "\\n"
+}
+
+reportInstance.Markdown("#### IP汇总")
+reportInstance.Markdown(ipRisksTable+ipRisksStr)
+
+
+
+
 // 端口扫描统计展示
 reportInstance.Markdown("## 3.2 端口扫描统计")
 reportInstance.Table(["地址", "端口", "指纹", "网站标题"], portsLine...)
@@ -362,54 +437,6 @@ if criticalLens == 0 && highLens == 0 && warningLens == 0 {
 }
 
 reportInstance.Markdown("# 附录：")
-
-// 漏洞等级分类数组
-criticalRisks = []
-highRisks = []
-warningRisks = []
-lowRisks = []
-// 合规检查等级分类数组
-criticalPotentialRisks = []
-highPotentialRisks = []
-warningPotentialRisks = []
-lowPotentialRisks = []
-
-for target,risks = range targetToRisks {
-    if target == "" {
-        continue
-    }
-
-    for _,riskIns := range risks {
-        if str.Contains(riskIns.Severity, "critical") {
-            if parseBool(riskIns.IsPotential) {
-                criticalPotentialRisks = append(criticalPotentialRisks, riskIns)
-            } else {
-                criticalRisks = append(criticalRisks, riskIns)
-            }
-        }
-        if str.Contains(riskIns.Severity, "high") {
-            if parseBool(riskIns.IsPotential) {
-                highPotentialRisks = append(highPotentialRisks, riskIns)
-            } else {
-                highRisks = append(highRisks, riskIns)
-            }
-        }
-        if str.Contains(riskIns.Severity, "warning") {
-            if parseBool(riskIns.IsPotential) {
-                warningPotentialRisks = append(warningPotentialRisks, riskIns)
-            } else {
-                warningRisks = append(warningRisks, riskIns)
-            }
-        }
-        if str.Contains(riskIns.Severity, "low") {
-            if parseBool(riskIns.IsPotential) {
-                lowPotentialRisks = append(lowPotentialRisks, riskIns)
-            } else {
-                lowRisks = append(lowRisks, riskIns)
-            }
-        }
-    }
-}
 
 func showReport(risks) {
     for _, riskIns := range risks {
