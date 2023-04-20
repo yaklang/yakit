@@ -191,6 +191,7 @@ const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
+const WEB_FUZZ_Advanced_Config_Switch_Checked = "WEB_FUZZ_Advanced_Config_Switch_Checked"
 
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -324,7 +325,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
     const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
     const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
-    const [advancedConfig, setAdvancedConfig] = useState(true)
+    const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
     const [hotPatchCode, setHotPatchCode] = useState<string>("")
@@ -420,6 +421,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
             if (!!remoteData) {
                 setHotPatchCodeWithParamGetter(`${remoteData}`)
+            }
+        })
+        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
+            if (c === "") {
+                setAdvancedConfig(true)
+            } else {
+                setAdvancedConfig(c === "true")
             }
         })
     }, [])
@@ -1056,6 +1064,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             StatusCode: val.statusCode?.split(",") || []
         })
     })
+    const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
+        setAdvancedConfig(c)
+        setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
+    })
     return (
         <div className={styles["http-fuzzer-body"]}>
             <HttpQueryAdvancedConfig
@@ -1108,7 +1120,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 isHttps={isHttps}
                 setIsHttps={setIsHttps}
                 visible={advancedConfig}
-                setVisible={setAdvancedConfig}
+                setVisible={onSetAdvancedConfig}
                 onInsertYakFuzzer={onInsertYakFuzzer}
                 onValuesChange={onGetFormValue}
                 refreshProxy={refreshProxy}
@@ -1149,7 +1161,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {!advancedConfig && (
                         <div className={styles["display-flex"]}>
                             <span>高级配置</span>
-                            <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
+                            <YakitSwitch checked={advancedConfig} onChange={onSetAdvancedConfig} />
                         </div>
                     )}
                     <div className={styles["fuzzer-heard-force"]}>
