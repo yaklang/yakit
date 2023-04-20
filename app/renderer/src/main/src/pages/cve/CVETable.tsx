@@ -483,20 +483,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     const [error, setError] = useState<boolean>(false)
     const [percent, setPercent, getPercent] = useGetState<number>(0)
 
-    const [targetDate, setTargetDate] = useState<number>()
-    const [countdown] = useCountDown({
-        targetDate,
-        onEnd: () => {
-            setTargetDate(0)
-        }
-    })
-
     const errorMessage = useRef<string>("")
     const timer = useRef<number>(0) //超时处理
     const prePercent = useRef<number>(0) // 上一次的进度数值
-    useEffect(() => {
-        if (countdown === 0) setStatus("done")
-    }, [countdown])
+
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             if (!data.IsMessage) {
@@ -523,14 +513,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            if (!errorMessage.current.includes("client failed")) {
+            // if (!errorMessage.current.includes("client failed")) {
+            if (!errorMessage.current) {
                 info("[UpdateCVEDatabase] finished")
-                if (props.latestMode) {
-                    setStatus("done")
-                    return
-                } // 差量更新不需要倒计时
-                const n = Math.round(Math.random() * 10 + 5) // 10-15随机数
-                setTargetDate(Date.now() + n * 1000)
+                setStatus("done")
             } else {
                 setStatus("init")
                 setMessages([])
@@ -612,17 +598,6 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                             />
                         </div>
                         <div className={styles["database-update-messages"]}>
-                            {countdown === 0 ? (
-                                ""
-                            ) : (
-                                <p>
-                                    CVE 数据库 解压中：
-                                    <span style={{color: "var(--yakit-primary-5)"}}>
-                                        {Math.round(countdown / 1000)}
-                                    </span>{" "}
-                                    s
-                                </p>
-                            )}
                             {messages.map((i) => {
                                 return <p>{`${i}`}</p>
                             })}
