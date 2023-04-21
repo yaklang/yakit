@@ -36,7 +36,7 @@ noWeakPassWordRisks = []
 // 风险漏洞分组
 // env.Get("YAK_RUNTIME_ID")
 for riskInstance = range risk.YieldRiskByCreateAt(int64(createAt)) {
-    // println(riskInstance.IP)
+    //println(riskInstance.IP)
     // 按照级别分类 Risk
     // printf("#%v\\n", riskInstance)
     if severityToRisks[riskInstance.Severity] == undefined {

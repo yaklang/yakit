@@ -72,7 +72,7 @@ export const getScriptIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
             return <MenuBasicCrawlerIcon/>
-        case "空间引擎: Hunter": //中文
+        case "空间引擎集成版本": //中文
             return <MenuSpaceEngineHunterIcon/>
         case "子域名收集":
             return <MenuSubDomainCollectionIcon/>
@@ -87,7 +87,7 @@ export const getScriptHoverIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
             return <MenuSolidBasicCrawlerIcon/>
-        case "空间引擎: Hunter": //中文
+        case "空间引擎集成版本": //中文
             return <MenuSolidSpaceEngineHunterIcon/>
         case "子域名收集":
             return <MenuSolidSubDomainCollectionIcon/>

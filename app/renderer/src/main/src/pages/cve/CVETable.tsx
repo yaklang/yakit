@@ -18,7 +18,7 @@ import {CVEDetail, CVEDetailEx} from "@/pages/cve/models"
 import {CVEInspect} from "@/pages/cve/CVEInspect"
 import styles from "./CVETable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {
@@ -36,8 +36,9 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {openExternalWebsite} from "@/utils/openWebsite"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext";
-import {showByContextMenu} from "@/components/functionTemplate/showByContext";
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {showByContextMenu} from "@/components/functionTemplate/showByContext"
+import {formatDate, formatTimestamp} from "@/utils/timeUtil"
 
 export interface CVETableProp {
     available: boolean
@@ -68,7 +69,7 @@ export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
                             setSelected={setSelected}
                         />
                     }
-                    secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected}/>}
+                    secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected} />}
                 />
             ) : (
                 <CVETableList
@@ -97,14 +98,20 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const {available, selected, setSelected, advancedQuery, setAdvancedQuery} = props
     const [params, setParams] = useState<QueryCVERequest>({...props.filter})
     const [loading, setLoading] = useState(false)
-    const [pagination, setPagination] = useState<PaginationSchema>(genDefaultPagination(20, 1))
+    const [pagination, setPagination] = useState<PaginationSchema>({
+        ...genDefaultPagination(20, 1),
+        OrderBy: "published_date",
+        Order: "desc"
+    })
     const [data, setData] = useState<CVEDetail[]>([])
     const [total, setTotal] = useState(0)
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
 
-    const [searchType, setSearchType] = useState<string>("Year")
+    const [searchType, setSearchType] = useState<string>("Keywords")
     const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
     const [dataBaseUpdateLatestMode, setDataBaseUpdateLatestMode] = useState<boolean>(false)
+
+    const [updateTime, setUpdateTime] = useState<number>() // 数据库更新时间
 
     const [currentSelectItem, setCurrentSelectItem] = useState<CVEDetail>()
 
@@ -120,13 +127,25 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         if (advancedQuery) return
         setParams({
             ...defQueryCVERequest,
-            Year: params.Year,
+            Keywords: params.Keywords,
             CWE: params.CWE
         })
         setTimeout(() => {
             update(1)
         }, 100)
     }, [advancedQuery])
+
+    useEffect(() => {
+        const finalParams = {
+            ...params,
+            Pagination: pagination
+        }
+        ipcRenderer.invoke("QueryCVE", finalParams).then((r: QueryGeneralResponse<CVEDetail>) => {
+            if (r.Data.length > 0) {
+                setUpdateTime(r.Data[0].UpdatedAt)
+            }
+        })
+    }, [])
 
     useUpdateEffect(() => {
         if (dataBaseUpdateVisible) return
@@ -137,7 +156,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         if (advancedQuery) {
             setParams({
                 ...props.filter,
-                Year: params.Year,
+                Keywords: params.Keywords,
                 CWE: params.CWE
             })
         }
@@ -154,6 +173,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
             const paginationProps = {
+                ...pagination,
                 Page: page || 1,
                 Limit: limit || pagination.Limit
             }
@@ -163,11 +183,9 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                 ...(extraParam ? extraParam : {}),
                 Pagination: paginationProps
             }
-            // console.info('finalParams', finalParams)
             ipcRenderer
                 .invoke("QueryCVE", finalParams)
                 .then((r: QueryGeneralResponse<CVEDetail>) => {
-                    console.info("QueryCVE", finalParams, r)
                     const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
                     setData(d)
                     setPagination(r.Pagination)
@@ -252,6 +270,24 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                         </div>
                     )
                 }
+            },
+            {
+                title: "披露时间",
+                dataKey: "PublishedAt",
+                render: (v) => (v ? formatTimestamp(v) : "-"),
+                sorterProps: {
+                    sorterKey: "published_date",
+                    sorter: true
+                }
+            },
+            {
+                title: "更新时间",
+                dataKey: "LastModifiedData",
+                render: (v) => (v ? formatTimestamp(v) : "-"),
+                sorterProps: {
+                    sorterKey: "last_modified_data",
+                    sorter: true
+                }
             }
         ]
     }, [])
@@ -260,10 +296,15 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         setCurrentSelectItem(record)
     })
     const onTableChange = useDebounceFn(
-        (page: number, limit: number, _, filter: any) => {
+        (page: number, limit: number, sorter: SortProps, filter: any) => {
             setParams({
                 ...params,
                 ...filter
+            })
+            setPagination({
+                ...pagination,
+                Order: sorter.order === "asc" ? "asc" : "desc",
+                OrderBy: sorter.order === "none" ? "published_date" : sorter.orderBy
             })
             setTimeout(() => {
                 update(1, limit)
@@ -284,10 +325,17 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                 {!advancedQuery && (
                                     <div className={styles["cve-list-title-query"]}>
                                         <span className={styles["cve-list-title-query-text"]}>高级查询</span>
-                                        <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
+                                        <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
                                     </div>
                                 )}
                                 <div className={styles["cve-list-title"]}>CVE 数据库管理</div>
+                                <div className={styles["cve-list-total"]}>
+                                    <span>Total</span>
+                                    <span className={styles["cve-list-total-number"]}>{total}</span>
+                                </div>
+                                <div className={styles["cve-list-time"]}>
+                                    更新时间:{updateTime ? formatDate(updateTime) : "-"}
+                                </div>
                             </div>
                             <div className={styles["cve-list-title-extra"]}>
                                 <YakitCombinationSearch
@@ -298,7 +346,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     valueBeforeOption={searchType}
                                     afterModuleType='input'
                                     onSelectBeforeOption={(o) => {
-                                        if (o === "Year") {
+                                        if (o === "Keywords") {
                                             setParams({
                                                 ...params,
                                                 CWE: ""
@@ -307,7 +355,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                         if (o === "CWE") {
                                             setParams({
                                                 ...params,
-                                                Year: ""
+                                                Keywords: ""
                                             })
                                         }
                                         setSearchType(o)
@@ -315,7 +363,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     addonBeforeOption={[
                                         {
                                             label: "CVE",
-                                            value: "Year"
+                                            value: "Keywords"
                                         },
                                         {
                                             label: "CWE",
@@ -325,6 +373,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     inputSearchModuleTypeProps={{
                                         size: "middle",
                                         value: params[searchType],
+                                        placeholder: searchType === "Keywords" ? "CVE编号或关键字搜索" : "CEW编号搜索",
                                         onChange: (e) => {
                                             setParams({
                                                 ...params,
@@ -342,29 +391,32 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                         }
                                     }}
                                 />
-                                <Divider type='vertical'/>
-                                <YakitButton type='primary' onClick={() => {
-                                    // setDataBaseUpdateVisible(true)
-                                    showByRightContext({
-                                        data: [
-                                            {label: "只更新最新数据", key: "update-latest-data"},
-                                            {label: "全量更新", key: "update-full-data"}
-                                        ],
-                                        onClick: e => {
-                                            switch (e.key) {
-                                                case "update-latest-data":
-                                                    setDataBaseUpdateLatestMode(true)
-                                                    setDataBaseUpdateVisible(true)
-                                                    return
-                                                case "update-full-data":
-                                                    setDataBaseUpdateLatestMode(false)
-                                                    setDataBaseUpdateVisible(true)
-                                                    return
+                                <Divider type='vertical' />
+                                <YakitButton
+                                    type='primary'
+                                    onClick={() => {
+                                        // setDataBaseUpdateVisible(true)
+                                        showByRightContext({
+                                            data: [
+                                                {label: "只更新最新数据", key: "update-latest-data"},
+                                                {label: "全量更新", key: "update-full-data"}
+                                            ],
+                                            onClick: (e) => {
+                                                switch (e.key) {
+                                                    case "update-latest-data":
+                                                        setDataBaseUpdateLatestMode(true)
+                                                        setDataBaseUpdateVisible(true)
+                                                        return
+                                                    case "update-full-data":
+                                                        setDataBaseUpdateLatestMode(false)
+                                                        setDataBaseUpdateVisible(true)
+                                                        return
+                                                }
                                             }
-                                        }
-                                    })
-                                }}>
-                                    <RefreshIcon className={styles["refresh-icon"]}/>
+                                        })
+                                    }}
+                                >
+                                    <RefreshIcon className={styles["refresh-icon"]} />
                                     数据库更新
                                 </YakitButton>
                             </div>
@@ -396,7 +448,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                         />
                         <YakitButton
                             type='outline1'
-                            icon={<CloudDownloadIcon/>}
+                            icon={<CloudDownloadIcon />}
                             onClick={() => setDataBaseUpdateVisible(true)}
                             style={{marginTop: 16}}
                         >
@@ -431,20 +483,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     const [error, setError] = useState<boolean>(false)
     const [percent, setPercent, getPercent] = useGetState<number>(0)
 
-    const [targetDate, setTargetDate] = useState<number>()
-    const [countdown] = useCountDown({
-        targetDate,
-        onEnd: () => {
-            setTargetDate(0)
-        }
-    })
-
     const errorMessage = useRef<string>("")
     const timer = useRef<number>(0) //超时处理
     const prePercent = useRef<number>(0) // 上一次的进度数值
-    useEffect(() => {
-        if (countdown === 0) setStatus("done")
-    }, [countdown])
+
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             if (!data.IsMessage) {
@@ -463,7 +505,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                 yakitFailed(`[UpdateCVEDatabase] error:连接超时`)
                 timer.current = 0
             }
-            setPercent(data.Progress)
+            setPercent(Math.ceil(data.Progress))
             setMessages([Uint8ArrayToString(data.Message), ...getMessages()])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -471,10 +513,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            if (!errorMessage.current.includes("client failed")) {
+            // if (!errorMessage.current.includes("client failed")) {
+            if (!errorMessage.current) {
                 info("[UpdateCVEDatabase] finished")
-                const n = Math.round(Math.random() * 10 + 5) // 10-15随机数
-                setTargetDate(Date.now() + n * 1000)
+                setStatus("done")
             } else {
                 setStatus("init")
                 setMessages([])
@@ -488,7 +530,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [])
+    }, [props.latestMode])
     useEffect(() => {
         if (!visible) return
         setStatus("init")
@@ -499,31 +541,34 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     }, [visible])
 
     const tipNode = useMemo(
-        () => (
-            props.latestMode ? <p>
-                差量更新数据仅更新最新数据
-                <br/>
-                （OpenAI 可能暂未翻译）
-                <br/>
-                被拒绝的 CVE 将不会更新
-            </p> : <p>
-                如果更新失败，可点击该地址下载：
-                <a
-                    href={url}
-                    style={{color: "var(--yakit-primary-5)"}}
-                    onClick={() => {
-                        openExternalWebsite(url)
-                    }}
-                >
-                    {url}
-                </a>
-                , 下载后请将文件放在~/yakit-projects项目文件下
-            </p>
-        ),
+        () =>
+            props.latestMode ? (
+                <p>
+                    差量更新数据仅更新最新数据
+                    <br />
+                    （OpenAI 可能暂未翻译）
+                    <br />
+                    被拒绝的 CVE 将不会更新
+                </p>
+            ) : (
+                <p>
+                    如果更新失败，可点击该地址下载：
+                    <a
+                        href={url}
+                        style={{color: "var(--yakit-primary-5)"}}
+                        onClick={() => {
+                            openExternalWebsite(url)
+                        }}
+                    >
+                        {url}
+                    </a>
+                    , 下载后请将文件放在~/yakit-projects项目文件下
+                </p>
+            ),
         [props.latestMode]
     )
 
-    const latestUpdate = props.latestMode;
+    const latestUpdate = props.latestMode
 
     const HintContent = useMemoizedFn(() => {
         switch (status) {
@@ -532,9 +577,9 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     <>
                         <p>
                             {available
-                                ? (
-                                    latestUpdate ? "差量更新数据库仅更新最新数据" : "点击“强制更新”，可更新本地CVE数据库"
-                                )
+                                ? latestUpdate
+                                    ? "差量更新数据库仅更新最新数据"
+                                    : "点击“强制更新”，可更新本地CVE数据库"
                                 : "本地CVE数据库未初始化，请点击“初始化”下载CVE数据库"}
                         </p>
                         {tipNode}
@@ -553,17 +598,6 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                             />
                         </div>
                         <div className={styles["database-update-messages"]}>
-                            {countdown === 0 ? (
-                                ""
-                            ) : (
-                                <p>
-                                    CVE 数据库 解压中：
-                                    <span style={{color: "var(--yakit-primary-5)"}}>
-                                        {Math.round(countdown / 1000)}
-                                    </span>{" "}
-                                    s
-                                </p>
-                            )}
                             {messages.map((i) => {
                                 return <p>{`${i}`}</p>
                             })}
@@ -578,12 +612,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     })
     const heardIconRender = useMemoizedFn(() => {
         if (status === "done") {
-            return <CheckCircleIcon style={{color: "var(--yakit-success-5)"}}/>
+            return <CheckCircleIcon style={{color: "var(--yakit-success-5)"}} />
         }
         if (available) {
-            return <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}}/>
+            return <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}} />
         } else {
-            return <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}}/>
+            return <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}} />
         }
     })
     const titleRender = useMemoizedFn(() => {
@@ -629,8 +663,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                 if (status === "done") {
                     ipcRenderer
                         .invoke("relaunch")
-                        .then(() => {
-                        })
+                        .then(() => {})
                         .catch((e) => {
                             failed(`重启失败: ${e}`)
                         })
@@ -638,8 +671,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     setStatus("progress")
                     ipcRenderer
                         .invoke("UpdateCVEDatabase", {Proxy: "", JustUpdateLatestCVE: props.latestMode}, token)
-                        .then(() => {
-                        })
+                        .then(() => {})
                         .catch((e) => {
                             failed(`更新 CVE 数据库失败！${e}`)
                         })
@@ -648,7 +680,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             okButtonText={okButtonTextRender()}
             isDrag={true}
             mask={false}
-            cancelButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
+            cancelButtonProps={{style: {display: status === "progress" && !props.latestMode ? "none" : "flex"}}}
             okButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
             content={<div className={styles["database-update-content"]}>{HintContent()}</div>}
         />

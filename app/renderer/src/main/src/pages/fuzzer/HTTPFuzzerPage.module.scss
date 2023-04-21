@@ -82,7 +82,7 @@
     gap: 12px;
     flex-direction: column;
     justify-content: center;
-    width: 320px;
+    width: 230px;
     .second-node-search-item {
         display: flex;
         flex-direction: column;
@@ -93,6 +93,16 @@
         :global {
             .ant-input-group {
                 padding: 0 !important;
+            }
+            .ant-input-group.ant-input-group-compact > *:nth-child(3) {
+                .ant-input-number {
+                    border-radius: 0 4px 4px 0;
+                    &:hover,
+                    &:focus,
+                    &:active {
+                        border-radius: 4px;
+                    }
+                }
             }
         }
     }
@@ -244,6 +254,14 @@
             // cursor: help;
             svg {
                 color: var(--yakit-helper-text-color);
+            }
+        }
+    }
+    .advanced-config-collapse-secondary-item {
+        border-bottom: 0 !important;
+        :global {
+            .ant-collapse-content > .ant-collapse-content-box {
+                padding: 12px 0 0;
             }
         }
     }
