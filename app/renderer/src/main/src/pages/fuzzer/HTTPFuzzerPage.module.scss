@@ -257,6 +257,14 @@
             }
         }
     }
+    .advanced-config-collapse-secondary-item {
+        border-bottom: 0 !important;
+        :global {
+            .ant-collapse-content > .ant-collapse-content-box {
+                padding: 12px 0 0;
+            }
+        }
+    }
 }
 
 .http-fuzzer-hotPatch {

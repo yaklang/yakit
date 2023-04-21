@@ -2276,7 +2276,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     </Form.Item>
                                 }
                                 key='重试条件'
-                                style={{borderBottom: 0}}
+                                className={styles["advanced-config-collapse-secondary-item"]}
                             >
                                 <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
                                     <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />
@@ -2294,7 +2294,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     </Form.Item>
                                 }
                                 key='不重试条件'
-                                style={{borderBottom: 0}}
+                                className={styles["advanced-config-collapse-secondary-item"]}
                             >
                                 <Form.Item label='状态码' name={["noRetryConfiguration", "statusCode"]}>
                                     <YakitInput placeholder='200,300-399' size='small' disabled={!noRetrying} />
