@@ -564,7 +564,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
-        console.log("params", params)
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 

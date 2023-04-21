@@ -294,11 +294,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     useThrottleEffect(
         () => {
-            // console.log('isEnd',isEnd,sorterTable)
             if (isEnd&&sorterTable) {
                 const scrollTop = tableRef.current?.containerRef?.scrollTop
-                // console.log("scrollTop", scrollTop)
-            
                 if (scrollTop <= 10) {
                     queryData()
                 }
