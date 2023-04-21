@@ -724,7 +724,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             droppedCount = 0
             lastUpdateCount = 0
-            setLoading(false)
+            setTimeout(() => {
+                setLoading(false)
+            }, 500);
         })
 
         const updateDataId = setInterval(() => {
@@ -1502,6 +1504,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setQuery={setQuery}
                                                         isRefresh={isRefresh}
                                                         extractedMap={extractedMap}
+                                                        isEnd={loading}
                                                     />
                                                 )}
                                                 {!showSuccess && (
@@ -1512,6 +1515,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setQuery={setQuery}
                                                         isRefresh={isRefresh}
                                                         extractedMap={new Map()}
+                                                        isEnd={loading}
                                                     />
                                                 )}
                                             </>

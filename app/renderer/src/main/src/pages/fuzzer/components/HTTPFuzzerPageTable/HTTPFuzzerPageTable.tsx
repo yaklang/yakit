@@ -26,7 +26,9 @@ interface HTTPFuzzerPageTableProps {
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
     isRefresh: boolean
     /**@name 提取的数据 */
-    extractedMap:Map<string, string>
+    extractedMap: Map<string, string>
+    /**@name 数据是否传输完成 */
+    isEnd: boolean
 }
 
 /**
@@ -77,7 +79,7 @@ const sorterFunction = (list, sorterTable) => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh,extractedMap} = props
+    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -86,6 +88,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
 
     const bodyLengthRef = useRef<any>()
+    const tableRef = useRef<any>(null)
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return success
             ? [
@@ -181,14 +184,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "Payloads",
                       dataKey: "Payloads",
                       width: 300,
-                      render: (v) => v.join(",")
+                      render: (v) => v.join(",")||'-'
                   },
                   {
-                    title: "提取数据",
-                    dataKey: "extracted",
-                    width: 300,
-                    render: (_,record) =>extractedMap.get(record['UUID']) 
-                },
+                      title: "提取数据",
+                      dataKey: "extracted",
+                      width: 300,
+                      render: (_, record) => extractedMap.get(record["UUID"])||'-'
+                  },
                   {
                       title: "响应相似度",
                       dataKey: "BodySimilarity",
@@ -287,21 +290,29 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   }
               ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength,extractedMap])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap])
 
     useThrottleEffect(
         () => {
-            queryData()
+            // console.log('isEnd',isEnd,sorterTable)
+            if (isEnd&&sorterTable) {
+                const scrollTop = tableRef.current?.containerRef?.scrollTop
+                // console.log("scrollTop", scrollTop)
+            
+                if (scrollTop <= 10) {
+                    queryData()
+                }
+            } else {
+                queryData()
+            }
         },
-        [data],
+        [data, isEnd],
         {wait: 200}
     )
+
     useEffect(() => {
         update()
     }, [isRefresh])
-    /**
-     * @description 搜索防抖
-     */
     useEffect(() => {
         if (!query) return
         update()
@@ -428,13 +439,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         return p
     }, [firstFull])
     return (
-        <div style={{overflowY: "hidden"}}>
+        <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
             <ResizeBox
                 isVer={true}
                 lineStyle={{display: firstFull ? "none" : ""}}
                 firstNodeStyle={{padding: firstFull ? 0 : undefined}}
                 firstNode={
                     <TableVirtualResize<FuzzerResponse>
+                        ref={tableRef}
                         query={query}
                         isRefresh={isRefresh || loading}
                         titleHeight={0.01}
@@ -458,7 +470,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         hideSearch={true}
                         noHex={true}
                         noHeader={true}
-                        // originValue={new Buffer(flow.Response)}
                         originValue={currentSelectItem?.ResponseRaw || new Buffer([])}
                     />
                 }
