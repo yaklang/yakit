@@ -529,8 +529,8 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {
                 id: "2-3",
                 key: undefined,
-                label: "空间引擎: Hunter",
-                yakScripName: "空间引擎: Hunter",
+                label: "空间引擎集成版本",
+                yakScripName: "空间引擎集成版本",
                 icon: <MenuSpaceEngineHunterIcon/>,
                 hoverIcon: <MenuSolidSpaceEngineHunterIcon/>
             },
@@ -814,8 +814,8 @@ export const SimpleDataBaseMenu: MenuDataProps[] = [
     //         {
     //             id: "2-3",
     //             key: undefined,
-    //             label: "空间引擎: Hunter",
-    //             yakScripName: "空间引擎: Hunter",
+    //             label: "空间引擎集成版本",
+    //             yakScripName: "空间引擎集成版本",
     //             icon: <MenuSpaceEngineHunterIcon />,
     //             hoverIcon: <MenuSolidSpaceEngineHunterIcon />
     //         },

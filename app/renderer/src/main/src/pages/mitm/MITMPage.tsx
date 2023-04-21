@@ -226,7 +226,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     // 设置开始服务器处理函数
     const startMITMServerHandler = useMemoizedFn(
-        (host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2, certs: ClientCertificate[], extra?: object) => {
+        (
+            host,
+            port,
+            downstreamProxy,
+            enableInitialPlugin,
+            plugins,
+            enableHttp2,
+            certs: ClientCertificate[],
+            extra?: object
+        ) => {
             setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
             setPort(port)
@@ -359,7 +368,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin ? checkList : [],
                     enableHttp2,
                     certs,
-                    extra,
+                    extra
                 )
         }
     )
@@ -568,6 +577,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <MITMServerStartForm
+                        status={status}
                         onStartMITMServer={onStartMITMServer}
                         visible={visible || false}
                         setVisible={(v) => {

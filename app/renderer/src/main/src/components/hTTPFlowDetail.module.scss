@@ -35,3 +35,17 @@
         }
     }
 }
+
+.httpFlow-data-table {
+    height: 100%;
+    width: 100%;
+    :global {
+        .ant-table {
+            overflow: hidden;
+        }
+        .ant-table-pagination.ant-pagination{
+            margin-bottom: 0;
+            margin-top: 12px;
+        }
+    }
+}

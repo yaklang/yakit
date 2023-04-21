@@ -1,4 +1,4 @@
-export const isEqual = (obj1: object, obj2: object) => {
+export const isEqualObject = (obj1: object, obj2: object) => {
     // 判断两个变量是否为对象类型
     let isObj = toString.call(obj1) === "[object Object]" && toString.call(obj2) === "[object Object]"
     if (!isObj) {
@@ -18,7 +18,7 @@ export const isEqual = (obj1: object, obj2: object) => {
             let obj2Type = toString.call(obj2[key])
             // 如果值是对象，则递归
             if (obj1Type === "[object Object]" || obj2Type === "[object Object]") {
-                if (!isEqual(obj1[key], obj2[key])) {
+                if (!isEqualObject(obj1[key], obj2[key])) {
                     return false
                 }
             } else if (obj1[key] !== obj2[key]) {

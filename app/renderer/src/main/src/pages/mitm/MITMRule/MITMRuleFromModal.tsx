@@ -1,5 +1,5 @@
 import {Col, Divider, Form, Row} from "antd"
-import React, {useEffect, useImperativeHandle, useState} from "react"
+import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 import styles from "./MITMRuleFromModal.module.scss"
 import classNames from "classnames"
 import {
@@ -45,16 +45,20 @@ const {ipcRenderer} = window.require("electron")
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const {modalVisible, onClose, currentItem, isEdit, rules, onSave} = props
 
+    const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
+
     const resultType = Form.useWatch("ResultType", form)
     const headers: HTTPHeader[] = Form.useWatch("ExtraHeaders", form) || []
     const cookies: HTTPCookieSetting[] = Form.useWatch("ExtraCookies", form) || []
+
     useEffect(() => {
         form.setFieldsValue({
             ...currentItem,
             ResultType:
                 currentItem && (currentItem?.ExtraHeaders?.length > 0 || currentItem?.ExtraCookies?.length > 0) ? 2 : 1 //  1 文本  2 HTTP
         })
+        ruleContentRef?.current?.onSetValue(currentItem?.Rule)
     }, [currentItem])
     const onOk = useMemoizedFn(() => {
         form.validateFields()
@@ -138,7 +142,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitInput />
                     </Form.Item>
                     <Form.Item label='规则内容' name='Rule' rules={[{required: true, message: "该项为必填"}]}>
-                        <RuleContent getRule={getRule} />
+                        <RuleContent getRule={getRule} ref={ruleContentRef}/>
                     </Form.Item>
                     <Row>
                         <Col span={5}>&nbsp;</Col>

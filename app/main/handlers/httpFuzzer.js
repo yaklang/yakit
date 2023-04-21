@@ -335,4 +335,9 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamExtractDataMap, token)
         stream.write(params)
     })
+
+     // 提取数据发送表中展示
+     ipcMain.handle("send-extracted-to-table", async (e, params) => {
+        win.webContents.send("fetch-extracted-to-table", params)
+    })
 }
