@@ -284,7 +284,7 @@ for target,risks = range targetToRisks {
     ipRisksStr += res + "\\n"
 }
 
-reportInstance.Markdown("#### IP汇总")
+reportInstance.Markdown("#### 风险IP汇总")
 reportInstance.Markdown(ipRisksTable+ipRisksStr)
 
 
