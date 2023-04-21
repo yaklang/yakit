@@ -1094,7 +1094,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         ["加载插件失败", "SYN扫描失败"].includes(item.tag)
     )
     const statusSucceeCards = infoState.statusState.filter((item) =>
-        ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
+        ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
     )
     const statusCards = useMemo(() => {
         if (statusErrorCards.length > 0) {
