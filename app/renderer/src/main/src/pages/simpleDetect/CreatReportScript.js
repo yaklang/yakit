@@ -6,6 +6,7 @@ loglevel(\`info\`)
 createAt  = cli.Int("timestamp", cli.setRequired(true))
 hostTotal = cli.Int("host_total", cli.setRequired(true))
 portTotal = cli.Int("port_total", cli.setRequired(true))
+pingAliveHostTotal = cli.Int("ping_alive_host_total", cli.setDefault(0))
 reportName = cli.String("report_name")
 plugins = cli.Int("plugins",cli.setDefault(10))
 
@@ -119,6 +120,9 @@ for port :=range portChan{
 
 aliveHostCount = len(aliveHostCountList)
 
+if pingAliveHostTotal > 0{
+    aliveHostCount = pingAliveHostTotal
+}
 reportInstance.Title(reportName)
 
 reportInstance.Markdown(\`# 1、项目概述
