@@ -159,15 +159,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         switch (getScanDeep()) {
             // 快速
             case 3:
-                setParams({...params, Ports: PresetPorts["top100"]})
+                setParams({...params, Ports: PresetPorts["fast"]})
                 break
             // 适中
             case 2:
-                setParams({...params, Ports: PresetPorts["topweb"]})
+                setParams({...params, Ports: PresetPorts["middle"]})
                 break
             // 慢速
             case 1:
-                setParams({...params, Ports: PresetPorts["top1000+"]})
+                setParams({...params, Ports: PresetPorts["slow"]})
                 break
         }
     }, [getScanDeep()])
@@ -213,12 +213,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     useEffect(() => {
         if (!isInputValue.current) {
-            // 任务名称-时间戳
-            const taskNameTimeStamp: number = moment(new Date()).unix()
+            // 任务名称-时间戳-扫描目标
+            let taskNameTimeTarget: string = moment(new Date()).unix().toString()
+            if(params?.Targets&&params.Targets.length>0){
+                taskNameTimeTarget = params.Targets.split(',')[0]
+            }
             form.setFieldsValue({
-                TaskName: `${getScanType()}-${taskNameTimeStamp}`
+                TaskName: `${getScanType()}-${taskNameTimeTarget}`
             })
-            setRunTaskName(`${getScanType()}-${taskNameTimeStamp}`)
+            setRunTaskName(`${getScanType()}-${taskNameTimeTarget}`)
         }
     }, [getScanType(), executing])
 
@@ -476,6 +479,21 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }}
                         otherHelpNode={
                             <>
+                                <span
+                                    className={styles["help-hint-title"]}
+                                >
+                                    <Checkbox
+                                        onClick={(e) => {
+                                            setParams({
+                                                ...params,
+                                                SkippedHostAliveScan: !params.SkippedHostAliveScan
+                                            })
+                                        }}
+                                        checked={params.SkippedHostAliveScan}
+                                    >
+                                    跳过主机存活检测
+                                    </Checkbox>
+                                </span>
                                 <span
                                     onClick={() => {
                                         let m = showDrawer({
@@ -747,8 +765,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }
 
     /** 获取扫描主机数 扫描端口数 */
-    const getProtAndHost = (v: string) => {
-        const item = infoState.statusState.filter((item) => item.tag === v)
+    const getCardForId = (id: string) => {
+        const item = infoState.statusState.filter((item) => item.tag === id)
         if (item.length > 0) {
             return parseInt(item[0].info[0].Data)
         }
@@ -765,8 +783,9 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                 {Key: "timestamp", Value: runTimeStamp},
                 {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount},
-                {Key: "host_total", Value: getProtAndHost("扫描主机数")},
-                {Key: "port_total", Value: getProtAndHost("扫描端口数")}
+                {Key: "host_total", Value: getCardForId("扫描主机数")},
+                {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+                {Key: "port_total", Value: getCardForId("扫描端口数")}
             ]
         }
 
@@ -1079,7 +1098,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         ["加载插件失败", "SYN扫描失败"].includes(item.tag)
     )
     const statusSucceeCards = infoState.statusState.filter((item) =>
-        ["加载插件", "漏洞/风险", "开放端口数", "存活主机数/扫描主机数"].includes(item.tag)
+        ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
     )
     const statusCards = useMemo(() => {
         if (statusErrorCards.length > 0) {

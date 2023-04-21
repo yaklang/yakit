@@ -11,6 +11,8 @@ const {
 } = require("./localCache")
 const { engineLog } = require("./filePath")
 const fs = require("fs")
+const {USER_INFO} = require("./state")
+const {getLocalCacheValue} = require("./localCache")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
