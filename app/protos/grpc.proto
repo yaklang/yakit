@@ -573,6 +573,8 @@ message CVEDetail {
   bool ObtainOtherPrivileged = 23;
   bool UserInteractionRequired = 24;
   string Product = 25;
+  int64  UpdatedAt = 26;
+  int64  LastModifiedData = 27;
 }
 
 message QueryCVEResponse {
