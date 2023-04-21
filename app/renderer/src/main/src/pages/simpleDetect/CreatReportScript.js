@@ -6,6 +6,7 @@ loglevel(\`info\`)
 createAt  = cli.Int("timestamp", cli.setRequired(true))
 hostTotal = cli.Int("host_total", cli.setRequired(true))
 portTotal = cli.Int("port_total", cli.setRequired(true))
+pingAliveHostTotal = cli.Int("ping_alive_host_total", cli.setDefault(0))
 reportName = cli.String("report_name")
 plugins = cli.Int("plugins",cli.setDefault(10))
 
@@ -36,7 +37,7 @@ noWeakPassWordRisks = []
 // 风险漏洞分组
 // env.Get("YAK_RUNTIME_ID")
 for riskInstance = range risk.YieldRiskByCreateAt(int64(createAt)) {
-    // println(riskInstance.IP)
+    //println(riskInstance.IP)
     // 按照级别分类 Risk
     // printf("#%v\\n", riskInstance)
     if severityToRisks[riskInstance.Severity] == undefined {
@@ -119,6 +120,9 @@ for port :=range portChan{
 
 aliveHostCount = len(aliveHostCountList)
 
+if pingAliveHostTotal > 0{
+    aliveHostCount = pingAliveHostTotal
+}
 reportInstance.Title(reportName)
 
 reportInstance.Markdown(\`# 1、项目概述
@@ -284,7 +288,7 @@ for target,risks = range targetToRisks {
     ipRisksStr += res + "\\n"
 }
 
-reportInstance.Markdown("#### IP汇总")
+reportInstance.Markdown("#### 风险IP汇总")
 reportInstance.Markdown(ipRisksTable+ipRisksStr)
 
 

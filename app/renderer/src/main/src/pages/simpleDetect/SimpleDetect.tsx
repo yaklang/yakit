@@ -765,8 +765,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     }
 
     /** 获取扫描主机数 扫描端口数 */
-    const getProtAndHost = (v: string) => {
-        const item = infoState.statusState.filter((item) => item.tag === v)
+    const getCardForId = (id: string) => {
+        const item = infoState.statusState.filter((item) => item.tag === id)
         if (item.length > 0) {
             return parseInt(item[0].info[0].Data)
         }
@@ -783,8 +783,9 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                 {Key: "timestamp", Value: runTimeStamp},
                 {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount},
-                {Key: "host_total", Value: getProtAndHost("扫描主机数")},
-                {Key: "port_total", Value: getProtAndHost("扫描端口数")}
+                {Key: "host_total", Value: getCardForId("扫描主机数")},
+                {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+                {Key: "port_total", Value: getCardForId("扫描端口数")}
             ]
         }
 
