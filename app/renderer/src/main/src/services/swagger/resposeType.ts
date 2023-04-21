@@ -228,6 +228,73 @@ export declare namespace API {
     createdAt: number;
     checkPlugin: boolean;
   }
+  export interface RiskUploadResponse extends Paging {
+    data: RiskLists[];
+  }
+  export interface RiskUploadRequest {
+    token: string;
+    risk_hash: string;
+    ip?: string;
+    ip_integer?: number;
+    url?: string;
+    port?: number;
+    host?: string;
+    title?: string;
+    title_verbose?: string;
+    risk_type?: string;
+    risk_type_verbose?: string;
+    parameter?: string;
+    payload?: string;
+    details?: string;
+    severity?: string;
+    from_yak_script?: string;
+    waiting_verified?: boolean;
+    reverse_token?: string;
+    runtime_id?: string;
+    quoted_request?: string;
+    quoted_response?: string;
+    is_potential?: boolean;
+    cve?: string;
+    description?: string;
+    solution?: string;
+    risk_created_at?: number;
+  }
+  export interface RiskTypes {
+    risk_type: string;
+  }
+  export interface RiskTypeResponse {
+    data: RiskTypes[];
+  }
+  export interface RiskLists extends GormBaseModel, RiskList {}
+  export interface RiskList {
+    user_name: string;
+    rish_hash: string;
+    ip: string;
+    ip_integer: number;
+    url: string;
+    port: number;
+    host: string;
+    title: string;
+    title_verbose: string;
+    risk_type: string;
+    risk_type_verbose: string;
+    parameter: string;
+    payload: string;
+    details: string;
+    severity: string;
+    from_yak_script: string;
+    waiting_verified: boolean;
+    reverse_token: string;
+    runtime_id: string;
+    quoted_request: string;
+    quoted_response: string;
+    is_potential: boolean;
+    cve: string;
+    description: string;
+    solution: string;
+    risk_created_at: number;
+    hash: string;
+  }
   export interface Principle {
     user: string;
     role: string;
@@ -443,6 +510,17 @@ export declare namespace API {
     id: number;
     created_at: number;
     updated_at: number;
+  }
+  export interface GetRiskWhere {
+    hash?: string[];
+    search?: string;
+    net_work?: string;
+    ports?: string;
+    risk_type?: string;
+    token?: string;
+    waiting_verified?: boolean;
+    severity?: string;
+    user_name?: string;
   }
   export interface GetPluginWhere {
     keywords?: string;

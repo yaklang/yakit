@@ -6,7 +6,7 @@ const _sudoPrompt = require("sudo-prompt");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-
+const {setLocalCache} = require("../localCache")
 const isWindows = process.platform === "win32";
 
 if (process.platform === "darwin" || process.platform === "linux") {
@@ -69,6 +69,7 @@ module.exports = {
     },
     register: (win, getClient) => {
         ipcMain.handle("set-release-edition-raw",(e,type)=>{
+            setLocalCache("REACT_APP_PLATFORM",type)
             dbFile = type === "enterprise" ?  "company-default-yakit.db" : "default-yakit.db"
             return""
         })

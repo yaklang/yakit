@@ -2,12 +2,13 @@ import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {getRemoteValue,setRemoteValue} from "./kv"
-import {GetReleaseEdition, isCommunityEdition, globalUserLogout} from "@/utils/envfile"
+import {GetReleaseEdition, isCommunityEdition, globalUserLogout,isEnpriTraceAgent} from "@/utils/envfile"
 import {RemoteGV} from "@/yakitGV";
 const {ipcRenderer} = window.require("electron")
 
-export const loginOut = (userInfo: UserInfoProps) => {
+export const loginOut = async(userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
+    await aboutLoginUpload(userInfo.token)
     NetWorkApi<null, API.ActionSucceeded>({
         method: "get",
         url: "logout/online"
@@ -45,4 +46,16 @@ export const refreshToken = (userInfo: UserInfoProps) => {
     })
         .then((res) => {})
         .catch((e) => {})
+}
+
+//企业简易版 登录/退出登录前时调用同步
+export const aboutLoginUpload = (Token:string) => {
+    if (!isEnpriTraceAgent()) return
+    return new Promise((resolve, reject) => {
+        ipcRenderer.invoke("upload-risk-to-online", {Token}).then((res)=>{
+        // console.log("登录/退出登录前时调用同步",res);
+        }).finally(() => {
+            resolve(true)
+        })
+    })
 }

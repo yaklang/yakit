@@ -137,6 +137,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     return [
                         {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
                         {key: "upload-plugin", title: "同步插件"},
+                        {key: "hole-collect", title: "漏洞汇总"},
                         {key: "role-admin", title: "角色管理"},
                         {key: "account-admin", title: "用户管理"},
                         {key: "set-password", title: "修改密码"},
