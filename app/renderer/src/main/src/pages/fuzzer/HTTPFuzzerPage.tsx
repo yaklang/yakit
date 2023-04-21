@@ -82,6 +82,7 @@ import {
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {onConvertBodySizeByUnit, onConvertBodySizeToB} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {useWatch} from "antd/lib/form/Form"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -92,6 +93,8 @@ interface ShareValueProps {
     advancedConfiguration: AdvancedConfigurationProps
     request: any
     // retry config
+    retry: boolean
+    noRetry: boolean
     retryMaxTimes: number
     retryInStatusCode: string
     retryNotInStatusCode: string
@@ -334,6 +337,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
     // 重试
     const [retryMaxTimes, setRetryMaxTimes] = useState(0)
+    const [retry, setRetry] = useState<boolean>(true)
+    const [noRetry, setNoRetry] = useState<boolean>(false)
     const [retryInStatusCode, setRetryInStatusCode] = useState("")
     const [retryNotInStatusCode, setRetryNotInStatusCode] = useState("")
     const [retryWaitSeconds, setRetryWaitSeconds] = useState(0) // float
@@ -545,8 +550,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             // retry config
             MaxRetryTimes: retryMaxTimes,
-            RetryInStatusCode: retryInStatusCode,
-            RetryNotInStatusCode: retryNotInStatusCode,
+            RetryInStatusCode: retry ? retryInStatusCode : "",
+            RetryNotInStatusCode: noRetry ? retryNotInStatusCode : "",
             RetryWaitSeconds: retryWaitSeconds,
             RetryMaxWaitSeconds: retryMaxWaitSeconds,
 
@@ -559,6 +564,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
+        console.log("params", params)
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
@@ -872,6 +878,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 getFilter: getFilter()
             },
             // retry config
+            retry,
+            noRetry,
             retryMaxTimes,
             retryInStatusCode,
             retryNotInStatusCode,
@@ -904,11 +912,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             setRetryMaxTimes(0)
         }
+        setRetry(shareContent.retry)
+        setNoRetry(shareContent.noRetry)
         setRetryInStatusCode(shareContent.retryInStatusCode || "")
         setRetryNotInStatusCode(shareContent.retryNotInStatusCode || "")
         setRetryWaitSeconds(shareContent.retryWaitSeconds || 0)
         setRetryMaxWaitSeconds(shareContent.retryMaxWaitSeconds || 0)
-
         // 重定向配置
         setRedirectMaxTimes(shareContent.redirectMaxTimes || 0)
         setNoFollowRedirect(shareContent.noFollowRedirect)
@@ -1035,6 +1044,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             setRetryMaxTimes(0)
         }
+        setRetry(val.retrying || false)
+        setNoRetry(val.noRetrying || false)
         setRetryInStatusCode(val.retryConfiguration?.statusCode || "")
         setRetryNotInStatusCode(val.noRetryConfiguration?.statusCode || "")
         setRetryWaitSeconds(val.retryConfiguration?.waitTime || 0)
@@ -1049,18 +1060,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFilterMode(val.filterMode)
         setFilter({
             Keywords: val.keyWord?.split(",") || [],
-            // MaxBodySize: val.maxBodySizeInit
-            //     ? onConvertBodySizeByUnit(Number(val.maxBodySizeInit), val.maxBodySizeUnit)
-            //     : 0,
-            // MinBodySize: val.minBodySizeInit
-            //     ? onConvertBodySizeByUnit(Number(val.minBodySizeInit), val.minBodySizeUnit)
-            //     : 0,
             MaxBodySize: Number(val.maxBodySize) || 0,
             MinBodySize: Number(val.minBodySize) || 0,
-            // maxBodySizeInit: val.maxBodySizeInit ? val.maxBodySizeInit : 0,
-            // minBodySizeInit: val.minBodySizeInit ? val.minBodySizeInit : 0,
-            // minBodySizeUnit: val.minBodySizeUnit || "B",
-            // maxBodySizeUnit: val.maxBodySizeUnit || "B",
             Regexps: val.regexps?.split(",") || [],
             StatusCode: val.statusCode?.split(",") || []
         })
@@ -1086,6 +1087,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     maxDelaySeconds,
                     // 重试配置
                     maxRetryTimes: retryMaxTimes,
+                    retrying: retry,
+                    noRetrying: noRetry,
                     retryConfiguration: {
                         statusCode: retryInStatusCode,
                         keyWord: ""
@@ -1123,7 +1126,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 visible={advancedConfig}
                 setVisible={onSetAdvancedConfig}
                 onInsertYakFuzzer={onInsertYakFuzzer}
-                onValuesChange={onGetFormValue}
+                onValuesChange={(v) => onGetFormValue(v)}
                 refreshProxy={refreshProxy}
             />
             <div className={styles["http-fuzzer-page"]}>
@@ -1882,6 +1885,10 @@ interface AdvancedConfigValueProps {
     maxDelaySeconds: number
     // 重试配置
     maxRetryTimes: number
+    /**@name 重试条件的checked */
+    retrying: boolean
+    /**@name 不重试条件的checked */
+    noRetrying: boolean
     retryConfiguration?: {
         statusCode: string
         keyWord: string
@@ -1947,9 +1954,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         refreshProxy
     } = props
 
-    const [retrying, setRetrying] = useState<boolean>(true) // 重试条件
-    const [noRetrying, setNoRetrying] = useState<boolean>(false)
-    const [retryActive, setRetryActive] = useState<string[] | string>(["重试条件"])
+    const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
 
     const [redirect, setRedirect] = useState<boolean>(true)
     const [noRedirect, setNoRedirect] = useState<boolean>(false)
@@ -1962,6 +1967,24 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     const [form] = Form.useForm()
     const queryRef = useRef(null)
     const [inViewport] = useInViewport(queryRef)
+
+    const retrying = useWatch("retrying", form)
+    const noRetrying = useWatch("noRetrying", form)
+
+    useEffect(() => {
+        let newRetryActive = retryActive
+        if (retrying) {
+            newRetryActive = [...newRetryActive, "重试条件"]
+        } else {
+            newRetryActive = newRetryActive.filter((ele) => ele !== "重试条件")
+        }
+        if (noRetrying) {
+            newRetryActive = [...newRetryActive, "不重试条件"]
+        } else {
+            newRetryActive = newRetryActive.filter((ele) => ele !== "不重试条件")
+        }
+        setRetryActive(newRetryActive)
+    }, [retrying, noRetrying])
 
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
@@ -2004,27 +2027,14 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         form.setFieldsValue({isHttps: isHttps})
     }, [isHttps])
     useEffect(() => {
-        form.setFieldsValue({...defAdvancedConfigValue})
+        form.setFieldsValue({
+            ...defAdvancedConfigValue
+        })
         ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
     }, [defAdvancedConfigValue])
-    useUpdateEffect(() => {
-        const v = form.getFieldsValue()
-        onSetValue(v)
-    }, [retrying, noRetrying, redirect, noRedirect])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
-        if (!retrying) {
-            newValue.retryConfiguration = undefined
-        }
-        if (!noRetrying) {
-            newValue.noRetryConfiguration = undefined
-        }
-        if (!redirect) {
-            newValue.redirectConfiguration = undefined
-        }
-        if (!noRedirect) {
-            newValue.noRedirectConfiguration = undefined
-        }
+
         onValuesChange({
             ...newValue
         })
@@ -2227,6 +2237,8 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     e.stopPropagation()
                                     const restValue = {
                                         maxRetryTimes: 3,
+                                        retrying: true,
+                                        noRetrying: false,
                                         retryConfiguration: {
                                             statusCode: undefined,
                                             keyWord: undefined
@@ -2244,7 +2256,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         ...v,
                                         ...restValue
                                     })
-                                    setNoRetrying(false)
+                                    // setNoRetrying(false)
                                 }}
                             >
                                 重置
@@ -2254,22 +2266,14 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         <Form.Item label='重试次数' name='maxRetryTimes'>
                             <YakitInputNumber type='horizontal' size='small' min={0} />
                         </Form.Item>
-                        <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e)}>
+                        <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e as string[])}>
                             <Panel
                                 header={
-                                    <span className={styles["display-flex"]}>
-                                        <YakitCheckbox
-                                            checked={retrying}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                            onChange={(e) => {
-                                                const {checked} = e.target
-                                                setRetrying(checked)
-                                            }}
-                                        />
-                                        <span style={{marginLeft: 6}}>重试条件</span>
-                                    </span>
+                                    <Form.Item name='retrying' noStyle valuePropName='checked'>
+                                        <YakitCheckbox>
+                                            <span style={{marginLeft: 6, cursor: "pointer"}}>重试条件</span>
+                                        </YakitCheckbox>
+                                    </Form.Item>
                                 }
                                 key='重试条件'
                                 style={{borderBottom: 0}}
@@ -2283,18 +2287,11 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </Panel>
                             <Panel
                                 header={
-                                    <span className={styles["display-flex"]}>
-                                        <YakitCheckbox
-                                            checked={noRetrying}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                            onChange={(e) => {
-                                                setNoRetrying(e.target.checked)
-                                            }}
-                                        />
-                                        <span style={{marginLeft: 6}}>不重试条件</span>
-                                    </span>
+                                    <Form.Item name='noRetrying' noStyle valuePropName='checked'>
+                                        <YakitCheckbox>
+                                            <span style={{marginLeft: 6, cursor: "pointer"}}>不重试条件</span>
+                                        </YakitCheckbox>
+                                    </Form.Item>
                                 }
                                 key='不重试条件'
                                 style={{borderBottom: 0}}
@@ -2419,9 +2416,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         regexps: "",
                                         keyWord: "",
                                         maxBodySize: undefined,
-                                        // minBodySizeUnit: "B",
                                         minBodySize: undefined
-                                        // maxBodySizeUnit: "B"
                                     }
                                     form.setFieldsValue({
                                         ...restValue
