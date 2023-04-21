@@ -213,12 +213,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     useEffect(() => {
         if (!isInputValue.current) {
-            // 任务名称-时间戳
-            const taskNameTimeStamp: number = moment(new Date()).unix()
+            // 任务名称-时间戳-扫描目标
+            let taskNameTimeTarget: string = moment(new Date()).unix().toString()
+            if(params?.Targets&&params.Targets.length>0){
+                taskNameTimeTarget = params.Targets.split(',')[0]
+            }
             form.setFieldsValue({
-                TaskName: `${getScanType()}-${taskNameTimeStamp}`
+                TaskName: `${getScanType()}-${taskNameTimeTarget}`
             })
-            setRunTaskName(`${getScanType()}-${taskNameTimeStamp}`)
+            setRunTaskName(`${getScanType()}-${taskNameTimeTarget}`)
         }
     }, [getScanType(), executing])
 
