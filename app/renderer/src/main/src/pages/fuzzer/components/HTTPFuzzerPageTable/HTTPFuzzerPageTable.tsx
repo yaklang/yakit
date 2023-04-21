@@ -296,7 +296,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     useThrottleEffect(
         () => {
-            setListTable(data)
+            // setListTable(data)
+            queryData()
         },
         [data],
         {wait: 200}
@@ -325,74 +326,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         })
         setSorterTable(sorter)
     })
-    /**
-     * @description 前端搜索
-     */
+
     const update = useDebounceFn(
         () => {
             setLoading(true)
             new Promise((resolve, reject) => {
                 try {
-                    // ------------  搜索 开始  ------------
-
-                    // 有搜索条件才循环
-                    if (
-                        query?.keyWord ||
-                        (query?.StatusCode && query?.StatusCode?.length > 0) ||
-                        query?.afterBodyLength ||
-                        query?.beforeBodyLength
-                    ) {
-                        const newDataTable = sorterFunction(data, sorterTable) || []
-                        const l = newDataTable.length
-                        const searchList: FuzzerResponse[] = []
-                        for (let index = 0; index < l; index++) {
-                            const record = newDataTable[index]
-                            // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
-                            let keyWordIsPush = true
-                            let statusCodeIsPush = true
-                            let bodyLengthMinIsPush = true
-                            let bodyLengthMaxIsPush = true
-                            // 搜索满足条件 交集
-                            // 关键字搜索
-                            if (query?.keyWord) {
-                                const responseString = Uint8ArrayToString(record.ResponseRaw)
-                                keyWordIsPush = responseString.includes(query.keyWord)
-                            }
-                            // 状态码搜索
-                            if (query?.StatusCode && query?.StatusCode?.length > 0) {
-                                const cLength = query.StatusCode
-                                const codeIsPushArr: boolean[] = []
-                                for (let index = 0; index < cLength.length; index++) {
-                                    const element = query.StatusCode[index]
-                                    const codeArr = element.split("-")
-                                    if (record.StatusCode >= codeArr[0] && record.StatusCode <= codeArr[1]) {
-                                        codeIsPushArr.push(true)
-                                    } else {
-                                        codeIsPushArr.push(false)
-                                    }
-                                }
-                                statusCodeIsPush = codeIsPushArr.includes(true)
-                            }
-                            // 响应大小搜索
-                            if (query?.afterBodyLength) {
-                                // 最小
-                                bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
-                            }
-                            if (query?.beforeBodyLength) {
-                                // 最大
-                                bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
-                            }
-                            // 搜索同时为true时，push新数组
-                            if (keyWordIsPush && statusCodeIsPush && bodyLengthMinIsPush && bodyLengthMaxIsPush) {
-                                searchList.push(record)
-                            }
-                        }
-                        setListTable([...searchList])
-                    } else {
-                        const newData = sorterFunction(data, sorterTable) || []
-                        setListTable([...newData])
-                    }
-                    // ------------  搜索 结束  ------------
+                    queryData()
                     resolve(true)
                 } catch (error) {
                     reject(error)
@@ -411,12 +351,77 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             wait: 200
         }
     ).run
+    /**
+     * @description 前端搜索
+     */
+    const queryData = useMemoizedFn(() => {
+        // ------------  搜索 开始  ------------
+
+        // 有搜索条件才循环
+        if (
+            query?.keyWord ||
+            (query?.StatusCode && query?.StatusCode?.length > 0) ||
+            query?.afterBodyLength ||
+            query?.beforeBodyLength
+        ) {
+            const newDataTable = sorterFunction(data, sorterTable) || []
+            const l = newDataTable.length
+            const searchList: FuzzerResponse[] = []
+            for (let index = 0; index < l; index++) {
+                const record = newDataTable[index]
+                // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
+                let keyWordIsPush = true
+                let statusCodeIsPush = true
+                let bodyLengthMinIsPush = true
+                let bodyLengthMaxIsPush = true
+                // 搜索满足条件 交集
+                // 关键字搜索
+                if (query?.keyWord) {
+                    const responseString = Uint8ArrayToString(record.ResponseRaw)
+                    keyWordIsPush = responseString.includes(query.keyWord)
+                }
+                // 状态码搜索
+                if (query?.StatusCode && query?.StatusCode?.length > 0) {
+                    const cLength = query.StatusCode
+                    const codeIsPushArr: boolean[] = []
+                    for (let index = 0; index < cLength.length; index++) {
+                        const element = query.StatusCode[index]
+                        const codeArr = element.split("-")
+                        if (record.StatusCode >= codeArr[0] && record.StatusCode <= codeArr[1]) {
+                            codeIsPushArr.push(true)
+                        } else {
+                            codeIsPushArr.push(false)
+                        }
+                    }
+                    statusCodeIsPush = codeIsPushArr.includes(true)
+                }
+                // 响应大小搜索
+                if (query?.afterBodyLength) {
+                    // 最小
+                    bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
+                }
+                if (query?.beforeBodyLength) {
+                    // 最大
+                    bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
+                }
+                // 搜索同时为true时，push新数组
+                if (keyWordIsPush && statusCodeIsPush && bodyLengthMinIsPush && bodyLengthMaxIsPush) {
+                    searchList.push(record)
+                }
+            }
+            setListTable([...searchList])
+        } else {
+            const newData = sorterFunction(data, sorterTable) || []
+            setListTable([...newData])
+        }
+        // ------------  搜索 结束  ------------
+    })
 
     return (
         <div style={{overflowY: "hidden"}}>
             <TableVirtualResize<FuzzerResponse>
                 query={query}
-                isRefresh={isRefresh}
+                isRefresh={isRefresh||loading}
                 titleHeight={0.01}
                 renderTitle={<></>}
                 renderKey='UUID'
