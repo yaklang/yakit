@@ -30,7 +30,7 @@ import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../.
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
-import {fuzzerInfoProp} from "../MainOperator"
+import {fuzzerInfoProp, onModalSecondaryConfirm} from "../MainOperator"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -84,6 +84,8 @@ import {onConvertBodySizeByUnit, onConvertBodySizeToB} from "@/components/HTTPFl
 import {useWatch} from "antd/lib/form/Form"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
+import {Route} from "@/routes/routeSpec"
+import {onUseSubscribe, onUseUnsubscribe} from "@/utils/publishSubscribe"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -416,6 +418,41 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+
+    const modalRef = useRef<any>() //存储二次确认框
+
+    useEffect(() => {
+        onUseSubscribe(Route.HTTPFuzzer, onConfirmClose)
+        return () => {
+            onUseUnsubscribe(Route.HTTPFuzzer, onConfirmClose)
+        }
+    }, [])
+
+    const onConfirmClose = useMemoizedFn(() => {
+        let modal = onModalSecondaryConfirm({
+            title: "关闭提示",
+            content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+            onOkText:'确定',
+            onCancelText:'取消',
+            onOk: () => {
+                onCloseTab()
+            },
+            onCancel: () => {
+                modal.destroy()
+            }
+        })
+        modalRef.current = modal
+    })
+
+    const onCloseTab = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.HTTPFuzzer,
+            })
+            .then(() => {
+                if (modalRef.current) modalRef.current.destroy()
+            })
+    })
 
     useEffect(() => {
         if (props.shareContent) {
@@ -751,7 +788,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             lastUpdateCount = 0
             setTimeout(() => {
                 setLoading(false)
-            }, 500);
+            }, 500)
         })
 
         const updateDataId = setInterval(() => {

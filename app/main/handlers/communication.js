@@ -32,11 +32,6 @@ module.exports = (win, getClient) => {
         return isDev
     })
 
-    // tab是否可以关闭
-    ipcMain.handle("tab-isClose", async (e, params) => {
-        win.webContents.send("fetch-tab-isClose", params)
-    })
-
     // 关闭tab
     ipcMain.handle("send-close-tab", async (e, params) => {
         win.webContents.send("fetch-close-tab", params)

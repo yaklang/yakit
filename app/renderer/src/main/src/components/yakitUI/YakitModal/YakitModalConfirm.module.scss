@@ -36,11 +36,13 @@
 
 .modal-confirm-btns {
     padding-bottom: 24px;
-    text-align: right;
     width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
     padding-right: 24px;
 
     .modal-confirm-btns-cancel {
-        margin-right: 8px;
+        // margin-right: 8px;
     }
 }

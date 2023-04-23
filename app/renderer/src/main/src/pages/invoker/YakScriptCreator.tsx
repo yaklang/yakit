@@ -1,29 +1,35 @@
-import React, { useEffect, useState } from "react"
-import { Button, Checkbox, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal } from "antd"
-import { InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem } from "../../utils/inputUtil"
-import { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam } from "./schema"
-import { YakCodeEditor, YakEditor } from "../../utils/editors"
-import { PlusOutlined, QuestionCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons"
-import { showDrawer, showModal } from "../../utils/showModal"
-import { failed, info, success, warn } from "../../utils/notification"
-import { YakScriptParamsSetter } from "./YakScriptParamsSetter"
-import { YakScriptRunner } from "./ExecYakScript"
-import { FullscreenOutlined, DeleteOutlined } from "@ant-design/icons"
-import { MITMPluginTemplate } from "./data/MITMPluginTamplate"
-import { PacketHackPluginTemplate } from "./data/PacketHackPluginTemplate"
-import { CodecPluginTemplate } from "./data/CodecPluginTemplate"
-import { PortScanPluginTemplate } from "./data/PortScanPluginTemplate"
-import { useCreation, useGetState, useMemoizedFn } from "ahooks"
+import React, {useEffect, useRef, useState} from "react"
+import {Button, Checkbox, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal} from "antd"
+import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
+import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam} from "./schema"
+import {YakCodeEditor, YakEditor} from "../../utils/editors"
+import {PlusOutlined, QuestionCircleOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
+import {showDrawer, showModal} from "../../utils/showModal"
+import {failed, info, success, warn} from "../../utils/notification"
+import {YakScriptParamsSetter} from "./YakScriptParamsSetter"
+import {YakScriptRunner} from "./ExecYakScript"
+import {FullscreenOutlined, DeleteOutlined} from "@ant-design/icons"
+import {MITMPluginTemplate} from "./data/MITMPluginTamplate"
+import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate"
+import {CodecPluginTemplate} from "./data/CodecPluginTemplate"
+import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
+import {useCreation, useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import "./YakScriptCreator.scss"
-import { queryYakScriptList } from "../yakitStore/network"
-import { YakExecutorParam } from "./YakExecutorParams"
-import { onLocalScriptToOnlinePlugin, SyncCloudButton,SyncCopyCloudButton } from "@/components/SyncCloudButton/SyncCloudButton"
-import { Route } from "@/routes/routeSpec"
-import { useStore } from "@/store"
-import { API } from "@/services/swagger/resposeType"
-import { NetWorkApi } from "@/services/fetch"
-import { SearchPluginDetailRequest } from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {queryYakScriptList} from "../yakitStore/network"
+import {YakExecutorParam} from "./YakExecutorParams"
+import {
+    onLocalScriptToOnlinePlugin,
+    SyncCloudButton,
+    SyncCopyCloudButton
+} from "@/components/SyncCloudButton/SyncCloudButton"
+import {Route} from "@/routes/routeSpec"
+import {useStore} from "@/store"
+import {API} from "@/services/swagger/resposeType"
+import {NetWorkApi} from "@/services/fetch"
+import {SearchPluginDetailRequest} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {onUseSubscribe, onUseUnsubscribe} from "@/utils/publishSubscribe"
+import {onModalSecondaryConfirm} from "../MainOperator"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -64,7 +70,7 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
     }
 }
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
     const yakScriptParams: YakScript = cloneDeep(data)
@@ -114,7 +120,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
         queryYakScriptList(
             yakScriptParams.PluginSelectorTypes || "mitm,port-scan",
             (i) => {
-                exec([{ Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: i.map((i) => i.ScriptName).join("|") }])
+                exec([{Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: i.map((i) => i.ScriptName).join("|")}])
             },
             undefined,
             10,
@@ -122,7 +128,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
             undefined,
             undefined,
             () => {
-                exec([{ Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: "no-such-plugin" }])
+                exec([{Key: BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES, Value: "no-such-plugin"}])
             }
         )
     } else {
@@ -161,11 +167,11 @@ const defParams = {
 }
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
-    const {showButton=true, isCreate} = props
+    const {showButton = true, isCreate} = props
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
-            labelCol: { span: 5 },
-            wrapperCol: { span: 14 }
+            labelCol: {span: 5},
+            wrapperCol: {span: 14}
         }
         return col
     }, [])
@@ -175,7 +181,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const [modified, setModified] = useState<YakScript | undefined>(props.modified)
     const [fullscreen, setFullscreen] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [visible, setVisible] = useState<boolean>(false)
     const [saveLoading, setSaveLoading] = useState<boolean>(false)
     const [isQueryByYakScriptName, setIsQueryByYakScriptName] = useState<boolean>(false)
     useEffect(() => {
@@ -184,25 +189,36 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
 
     const [updateLoading, setUpdateLoading] = useState<boolean>(false)
     const [isByMeCreatOnlienPlugin, setIsByMeCreatOnlienPlugin] = useState<boolean>(true)
-    const { userInfo } = useStore()
+    const {userInfo} = useStore()
     const debugButton = (primary?: boolean) => {
         if (loading) {
             return <Button disabled={true}>执行中...无法调试</Button>
         }
         return
     }
-
-    const tabIsClose = useMemoizedFn((e, res: any) => {
+    const modalRef=useRef<any>() //存储二次确认框
+    const tabIsClose = useMemoizedFn((val) => {
         if (getParams().Id > 0) {
             onCloseTab()
             return
         }
-        setVisible(true)
+        let modal = onModalSecondaryConfirm({
+            title: "插件未保存",
+            content: "是否要保存该插件?",
+            confirmLoading: saveLoading,
+            onOk: () => {
+                onSaveLocal()
+            },
+            onCancel: () => {
+                onCloseTab()
+            }
+        })
+        modalRef.current=modal
     })
     useEffect(() => {
-        ipcRenderer.on("fetch-tab-isClose", tabIsClose)
+        onUseSubscribe(Route.AddYakitScript, tabIsClose)
         return () => {
-            ipcRenderer.removeListener("fetch-tab-isClose", tabIsClose)
+            onUseUnsubscribe(Route.AddYakitScript, tabIsClose)
         }
     }, [])
     useEffect(() => {
@@ -223,7 +239,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         //创建插件才会有模块类型的修改
         switch (params.Type) {
             case "mitm":
-                setParams({ ...params, Content: MITMPluginTemplate })
+                setParams({...params, Content: MITMPluginTemplate})
                 return
             case "port-scan":
                 setParams({
@@ -235,14 +251,14 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             FieldVerbose: "扫描的目标",
                             TypeVerbose: "string",
                             Required: true,
-                            DefaultValue: ''
+                            DefaultValue: ""
                         } as YakScriptParam,
                         {
                             Field: "ports",
                             FieldVerbose: "端口",
                             TypeVerbose: "string",
                             Required: false,
-                            DefaultValue: "80",
+                            DefaultValue: "80"
                         } as YakScriptParam
                     ]
                 })
@@ -252,20 +268,30 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     ...params,
                     Content: PacketHackPluginTemplate,
                     Params: [
-                        { Field: "request", DefaultValue: '', TypeVerbose: "http-packet", Required: true } as YakScriptParam,
-                        { Field: "response", DefaultValue: '', TypeVerbose: "http-packet", Required: false } as YakScriptParam,
-                        { Field: "isHttps", DefaultValue: '', TypeVerbose: "bool" } as YakScriptParam
+                        {
+                            Field: "request",
+                            DefaultValue: "",
+                            TypeVerbose: "http-packet",
+                            Required: true
+                        } as YakScriptParam,
+                        {
+                            Field: "response",
+                            DefaultValue: "",
+                            TypeVerbose: "http-packet",
+                            Required: false
+                        } as YakScriptParam,
+                        {Field: "isHttps", DefaultValue: "", TypeVerbose: "bool"} as YakScriptParam
                     ]
                 })
                 return
             case "codec":
-                setParams({ ...params, Content: CodecPluginTemplate })
+                setParams({...params, Content: CodecPluginTemplate})
                 return
             case "nuclei":
-                setParams({ ...params, Content: "# Add your nuclei formatted PoC!" })
+                setParams({...params, Content: "# Add your nuclei formatted PoC!"})
                 return
             default:
-                setParams({ ...params, Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n" })
+                setParams({...params, Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n"})
                 return
         }
     }, [params.Type])
@@ -275,12 +301,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             setParams({
                 ...props.modified
             })
-            showButton&&getPluginDetail(props.modified?.OnlineId,props.modified?.UUID)
+            showButton && getPluginDetail(props.modified?.OnlineId, props.modified?.UUID)
         }
     }, [props.modified, userInfo])
-    const getPluginDetail = useMemoizedFn((pluginId,uuid) => {
+    const getPluginDetail = useMemoizedFn((pluginId, uuid) => {
         if (!userInfo.isLogin) return
-        if (pluginId as number == 0) return
+        if ((pluginId as number) == 0) return
         NetWorkApi<SearchPluginDetailRequest, API.YakitPluginDetailResponse>({
             method: "get",
             url: "yakit/plugin/detail",
@@ -303,10 +329,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         ipcRenderer
             .invoke("send-close-tab", {
                 router: Route.AddYakitScript,
-                singleNode: true
             })
             .then(() => {
-                setVisible(false)
+                if (modalRef.current) modalRef.current.destroy()
             })
     })
     // 仅保存本地
@@ -316,7 +341,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             return
         }
         if (isQueryByYakScriptName) {
-            queryByYakScriptName()// 先查询再保存
+            queryByYakScriptName() // 先查询再保存
         } else {
             onSaveYakScript()
         }
@@ -333,12 +358,12 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             .then((data) => {
                 info("创建 / 保存 Yak 脚本成功")
                 setParams(data)
-                if (visible || isCreate) {
+                if (isCreate) {
                     // model提示保存后的处理
                     onCloseTab()
-                    setVisible(false)
                     ipcRenderer.invoke("send-local-script-list")
                 }
+                if (modalRef.current) modalRef.current.destroy()
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
@@ -365,13 +390,13 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 Page: 1,
                 Order: "desc",
                 OrderBy: "updated_at"
-            },
+            }
         }
         setSaveLoading(true)
         ipcRenderer
             .invoke("QueryYakScript", newParams)
             .then((item: QueryYakScriptsResponse) => {
-                if (item.Total as number > 0) {
+                if ((item.Total as number) > 0) {
                     failed(`保存 Yak 模块失败：插件名重复`)
                     return
                 }
@@ -389,50 +414,59 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     // 修改提交内容
     const onSubmitEditContent = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
-            warn('请先登录');
+            warn("请先登录")
             return
         }
         Modal.confirm({
-            title: '提交的内容不会覆盖本地数据！',
+            title: "提交的内容不会覆盖本地数据！",
             icon: <ExclamationCircleOutlined />,
-            content: <div>
-                <p>提交的内容只会展示给插件作者看，待审核通过后才会更新在插件商店中。</p>
-                <p>提交的内容不会覆盖本地的代码，如需要保存本地，请先关闭该弹窗，在页面上点击【保存】按钮后，再点击【提交修改内容】</p>
-            </div>,
-            okText: '继续提交',
-            cancelText: '关闭',
+            content: (
+                <div>
+                    <p>提交的内容只会展示给插件作者看，待审核通过后才会更新在插件商店中。</p>
+                    <p>
+                        提交的内容不会覆盖本地的代码，如需要保存本地，请先关闭该弹窗，在页面上点击【保存】按钮后，再点击【提交修改内容】
+                    </p>
+                </div>
+            ),
+            okText: "继续提交",
+            cancelText: "关闭",
             onOk() {
-                const newParams = onLocalScriptToOnlinePlugin(params);
+                const newParams = onLocalScriptToOnlinePlugin(params)
                 const onlineParams: API.ApplyPluginRequest = {
                     ...newParams,
-                    id: parseInt(`${params.OnlineId}`),
+                    id: parseInt(`${params.OnlineId}`)
                 }
                 setUpdateLoading(true)
                 NetWorkApi<API.ApplyPluginRequest, API.ActionSucceeded>({
                     method: "post",
-                    url: 'apply/update/plugin',
+                    url: "apply/update/plugin",
                     data: onlineParams
-                }).then((res) => {
-                    success('提交成功')
-                }).catch((err) => {
-                    failed("提交失败:" + err)
                 })
+                    .then((res) => {
+                        success("提交成功")
+                    })
+                    .catch((err) => {
+                        failed("提交失败:" + err)
+                    })
                     .finally(() => {
                         setTimeout(() => {
                             setUpdateLoading(false)
                         }, 200)
                     })
             },
-            onCancel() {
-            },
-        });
-
+            onCancel() {}
+        })
     })
 
     return (
         <div>
             <Form {...fromLayout}>
-                <YakScriptFormContent params={params} setParams={setParams} modified={modified} setParamsLoading={setParamsLoading} />
+                <YakScriptFormContent
+                    params={params}
+                    setParams={setParams}
+                    modified={modified}
+                    setParamsLoading={setParamsLoading}
+                />
                 <Form.Item
                     label={"源码"}
                     help={
@@ -458,7 +492,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                                         }}
                                                         onUpdate={(data: YakScript) => {
                                                             props.onChanged && props.onChanged(data)
-                                                            setParams({ ...data })
+                                                            setParams({...data})
                                                         }}
                                                     />
                                                 </>
@@ -503,10 +537,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     }
                 >
                     {!fullscreen && (
-                        <div style={{ height: 400 }}>
+                        <div style={{height: 400}}>
                             <YakEditor
                                 type={"yak"}
-                                setValue={(Content) => setParams({ ...params, Content })}
+                                setValue={(Content) => setParams({...params, Content})}
                                 value={params.Content}
                             />
                         </div>
@@ -517,45 +551,51 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <Button type='primary' onClick={onSaveLocal} loading={saveLoading}>
                             保存
                         </Button>
-                        {showButton&&<>
-                        {
-                            isByMeCreatOnlienPlugin &&
+                        {showButton && (
                             <>
-                            {
-                                params?.BaseOnlineId&&parseInt(`${params?.BaseOnlineId}`)>0&&<Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
-                            }
-                            <SyncCloudButton
-                                params={params}
-                                setParams={(newSrcipt) => {
-                                    setParams(newSrcipt)
-                                    props.onCreated && props.onCreated(newSrcipt)
-                                    props.onChanged && props.onChanged(newSrcipt)
-                                }}
-                                isCreate={isCreate}
-                            >
-                                <Button>同步至云端</Button>
-                            </SyncCloudButton>
+                                {(isByMeCreatOnlienPlugin && (
+                                    <>
+                                        {params?.BaseOnlineId && parseInt(`${params?.BaseOnlineId}`) > 0 && (
+                                            <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>
+                                                提交修改内容
+                                            </Button>
+                                        )}
+                                        <SyncCloudButton
+                                            params={params}
+                                            setParams={(newSrcipt) => {
+                                                setParams(newSrcipt)
+                                                props.onCreated && props.onCreated(newSrcipt)
+                                                props.onChanged && props.onChanged(newSrcipt)
+                                            }}
+                                            isCreate={isCreate}
+                                        >
+                                            <Button>同步至云端</Button>
+                                        </SyncCloudButton>
+                                    </>
+                                )) || (
+                                    <>
+                                        {/* 判断本地插件是否是私有的 若为私有插件则不显示 复制至云端 按钮 */}
+                                        {!params.OnlineIsPrivate && (
+                                            <>
+                                                <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>
+                                                    提交修改内容
+                                                </Button>
+                                                <SyncCopyCloudButton
+                                                    params={params}
+                                                    setParams={(newSrcipt) => {
+                                                        setParams(newSrcipt)
+                                                        props.onCreated && props.onCreated(newSrcipt)
+                                                        props.onChanged && props.onChanged(newSrcipt)
+                                                    }}
+                                                >
+                                                    <Button>复制至云端</Button>
+                                                </SyncCopyCloudButton>
+                                            </>
+                                        )}
+                                    </>
+                                )}
                             </>
-                            ||
-                            <>
-                            {/* 判断本地插件是否是私有的 若为私有插件则不显示 复制至云端 按钮 */}
-                            {!params.OnlineIsPrivate&&
-                            <>
-                                <Button onClick={() => onSubmitEditContent()} loading={updateLoading}>提交修改内容</Button>
-                                <SyncCopyCloudButton
-                                params={params}
-                                setParams={(newSrcipt) => {
-                                    setParams(newSrcipt)
-                                    props.onCreated && props.onCreated(newSrcipt)
-                                    props.onChanged && props.onChanged(newSrcipt)
-                                }}
-                                >
-                                <Button>复制至云端</Button>
-                                </SyncCopyCloudButton>
-                                </>}
-                            </>
-                        }
-                        </>}
+                        )}
 
                         <Button
                             // type={primary ? "primary" : undefined}
@@ -593,33 +633,6 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     </Space>
                 </Form.Item>
             </Form>
-
-            <Modal
-                visible={visible}
-                onCancel={() => setVisible(false)}
-                footer={[
-                    <Button key='link' onClick={() => setVisible(false)}>
-                        取消
-                    </Button>,
-                    <Button
-                        key='submit'
-                        onClick={() => {
-                            onCloseTab()
-                        }}
-                    >
-                        不保存
-                    </Button>,
-                    <Button key='back' type='primary' onClick={() => onSaveLocal()} loading={saveLoading}>
-                        保存
-                    </Button>
-                ]}
-            >
-                <div className='save-script'>
-                    <ExclamationCircleOutlined className='exclamation-icon' />
-                    <span className='title'>插件未保存</span>
-                    <div className='tip'>是否要保存该插件</div>
-                </div>
-            </Modal>
         </div>
     )
 }
@@ -634,7 +647,7 @@ interface YakScriptFormContentProps {
 }
 
 export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props) => {
-    const { params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled } = props
+    const {params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled} = props
     const isNucleiPoC = params.Type === "nuclei"
     return (
         <>
@@ -642,12 +655,12 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                 disabled={!!modified}
                 label={"模块类型"}
                 data={[
-                    { value: "yak", text: "Yak 原生模块" },
-                    { value: "mitm", text: "MITM 模块" },
-                    { value: "packet-hack", text: "Packet 检查" },
-                    { value: "port-scan", text: "端口扫描插件" },
-                    { value: "codec", text: "Codec 模块" },
-                    { value: "nuclei", text: "nuclei Yaml模块" }
+                    {value: "yak", text: "Yak 原生模块"},
+                    {value: "mitm", text: "MITM 模块"},
+                    {value: "packet-hack", text: "Packet 检查"},
+                    {value: "port-scan", text: "端口扫描插件"},
+                    {value: "codec", text: "Codec 模块"},
+                    {value: "nuclei", text: "nuclei Yaml模块"}
                 ]}
                 setValue={(Type) => {
                     if (["packet-hack", "codec", "nuclei"].includes(Type))
@@ -656,32 +669,36 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                             Type,
                             IsGeneralModule: false
                         })
-                    else setParams({ ...params, Type })
+                    else setParams({...params, Type})
                 }}
                 value={params.Type}
             />
             <InputItem
                 label={"Yak 模块名"}
                 required={true}
-                setValue={(ScriptName) => setParams({ ...params, ScriptName })}
+                setValue={(ScriptName) => setParams({...params, ScriptName})}
                 value={params.ScriptName}
                 disable={disabled}
             />
-            <InputItem label={"简要描述"} setValue={(Help) => setParams({ ...params, Help })} value={params.Help} disable={disabled} />
-            {
-                isShowAuthor &&
+            <InputItem
+                label={"简要描述"}
+                setValue={(Help) => setParams({...params, Help})}
+                value={params.Help}
+                disable={disabled}
+            />
+            {isShowAuthor && (
                 <InputItem
                     label={"模块作者"}
-                    setValue={(Author) => setParams({ ...params, Author })}
+                    setValue={(Author) => setParams({...params, Author})}
                     value={params.Author}
                     disable={disabled}
                 />
-            }
+            )}
             <ManyMultiSelectForString
                 label={"Tags"}
-                data={[{ value: "教程", label: "教程" }]}
+                data={[{value: "教程", label: "教程"}]}
                 mode={"tags"}
-                setValue={(Tags) => setParams({ ...params, Tags })}
+                setValue={(Tags) => setParams({...params, Tags})}
                 value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
                 disabled={disabled}
             />
@@ -703,7 +720,8 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                                     if (item.Field === param.Field) {
                                                         flag = true
                                                         info(
-                                                            `参数 [${param.Field}]${param.FieldVerbose ? `(${param.FieldVerbose})` : ""
+                                                            `参数 [${param.Field}]${
+                                                                param.FieldVerbose ? `(${param.FieldVerbose})` : ""
                                                             } 已经存在，已覆盖旧参数`
                                                         )
                                                         return param
@@ -711,7 +729,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                                     return item
                                                 })
                                                 if (!flag) paramArr.push(param)
-                                                setParams({ ...params, Params: [...paramArr] })
+                                                setParams({...params, Params: [...paramArr]})
                                                 m.destroy()
                                             }}
                                         />
@@ -747,8 +765,8 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                         {p.TypeVerbose} {p.DefaultValue && `默认值：${p.DefaultValue}`}
                                     </Tag>
                                     {p.DefaultValue && `默认值为: ${p.DefaultValue}`}
-                                    {!isNucleiPoC && (
-                                        <Space style={{ marginLeft: 20 }}>
+                                    {(!isNucleiPoC && (
+                                        <Space style={{marginLeft: 20}}>
                                             <Button
                                                 size={"small"}
                                                 onClick={() => {
@@ -795,7 +813,8 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                                                 </Button>
                                             </Popconfirm>
                                         </Space>
-                                    ) || '--'}
+                                    )) ||
+                                        "--"}
                                 </List.Item>
                             )
                         }}
@@ -808,9 +827,9 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
             {params.Type === "yak" && (
                 <>
                     <SwitchItem
-                        label="启用插件联动 UI"
+                        label='启用插件联动 UI'
                         value={params.EnablePluginSelector}
-                        setValue={(EnablePluginSelector) => setParams({ ...params, EnablePluginSelector })}
+                        setValue={(EnablePluginSelector) => setParams({...params, EnablePluginSelector})}
                         disabled={disabled}
                     />
                     {params.EnablePluginSelector && (
@@ -818,11 +837,11 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                             label={"联动插件类型"}
                             value={params.PluginSelectorTypes}
                             data={["mitm", "port-scan"].map((i) => {
-                                return { value: i, label: getPluginTypeVerbose(i) }
+                                return {value: i, label: getPluginTypeVerbose(i)}
                             })}
                             mode={"multiple"}
                             setValue={(res) => {
-                                setParams({ ...params, PluginSelectorTypes: res })
+                                setParams({...params, PluginSelectorTypes: res})
                             }}
                             help={"通过 cli.String(`yakit-plugin-file`) 获取用户选择的插件"}
                             disabled={disabled}
@@ -849,7 +868,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
             TypeVerbose: ""
         }
     )
-    const [extraSetting, setExtraSetting] = useState<{ [key: string]: any }>(
+    const [extraSetting, setExtraSetting] = useState<{[key: string]: any}>(
         props.modifiedParam?.ExtraSetting ? JSON.parse(props.modifiedParam.ExtraSetting) : {}
     )
     // 选择类型时的转换
@@ -862,13 +881,13 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 })
                 break
             case "upload-path":
-                setExtraSetting({ isTextArea: false })
+                setExtraSetting({isTextArea: false})
                 break
             default:
                 setExtraSetting({})
                 break
         }
-        setParams({ ...params, TypeVerbose: type,DefaultValue:"" })
+        setParams({...params, TypeVerbose: type, DefaultValue: ""})
     })
     // 提交参数信息的验证
     const verify = useMemoizedFn(() => {
@@ -900,7 +919,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 })
 
                 const data: any = []
-                for (let item in dataObj) data.push({ key: dataObj[item], value: item })
+                for (let item in dataObj) data.push({key: dataObj[item], value: item})
                 extra.data = data
                 setting.ExtraSetting = JSON.stringify(extra)
 
@@ -921,11 +940,11 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
             case "select":
                 if (Array.isArray(extra.data) && kind === "update" && index !== undefined) {
                     extra.data[index][key] = value
-                    setExtraSetting({ ...extra })
+                    setExtraSetting({...extra})
                 }
                 if (Array.isArray(extra.data) && kind === "del" && index !== undefined) {
                     extra.data.splice(index, 1)
-                    setExtraSetting({ ...extra })
+                    setExtraSetting({...extra})
                 }
                 return
             default:
@@ -933,7 +952,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
         }
     })
 
-    const selectOptSetting = (item: { key: string; value: string }, index: number) => {
+    const selectOptSetting = (item: {key: string; value: string}, index: number) => {
         return (
             <div key={index} className='select-type-opt'>
                 <span className='opt-hint-title'>选项名称</span>
@@ -971,7 +990,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                     <div>
                         <SwitchItem
                             label={"是否支持多选"}
-                            setValue={(value) => setExtraSetting({ ...extraSetting, double: value })}
+                            setValue={(value) => setExtraSetting({...extraSetting, double: value})}
                             value={!!extraSetting.double}
                             help={"多选状态时，用户选中数据保存格式为数组类型"}
                         />
@@ -979,8 +998,8 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                             <Button
                                 type='link'
                                 onClick={() => {
-                                    ; (extraSetting.data || []).push({ key: "", value: "" })
-                                    setExtraSetting({ ...extraSetting })
+                                    ;(extraSetting.data || []).push({key: "", value: ""})
+                                    setExtraSetting({...extraSetting})
                                 }}
                             >
                                 新增选项 <PlusOutlined />
@@ -999,7 +1018,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                     <div>
                         <SwitchItem
                             label={"是否以文本域展示"}
-                            setValue={(value) => setExtraSetting({ ...extraSetting, isTextArea: value })}
+                            setValue={(value) => setExtraSetting({...extraSetting, isTextArea: value})}
                             value={!!extraSetting.isTextArea}
                         />
                     </div>
@@ -1018,76 +1037,74 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                     if (!verify()) return false
                     props.onCreated(convert())
                 }}
-                labelCol={{ span: 5 }}
-                wrapperCol={{ span: 14 }}
+                labelCol={{span: 5}}
+                wrapperCol={{span: 14}}
             >
                 <InputItem
                     disable={!!props.modifiedParam}
                     label={"参数名（英文）"}
                     required={true}
                     placeholder={"填入想要增加的参数名"}
-                    setValue={(Field) => setParams({ ...params, Field })}
+                    setValue={(Field) => setParams({...params, Field})}
                     value={params.Field}
                     help={"参数名应该避免特殊符号，只允许英文 / '-' 等"}
                 />
                 <InputItem
                     label={"参数显示名称(可中文)"}
                     placeholder={"输入想要显示的参数名"}
-                    setValue={(FieldVerbose) => setParams({ ...params, FieldVerbose })}
+                    setValue={(FieldVerbose) => setParams({...params, FieldVerbose})}
                     value={params.FieldVerbose}
                 />
                 <SwitchItem
                     label={"必要参数"}
-                    setValue={(Required) => setParams({ ...params, Required })}
+                    setValue={(Required) => setParams({...params, Required})}
                     value={params.Required}
                 />
                 <ManySelectOne
                     label={"选择参数类型"}
                     data={[
-                        { text: "字符串 / string", value: "string" },
-                        { text: "布尔值 / boolean", value: "boolean" },
-                        { text: "HTTP 数据包 / yak", value: "http-packet" },
-                        { text: "Yak 代码块 / yak", value: "yak" },
-                        { text: "文本块 / text", value: "text" },
-                        { text: "整数（大于零） / uint", value: "uint" },
-                        { text: "浮点数 / float", value: "float" },
-                        { text: "上传文件路径 / uploadPath", value: "upload-path" },
-                        { text: "下拉框 / select", value: "select" }
+                        {text: "字符串 / string", value: "string"},
+                        {text: "布尔值 / boolean", value: "boolean"},
+                        {text: "HTTP 数据包 / yak", value: "http-packet"},
+                        {text: "Yak 代码块 / yak", value: "yak"},
+                        {text: "文本块 / text", value: "text"},
+                        {text: "整数（大于零） / uint", value: "uint"},
+                        {text: "浮点数 / float", value: "float"},
+                        {text: "上传文件路径 / uploadPath", value: "upload-path"},
+                        {text: "下拉框 / select", value: "select"}
                     ]}
                     setValue={(TypeVerbose) => typeChange(TypeVerbose)}
                     value={params.TypeVerbose}
                 />
-                {!["upload-path","boolean"].includes(params.TypeVerbose) && (
+                {!["upload-path", "boolean"].includes(params.TypeVerbose) && (
                     <InputItem
                         label={"默认值"}
                         placeholder={"该参数的默认值"}
-                        setValue={(DefaultValue) => setParams({ ...params, DefaultValue })}
+                        setValue={(DefaultValue) => setParams({...params, DefaultValue})}
                         value={params.DefaultValue}
                         help={params.TypeVerbose === "select" ? "使用 逗号(,) 作为选项分隔符 " : undefined}
                     />
                 )}
-                {
-                  ["boolean"].includes(params.TypeVerbose)&&(
+                {["boolean"].includes(params.TypeVerbose) && (
                     <ManySelectOne
-                    label={"默认值"}
-                    placeholder={"该参数的默认值"}
-                    data={[
-                        { text: "布尔值 / true", value: "true" },
-                        { text: "布尔值 / false", value: "false" },
-                    ]}
-                    setValue={(value) => {
-                        console.log("value",value,params.TypeVerbose)
-                        setParams({ ...params, DefaultValue:value })
-                    }}
-                    value={params.DefaultValue}
-                />
-                  )
-                }
+                        label={"默认值"}
+                        placeholder={"该参数的默认值"}
+                        data={[
+                            {text: "布尔值 / true", value: "true"},
+                            {text: "布尔值 / false", value: "false"}
+                        ]}
+                        setValue={(value) => {
+                            console.log("value", value, params.TypeVerbose)
+                            setParams({...params, DefaultValue: value})
+                        }}
+                        value={params.DefaultValue}
+                    />
+                )}
                 {extraSettingComponent(params.TypeVerbose)}
 
                 <InputItem
                     label={"参数帮助信息"}
-                    setValue={(Help) => setParams({ ...params, Help })}
+                    setValue={(Help) => setParams({...params, Help})}
                     value={params.Help}
                     textarea={true}
                     textareaRow={4}
@@ -1096,7 +1113,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                 {!params.Required && (
                     <InputItem
                         label={"参数组"}
-                        setValue={(Group) => setParams({ ...params, Group })}
+                        setValue={(Group) => setParams({...params, Group})}
                         value={params.Group}
                         placeholder={"参数组，在用户输入界面将会把参数分成组，一般用于设置可选参数`"}
                     />
@@ -1120,11 +1137,11 @@ export interface YakScriptLargeEditorProp {
 }
 
 export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) => {
-    const { script } = props
-    const [params, setParams] = useState<YakScript>({ ...script })
+    const {script} = props
+    const [params, setParams] = useState<YakScript>({...script})
 
     useEffect(() => {
-        setParams({ ...script })
+        setParams({...script})
     }, [props.script])
 
     return (
@@ -1133,13 +1150,13 @@ export const YakScriptLargeEditor: React.FC<YakScriptLargeEditorProp> = (props) 
                 originValue={Buffer.from(script.Content, "utf8")}
                 noTitle={true}
                 noHex={true}
-                onChange={(value) => setParams({ ...params, Content: new Buffer(value).toString("utf8") })}
+                onChange={(value) => setParams({...params, Content: new Buffer(value).toString("utf8")})}
                 language={props.language || "yak"}
                 noHeader={false}
                 disableFullscreen={true}
                 noPacketModifier={true}
                 extra={
-                    <Space style={{ marginRight: 10 }}>
+                    <Space style={{marginRight: 10}}>
                         <Button
                             danger={true}
                             onClick={() => {

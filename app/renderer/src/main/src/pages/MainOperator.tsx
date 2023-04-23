@@ -1,7 +1,7 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {Alert, Avatar, Button, Layout, Modal, Space, Tabs, Upload} from "antd"
 import {ContentByRoute, NoScrollRoutes, Route, RouteNameToVerboseName} from "../routes/routeSpec"
-import {CameraOutlined, CloseOutlined} from "@ant-design/icons"
+import {CameraOutlined, CloseOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {
@@ -38,7 +38,10 @@ import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect";
+import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
+import {onUsePublish} from "@/utils/publishSubscribe"
+import {YakitModalConfirm, YakitModalConfirmProps} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {RemoveIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
 const {Content} = Layout
@@ -350,7 +353,6 @@ const getInitActiveTabKey = () => {
     return Route.NewHome
 }
 
-
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [loading, setLoading] = useState(false)
 
@@ -605,12 +607,20 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
         } else addTabPage(route as Route)
     })
-    const removePage = (route: string, isClose: boolean = true) => {
-        const targetIndex = getCacheIndex(route)
-        if (route === Route.AddYakitScript && isClose) {
-            ipcRenderer.invoke("tab-isClose")
+    const onBeforeRemovePage = useMemoizedFn((route: string) => {
+        if (route === Route.AddYakitScript) {
+            onUsePublish(Route.AddYakitScript, true)
             return
         }
+        if (route === Route.HTTPFuzzer) {
+            onUsePublish(Route.HTTPFuzzer, true)
+            return
+        }
+        removePage(route)
+    })
+    const removePage = (route: string) => {
+        const targetIndex = getCacheIndex(route)
+
         if (targetIndex > 0 && getPageCache()[targetIndex - 1]) {
             const targetCache = getPageCache()[targetIndex - 1]
             setCurrentTabKey(targetCache.route)
@@ -621,12 +631,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
-        if (route === Route.AddYakitScript && !isClose) {
+        setPageCache(getPageCache().filter((i) => i.route !== route))
+        if (route === Route.AddYakitScript) {
             setCurrentTabKey(Route.ModManager)
         }
-
-        setPageCache(getPageCache().filter((i) => i.route !== route))
-
         if (route === Route.HTTPFuzzer) delFuzzerList(1)
     }
     const updateCacheVerbose = (id: string, verbose: string) => {
@@ -767,13 +775,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             setStoreUserInfo(defaultUserInfo)
             if (IsEnpriTrace) {
                 ipcRenderer.invoke("update-judge-license", true)
-                removePage(Route.AccountAdminPage, false)
-                removePage(Route.RoleAdminPage, false)
-                removePage(Route.HoleCollectPage, false)
+                removePage(Route.AccountAdminPage)
+                removePage(Route.RoleAdminPage)
+                removePage(Route.HoleCollectPage)
             } else {
-                removePage(Route.LicenseAdminPage, false)
-                removePage(Route.TrustListPage, false)
-                removePage(Route.PlugInAdminPage, false)
+                removePage(Route.LicenseAdminPage)
+                removePage(Route.TrustListPage)
+                removePage(Route.PlugInAdminPage)
             }
             IsEnpriTrace ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
@@ -881,7 +889,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     // 加载补全
     useEffect(() => {
-        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: { RawJson: Uint8Array }) => {
+        ipcRenderer.invoke("GetYakitCompletionRaw").then((data: {RawJson: Uint8Array}) => {
             try {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
@@ -1164,7 +1172,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 if (flag === 0) {
                     addTabPage(Route.ModManager)
                 } else {
-                    removePage(Route.AddYakitScript, false)
+                    removePage(Route.AddYakitScript)
                     setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50);
                 }
             }
@@ -1177,10 +1185,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-close-tab", (e, res: any) => {
-            const {router, singleNode} = res
-            if (singleNode) {
-                removePage(router, false)
-            }
+            const {router} = res
+            removePage(router)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-close-tab")
@@ -1382,7 +1388,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 {i.verbose !== "首页" && (
                                                                     <CloseOutlined
                                                                         className='main-container-cion'
-                                                                        onClick={() => removePage(`${i.route}`)}
+                                                                        onClick={() => onBeforeRemovePage(`${i.route}`)}
                                                                     />
                                                                 )}
                                                             </Space>
@@ -1505,10 +1511,34 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 onCancel={() => setPasswordShow(false)}
                 footer={null}
             >
-                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo}/>
+                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
             </Modal>
         </Layout>
     )
 })
 
 export default Main
+
+export const onModalSecondaryConfirm = (props: YakitModalConfirmProps) => {
+    let m = YakitModalConfirm({
+        width: 420,
+        type: "white",
+        onCancelText: "不保存",
+        onOkText: "保存",
+        icon: <ExclamationCircleOutlined />,
+        ...props,
+        closeIcon: (
+            <div
+                onClick={(e) => {
+                    e.stopPropagation()
+                    m.destroy()
+                }}
+                className='modal-remove-icon'
+            >
+                <RemoveIcon />
+            </div>
+        ),
+        content: <div style={{paddingTop: 8}}>{props.content}</div>
+    })
+    return m
+}
