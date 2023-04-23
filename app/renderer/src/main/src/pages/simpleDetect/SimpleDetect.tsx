@@ -92,6 +92,7 @@ interface SimpleDetectFormProps {
     Uid?: string
     nowUUID:string
     setNowUUID:(v:string)=>void
+    setAllowDownloadReport:(v:boolean)=>void
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -114,7 +115,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         oldRunParams,
         Uid,
         nowUUID,
-        setNowUUID
+        setNowUUID,
+        setAllowDownloadReport
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -336,7 +338,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         let LastRecord = {}
         const runTaskNameEx = TaskName + nowUUID
         let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
-
+        setAllowDownloadReport(true)
         ipcRenderer.invoke(
             "SimpleDetect",
             {
@@ -652,10 +654,11 @@ export interface SimpleDetectTableProps {
     infoState: InfoState
     setExecuting: (v: boolean) => void
     nowUUID:string
+    allowDownloadReport:boolean
 }
 
 export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
-    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting,nowUUID} = props
+    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting,nowUUID,allowDownloadReport} = props
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
@@ -816,7 +819,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                     tabBarStyle={{marginBottom: 5}}
                     tabBarExtraContent={
                         <div>
-                            {!executing ? (
+                            {!executing&&allowDownloadReport ? (
                                 <div className={styles["hole-text"]} onClick={creatReport}>
                                     生成报告
                                 </div>
@@ -1086,7 +1089,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [___,setNowUUID,getNowUUID] = useGetState<string>(uuid)
     // 获取运行任务插件数
     const [runPluginCount, setRunPluginCount] = useState<number>()
-
+    // 是否允许下载报告
+    const [allowDownloadReport,setAllowDownloadReport] = useState<boolean>(false)
     const [infoState, {reset, setXtermRef, resetAll}] = useHoldingIPCRStream(
         "simple-scan",
         "SimpleDetect",
@@ -1250,6 +1254,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                         Uid={Uid}
                                         nowUUID={getNowUUID()}
                                         setNowUUID={setNowUUID}
+                                        setAllowDownloadReport={setAllowDownloadReport}
                                     />
                                 </Col>
                             </Row>
@@ -1275,6 +1280,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 infoState={infoState}
                                 setExecuting={setExecuting}
                                 nowUUID={getNowUUID()}
+                                allowDownloadReport={allowDownloadReport}
                             />
                         )
                     }}
