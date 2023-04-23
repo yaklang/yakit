@@ -81,21 +81,21 @@ for key,value = range severityToRisks {
     }
 }
 
-if criticalLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "critical"})
-}
-if criticalLens == 0 && highLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "high"})
-}
-if criticalLens == 0 && highLens == 0 && warningLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "warning"})
-}
-if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "low"})
-}
-if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens == 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "security"})
-}
+// if criticalLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "critical"})
+// }
+// if criticalLens == 0 && highLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "high"})
+// }
+// if criticalLens == 0 && highLens == 0 && warningLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "warning"})
+// }
+// if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "low"})
+// }
+// if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens == 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "security"})
+// }
 
 // 端口开放情况
 portsLine = []
