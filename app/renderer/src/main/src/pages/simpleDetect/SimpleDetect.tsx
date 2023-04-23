@@ -90,6 +90,8 @@ interface SimpleDetectFormProps {
     filePtrValue: number
     oldRunParams?: OldRunParamsProps
     Uid?: string
+    nowUUID:string
+    setNowUUID:(v:string)=>void
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -110,7 +112,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         reset,
         filePtrValue,
         oldRunParams,
-        Uid
+        Uid,
+        nowUUID,
+        setNowUUID
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -330,7 +334,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 break
         }
         let LastRecord = {}
-        let PortScanRequest = {...newParams, TaskName: TaskName}
+        const runTaskNameEx = TaskName + nowUUID
+        let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
 
         ipcRenderer.invoke(
             "SimpleDetect",
@@ -343,6 +348,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }
 
     const recoverRun = () => {
+        // 更改最新的唯一标识UUID
+        const uuid: string = uuidv4()
+        setNowUUID(uuid)
         reset()
         setExecuting(true)
         ipcRenderer.invoke("RecoverSimpleDetectUnfinishedTask", {Uid}, token)
@@ -643,10 +651,11 @@ export interface SimpleDetectTableProps {
     runPluginCount?: number
     infoState: InfoState
     setExecuting: (v: boolean) => void
+    nowUUID:string
 }
 
 export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
-    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting} = props
+    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting,nowUUID} = props
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
@@ -784,8 +793,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const downloadReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
-        const uuid: string = uuidv4()
-        const runTaskNameEx = reportName + uuid
+        const runTaskNameEx = reportName + nowUUID
         const reqParams = {
             Script: scriptData,
             Params: [
@@ -1073,6 +1081,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     // 点击运行任务的最新TaskName
     const [runTaskName, setRunTaskName] = useState<string>()
+    // 获取最新的唯一标识UUID
+    const uuid: string = uuidv4()
+    const [___,setNowUUID,getNowUUID] = useGetState<string>(uuid)
     // 获取运行任务插件数
     const [runPluginCount, setRunPluginCount] = useState<number>()
 
@@ -1237,6 +1248,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                         filePtrValue={filePtrValue}
                                         oldRunParams={oldRunParams}
                                         Uid={Uid}
+                                        nowUUID={getNowUUID()}
+                                        setNowUUID={setNowUUID}
                                     />
                                 </Col>
                             </Row>
@@ -1261,6 +1274,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 runPluginCount={runPluginCount}
                                 infoState={infoState}
                                 setExecuting={setExecuting}
+                                nowUUID={getNowUUID()}
                             />
                         )
                     }}
