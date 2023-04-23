@@ -3,9 +3,11 @@ yakit.AutoInitYakit()
 loglevel(\`info\`)
 
 
-createAt  = cli.Int("timestamp", cli.setRequired(true))
+// createAt  = cli.Int("timestamp", cli.setRequired(true))
+taskName  = cli.String("task_name", cli.setRequired(true))
+runtimeID = cli.String("runtime_id", cli.setRequired(true))
 hostTotal = cli.Int("host_total", cli.setRequired(true))
-portTotal = cli.Int("port_total", cli.setRequired(true))
+portTotal = cli.Int("port_total", cli.setDefault(0))
 pingAliveHostTotal = cli.Int("ping_alive_host_total", cli.setDefault(0))
 reportName = cli.String("report_name")
 plugins = cli.Int("plugins",cli.setDefault(10))
@@ -36,7 +38,7 @@ noWeakPassWordRisks = []
 
 // 风险漏洞分组
 // env.Get("YAK_RUNTIME_ID")
-for riskInstance = range risk.YieldRiskByCreateAt(int64(createAt)) {
+for riskInstance = range risk.YieldRiskByRuntimeId(runtimeID) {
     //println(riskInstance.IP)
     // 按照级别分类 Risk
     // printf("#%v\\n", riskInstance)
@@ -102,7 +104,7 @@ portsLine = []
 aliveHostCountList = []
 openPortCount = 0
 
-portChan := db.QueryPortsByUpdatedAt(int64(createAt))~
+portChan := db.QueryPortsByTaskName(taskName)~
 for port :=range portChan{
     openPortCount +=1
     if port.Host not in aliveHostCountList {
