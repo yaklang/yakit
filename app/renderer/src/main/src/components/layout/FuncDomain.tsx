@@ -267,6 +267,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 const key = Route.PlugInAdminPage
                                                 openMenu(key)
                                             }
+                                            if(key === "hole-collect"){
+                                                const key = Route.HoleCollectPage
+                                                openMenu(key)
+                                            }
                                             if (key === "upload-plugin") {
                                                 const m = showModal({
                                                     title: "同步本地插件",
