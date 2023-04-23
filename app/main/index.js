@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, nativeImage} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const {registerIPC, clearing} = require("./ipc")
@@ -11,8 +11,7 @@ const {
 } = require("./localCache")
 const { engineLog } = require("./filePath")
 const fs = require("fs")
-const {USER_INFO} = require("./state")
-const {getLocalCacheValue} = require("./localCache")
+const Screenshots = require("./screenshots")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -123,6 +122,42 @@ app.whenReady().then(() => {
     } catch (e) {
         console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
     }
+
+    const screenshots = new Screenshots({
+        singleWindow: true
+    })
+
+    ipcMain.handle("activate-screenshot", () => {
+        screenshots.startCapture()
+        globalShortcut.register("esc", () => {
+            screenshots.endCapture()
+            globalShortcut.unregister("esc")
+        })
+    })
+
+    globalShortcut.register("Control+Shift+b", () => {
+        screenshots.startCapture()
+        globalShortcut.register("esc", () => {
+            screenshots.endCapture()
+            globalShortcut.unregister("esc") 
+        })
+    })
+    globalShortcut.register("Control+Shift+q", () => {
+        screenshots.endCapture()
+        globalShortcut.unregister("esc")
+    })
+
+    // 点击确定按钮回调事件
+    screenshots.on("ok", (e, buffer, bounds) => {
+        if (screenshots.$win?.isFocused()) {
+            screenshots.endCapture()
+            globalShortcut.unregister("esc")
+        }
+    })
+    // 点击取消按钮回调事件
+    screenshots.on("cancel", () => {
+        globalShortcut.unregister("esc")
+    })
 
     createWindow()
 

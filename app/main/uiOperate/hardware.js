@@ -98,38 +98,6 @@ module.exports = (win, getClient) => {
         if (time) clearInterval(time)
     })
 
-    // mac截图功能
-    const macScreenshot = () => {
-        exec("screencapture -i -U -c", (error, stdout, stderr) => {
-            console.log("308", error, stdout, stderr)
-            // 从剪切板上取到图片
-            const pngs = clipboard.readImage().toPNG()
-            const imgs = "data:image/png;base64," + pngs.toString("base64")
-            // mainWin是窗口实例，这里是将图片传给渲染进程
-            win.webContents.send("captureScreenBack", imgs)
-        })
-    }
-    // win和linux截图功能
-    const winLinuxScreenshot = () => {
-        let url = path.resolve(__dirname, "../../../build/PrintScr.exe")
-        const screen_window = execFile(url)
-        screen_window.on("exit", (code) => {
-            if (code) {
-                const pngs = clipboard.readImage().toPNG()
-                const imgs = "data:image/png;base64," + pngs.toString("base64")
-                win.webContents.send("captureScreenBack", imgs)
-            }
-        })
-    }
-    // 截图功能
-    ipcMain.handle("activate-screenshot", () => {
-        if (process.platform === "darwin") {
-            macScreenshot()
-        } else {
-            winLinuxScreenshot()
-        }
-    })
-
     /** 获取操作系统类型 */
     ipcMain.handle("fetch-system-name", () => {
         return OS.type()

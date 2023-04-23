@@ -47,6 +47,7 @@
     "electron-is-dev": "^2.0.0",
     "electron-updater": "^4.3.9",
     "form-data": "^4.0.0",
+    "fs-extra": "11.1.1",
     "google-protobuf": "^3.17.3",
     "node-stream-zip": "^1.15.0",
     "node-xlsx": "^0.21.0",
