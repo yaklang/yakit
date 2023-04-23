@@ -90,9 +90,9 @@ interface SimpleDetectFormProps {
     filePtrValue: number
     oldRunParams?: OldRunParamsProps
     Uid?: string
-    nowUUID:string
-    setNowUUID:(v:string)=>void
-    setAllowDownloadReport:(v:boolean)=>void
+    nowUUID: string
+    setNowUUID: (v: string) => void
+    setAllowDownloadReport: (v: boolean) => void
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -227,7 +227,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             })
             setRunTaskName(`${getScanType()}-${taskNameTimeTarget}`)
         }
-    }, [getScanType(), executing])
+    }, [getScanType(), executing, params?.Targets])
 
     useEffect(() => {
         if (TaskName) {
@@ -240,8 +240,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     // 保存任务
     const saveTask = (v?: string) => {
         const cacheData = v ? JSON.parse(v) : false
-        console.log("SimpleCloseInfo", SimpleCloseInfo, token, cacheData)
-
         let newParams: PortScanParams = {...getParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         if (oldRunParams) {
@@ -336,7 +334,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 break
         }
         let LastRecord = {}
-        const runTaskNameEx = TaskName + nowUUID
+        const runTaskNameEx = TaskName + "-" + nowUUID
         let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
         setAllowDownloadReport(true)
         ipcRenderer.invoke(
@@ -653,12 +651,12 @@ export interface SimpleDetectTableProps {
     runPluginCount?: number
     infoState: InfoState
     setExecuting: (v: boolean) => void
-    nowUUID:string
-    allowDownloadReport:boolean
+    nowUUID: string
+    allowDownloadReport: boolean
 }
 
 export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
-    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting,nowUUID,allowDownloadReport} = props
+    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting, nowUUID, allowDownloadReport} = props
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
@@ -819,7 +817,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                     tabBarStyle={{marginBottom: 5}}
                     tabBarExtraContent={
                         <div>
-                            {!executing&&allowDownloadReport ? (
+                            {!executing && allowDownloadReport ? (
                                 <div className={styles["hole-text"]} onClick={creatReport}>
                                     生成报告
                                 </div>
@@ -1086,11 +1084,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [runTaskName, setRunTaskName] = useState<string>()
     // 获取最新的唯一标识UUID
     const uuid: string = uuidv4()
-    const [___,setNowUUID,getNowUUID] = useGetState<string>(uuid)
+    const [___, setNowUUID, getNowUUID] = useGetState<string>(uuid)
     // 获取运行任务插件数
     const [runPluginCount, setRunPluginCount] = useState<number>()
     // 是否允许下载报告
-    const [allowDownloadReport,setAllowDownloadReport] = useState<boolean>(false)
+    const [allowDownloadReport, setAllowDownloadReport] = useState<boolean>(false)
     const [infoState, {reset, setXtermRef, resetAll}] = useHoldingIPCRStream(
         "simple-scan",
         "SimpleDetect",
