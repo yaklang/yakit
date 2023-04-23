@@ -201,7 +201,7 @@ reportInstance.Markdown(sprintf(\`
 
 \`, totalTasks,openPortCount,aliveHostCount, hostTotal, portTotal))
 // 输出漏洞图相关的内容
-total := len(riskAll)
+total := criticalLens + highLens + warningLens + lowLens
 reportInstance.Markdown(sprintf(\`
 本次测试发现以下风险漏洞：
 
@@ -317,6 +317,9 @@ if len(noPotentialRisks) == 0 {
 }else{
     _line = []
     for index,info = range noPotentialRisks {
+        if info.IP == "" {
+            continue
+        }
         level = "-"
         if str.Contains(info.Severity, "critical") { level = "严重" }
         if str.Contains(info.Severity, "high") { level = "高危" }
@@ -337,6 +340,9 @@ showPotentialLine = []
 cpp = cve.NewStatistics("PotentialPie")
 println(len(potentialRisks))
 for i, riskIns := range potentialRisks {
+    if riskIns.IP == "" {
+        continue
+    }
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
@@ -399,6 +405,9 @@ if len(potentialRisks) != 0 {
 
 showWeakPassWordLine = []
 for _, riskIns := range weakPassWordRisks {
+    if riskIns.IP == "" {
+        continue
+    }
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
