@@ -178,6 +178,9 @@ service Yak {
   rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
+  rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
+  rpc ExtractHTTPResponse(ExtractHTTPResponseParams) returns (ExtractHTTPResponseResult);
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
   rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
   rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
@@ -2487,9 +2490,64 @@ message HTTPRequestAnalysis {
   bool IsHTTPS = 3;
 }
 
+message HTTPResponseMatcher {
+  repeated HTTPResponseMatcher SubMatchers = 1;
+  string SubMatcherCondition = 2;
+
+  string MatcherType = 3;
+  string Scope = 4;
+  string Condition = 5;
+  repeated string Group = 6;
+  string GroupEncoding = 7;
+  bool Negative = 8;
+  string ExprType = 9;
+}
+
+message MatchHTTPResponseParams {
+  repeated HTTPResponseMatcher Matchers = 1;
+  string MatcherCondition = 2;
+
+  bool IsHTTPS = 3;
+  string HTTPResponse = 4;
+  string HTTPRequest = 5;
+}
+
+message MatchHTTPResponseResult {
+  bool Matched = 1;
+}
+
+message HTTPResponseExtractor {
+  string Name = 1; // default for index
+  string Type = 2; // regex / xpath / kval / json / nuclei-dsl
+  string Scope = 3; // body / header / raw
+  repeated string Groups = 4;
+  repeated int64 RegexpMatchGroup = 5;
+  string XPathAttribute = 6;
+}
+
+message ExtractHTTPResponseResult {
+  repeated FuzzerParamItem Values = 1;
+}
+
+message ExtractHTTPResponseParams {
+  repeated HTTPResponseExtractor Extractors = 1;
+  string HTTPResponse = 2;
+}
+
+message PreloadHTTPFuzzerParamsRequest {
+  repeated FuzzerParamItem Params = 1;
+}
+
+message PreloadHTTPFuzzerParamsResponse {
+  repeated FuzzerParamItem Values = 2;
+}
+
 message FuzzerParamItem {
   string Key = 1;
   string Value = 2;
+
+  // nuclei-dsl / raw
+  string Type = 3;
 }
 
 message FuzzerRequest {
@@ -2943,6 +3001,7 @@ message MITMContentReplacer {
   bool EnableForResponse = 6;
   bool EnableForHeader = 9;
   bool EnableForBody = 10;
+  bool EnableForURI = 15;
 
   // Index
   int32 Index = 7;
@@ -2959,6 +3018,14 @@ message MITMContentReplacer {
   // 为数据包新增 Header
   repeated HTTPHeader ExtraHeaders = 13;
   repeated HTTPCookieSetting ExtraCookies = 14;
+
+  // Action
+  // 额外重复一次这个数据包（替换后的数据）
+  // 只有替换数据
+  bool ExtraRepeat = 16;
+  // 匹配掉之后直接丢包
+  bool Drop = 17;
+
 }
 
 message RemoveHookParams {
