@@ -5,7 +5,7 @@ const Event = require("./event")
 const getDisplay = require("./getDisplay")
 const padStart = require("./padStart")
 const path = require("path")
-const { NodeScreenshots } = require("./nodeScreenshots")
+const {NodeScreenshots} = require("./nodeScreenshots")
 
 /**
  * @typedef {Object} Display - 窗口坐标和宽高相关信息
@@ -133,7 +133,6 @@ class Screenshots extends Events {
 
         // 先清除 Kiosk 模式，然后取消全屏才有效
         this.$win.setKiosk(false)
-        this.$win.setSimpleFullScreen(false)
         this.$win.blur()
         this.$win.blurWebView()
         this.$win.unmaximize()
@@ -183,6 +182,11 @@ class Screenshots extends Events {
 
         // 复用未销毁的窗口
         if (!this.$win || this.$win?.isDestroyed?.()) {
+            const systemType = {
+                darwin: "panel",
+                win32: "toolbar"
+            }
+
             this.$win = new BrowserWindow({
                 title: "screenshots",
                 x: display.x,
@@ -190,32 +194,35 @@ class Screenshots extends Events {
                 width: display.width,
                 height: display.height,
                 useContentSize: true,
+                type: systemType[process.platform],
                 frame: false,
                 show: false,
                 autoHideMenuBar: true,
                 transparent: true,
-                // mac resizable 设置为 true 会导致应用崩溃
-                resizable: false && process.platform !== "darwin",
+                resizable: false,
                 movable: false,
+                minimizable: false,
+                maximizable: false,
                 // focusable 必须设置为 true, 否则窗口不能及时响应esc按键，输入框也不能输入
                 focusable: true,
-                // mac fullscreenable 设置为 true 会导致应用崩溃
-                fullscreenable: process.platform !== "darwin",
-                // 设为true 防止mac新开一个桌面，影响效果
-                simpleFullscreen: process.platform === "darwin",
+                skipTaskbar: true,
+                alwaysOnTop: true,
+                fullscreen: false,
+                fullscreenable: false,
+                kiosk: true,
                 backgroundColor: "#31343f4d",
                 titleBarStyle: "hidden",
-                alwaysOnTop: true,
-                enableLargerThanScreen: true,
-                skipTaskbar: true,
                 hasShadow: false,
                 paintWhenInitiallyHidden: false,
+                // mac 特有的属性
+                roundedCorners: false,
+                enableLargerThanScreen: false,
                 acceptFirstMouse: true
             })
 
             this.$win.on("show", () => {
                 this.$win?.focus()
-                this.$win?.setKiosk(process.platform !== "darwin")
+                this.$win?.setKiosk(true)
             })
 
             this.$win.on("closed", () => {
@@ -238,12 +245,6 @@ class Screenshots extends Events {
         }
 
         this.$win.blur()
-        this.$win.setKiosk(false)
-
-        if (process.platform === "darwin") {
-            this.$win.setSimpleFullScreen(true)
-        }
-
         this.$win.setBounds(display)
         this.$view.setBounds({
             x: 0,
@@ -263,6 +264,11 @@ class Screenshots extends Events {
         this.logger("SCREENSHOTS:capture")
 
         try {
+            /**
+             * 有些小问题：
+             * 1、在某些windows系统的多屏下，electorn获取的屏幕信息里，
+             *    x-y坐标数据有问题，导致无法使用截图库正确截取目标屏幕图片(出现场景-多屏并且屏幕分辨率和缩放比都不一样且都不为100%的时候)
+             */
             const capturer = NodeScreenshots.fromPoint(display.x + display.width / 2, display.y + display.height / 2)
             this.logger("SCREENSHOTS:capture NodeScreenshots.fromPoint arguments", display)
             this.logger(

@@ -123,41 +123,43 @@ app.whenReady().then(() => {
         console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
     }
 
-    const screenshots = new Screenshots({
-        singleWindow: true
-    })
+    if (["darwin", "win32"].includes(process.platform)) {
+        const screenshots = new Screenshots({
+            singleWindow: true
+        })
 
-    ipcMain.handle("activate-screenshot", () => {
-        screenshots.startCapture()
-        globalShortcut.register("esc", () => {
+        ipcMain.handle("activate-screenshot", () => {
+            screenshots.startCapture()
+            globalShortcut.register("esc", () => {
+                screenshots.endCapture()
+                globalShortcut.unregister("esc")
+            })
+        })
+
+        globalShortcut.register("Control+Shift+b", () => {
+            screenshots.startCapture()
+            globalShortcut.register("esc", () => {
+                screenshots.endCapture()
+                globalShortcut.unregister("esc")
+            })
+        })
+        globalShortcut.register("Control+Shift+q", () => {
             screenshots.endCapture()
             globalShortcut.unregister("esc")
         })
-    })
 
-    globalShortcut.register("Control+Shift+b", () => {
-        screenshots.startCapture()
-        globalShortcut.register("esc", () => {
-            screenshots.endCapture()
-            globalShortcut.unregister("esc") 
+        // 点击确定按钮回调事件
+        screenshots.on("ok", (e, buffer, bounds) => {
+            if (screenshots.$win?.isFocused()) {
+                screenshots.endCapture()
+                globalShortcut.unregister("esc")
+            }
         })
-    })
-    globalShortcut.register("Control+Shift+q", () => {
-        screenshots.endCapture()
-        globalShortcut.unregister("esc")
-    })
-
-    // 点击确定按钮回调事件
-    screenshots.on("ok", (e, buffer, bounds) => {
-        if (screenshots.$win?.isFocused()) {
-            screenshots.endCapture()
+        // 点击取消按钮回调事件
+        screenshots.on("cancel", () => {
             globalShortcut.unregister("esc")
-        }
-    })
-    // 点击取消按钮回调事件
-    screenshots.on("cancel", () => {
-        globalShortcut.unregister("esc")
-    })
+        })
+    }
 
     createWindow()
 
