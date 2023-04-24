@@ -14,6 +14,9 @@ export interface MITMContentReplacerRule {
     EnableForResponse: boolean
     EnableForBody: boolean
     EnableForHeader: boolean
+    EnableForURI: boolean
+    ExtraRepeat: boolean
+    Drop: boolean
     ExtraTag: string[]
     Disabled: boolean
     VerboseName: string
