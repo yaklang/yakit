@@ -187,6 +187,13 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             )
         },
         {
+            title: "上传时间",
+            dataIndex: "created_at",
+            render: (_, i: API.RiskLists) => (
+                <YakitTag>{i.created_at > 0 ? formatTimestamp(i.created_at) : "-"}</YakitTag>
+            )
+        },
+        {
             title: "操作",
             dataIndex: "action",
             render: (_, i: API.RiskLists) => {
