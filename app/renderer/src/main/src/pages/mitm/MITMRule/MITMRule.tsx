@@ -236,6 +236,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const rulesRangeList = useCreation(() => {
         return [
             {
+                label: "URI",
+                value: "EnableForURI"
+            },
+            {
                 label: "请求",
                 value: "EnableForRequest"
             },
@@ -293,9 +297,45 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 )
             },
             {
+                title: "丢弃结果",
+                dataKey: "Drop",
+                width: 110,
+                tip: "设置开启替代之后，可丢弃当前请求/响应",
+                render: (_, i: MITMContentReplacerRule) => (
+                    <YakitSwitch
+                        checked={i.Drop}
+                        onChange={val => {
+                            if (val) {
+                                onEdit({Id: i.Id, Drop: val, NoReplace: false}, "Drop")
+                            }else{
+                                onEdit({Id: i.Id, Drop: val}, "Drop")
+                            }
+                        }}
+                    />
+                )
+            },
+            {
+                title: "自动重发",
+                dataKey: "ExtraRepeat",
+                width: 110,
+                tip: "设置改选项后，将不会替换（请求）数据包，会把替换后的结果进行额外发包",
+                render: (_, i: MITMContentReplacerRule) => (
+                    <YakitSwitch
+                        checked={i.ExtraRepeat}
+                        onChange={val => {
+                            if (val) {
+                                onEdit({Id: i.Id, ExtraRepeat: val, NoReplace: false}, "ExtraRepeat")
+                            }else{
+                                onEdit({Id: i.Id, ExtraRepeat: val}, "ExtraRepeat")
+                            }
+                        }}
+                    />
+                )
+            },
+            {
                 title: "规则作用范围",
                 dataKey: "EnableForRequest",
-                width: 235,
+                width: 280,
                 render: (_, record: MITMContentReplacerRule) => {
                     return (
                         <div>
@@ -319,7 +359,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "命中颜色",
                 dataKey: "Color",
                 ellipsis: false,
-                width: 80,
+                width: 85,
                 render: (text, record: MITMContentReplacerRule) => (
                     <div className={classNames(styles["table-hit-color-content"])}>
                         <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
@@ -408,7 +448,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 EnableForResponse: true,
                 EnableForBody: true,
                 EnableForHeader: true,
+                EnableForURI: false,
                 Index: index,
+                Drop: false,
+                ExtraRepeat: false,
                 Id: index,
                 NoReplace: false,
                 Result: "",
