@@ -51,6 +51,7 @@ import {formatTimestamp} from "../../utils/timeUtil"
 import {ResizeBox} from "../../components/ResizeBox"
 import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVariable"
 import {PresetPorts} from "@/pages/portscan/schema"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -85,12 +86,14 @@ interface SimpleDetectFormProps {
     TaskName?: string
     runTaskName?: string
     setRunTaskName: (v: string) => void
-    setRunTimeStamp: (v: number) => void
     setRunPluginCount: (v: number) => void
     reset: () => void
     filePtrValue: number
     oldRunParams?: OldRunParamsProps
     Uid?: string
+    nowUUID: string
+    setNowUUID: (v: string) => void
+    setAllowDownloadReport: (v: boolean) => void
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -107,12 +110,14 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         TaskName,
         runTaskName,
         setRunTaskName,
-        setRunTimeStamp,
         setRunPluginCount,
         reset,
         filePtrValue,
         oldRunParams,
-        Uid
+        Uid,
+        nowUUID,
+        setNowUUID,
+        setAllowDownloadReport
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -215,15 +220,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         if (!isInputValue.current) {
             // 任务名称-时间戳-扫描目标
             let taskNameTimeTarget: string = moment(new Date()).unix().toString()
-            if(params?.Targets&&params.Targets.length>0){
-                taskNameTimeTarget = params.Targets.split(',')[0]
+            if (params?.Targets && params.Targets.length > 0) {
+                taskNameTimeTarget = params.Targets.split(",")[0]
             }
             form.setFieldsValue({
                 TaskName: `${getScanType()}-${taskNameTimeTarget}`
             })
             setRunTaskName(`${getScanType()}-${taskNameTimeTarget}`)
         }
-    }, [getScanType(), executing])
+    }, [getScanType(), executing, params?.Targets])
 
     useEffect(() => {
         if (TaskName) {
@@ -236,25 +241,29 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     // 保存任务
     const saveTask = (v?: string) => {
         const cacheData = v ? JSON.parse(v) : false
-        console.log("SimpleCloseInfo", SimpleCloseInfo, token, cacheData);
-
         let newParams: PortScanParams = {...getParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
-            ipcRenderer.invoke("SaveCancelSimpleDetect", cacheData || {
-                LastRecord,
-                PortScanRequest
-            })
+            ipcRenderer.invoke(
+                "SaveCancelSimpleDetect",
+                cacheData || {
+                    LastRecord,
+                    PortScanRequest
+                }
+            )
         } else {
-            ipcRenderer.invoke("SaveCancelSimpleDetect", cacheData || {
-                LastRecord: {
-                    LastRecordPtr: filePtrValue,
-                    Percent: percent,
-                    YakScriptOnlineGroup: OnlineGroup
-                },
-                PortScanRequest: {...newParams, TaskName: runTaskName}
-            })
+            ipcRenderer.invoke(
+                "SaveCancelSimpleDetect",
+                cacheData || {
+                    LastRecord: {
+                        LastRecordPtr: filePtrValue,
+                        Percent: percent,
+                        YakScriptOnlineGroup: OnlineGroup
+                    },
+                    PortScanRequest: {...newParams, TaskName: runTaskName}
+                }
+            )
         }
         delSimpleInfo(token)
     }
@@ -292,9 +301,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     const run = (OnlineGroup: string, TaskName: string) => {
         setPercent(0)
-        // 时间戳生成
-        const timeStamp: number = moment(new Date()).unix()
-        setRunTimeStamp(timeStamp)
         setRunPluginCount(getParams().ScriptNames.length)
 
         reset()
@@ -329,8 +335,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 break
         }
         let LastRecord = {}
-        let PortScanRequest = {...newParams, TaskName: TaskName}
-
+        const runTaskNameEx = TaskName + "-" + nowUUID
+        let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
+        setAllowDownloadReport(true)
         ipcRenderer.invoke(
             "SimpleDetect",
             {
@@ -342,8 +349,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }
 
     const recoverRun = () => {
-        const timeStamp: number = moment(new Date()).unix()
-        setRunTimeStamp(timeStamp)
+        // 更改最新的唯一标识UUID
+        const uuid: string = uuidv4()
+        setNowUUID(uuid)
         reset()
         setExecuting(true)
         ipcRenderer.invoke("RecoverSimpleDetectUnfinishedTask", {Uid}, token)
@@ -444,7 +452,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             const absPath: string = (f as any).path
                             // 当已有文件上传时
                             if (TargetsFile && TargetsFile?.length > 0) {
-                                let arr = TargetsFile.split(',')
+                                let arr = TargetsFile.split(",")
                                 // 限制最多3个文件上传
                                 if (arr.length >= 3) {
                                     info("最多支持3个文件上传")
@@ -457,8 +465,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 } else {
                                     info("路径已存在，请勿重复上传")
                                 }
-
-                            }// 当未上传过文件时
+                            } // 当未上传过文件时
                             else {
                                 setParams({...params, TargetsFile: absPath})
                             }
@@ -479,9 +486,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }}
                         otherHelpNode={
                             <>
-                                <span
-                                    className={styles["help-hint-title"]}
-                                >
+                                <span className={styles["help-hint-title"]}>
                                     <Checkbox
                                         onClick={(e) => {
                                             setParams({
@@ -491,7 +496,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                         }}
                                         checked={params.SkippedHostAliveScan}
                                     >
-                                    跳过主机存活检测
+                                        跳过主机存活检测
                                     </Checkbox>
                                 </span>
                                 <span
@@ -550,24 +555,37 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                {getParams().TargetsFile && <Form.Item label=" " colon={false}>
-                    {
-                        getParams().TargetsFile?.split(",").map((item: string) => {
-                            return <div className={styles["upload-file-item"]}>
-                                <div className={styles["text"]}><PaperClipOutlined style={{
-                                    marginRight: 8,
-                                    color: "#666666"
-                                }}/>{item.substring(item.lastIndexOf('\\') + 1)}</div>
-                                {!executing && !!!oldRunParams &&
-                                    <DeleteOutlined className={styles["icon"]} onClick={() => {
-                                        let arr = getParams().TargetsFile?.split(",") || []
-                                        let str = arr?.filter((itemIn: string) => itemIn !== item).join(',')
-                                        setParams({...params, TargetsFile: str})
-                                    }}/>}
-                            </div>
-                        })
-                    }
-                </Form.Item>}
+                {getParams().TargetsFile && (
+                    <Form.Item label=' ' colon={false}>
+                        {getParams()
+                            .TargetsFile?.split(",")
+                            .map((item: string) => {
+                                return (
+                                    <div className={styles["upload-file-item"]}>
+                                        <div className={styles["text"]}>
+                                            <PaperClipOutlined
+                                                style={{
+                                                    marginRight: 8,
+                                                    color: "#666666"
+                                                }}
+                                            />
+                                            {item.substring(item.lastIndexOf("\\") + 1)}
+                                        </div>
+                                        {!executing && !!!oldRunParams && (
+                                            <DeleteOutlined
+                                                className={styles["icon"]}
+                                                onClick={() => {
+                                                    let arr = getParams().TargetsFile?.split(",") || []
+                                                    let str = arr?.filter((itemIn: string) => itemIn !== item).join(",")
+                                                    setParams({...params, TargetsFile: str})
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                )
+                            })}
+                    </Form.Item>
+                )}
                 <div style={executing ? {display: "none"} : {}}>
                     <Form.Item name='scan_type' label='扫描模式' extra={judgeExtra()}>
                         <Radio.Group
@@ -632,14 +650,15 @@ export interface SimpleDetectTableProps {
     token: string
     executing: boolean
     runTaskName?: string
-    runTimeStamp?: number
     runPluginCount?: number
     infoState: InfoState
     setExecuting: (v: boolean) => void
+    nowUUID: string
+    allowDownloadReport: boolean
 }
 
 export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
-    const {token, executing, runTaskName, runTimeStamp, runPluginCount, infoState, setExecuting} = props
+    const {token, executing, runTaskName, runPluginCount, infoState, setExecuting, nowUUID, allowDownloadReport} = props
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
     const openPort = useRef<YakitPort[]>([])
@@ -768,7 +787,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const getCardForId = (id: string) => {
         const item = infoState.statusState.filter((item) => item.tag === id)
         if (item.length > 0) {
-            return parseInt(item[0].info[0].Data)
+            return item[0].info[0].Data
         }
         return null
     }
@@ -777,10 +796,12 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
     const downloadReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
+        const runTaskNameEx = reportName + "-" + nowUUID
         const reqParams = {
             Script: scriptData,
             Params: [
-                {Key: "timestamp", Value: runTimeStamp},
+                {Key: "task_name", Value: runTaskNameEx},
+                {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
                 {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount},
                 {Key: "host_total", Value: getCardForId("扫描主机数")},
@@ -799,16 +820,12 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = (props) => {
                     tabBarStyle={{marginBottom: 5}}
                     tabBarExtraContent={
                         <div>
-                            {runTimeStamp && (
-                                <>
-                                    {!executing ? (
-                                        <div className={styles["hole-text"]} onClick={creatReport}>
-                                            生成报告
-                                        </div>
-                                    ) : (
-                                        <div className={styles["disable-hole-text"]}>生成报告</div>
-                                    )}
-                                </>
+                            {!executing && allowDownloadReport ? (
+                                <div className={styles["hole-text"]} onClick={creatReport}>
+                                    生成报告
+                                </div>
+                            ) : (
+                                <div className={styles["disable-hole-text"]}>生成报告</div>
                             )}
                         </div>
                     }
@@ -1070,11 +1087,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     // 点击运行任务的最新TaskName
     const [runTaskName, setRunTaskName] = useState<string>()
-    // 获取运行任务时间戳
-    const [runTimeStamp, setRunTimeStamp] = useState<number>()
+    // 获取最新的唯一标识UUID
+    const uuid: string = uuidv4()
+    const [___, setNowUUID, getNowUUID] = useGetState<string>(uuid)
     // 获取运行任务插件数
     const [runPluginCount, setRunPluginCount] = useState<number>()
-
+    // 是否允许下载报告
+    const [allowDownloadReport, setAllowDownloadReport] = useState<boolean>(false)
     const [infoState, {reset, setXtermRef, resetAll}] = useHoldingIPCRStream(
         "simple-scan",
         "SimpleDetect",
@@ -1094,9 +1113,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 设置ResizeBox高度
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
 
-    const statusErrorCards = infoState.statusState.filter((item) =>
-        ["加载插件失败", "SYN扫描失败"].includes(item.tag)
-    )
+    const statusErrorCards = infoState.statusState.filter((item) => ["加载插件失败", "SYN扫描失败"].includes(item.tag))
     const statusSucceeCards = infoState.statusState.filter((item) =>
         ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
     )
@@ -1135,6 +1152,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     useEffect(() => {
         if (Uid) {
+            setAllowDownloadReport(true)
             setLoading(true)
             ipcRenderer
                 .invoke("GetSimpleDetectUnfinishedTaskByUid", {
@@ -1235,12 +1253,14 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                         TaskName={TaskName}
                                         runTaskName={runTaskName}
                                         setRunTaskName={setRunTaskName}
-                                        setRunTimeStamp={setRunTimeStamp}
                                         setRunPluginCount={setRunPluginCount}
                                         reset={resetAll}
                                         filePtrValue={filePtrValue}
                                         oldRunParams={oldRunParams}
                                         Uid={Uid}
+                                        nowUUID={getNowUUID()}
+                                        setNowUUID={setNowUUID}
+                                        setAllowDownloadReport={setAllowDownloadReport}
                                     />
                                 </Col>
                             </Row>
@@ -1262,10 +1282,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 token={token}
                                 executing={executing}
                                 runTaskName={runTaskName}
-                                runTimeStamp={runTimeStamp}
                                 runPluginCount={runPluginCount}
                                 infoState={infoState}
                                 setExecuting={setExecuting}
+                                nowUUID={getNowUUID()}
+                                allowDownloadReport={allowDownloadReport}
                             />
                         )
                     }}
