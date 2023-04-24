@@ -39,8 +39,8 @@ import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
-import {onUsePublish} from "@/utils/publishSubscribe"
-import {YakitModalConfirm, YakitModalConfirmProps} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscribe"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {RemoveIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
@@ -93,7 +93,7 @@ const singletonRoute: Route[] = [
     Route.NewHome,
 
     // 录屏
-    Route.ScreenRecorderPage,
+    Route.ScreenRecorderPage
 ]
 /** 不需要首页组件安全边距的页面 */
 export const noPaddingPage = [
@@ -207,7 +207,7 @@ export interface SetUserInfoProp {
 export const judgeAvatar = (userInfo) => {
     const {companyHeadImg, companyName} = userInfo
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg}/>
+        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
     ) : (
         <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
@@ -240,8 +240,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             .catch((err) => {
                 failed("头像更换失败：" + err)
             })
-            .finally(() => {
-            })
+            .finally(() => {})
     })
 
     // 修改头像
@@ -271,14 +270,12 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                     .catch((err) => {
                         failed("头像更换失败：" + err)
                     })
-                    .finally(() => {
-                    })
+                    .finally(() => {})
             })
             .catch((err) => {
                 failed("头像上传失败")
             })
-            .finally(() => {
-            })
+            .finally(() => {})
     })
     return (
         <div className='dropdown-menu-user-info'>
@@ -300,7 +297,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
             >
                 <div className='img-box'>
                     <div className='img-box-mask'>{judgeAvatar(userInfo)}</div>
-                    <CameraOutlined className='hover-icon'/>
+                    <CameraOutlined className='hover-icon' />
                 </div>
             </Upload.Dragger>
 
@@ -386,17 +383,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
                 UserId: 0
             }
-            ipcRenderer
-                .invoke("QueryYakScript", newParams)
-                .then((item: QueryYakScriptsResponse) => {
-                    if (item.Data.length === 0) {
-                        const m = showModal({
-                            title: "导入插件",
-                            content: <DownloadAllPlugin type="modal" onClose={() => m.destroy()}/>
-                        })
-                        return m
-                    }
-                })
+            ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
+                if (item.Data.length === 0) {
+                    const m = showModal({
+                        title: "导入插件",
+                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
+                    })
+                    return m
+                }
+            })
         }
 
         if (isBreachTrace()) {
@@ -481,8 +476,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                             type={"link"}
                                             onClick={() => {
                                                 m.destroy()
-                                                setRemoteValue(firstUseProjectFlag, "1").catch((e) => {
-                                                })
+                                                setRemoteValue(firstUseProjectFlag, "1").catch((e) => {})
                                             }}
                                         >
                                             知道了，不再提示
@@ -607,16 +601,19 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
         } else addTabPage(route as Route)
     })
+    const {getSubscribeClose} = useSubscribeClose()
     const onBeforeRemovePage = useMemoizedFn((route: string) => {
-        if (route === Route.AddYakitScript) {
-            onUsePublish(Route.AddYakitScript, true)
-            return
+        switch (route) {
+            case Route.AddYakitScript:
+            case Route.HTTPFuzzer:
+                const modalProps = getSubscribeClose(route)
+                onModalSecondaryConfirm(modalProps)
+                break
+
+            default:
+                removePage(route)
+                break
         }
-        if (route === Route.HTTPFuzzer) {
-            onUsePublish(Route.HTTPFuzzer, true)
-            return
-        }
-        removePage(route)
     })
     const removePage = (route: string) => {
         const targetIndex = getCacheIndex(route)
@@ -748,8 +745,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // }, [])
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
-    const IsEnpriTrace = shouldVerifyEnpriTraceLogin();
-
+    const IsEnpriTrace = shouldVerifyEnpriTraceLogin()
 
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
@@ -877,8 +873,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         // 开发环境不展示fuzzer缓存
         ipcRenderer
             .invoke("is-dev")
-            .then((flag) => {
-            })
+            .then((flag) => {})
             .finally(() => {
                 fetchFuzzerList()
             })
@@ -902,7 +897,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
 
         //
-        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: { Suggestions: MethodSuggestion[] }) => {
+        ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: {Suggestions: MethodSuggestion[]}) => {
             try {
                 if (!data) {
                     return
@@ -937,7 +932,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                         title: "Notification",
                                         content: (
                                             <>
-                                                <MDEditor.Markdown source={e}/>
+                                                <MDEditor.Markdown source={e} />
                                             </>
                                         )
                                     })
@@ -990,7 +985,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
 
     // websocket fuzzer 和 Fuzzer 类似
-    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
         addTabPage(Route.WebsocketFuzzer, {
             hideAdd: false,
             isRecord: false,
@@ -1073,8 +1068,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {
-                })
+                .catch(() => {})
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === Route.PoC)
@@ -1168,12 +1162,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "**screen-recorder") addTabPage(Route.ScreenRecorderPage)
             if (type === "**chaos-maker") addTabPage(Route.DB_ChaosMaker)
             if (type === "open-plugin-store") {
-                const flag = getPageCache().filter(item => item.route === Route.ModManager).length
+                const flag = getPageCache().filter((item) => item.route === Route.ModManager).length
                 if (flag === 0) {
                     addTabPage(Route.ModManager)
                 } else {
                     removePage(Route.AddYakitScript)
-                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50);
+                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
                 }
             }
             console.info("send to tab: ", type)
@@ -1293,7 +1287,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         <Layout className='yakit-main-layout'>
             <AutoSpin spinning={loading}>
                 {isShowCustomizeMenu && (
-                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)}/>
+                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
                 )}
                 <div style={{display: isShowCustomizeMenu ? "none" : "flex", flexDirection: "column", height: "100%"}}>
                     <HeardMenu
@@ -1488,12 +1482,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             setBugTestValue(
                                 value
                                     ? [
-                                        {
-                                            filter: record?.filter,
-                                            key: record?.key,
-                                            title: record?.title
-                                        }
-                                    ]
+                                          {
+                                              filter: record?.filter,
+                                              key: record?.key,
+                                              title: record?.title
+                                          }
+                                      ]
                                     : []
                             )
                         }
@@ -1519,14 +1513,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
 export default Main
 
-export const onModalSecondaryConfirm = (props: YakitModalConfirmProps) => {
+export const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
     let m = YakitModalConfirm({
         width: 420,
         type: "white",
         onCancelText: "不保存",
         onOkText: "保存",
         icon: <ExclamationCircleOutlined />,
-        ...props,
+        ...(props || {}),
+        onOk: () => {
+            if (props?.onOk) {
+                props.onOk(m)
+            } else {
+                m.destroy()
+            }
+        },
         closeIcon: (
             <div
                 onClick={(e) => {
@@ -1538,7 +1539,7 @@ export const onModalSecondaryConfirm = (props: YakitModalConfirmProps) => {
                 <RemoveIcon />
             </div>
         ),
-        content: <div style={{paddingTop: 8}}>{props.content}</div>
+        content: <div style={{paddingTop: 8}}>{props?.content}</div>
     })
     return m
 }

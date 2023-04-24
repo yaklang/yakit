@@ -28,8 +28,7 @@ import {useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {SearchPluginDetailRequest} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
-import {onUseSubscribe, onUseUnsubscribe} from "@/utils/publishSubscribe"
-import {onModalSecondaryConfirm} from "../MainOperator"
+import {useSubscribeClose} from "@/store/tabSubscribe"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -196,31 +195,32 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         }
         return
     }
-    const modalRef=useRef<any>() //存储二次确认框
-    const tabIsClose = useMemoizedFn((val) => {
+
+    const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
+    const modalRef = useRef<any>() //存储二次确认框
+    useEffect(() => {
         if (getParams().Id > 0) {
             onCloseTab()
+            removeSubscribeClose(Route.HTTPFuzzer)
             return
         }
-        let modal = onModalSecondaryConfirm({
+        setSubscribeClose(Route.AddYakitScript, {
             title: "插件未保存",
             content: "是否要保存该插件?",
             confirmLoading: saveLoading,
-            onOk: () => {
+            onOk: (m) => {
+                modalRef.current = m
                 onSaveLocal()
             },
             onCancel: () => {
                 onCloseTab()
             }
         })
-        modalRef.current=modal
-    })
-    useEffect(() => {
-        onUseSubscribe(Route.AddYakitScript, tabIsClose)
         return () => {
-            onUseUnsubscribe(Route.AddYakitScript, tabIsClose)
+            removeSubscribeClose(Route.HTTPFuzzer)
         }
-    }, [])
+    }, [getParams().Id])
+
     useEffect(() => {
         if (props.fromLayout) {
             setFromLayout(props.fromLayout)
@@ -328,11 +328,9 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const onCloseTab = useMemoizedFn(() => {
         ipcRenderer
             .invoke("send-close-tab", {
-                router: Route.AddYakitScript,
+                router: Route.AddYakitScript
             })
-            .then(() => {
-                if (modalRef.current) modalRef.current.destroy()
-            })
+            .then(() => {})
     })
     // 仅保存本地
     const onSaveLocal = useMemoizedFn(() => {

@@ -85,7 +85,7 @@ import {useWatch} from "antd/lib/form/Form"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
 import {Route} from "@/routes/routeSpec"
-import {onUseSubscribe, onUseUnsubscribe} from "@/utils/publishSubscribe"
+import {useSubscribeClose} from "@/store/tabSubscribe"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -419,38 +419,28 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
-    const modalRef = useRef<any>() //存储二次确认框
+    const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
 
     useEffect(() => {
-        onUseSubscribe(Route.HTTPFuzzer, onConfirmClose)
+        setSubscribeClose(Route.HTTPFuzzer, {
+            title: "关闭提示",
+            content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+            onOkText: "确定",
+            onCancelText: "取消",
+            onOk: (m) => onCloseTab(m)
+        })
         return () => {
-            onUseUnsubscribe(Route.HTTPFuzzer, onConfirmClose)
+            removeSubscribeClose(Route.HTTPFuzzer)
         }
     }, [])
 
-    const onConfirmClose = useMemoizedFn(() => {
-        let modal = onModalSecondaryConfirm({
-            title: "关闭提示",
-            content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
-            onOkText:'确定',
-            onCancelText:'取消',
-            onOk: () => {
-                onCloseTab()
-            },
-            onCancel: () => {
-                modal.destroy()
-            }
-        })
-        modalRef.current = modal
-    })
-
-    const onCloseTab = useMemoizedFn(() => {
+    const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
             .invoke("send-close-tab", {
-                router: Route.HTTPFuzzer,
+                router: Route.HTTPFuzzer
             })
             .then(() => {
-                if (modalRef.current) modalRef.current.destroy()
+                m.destroy()
             })
     })
 
