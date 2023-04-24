@@ -1152,6 +1152,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     useEffect(() => {
         if (Uid) {
+            setAllowDownloadReport(true)
             setLoading(true)
             ipcRenderer
                 .invoke("GetSimpleDetectUnfinishedTaskByUid", {
