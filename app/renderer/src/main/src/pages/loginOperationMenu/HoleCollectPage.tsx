@@ -69,7 +69,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         })
             .then((res) => {
                 if (res) {
-                    setRiskType(res.data)
+                    setRiskType(res?.data||[])
                 }
             })
             .catch((e) => {
