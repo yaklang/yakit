@@ -805,7 +805,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
-
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
         const info: fuzzerInfoProp = {
             time: new Date().getTime().toString(),
@@ -1433,7 +1432,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         title: (
                             <>
                                 <span style={{marginRight: 8}}>Responses</span>
+
                                 <SecondNodeTitle
+                                    cachedTotal={cachedTotal}
                                     onlyOneResponse={onlyOneResponse}
                                     rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
                                     successFuzzerLength={(successFuzzer || []).length}
@@ -1565,7 +1566,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     </>
                                 ) : (
                                     <>
-                                        {cachedTotal > 0 ? (
+                                        {cachedTotal > 1 ? (
                                             <>
                                                 {showSuccess && (
                                                     <HTTPFuzzerPageTable
@@ -1721,8 +1722,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
             </>
         )
     }
-
-    if (!onlyOneResponse && cachedTotal > 0) {
+    if (!onlyOneResponse && cachedTotal > 1) {
         const searchNode = (
             <YakitInput.Search
                 size='small'
@@ -1895,6 +1895,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
 })
 
 interface SecondNodeTitleProps {
+    cachedTotal:number
     rsp: FuzzerResponse
     onlyOneResponse: boolean
     successFuzzerLength: number
@@ -1907,7 +1908,7 @@ interface SecondNodeTitleProps {
  * @description 右边的返回内容 头部left内容
  */
 const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
-    const {rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} = props
+    const {cachedTotal,rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} = props
     // if (!rsp.BodyLength) return <></>
     if (onlyOneResponse) {
         return (
@@ -1919,7 +1920,7 @@ const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
             </>
         )
     }
-    if (successFuzzerLength > 0 || failedFuzzerLength > 0) {
+    if (cachedTotal>1) {
         return (
             <div className={styles["second-node-title"]}>
                 <YakitRadioButtons
