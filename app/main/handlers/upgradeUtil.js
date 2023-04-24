@@ -8,9 +8,6 @@ const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
 
-const axios = require('axios');
-const {promisify} = require('util');
-const pipeline = promisify(require('stream').pipeline);
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
 
@@ -357,7 +354,6 @@ module.exports = {
                         win.webContents.send("download-yakit-engine-progress", state)
                     })
                     .on("error", function (err) {
-                        console.log(err)
                         reject(err)
                     })
                     .on("end", function () {
