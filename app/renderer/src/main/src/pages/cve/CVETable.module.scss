@@ -279,6 +279,14 @@
     min-height: 30px;
     max-height: 400px;
     overflow-y: auto;
+    .hint-content-proxy {
+        display: flex;
+        align-items: center;
+        height: 28px;
+        margin-bottom: 8px;
+        color: var(--yakit-header-color);
+        font-size: 12px;
+    }
 }
 
 .cve-query {
