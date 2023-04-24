@@ -1,6 +1,11 @@
 import {Input, InputRef} from "antd"
 import React, {useState} from "react"
-import {YakitInputSearchProps, YakitInputProps, InternalTextAreaProps} from "./YakitInputType"
+import {
+    YakitInputSearchProps,
+    YakitInputProps,
+    InternalTextAreaProps,
+    InternalInputPasswordProps
+} from "./YakitInputType"
 import styles from "./YakitInput.module.scss"
 import classNames from "classnames"
 import {YakitButton} from "../YakitButton/YakitButton"
@@ -113,11 +118,45 @@ const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
     )
 }
 
+const InternalInputPassword: React.FC<InternalInputPasswordProps> = (props) => {
+    const {wrapperClassName, style, size, className, ...restProps} = props
+    const [focus, setFocus] = useState<boolean>(false)
+    const onFocus = useMemoizedFn((e) => {
+        setFocus(true)
+        if (props.onFocus) props.onFocus(e)
+    })
+    const onBlur = useMemoizedFn((e) => {
+        setFocus(false)
+        if (props.onBlur) props.onBlur(e)
+    })
+    return (
+        <div
+            className={classNames(
+                styles["yakit-password-wrapper-middle"],
+                {
+                    [styles["yakit-password-large"]]: size === "large",
+                    [styles["yakit-password-small"]]: size === "small",
+                    [styles["yakit-password-maxLarge"]]: size === "maxLarge",
+                    [styles["yakit-password-disabled"]]: !!props.disabled
+                },
+                wrapperClassName
+            )}
+            style={style}
+        >
+            <Input.Password
+                {...restProps}
+                onFocus={onFocus}
+                onBlur={onBlur}
+            />
+        </div>
+    )
+}
+
 type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & React.RefAttributes<InputRef>> & {
     Group: typeof Input.Group
     Search: typeof InternalSearch
     TextArea: typeof InternalTextArea
-    Password: typeof Input.Password
+    Password: typeof InternalInputPassword
 }
 
 /**
@@ -129,4 +168,4 @@ export const YakitInput = InternalInput as CompoundedComponent
 YakitInput.Group = Input.Group
 YakitInput.Search = InternalSearch
 YakitInput.TextArea = InternalTextArea
-YakitInput.Password = Input.Password
+YakitInput.Password = InternalInputPassword
