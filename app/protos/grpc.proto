@@ -1664,6 +1664,7 @@ message Risk {
   string CVE = 23;
   string Description = 24;
   string Solution = 25;
+  string TaskName = 26;
 }
 
 message QueryRisksRequest {
@@ -2220,6 +2221,7 @@ message Port {
   int64 Id = 11;
   int64 CreatedAt = 12;
   int64 UpdatedAt = 13;
+  string TaskName = 14;
 }
 
 message YakitCompletionRawResponse {
@@ -2605,6 +2607,15 @@ message FuzzerRequest {
   // 这个字段不需要用户做任何处理，也不需要客户端传递
   // 这是服务端用来初始化的字段，用以构建快速搜索
   string Verbose = 24;
+
+  // dns config
+  repeated string DNSServers = 28;
+  repeated KVPair EtcHosts = 29;
+}
+
+message KVPair {
+  string Key = 1;
+  string Value = 2;
 }
 
 message FuzzerResponseFilter {
@@ -2643,7 +2654,12 @@ message FuzzerResponse {
   // response body 的长度
   int64 BodyLength = 7;
   // 这个请求大约花费了多长时间
-  int64 DurationMs = 8;
+  int64 DurationMs = 8; // FirstByte Duration
+  int64 DNSDurationMs = 40;
+  int64 FirstByteDurationMs = 41;
+  int64 FinishedDurationMs = 42;
+  int64 TotalDurationMs = 43;
+
   // 给一个随机 ID
   string UUID = 9;
   // timestamp 请求
