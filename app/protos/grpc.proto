@@ -2611,6 +2611,9 @@ message FuzzerRequest {
   // dns config
   repeated string DNSServers = 28;
   repeated KVPair EtcHosts = 29;
+
+  // 不启用系统代理
+  bool NoSystemProxy = 30;
 }
 
 message KVPair {
@@ -2657,8 +2660,7 @@ message FuzzerResponse {
   int64 DurationMs = 8; // FirstByte Duration
   int64 DNSDurationMs = 40;
   int64 FirstByteDurationMs = 41;
-  int64 FinishedDurationMs = 42;
-  int64 TotalDurationMs = 43;
+  int64 TotalDurationMs = 42;
 
   // 给一个随机 ID
   string UUID = 9;
@@ -2690,6 +2692,10 @@ message FuzzerResponse {
   string Url = 38;
 
   int64 TaskId = 39;
+
+  // 使用哪个代理
+  string Proxy = 43;
+  string RemoteAddr = 44;
 }
 
 message Paging {

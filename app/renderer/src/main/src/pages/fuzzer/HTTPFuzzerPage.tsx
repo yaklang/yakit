@@ -10,8 +10,7 @@ import {
     Popover,
     Tooltip,
     Divider,
-    Collapse,
-    Input
+    Collapse, Tag,
 } from "antd"
 import {
     HTTPPacketEditor,
@@ -83,6 +82,8 @@ import {
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {onConvertBodySizeByUnit, onConvertBodySizeToB} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {useWatch} from "antd/lib/form/Form"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
+import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -104,6 +105,9 @@ interface ShareValueProps {
     redirectMaxTimes: number
     noFollowRedirect: boolean
     followJSRedirect: boolean
+    // dnsConfig
+    dnsServers: string[]
+    etcHosts: {Key: string, Value: string}[]
 }
 
 interface AdvancedConfigurationProps {
@@ -111,6 +115,7 @@ interface AdvancedConfigurationProps {
     concurrent: number
     isHttps: boolean
     noFixContentLength: boolean
+    noSystemProxy: boolean
     proxy: string
     actualHost: string
     timeout: number
@@ -152,8 +157,6 @@ export interface HTTPFuzzerPageProp {
     shareContent?: string
 }
 
-const Text = Typography.Text
-
 export interface FuzzerResponse {
     Method: string
     StatusCode: number
@@ -178,6 +181,12 @@ export interface FuzzerResponse {
     BodySimilarity?: number
     MatchedByFilter?: boolean
     Url?: string
+
+    Proxy?: string
+    RemoteAddr?: string
+    DNSDurationMs?: number
+    FirstByteDurationMs?: number
+    TotalDurationMs?: number
 
     /**@name 提取响应数据*/
     extracted?: string
@@ -316,6 +325,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         props.fuzzerParams?.isHttps || props.isHttps || false
     )
     const [noFixContentLength, setNoFixContentLength] = useState(false)
+    const [noSystemProxy, setNoSystemProxy] = useState(false)
     const [request, setRequest, getRequest] = useGetState(
         props.fuzzerParams?.request || props.request || defaultPostTemplate
     )
@@ -347,6 +357,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [redirectMaxTimes, setRedirectMaxTimes] = useState(3)
     const [noFollowRedirect, setNoFollowRedirect] = useState(true)
     const [followJSRedirect, setFollowJSRedirect] = useState(false)
+    // dnsConfig
+    const [dnsServers, setDNSServers] = useState<string[]>([]);
+    const [etcHosts, setETCHosts] = useState<{Key: string, Value: string}[]>([]);
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
     /**@name 是否刷新高级配置中的代理列表 */
@@ -535,6 +548,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             Concurrent: concurrent,
             PerRequestTimeoutSeconds: timeout,
             NoFixContentLength: noFixContentLength,
+            NoSystemProxy: noSystemProxy,
             Proxy: proxy,
             ActualAddr: actualHost,
             HotPatchCode: hotPatchCode,
@@ -558,12 +572,17 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // redirect config
             NoFollowRedirect: noFollowRedirect,
             FollowJSRedirect: followJSRedirect,
-            RedirectTimes: redirectMaxTimes
+            RedirectTimes: redirectMaxTimes,
+
+            // dnsConfig
+            DNSServers: dnsServers,
+            EtcHosts: etcHosts,
         }
         if (params.Proxy) {
             const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
+        // alert(JSON.stringify(noSystemProxy))
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
@@ -700,8 +719,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Count: count,
                 BodySimilarity: data.BodySimilarity,
                 HeaderSimilarity: data.HeaderSimilarity,
-                Url: data.Url
+                Url: data.Url,
+                Proxy: data.Proxy,
+                RemoteAddr: data.RemoteAddr,
+                FirstByteDurationMs: data.FirstByteDurationMs,
+                DNSDurationMs: data.DNSDurationMs,
+                TotalDurationMs: data.TotalDurationMs,
             } as FuzzerResponse
+
+            alert(JSON.stringify([r.Proxy, r.RemoteAddr, r.DNSDurationMs, r.TotalDurationMs, r.FirstByteDurationMs]))
 
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
@@ -870,6 +896,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 concurrent,
                 isHttps,
                 noFixContentLength,
+                noSystemProxy,
                 proxy,
                 actualHost,
                 timeout,
@@ -889,7 +916,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // redirect config
             noFollowRedirect,
             followJSRedirect,
-            redirectMaxTimes
+            redirectMaxTimes,
+
+            // dns config
+            dnsServers,
+            etcHosts,
         }
         callback(params)
     })
@@ -900,6 +931,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setForceFuzz(shareContent.advancedConfiguration.forceFuzz)
         setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
         setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
+        setNoSystemProxy(shareContent.advancedConfiguration.noSystemProxy)
         setProxy(shareContent.advancedConfiguration.proxy)
         setActualHost(shareContent.advancedConfiguration.actualHost)
         setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
@@ -923,6 +955,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRedirectMaxTimes(shareContent.redirectMaxTimes || 0)
         setNoFollowRedirect(shareContent.noFollowRedirect)
         setFollowJSRedirect(shareContent.followJSRedirect)
+        // config
+        setETCHosts(shareContent.etcHosts)
+        setDNSServers(shareContent.dnsServers)
     })
 
     const cachedTotal = successFuzzer.length + failedFuzzer.length
@@ -1029,9 +1064,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
         // 请求包配置
-        setForceFuzz(val.forceFuzz || false)
+        setForceFuzz(val.forceFuzz === undefined ? true : val.forceFuzz)
         setIsHttps(val.isHttps)
         setNoFixContentLength(val.noFixContentLength)
+        setNoSystemProxy(val.noSystemProxy)
         setActualHost(val.actualHost)
         setParamTimeout(val.timeout)
         // 发包配置
@@ -1057,6 +1093,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setNoFollowRedirect(val.noFollowRedirect)
         setFollowJSRedirect(val.followJSRedirect)
 
+        // dns
+        setDNSServers(val.dnsServers)
+        setETCHosts(val.etcHosts)
+
         // 过滤配置
         setFilterMode(val.filterMode)
         setFilter({
@@ -1079,6 +1119,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     forceFuzz,
                     isHttps,
                     noFixContentLength,
+                    noSystemProxy,
                     actualHost,
                     timeout,
                     // 发包配置
@@ -1116,11 +1157,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     regexps: getFilter().Regexps.join(","),
                     keyWord: getFilter().Keywords?.join(",") || "",
                     minBodySize: getFilter().MinBodySize,
-                    maxBodySize: getFilter().MaxBodySize
+                    maxBodySize: getFilter().MaxBodySize,
                     // minBodySizeInit: onConvertBodySizeToB(getFilter().MinBodySize, getFilter().minBodySizeUnit || "B"),
                     // maxBodySizeInit: onConvertBodySizeToB(getFilter().MaxBodySize, getFilter().maxBodySizeUnit || "B"),
                     // minBodySizeUnit: getFilter().minBodySizeUnit || "B",
                     // maxBodySizeUnit: getFilter().maxBodySizeUnit || "B"
+
+                    /** dnsConfig */
+                    dnsServers: dnsServers,
+                    etcHosts: etcHosts,
                 }}
                 isHttps={isHttps}
                 setIsHttps={setIsHttps}
@@ -1220,6 +1265,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         IsHttps: isHttps,
                                         PerRequestTimeoutSeconds: timeout,
                                         NoFixContentLength: noFixContentLength,
+                                        NoSystemProxy: noSystemProxy,
                                         Proxy: proxy
                                     })
                                     .then((rsp: FuzzerResponse) => {
@@ -1879,6 +1925,7 @@ interface AdvancedConfigValueProps {
     isHttps: boolean
     /**@name 不修复长度 */
     noFixContentLength: boolean
+    noSystemProxy: boolean
     actualHost: string
     timeout: number
     // 发包配置
@@ -1931,6 +1978,10 @@ interface AdvancedConfigValueProps {
     // minBodySizeUnit: "B" | "K" | "M"
     // /**@name 响应大小最大值单位 */
     // maxBodySizeUnit: "B" | "K" | "M"
+
+    // dns config
+    dnsServers: string[]
+    etcHosts: {Key: string, Value: string}[]
 }
 
 interface HttpQueryAdvancedConfigProps {
@@ -1959,12 +2010,10 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
 
-    const [redirect, setRedirect] = useState<boolean>(true)
-    const [noRedirect, setNoRedirect] = useState<boolean>(false)
-    const [redirectActive, setRedirectActive] = useState<string[] | string>(["重定向条件"])
-
     const [proxyList, setProxyList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
+
+    const [etcHosts, setEtcHosts] = useState<{Key: string, Value: string}[]>([]);
 
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
@@ -2035,6 +2084,10 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         })
         ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
     }, [defAdvancedConfigValue])
+    useEffect(()=>{
+        form.setFieldsValue({etcHosts})
+        onSetValue({...form.getFieldsValue(), etcHosts})
+    }, [etcHosts])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
 
@@ -2152,6 +2205,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     const restValue = {
                                         concurrent: 20,
                                         proxy: [],
+                                        noSystemProxy: false,
                                         minDelaySeconds: undefined,
                                         maxDelaySeconds: undefined
                                     }
@@ -2194,6 +2248,9 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 size='small'
                                 maxTagCount={1}
                             />
+                        </Form.Item>
+                        <Form.Item label={"禁用系统代理"} name={'noSystemProxy'} valuePropName='checked'>
+                            <YakitSwitch />
                         </Form.Item>
                         <Form.Item label='随机延迟'>
                             <div className={styles["advanced-config-delay"]}>
@@ -2493,6 +2550,61 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             >
                                 <YakitInput prefix='Max' size='small' />
                             </Form.Item>
+                        </Form.Item>
+                    </Panel>
+                    <Panel
+                        header={'DNS配置'}
+                        key={'DNS配置'}
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const restValue = {
+                                        dnsServers: [],
+                                        etcHosts: [],
+                                    }
+                                    form.setFieldsValue({
+                                        ...restValue
+                                    })
+                                    ruleContentRef?.current?.onSetValue("")
+                                    const v = form.getFieldsValue()
+                                    onSetValue({
+                                        ...v,
+                                        ...restValue
+                                    })
+                                }}
+                            >
+                                重置
+                            </YakitButton>
+                        }
+                    >
+                        <Form.Item label='DNS服务器' name='dnsServers'>
+                            <YakitSelect
+                                options={[
+                                    "8.8.8.8", "8.8.4.4",
+                                    "1.1.1.1", '1.0.0.1',
+                                ].map(i => {return {value: i, label: i}})}
+                                mode='tags'
+                                allowClear={true}
+                                size={"small"}
+                                placeholder={"指定DNS服务器"}
+                            />
+                        </Form.Item>
+                        <Form.Item label={'Hosts配置'}>
+                            <Space direction={"vertical"}>
+                                {etcHosts.map(i => <Tag closable={true} onClose={()=>{
+                                    setEtcHosts(etcHosts.filter(j => j.Key !== i.Key))
+                                }}>
+                                    {`${i.Key} => ${i.Value}`}
+                                </Tag>)}
+                                <YakitButton onClick={()=>{
+                                    inputHTTPFuzzerHostConfigItem(obj => {
+                                        setEtcHosts([...etcHosts.filter(i => i.Key !== obj.Key), obj])
+                                    })
+                                }}>添加 Hosts 映射</YakitButton>
+                            </Space>
                         </Form.Item>
                     </Panel>
                 </Collapse>
