@@ -115,8 +115,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
             .then(() => {})
     })
-    const onFinish = useMemoizedFn((values: OnlineProfileProps) => {
+    const onFinish = useMemoizedFn((v: OnlineProfileProps) => {
         setLoading(true)
+        const values = {
+            ...formValue,
+            ...v
+        }
         ipcRenderer
             .invoke("SetOnlineProfile", {
                 ...values
@@ -165,6 +169,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             form.setFieldsValue({
                 ...value
             })
+            setFormValue({...value})
         })
     })
     const getHistoryList = useMemoizedFn(() => {

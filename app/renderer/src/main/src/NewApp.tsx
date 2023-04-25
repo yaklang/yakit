@@ -148,7 +148,8 @@ function NewApp() {
                 const values = JSON.parse(setting)
                 ipcRenderer
                     .invoke("SetOnlineProfile", {
-                        ...values
+                        ...values,
+                        IsCommunity: isCommunityEdition()
                     } as OnlineProfileProps)
                     .then(() => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
