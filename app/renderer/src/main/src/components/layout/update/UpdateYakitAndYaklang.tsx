@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {GetReleaseEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
@@ -161,8 +161,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }
 
     const yakitLater = useMemoizedFn(() => {
-        if (isShowYaklang) setLatestYakit("")
-        else onCancel()
+        setLatestYakit("")
+        if (!isShowYaklang) onCancel()
     })
     const yaklangLater = useMemoizedFn(() => {
         setLatestYaklang("")

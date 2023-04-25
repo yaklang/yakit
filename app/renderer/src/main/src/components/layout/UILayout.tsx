@@ -869,6 +869,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 onEngineModeChange={changeEngineMode}
                                                 typeCallback={typeCallback}
                                                 showProjectManage={linkDatabase}
+                                                system={system}
                                             />
                                             {!linkDatabase && (
                                                 <>
@@ -930,6 +931,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     onEngineModeChange={changeEngineMode}
                                                     typeCallback={typeCallback}
                                                     showProjectManage={linkDatabase}
+                                                    system={system}
                                                 />
                                             </div>
                                         </>

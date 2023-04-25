@@ -19,7 +19,7 @@ import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success, yakitFailed} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
-import {YakitSettingCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
+import {YakitSettingCallbackType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
@@ -76,6 +76,8 @@ export interface FuncDomainProp {
 
     /** @name 当前是否展示项目管理页面 */
     showProjectManage?: boolean
+    /** @name 操作系统类型 */
+    system: YakitSystem
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -86,7 +88,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         isRemoteMode,
         onEngineModeChange,
         typeCallback,
-        showProjectManage = false
+        showProjectManage = false,
+        system
     } = props
 
     /** 登录用户信息 */
@@ -183,9 +186,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
                 {showDevTool() && <UIDevTool />}
 
-                {/* <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
-                    <ScreensHotSvgIcon className={styles["icon-style"]} />
-                </div> */}
+                {(system === "Darwin" || system === "Windows_NT") && <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
+                    <div className={styles["op-btn-body"]}>
+                        <ScreensHotSvgIcon className={styles["icon-style"]} />
+                    </div>
+                </div>}
 
                 {!showProjectManage && (
                     <div
