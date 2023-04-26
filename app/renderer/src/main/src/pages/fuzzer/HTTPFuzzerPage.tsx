@@ -1,12 +1,10 @@
 import React, {useEffect, useRef, useState} from "react"
 import {
-    Button,
     Form,
     Modal,
     notification,
     Result,
     Space,
-    Typography,
     Popover,
     Tooltip,
     Divider,
@@ -22,7 +20,6 @@ import {
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {InputItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed} from "../../utils/notification"
@@ -31,7 +28,7 @@ import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../.
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
-import {fuzzerInfoProp, onModalSecondaryConfirm} from "../MainOperator"
+import {fuzzerInfoProp, } from "../MainOperator"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -69,7 +66,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
@@ -81,12 +77,12 @@ import {
     HTTPFuzzerPageTable,
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {onConvertBodySizeByUnit, onConvertBodySizeToB} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {useWatch} from "antd/lib/form/Form"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
+
+import ReactDOM from "react-dom"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -754,8 +750,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 TotalDurationMs: data.TotalDurationMs
             } as FuzzerResponse
 
-            alert(JSON.stringify([r.Proxy, r.RemoteAddr, r.DNSDurationMs, r.TotalDurationMs, r.FirstByteDurationMs]))
-
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
@@ -880,6 +874,25 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 fontSizeState={fontSizeSecondEditor}
                 noWordWrapState={noWordwrapSecondEditor}
+                onAddOverlayWidget={(editor) => {
+                    const fizzOverlayWidget = {
+                        allowEditorOverflow: true,
+                        getDomNode() {
+                            const domNode = document.createElement("div")
+                            ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
+                            domNode.style.right = "102px";
+                            domNode.style.top = "0px";
+                            return domNode
+                        },
+                        getId() {
+                            return "monaco.fizz.overlaywidget"
+                        },
+                        getPosition() {
+                            return null
+                        }
+                    }
+                    editor.addOverlayWidget(fizzOverlayWidget)
+                }}
             />
         )
     })
@@ -2140,7 +2153,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                     ...defAdvancedConfigValue
                 }}
             >
-                <div className={styles['advanced-config-extra-formItem']}>
+                <div className={styles["advanced-config-extra-formItem"]}>
                     <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
                         <YakitSwitch onChange={setIsHttps} />
                     </Form.Item>
@@ -2171,7 +2184,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         />
                     </Form.Item>
                     <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
-                            <YakitSwitch />
+                        <YakitSwitch />
                     </Form.Item>
                 </div>
                 <Collapse
@@ -2773,5 +2786,22 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
             </YakitPopover>
         </>
+    )
+})
+interface EditorOverlayWidgetProps {
+    rsp: FuzzerResponse
+}
+const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((props) => {
+    const {rsp} = props
+
+    return (
+        <div className={styles["editor-overlay-widget"]}>
+            <p>DNS时间：{rsp.DNSDurationMs}</p>
+            <p>远端地址：{rsp.RemoteAddr || "-"}</p>
+            <p>URL：{rsp.Url || "-"}</p>
+            <p>代理：{rsp.Proxy || "-"}</p>
+            <p>响应时间：{rsp.Timestamp||'-'}</p>
+            <p>DNS时间：{rsp.TotalDurationMs||'-'}</p>
+        </div>
     )
 })

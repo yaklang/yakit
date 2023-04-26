@@ -260,7 +260,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             <span className='form-label'>
                                 设置代理
                                 <Tooltip
-                                    title='插件商店提示：特殊情况无法访问插件商店时，可设置代理进行访问'
+                                    title='特殊情况无法访问插件商店时，可设置代理进行访问'
                                     overlayStyle={{width: 150}}
                                 >
                                     <InformationCircleIcon className='info-icon' />

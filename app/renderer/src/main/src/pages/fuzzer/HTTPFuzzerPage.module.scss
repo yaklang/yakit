@@ -350,3 +350,14 @@
         }
     }
 }
+
+.editor-overlay-widget {
+    background-color: #f0f2f5;
+    color: var(--yakit-header-color);
+    padding: 4px 8px;
+    font-size: 12px;
+    width: 200px;
+    p{
+        margin-bottom: 4px;
+    }
+}

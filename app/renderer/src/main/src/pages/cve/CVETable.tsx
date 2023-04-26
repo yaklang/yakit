@@ -719,8 +719,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                         setRemoteValue("cveProxy", proxy)
                     }
                     setStatus("progress")
+                    const params = {
+                        Proxy: proxy,
+                        JustUpdateLatestCVE: props.latestMode
+                    }
                     ipcRenderer
-                        .invoke("UpdateCVEDatabase", {Proxy: "", JustUpdateLatestCVE: props.latestMode}, token)
+                        .invoke("UpdateCVEDatabase", params, token)
                         .then(() => {})
                         .catch((e) => {
                             failed(`更新 CVE 数据库失败！${e}`)

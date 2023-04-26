@@ -399,6 +399,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     defaultHeight?: number
     bordered?: boolean
     onEditor?: (editor: IMonacoEditor) => any
+    onAddOverlayWidget?: (editor: IMonacoEditor) => any
     hideSearch?: boolean
     extra?: React.ReactNode
     emptyOr?: React.ReactNode
@@ -567,6 +568,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (monacoEditor) {
             props.onEditor && props.onEditor(monacoEditor)
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+        }
+        if (monacoEditor) {
+            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor)
         }
         if (!props.simpleMode && !props.hideSearch && monacoEditor) {
             setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
