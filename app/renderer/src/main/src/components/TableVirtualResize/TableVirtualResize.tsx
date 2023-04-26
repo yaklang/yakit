@@ -1398,6 +1398,7 @@ const CellRender = React.memo(
     (preProps, nextProps) => {
         // return true; 	不渲染
         // return false;	渲染
+        
         if (preProps.isSelect !== nextProps.isSelect) {
             return false
         }
@@ -1410,6 +1411,7 @@ const CellRender = React.memo(
         if (preProps.item.data !== nextProps.item.data) {
             return false
         }
+        
         return true
     }
 )
