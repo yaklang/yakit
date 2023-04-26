@@ -569,6 +569,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         })
     })
     const addProxyList = useMemoizedFn((url) => {
+        if(!url)return
         const index = httpProxyList.findIndex((u) => u === url)
         if (index !== -1) return
         httpProxyList.push(url)
