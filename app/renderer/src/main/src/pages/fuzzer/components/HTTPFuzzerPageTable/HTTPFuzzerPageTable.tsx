@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTPPacketEditor} from "@/utils/editors"
+import {HTTPPacketEditor, IMonacoEditor} from "@/utils/editors"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -15,7 +15,7 @@ import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useThrottleEffec
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, FuzzerResponse} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 
 interface HTTPFuzzerPageTableProps {
@@ -440,6 +440,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }
         return p
     }, [firstFull])
+    const [editor, setEditor] = useState<IMonacoEditor>()
+    useEffect(() => {
+        if (!editor || !currentSelectItem) return
+        onAddOverlayWidget(editor, currentSelectItem)
+    }, [currentSelectItem])
     return (
         <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
             <ResizeBox
@@ -473,6 +478,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         noHex={true}
                         noHeader={true}
                         originValue={currentSelectItem?.ResponseRaw || new Buffer([])}
+                        onAddOverlayWidget={(editor) => {
+                            setEditor(editor)
+                        }}
                     />
                 }
                 {...ResizeBoxProps}

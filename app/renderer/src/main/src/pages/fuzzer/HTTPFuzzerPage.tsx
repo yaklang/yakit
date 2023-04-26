@@ -864,23 +864,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 fontSizeState={fontSizeSecondEditor}
                 noWordWrapState={noWordwrapSecondEditor}
                 onAddOverlayWidget={(editor) => {
-                    const fizzOverlayWidget = {
-                        allowEditorOverflow: true,
-                        getDomNode() {
-                            const domNode = document.createElement("div")
-                            ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
-                            return domNode
-                        },
-                        getId() {
-                            return "monaco.fizz.overlaywidget"
-                        },
-                        getPosition() {
-                            return {
-                                preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
-                            }
-                        }
-                    }
-                    editor.addOverlayWidget(fizzOverlayWidget)
+                    onAddOverlayWidget(editor, rsp)
                 }}
             />
         )
@@ -2777,12 +2761,32 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
         </>
     )
 })
+
+export const onAddOverlayWidget = (editor, rsp) => {
+    const fizzOverlayWidget = {
+        allowEditorOverflow: true,
+        getDomNode() {
+            const domNode = document.createElement("div")
+            ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
+            return domNode
+        },
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        },
+        getPosition() {
+            return {
+                preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+            }
+        }
+    }
+    editor.addOverlayWidget(fizzOverlayWidget)
+}
 interface EditorOverlayWidgetProps {
     rsp: FuzzerResponse
 }
 const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((props) => {
     const {rsp} = props
-
+    if(!rsp)return<></>
     return (
         <div className={styles["editor-overlay-widget"]}>
             {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
