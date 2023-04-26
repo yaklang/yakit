@@ -1,16 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {
-    Form,
-    Modal,
-    notification,
-    Result,
-    Space,
-    Popover,
-    Tooltip,
-    Divider,
-    Collapse,
-    Tag
-} from "antd"
+import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider, Collapse, Tag} from "antd"
 import {
     HTTPPacketEditor,
     HTTP_PACKET_EDITOR_FONT_SIZE,
@@ -28,7 +17,7 @@ import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../.
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HackerPlugin} from "../hacker/HackerPlugin"
-import {fuzzerInfoProp, } from "../MainOperator"
+import {fuzzerInfoProp} from "../MainOperator"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -81,7 +70,7 @@ import {useWatch} from "antd/lib/form/Form"
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
-
+import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
 
 const {ipcRenderer} = window.require("electron")
@@ -880,15 +869,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         getDomNode() {
                             const domNode = document.createElement("div")
                             ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
-                            domNode.style.right = "102px";
-                            domNode.style.top = "0px";
                             return domNode
                         },
                         getId() {
                             return "monaco.fizz.overlaywidget"
                         },
                         getPosition() {
-                            return null
+                            return {
+                                preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+                            }
                         }
                     }
                     editor.addOverlayWidget(fizzOverlayWidget)
@@ -2800,8 +2789,8 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
             <p>远端地址：{rsp.RemoteAddr || "-"}</p>
             <p>URL：{rsp.Url || "-"}</p>
             <p>代理：{rsp.Proxy || "-"}</p>
-            <p>响应时间：{rsp.Timestamp||'-'}</p>
-            <p>DNS时间：{rsp.TotalDurationMs||'-'}</p>
+            <p>响应时间：{rsp.Timestamp || "-"}</p>
+            <p>DNS时间：{rsp.TotalDurationMs || "-"}</p>
         </div>
     )
 })
