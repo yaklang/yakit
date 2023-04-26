@@ -2785,12 +2785,12 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
 
     return (
         <div className={styles["editor-overlay-widget"]}>
-            <p>DNS时间：{rsp.DNSDurationMs}</p>
-            <p>远端地址：{rsp.RemoteAddr || "-"}</p>
-            <p>URL：{rsp.Url || "-"}</p>
-            <p>代理：{rsp.Proxy || "-"}</p>
-            <p>响应时间：{rsp.Timestamp || "-"}</p>
-            <p>DNS时间：{rsp.TotalDurationMs || "-"}</p>
+            {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}</span> : ""}
+            {rsp.RemoteAddr && <span>远端地址:{rsp.RemoteAddr}</span>}
+            {rsp.Url && <span>URL:{rsp.Url}</span>}
+            {rsp.Proxy && <span>代理:{rsp.Proxy}</span>}
+            {Number(rsp.FirstByteDurationMs) > 0 ? <span>响应时间:{rsp.FirstByteDurationMs}</span> : ""}
+            {Number(rsp.TotalDurationMs) > 0 ? <span>总耗时:{rsp.TotalDurationMs}</span> : ""}
         </div>
     )
 })
