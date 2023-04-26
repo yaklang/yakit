@@ -601,6 +601,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     title: "配置私有域",
                     type: "white",
                     footer: null,
+                    maskClosable: false,
                     // onCancel: () => m.destroy(),
                     content: <ConfigPrivateDomain onClose={() => m.destroy()} />
                 })
