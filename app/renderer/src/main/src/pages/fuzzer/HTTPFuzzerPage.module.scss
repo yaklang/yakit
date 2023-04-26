@@ -265,6 +265,10 @@
             }
         }
     }
+    .advanced-config-extra-formItem {
+        padding: 8px 12px 0;
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
 }
 
 .http-fuzzer-hotPatch {
