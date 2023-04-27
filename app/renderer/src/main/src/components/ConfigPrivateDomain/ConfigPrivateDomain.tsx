@@ -119,7 +119,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         setLoading(true)
         const values = {
             ...formValue,
-            ...v
+            ...v,
+            IsCompany: enterpriseLogin
         }
         ipcRenderer
             .invoke("SetOnlineProfile", {
@@ -141,10 +142,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 }
             })
             .catch((e: any) => {
-                !enterpriseLogin && setTimeout(() => setLoading(false), 300)
+                // !enterpriseLogin && setTimeout(() => setLoading(false), 300)
                 failed("设置私有域失败:" + e)
             })
-            .finally(() => {})
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
     })
     useEffect(() => {
         ipcRenderer.on("edit-baseUrl-status", (e, res: any) => {
