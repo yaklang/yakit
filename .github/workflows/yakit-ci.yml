@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 16.10.0
       - run: echo ${{ github.ref }}
-      - run: brew install wget curl zip
+      - run: cp buildutil/zip /usr/bin/ && zip -h
       - name: "Download Yak Engine via wget(MacOS)"
         id: download-darwin-engine
         run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
