@@ -721,7 +721,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     }
                     setStatus("progress")
                     const params = {
-                        Proxy: proxy,
+                        Proxy: props.latestMode ? proxy : "",
                         JustUpdateLatestCVE: props.latestMode
                     }
                     ipcRenderer
