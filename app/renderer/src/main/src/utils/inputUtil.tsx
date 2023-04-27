@@ -15,7 +15,7 @@ import {
     Switch,
     Tag, Tooltip,
     Typography,
-    Upload
+    Upload,
 } from 'antd';
 import '@ant-design/compatible/assets/index.css';
 import {DeleteOutlined, PlusOutlined} from "@ant-design/icons"
@@ -31,12 +31,14 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 
+type TooltipPlacement = 'top' | 'left' | 'right' | 'bottom' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'leftTop' | 'leftBottom' | 'rightTop' | 'rightBottom';
 export interface OneLineProp {
     width?: string | number
     overflow?: string
     maxWidth?: string | any
     title?: string
     children?: React.ReactNode
+    placement?:TooltipPlacement 
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
@@ -48,7 +50,7 @@ export const OneLine: React.FC<OneLineProp> = (props) => {
             maxWidth: props.maxWidth,
             textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
         }}>
-        {props?.title ? <Tooltip title={props.title}>
+        {props?.title ? <Tooltip title={props.title} placement={props.placement}>
             {props.children}
         </Tooltip> : props.children}
     </div>
