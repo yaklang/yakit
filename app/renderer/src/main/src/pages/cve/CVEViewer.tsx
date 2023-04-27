@@ -80,12 +80,12 @@ interface CVEQueryProp {
     setAdvancedQuery: (b: boolean) => void
 }
 export const defQueryCVERequest:QueryCVERequest = {
-    AccessComplexity: "LOW",
-    AccessVector: "NETWORK,ADJACENT_NETWORK",
+    AccessComplexity: "",
+    AccessVector: "",
     CWE: "",
     Product: "",
     // Score: 6.0,
-    Severity: "HIGH",
+    Severity: "",
     Year: "",
     // ChineseTranslationFirst: true
     Keywords: ""

@@ -2763,8 +2763,12 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
 })
 
 export const onAddOverlayWidget = (editor, rsp) => {
+    editor.removeOverlayWidget({
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        }
+    })
     const fizzOverlayWidget = {
-        allowEditorOverflow: true,
         getDomNode() {
             const domNode = document.createElement("div")
             ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
@@ -2786,7 +2790,7 @@ interface EditorOverlayWidgetProps {
 }
 const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((props) => {
     const {rsp} = props
-    if(!rsp)return<></>
+    if (!rsp) return <></>
     return (
         <div className={styles["editor-overlay-widget"]}>
             {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
