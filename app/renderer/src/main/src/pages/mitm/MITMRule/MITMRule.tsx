@@ -304,6 +304,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitProtoSwitch
                         checked={i.Drop}
+                        disabled={i.Disabled}
                         onChange={(val) => {
                             if (val) {
                                 onEdit({Id: i.Id, Drop: val, NoReplace: false}, "Drop")
@@ -321,6 +322,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 tip: "设置改选项后，将不会替换（请求）数据包，会把替换后的结果进行额外发包",
                 render: (_, i: MITMContentReplacerRule) => (
                     <YakitProtoSwitch
+                        disabled={i.Disabled}
                         checked={i.ExtraRepeat}
                         onChange={(val) => {
                             if (val) {
