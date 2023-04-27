@@ -50,7 +50,7 @@ import {
 import {showDrawer, showModal} from "../../utils/showModal"
 import {startExecYakCode} from "../../utils/basic"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
-import {failed, success, warn, info} from "../../utils/notification"
+import {failed, success, warn, info, yakitFailed} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
 import {PluginOperator} from "./PluginOperator"
@@ -3151,7 +3151,9 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                 ipcRenderer.invoke("change-main-menu")
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            yakitFailed('插件下载失败:'+e)
+        })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
