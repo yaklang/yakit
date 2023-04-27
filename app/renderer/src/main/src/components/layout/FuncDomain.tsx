@@ -57,12 +57,13 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage"
+import {addToTab} from "@/pages/MainTabs"
+import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
+import {LoadingOutlined} from "@ant-design/icons"
 
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
-import {addToTab} from "@/pages/MainTabs"
-import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -105,6 +106,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 上传数据弹框 */
     const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
+
+    /** 截图功能的loading */
+    const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
 
     useEffect(() => {
         const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
@@ -186,11 +190,27 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
                 {showDevTool() && <UIDevTool />}
 
-                {(system === "Darwin" || system === "Windows_NT") && <div className={styles["ui-op-btn-wrapper"]} onClick={() => ipcRenderer.invoke("activate-screenshot")}>
-                    <div className={styles["op-btn-body"]}>
-                        <ScreensHotSvgIcon className={styles["icon-style"]} />
+                {(system === "Darwin" || system === "Windows_NT") && (
+                    <div
+                        className={styles["ui-op-btn-wrapper"]}
+                        onClick={() => {
+                            setScreenshotLoading(true)
+                            ipcRenderer.invoke("activate-screenshot")
+                            setTimeout(() => {
+                                setScreenshotLoading(false)
+                            }, 1000)
+                        }}
+                    >
+                        <div className={styles["op-btn-body"]}>
+                            <ScreensHotSvgIcon className={styles["icon-style"]} />
+                        </div>
+                        {screenshotLoading && (
+                            <div className={styles["icon-loading-wrapper"]} onClick={(e) => e.stopPropagation()}>
+                                <LoadingOutlined className={styles["icon-hover-style"]} />
+                            </div>
+                        )}
                     </div>
-                </div>}
+                )}
 
                 {!showProjectManage && (
                     <div
@@ -540,7 +560,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(false)
     const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
     const [available, setAvailable] = useState(false) // cve数据库是否可用
-    const [isDiffUpdate,setIsDiffUpdate]=useState(false)
+    const [isDiffUpdate, setIsDiffUpdate] = useState(false)
     useEffect(() => {
         onIsCVEDatabaseReady()
     }, [])

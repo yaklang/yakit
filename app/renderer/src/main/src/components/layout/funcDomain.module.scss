@@ -55,6 +55,24 @@
     height: 36px;
     padding: 4px;
 
+    position: relative;
+
+    .icon-loading-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 44px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ffffff66;
+        .icon-hover-style {
+            color: var(--yakit-primary-5);
+            font-size: 20px;
+        }
+    }
+
     .op-btn-body {
         border-radius: 4px;
         width: 36px;
