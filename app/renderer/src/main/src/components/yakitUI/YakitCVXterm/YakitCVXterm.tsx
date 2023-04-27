@@ -1,8 +1,11 @@
-import {forwardRef, useImperativeHandle, useRef, useState} from "react"
+import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {IProps} from "xterm-for-react/dist/src/XTerm"
 import {XTerm} from "xterm-for-react"
+import {FitAddon} from "xterm-addon-fit"
 import ReactResizeDetector from "react-resize-detector"
-import {xtermFit} from "../utils/xtermUtils"
+import {xtermFit} from "@/utils/xtermUtils"
+import styles from "./YakitCVXterm.module.scss"
+import {Terminal as ITerminal} from "xterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -23,12 +26,13 @@ export const TERMINAL_INPUT_KEY = {
 }
 
 /**
- * @deprecated 建议使用 YakitCVXterm 调试
+ * @description 仅适配部分，使用自己看看有没有问题
  */
-export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
-    const {isWrite = false, write: rewrite, maxHeight = 400, ...rest} = props
+export const YakitCVXterm = forwardRef((props: CVXtermProps, ref) => {
+    const {isWrite = false, write: rewrite, ...rest} = props
 
     const [loading, setLoading] = useState<boolean>(false)
+
     const xtermRef = useRef<any>(null)
     const timer = useRef<any>(null)
 
@@ -45,31 +49,32 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     }
 
     return (
-        <div style={{width: "100%", height: "100%", maxHeight: maxHeight, overflow: "auto"}}>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) return
-                    const row = Math.floor(height / 18.5)
-                    const col = Math.floor(width / 10)
+        <>
+            {/* <ReactResizeDetector
+                onResize={(w, h) => {
+                    if (!w || !h) return
+                    const row = Math.floor(h / 18.5)
+                    const col = Math.floor(w / 10)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
                 handleWidth={true}
                 handleHeight={true}
                 refreshMode={"debounce"}
                 refreshRate={50}
-            />
+            /> */}
             <XTerm
                 ref={xtermRef}
-                onKey={e => {
+                className={styles["yakit-xterm"]}
+                onKey={(e) => {
                     if (!loading) {
                         const {key} = e
                         const {keyCode} = e.domEvent
                         if (keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current) {
                             //Backspace
                             if (isWrite) {
-                                xtermRef.current.terminal.write('\x1b[D \x1b[D');
+                                xtermRef.current.terminal.write("\x1b[D \x1b[D")
                             } else {
-                                xtermRef.current.terminal.write(' \x1b[D');
+                                xtermRef.current.terminal.write(" \x1b[D")
                             }
                         }
                         rewrite ? rewrite(key) : write(key)
@@ -93,7 +98,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
                     }
                     if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
                         const str = xtermRef.current.terminal.getSelection()
-                        if(!str) return true
+                        if (!str) return true
                         setLoading(true)
 
                         if (timer.current) {
@@ -109,11 +114,11 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
                     }
                     return true
                 }}
-                {...rest}
                 onResize={(r) => {
                     xtermFit(xtermRef, r.cols, r.rows)
                 }}
+                {...rest}
             />
-        </div>
+        </>
     )
 })

@@ -34,14 +34,14 @@ const LoadingTitle: string[] = [
     "来用Yakit啦？安全圈还是你最成功",
     "这届网安人，人手一个Yakit，香惨了！",
 
-    "webfuzzer时根目录插入字典，会有意想不到的收获",
-    "yakit写监听参数时不必写socks的版本号",
-    "使用热标签，可以中间处理des aes等加密，无需再碰py",
-    "Yakit，为您提供渗透问题的完美解决方案",
-    "热加载fuzz快速定位，轻松挖洞无压力",
-    "别让无聊占据你的时间，来探索新世界吧！",
-    "<script>alert('Hello Yakit!')</script>",
-    "你的鼠标，掌控世界！"
+    "webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊",
+    "yakit写监听参数时不必写socks的版本号 ——是果实菌啊 ",
+    "使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊",
+    "Yakit，为您提供渗透问题的完美解决方案 ——酒零",
+    "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
+    "别让无聊占据你的时间，来探索新世界吧！——Chelth",
+    "<script>alert(‘Hello Yakit!’)</script> ——红炉点火",
+    "你的鼠标，掌控世界！——Chelth"
 ]
 
 export const EngineModeVerbose = (m: YaklangEngineMode) => {

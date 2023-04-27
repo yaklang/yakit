@@ -200,6 +200,11 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+        :global{
+            .ant-select.ant-select-in-form-item{
+                height: auto;
+            }
+        }
     }
 }
 

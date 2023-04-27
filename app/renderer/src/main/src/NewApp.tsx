@@ -55,6 +55,7 @@ const {ipcRenderer} = window.require("electron")
 interface OnlineProfileProps {
     BaseUrl: string
     Password?: string
+    IsCompany?:boolean
 }
 
 function NewApp() {
@@ -148,7 +149,8 @@ function NewApp() {
                 const values = JSON.parse(setting)
                 ipcRenderer
                     .invoke("SetOnlineProfile", {
-                        ...values
+                        ...values,
+                        IsCompany: true
                     } as OnlineProfileProps)
                     .then(() => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步

@@ -1,17 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {
-    Button,
-    Form,
-    Modal,
-    notification,
-    Result,
-    Space,
-    Typography,
-    Popover,
-    Tooltip,
-    Divider,
-    Collapse, Tag,
-} from "antd"
+import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider, Collapse, Tag} from "antd"
 import {
     HTTPPacketEditor,
     HTTP_PACKET_EDITOR_FONT_SIZE,
@@ -21,7 +9,6 @@ import {
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
-import {InputItem} from "../../utils/inputUtil"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed} from "../../utils/notification"
@@ -68,7 +55,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
@@ -80,10 +66,12 @@ import {
     HTTPFuzzerPageTable,
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {onConvertBodySizeByUnit, onConvertBodySizeToB} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {useWatch} from "antd/lib/form/Form"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
-import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
+import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
+import {Route} from "@/routes/routeSpec"
+import {useSubscribeClose} from "@/store/tabSubscribe"
+import {monaco} from "react-monaco-editor"
+import ReactDOM from "react-dom"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -107,7 +95,7 @@ interface ShareValueProps {
     followJSRedirect: boolean
     // dnsConfig
     dnsServers: string[]
-    etcHosts: {Key: string, Value: string}[]
+    etcHosts: {Key: string; Value: string}[]
 }
 
 interface AdvancedConfigurationProps {
@@ -358,8 +346,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [noFollowRedirect, setNoFollowRedirect] = useState(true)
     const [followJSRedirect, setFollowJSRedirect] = useState(false)
     // dnsConfig
-    const [dnsServers, setDNSServers] = useState<string[]>([]);
-    const [etcHosts, setETCHosts] = useState<{Key: string, Value: string}[]>([]);
+    const [dnsServers, setDNSServers] = useState<string[]>([])
+    const [etcHosts, setETCHosts] = useState<{Key: string; Value: string}[]>([])
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
     /**@name 是否刷新高级配置中的代理列表 */
@@ -416,6 +404,31 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+
+    const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
+
+    useEffect(() => {
+        setSubscribeClose(Route.HTTPFuzzer, {
+            title: "关闭提示",
+            content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+            onOkText: "确定",
+            onCancelText: "取消",
+            onOk: (m) => onCloseTab(m)
+        })
+        return () => {
+            removeSubscribeClose(Route.HTTPFuzzer)
+        }
+    }, [])
+
+    const onCloseTab = useMemoizedFn((m) => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: Route.HTTPFuzzer
+            })
+            .then(() => {
+                m.destroy()
+            })
+    })
 
     useEffect(() => {
         if (props.shareContent) {
@@ -576,13 +589,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             // dnsConfig
             DNSServers: dnsServers,
-            EtcHosts: etcHosts,
+            EtcHosts: etcHosts
         }
         if (params.Proxy) {
             const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
-        // alert(JSON.stringify(noSystemProxy))
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
@@ -724,10 +736,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 RemoteAddr: data.RemoteAddr,
                 FirstByteDurationMs: data.FirstByteDurationMs,
                 DNSDurationMs: data.DNSDurationMs,
-                TotalDurationMs: data.TotalDurationMs,
+                TotalDurationMs: data.TotalDurationMs
             } as FuzzerResponse
-
-            alert(JSON.stringify([r.Proxy, r.RemoteAddr, r.DNSDurationMs, r.TotalDurationMs, r.FirstByteDurationMs]))
 
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
@@ -751,7 +761,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             lastUpdateCount = 0
             setTimeout(() => {
                 setLoading(false)
-            }, 500);
+            }, 500)
         })
 
         const updateDataId = setInterval(() => {
@@ -778,7 +788,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
-
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
         const info: fuzzerInfoProp = {
             time: new Date().getTime().toString(),
@@ -854,6 +863,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 fontSizeState={fontSizeSecondEditor}
                 noWordWrapState={noWordwrapSecondEditor}
+                onAddOverlayWidget={(editor) => {
+                    onAddOverlayWidget(editor, rsp)
+                }}
             />
         )
     })
@@ -920,7 +932,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             // dns config
             dnsServers,
-            etcHosts,
+            etcHosts
         }
         callback(params)
     })
@@ -1158,14 +1170,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     keyWord: getFilter().Keywords?.join(",") || "",
                     minBodySize: getFilter().MinBodySize,
                     maxBodySize: getFilter().MaxBodySize,
-                    // minBodySizeInit: onConvertBodySizeToB(getFilter().MinBodySize, getFilter().minBodySizeUnit || "B"),
-                    // maxBodySizeInit: onConvertBodySizeToB(getFilter().MaxBodySize, getFilter().maxBodySizeUnit || "B"),
-                    // minBodySizeUnit: getFilter().minBodySizeUnit || "B",
-                    // maxBodySizeUnit: getFilter().maxBodySizeUnit || "B"
 
                     /** dnsConfig */
                     dnsServers: dnsServers,
-                    etcHosts: etcHosts,
+                    etcHosts: etcHosts
                 }}
                 isHttps={isHttps}
                 setIsHttps={setIsHttps}
@@ -1406,7 +1414,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         title: (
                             <>
                                 <span style={{marginRight: 8}}>Responses</span>
+
                                 <SecondNodeTitle
+                                    cachedTotal={cachedTotal}
                                     onlyOneResponse={onlyOneResponse}
                                     rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
                                     successFuzzerLength={(successFuzzer || []).length}
@@ -1538,7 +1548,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     </>
                                 ) : (
                                     <>
-                                        {cachedTotal > 0 ? (
+                                        {cachedTotal > 1 ? (
                                             <>
                                                 {showSuccess && (
                                                     <HTTPFuzzerPageTable
@@ -1694,8 +1704,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
             </>
         )
     }
-
-    if (!onlyOneResponse && cachedTotal > 0) {
+    if (!onlyOneResponse && cachedTotal > 1) {
         const searchNode = (
             <YakitInput.Search
                 size='small'
@@ -1868,6 +1877,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
 })
 
 interface SecondNodeTitleProps {
+    cachedTotal: number
     rsp: FuzzerResponse
     onlyOneResponse: boolean
     successFuzzerLength: number
@@ -1880,7 +1890,8 @@ interface SecondNodeTitleProps {
  * @description 右边的返回内容 头部left内容
  */
 const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
-    const {rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} = props
+    const {cachedTotal, rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} =
+        props
     // if (!rsp.BodyLength) return <></>
     if (onlyOneResponse) {
         return (
@@ -1892,7 +1903,7 @@ const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
             </>
         )
     }
-    if (successFuzzerLength > 0 || failedFuzzerLength > 0) {
+    if (cachedTotal > 1) {
         return (
             <div className={styles["second-node-title"]}>
                 <YakitRadioButtons
@@ -1981,7 +1992,7 @@ interface AdvancedConfigValueProps {
 
     // dns config
     dnsServers: string[]
-    etcHosts: {Key: string, Value: string}[]
+    etcHosts: {Key: string; Value: string}[]
 }
 
 interface HttpQueryAdvancedConfigProps {
@@ -2013,8 +2024,6 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     const [proxyList, setProxyList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
-    const [etcHosts, setEtcHosts] = useState<{Key: string, Value: string}[]>([]);
-
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
     const queryRef = useRef(null)
@@ -2022,6 +2031,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
 
     const retrying = useWatch("retrying", form)
     const noRetrying = useWatch("noRetrying", form)
+    const etcHosts = useWatch("etcHosts", form) || []
 
     useEffect(() => {
         let newRetryActive = retryActive
@@ -2084,10 +2094,6 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         })
         ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
     }, [defAdvancedConfigValue])
-    useEffect(()=>{
-        form.setFieldsValue({etcHosts})
-        onSetValue({...form.getFieldsValue(), etcHosts})
-    }, [etcHosts])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
 
@@ -2120,6 +2126,40 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                     ...defAdvancedConfigValue
                 }}
             >
+                <div className={styles["advanced-config-extra-formItem"]}>
+                    <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
+                        <YakitSwitch onChange={setIsHttps} />
+                    </Form.Item>
+                    <Form.Item label='请求 Host' name='actualHost'>
+                        <YakitInput placeholder='请输入...' size='small' />
+                    </Form.Item>
+                    <Form.Item
+                        label={
+                            <span className={styles["advanced-config-form-label"]}>
+                                设置代理
+                                <Tooltip
+                                    title='设置多个代理时，会智能选择能用的代理进行发包'
+                                    overlayStyle={{width: 150}}
+                                >
+                                    <InformationCircleIcon className={styles["info-icon"]} />
+                                </Tooltip>
+                            </span>
+                        }
+                        name='proxy'
+                    >
+                        <YakitSelect
+                            allowClear
+                            options={proxyList}
+                            placeholder='请输入...'
+                            mode='tags'
+                            size='small'
+                            maxTagCount={1}
+                        />
+                    </Form.Item>
+                    <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
+                        <YakitSwitch />
+                    </Form.Item>
+                </div>
                 <Collapse
                     activeKey={activeKey}
                     onChange={(key) => onSwitchCollapse(key)}
@@ -2180,15 +2220,11 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         >
                             <YakitSwitch />
                         </Form.Item>
-                        <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
-                            <YakitSwitch onChange={setIsHttps} />
-                        </Form.Item>
+
                         <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
                             <YakitSwitch />
                         </Form.Item>
-                        <Form.Item label='请求 Host' name='actualHost'>
-                            <YakitInput placeholder='请输入...' size='small' />
-                        </Form.Item>
+
                         <Form.Item label='超时时长' name='timeout'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
@@ -2226,32 +2262,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         <Form.Item label='并发线程' name='concurrent'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
-                        <Form.Item
-                            label={
-                                <span className={styles["advanced-config-form-label"]}>
-                                    设置代理
-                                    <Tooltip
-                                        title='设置多个代理时，会智能选择能用的代理进行发包'
-                                        overlayStyle={{width: 150}}
-                                    >
-                                        <InformationCircleIcon className={styles["info-icon"]} />
-                                    </Tooltip>
-                                </span>
-                            }
-                            name='proxy'
-                        >
-                            <YakitSelect
-                                allowClear
-                                options={proxyList}
-                                placeholder='请输入...'
-                                mode='tags'
-                                size='small'
-                                maxTagCount={1}
-                            />
-                        </Form.Item>
-                        <Form.Item label={"禁用系统代理"} name={'noSystemProxy'} valuePropName='checked'>
-                            <YakitSwitch />
-                        </Form.Item>
+
                         <Form.Item label='随机延迟'>
                             <div className={styles["advanced-config-delay"]}>
                                 <Form.Item
@@ -2553,8 +2564,8 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         </Form.Item>
                     </Panel>
                     <Panel
-                        header={'DNS配置'}
-                        key={'DNS配置'}
+                        header={"DNS配置"}
+                        key={"DNS配置"}
                         extra={
                             <YakitButton
                                 type='text'
@@ -2563,7 +2574,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     e.stopPropagation()
                                     const restValue = {
                                         dnsServers: [],
-                                        etcHosts: [],
+                                        etcHosts: []
                                     }
                                     form.setFieldsValue({
                                         ...restValue
@@ -2582,28 +2593,46 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                     >
                         <Form.Item label='DNS服务器' name='dnsServers'>
                             <YakitSelect
-                                options={[
-                                    "8.8.8.8", "8.8.4.4",
-                                    "1.1.1.1", '1.0.0.1',
-                                ].map(i => {return {value: i, label: i}})}
+                                options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
+                                    return {value: i, label: i}
+                                })}
                                 mode='tags'
                                 allowClear={true}
                                 size={"small"}
                                 placeholder={"指定DNS服务器"}
                             />
                         </Form.Item>
-                        <Form.Item label={'Hosts配置'}>
+                        <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
                             <Space direction={"vertical"}>
-                                {etcHosts.map(i => <Tag closable={true} onClose={()=>{
-                                    setEtcHosts(etcHosts.filter(j => j.Key !== i.Key))
-                                }}>
-                                    {`${i.Key} => ${i.Value}`}
-                                </Tag>)}
-                                <YakitButton onClick={()=>{
-                                    inputHTTPFuzzerHostConfigItem(obj => {
-                                        setEtcHosts([...etcHosts.filter(i => i.Key !== obj.Key), obj])
-                                    })
-                                }}>添加 Hosts 映射</YakitButton>
+                                {(etcHosts || []).map((i) => (
+                                    <Tag
+                                        closable={true}
+                                        onClose={() => {
+                                            const newEtcHosts = etcHosts.filter((j) => j.Key !== i.Key)
+                                            const v = form.getFieldsValue()
+                                            onSetValue({
+                                                ...v,
+                                                etcHosts: newEtcHosts
+                                            })
+                                        }}
+                                    >
+                                        {`${i.Key} => ${i.Value}`}
+                                    </Tag>
+                                ))}
+                                <YakitButton
+                                    onClick={() => {
+                                        inputHTTPFuzzerHostConfigItem((obj) => {
+                                            const newEtcHosts = [...etcHosts.filter((i) => i.Key !== obj.Key), obj]
+                                            const v = form.getFieldsValue()
+                                            onSetValue({
+                                                ...v,
+                                                etcHosts: newEtcHosts
+                                            })
+                                        })
+                                    }}
+                                >
+                                    添加 Hosts 映射
+                                </YakitButton>
                             </Space>
                         </Form.Item>
                     </Panel>
@@ -2730,5 +2759,46 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                 <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
             </YakitPopover>
         </>
+    )
+})
+
+export const onAddOverlayWidget = (editor, rsp) => {
+    editor.removeOverlayWidget({
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        }
+    })
+    const fizzOverlayWidget = {
+        getDomNode() {
+            const domNode = document.createElement("div")
+            ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
+            return domNode
+        },
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        },
+        getPosition() {
+            return {
+                preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+            }
+        }
+    }
+    editor.addOverlayWidget(fizzOverlayWidget)
+}
+interface EditorOverlayWidgetProps {
+    rsp: FuzzerResponse
+}
+const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((props) => {
+    const {rsp} = props
+    if (!rsp) return <></>
+    return (
+        <div className={styles["editor-overlay-widget"]}>
+            {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
+            {rsp.RemoteAddr && <span>远端地址:{rsp.RemoteAddr}</span>}
+            {rsp.Url && <span>URL:{rsp.Url}</span>}
+            {rsp.Proxy && <span>代理:{rsp.Proxy}</span>}
+            {Number(rsp.FirstByteDurationMs) > 0 ? <span>响应时间:{rsp.FirstByteDurationMs}ms</span> : ""}
+            {Number(rsp.TotalDurationMs) > 0 ? <span>总耗时:{rsp.TotalDurationMs}ms</span> : ""}
+        </div>
     )
 })

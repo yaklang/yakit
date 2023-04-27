@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTPPacketEditor} from "@/utils/editors"
+import {HTTPPacketEditor, IMonacoEditor} from "@/utils/editors"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -15,7 +15,7 @@ import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useThrottleEffec
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, FuzzerResponse} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 
 interface HTTPFuzzerPageTableProps {
@@ -113,7 +113,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   {
                       title: "StatusCode",
                       dataKey: "StatusCode",
-                      render: (v) => <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div>,
+                      render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
                       width: 140,
                       sorterProps: {
                           sorter: true
@@ -184,13 +184,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "Payloads",
                       dataKey: "Payloads",
                       width: 300,
-                      render: (v) => v.join(",")||'-'
+                      render: (v) => (v ? v.join(",") : "-")
                   },
                   {
                       title: "提取数据",
                       dataKey: "extracted",
                       width: 300,
-                      render: (_, record) => extractedMap.get(record["UUID"])||'-'
+                      render: (_, record) => extractedMap.get(record["UUID"]) || "-"
                   },
                   {
                       title: "响应相似度",
@@ -198,10 +198,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       width: 150,
                       render: (v) => {
                           const text = parseFloat(`${v}`).toFixed(3)
-                          return (
+                          return text ? (
                               <div style={{color: text.startsWith("1.00") ? "var(--yakit-success-5)" : undefined}}>
                                   {text}
                               </div>
+                          ) : (
+                              "-"
                           )
                       },
                       sorterProps: {
@@ -211,7 +213,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   {
                       title: "HTTP头相似度",
                       dataKey: "HeaderSimilarity",
-                      render: (v) => parseFloat(`${v}`).toFixed(3),
+                      render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
                       width: 150,
                       sorterProps: {
                           sorter: true
@@ -225,7 +227,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       sorterProps: {
                           sorter: true
                       },
-                      render: (v) => <div style={{color: DurationMsToColor(v)}}>{`${v}`}</div>
+                      render: (v) => (v ? <div style={{color: DurationMsToColor(v)}}>{`${v}`}</div> : "-")
                   },
                   {
                       title: "Content-Type",
@@ -236,7 +238,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "time",
                       dataKey: "Timestamp",
                       width: 165,
-                      render: (text) => formatTimestamp(text),
+                      render: (text) => (text ? formatTimestamp(text) : "-"),
                       sorterProps: {
                           sorter: true
                       }
@@ -294,7 +296,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     useThrottleEffect(
         () => {
-            if (isEnd&&sorterTable) {
+            if (isEnd && sorterTable) {
                 const scrollTop = tableRef.current?.containerRef?.scrollTop
                 if (scrollTop <= 10) {
                     queryData()
@@ -357,66 +359,69 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
      * @description 前端搜索
      */
     const queryData = useMemoizedFn(() => {
-        // ------------  搜索 开始  ------------
-
-        // 有搜索条件才循环
-        if (
-            query?.keyWord ||
-            (query?.StatusCode && query?.StatusCode?.length > 0) ||
-            query?.afterBodyLength ||
-            query?.beforeBodyLength
-        ) {
-            const newDataTable = sorterFunction(data, sorterTable) || []
-            const l = newDataTable.length
-            const searchList: FuzzerResponse[] = []
-            for (let index = 0; index < l; index++) {
-                const record = newDataTable[index]
-                // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
-                let keyWordIsPush = true
-                let statusCodeIsPush = true
-                let bodyLengthMinIsPush = true
-                let bodyLengthMaxIsPush = true
-                // 搜索满足条件 交集
-                // 关键字搜索
-                if (query?.keyWord) {
-                    const responseString = Uint8ArrayToString(record.ResponseRaw)
-                    keyWordIsPush = responseString.includes(query.keyWord)
-                }
-                // 状态码搜索
-                if (query?.StatusCode && query?.StatusCode?.length > 0) {
-                    const cLength = query.StatusCode
-                    const codeIsPushArr: boolean[] = []
-                    for (let index = 0; index < cLength.length; index++) {
-                        const element = query.StatusCode[index]
-                        const codeArr = element.split("-")
-                        if (record.StatusCode >= codeArr[0] && record.StatusCode <= codeArr[1]) {
-                            codeIsPushArr.push(true)
-                        } else {
-                            codeIsPushArr.push(false)
-                        }
+        try {
+            // ------------  搜索 开始  ------------
+            // 有搜索条件才循环
+            if (
+                query?.keyWord ||
+                (query?.StatusCode && query?.StatusCode?.length > 0) ||
+                query?.afterBodyLength ||
+                query?.beforeBodyLength
+            ) {
+                const newDataTable = sorterFunction(data, sorterTable) || []
+                const l = newDataTable.length
+                const searchList: FuzzerResponse[] = []
+                for (let index = 0; index < l; index++) {
+                    const record = newDataTable[index]
+                    // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
+                    let keyWordIsPush = true
+                    let statusCodeIsPush = true
+                    let bodyLengthMinIsPush = true
+                    let bodyLengthMaxIsPush = true
+                    // 搜索满足条件 交集
+                    // 关键字搜索
+                    if (query?.keyWord) {
+                        const responseString = Uint8ArrayToString(record.ResponseRaw)
+                        keyWordIsPush = responseString.includes(query.keyWord)
                     }
-                    statusCodeIsPush = codeIsPushArr.includes(true)
+                    // 状态码搜索
+                    if (query?.StatusCode && query?.StatusCode?.length > 0) {
+                        const cLength = query.StatusCode
+                        const codeIsPushArr: boolean[] = []
+                        for (let index = 0; index < cLength.length; index++) {
+                            const element = query.StatusCode[index]
+                            const codeArr = element.split("-")
+                            if (record.StatusCode >= codeArr[0] && record.StatusCode <= codeArr[1]) {
+                                codeIsPushArr.push(true)
+                            } else {
+                                codeIsPushArr.push(false)
+                            }
+                        }
+                        statusCodeIsPush = codeIsPushArr.includes(true)
+                    }
+                    // 响应大小搜索
+                    if (query?.afterBodyLength) {
+                        // 最小
+                        bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
+                    }
+                    if (query?.beforeBodyLength) {
+                        // 最大
+                        bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
+                    }
+                    // 搜索同时为true时，push新数组
+                    if (keyWordIsPush && statusCodeIsPush && bodyLengthMinIsPush && bodyLengthMaxIsPush) {
+                        searchList.push(record)
+                    }
                 }
-                // 响应大小搜索
-                if (query?.afterBodyLength) {
-                    // 最小
-                    bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
-                }
-                if (query?.beforeBodyLength) {
-                    // 最大
-                    bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
-                }
-                // 搜索同时为true时，push新数组
-                if (keyWordIsPush && statusCodeIsPush && bodyLengthMinIsPush && bodyLengthMaxIsPush) {
-                    searchList.push(record)
-                }
+                setListTable([...searchList])
+            } else {
+                const newData = sorterFunction(data, sorterTable) || []
+                setListTable([...newData])
             }
-            setListTable([...searchList])
-        } else {
-            const newData = sorterFunction(data, sorterTable) || []
-            setListTable([...newData])
+            // ------------  搜索 结束  ------------
+        } catch (error) {
+            yakitFailed("搜索失败:" + error)
         }
-        // ------------  搜索 结束  ------------
     })
 
     const onRowClick = useMemoizedFn((val) => {
@@ -435,6 +440,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }
         return p
     }, [firstFull])
+    const [editor, setEditor] = useState<IMonacoEditor>()
+    useEffect(() => {
+        if (!editor || !currentSelectItem) return
+        onAddOverlayWidget(editor, currentSelectItem)
+    }, [currentSelectItem])
     return (
         <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
             <ResizeBox
@@ -468,6 +478,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         noHex={true}
                         noHeader={true}
                         originValue={currentSelectItem?.ResponseRaw || new Buffer([])}
+                        onAddOverlayWidget={(editor) => {
+                            setEditor(editor)
+                        }}
                     />
                 }
                 {...ResizeBoxProps}

@@ -265,6 +265,10 @@
             }
         }
     }
+    .advanced-config-extra-formItem {
+        padding: 8px 12px 0;
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
 }
 
 .http-fuzzer-hotPatch {
@@ -344,5 +348,21 @@
         .ant-popover-inner-content {
             padding: 8px;
         }
+    }
+}
+
+.editor-overlay-widget {
+    background-color: #f0f2f5;
+    color: var(--yakit-header-color);
+    // padding: 4px 8px;
+    font-size: 10px;
+    margin-right: -14px;
+    max-width: 150px;
+    opacity: 0.6;
+    word-break: break-all;
+
+    span + span::before {
+        content: ";";
+        margin-right: 4px;
     }
 }

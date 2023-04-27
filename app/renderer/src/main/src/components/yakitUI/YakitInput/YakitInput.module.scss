@@ -451,3 +451,63 @@
         }
     }
 }
+// ========================== password ==========================
+.yakit-password-wrapper-middle {
+    :global {
+        .ant-input-affix-wrapper {
+            border-radius: 4px;
+            height: 28px;
+            border-color: var(--yakit-border-color);
+            font-size: 12px;
+            color: #31343f;
+        }
+        .ant-input-password-icon.anticon {
+            color: var(--yakit-helper-text-color);
+        }
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
+            border-color: var(--yakit-primary-4);
+        }
+        .ant-input-affix-wrapper:focus,
+        .ant-input-affix-wrapper-focused {
+            border-color: var(--yakit-primary-5);
+            box-shadow: 0 0 0 2px var(--yakit-primary-2);
+        }
+    }
+}
+
+.yakit-password-large {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 28px;
+            font-size: 14px;
+        }
+    }
+}
+.yakit-password-small {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 24px;
+        }
+    }
+}
+
+.yakit-password-maxLarge {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 32px;
+            font-size: 14px;
+        }
+    }
+}
+.yakit-password-disabled {
+    :global {
+        .ant-input[disabled]:hover {
+            border-color: var(--yakit-border-color);
+        }
+
+        .ant-input[disabled] {
+            background-color: var(--yakit-background-color);
+            border-color: var(--yakit-border-color);
+        }
+    }
+}

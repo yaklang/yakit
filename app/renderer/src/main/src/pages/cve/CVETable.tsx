@@ -39,6 +39,9 @@ import {openExternalWebsite} from "@/utils/openWebsite"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {showByContextMenu} from "@/components/functionTemplate/showByContext"
 import {formatDate, formatTimestamp} from "@/utils/timeUtil"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 
 export interface CVETableProp {
     available: boolean
@@ -476,12 +479,15 @@ interface DatabaseUpdateModalProps {
 
 const url = "https://cve-db.oss-cn-beijing.aliyuncs.com/default-cve.db.gzip"
 export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.memo((props) => {
-    const {available, visible, setVisible} = props
+    const {available, visible, setVisible, latestMode} = props
     const [token, setToken] = useState(randomString(40))
     const [messages, setMessages, getMessages] = useGetState<string[]>([])
     const [status, setStatus] = useState<"init" | "progress" | "done">("init")
     const [error, setError] = useState<boolean>(false)
     const [percent, setPercent, getPercent] = useGetState<number>(0)
+
+    const [proxy, setProxy] = useState<string>("")
+    const [httpProxyList, setHttpProxyList] = useState<string[]>([])
 
     const errorMessage = useRef<string>("")
     const timer = useRef<number>(0) //超时处理
@@ -530,7 +536,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [props.latestMode])
+    }, [latestMode])
     useEffect(() => {
         if (!visible) return
         setStatus("init")
@@ -538,11 +544,40 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         setError(false)
         setPercent(0)
         errorMessage.current = ""
+        getProxyListAndProxy()
     }, [visible])
-
+    /**@description 获取代理list历史 和代理 */
+    const getProxyListAndProxy = useMemoizedFn(() => {
+        getRemoteValue("cveProxyList").then((listString) => {
+            try {
+                if (listString) {
+                    const list: string[] = JSON.parse(listString) || []
+                    setHttpProxyList(list)
+                }
+            } catch (error) {
+                yakitFailed("CVE代理list获取失败:" + error)
+            }
+        })
+        getRemoteValue("cveProxy").then((v) => {
+            try {
+                if (v) {
+                    setProxy(v)
+                }
+            } catch (error) {
+                yakitFailed("CVE代理获取失败:" + error)
+            }
+        })
+    })
+    const addProxyList = useMemoizedFn((url) => {
+        if(!url)return
+        const index = httpProxyList.findIndex((u) => u === url)
+        if (index !== -1) return
+        httpProxyList.push(url)
+        setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+    })
     const tipNode = useMemo(
         () =>
-            props.latestMode ? (
+            latestMode ? (
                 <p>
                     差量更新数据仅更新最新数据
                     <br />
@@ -568,16 +603,28 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         [props.latestMode]
     )
 
-    const latestUpdate = props.latestMode
-
     const HintContent = useMemoizedFn(() => {
         switch (status) {
             case "init":
                 return (
                     <>
+                        {latestMode && (
+                            <div className={styles["hint-content-proxy"]}>
+                                <span style={{width: 75}}>设置代理：</span>
+                                <YakitAutoComplete
+                                    options={httpProxyList.map((item) => ({value: item, label: item}))}
+                                    placeholder='设置代理'
+                                    value={proxy}
+                                    onChange={(v) => {
+                                        setProxy(v)
+                                        // addProxyList(proxy)
+                                    }}
+                                />
+                            </div>
+                        )}
                         <p>
                             {available
-                                ? latestUpdate
+                                ? latestMode
                                     ? "差量更新数据库仅更新最新数据"
                                     : "点击“强制更新”，可更新本地CVE数据库"
                                 : "本地CVE数据库未初始化，请点击“初始化”下载CVE数据库"}
@@ -668,9 +715,17 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                             failed(`重启失败: ${e}`)
                         })
                 } else {
+                    if (latestMode) {
+                        addProxyList(proxy)
+                        setRemoteValue("cveProxy", proxy)
+                    }
                     setStatus("progress")
+                    const params = {
+                        Proxy: props.latestMode ? proxy : "",
+                        JustUpdateLatestCVE: props.latestMode
+                    }
                     ipcRenderer
-                        .invoke("UpdateCVEDatabase", {Proxy: "", JustUpdateLatestCVE: props.latestMode}, token)
+                        .invoke("UpdateCVEDatabase", params, token)
                         .then(() => {})
                         .catch((e) => {
                             failed(`更新 CVE 数据库失败！${e}`)

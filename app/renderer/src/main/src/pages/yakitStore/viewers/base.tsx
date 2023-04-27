@@ -14,7 +14,6 @@ import {formatDate} from "../../../utils/timeUtil"
 import {xtermFit} from "../../../utils/xtermUtils"
 import {CaretDownOutlined, CaretUpOutlined, SearchOutlined} from "@ant-design/icons"
 import {failed} from "../../../utils/notification"
-import {CVXterm} from "../../../components/CVXterm"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
@@ -24,6 +23,8 @@ import {Risk} from "@/pages/risks/schema";
 import {RisksViewer} from "@/pages/risks/RisksViewer";
 import {RiskDetails} from "@/pages/risks/RiskTable";
 import {RiskStatsTag} from "@/utils/RiskStatsTag";
+import { YakitCVXterm } from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
+import { CVXterm } from "@/components/CVXterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -205,31 +206,16 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
             {props.debugMode && props.onXtermRef && (
                 <>
-                    <div style={{width: "100%", height: '100%'}}>
-                        <XTerm
+                    <div style={{width: "100%",height:'100%'}}>
+                        <YakitCVXterm
                             ref={xtermRef}
-                            options={{convertEol: true, rows: 8}}
-                            onResize={(r) => {
-                                xtermFit(xtermRef, 50, 18)
+                            options={{
+                                convertEol: true,
+                                rows: 12
                             }}
-                            customKeyEventHandler={(e) => {
-                                if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
-                                    const str = xtermRef?.current
-                                        ? (xtermRef.current as any).terminal.getSelection()
-                                        : ""
-
-                                    if (timer.current) {
-                                        clearTimeout(timer.current)
-                                        timer.current = null
-                                    }
-                                    timer.current = setTimeout(() => {
-                                        ipcRenderer.invoke("copy-clipboard", str).finally(() => {
-                                            timer.current = null
-                                        })
-                                    }, 300)
-                                }
-                                return true
-                            }}
+                            // onResize={(r) => {
+                            //     xtermFit(xtermRef, 50, 18)
+                            // }}
                         />
                     </div>
                 </>
@@ -238,7 +224,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <div style={{margin:"8px 4px 4px"}}>
                     <Row gutter={8}>
                         {statusCards.map((card, cardIndex) => {
-                            console.log("card----",card)
                             return (
                                 <Col key={card.tag} span={8} style={{marginBottom: 8}}>
                                     <Card

@@ -179,7 +179,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                     render: (i: YakitPort) =>
                         i.fingerprint ? (
                             <>
-                                <OneLine width={230} overflow={"hidden"} title={i.fingerprint}>
+                                <OneLine width={230} overflow={"hidden"} title={i.fingerprint} placement='topLeft'>
                                     {i?.fingerprint}
                                 </OneLine>
                             </>

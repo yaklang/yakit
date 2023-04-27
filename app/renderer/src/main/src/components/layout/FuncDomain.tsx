@@ -64,6 +64,7 @@ import {LoadingOutlined} from "@ant-design/icons"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -596,8 +597,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 })
                 return
             case "store":
-                const m = showModal({
+                const m = showYakitModal({
                     title: "配置私有域",
+                    type: "white",
+                    footer: null,
+                    maskClosable: false,
+                    // onCancel: () => m.destroy(),
                     content: <ConfigPrivateDomain onClose={() => m.destroy()} />
                 })
                 return m
