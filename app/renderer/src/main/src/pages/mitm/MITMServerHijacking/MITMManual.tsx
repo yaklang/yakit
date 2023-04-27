@@ -171,6 +171,7 @@ interface MITMManualEditorProps {
     hijacking: () => void
     execFuzzer: (s: string) => void
     status: MITMStatus
+    onSetHijackResponseType: (s: string) => void
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
@@ -183,7 +184,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         forward,
         hijacking,
         execFuzzer,
-        status
+        status,
+        onSetHijackResponseType
     } = props
     // 操作系统类型
     const [system, setSystem] = useState<string>()
@@ -191,7 +193,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
-
     return (
         <HTTPPacketEditor
             originValue={currentPacket}
@@ -328,7 +329,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                               id: "hijack-current-response",
                               label: "劫持该 Request 对应的响应",
                               run: function () {
-                                  allowHijackedResponseByRequest(currentPacketId)
+                                  onSetHijackResponseType("onlyOne")
                               },
                               contextMenuGroupId: "Actions"
                           }
