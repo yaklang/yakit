@@ -23,8 +23,8 @@ jobs:
         with:
           node-version: 16.10.0
       - run: echo ${{ github.ref }}
-      - run: sudo cp buildutil/zip /usr/bin/
-      - run: sudo chmod +x /usr/bin/zip
+      - run: cp buildutil/zip /usr/local/bin/zip
+      - run: chmod +x /usr/local/bin/zip
       - run: zip -h
       - name: "Download Yak Engine via wget(MacOS)"
         id: download-darwin-engine
