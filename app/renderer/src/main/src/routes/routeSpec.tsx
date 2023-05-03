@@ -113,6 +113,7 @@ import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker";
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
 import {YakScriptExecResultTable} from "@/components/YakScriptExecResultTable";
+import {MatcherExtractorPage} from "@/pages/matcherextractor/MatcherExtractorPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -201,8 +202,11 @@ export enum Route {
     // 录屏管理器
     ScreenRecorderPage = "screen-recorder-page",
 
+    // 匹配提取功能
+    Beta_MatcherExtractorPage = "beta-matcher-extractor-page",
+
     // 首页
-    NewHome = "new-home"
+    NewHome = "new-home",
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -458,10 +462,10 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <ChaosMakerPage/>
         case Route.ScreenRecorderPage:
             return <ScreenRecorderPage/>
-        case Route.AttachEngineCombinedOutput:
-            return <EngineConsole />
         case Route.DB_CVE:
             return <CVEViewer/>
+        case Route.Beta_MatcherExtractorPage:
+            return <MatcherExtractorPage/>
         default:
             return <div/>
     }

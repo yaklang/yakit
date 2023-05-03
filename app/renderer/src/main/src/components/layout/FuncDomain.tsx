@@ -486,6 +486,10 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "bas-chaosmaker",
                     label: "BAS实验室"
+                },
+                {
+                    key: "matcher-extractor",
+                    label: "匹配与提取配置"
                 }
             ]
         },
@@ -644,6 +648,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "screen-recorder":
                 addToTab("**screen-recorder")
+                return
+            case "matcher-extractor":
+                addToTab("**matcher-extractor")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()
