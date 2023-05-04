@@ -1,6 +1,7 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
+const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
 const {
@@ -160,6 +161,11 @@ app.whenReady().then(() => {
             globalShortcut.unregister("esc")
         })
     }
+
+    protocol.registerFileProtocol("atom", (request, callback) => {
+        const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
+        callback(filePath)
+    })
 
     createWindow()
 
