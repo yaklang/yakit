@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider, Collapse, Tag} from "antd"
 import {
-    HTTPPacketEditor,
     HTTP_PACKET_EDITOR_FONT_SIZE,
     HTTP_PACKET_EDITOR_Line_Breaks,
-    IMonacoEditor
+    IMonacoEditor,
+    NewHTTPPacketEditor
 } from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -12,7 +12,7 @@ import {StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed} from "../../utils/notification"
-import {useGetState, useInViewport, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useGetState, useInViewport, useMap, useMemoizedFn, useSize} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -72,6 +72,7 @@ import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
+import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -820,7 +821,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             reason = rsp!.Reason
         } catch (e) {}
         return (
-            <HTTPPacketEditor
+            <NewHTTPPacketEditor
                 defaultSearchKeyword={defaultResponseSearch}
                 system={props.system}
                 originValue={rsp.ResponseRaw}
@@ -1129,6 +1130,58 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
     })
+
+    const editorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            insertLabelTag: {
+                menu: [
+                    {
+                        key: "insert-label-tag",
+                        label: "插入标签/字典",
+                        children: [
+                            {type: "divider"},
+                            {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
+                            {key: "insert-temporary-file-tag", label: "插入临时字典"},
+                            {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
+                            {key: "insert-hotpatch-tag", label: "插入热加载标签"},
+                            {key: "insert-fuzzfile-tag", label: "插入文件标签"}
+                        ]
+                    }
+                ],
+                onRun: (editor, key) => {
+                    switch (key) {
+                        case "insert-nullbyte":
+                            editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
+                            return
+                        case "insert-temporary-file-tag":
+                            insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                            return
+                        case "insert-intruder-tag":
+                            showDictsAndSelect((i) => {
+                                monacoEditorWrite(editor, i, editor.getSelection())
+                            })
+                            return
+                        case "insert-hotpatch-tag":
+                            hotPatchTrigger()
+                            return
+                        case "insert-fuzzfile-tag":
+                            insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                            return
+
+                        default:
+                            break
+                    }
+                }
+            },
+            copyURL: {
+                menu: [{key: "copy-as-url", label: "复制为 URL"}],
+                onRun: (editor, key) => {
+                    copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
+                }
+            }
+        }
+    }, [])
+
     return (
         <div className={styles["http-fuzzer-body"]}>
             <HttpQueryAdvancedConfig
@@ -1406,14 +1459,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         构造请求
                                     </YakitButton>
                                 </YakitPopover>
-                                <EditorsSetting
+                                {/* <EditorsSetting
                                     noWordwrap={noWordwrapFirstEditor}
                                     setNoWordwrap={setNoWordwrapFirstEditor}
                                     fontSize={fontSizeFirstEditor}
                                     setFontSize={setFontSizeFirstEditor}
                                     showLineBreaks={showLineBreaksFirstEditor}
                                     setShowLineBreaks={setShowLineBreaksFirstEditor}
-                                />
+                                /> */}
                             </div>
                         )
                     }}
@@ -1461,7 +1514,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     query={query}
                                     setQuery={(q) => setQuery({...q})}
                                 />
-                                {onlyOneResponse && (
+                                {/* {onlyOneResponse && (
                                     <EditorsSetting
                                         fontSize={fontSizeSecondEditor}
                                         setFontSize={setFontSizeSecondEditor}
@@ -1470,12 +1523,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         showLineBreaks={showLineBreaksSecondEditor}
                                         setShowLineBreaks={setShowLineBreaksSecondEditor}
                                     />
-                                )}
+                                )} */}
                             </div>
                         )
                     }}
                     firstNode={
-                        <HTTPPacketEditor
+                        <NewHTTPPacketEditor
                             system={props.system}
                             noHex={true}
                             noHeader={true}
@@ -1485,58 +1538,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             noMinimap={true}
                             utf8={true}
                             originValue={StringToUint8Array(request)}
-                            actions={[
-                                {
-                                    id: "copy-as-url",
-                                    label: "复制为 URL",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: () => {
-                                        copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
-                                    }
-                                },
-                                {
-                                    id: "insert-intruder-tag",
-                                    label: "插入模糊测试字典标签",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        showDictsAndSelect((i) => {
-                                            monacoEditorWrite(editor, i, editor.getSelection())
-                                        })
-                                    }
-                                },
-                                {
-                                    id: "insert-nullbyte",
-                                    label: "插入空字节标签: {{hexd(00)}}",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
-                                    }
-                                },
-                                {
-                                    id: "insert-hotpatch-tag",
-                                    label: "插入热加载标签",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        hotPatchTrigger()
-                                    }
-                                },
-                                {
-                                    id: "insert-fuzzfile-tag",
-                                    label: "插入文件标签",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                                    }
-                                },
-                                {
-                                    id: "insert-temporary-file-tag",
-                                    label: "插入临时字典",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                                    }
-                                }
-                            ]}
+                            contextMenu={editorRightMenu}
                             onEditor={setReqEditor}
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                             noWordWrapState={noWordwrapFirstEditor}
@@ -1673,8 +1675,8 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         )
         return (
             <>
-                {(secondNodeSize?.width || 0) > 620 && searchNode}
-                {(secondNodeSize?.width || 0) < 620 && (
+                {+(secondNodeSize?.width || 0) > 620 && searchNode}
+                {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover content={searchNode}>
                         <YakitButton
                             icon={<SearchIcon />}
@@ -1741,8 +1743,8 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         )
         return (
             <>
-                {(secondNodeSize?.width || 0) > 620 && searchNode}
-                {(secondNodeSize?.width || 0) < 620 && (
+                {+(secondNodeSize?.width || 0) > 620 && searchNode}
+                {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover
                         content={searchNode}
                         onVisibleChange={(b) => {

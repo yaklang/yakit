@@ -6,14 +6,16 @@ export type YakitSelection = monacoEditor.Selection
 export type YakitIMonacoEditor = monacoEditor.editor.IStandaloneCodeEditor
 export type YakitIMonacoCodeEditor = monacoEditor.editor.ICodeEditor
 export type YakitITextModel = monacoEditor.editor.ITextModel
+export type YakitIModelDecoration = monacoEditor.editor.IModelDecoration
+
+/** @name 自带的菜单组可选项 */
+export type YakitEditorExtraRightMenuType = "code" | "decode" | "http" | "pretty"
 
 export interface YakitEditorProps {
-    // full?: boolean
-
     /** @name 是否每次更新菜单 */
-    forceRenderMenu?:boolean
+    forceRenderMenu?: boolean
 
-    /** @name 额外添加封装好的菜单类 */
+    /** @name 自带的菜单组可选项(多选) */
     menuType?: YakitEditorExtraRightMenuType[]
 
     /** @name 内容类型是否为字节码 */
@@ -33,7 +35,7 @@ export interface YakitEditorProps {
     /** @name 编辑器加载完成后的回调 */
     editorDidMount?: (editor: YakitIMonacoEditor) => any
 
-    /** @name 右键菜单数组 */
+    /** @name 自定义额外的右键菜单组 */
     contextMenu?: OtherMenuListProps
     /** @name 右键菜单点击事件回调 */
     onContextMenu?: (editor: YakitIMonacoEditor, key: string) => any
@@ -50,11 +52,15 @@ export interface YakitEditorProps {
     lineNumbersMinChars?: number
     /** @name 配置项-字体大小(默认为12) */
     fontSize?: number
+
+    /** @name 是否展示换行字符(只有在[type="http"]下有效,同时可在右键菜单中关闭显示功能) */
+    showLineBreaks?: boolean
 }
 
-/** @name 额外封装好的菜单组类型 */
-export type YakitEditorExtraRightMenuType = "codec" | "http" | "pretty"
-/** @name 额外封装菜单组的详情 */
+/**
+ * @name 自定义菜单组
+ * @description 注意！！！key值一定和一级菜单的key值一致
+ */
 export interface OtherMenuListProps {
     [key: string]: {
         menu: EditorMenuItemType[]
