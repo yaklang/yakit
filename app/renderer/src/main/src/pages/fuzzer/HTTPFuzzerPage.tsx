@@ -109,6 +109,7 @@ interface AdvancedConfigurationProps {
     timeout: number
     minDelaySeconds: number
     maxDelaySeconds: number
+    repeatTimes: number
     _filterMode: "drop" | "match"
     getFilter: FuzzResponseFilter
 }
@@ -324,6 +325,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
     const [minDelaySeconds, setMinDelaySeconds] = useState<number>(0)
     const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
+    const [repeatTimes, setRepeatTimes] = useState<number>(0)
     const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
     const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
@@ -574,6 +576,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             },
             DelayMinSeconds: minDelaySeconds,
             DelayMaxSeconds: maxDelaySeconds,
+            RepeatTimes: repeatTimes,
 
             // retry config
             MaxRetryTimes: retryMaxTimes,
@@ -914,6 +917,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 timeout,
                 minDelaySeconds,
                 maxDelaySeconds,
+                repeatTimes,
                 _filterMode: getFilterMode(),
                 getFilter: getFilter()
             },
@@ -949,6 +953,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
         setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
         setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
+        setRepeatTimes(shareContent.advancedConfiguration.repeatTimes)
         setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
         setFilter(shareContent.advancedConfiguration.getFilter)
         // 重试配置
@@ -1087,6 +1092,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setProxy(val.proxy ? val.proxy?.join(",") : "")
         setMinDelaySeconds(val.minDelaySeconds ? Number(val.minDelaySeconds) : 0)
         setMaxDelaySeconds(val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0)
+        setRepeatTimes(val.repeatTimes ? Number(val.repeatTimes) : 0)
         // 重试配置
         if (val.maxRetryTimes > 0) {
             setRetryMaxTimes(val.maxRetryTimes)
@@ -1139,6 +1145,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     proxy: proxy ? proxy?.split(",") : [],
                     minDelaySeconds,
                     maxDelaySeconds,
+                    repeatTimes,
                     // 重试配置
                     maxRetryTimes: retryMaxTimes,
                     retrying: retry,
@@ -1944,6 +1951,7 @@ interface AdvancedConfigValueProps {
     proxy: string[]
     minDelaySeconds: number
     maxDelaySeconds: number
+    repeatTimes: number
     // 重试配置
     maxRetryTimes: number
     /**@name 重试条件的checked */
@@ -2243,7 +2251,8 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         proxy: [],
                                         noSystemProxy: false,
                                         minDelaySeconds: undefined,
-                                        maxDelaySeconds: undefined
+                                        maxDelaySeconds: undefined,
+                                        repeatTimes: 0,
                                     }
                                     form.setFieldsValue({
                                         ...restValue
@@ -2259,6 +2268,9 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </YakitButton>
                         }
                     >
+                        <Form.Item label='重复发包' name='repeatTimes' help={`一般用来测试条件竞争或者大并发的情况`}>
+                            <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
                         <Form.Item label='并发线程' name='concurrent'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
