@@ -31,6 +31,13 @@ import "./StaticYakitEditor.scss"
 
 const {ipcRenderer} = window.require("electron")
 
+/** @name 字体key值对应字体大小 */
+const keyToFontSize: Record<string, number> = {
+    "font-size-small": 12,
+    "font-size-middle": 16,
+    "font-size-large": 20
+}
+
 /** 编辑器右键默认菜单 */
 const DefaultMenu: EditorMenuItemType[] = [
     {
@@ -85,6 +92,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const keyToOnRunRef = useRef<Record<string, string[]>>({})
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
+    const [fontsize, setFontsize] = useState<number>(fontSize)
 
     /**
      * 整理右键菜单的对应关系
@@ -149,6 +157,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         const model = editor?.getModel()
 
         switch (key) {
+            case "font-size-small":
+            case "font-size-middle":
+            case "font-size-large":
+                if (editor?.updateOptions) {
+                    setFontsize(keyToFontSize[key] || 12)
+                }
+                return
             case "http-show-break":
                 setShowBreak(!getShowBreak())
                 return
@@ -248,7 +263,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
     useEffect(() => {
-        if (isInitRef.current) return
+        /**
+         * @description 使用下方的判断逻辑，将导致后续的(额外菜单变动)无法在右键菜单再渲染中生效
+         */
+        // if (isInitRef.current) return
 
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
             systemRef.current = systemType
@@ -427,7 +445,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     console.info(e)
                 })
         }),
-        {wait: 500}
+        {wait: 500, leading: true, trailing: false}
     )
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakSyntaxChecking = useDebounceFn(
@@ -501,7 +519,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         readOnly: readOnly,
                         scrollBeyondLastLine: false,
                         fontWeight: "500",
-                        fontSize: fontSize || 12,
+                        fontSize: fontsize || 12,
                         showFoldingControls: "always",
                         showUnused: true,
                         wordWrap: noWordWrap ? "off" : "on",

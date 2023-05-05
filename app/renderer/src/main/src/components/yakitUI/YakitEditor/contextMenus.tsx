@@ -11,12 +11,6 @@ import {fetchCursorContent, fetchSelectionRange} from "./editorUtils"
 
 const {ipcRenderer} = window.require("electron")
 
-/** @name 字体key值对应字体大小 */
-const keyToFontSize: Record<string, number> = {
-    "font-size-small": 12,
-    "font-size-middle": 16,
-    "font-size-large": 20
-}
 /** @name 基础菜单组配置信息 */
 export const baseMenuLists: OtherMenuListProps = {
     fontSize: {
@@ -31,10 +25,7 @@ export const baseMenuLists: OtherMenuListProps = {
                 ]
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
-            if (editor?.updateOptions) editor.updateOptions({fontSize: keyToFontSize[key] || 16})
-            return
-        }
+        onRun: (editor: YakitIMonacoEditor, key: string) => {}
     },
     cut: {
         menu: [{key: "cut", label: "剪切"}],
