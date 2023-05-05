@@ -558,6 +558,7 @@ message CVEDetail {
   string DescriptionOrigin = 3;
   string Title = 4;
   string Solution = 5;
+  string References = 6;
   string AccessVector = 7;
   string AccessComplexity = 8;
   string Authentication = 9;

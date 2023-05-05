@@ -10,7 +10,9 @@ import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {useCreation, useMemoizedFn} from "ahooks"
 
 export interface CVEInspectProp {
-    CVE?: string
+    selected?: string
+    CVE: CVEDetail
+    CWE: CWEDetail[]
     onSelectCve: (s: string) => void
 }
 
@@ -18,11 +20,8 @@ function emptyCVE() {
     return {} as CVEDetail
 }
 
-const {ipcRenderer} = window.require("electron")
-
 export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
-    const {onSelectCve} = props
-    const selected = props.CVE
+    const {onSelectCve,CVE,CWE,selected} = props
 
     const [cve, setCVE] = useState<CVEDetail>(emptyCVE)
     const [cwes, setCWE] = useState<CWEDetail[]>([])
@@ -31,21 +30,14 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
     const [secondFull, setSecondFull] = useState<boolean>(false)
 
     useEffect(() => {
-        if (!selected) {
-            return
-        }
-        onGetCve(selected)
-    }, [props.CVE])
+        setCVE(CVE)
+        setCWE(CWE)
+    }, [CVE,CWE])
+
     useEffect(() => {
         setFirstFull(cwes.length === 0)
     }, [cwes])
-    const onGetCve = useMemoizedFn((c: string) => {
-        ipcRenderer.invoke("GetCVE", {CVE: c}).then((i: CVEDetailEx) => {
-            const {CVE, CWE} = i
-            setCVE(CVE)
-            setCWE(CWE)
-        })
-    })
+
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "50%",
@@ -70,7 +62,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                         <div className={styles["cve-description-heard"]}>
                             <div className={styles["cve-description-heard-title"]}>CVE 详情</div>
                             <div className={styles["cve-description-icon"]} onClick={() => setFirstFull(!firstFull)}>
-                                {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                {firstFull ? <ArrowsRetractIcon/> : <ArrowsExpandIcon/>}
                             </div>
                         </div>
                         <CVEDescription {...cve} />
@@ -94,14 +86,13 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                         className={styles["cve-description-icon"]}
                                         onClick={() => setSecondFull(!secondFull)}
                                     >
-                                        {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                        {secondFull ? <ArrowsRetractIcon/> : <ArrowsExpandIcon/>}
                                     </div>
                                 </div>
                                 <div className={styles["description-content"]}>
                                     <CWEDescriptionItem
                                         item={cwes[0]}
                                         onSelectCve={(s) => {
-                                            onGetCve(s)
                                             onSelectCve(s)
                                         }}
                                     />
@@ -109,12 +100,11 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                 </div>
                             </>
                         ) : cwes.length === 0 ? (
-                            <YakitEmpty style={{paddingTop: 48}} title='暂无CWE数据' />
+                            <YakitEmpty style={{paddingTop: 48}} title='暂无CWE数据'/>
                         ) : (
                             <CWEDescription
                                 data={cwes}
                                 onSelectCve={(s) => {
-                                    onGetCve(s)
                                     onSelectCve(s)
                                 }}
                                 tabBarExtraContent={
@@ -123,7 +113,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                         onClick={() => setSecondFull(!secondFull)}
                                         style={{paddingRight: 12}}
                                     >
-                                        {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                        {secondFull ? <ArrowsRetractIcon/> : <ArrowsExpandIcon/>}
                                     </div>
                                 }
                             />
@@ -134,6 +124,6 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
             />
         </div>
     ) : (
-        <YakitEmpty style={{paddingTop: 48}} title='未选中 CVE 数据' />
+        <YakitEmpty style={{paddingTop: 48}} title='未选中 CVE 数据'/>
     )
 }
