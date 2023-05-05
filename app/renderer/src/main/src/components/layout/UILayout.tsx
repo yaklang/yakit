@@ -56,14 +56,15 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu";
+import {FeatureRequest, ReportBug} from "@/utils/template/issues";
 
 const {ipcRenderer} = window.require("electron")
 
-interface LocalInfoProps{
-    system:string
-    arch:string
-    localYakit:string
-    localYaklang:string
+export interface LocalInfoProps {
+    system: string
+    arch: string
+    localYakit: string
+    localYaklang: string
 }
 
 export interface UILayoutProp {
@@ -780,20 +781,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 企业版-连接引擎后验证license=>展示企业登录
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
     const [show, setShow] = useState<boolean>(false)
-    const [_,setLocalInfo,getLocalInfo] = useGetState<LocalInfoProps>()
-    useEffect(()=>{
+    const [_, setLocalInfo, getLocalInfo] = useGetState<LocalInfoProps>()
+    useEffect(() => {
         // 获取操作系统、架构、Yakit 版本、Yak 版本
         ipcRenderer.invoke("fetch-local-basic-info").then((data: LocalInfoProps) => {
             setLocalInfo(data)
         })
-    },[])
+    }, [])
     const menu = (
         <YakitMenu
             // selectedKeys={[]}
             data={[
                 {
-                    key:"official_website",
-                    label:"官方网站"
+                    key: "official_website",
+                    label: "官方网站"
                 },
                 {
                     key: "Github",
@@ -808,16 +809,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ></YakitMenu>
     )
     const menuSelect = useMemoizedFn((type: string) => {
+        const info = getLocalInfo();
         switch (type) {
             case "report_bug":
-                const bug_tpl = `问题描述`
+                const bug_tpl = ReportBug(info);
                 ipcRenderer.invoke("open-url", `https://github.com/yaklang/yakit/issues/new?title=【BUG】问题标题&body=${bug_tpl}&labels=bug`)
                 return
             case "feature_request":
-                let feature_tpl = `需求描述`
-                if(getLocalInfo()){
-                    feature_tpl += `system=${getLocalInfo()?.system}arch=${getLocalInfo()?.arch}yakit=${getLocalInfo()?.localYakit}yaklang=${getLocalInfo()?.localYaklang}`
-                }
+                let feature_tpl = FeatureRequest()
                 ipcRenderer.invoke("open-url", `https://github.com/yaklang/yakit/issues/new?title=【需求】需求标题&body=${feature_tpl}&labels=enhancement`)
                 return
             case "official_website":
@@ -1002,7 +1001,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <div className={styles["ui-op-btn-wrapper"]}>
                                             <div
                                                 className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                                                <HelpSvgIcon style={{fontSize: 20}} className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
+                                                <HelpSvgIcon style={{fontSize: 20}}
+                                                             className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
                                             </div>
                                         </div>
                                     </YakitPopover>
