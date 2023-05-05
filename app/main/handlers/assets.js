@@ -509,12 +509,10 @@ module.exports = (win, getClient) => {
     const asyncGetCVE = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetCVE(params, (err, data) => {
-                console.log(params)
                 if (err) {
                     reject(err)
                     return
                 }
-                console.log(data)
                 resolve(data)
             })
         })

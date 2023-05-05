@@ -7,7 +7,7 @@ import styles from "./CVETable.module.scss"
 import {useCreation} from "ahooks"
 import moment from "moment"
 import React, {ReactNode} from "react"
-
+const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
 
 export const CVEDescription = React.memo(
@@ -45,11 +45,16 @@ export const CVEDescription = React.memo(
             }
             return text
         }, [BaseCVSSv2Score, Severity, Severity])
+        // 过滤掉 ftp 的参考链接 eg: CVE-2001-0830
+        const references_links = References ? References.split('\n').filter((link) => !link.startsWith('ftp://')) : [];
+        const handleClickLink = (link) => {
+            ipcRenderer.invoke('open-url', link);
+        };
         return (
             <div className={styles["description-content"]}>
                 <Descriptions bordered size='small' column={3}>
                     <Descriptions.Item label='CVE编号' span={2} contentStyle={{fontSize: 16, fontWeight: "bold"}}>
-                        {CVE||"-"}
+                        {CVE || "-"}
                     </Descriptions.Item>
                     <Descriptions.Item label='漏洞级别' span={1} contentStyle={{minWidth: 110}}>
                         {Severity === "-" ? (
@@ -74,17 +79,17 @@ export const CVEDescription = React.memo(
                         )}
                     </Descriptions.Item>
                     <Descriptions.Item label='标题' span={2}>
-                        {Title||"-"}
+                        {Title || "-"}
                     </Descriptions.Item>
                     <Descriptions.Item label='披露时间' span={1}>
                         {moment.unix(PublishedAt).format("YYYY/MM/DD")}
                     </Descriptions.Item>
                     <Descriptions.Item label='漏洞总结' span={3}>
-                        {DescriptionZh || DescriptionOrigin ||"-"}
+                        {DescriptionZh || DescriptionOrigin || "-"}
                     </Descriptions.Item>
 
                     <Descriptions.Item label='利用路径' span={2}>
-                        {AccessVector||"-"}
+                        {AccessVector || "-"}
                     </Descriptions.Item>
                     <Descriptions.Item label='利用难度' span={2}>
                         {AccessComplexity === "-" ? (
@@ -108,14 +113,33 @@ export const CVEDescription = React.memo(
                         )}
                     </Descriptions.Item>
                     <Descriptions.Item label='影响产品' span={3}>
-                        {Product||"-"}
+                        {Product || "-"}
                     </Descriptions.Item>
 
                     <Descriptions.Item label='解决方案' span={3}>
-                        {Solution||"-"}
+                        {Solution || "-"}
                     </Descriptions.Item>
-                    <Descriptions.Item label='参考链接' span={3} style={{whiteSpace: "pre"}}>
-                        {References||"-"}
+                    <Descriptions.Item label='参考链接' span={3}>
+                        {
+                            references_links.length > 0 ? (
+                                <div>
+                                    {references_links.map((link, index) => (
+                                        <div key={index}>
+                                            <a
+                                                href={link}
+                                                onClick={(event) => {
+                                                    event.preventDefault();
+                                                    handleClickLink(link);
+                                                }}
+                                                style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                                            >
+                                                {link}
+                                            </a>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : '-'
+                        }
                     </Descriptions.Item>
                 </Descriptions>
                 <div className={styles["no-more"]}>暂无更多</div>
@@ -123,11 +147,13 @@ export const CVEDescription = React.memo(
         )
     }
 )
+
 interface CWEDescriptionProps {
     data: CWEDetail[]
     tabBarExtraContent: ReactNode
     onSelectCve: (s: string) => void
 }
+
 export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) => {
     const {data, tabBarExtraContent, onSelectCve} = props
 
@@ -143,7 +169,7 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
             >
                 {data.map((i: CWEDetail) => (
                     <TabPane tab={i.CWE} key={i.CWE}>
-                        <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
+                        <CWEDescriptionItem item={i} onSelectCve={onSelectCve}/>
                         <div className={styles["no-more"]}>暂无更多</div>
                     </TabPane>
                 ))}
@@ -151,10 +177,12 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
         </>
     )
 })
+
 interface CWEDescriptionItemProps {
     item: CWEDetail
     onSelectCve: (s: string) => void
 }
+
 export const CWEDescriptionItem: React.FC<CWEDescriptionItemProps> = React.memo((props) => {
     const {item, onSelectCve} = props
     return (
