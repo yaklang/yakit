@@ -115,6 +115,11 @@ const createWindow = () => {
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
     })
+
+    // 录屏
+    globalShortcut.register("Control+Shift+X", (e) => {
+        win.webContents.send("open-screenCap-modal")
+    })
 }
 
 app.whenReady().then(() => {
@@ -162,6 +167,7 @@ app.whenReady().then(() => {
         })
     }
 
+    // 协议
     protocol.registerFileProtocol("atom", (request, callback) => {
         const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
         callback(filePath)

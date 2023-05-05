@@ -1437,7 +1437,6 @@ const Stop = () => (
 export const StopIcon = (props: Partial<IconProps>) => {
     return <Icon component={Stop} {...props} />
 }
-
 const Exclamation = () => (
     <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -1472,4 +1471,29 @@ const ShieldCheck = () => (
  */
 export const ShieldCheckIcon = (props: Partial<IconProps>) => {
     return <Icon component={ShieldCheck} {...props} />
+}
+
+const Camera = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M2.5 7.49998C2.5 6.57951 3.24619 5.83331 4.16667 5.83331H4.94136C5.49862 5.83331 6.019 5.55481 6.32811 5.09115L7.00522 4.07548C7.31433 3.61181 7.83472 3.33331 8.39197 3.33331H11.608C12.1653 3.33331 12.6857 3.61181 12.9948 4.07548L13.6719 5.09115C13.981 5.55481 14.5014 5.83331 15.0586 5.83331H15.8333C16.7538 5.83331 17.5 6.57951 17.5 7.49998V15C17.5 15.9205 16.7538 16.6666 15.8333 16.6666H4.16667C3.24619 16.6666 2.5 15.9205 2.5 15V7.49998Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M12.5 10.8333C12.5 12.214 11.3807 13.3333 10 13.3333C8.61929 13.3333 7.5 12.214 7.5 10.8333C7.5 9.4526 8.61929 8.33331 10 8.33331C11.3807 8.33331 12.5 9.4526 12.5 10.8333Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  camera 相机
+ */
+export const CameraIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Camera} {...props} />
 }
