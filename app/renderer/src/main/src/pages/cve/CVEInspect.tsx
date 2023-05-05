@@ -10,7 +10,9 @@ import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {useCreation, useMemoizedFn} from "ahooks"
 
 export interface CVEInspectProp {
-    CVE?: string
+    selected?: string
+    CVE: CVEDetail
+    CWE: CWEDetail[]
     onSelectCve: (s: string) => void
 }
 
@@ -18,11 +20,8 @@ function emptyCVE() {
     return {} as CVEDetail
 }
 
-const {ipcRenderer} = window.require("electron")
-
 export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
-    const {onSelectCve} = props
-    const selected = props.CVE
+    const {onSelectCve,CVE,CWE,selected} = props
 
     const [cve, setCVE] = useState<CVEDetail>(emptyCVE)
     const [cwes, setCWE] = useState<CWEDetail[]>([])
@@ -31,23 +30,14 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
     const [secondFull, setSecondFull] = useState<boolean>(false)
 
     useEffect(() => {
-        if (!selected) {
-            return
-        }
-        onGetCve(selected)
-    }, [props.CVE])
+        setCVE(CVE)
+        setCWE(CWE)
+    }, [CVE,CWE])
+
     useEffect(() => {
         setFirstFull(cwes.length === 0)
     }, [cwes])
-    const onGetCve = useMemoizedFn((c: string) => {
-        console.log("1111111111111111111111")
-        ipcRenderer.invoke("GetCVE", {CVE: c}).then((i: CVEDetailEx) => {
-            console.log(i)
-            const {CVE, CWE} = i
-            setCVE(CVE)
-            setCWE(CWE)
-        })
-    })
+
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "50%",
@@ -103,7 +93,6 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                     <CWEDescriptionItem
                                         item={cwes[0]}
                                         onSelectCve={(s) => {
-                                            onGetCve(s)
                                             onSelectCve(s)
                                         }}
                                     />
@@ -116,7 +105,6 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                             <CWEDescription
                                 data={cwes}
                                 onSelectCve={(s) => {
-                                    onGetCve(s)
                                     onSelectCve(s)
                                 }}
                                 tabBarExtraContent={

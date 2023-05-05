@@ -14,7 +14,7 @@ import {
 import {ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {CVEDetail, CVEDetailEx} from "@/pages/cve/models"
+import {CVEDetail, CVEDetailEx,CWEDetail} from "@/pages/cve/models"
 import {CVEInspect} from "@/pages/cve/CVEInspect"
 import styles from "./CVETable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -52,9 +52,25 @@ export interface CVETableProp {
 
 const {ipcRenderer} = window.require("electron")
 
+function emptyCVE() {
+    return {} as CVEDetail
+}
+
 export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
     const {available, advancedQuery, setAdvancedQuery} = props
     const [selected, setSelected] = useState<string>("")
+
+    const [cve, setCVE] = useState<CVEDetail>(emptyCVE)
+    const [cwe, setCWE] = useState<CWEDetail[]>([])
+    useEffect(() => {
+        if (!selected) return
+        ipcRenderer.invoke("GetCVE", {CVE: selected}).then((i: CVEDetailEx) => {
+            const {CVE, CWE} = i
+            setCVE(CVE)
+            setCWE(CWE)
+        })
+    }, [selected])
+
     return (
         <>
             {available ? (
@@ -70,9 +86,13 @@ export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
                             filter={props.filter}
                             selected={selected}
                             setSelected={setSelected}
+                            CVE={cve}
+                            setCVE={setCVE}
                         />
                     }
-                    secondNode={<CVEInspect CVE={selected} onSelectCve={setSelected} />}
+                    secondNode={
+                        <CVEInspect selected={selected} CVE={cve} CWE={cwe} onSelectCve={setSelected} />
+                }
                 />
             ) : (
                 <CVETableList
@@ -82,6 +102,8 @@ export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
                     filter={props.filter}
                     selected={selected}
                     setSelected={setSelected}
+                    CVE={cve}
+                    setCVE={setCVE}
                 />
             )}
         </>
@@ -95,10 +117,12 @@ interface CVETableListProps {
     setSelected: (s: string) => void
     advancedQuery: boolean //是否开启高级查询
     setAdvancedQuery: (b: boolean) => void
+    CVE:CVEDetail
+    setCVE:(v:CVEDetail)=>void
 }
 
 const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
-    const {available, selected, setSelected, advancedQuery, setAdvancedQuery} = props
+    const {available, selected, setSelected, advancedQuery, setAdvancedQuery,CVE,setCVE} = props
     const [params, setParams] = useState<QueryCVERequest>({...props.filter})
     const [loading, setLoading] = useState(false)
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -115,16 +139,11 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const [dataBaseUpdateLatestMode, setDataBaseUpdateLatestMode] = useState<boolean>(false)
 
     const [updateTime, setUpdateTime] = useState<number>() // 数据库更新时间
-
+    
     const [currentSelectItem, setCurrentSelectItem] = useState<CVEDetail>()
-
     useEffect(() => {
         if (!selected) return
-        console.log("2222222222222222222222")
-        ipcRenderer.invoke("GetCVE", {CVE: selected}).then((i: CVEDetailEx) => {
-            const {CVE} = i
-            setCurrentSelectItem(CVE)
-        })
+        setCurrentSelectItem(CVE)
     }, [selected])
 
     useEffect(() => {
@@ -297,7 +316,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     }, [])
     const onRowClick = useMemoizedFn((record: CVEDetail) => {
         setSelected(record.CVE) // 更新当前选中的行
-        setCurrentSelectItem(record)
+        setCVE(record)
     })
     const onTableChange = useDebounceFn(
         (page: number, limit: number, sorter: SortProps, filter: any) => {
