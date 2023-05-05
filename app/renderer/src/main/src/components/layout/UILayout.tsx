@@ -59,6 +59,13 @@ import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu";
 
 const {ipcRenderer} = window.require("electron")
 
+interface LocalInfoProps{
+    system:string
+    arch:string
+    localYakit:string
+    localYaklang:string
+}
+
 export interface UILayoutProp {
     children?: React.ReactNode
     linkSuccess?: () => any
@@ -773,18 +780,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 企业版-连接引擎后验证license=>展示企业登录
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
     const [show, setShow] = useState<boolean>(false)
+    const [_,setLocalInfo,getLocalInfo] = useGetState<LocalInfoProps>()
+    useEffect(()=>{
+        // 获取操作系统、架构、Yakit 版本、Yak 版本
+        ipcRenderer.invoke("fetch-local-basic-info").then((data: LocalInfoProps) => {
+            setLocalInfo(data)
+        })
+    },[])
     const menu = (
         <YakitMenu
-            selectedKeys={undefined}
+            // selectedKeys={[]}
             data={[
                 {
-                    key: "report_bug",
-                    label: "BUG"
+                    key:"official_website",
+                    label:"官方网站"
                 },
                 {
-                    key: "feature_request",
-                    label: "功能建议"
-                }
+                    key: "Github",
+                    label: "Github",
+                    children: [
+                        {label: "功能建议", key: "feature_request"},
+                        {label: "BUG", key: "report_bug"},
+                    ]
+                },
             ]}
             onClick={({key}) => menuSelect(key)}
         ></YakitMenu>
@@ -796,8 +814,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ipcRenderer.invoke("open-url", `https://github.com/yaklang/yakit/issues/new?title=【BUG】问题标题&body=${bug_tpl}&labels=bug`)
                 return
             case "feature_request":
-                const feature_tpl = `需求描述`
+                let feature_tpl = `需求描述`
+                if(getLocalInfo()){
+                    feature_tpl += `system=${getLocalInfo()?.system}arch=${getLocalInfo()?.arch}yakit=${getLocalInfo()?.localYakit}yaklang=${getLocalInfo()?.localYaklang}`
+                }
                 ipcRenderer.invoke("open-url", `https://github.com/yaklang/yakit/issues/new?title=【需求】需求标题&body=${feature_tpl}&labels=enhancement`)
+                return
+            case "official_website":
+                ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
                 return
             default:
                 return
@@ -969,19 +993,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         </>
                                     )}
 
-                                    <div
-                                        className={styles["ui-op-btn-wrapper"]}
-                                        onClick={() =>
-                                            ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
-                                        }
-                                    >
-                                        <div className={styles["op-btn-body"]}>
-                                            <Tooltip placement='bottom' title='官方网站'>
-                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]}/>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-
                                     <YakitPopover
                                         overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
                                         placement={"bottom"}
@@ -991,8 +1002,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <div className={styles["ui-op-btn-wrapper"]}>
                                             <div
                                                 className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                                                <UISettingSvgIcon
-                                                    className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
+                                                <HelpSvgIcon style={{fontSize: 20}} className={show ? styles["icon-hover-style"] : styles["icon-style"]}/>
                                             </div>
                                         </div>
                                     </YakitPopover>

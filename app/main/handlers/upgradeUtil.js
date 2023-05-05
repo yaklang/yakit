@@ -290,6 +290,18 @@ module.exports = {
             return await asyncGetCurrentLatestYakVersion(params)
         })
 
+        /** 获取Yakit Yaklang本地版本号 操作系统 架构 */
+        ipcMain.handle("fetch-local-basic-info", async (e) => {
+            const localYakit = app.getVersion()
+            const localYaklang = await asyncGetCurrentLatestYakVersion()
+            return {
+                system:process.platform,
+                arch:process.arch,
+                localYakit,
+                localYaklang
+            }
+        })
+
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise((resolve, reject) => {
