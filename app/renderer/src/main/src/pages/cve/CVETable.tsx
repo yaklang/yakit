@@ -120,6 +120,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
 
     useEffect(() => {
         if (!selected) return
+        console.log("2222222222222222222222")
         ipcRenderer.invoke("GetCVE", {CVE: selected}).then((i: CVEDetailEx) => {
             const {CVE} = i
             setCurrentSelectItem(CVE)

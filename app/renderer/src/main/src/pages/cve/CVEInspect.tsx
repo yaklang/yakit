@@ -40,7 +40,9 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
         setFirstFull(cwes.length === 0)
     }, [cwes])
     const onGetCve = useMemoizedFn((c: string) => {
+        console.log("1111111111111111111111")
         ipcRenderer.invoke("GetCVE", {CVE: c}).then((i: CVEDetailEx) => {
+            console.log(i)
             const {CVE, CWE} = i
             setCVE(CVE)
             setCWE(CWE)
@@ -70,7 +72,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                         <div className={styles["cve-description-heard"]}>
                             <div className={styles["cve-description-heard-title"]}>CVE 详情</div>
                             <div className={styles["cve-description-icon"]} onClick={() => setFirstFull(!firstFull)}>
-                                {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                {firstFull ? <ArrowsRetractIcon/> : <ArrowsExpandIcon/>}
                             </div>
                         </div>
                         <CVEDescription {...cve} />
@@ -94,7 +96,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                         className={styles["cve-description-icon"]}
                                         onClick={() => setSecondFull(!secondFull)}
                                     >
-                                        {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                        {secondFull ? <ArrowsRetractIcon/> : <ArrowsExpandIcon/>}
                                     </div>
                                 </div>
                                 <div className={styles["description-content"]}>
@@ -109,7 +111,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                 </div>
                             </>
                         ) : cwes.length === 0 ? (
-                            <YakitEmpty style={{paddingTop: 48}} title='暂无CWE数据' />
+                            <YakitEmpty style={{paddingTop: 48}} title='暂无CWE数据'/>
                         ) : (
                             <CWEDescription
                                 data={cwes}
@@ -123,7 +125,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                                         onClick={() => setSecondFull(!secondFull)}
                                         style={{paddingRight: 12}}
                                     >
-                                        {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                        {secondFull ? <ArrowsRetractIcon/> : <ArrowsExpandIcon/>}
                                     </div>
                                 }
                             />
@@ -134,6 +136,6 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
             />
         </div>
     ) : (
-        <YakitEmpty style={{paddingTop: 48}} title='未选中 CVE 数据' />
+        <YakitEmpty style={{paddingTop: 48}} title='未选中 CVE 数据'/>
     )
 }

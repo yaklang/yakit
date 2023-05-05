@@ -12,24 +12,26 @@ const {TabPane} = Tabs
 
 export const CVEDescription = React.memo(
     ({
-        CVE,
-        DescriptionZh,
-        DescriptionOrigin,
-        Title,
-        Solution,
-        AccessVector,
-        AccessComplexity,
-        ConfidentialityImpact,
-        IntegrityImpact,
-        AvailabilityImpact,
-        PublishedAt,
-        CWE,
-        Severity,
-        CVSSVectorString,
-        BaseCVSSv2Score,
-        ExploitabilityScore,
-        Product
-    }: CVEDetail) => {
+         CVE,
+         DescriptionZh,
+         DescriptionOrigin,
+         Title,
+         Solution,
+         AccessVector,
+         References,
+         AccessComplexity,
+         ConfidentialityImpact,
+         IntegrityImpact,
+         AvailabilityImpact,
+         PublishedAt,
+         CWE,
+         Severity,
+         CVSSVectorString,
+         BaseCVSSv2Score,
+         ExploitabilityScore,
+         Product
+     }: CVEDetail) => {
+
         const color = useCreation(() => {
             let text = "success"
             if (Severity === "严重") {
@@ -43,7 +45,6 @@ export const CVEDescription = React.memo(
             }
             return text
         }, [BaseCVSSv2Score, Severity, Severity])
-
         return (
             <div className={styles["description-content"]}>
                 <Descriptions bordered size='small' column={3}>
@@ -112,6 +113,9 @@ export const CVEDescription = React.memo(
 
                     <Descriptions.Item label='解决方案' span={3}>
                         {Solution}
+                    </Descriptions.Item>
+                    <Descriptions.Item label='参考链接' span={3} style={{whiteSpace: "pre"}}>
+                        {References}
                     </Descriptions.Item>
                 </Descriptions>
                 <div className={styles["no-more"]}>暂无更多</div>
