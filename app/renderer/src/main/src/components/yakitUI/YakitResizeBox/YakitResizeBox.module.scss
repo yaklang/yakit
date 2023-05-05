@@ -5,18 +5,19 @@
     position: relative;
     overflow: hidden;
     .resize-split-line {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         .resize-split-line-in {
             background-color: var(--yakit-background-color);
         }
         .resize-split-line-in-ver {
             width: 100%;
             height: 1px;
-            margin-top: 2.5px;
         }
         .resize-split-line-in-nover {
             width: 1px;
             height: 100%;
-            margin: auto;
         }
     }
     .resize-split-line:hover {

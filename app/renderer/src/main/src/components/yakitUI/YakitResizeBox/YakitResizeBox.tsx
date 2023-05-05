@@ -1,10 +1,10 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useDebounce, useDebounceFn, useMemoizedFn, useThrottleFn, useClickAway} from "ahooks"
-import classNames from "classnames"
+import {useMemoizedFn, useClickAway} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
+import classNames from "classnames"
 import styles from "./YakitResizeBox.module.scss"
 
-export interface ResizeLineProps {
+export interface YakitResizeLineProps {
     isVer?: boolean
     dragResize?: boolean
     minSize?: string | number
@@ -18,7 +18,7 @@ export interface ResizeLineProps {
     dragMoveSize: (v: number) => void
 }
 
-export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
+export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
     const {
         isVer = false,
         dragResize = false,
@@ -142,9 +142,6 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
         resize.addEventListener("mousedown", mouseDown)
         body.addEventListener("mousemove", mouseMove)
         body.addEventListener("mouseup", mouseUp)
-        // 解决有些时候,在鼠标松开的时候,元素仍然可以拖动;
-        body.addEventListener("dragstart", (e) => e.preventDefault())
-        body.addEventListener("dragend", (e) => e.preventDefault())
         return () => {
             if (resize) {
                 resize.removeEventListener("click", mouseDown)
@@ -163,12 +160,11 @@ export const ResizeLine: React.FC<ResizeLineProps> = (props) => {
                 [styles["resize-line-ver"]]: isVer,
                 [styles["resize-line-hor"]]: !isVer
             })}
-            draggable
         ></div>
     )
 }
 
-export interface ResizeBoxProps {
+export interface YakitResizeBoxProps {
     /** 是否为竖向拖拽 默认横向拖拽 */
     isVer?: boolean
     /** 是否拖拽立即生效 默认为拖拽完成生效 */
@@ -201,7 +197,7 @@ export interface ResizeBoxProps {
     onMouseUp?: () => void
 }
 
-export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
+export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) => {
     const {
         isVer = false,
         dragResize = false,
@@ -351,7 +347,11 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 ref={firstRef}
                 style={{
                     width: isVer ? "100%" : firstRatio === "50%" ? `calc(100% - ${secondRatio})` : firstRatio,
-                    height: isVer ? (firstRatio === "50%" ? `calc(100% - ${secondRatio} - 6px)` : firstRatio) : "100%",
+                    height: isVer
+                        ? firstRatio === "50%"
+                            ? `calc(100% - ${secondRatio} - ${freeze ? "8px" : "0px"})`
+                            : firstRatio
+                        : "100%",
                     padding: `${isVer ? "0 0 2px 0" : "0 2px 0 0 "}`,
                     overflow: "hidden",
                     ...firstNodeStyle
@@ -385,7 +385,11 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 ref={secondRef}
                 style={{
                     width: isVer ? "100%" : firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio})`,
-                    height: isVer ? (firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio} - 6px)`) : "100%",
+                    height: isVer
+                        ? firstRatio === "50%"
+                            ? secondRatio
+                            : `calc(100% - ${firstRatio} - ${freeze ? "8px" : "0px"})`
+                        : "100%",
                     padding: `${isVer ? "2px 0 0 0" : "0 0 0 2px"}`,
                     overflow: "hidden",
                     ...secondNodeStyle
@@ -394,7 +398,7 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
                 {typeof secondNode === "function" ? secondNode() : secondNode}
             </div>
             {freeze && (
-                <ResizeLine
+                <YakitResizeLine
                     isVer={isVer}
                     bodyRef={bodyRef}
                     resizeRef={lineRef}
