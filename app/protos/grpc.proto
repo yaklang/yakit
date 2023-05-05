@@ -2616,6 +2616,9 @@ message FuzzerRequest {
 
   // 不启用系统代理
   bool NoSystemProxy = 30;
+
+  // 重复次数
+  int64 RepeatTimes = 31;
 }
 
 message KVPair {
