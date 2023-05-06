@@ -252,7 +252,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 cacheData || {
                     LastRecord,
                     PortScanRequest,
-                    ExtraInfo:JSON.stringify(statusCards)
+                    ExtraInfo: JSON.stringify(statusCards)
                 }
             )
         } else {
@@ -263,7 +263,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         LastRecordPtr: filePtrValue,
                         Percent: percent,
                         YakScriptOnlineGroup: OnlineGroup,
-                        ExtraInfo:JSON.stringify(statusCards)
+                        ExtraInfo: JSON.stringify(statusCards)
                     },
                     PortScanRequest: {...newParams, TaskName: runTaskName}
                 }
@@ -1075,8 +1075,9 @@ interface LastRecordProps {
     ExtraInfo: string
     YakScriptOnlineGroup: string
     Percent: number
-    LastRecordPtr:number
+    LastRecordPtr: number
 }
+
 interface OldRunParamsProps {
     LastRecord: LastRecordProps
     PortScanRequest: any
@@ -1124,7 +1125,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
 
     // 是否显示之前的卡片
-    const [showOldCard,setShowOldCard] = useState<boolean>(false)
+    const [showOldCard, setShowOldCard] = useState<boolean>(false)
 
     const statusErrorCards = infoState.statusState.filter((item) => ["加载插件失败", "SYN扫描失败"].includes(item.tag))
     const statusSucceeCards = infoState.statusState.filter((item) =>
@@ -1139,39 +1140,39 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     // 区分新老卡片渲染
     const Cards = useMemo(() => {
-        if(showOldCard&&oldRunParams&&oldRunParams.LastRecord.ExtraInfo){
+        if (showOldCard && oldRunParams && oldRunParams.LastRecord.ExtraInfo) {
             let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo)
-            return Array.isArray(oldCards)? oldCards: []
+            return Array.isArray(oldCards) ? oldCards : []
         }
         return statusCards
-    },[statusCards,showOldCard,oldRunParams])
+    }, [statusCards, showOldCard, oldRunParams])
 
     const filePtr = infoState.statusState.filter((item) => ["当前文件指针"].includes(item.tag))
     const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
 
     useEffect(() => {
-        if(statusCards.length>0){
+        if (statusCards.length > 0) {
             setShowOldCard(false)
         }
         if (!isResize.current) {
             if (executing) {
-                let cards:any = statusCards
-                if(oldRunParams&&showOldCard){
+                let cards: any = statusCards
+                if (oldRunParams && showOldCard && oldRunParams.LastRecord.ExtraInfo) {
                     let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo)
-                    cards = Array.isArray(oldCards)? oldCards: []
+                    cards = Array.isArray(oldCards) ? oldCards : []
                 }
                 cards.length === 0 ? setResizeBoxSize("160px") : setResizeBoxSize("270px")
-                
+
             } else {
-                let cards:any = statusCards
-                if(oldRunParams&&showOldCard){
+                let cards: any = statusCards
+                if (oldRunParams && showOldCard && oldRunParams.LastRecord.ExtraInfo) {
                     let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo)
-                    cards = Array.isArray(oldCards)? oldCards: []
+                    cards = Array.isArray(oldCards) ? oldCards : []
                 }
                 cards.length === 0 ? setResizeBoxSize("350px") : setResizeBoxSize("455px")
             }
         }
-    }, [executing, statusCards.length,showOldCard,oldRunParams])
+    }, [executing, statusCards.length, showOldCard, oldRunParams])
 
     useEffect(() => {
         setTabId(simpleDetectParams.tabId)
