@@ -1144,7 +1144,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
             return Array.isArray(oldCards)? oldCards: []
         }
         return statusCards
-    },[showOldCard,oldRunParams])
+    },[statusCards,showOldCard,oldRunParams])
 
     const filePtr = infoState.statusState.filter((item) => ["当前文件指针"].includes(item.tag))
     const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
