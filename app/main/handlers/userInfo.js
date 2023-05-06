@@ -28,6 +28,65 @@ module.exports = (win, getClient) => {
                 const wxCode = query.code
                 console.log(wxCode)
 
+                res.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Authorization Success</title>
+<style>
+body {
+font-family: Arial, Helvetica, sans-serif;
+background-color: #f2f2f2;
+}
+
+.container {
+margin: 0 auto;
+max-width: 800px;
+padding: 50px;
+background-color: #ffffff;
+border-radius: 10px;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+font-size: 36px;
+color: #444444;
+margin-bottom: 20px;
+}
+
+p {
+font-size: 18px;
+color: #777777;
+line-height: 1.5;
+margin-bottom: 30px;
+}
+
+a {
+color: #ffffff;
+background-color: #3498db;
+padding: 10px 20px;
+text-decoration: none;
+border-radius: 5px;
+font-size: 18px;
+transition: all 0.3s ease;
+}
+
+a:hover {
+background-color: #2980b9;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Authorization Successful!</h1>
+<p>Thank you for authorizing our application. You can now use our features and services.</p>
+<a href="myapp://C:\\Users\\go0p\\AppData\\Local\\Programs\\yakit\\Yakit.exe">Go to Dashboard</a>
+</div>
+</body>
+</html>
+`);
+                res.end()
+
                 // 关闭 HTTP 服务器
                 server.close()
                 httpApi("get", typeApi[type], {code: wxCode})
@@ -76,7 +135,7 @@ module.exports = (win, getClient) => {
             }
 
             res.end()
-        }).listen(3000, () => {
+        }).listen(3001, () => {
             console.log('HTTP server is listening on port 3000')
         })
         shell.openExternal(url)
