@@ -59,7 +59,7 @@ const Login: React.FC<LoginProp> = (props) => {
         })
             .then((res) => {
                 console.log("rrrrrrr ",res)
-                 res = 'https://github.com/login/oauth/authorize?client_id=9b715cd4290a40a17978&redirect_uri=http://localhost:3000/callback&scope=user'
+                 res = 'https://github.com/login/oauth/authorize?client_id=9b715cd4290a40a17978&redirect_uri=http://localhost:3001/callback&scope=user'
 
                 if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
