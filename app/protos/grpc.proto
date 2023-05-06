@@ -2115,6 +2115,7 @@ message LastRecord {
   int64 LastRecordPtr = 1;
   double Percent = 2;
   string YakScriptOnlineGroup = 3;
+  string ExtraInfo = 4;
 }
 
 message RecordPortScanRequest {
