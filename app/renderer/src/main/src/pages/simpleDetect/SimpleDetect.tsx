@@ -40,7 +40,7 @@ import {ExecResult, YakScript} from "../invoker/schema"
 import {useStore, simpleDetectParams} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
-import {SimpleCardBox} from "../yakitStore/viewers/base"
+import {SimpleCardBox, StatusCardInfoProps} from "../yakitStore/viewers/base"
 import moment from "moment"
 import {CreatReportScript} from "./CreatReportScript"
 import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
@@ -94,6 +94,7 @@ interface SimpleDetectFormProps {
     nowUUID: string
     setNowUUID: (v: string) => void
     setAllowDownloadReport: (v: boolean) => void
+    statusCards: StatusCardInfoProps[]
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -117,7 +118,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         Uid,
         nowUUID,
         setNowUUID,
-        setAllowDownloadReport
+        setAllowDownloadReport,
+        statusCards
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -249,7 +251,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 "SaveCancelSimpleDetect",
                 cacheData || {
                     LastRecord,
-                    PortScanRequest
+                    PortScanRequest,
+                    ExtraInfo:JSON.stringify(statusCards)
                 }
             )
         } else {
@@ -259,7 +262,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     LastRecord: {
                         LastRecordPtr: filePtrValue,
                         Percent: percent,
-                        YakScriptOnlineGroup: OnlineGroup
+                        YakScriptOnlineGroup: OnlineGroup,
+                        ExtraInfo:JSON.stringify(statusCards)
                     },
                     PortScanRequest: {...newParams, TaskName: runTaskName}
                 }
@@ -1067,8 +1071,14 @@ export interface SimpleDetectProps {
     TaskName?: string
 }
 
+interface LastRecordProps {
+    ExtraInfo: string
+    YakScriptOnlineGroup: string
+    Percent: number
+    LastRecordPtr:number
+}
 interface OldRunParamsProps {
-    LastRecord: any
+    LastRecord: LastRecordProps
     PortScanRequest: any
 }
 
@@ -1113,6 +1123,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 设置ResizeBox高度
     const [__, setResizeBoxSize, getResizeBoxSize] = useGetState<string>("430px")
 
+    // 是否显示之前的卡片
+    const [showOldCard,setShowOldCard] = useState<boolean>(false)
+
     const statusErrorCards = infoState.statusState.filter((item) => ["加载插件失败", "SYN扫描失败"].includes(item.tag))
     const statusSucceeCards = infoState.statusState.filter((item) =>
         ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
@@ -1124,18 +1137,41 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         return statusSucceeCards
     }, [statusErrorCards, statusSucceeCards])
 
+    // 区分新老卡片渲染
+    const Cards = useMemo(() => {
+        if(showOldCard&&oldRunParams&&oldRunParams.LastRecord.ExtraInfo){
+            let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo)
+            return Array.isArray(oldCards)? oldCards: []
+        }
+        return statusCards
+    },[showOldCard,oldRunParams])
+
     const filePtr = infoState.statusState.filter((item) => ["当前文件指针"].includes(item.tag))
     const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
 
     useEffect(() => {
+        if(statusCards.length>0){
+            setShowOldCard(false)
+        }
         if (!isResize.current) {
             if (executing) {
-                statusCards.length === 0 ? setResizeBoxSize("160px") : setResizeBoxSize("270px")
+                let cards:any = statusCards
+                if(oldRunParams&&showOldCard){
+                    let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo)
+                    cards = Array.isArray(oldCards)? oldCards: []
+                }
+                cards.length === 0 ? setResizeBoxSize("160px") : setResizeBoxSize("270px")
+                
             } else {
-                statusCards.length === 0 ? setResizeBoxSize("350px") : setResizeBoxSize("455px")
+                let cards:any = statusCards
+                if(oldRunParams&&showOldCard){
+                    let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo)
+                    cards = Array.isArray(oldCards)? oldCards: []
+                }
+                cards.length === 0 ? setResizeBoxSize("350px") : setResizeBoxSize("455px")
             }
         }
-    }, [executing, statusCards.length])
+    }, [executing, statusCards.length,showOldCard,oldRunParams])
 
     useEffect(() => {
         setTabId(simpleDetectParams.tabId)
@@ -1159,6 +1195,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                     Uid
                 })
                 .then(({LastRecord, PortScanRequest}) => {
+                    setShowOldCard(true)
                     const {ScriptNames} = PortScanRequest
                     setOldRunParams({
                         LastRecord,
@@ -1177,7 +1214,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         if (getTabId()) {
             let status = ""
             if (executing) {
-                // console.log("percent-executing", getTabId(), percent, executing)
                 status = "run"
             }
             if (percent > 0 && percent < 1 && !executing) {
@@ -1261,13 +1297,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                         nowUUID={getNowUUID()}
                                         setNowUUID={setNowUUID}
                                         setAllowDownloadReport={setAllowDownloadReport}
+                                        // 卡片存储
+                                        statusCards={statusCards}
                                     />
                                 </Col>
                             </Row>
 
                             <Divider style={{margin: 4}}/>
 
-                            <SimpleCardBox statusCards={statusCards}/>
+                            <SimpleCardBox statusCards={Cards}/>
                         </AutoCard>
                     }
                     firstMinSize={"200px"}
