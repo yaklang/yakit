@@ -175,7 +175,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         isYakitBreak.current = false
         setInstallYakit(true)
         ipcRenderer
-            .invoke("download-latest-yakit", version)
+            .invoke("download-latest-yakit", version, isEnterpriseEdition())
             .then(() => {
                 if (isYakitBreak.current) return
                 success("下载完毕")
