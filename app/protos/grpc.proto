@@ -558,6 +558,7 @@ message CVEDetail {
   string DescriptionOrigin = 3;
   string Title = 4;
   string Solution = 5;
+  string References = 6;
   string AccessVector = 7;
   string AccessComplexity = 8;
   string Authentication = 9;
@@ -2615,6 +2616,9 @@ message FuzzerRequest {
 
   // 不启用系统代理
   bool NoSystemProxy = 30;
+
+  // 重复次数
+  int64 RepeatTimes = 31;
 }
 
 message KVPair {
