@@ -340,4 +340,36 @@ module.exports = (win, getClient) => {
      ipcMain.handle("send-extracted-to-table", async (e, params) => {
         win.webContents.send("fetch-extracted-to-table", params)
     })
+
+    // asyncMatchHTTPResponse wrapper
+    const asyncMatchHTTPResponse = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().MatchHTTPResponse(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("MatchHTTPResponse", async (e, params) => {
+        return await asyncMatchHTTPResponse(params)
+    })
+
+    // asyncExtractHTTPResponse wrapper
+    const asyncExtractHTTPResponse = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExtractHTTPResponse(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExtractHTTPResponse", async (e, params) => {
+        return await asyncExtractHTTPResponse(params)
+    })
 }

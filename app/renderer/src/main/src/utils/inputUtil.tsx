@@ -31,14 +31,27 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 
-type TooltipPlacement = 'top' | 'left' | 'right' | 'bottom' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'leftTop' | 'leftBottom' | 'rightTop' | 'rightBottom';
+type TooltipPlacement =
+    'top'
+    | 'left'
+    | 'right'
+    | 'bottom'
+    | 'topLeft'
+    | 'topRight'
+    | 'bottomLeft'
+    | 'bottomRight'
+    | 'leftTop'
+    | 'leftBottom'
+    | 'rightTop'
+    | 'rightBottom';
+
 export interface OneLineProp {
     width?: string | number
     overflow?: string
     maxWidth?: string | any
     title?: string
     children?: React.ReactNode
-    placement?:TooltipPlacement 
+    placement?: TooltipPlacement
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
@@ -327,6 +340,7 @@ export interface SelectOneProps extends InputBase {
     colon?: boolean
     placeholder?: string
     size?: any
+    oldTheme?: boolean
 
     setValue?(a: any): any
 
@@ -346,7 +360,9 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
     // const [current, setCurrent] = useState<any>();
     return <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
         <YakitRadioButtons
-            className={"old-theme-html select-one"}
+            className={
+                (p.oldTheme || p.oldTheme === undefined) ? "old-theme-html select-one" : "select-one"
+            }
             disabled={p.disabled}
             size={p.size}
             value={p.value}
@@ -356,10 +372,10 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
             }}
             buttonStyle='solid'
             options={p.data.map(item => {
-                const info ={
-                    value:item.value,
-                    label:item.text,
-                    disabled:item.disabled
+                const info = {
+                    value: item.value,
+                    label: item.text,
+                    disabled: item.disabled
                 }
                 return info
             })}
