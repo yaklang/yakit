@@ -3,14 +3,17 @@ import {AutoCard} from "@/components/AutoCard";
 import {Col, Form, Input, Row, Space} from "antd";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {DeleteOutlined} from "@ant-design/icons";
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 
 export interface VariablesFormProp {
-
+    HTTPResponse?: Uint8Array
 }
 
+const {ipcRenderer} = window.require("electron");
 export const VariablesForm: React.FC<VariablesFormProp> = (props) => {
     const [variables, setVariables] = useState<{ Key: string; Value: string }[]>([
-        {Key: "r1", Value: "{{rand_str}}"},
+        {Key: "r1", Value: "{{rand_int(1000,9999)}}"},
         {Key: "r2", Value: "abc"},
     ])
 
@@ -20,7 +23,37 @@ export const VariablesForm: React.FC<VariablesFormProp> = (props) => {
         }
     }, [variables])
 
-    return <AutoCard size={"small"} bodyStyle={{overflow: "auto", padding: 0}}>
+    return <AutoCard
+        title={<Space>
+            <div>
+                设置变量
+            </div>
+            <YakitButton
+                type={"text"}
+                onClick={() => {
+                    ipcRenderer.invoke("RenderVariables", {
+                        Params: variables,
+                        HTTPResponse: props.HTTPResponse,
+                    }).then((rsp: { Results: { Key: string, Value: string }[] }) => {
+                        showYakitModal({
+                            title: "渲染后变量内容",
+                            content: (
+                                <Space
+                                    direction={"vertical"} style={{margin: 20}}
+                                >
+                                    {rsp.Results.map(data => {
+                                        return <div>
+                                            {data.Key}: {data.Value}
+                                        </div>
+                                    })}
+                                </Space>
+                            )
+                        })
+                    })
+                }}
+            >预览</YakitButton>
+        </Space>}
+        size={"small"} bodyStyle={{overflow: "auto", padding: 0}}>
         <Form
             style={{marginTop: 4}}
             labelCol={{span: 5}} wrapperCol={{span: 18}}

@@ -8,6 +8,9 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {MatcherForm, MatcherItem} from "@/pages/matcherextractor/MatcherForm";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {VariablesForm} from "@/pages/matcherextractor/VariablesForm";
+import {ExtractorForm, ExtractorItem} from "@/pages/matcherextractor/ExtractorForm";
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
+import {failed} from "@/utils/notification";
 
 export interface MatcherExtractorPageProp {
 
@@ -42,7 +45,7 @@ export const MatcherExtractorPage: React.FC<MatcherExtractorPageProp> = (props) 
                 >
                     <Row gutter={6} style={{height: "100%"}}>
                         {enableVars && <Col span={6}>
-                            <VariablesForm/>
+                            <VariablesForm HTTPResponse={StringToUint8Array(data)}/>
                         </Col>}
                         <Col span={enableVars ? 18 : 24}>
                             <HTTPPacketEditor
@@ -84,9 +87,38 @@ export const MatcherExtractorPage: React.FC<MatcherExtractorPageProp> = (props) 
                                     setMatched(data.Matched)
                                 })
                             }}/>}
-                        secondNode={<div>
-                            2
-                        </div>}
+                        secondNode={<ExtractorForm
+                            onChange={extractors => {
+
+                            }}
+                            onExecute={extractors => {
+                                ipcRenderer.invoke("ExtractHTTPResponse", {
+                                    Extractors: extractors,
+                                    HTTPResponse: data,
+                                }).then((obj: { Values: { Key: string, Value: string }[] }) => {
+                                    if (!obj) {
+                                        failed("匹配不到有效结果")
+                                        return
+                                    }
+
+                                    if ((obj?.Values || []).length <= 0) {
+                                        failed("匹配不到有效结果")
+                                        return
+                                    }
+                                    showYakitModal({
+                                        title: "提取结果",
+                                        width: "60%",
+                                        content: (
+                                            <Space style={{margin: 24}} direction={"vertical"}>
+                                                {obj.Values.map(i => {
+                                                    return `${i.Key}: ${i.Value}`
+                                                })}
+                                            </Space>
+                                        )
+                                    })
+                                })
+                            }}
+                        />}
                     />
                 </AutoCard>}
             />

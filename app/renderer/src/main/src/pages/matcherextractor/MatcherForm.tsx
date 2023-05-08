@@ -20,6 +20,10 @@ export interface MatcherItem {
     Negative: boolean
 }
 
+const isMatcherItemEmpty = (i: MatcherItem) => {
+    return (i?.Group || []).map(i => i.trim()).join("") === ""
+}
+
 const matcherTypeVerbose = name => {
     switch (name) {
         case "word":
@@ -96,10 +100,18 @@ export const MatcherForm: React.FC<MatcherFormProp> = (props) => {
             <YakitButton
                 type={"outline1"}
                 onClick={() => {
+                    if (matchers.filter(i => isMatcherItemEmpty(i)).length > 0) {
+                        failed("已有空匹配器条件")
+                        return
+                    }
                     setMatchers([...matchers, defaultMatcherItem()])
                 }}
             >添加条件</YakitButton>
             <YakitButton onClick={() => {
+                if (matchers.filter(i => !isMatcherItemEmpty(i)).length === 0) {
+                    failed("所有匹配条件均为空，请先设置条件")
+                    return
+                }
                 props.onExecute(totalCondition, matchers)
             }}>执行规则</YakitButton>
         </Space>}
@@ -119,17 +131,18 @@ export const MatcherForm: React.FC<MatcherFormProp> = (props) => {
             accordion={true}
             defaultActiveKey={0}>
             {matchers.map((origin, matcherIndex) => {
+                const isEmpty = isMatcherItemEmpty(origin)
                 return <Collapse.Panel
                     style={{backgroundColor: "#f5f5f5", marginBottom: 12}}
                     header={<div>
                         ID[{matcherIndex}]: 类型[{origin.Negative ? "!" : ""}{matcherTypeVerbose(origin.MatcherType)}]
-                        {(origin.Group.length !== 0 && origin.Group[0].trim() !== "") ?
-                            <span> - 已设置{
+                        {isEmpty ?
+                            <Tag style={{marginLeft: 8}} color={"red"}>暂未设置条件</Tag>
+                            : <span> - 已设置{
                                 origin.Group.length > 1 ?
                                     `[${origin.Condition}]` :
                                     ''
-                            }：{origin.Group.length}组</span> :
-                            <Tag style={{marginLeft: 8}} color={"red"}>暂未设置条件</Tag>}
+                            }：{origin.Group.length}组</span>}
                     </div>}
                     key={matcherIndex} collapsible={currentIndex === matcherIndex ? "header" : undefined}
                     extra={<>
@@ -139,14 +152,14 @@ export const MatcherForm: React.FC<MatcherFormProp> = (props) => {
                     </>}
                 >
                     {currentIndex === matcherIndex &&
-                    <MatcherItemForm matcher={origin} onMatcherChange={(data: MatcherItem) => {
-                        setMatchers([...matchers.map((origin, index) => {
-                            if (index === currentIndex) {
-                                return data
-                            }
-                            return origin
-                        })])
-                    }}/>}
+                        <MatcherItemForm matcher={origin} onMatcherChange={(data: MatcherItem) => {
+                            setMatchers([...matchers.map((origin, index) => {
+                                if (index === currentIndex) {
+                                    return data
+                                }
+                                return origin
+                            })])
+                        }}/>}
                     {currentIndex !== matcherIndex && <Tag onClick={() => {
                         setCurrentIndex(matchers.indexOf(origin))
                     }}>MatcherIndex: {matchers.indexOf(origin)}</Tag>}
