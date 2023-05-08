@@ -69,7 +69,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         })
             .then((res) => {
                 if (res) {
-                    setRiskType(res.data)
+                    setRiskType(res?.data||[])
                 }
             })
             .catch((e) => {
@@ -184,6 +184,13 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             dataIndex: "risk_created_at",
             render: (_, i: API.RiskLists) => (
                 <YakitTag>{i.risk_created_at > 0 ? formatTimestamp(i.risk_created_at) : "-"}</YakitTag>
+            )
+        },
+        {
+            title: "上传时间",
+            dataIndex: "created_at",
+            render: (_, i: API.RiskLists) => (
+                <YakitTag>{i.created_at > 0 ? formatTimestamp(i.created_at) : "-"}</YakitTag>
             )
         },
         {

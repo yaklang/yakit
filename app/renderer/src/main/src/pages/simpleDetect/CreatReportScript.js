@@ -3,9 +3,11 @@ yakit.AutoInitYakit()
 loglevel(\`info\`)
 
 
-createAt  = cli.Int("timestamp", cli.setRequired(true))
+// createAt  = cli.Int("timestamp", cli.setRequired(true))
+taskName  = cli.String("task_name", cli.setRequired(true))
+runtimeID = cli.String("runtime_id", cli.setRequired(true))
 hostTotal = cli.Int("host_total", cli.setRequired(true))
-portTotal = cli.Int("port_total", cli.setRequired(true))
+portTotal = cli.Int("port_total", cli.setDefault(0))
 pingAliveHostTotal = cli.Int("ping_alive_host_total", cli.setDefault(0))
 reportName = cli.String("report_name")
 plugins = cli.Int("plugins",cli.setDefault(10))
@@ -36,7 +38,7 @@ noWeakPassWordRisks = []
 
 // 风险漏洞分组
 // env.Get("YAK_RUNTIME_ID")
-for riskInstance = range risk.YieldRiskByCreateAt(int64(createAt)) {
+for riskInstance = range risk.YieldRiskByRuntimeId(runtimeID) {
     //println(riskInstance.IP)
     // 按照级别分类 Risk
     // printf("#%v\\n", riskInstance)
@@ -81,28 +83,28 @@ for key,value = range severityToRisks {
     }
 }
 
-if criticalLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "critical"})
-}
-if criticalLens == 0 && highLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "high"})
-}
-if criticalLens == 0 && highLens == 0 && warningLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "warning"})
-}
-if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens > 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "low"})
-}
-if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens == 0 {
-    reportInstance.Raw({"type": "report-cover", "data": "security"})
-}
+// if criticalLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "critical"})
+// }
+// if criticalLens == 0 && highLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "high"})
+// }
+// if criticalLens == 0 && highLens == 0 && warningLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "warning"})
+// }
+// if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens > 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "low"})
+// }
+// if criticalLens == 0 && highLens == 0 && warningLens == 0 && lowLens == 0 {
+//     reportInstance.Raw({"type": "report-cover", "data": "security"})
+// }
 
 // 端口开放情况
 portsLine = []
 aliveHostCountList = []
 openPortCount = 0
 
-portChan := db.QueryPortsByUpdatedAt(int64(createAt))~
+portChan := db.QueryPortsByTaskName(taskName)~
 for port :=range portChan{
     openPortCount +=1
     if port.Host not in aliveHostCountList {
@@ -199,7 +201,7 @@ reportInstance.Markdown(sprintf(\`
 
 \`, totalTasks,openPortCount,aliveHostCount, hostTotal, portTotal))
 // 输出漏洞图相关的内容
-total := len(riskAll)
+total := criticalLens + highLens + warningLens + lowLens
 reportInstance.Markdown(sprintf(\`
 本次测试发现以下风险漏洞：
 
@@ -315,6 +317,9 @@ if len(noPotentialRisks) == 0 {
 }else{
     _line = []
     for index,info = range noPotentialRisks {
+        if info.IP == "" {
+            continue
+        }
         level = "-"
         if str.Contains(info.Severity, "critical") { level = "严重" }
         if str.Contains(info.Severity, "high") { level = "高危" }
@@ -335,6 +340,9 @@ showPotentialLine = []
 cpp = cve.NewStatistics("PotentialPie")
 println(len(potentialRisks))
 for i, riskIns := range potentialRisks {
+    if riskIns.IP == "" {
+        continue
+    }
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
@@ -397,6 +405,9 @@ if len(potentialRisks) != 0 {
 
 showWeakPassWordLine = []
 for _, riskIns := range weakPassWordRisks {
+    if riskIns.IP == "" {
+        continue
+    }
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
