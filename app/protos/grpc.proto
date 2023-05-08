@@ -179,6 +179,7 @@ service Yak {
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
   rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
+  rpc RenderVariables(RenderVariablesRequest) returns (RenderVariablesResponse);
   rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
   rpc ExtractHTTPResponse(ExtractHTTPResponseParams) returns (ExtractHTTPResponseResult);
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
@@ -2505,6 +2506,17 @@ message HTTPResponseMatcher {
   string GroupEncoding = 7;
   bool Negative = 8;
   string ExprType = 9;
+}
+
+message RenderVariablesRequest {
+  repeated KVPair Params = 1;
+  bool IsHTTPS = 2;
+  bytes HTTPRequest = 5;
+  bytes HTTPResponse = 4;
+}
+
+message RenderVariablesResponse {
+  repeated KVPair Results = 1;
 }
 
 message MatchHTTPResponseParams {

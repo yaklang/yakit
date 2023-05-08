@@ -336,8 +336,8 @@ module.exports = (win, getClient) => {
         stream.write(params)
     })
 
-     // 提取数据发送表中展示
-     ipcMain.handle("send-extracted-to-table", async (e, params) => {
+    // 提取数据发送表中展示
+    ipcMain.handle("send-extracted-to-table", async (e, params) => {
         win.webContents.send("fetch-extracted-to-table", params)
     })
 
@@ -371,5 +371,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ExtractHTTPResponse", async (e, params) => {
         return await asyncExtractHTTPResponse(params)
+    })
+
+    // asyncRenderVariables wrapper
+    const asyncRenderVariables = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RenderVariables(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RenderVariables", async (e, params) => {
+        return await asyncRenderVariables(params)
     })
 }

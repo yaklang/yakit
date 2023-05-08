@@ -1,11 +1,13 @@
 import React, {useState} from "react";
-import {Button, PageHeader, Space, Tag} from "antd";
+import {Button, Col, PageHeader, Row, Space, Tag} from "antd";
 import {AutoCard} from "@/components/AutoCard";
 import {ResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {HTTPPacketEditor} from "@/utils/editors";
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {MatcherForm, MatcherItem} from "@/pages/matcherextractor/MatcherForm";
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
+import {VariablesForm} from "@/pages/matcherextractor/VariablesForm";
 
 export interface MatcherExtractorPageProp {
 
@@ -22,18 +24,34 @@ export const MatcherExtractorPage: React.FC<MatcherExtractorPageProp> = (props) 
         "<!doctype html>\n<html>\n<body>\n  <div id=\"result\">%d</div>\n</body>\n</html>" +
         "</html>");
     const [matched, setMatched] = useState<boolean>();
+    const [enableVars, setEnableVars] = useState<boolean>(false);
 
     return <AutoCard
-        title={"匹配提取调试"}
-        bodyStyle={{overflow: "hidden"}}
+        title={<Space>
+            匹配提取调试
+            <YakitSwitch checked={enableVars} onChange={setEnableVars}/>
+        </Space>}
+        bodyStyle={{overflow: "hidden", padding: 0}}
+        size={"small"}
     >
         <div style={{height: "100%"}}>
             <ResizeBox
                 isVer={true}
-                firstNode={<HTTPPacketEditor
-                    noHeader={true}
-                    originValue={StringToUint8Array(data)} onChange={e => setData(Uint8ArrayToString(e))}
-                />}
+                firstNode={<AutoCard
+                    size={"small"} bordered={false} bodyStyle={{padding: 0}}
+                >
+                    <Row gutter={6} style={{height: "100%"}}>
+                        {enableVars && <Col span={6}>
+                            <VariablesForm/>
+                        </Col>}
+                        <Col span={enableVars ? 18 : 24}>
+                            <HTTPPacketEditor
+                                noHeader={true}
+                                originValue={StringToUint8Array(data)} onChange={e => setData(Uint8ArrayToString(e))}
+                            />
+                        </Col>
+                    </Row>
+                </AutoCard>}
                 secondNode={<AutoCard
                     bodyStyle={{overflow: "auto", padding: 0}} size={"small"}
                     title={<Space>
@@ -54,7 +72,7 @@ export const MatcherExtractorPage: React.FC<MatcherExtractorPageProp> = (props) 
                     <ResizeBox
                         isVer={false}
                         firstNode={<MatcherForm
-                            onChange={(condition: string, matchers: MatcherItem[])=>{
+                            onChange={(condition: string, matchers: MatcherItem[]) => {
                                 setMatched(undefined)
                             }}
                             onExecute={(condition, matchers) => {
