@@ -253,7 +253,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         const ReportParams = getReportParams()
         if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
-            ipcRenderer.invoke("getNew")
             ipcRenderer.invoke(
                 "SaveCancelSimpleDetect",
                 cacheData || {
