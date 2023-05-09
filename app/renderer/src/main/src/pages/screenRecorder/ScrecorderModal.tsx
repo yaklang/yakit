@@ -6,7 +6,8 @@ import {randomString} from "@/utils/randomUtil"
 import {useMemoizedFn} from "ahooks"
 import {Form} from "antd"
 import classNames from "classnames"
-import React, {useEffect, useState} from "react"
+import React, {CSSProperties, useEffect, useState} from "react"
+import {ReactNode} from "react-markdown/lib/ast-to-react"
 import styles from "./ScrecorderModal.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -15,6 +16,9 @@ interface ScrecorderModalProp {
     onClose: () => void
     token: string
     onStartCallback: () => void
+    formStyle?: CSSProperties
+    footer?: ReactNode
+    disabled?: boolean
 }
 
 export interface StartScrecorderParams {
@@ -60,7 +64,7 @@ export const FramerateData = [
 ]
 
 export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props) => {
-    const {onClose, token, onStartCallback} = props
+    const {onClose, token, onStartCallback, formStyle, footer, disabled} = props
     const [params, setParams] = useState<StartScrecorderParams>({
         CoefficientPTS: 0.333, // 三倍速
         DisableMouse: false, // 鼠标捕捉
@@ -85,10 +89,9 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
             </div>
             <Form
                 layout='vertical'
-                style={{padding: "16px 24px 24px"}}
+                style={{padding: "16px 24px 24px", ...formStyle}}
                 initialValues={{...params}}
                 onFinish={(v) => {
-                    console.log("v", v)
                     onStart(v)
                 }}
             >
@@ -101,23 +104,27 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                     }}
                     name='Framerate'
                 >
-                    <YakitSelect options={FramerateData} />
+                    <YakitSelect options={FramerateData} disabled={disabled} />
                 </Form.Item>
                 <div className={styles["disable-mouse"]}>
                     <Form.Item noStyle valuePropName='checked' name='DisableMouse'>
-                        <YakitSwitch size='large' />
+                        <YakitSwitch size='large' disabled={disabled} />
                     </Form.Item>
                     鼠标捕捉
                 </div>
-                <div className={styles["footer-btns"]}>
-                    <YakitButton type='outline2' size='large' onClick={() => onClose()}>
-                        取消
-                    </YakitButton>
-                    <YakitButton htmlType='submit' type='primary' size='large'>
-                        <PlayIcon style={{height: 16}} />
-                        开始录屏
-                    </YakitButton>
-                </div>
+                {footer ? (
+                    footer
+                ) : (
+                    <div className={styles["footer-btns"]}>
+                        <YakitButton type='outline2' size='large' onClick={() => onClose()}>
+                            取消
+                        </YakitButton>
+                        <YakitButton htmlType='submit' type='primary' size='large'>
+                            <PlayIcon style={{height: 16}} />
+                            开始录屏
+                        </YakitButton>
+                    </div>
+                )}
             </Form>
         </div>
     )

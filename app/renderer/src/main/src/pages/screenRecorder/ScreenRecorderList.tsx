@@ -25,7 +25,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {FramerateData} from "./ScrecorderModal"
+import {FramerateData, ScrecorderModal} from "./ScrecorderModal"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
@@ -77,6 +77,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const [hasMore, setHasMore] = useState(false)
     const [isRef, setIsRef] = useState(false)
 
+    const [isShowRefText, setIsShowRefText] = useState<boolean>(false)
+
     const {selected, allSelected, isSelected, toggle, toggleAll, partiallySelected} = useSelections(data)
 
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
@@ -126,7 +128,10 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const onRefresh = useMemoizedFn(() => {
         update(1, undefined, true)
     })
-    return (
+    const onSearch = useMemoizedFn(() => {
+        update(1, undefined, true)
+    })
+    return total > 0 ? (
         <div className={styles["screen-recorder"]}>
             <div className={styles["screen-recorder-heard"]}>
                 <div className={styles["heard-title"]}>
@@ -207,7 +212,12 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             </div>
                         </div>
                         <div className={styles["content-heard-extra"]}>
-                            <YakitInput.Search placeholder='请输入关键词搜索' />
+                            <YakitInput.Search
+                                placeholder='请输入关键词搜索'
+                                value={keyword}
+                                onChange={(e) => setKeyword(e.target.value)}
+                                onSearch={onSearch}
+                            />
                             <YakitPopover
                                 placement={"bottom"}
                                 arrowPointAtCenter={true}
@@ -269,80 +279,50 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 </YakitSpin>
             </div>
         </div>
-        // <AutoCard
-        //     title={"当前项目录屏列表"}
-        //     size={"small"}
-        //     bordered={false}
-        //     extra={
-        //         <div>
-        //             <YakitButton type={"outline2"} onClick={() => update(1)}>
-        //                 刷新
-        //             </YakitButton>
-        //         </div>
-        //     }
-        // >
-        //     <List<ScreenRecorder>
-        //         dataSource={data}
-        //         pagination={false}
-        //         loading={loading}
-        //         renderItem={(item) => {
-        //             return (
-        //                 <List.Item key={item.Id}>
-        //                     <AutoCard
-        //                         extra={
-        //                             <div>
-        //                                 <Tag>创建时间：{formatTimestamp(item.CreatedAt)}</Tag>
-        //                             </div>
-        //                         }
-        //                         size={"small"}
-        //                         title={
-        //                             <div>
-        //                                 项目：<Tag color={"orange"}>{item.Project}</Tag>
-        //                                 录屏编号：<Tag>{item.Id}</Tag>
-        //                             </div>
-        //                         }
-        //                         onClick={(e) => {}}
-        //                     >
-        //                         <ReactPlayer
-        //                             url={`atom://${item.Filename}`}
-        //                             height={150}
-        //                             width={300}
-        //                             playing={true}
-        //                             controls={true}
-        //                         />
-        //                         <YakitButton
-        //                             onClick={(e) => {
-        //                                 showByCursorMenu(
-        //                                     {
-        //                                         content: [
-        //                                             {
-        //                                                 title: "打开文件位置",
-        //                                                 onClick: () => {
-        //                                                     openABSFileLocated(item.Filename)
-        //                                                 }
-        //                                             },
-        //                                             {
-        //                                                 title: "复制文件名",
-        //                                                 onClick: () => {
-        //                                                     callCopyToClipboard(item.Filename)
-        //                                                 }
-        //                                             }
-        //                                         ]
-        //                                     },
-        //                                     e.clientX,
-        //                                     e.clientY
-        //                                 )
-        //                             }}
-        //                             type={"outline2"}
-        //                         >
-        //                             文件位置：{item.Filename}
-        //                         </YakitButton>
-        //                     </AutoCard>
-        //                 </List.Item>
-        //             )
-        //         }}
-        //     />
-        // </AutoCard>
+    ) : (
+        <div className={styles["screen-recorder-empty"]}>
+            <div className={styles["empty-title"]}>录屏管理</div>
+            <ScrecorderModal
+                disabled={screenRecorderInfo.isRecording}
+                onClose={() => {}}
+                token={screenRecorderInfo.token}
+                onStartCallback={() => {
+                    setRecording(true)
+                }}
+                formStyle={{padding: "24px 0 "}}
+                footer={
+                    <div className={styles["empty-footer"]}>
+                        {screenRecorderInfo.isRecording ? (
+                            <YakitButton
+                                onClick={() => {
+                                    ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
+                                    setIsShowRefText(true)
+                                    setTimeout(() => {
+                                        onRefresh()
+                                    }, 1000)
+                                }}
+                                type='primary'
+                                className='button-primary-danger'
+                                size='large'
+                            >
+                                <StopIcon className={styles["stop-icon"]} />
+                                停止录屏
+                            </YakitButton>
+                        ) : (
+                            <YakitButton htmlType='submit' type='primary' size='large'>
+                                <PlayIcon style={{height: 16}} />
+                                开始录屏
+                            </YakitButton>
+                        )}
+                        {isShowRefText && (
+                            <YakitButton type='text' style={{marginTop: 12}}>
+                                刷新
+                            </YakitButton>
+                        )}
+                    </div>
+                }
+            />
+        </div>
     )
 }
 

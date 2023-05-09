@@ -36,13 +36,6 @@
                     color: var(--yakit-primary-4);
                 }
             }
-            .stop-icon {
-                height: 16px;
-                svg {
-                    height: 16px;
-                    width: 16px;
-                }
-            }
         }
     }
     .screen-recorder-content {
@@ -211,6 +204,27 @@
     }
 }
 
+.screen-recorder-empty {
+    width: 506px;
+    height: 314px;
+    padding: 16px 24px 24px;
+    margin: auto;
+    margin-top: 96px;
+    .empty-title {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--yakit-header-color);
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    .empty-footer {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }
+}
+
 .popover-remove {
     padding-top: 6px;
 
@@ -218,5 +232,13 @@
         .ant-popover-inner-content {
             padding: 6px 4px 8px;
         }
+    }
+}
+
+.stop-icon {
+    height: 16px;
+    svg {
+        height: 16px;
+        width: 16px;
     }
 }
