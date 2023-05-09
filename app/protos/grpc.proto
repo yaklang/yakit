@@ -179,6 +179,7 @@ service Yak {
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
   rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
+  rpc RenderVariables(RenderVariablesRequest) returns (RenderVariablesResponse);
   rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
   rpc ExtractHTTPResponse(ExtractHTTPResponseParams) returns (ExtractHTTPResponseResult);
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
@@ -2508,6 +2509,17 @@ message HTTPResponseMatcher {
   string ExprType = 9;
 }
 
+message RenderVariablesRequest {
+  repeated KVPair Params = 1;
+  bool IsHTTPS = 2;
+  bytes HTTPRequest = 5;
+  bytes HTTPResponse = 4;
+}
+
+message RenderVariablesResponse {
+  repeated KVPair Results = 1;
+}
+
 message MatchHTTPResponseParams {
   repeated HTTPResponseMatcher Matchers = 1;
   string MatcherCondition = 2;
@@ -2620,6 +2632,11 @@ message FuzzerRequest {
 
   // 重复次数
   int64 RepeatTimes = 31;
+
+  // Extractor n Matchers
+  repeated HTTPResponseExtractor Extractors = 32;
+  repeated HTTPResponseMatcher Matchers = 33;
+  string MatchersCondition = 34;
 }
 
 message KVPair {
@@ -2702,6 +2719,10 @@ message FuzzerResponse {
   // 使用哪个代理
   string Proxy = 43;
   string RemoteAddr = 44;
+
+  // 如果设置了
+  repeated KVPair ExtractedResults = 45;
+  bool MatchedByMatcher = 46;
 }
 
 message Paging {
