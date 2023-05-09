@@ -4,6 +4,7 @@ export interface CVEDetail {
     DescriptionOrigin: string;
     Title: string;
     Solution: string;
+    References: string;
     AccessVector: string;
     AccessComplexity: string;
     Authentication: string;
@@ -11,6 +12,7 @@ export interface CVEDetail {
     IntegrityImpact: string;
     AvailabilityImpact: string;
     Severity: string;
+    UpdatedAt: number;
     PublishedAt: number;
     CWE: string;
     CVSSVersion: string;
@@ -22,35 +24,9 @@ export interface CVEDetail {
     ObtainOtherPrivileged: boolean;
     UserInteractionRequired: boolean;
     Product: string;
+    LastModifiedData : number
 }
 
-
-export interface CVEDetail {
-    CVE: string
-    DescriptionZh: string
-    DescriptionOrigin: string
-    Title: string
-    Solution: string
-    AccessVector: string
-    AccessComplexity: string
-    Authentication: string
-    ConfidentialityImpack: string
-    IntegrityImpact: string
-    AvailabilityImpact: string
-    Severity: string
-    PublishedAt: number
-    UpdatedAt:number
-    CWE: string
-    CVSSVersion: string
-    CVSSVectorString: string
-    BaseCVSSv2Score: number
-    ExploitabilityScore: number
-    ObtainAllPrivileged: boolean
-    ObtainUserPrivileged: boolean
-    ObtainOtherPrivileged: boolean
-    UserInteractionRequired: boolean
-    Product: string
-}
 
 export interface CWEDetail {
     CWE: string;

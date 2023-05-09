@@ -11,6 +11,7 @@ import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "../../utils/openWebsite"
+import {useThrottleFn,useGetState} from "ahooks"
 export interface ReportViewerProp {
     id?: number
 }
@@ -29,13 +30,15 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         PublishedAt: 0,
         Title: "-"
     })
-    const [reportItems, setReportItems] = useState<ReportItem[]>([])
-    const divRef = useRef<HTMLDivElement>(null)
+    const [reportItems, setReportItems,getReportItems] = useGetState<ReportItem[]>([])
+    const [renderReportItems,setRenderReportItems,getRenderReportItems] = useGetState<ReportItem[]>([])
+    const divRef = useRef<any>(null)
+
     useEffect(() => {
         if ((props?.id || 0) <= 0) {
             setReport({
                 ...report,
-                Id: 0,
+                Id: 0
             })
             return
         }
@@ -57,11 +60,21 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             const items = report.JsonRaw && report.JsonRaw !== "-" && (JSON.parse(report.JsonRaw) as ReportItem[])
             if (!!items && items.length > 0) {
                 setReportItems(items)
+                setRenderReportItems(items.slice(0,15))
             }
         } catch (e) {
             failed(`Parse Report[${props.id}]'s items failed`)
         }
     }, [report])
+
+    const loadReport = useThrottleFn(()=>{
+        let listLength = getReportItems().length
+        let renderLength = getRenderReportItems().length
+        if(listLength>renderLength){
+            setRenderReportItems(getReportItems().slice(0,renderLength+15))
+        }
+    },
+    { wait: 500 })
 
     if (report.Id <= 0) {
         return (
@@ -141,7 +154,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             {report.Title} <Tag>{props.id}</Tag>
                         </Space>
                     }
-                    bodyStyle={{overflow: "auto"}}
+                    bodyStyle={{paddingLeft: 20, overflow: "hidden"}}
                     extra={
                         <Space>
                             <a
@@ -171,9 +184,20 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                         </Space>
                     }
                 >
-                    <div ref={divRef}>
+                    <div
+                        ref={divRef}
+                        style={{overflow: "auto", height: "100%"}}
+                        onScroll={() => {
+                            const {scrollTop, clientHeight, scrollHeight} = divRef.current
+                            const isAtBottom = scrollTop + clientHeight > scrollHeight - 20
+                            // 监听是否滚动到接近底部
+                            if (isAtBottom) {
+                                loadReport.run()
+                            }
+                        }}
+                    >
                         <Space direction={"vertical"} style={{width: "100%"}}>
-                            {reportItems.map((i, index) => {
+                            {renderReportItems.map((i, index) => {
                                 return <ReportItemRender item={i} key={index} />
                             })}
                         </Space>
