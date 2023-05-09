@@ -41,8 +41,8 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
     }, [])
 
     return (
-        <div>
-            <PageHeader
+        <>
+            {/* <PageHeader
                 title={
                     <Space>
                         录屏管理器
@@ -78,29 +78,9 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                 }
             >
                 {!available && <Alert type={"info"} closable={false} message={reason} />}
-            </PageHeader>
-            <AutoSpin spinning={loading}>
-                <ResizeBox
-                    firstNode={
-                        <AutoCard size={"small"} bordered={false} title={"录屏基础设置"}>
-                            <ScreenRecorderForm
-                                onRefresh={() => {
-                                    const id = setInterval(() => {
-                                        setRefreshTrigger(!getRefreshTrigger())
-                                    }, 1000)
-                                    setTimeout(() => {
-                                        clearInterval(id)
-                                    }, 3400)
-                                }}
-                            />
-                        </AutoCard>
-                    }
-                    firstRatio={"450px"}
-                    firstMinSize={"400px"}
-                    secondNode={<ScreenRecorderList refreshTrigger={refreshTrigger} />}
-                />
-            </AutoSpin>
-        </div>
+            </PageHeader> */}
+            <ScreenRecorderList refreshTrigger={refreshTrigger} />
+        </>
     )
 }
 

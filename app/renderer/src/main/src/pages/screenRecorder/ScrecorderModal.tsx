@@ -63,7 +63,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
     const {onClose, token, onStartCallback} = props
     const [params, setParams] = useState<StartScrecorderParams>({
         CoefficientPTS: 0.333, // 三倍速
-        DisableMouse: true, // 鼠标捕捉
+        DisableMouse: false, // 鼠标捕捉
         Framerate: "7", // 帧率
         ResolutionSize: "" // 分辨率
     })
@@ -71,7 +71,8 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
     const onStart = useMemoizedFn((v) => {
         const newValue = {
             ...v,
-            ...params
+            ...params,
+            DisableMouse: !v.DisableMouse
         }
         ipcRenderer.invoke("StartScrecorder", newValue, token).then(() => {
             onStartCallback()

@@ -212,7 +212,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     }, [])
 
     const openScreenRecorder = useMemoizedFn(() => {
-        console.log("openScreenRecorder", screenRecorderInfo.token)
         const m = showYakitModal({
             title: "录屏须知",
             footer: null,
@@ -1757,7 +1756,6 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                         <div
                             className={styles["stop-screen-menu-item"]}
                             onClick={() => {
-                                console.log("screenRecorderInfo.token", token)
                                 ipcRenderer.invoke("cancel-StartScrecorder", token)
                             }}
                         >
@@ -1809,7 +1807,6 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     <div
                         className={styles["stop-screen-menu-item"]}
                         onClick={() => {
-                            console.log("screenRecorderInfo.token", token)
                             ipcRenderer.invoke("cancel-StartScrecorder", token)
                         }}
                     >
