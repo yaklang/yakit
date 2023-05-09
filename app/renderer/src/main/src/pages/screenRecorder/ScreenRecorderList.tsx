@@ -352,6 +352,7 @@ interface ScreenRecorderListItemProps {
 const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo((props) => {
     const {item, isSelected, onSelect} = props
     const [urlVideo, setUrlVideo] = useState<string>("")
+    const [form] = Form.useForm()
     useEffect(() => {
         setUrlVideo(`atom://${item.Filename}`)
     }, [item.Filename])
@@ -389,6 +390,39 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
     const onNextVideo = useMemoizedFn((item: ScreenRecorder) => {
         console.log("onNextVideo", item)
     })
+    const onEdit = useMemoizedFn(() => {
+        showYakitModal({
+            title: "编辑视频信息",
+            type: "white",
+            width: 720,
+            onOkText: "保存",
+            onOk: () => {
+                form.validateFields()
+                    .then((val) => {
+                        console.log("edit", val)
+                    })
+                    .catch(() => {})
+            },
+            content: (
+                <Form
+                    form={form}
+                    initialValues={{
+                        Filename: item.Filename,
+                        NoteInfo: item.NoteInfo
+                    }}
+                    layout='vertical'
+                    style={{padding: 24}}
+                >
+                    <Form.Item name='Filename' label='视频名称' rules={[{required: true, message: "该项为必填"}]}>
+                        <YakitInput />
+                    </Form.Item>
+                    <Form.Item name='NoteInfo' label='备注'>
+                        <YakitInput.TextArea rows={6} />
+                    </Form.Item>
+                </Form>
+            )
+        })
+    })
     return (
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
@@ -420,7 +454,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                 </div>
             </div>
             <div className={styles["list-item-operate"]}>
-                <PencilAltIcon />
+                <PencilAltIcon onClick={() => onEdit()} />
                 {/* {isEnterpriseEdition() && <CloudUploadIcon />} */}
                 <CloudUploadIcon />
                 <TrashIcon className={styles["icon-trash"]} />
