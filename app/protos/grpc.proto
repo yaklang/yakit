@@ -2632,6 +2632,11 @@ message FuzzerRequest {
 
   // 重复次数
   int64 RepeatTimes = 31;
+
+  // Extractor n Matchers
+  repeated HTTPResponseExtractor Extractors = 32;
+  repeated HTTPResponseMatcher Matchers = 33;
+  string MatchersCondition = 34;
 }
 
 message KVPair {
@@ -2714,6 +2719,10 @@ message FuzzerResponse {
   // 使用哪个代理
   string Proxy = 43;
   string RemoteAddr = 44;
+
+  // 如果设置了
+  repeated KVPair ExtractedResults = 45;
+  bool MatchedByMatcher = 46;
 }
 
 message Paging {
