@@ -456,8 +456,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <PlugInAdminPage/>
         case Route.AttachEngineCombinedOutput:
             return <EngineConsole/>
-        case Route.DB_Projects:
-            return <ProjectPage/>
         case Route.DB_WebShells:
             return <WebShellPage/>
         case Route.DB_ChaosMaker:

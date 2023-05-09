@@ -1,9 +1,9 @@
 const {ipcMain} = require("electron")
 
-module.exports = (win, getClient) => {
+module.exports = (win, getWsmClient) => {
     const asyncCreateWebShell = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().CreateWebShell(params, (err, data) => {
+            getWsmClient().CreateWebShell(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -18,7 +18,7 @@ module.exports = (win, getClient) => {
 
     const asyncDeleteWebShell = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().DeleteWebShell(params, (err, data) => {
+            getWsmClient().DeleteWebShell(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -33,7 +33,7 @@ module.exports = (win, getClient) => {
 
     const asyncUpdateWebShellById = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().UpdateWebShellById(params, (err, data) => {
+            getWsmClient().UpdateWebShellById(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -49,7 +49,7 @@ module.exports = (win, getClient) => {
 
     const asyncQueryWebShells = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().QueryWebShells(params, (err, data) => {
+            getWsmClient().QueryWebShells(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -64,7 +64,7 @@ module.exports = (win, getClient) => {
 
     const asyncPingWebShells = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().Ping(params, (err, data) => {
+            getWsmClient().Ping(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -79,7 +79,7 @@ module.exports = (win, getClient) => {
 
     const asyncGetBasicInfoWebShells = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetBasicInfo(params, (err, data) => {
+            getWsmClient().GetBasicInfo(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return

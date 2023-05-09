@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "protos/yakgrpc.proto";
+
+
+// WebShell
+enum ShellType {
+    Behinder = 0;
+    Godzilla = 1;
+}
+enum ShellScript {
+    JSP = 0;
+    JSPX = 1;
+    ASP = 2;
+    ASPX = 3;
+    PHP = 4;
+}
+enum EncMode {
+    Raw = 0;
+    Base64 = 1;
+    AesRaw = 2;
+    AesBase64 = 3;
+    XorRaw = 4;
+    XorBase64 = 5;
+}
+
+message WebShell {
+    int64 Id = 1;
+    string Url = 2;
+    string Pass = 3;
+    string SecretKey = 4;
+    string EncMode = 5;
+    string Charset = 6;
+    string ShellType = 7;
+    string ShellScript = 8;
+    bool State = 9;
+    string Tag = 10;
+    //    Proxy
+    string Proxy = 11;
+    int64 CreatedAt = 12;
+    int64 UpdatedAt = 13;
+}
+message WebShellRequest {
+    int64 Id = 1;
+}
+message WebShellResponse {
+    bool State = 1;
+    bytes Data = 2;
+}
+
+
+message QueryWebShellsRequest {
+    Paging Pagination = 1;
+    string Tag = 2;
+}
+
+message QueryWebShellsResponse {
+    Paging Pagination = 1;
+    int64 Total = 2;
+    repeated WebShell Data = 3;
+}
+
+message UpdateWebShellRequest {
+    int64 Id = 1;
+    string Url = 2;
+    string Pass = 3;
+    string SecretKey = 4;
+    string EncMode = 5;
+    string Charset = 6;
+    string ShellType = 7;
+    string ShellScript = 8;
+    string Tag = 10;
+}
+
+message DeleteWebShellRequest {
+    int64 Id = 1;
+    repeated int64 Ids = 2;
+}
+
+
+service WebShellManager {
+    rpc CreateWebShell(WebShell) returns (Empty);
+    rpc DeleteWebShell(DeleteWebShellRequest) returns (Empty);
+    rpc UpdateWebShellById(UpdateWebShellRequest) returns (Empty);
+    rpc QueryWebShells(QueryWebShellsRequest) returns (QueryWebShellsResponse);
+    rpc Ping(WebShellRequest) returns (WebShellResponse);
+    rpc GetBasicInfo(WebShellRequest) returns (WebShellResponse);
+}

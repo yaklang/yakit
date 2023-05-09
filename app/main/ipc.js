@@ -1,19 +1,24 @@
 const {ipcMain, nativeImage, Notification, app} = require("electron")
 const path = require("path")
 const fs = require("fs")
-const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
 const grpc = require("@grpc/grpc-js")
 const protoLoader = require("@grpc/proto-loader")
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+
+const PROTO_DIR = path.join(__dirname, "../protos/")
+const PROTO_FILES = fs.readdirSync(PROTO_DIR).map((filename) => path.join(PROTO_DIR, filename))
+const packageDefinition = protoLoader.loadSync(PROTO_FILES, {
     keepCase: true,
     longs: String,
     enums: String,
     defaults: true,
-    oneofs: true
+    oneofs: true,
 })
+
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
 const {ypb} = protoDescriptor
-const {Yak} = ypb
+console.log("xxxxxxxxxxxxxxxxxxxxxx", ypb.Yak)
+console.log("xxxxxxxxxxxxxxxxxxxxxx", ypb.WebShellManager)
+// const {Yak} = ypb
 
 const global = {
     defaultYakGRPCAddr: "127.0.0.1:8087",
@@ -22,6 +27,7 @@ const global = {
 }
 
 let _client
+let _wsmClient
 
 const options = {
     "grpc.max_receive_message_length": 1024 * 1024 * 1000,
@@ -36,7 +42,7 @@ function newClient() {
         const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
             return callback(null, md)
         })
-        return new Yak(
+        return new ypb.Yak(
             global.defaultYakGRPCAddr,
             // grpc.credentials.createInsecure(),
             grpc.credentials.combineChannelCredentials(
@@ -50,7 +56,7 @@ function newClient() {
             options
         )
     } else {
-        return new Yak(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), options)
+        return new ypb.Yak(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), options)
     }
 }
 
@@ -67,6 +73,44 @@ function getClient(createNew) {
     return getClient()
 }
 
+function newWebShellManagerClient() {
+    const md = new grpc.Metadata()
+    md.set("authorization", `bearer ${global.password}`)
+    if (global.caPem !== "") {
+        const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
+            return callback(null, md)
+        })
+        return new ypb.WebShellManager(
+            global.defaultYakGRPCAddr,
+            // grpc.credentials.createInsecure(),
+            grpc.credentials.combineChannelCredentials(
+                grpc.credentials.createSsl(Buffer.from(global.caPem, "latin1"), null, null, {
+                    checkServerIdentity: (hostname, cert) => {
+                        return undefined
+                    }
+                }),
+                creds
+            ),
+            options
+        )
+    } else {
+        return new ypb.WebShellManager(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), options)
+    }
+}
+
+function getWsmClient(createNew) {
+    if (!!createNew) {
+        console.log("1111")
+        return newWebShellManagerClient()
+    }
+
+    if (_wsmClient) {
+        return _wsmClient
+    }
+
+    _wsmClient = newWebShellManagerClient()
+    return getWsmClient()
+}
 /**
  * @name 测试远程连接引擎是否成功
  * @param {Object} params
@@ -135,7 +179,7 @@ module.exports = {
         ipcMain.handle("Echo", async (e, params) => {
             return await asyncEcho(params)
         })
-        
+
         /** 获取 yaklang引擎 配置参数 */
         ipcMain.handle("fetch-yaklang-engine-addr", () => {
             return {
@@ -192,7 +236,7 @@ module.exports = {
         //assets
         require("./handlers/assets")(win, getClient)
 
-        require("./handlers/webshell")(win, getClient)
+        require("./handlers/webshell")(win, getWsmClient)
 
         // 加载更多的 menu
         require("./handlers/menu")(win, getClient)
