@@ -40,6 +40,7 @@ import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {ReactPlayerVideo} from "./ReactPlayerVideo/ReactPlayerVideo"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -125,7 +126,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const onRefresh = useMemoizedFn(() => {
         update(1, undefined, true)
     })
-
     return (
         <div className={styles["screen-recorder"]}>
             <div className={styles["screen-recorder-heard"]}>
@@ -232,14 +232,16 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     <ChevronDownIcon />
                                 </YakitButton>
                             </YakitPopover>
-                            <YakitButton
-                                type='outline2'
-                                onClick={() => {}}
-                                disabled={selected.length === 0}
-                                className={classNames("button-outline2-danger")}
-                            >
-                                清空
-                            </YakitButton>
+                            <YakitPopconfirm title={"确定清空吗？"} onConfirm={() => {}} className='button-text-danger'>
+                                <YakitButton
+                                    type='outline2'
+                                    onClick={() => {}}
+                                    disabled={selected.length === 0}
+                                    className={classNames("button-outline2-danger")}
+                                >
+                                    清空
+                                </YakitButton>
+                            </YakitPopconfirm>
                         </div>
                     </div>
                     <div className={styles["screen-recorder-list"]}>
@@ -433,7 +435,6 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                 </div>
             </div>
 
-            {/* <ReactPlayer url={`atom://${item.Filename}`} height={72} width={128} /> */}
             <div className={styles["list-item-info"]}>
                 <div className={styles["list-item-name"]} onClick={() => onPlayVideo()}>
                     {item.Filename}
@@ -457,7 +458,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                 <PencilAltIcon onClick={() => onEdit()} />
                 {/* {isEnterpriseEdition() && <CloudUploadIcon />} */}
                 <CloudUploadIcon />
-                <TrashIcon className={styles["icon-trash"]} />
+                <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => {}} className='button-text-danger'>
+                    <TrashIcon className={styles["icon-trash"]} />
+                </YakitPopconfirm>
             </div>
         </>
     )
