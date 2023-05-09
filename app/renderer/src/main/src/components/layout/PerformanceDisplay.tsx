@@ -257,6 +257,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                         ipcRenderer
                                                             .invoke("connect-yaklang-engine", switchEngine)
                                                             .then(() => {
+                                                                ipcRenderer.invoke("switch-conn-refresh", true)
                                                                 success(`切换核心引擎成功！`)
                                                             })
                                                             .catch((e) => {

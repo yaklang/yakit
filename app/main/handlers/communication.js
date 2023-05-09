@@ -64,6 +64,10 @@ module.exports = (win, getClient) => {
     ipcMain.handle("update-yakit-header-title-drop", (e, params) => {
         win.webContents.send("fetch-yakit-header-title-drop", params)
     })
+    /** 风车切换引擎 */
+    ipcMain.handle("switch-conn-refresh", (e, params) => {
+        win.webContents.send("fetch-switch-conn-refresh", params)
+    })
     /** License验证通信 */
     ipcMain.handle("update-judge-license", (e, params) => {
         win.webContents.send("fetch-judge-license", params)

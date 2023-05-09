@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Form, Input, Progress, Select, Spin, Tooltip} from "antd"
+import {Form, Input, Modal, Progress, Select, Spin, Tooltip} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -57,6 +57,7 @@ import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu";
 import {FeatureRequest, ReportBug} from "@/utils/template/issues";
+import {ExclamationCircleOutlined} from "@ant-design/icons";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -826,6 +827,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
         }
     })
+
+    const [refresh, setRefresh] = useState<boolean>(false)
+
+    useEffect(() => {
+        ipcRenderer.on("fetch-switch-conn-refresh", (e, d: boolean) => {
+            setRefresh(d)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-switch-conn-refresh")
+        }
+    }, [])
+
+    console.log("refresh ", refresh)
+
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <div className={styles["ui-layout-container"]}>
