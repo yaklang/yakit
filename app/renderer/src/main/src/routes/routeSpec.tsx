@@ -114,6 +114,7 @@ import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
 import {YakScriptExecResultTable} from "@/components/YakScriptExecResultTable";
 import {WebShellPage} from "@/pages/webshellManager/WebShellPage"
+import {MatcherExtractorPage} from "@/pages/matcherextractor/MatcherExtractorPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -161,7 +162,6 @@ export enum Route {
     DB_Domain = "db-domains",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
-    DB_Projects = "db-projects",
     DB_WebShells = "db-webshells",
     DB_CVE = "cve",
 
@@ -204,8 +204,11 @@ export enum Route {
     // 录屏管理器
     ScreenRecorderPage = "screen-recorder-page",
 
+    // 匹配提取功能
+    Beta_MatcherExtractorPage = "beta-matcher-extractor-page",
+
     // 首页
-    NewHome = "new-home"
+    NewHome = "new-home",
 }
 
 export function RouteNameToVerboseName(r: string) {
@@ -463,10 +466,10 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <ChaosMakerPage/>
         case Route.ScreenRecorderPage:
             return <ScreenRecorderPage/>
-        case Route.AttachEngineCombinedOutput:
-            return <EngineConsole />
         case Route.DB_CVE:
             return <CVEViewer/>
+        case Route.Beta_MatcherExtractorPage:
+            return <MatcherExtractorPage/>
         default:
             return <div/>
     }
@@ -503,6 +506,13 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 icon: <MenuWebsocketFuzzerIcon/>,
                 hoverIcon: <MenuSolidWebsocketFuzzerIcon/>
             }
+            // {
+            //     id: "1-4",
+            //     key: Route.PayloadGenerater_New,
+            //     label: "Yso-Java Hack",
+            //     icon: <MenuYsoJavaHackIcon />,
+            //     describe: "配置序列化 Payload 或恶意类"
+            // }
         ]
     },
     {

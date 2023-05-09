@@ -94,7 +94,9 @@ const singletonRoute: Route[] = [
     Route.NewHome,
 
     // 录屏
-    Route.ScreenRecorderPage
+    Route.ScreenRecorderPage,
+    // Matcher n Extractor
+    Route.Beta_MatcherExtractorPage,
 ]
 /** 不需要首页组件安全边距的页面 */
 export const noPaddingPage = [
@@ -1162,6 +1164,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "add-yak-running") addYakRunning(data)
             if (type === "**screen-recorder") addTabPage(Route.ScreenRecorderPage)
             if (type === "**chaos-maker") addTabPage(Route.DB_ChaosMaker)
+            if (type === "**matcher-extractor") addTabPage(Route.Beta_MatcherExtractorPage)
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === Route.ModManager).length
                 if (flag === 0) {
