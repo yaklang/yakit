@@ -215,9 +215,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
     // 通过 gRPC 调用，启动 MITM 劫持
     const startMITMServer = useMemoizedFn(
-        (targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[]) => {
+        (targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[], extra?: object) => {
             return ipcRenderer
-                .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs)
+                .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs, extra)
                 .catch((e: any) => {
                     notification["error"]({message: `启动中间人劫持失败：${e}`})
                 })
@@ -226,13 +226,22 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     // 设置开始服务器处理函数
     const startMITMServerHandler = useMemoizedFn(
-        (host, port, downstreamProxy, enableInitialPlugin, plugins, enableHttp2, certs: ClientCertificate[]) => {
-            setAddr(`https://${host}:${port}`)
+        (
+            host,
+            port,
+            downstreamProxy,
+            enableInitialPlugin,
+            plugins,
+            enableHttp2,
+            certs: ClientCertificate[],
+            extra?: object
+        ) => {
+            setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
             setPort(port)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(host, port, downstreamProxy, enableHttp2, certs)
+            startMITMServer(host, port, downstreamProxy, enableHttp2, certs, extra)
         }
     )
 
@@ -309,7 +318,8 @@ interface MITMServerProps {
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
-        clientCertificates: ClientCertificate[]
+        clientCertificates: ClientCertificate[],
+        extra?: object
     ) => any
     visible?: boolean
     setVisible?: (b: boolean) => void
@@ -348,7 +358,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
     })
     const onStartMITMServer = useMemoizedFn(
-        (host, port, downstreamProxy, enableInitialPlugin, enableHttp2, certs: ClientCertificate[]) => {
+        (host, port, downstreamProxy, enableInitialPlugin, enableHttp2, certs: ClientCertificate[], extra?: object) => {
             if (props.onStartMITMServer)
                 props.onStartMITMServer(
                     host,
@@ -357,7 +367,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin,
                     enableInitialPlugin ? checkList : [],
                     enableHttp2,
-                    certs
+                    certs,
+                    extra
                 )
         }
     )
@@ -566,6 +577,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <MITMServerStartForm
+                        status={status}
                         onStartMITMServer={onStartMITMServer}
                         visible={visible || false}
                         setVisible={(v) => {

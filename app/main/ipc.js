@@ -143,6 +143,10 @@ module.exports = {
                 isTLS: !!global.caPem
             }
         })
+
+        /** 登录相关监听 */
+        require("./handlers/userInfo")(win, getClient)
+
         /** 注册本地缓存数据查改通信 */
         require("./localCache").register(win, getClient)
         /** 启动、连接引擎 */
@@ -165,22 +169,6 @@ module.exports = {
         require("./handlers/execYak")(win, getClient)
         require("./handlers/listenPort")(win, getClient)
         require("./handlers/mitm")(win, getClient)
-        require("./handlers/checkYakEnv")(
-            win,
-            (addr, password, caPem) => {
-                // 清空老数据
-                if (_client) _client.close()
-                _client = null
-                global.password = ""
-                global.caPem = ""
-
-                // 设置地址
-                global.defaultYakGRPCAddr = addr
-                global.password = password
-                global.caPem = caPem
-            },
-            getClient
-        )
         require("./handlers/queryHTTPFlow")(win, getClient)
         require("./handlers/httpFuzzer")(win, getClient)
         require("./handlers/httpAnalyzer")(win, getClient)

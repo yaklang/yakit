@@ -884,7 +884,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 onCancel={() => setVisibleRemove(false)}
                 footer={null}
                 closable={true}
-                closeIcon={<RemoveIcon className='modal-remove-icon' />}
+                closeIcon={<RemoveIcon className='plugin-modal-remove-icon' />}
             >
                 <Space direction={"vertical"} className='modal-remove-menu'>
                     {(groups &&

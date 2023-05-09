@@ -1,14 +1,14 @@
-import React from "react";
-import {ReportItem} from "./schema";
+import React from "react"
+import {ReportItem} from "./schema"
 
-import MDEditor from "@uiw/react-md-editor";
-
-const {Markdown} = MDEditor;
+import MDEditor from "@uiw/react-md-editor"
+import styles from "./markdownRender.module.scss"
+const {Markdown} = MDEditor
 
 export interface ReportMarkdownBlockProp {
     item: ReportItem
 }
 
 export const ReportMarkdownBlock: React.FC<ReportMarkdownBlockProp> = (props) => {
-    return <Markdown source={props.item.content}/>
-};
+    return <Markdown source={props.item.content} className={styles["markdown-block"]} />
+}

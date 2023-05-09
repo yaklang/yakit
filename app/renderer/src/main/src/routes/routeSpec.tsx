@@ -43,6 +43,7 @@ import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
 import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
+import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage";
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
@@ -108,7 +109,6 @@ import {
     MenuSolidYsoJavaHackIcon,
     MenuSolidBatchVulnerabilityDetectionIcon,
 } from "@/pages/customizeMenu/icon/solidMenuIcon"
-import {ProjectPage} from "@/pages/projects/ProjectPage"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker";
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
@@ -194,6 +194,7 @@ export enum Route {
     // 管理
     AccountAdminPage = "account-admin-page", // 用户管理
     RoleAdminPage = "role-admin-page", // 角色管理
+    HoleCollectPage = "hole-collect-page", // 漏洞汇总
     LicenseAdminPage = "license-admin-page", // license管理
     TrustListPage = "trust-list-admin-page", // 信任用户管理
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
@@ -445,6 +446,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <AccountAdminPage/>
         case Route.RoleAdminPage:
             return <RoleAdminPage/>
+        case Route.HoleCollectPage:
+            return <HoleCollectPage/>
         case Route.LicenseAdminPage:
             return <LicenseAdminPage/>
         case Route.TrustListPage:
@@ -530,8 +533,8 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
             {
                 id: "2-3",
                 key: undefined,
-                label: "空间引擎: Hunter",
-                yakScripName: "空间引擎: Hunter",
+                label: "空间引擎集成版本",
+                yakScripName: "空间引擎集成版本",
                 icon: <MenuSpaceEngineHunterIcon/>,
                 hoverIcon: <MenuSolidSpaceEngineHunterIcon/>
             },
@@ -764,6 +767,13 @@ export const HiddenMenuData: MenuDataProps[] = [
         hidden: true
     },
     {
+        id: "Route.HoleCollectPage",
+        key: Route.HoleCollectPage,
+        label: "漏洞汇总",
+        disabled: true,
+        hidden: true
+    },
+    {
         id: "Route.LicenseAdminPage",
         key: Route.LicenseAdminPage,
         label: "License管理",
@@ -822,8 +832,8 @@ export const SimpleDataBaseMenu: MenuDataProps[] = [
     //         {
     //             id: "2-3",
     //             key: undefined,
-    //             label: "空间引擎: Hunter",
-    //             yakScripName: "空间引擎: Hunter",
+    //             label: "空间引擎集成版本",
+    //             yakScripName: "空间引擎集成版本",
     //             icon: <MenuSpaceEngineHunterIcon />,
     //             hoverIcon: <MenuSolidSpaceEngineHunterIcon />
     //         },

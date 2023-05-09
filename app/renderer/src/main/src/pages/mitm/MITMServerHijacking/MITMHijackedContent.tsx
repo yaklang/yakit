@@ -317,6 +317,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 hijacking={hijacking}
                                 execFuzzer={execFuzzer}
                                 status={status}
+                                onSetHijackResponseType={onSetHijackResponseType}
                             />
                         </div>
                     </div>

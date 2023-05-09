@@ -13,6 +13,8 @@ export interface ChaosMakerOperatorsProp {
     running?: boolean
     groups: ChaosMakerRuleGroup[]
     onExecute: (data: ExecuteChaosMakerRuleRequest) => any
+    couldBeenReset?: boolean
+    onReset?: () => any
 }
 
 export interface ExecuteChaosMakerRuleRequest {
@@ -95,19 +97,38 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                         })
                     }}>添加探针</YakitButton>
                 </AutoCard>
-                <AutoCard style={{
-                    height: 40, width: 40, borderRadius: '6px',
-                    border: '1px solid var(--yakit-primary-3)',
-                    backgroundColor: '#F28B44',
-                }} hoverable={true} onClick={() => {
-                    if (props.onExecute) {
-                        props.onExecute(params)
-                    }
-                }}>
-                    <div style={{fontWeight: "bold", color: "#fff"}}>
-                        配置模拟攻击参数
-                    </div>
-                </AutoCard>
+                {
+                    props.couldBeenReset ? <AutoCard
+                        style={{
+                            height: 40, width: 40, borderRadius: '6px',
+                            border: '1px solid var(--yakit-primary-5)',
+                            backgroundColor: '#e01f1f',
+                        }}
+                        hoverable={true}
+                        onClick={()=>{
+                            if (props.onReset) {
+                                props.onReset()
+                            }
+                        }}
+                    >
+                        <div style={{fontWeight: "bold", color: "#fff"}}>
+                            重置 BAS 操作台
+                        </div>
+                    </AutoCard> : <AutoCard style={{
+                        height: 40, width: 40, borderRadius: '6px',
+                        border: '1px solid var(--yakit-primary-3)',
+                        backgroundColor: '#F28B44',
+                    }} hoverable={true} onClick={() => {
+                        if (props.onExecute) {
+                            props.onExecute(params)
+                        }
+                    }}>
+                        <div style={{fontWeight: "bold", color: "#fff"}}>
+                            配置模拟攻击参数
+                        </div>
+                    </AutoCard>
+                }
+
             </Space>
         </Form.Item>
     </Form>

@@ -9,7 +9,7 @@ import {YakitModal} from "./YakitModal"
 import {ErrorBoundary} from "react-error-boundary"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 
-interface YakitModalConfirmProps extends YakitBaseModalProp {
+export interface YakitModalConfirmProps extends YakitBaseModalProp {
     title?: React.ReactNode | string
     content?: React.ReactNode | string
     modalAfterClose?: () => any

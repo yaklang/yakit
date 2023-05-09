@@ -333,11 +333,4 @@ module.exports = (win, callback, getClient, newClient) => {
     ipcMain.handle("output-log-to-welcome-console", (e, msg) => {
         toLog(`${msg}`)
     })
-
-
-    ipcMain.handle("callback-process-envs",(e,type)=>{
-        // 屏蔽企业/社区版分库
-        // dbFile = ["enterprise","simple-enterprise"].includes(type) ?  "company-default-yakit.db" : undefined
-        return""
-    })
 }

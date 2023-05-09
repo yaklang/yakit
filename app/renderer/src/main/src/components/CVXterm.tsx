@@ -22,6 +22,9 @@ export const TERMINAL_INPUT_KEY = {
     CHAR_C: 67 // 字符C
 }
 
+/**
+ * @deprecated 建议使用 YakitCVXterm 调试
+ */
 export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     const {isWrite = false, write: rewrite, maxHeight = 400, ...rest} = props
 

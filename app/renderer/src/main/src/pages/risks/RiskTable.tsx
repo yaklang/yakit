@@ -20,8 +20,6 @@ import {ExportExcel} from "../../components/DataExport/DataExport"
 import {HTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
-import {ColumnType} from "antd/lib/table"
-import {isSimpleEnterprise} from "@/utils/envfile"
 
 import "./RiskTable.css"
 
@@ -76,8 +74,8 @@ const mergeFieldNames = (f: Fields) => {
     return items
 }
 
-const cellColorFontSetting = {
-    '调试信息': {
+export const cellColorFontSetting = {
+    "调试信息": {
         font: {
             color: {rgb: "000000"}
         }
@@ -87,16 +85,16 @@ const cellColorFontSetting = {
             color: {rgb: "8c8c8c"}
         }
     },
-    '中危': {
+    "中危": {
         font: {
             color: {rgb: "ff7a45"}
         }
     },
-    '严重': {
+    "严重": {
         font: {
             color: {rgb: "a8071a"}
         }
-    },
+    }
 }
 export const TitleColor = [
     {
@@ -226,7 +224,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     const delRisk = useMemoizedFn((hash: string) => {
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteRisk", {Hash:hash})
+            .invoke("DeleteRisk", {Hash: hash})
             .then(() => {
                 update(1)
             })
@@ -344,7 +342,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             width: 400,
             filteredValue: (getParams()["Search"] && ["TitleVerbose"]) || null,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -370,7 +368,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             filteredValue: (getParams()["RiskType"] && ["RiskTypeVerbose"]) || null,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -404,7 +402,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             render: (_, i: Risk) => i?.IP || "-",
             filteredValue: (getParams()["Network"] && ["IP"]) || null,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}}/>
+                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -453,7 +451,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                     title: "详情",
                                     content: (
                                         <div style={{overflow: "auto"}}>
-                                            <RiskDetails info={i}/>
+                                            <RiskDetails info={i} />
                                         </div>
                                     )
                                 })
@@ -548,7 +546,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                                 onClick={() => {
                                                     refList()
                                                 }}
-                                                icon={<ReloadOutlined/>}
+                                                icon={<ReloadOutlined />}
                                             />
                                         </Tooltip>
                                     </Space>
@@ -621,7 +619,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                                 Id: record.Id,
                                                 Filter: {
                                                     Search: record?.TitleVerbose || record.Title,
-                                                    Network: record?.IP,
+                                                    Network: record?.IP
                                                 }
                                             }
                                             ipcRenderer
@@ -786,19 +784,21 @@ interface RiskDetailsProp {
     info: Risk
     isShowTime?: boolean
     shrink?: boolean
+    quotedRequest?: string
+    quotedResponse?: string
 }
 
 export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDetailsProp) => {
-    const {info, isShowTime = true} = props
+    const {info, isShowTime = true, quotedRequest, quotedResponse} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
-    const [shrink, setShrink] = useState(!!props.shrink);
+    const [shrink, setShrink] = useState(!!props.shrink)
 
     return (
         <Descriptions
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>
-                        <img src={title?.img || infoImg} className='icon-img'/>
+                        <img src={title?.img || infoImg} className='icon-img' />
                     </div>
 
                     <div className='title-header'>
@@ -806,11 +806,14 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                             <Space>
                                 {info?.TitleVerbose || info.Title}
                                 <Button
-                                    type={"link"} size={"small"}
-                                    onClick={()=>{
+                                    type={"link"}
+                                    size={"small"}
+                                    onClick={() => {
                                         setShrink(!shrink)
                                     }}
-                                >{shrink ? `展开详情` : `折叠详情`}</Button>
+                                >
+                                    {shrink ? `展开详情` : `折叠详情`}
+                                </Button>
                             </Space>
                         </div>
 
@@ -861,11 +864,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                 <div>{info.Host || "-"}</div>
             </Descriptions.Item>
             <Descriptions.Item label='类型'>
-                {isSimpleEnterprise ? (
-                    <div>{(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}</div>
-                ) : (
-                    <div>{info?.RiskTypeVerbose || info.RiskType}</div>
-                )}
+                <div>{(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}</div>
             </Descriptions.Item>
             <Descriptions.Item label='来源'>
                 <div>{info?.FromYakScript || "漏洞检测"}</div>
@@ -900,22 +899,30 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                     {(info?.Request || []).length > 0 && (
                         <Descriptions.Item label='Request' span={3}>
                             <div style={{height: 300}}>
-                                <HTTPPacketEditor
-                                    originValue={info?.Request || new Uint8Array()}
-                                    readOnly={true}
-                                    noHeader={true}
-                                />
+                                {quotedRequest ? (
+                                    <div>{quotedRequest}</div>
+                                ) : (
+                                    <HTTPPacketEditor
+                                        originValue={info?.Request || new Uint8Array()}
+                                        readOnly={true}
+                                        noHeader={true}
+                                    />
+                                )}
                             </div>
                         </Descriptions.Item>
                     )}
                     {(info?.Response || []).length > 0 && (
                         <Descriptions.Item label='Response' span={3}>
                             <div style={{height: 300}}>
-                                <HTTPPacketEditor
-                                    originValue={info?.Response || new Uint8Array()}
-                                    readOnly={true}
-                                    noHeader={true}
-                                />
+                                {quotedResponse ? (
+                                    <div>{quotedResponse}</div>
+                                ) : (
+                                    <HTTPPacketEditor
+                                        originValue={info?.Response || new Uint8Array()}
+                                        readOnly={true}
+                                        noHeader={true}
+                                    />
+                                )}
                             </div>
                         </Descriptions.Item>
                     )}

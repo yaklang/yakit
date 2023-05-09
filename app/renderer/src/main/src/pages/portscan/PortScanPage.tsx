@@ -485,18 +485,17 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
     useEffect(()=>{
         if(deepLevel&&isSetPort){
             switch (deepLevel) {
-            case 1:
-                setPortroupValue(["top1000+"])
+            case 3:
+                setPortroupValue(["fast"])
             break;
             case 2:
-                setPortroupValue(["topweb"])
+                setPortroupValue(["middle"])
             break;
-            case 3:
-                setPortroupValue(["top100"])
+            case 1:
+                setPortroupValue(["slow"])
             break;
         }
         }
-        
     },[deepLevel])
 
     return (
@@ -563,6 +562,9 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         setPortroupValue(value)
                                     }}
                                 >
+                                    <Checkbox value={"fast"}>快速默认端口</Checkbox>
+                                    <Checkbox value={"middle"}>适中默认端口</Checkbox>
+                                    <Checkbox value={"slow"}>慢速默认端口</Checkbox>
                                     <Checkbox value={"top100"}>常见100端口</Checkbox>
                                     <Checkbox value={"topweb"}>常见 Web 端口</Checkbox>
                                     <Checkbox value={"top1000+"}>常见一两千</Checkbox>

@@ -13,11 +13,12 @@ import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {DownloadingState, YakitSystem} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
+import {showModal} from "@/utils/showModal"
+import { getLocalValue, setLocalValue } from "@/utils/kv"
+import { LocalGV } from "@/yakitGV"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
-import {showModal} from "@/utils/showModal";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -66,6 +67,18 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     /** 是否中断下载记录 */
     const [cancelLoading, setCancelLoading] = useState<boolean>(false)
     const isBreakDownload = useRef<boolean>(false)
+
+    useEffect(() => {
+        getLocalValue(LocalGV.IsCheckedUserAgreement).then((val: boolean) => {
+            setAgrCheck(val)
+        })
+    },[])
+
+    useEffect(() => {
+        if(agrCheck){
+            setLocalValue(LocalGV.IsCheckedUserAgreement, true)
+        }
+    }, [agrCheck])
 
     /** 弹窗拖拽移动触发事件 */
     const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {

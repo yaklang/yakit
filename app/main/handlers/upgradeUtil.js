@@ -7,6 +7,7 @@ const fs = require("fs");
 const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
+
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
 
@@ -289,6 +290,18 @@ module.exports = {
             return await asyncGetCurrentLatestYakVersion(params)
         })
 
+        /** 获取Yakit Yaklang本地版本号 操作系统 架构 */
+        ipcMain.handle("fetch-local-basic-info", async (e) => {
+            const localYakit = app.getVersion()
+            const localYaklang = await asyncGetCurrentLatestYakVersion()
+            return {
+                system:process.platform,
+                arch:process.arch,
+                localYakit,
+                localYaklang
+            }
+        })
+
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise((resolve, reject) => {
@@ -336,34 +349,29 @@ module.exports = {
 
                 }
 
-                request(
-                    {
-                        url: downloadUrl
-                    },
-                    function (error, response, body) {
-                        if (response.statusCode === 404) {
+                // https://github.com/IndigoUnited/node-request-progress
+                // The options argument is optional so you can omit it
+                requestProgress(
+                    request(downloadUrl), {
+                        // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+                        // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+                        // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+                    })
+                    .on("response",function (resp){
+                        if (resp.statusCode === 404) {
                             reject("暂无最新安装包")
-                        } else {
-                            // https://github.com/IndigoUnited/node-request-progress
-                            // The options argument is optional so you can omit it
-                            requestProgress(request(downloadUrl), {
-                                // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-                                // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-                                // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-                            })
-                                .on("progress", function (state) {
-                                    win.webContents.send("download-yakit-engine-progress", state)
-                                })
-                                .on("error", function (err) {
-                                    reject(err)
-                                })
-                                .on("end", function () {
-                                    resolve()
-                                })
-                                .pipe(fs.createWriteStream(dest))
                         }
-                    }
-                )
+                    })
+                    .on("progress", function (state) {
+                        win.webContents.send("download-yakit-engine-progress", state)
+                    })
+                    .on("error", function (err) {
+                        reject(err)
+                    })
+                    .on("end", function () {
+                        resolve()
+                    })
+                    .pipe(fs.createWriteStream(dest))
             })
         }
         ipcMain.handle("download-latest-yakit", async (e, version, isEnterprise) => {
@@ -429,10 +437,6 @@ module.exports = {
         // 获取当前是否是 arm64？
         ipcMain.handle("get-platform-and-arch", (e) => {
             return `${process.platform}-${process.arch}`;
-        })
-
-        ipcMain.handle("install-yakit", async (e, params) => {
-            return shell.openPath(yakEngineDir)
         })
 
         // 获取yak code文件根目录路径

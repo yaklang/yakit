@@ -13,8 +13,6 @@ import {SelectIcon} from "../../assets/icons"
 import {report} from "process"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import "./ReportViewerPage.scss"
-import { ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 export interface ReportViewerPageProp {
 }
 

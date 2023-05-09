@@ -212,10 +212,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 // if (res?.Data.length === 0) return
-                const newData: HTTPFlow[] = getClassNameData(res?.Data || [])
+                let newData: HTTPFlow[] = getClassNameData(res?.Data || [])
                     .concat(data || [])
                     .filter((_, index) => index < 30)
-
                 setData(newData)
                 setTotal(res.Total)
             })
@@ -241,7 +240,10 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             setLoading(false)
         }, 1000)
     }, [shieldData])
-
+    useEffect(() => {
+        setData([])
+        setTotal(0)
+    }, [inViewport])
     useRafInterval(
         () => {
             update()

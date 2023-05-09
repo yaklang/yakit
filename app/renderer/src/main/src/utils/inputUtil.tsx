@@ -15,7 +15,7 @@ import {
     Switch,
     Tag, Tooltip,
     Typography,
-    Upload
+    Upload,
 } from 'antd';
 import '@ant-design/compatible/assets/index.css';
 import {DeleteOutlined, PlusOutlined} from "@ant-design/icons"
@@ -31,12 +31,14 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 
+type TooltipPlacement = 'top' | 'left' | 'right' | 'bottom' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'leftTop' | 'leftBottom' | 'rightTop' | 'rightBottom';
 export interface OneLineProp {
     width?: string | number
     overflow?: string
     maxWidth?: string | any
     title?: string
     children?: React.ReactNode
+    placement?:TooltipPlacement 
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
@@ -48,7 +50,7 @@ export const OneLine: React.FC<OneLineProp> = (props) => {
             maxWidth: props.maxWidth,
             textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
         }}>
-        {props?.title ? <Tooltip title={props.title}>
+        {props?.title ? <Tooltip title={props.title} placement={props.placement}>
             {props.children}
         </Tooltip> : props.children}
     </div>
@@ -344,7 +346,7 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
     // const [current, setCurrent] = useState<any>();
     return <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
         <YakitRadioButtons
-            className={"select-one"}
+            className={"old-theme-html select-one"}
             disabled={p.disabled}
             size={p.size}
             value={p.value}
@@ -596,7 +598,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
 }
 
 export const SwitchItem: React.FC<SwitchItemProps> = p => {
-    return <Item label={p.label} help={p.help} style={p.formItemStyle}>
+    return <Item className="old-theme-html" label={p.label} help={p.help} style={p.formItemStyle}>
         <YakitSwitch checked={p.value} onChange={e => p.setValue(e)} disabled={p.disabled}/>
     </Item>
 }

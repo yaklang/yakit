@@ -3,8 +3,8 @@ import {setRemoteValue} from "@/utils/kv"
 import {loginOut, loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import {globalUserLogout} from "@/utils/envfile"
+
 const {ipcRenderer} = window.require("electron")
 
 interface AxiosResponseInfoProps {
@@ -71,6 +71,6 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 // token过期，退出
 const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
-    IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
+    globalUserLogout()
     failed("401,登录过期/未登录，请重新登录")
 }

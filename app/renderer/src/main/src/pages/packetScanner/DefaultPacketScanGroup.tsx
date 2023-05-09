@@ -1,7 +1,10 @@
-import React, {useState} from "react";
-import {ByCursorMenuItemProps} from "@/utils/showByCursor";
-import {Button, Popover, Space} from "antd";
-import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner";
+import React, {useState} from "react"
+import {ByCursorMenuItemProps} from "@/utils/showByCursor"
+import {Space} from "antd"
+import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import styles from "./packetScanner.module.scss"
 
 /**
  * @description 数据包扫描的默认菜单数据
@@ -39,30 +42,38 @@ export interface PacketScanButtonProp {
 export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
     const [visible, setVisible] = useState<false | undefined>(undefined);
     return (
-        <Popover
+        <YakitPopover
             title={"数据包扫描"}
             trigger={["click"]}
             visible={visible}
             content={[
                 <Space direction={"vertical"} style={{width: 150}}>
-                    {packetScanDefaultValue.map(i => {
-                        return <Button
-                            style={{width: "100%"}}
-                            onClick={() => {
-                                const {https, httpRequest} = props.packetGetter();
-                                setVisible(false)
-                                setTimeout(() => {
-                                    setVisible(undefined)
-                                }, 300)
-                                execPacketScanFromRaw(https, httpRequest, i.Keyword)
-                            }}
-                            size={"small"}
-                        >{i.Verbose}</Button>
+                    {packetScanDefaultValue.map((i,n) => {
+                        return (
+                            <YakitButton
+                                themeClass={styles["yakit-button-theme"]}
+                                className={styles["yakit-button-theme"]}
+                                type='outline2'
+                                onClick={() => {
+                                    const {https, httpRequest} = props.packetGetter()
+                                    setVisible(false)
+                                    setTimeout(() => {
+                                        setVisible(undefined)
+                                    }, 300)
+                                    execPacketScanFromRaw(https, httpRequest, i.Keyword)
+                                }}
+                                key={`${i.Verbose}+${n}`}
+                            >
+                                {i.Verbose}
+                            </YakitButton>
+                        )
                     })}
                 </Space>
             ]}
         >
-            <Button size={"small"}>数据包扫描</Button>
-        </Popover>
+            <YakitButton size={"small"} type='outline2'>
+                数据包扫描
+            </YakitButton>
+        </YakitPopover>
     )
-};
+}

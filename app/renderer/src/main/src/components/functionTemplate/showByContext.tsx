@@ -47,41 +47,6 @@ export const showByContextMenu = (props: BaseMenuProps, x?: number, y?: number) 
     return {destroy: destory}
 }
 
-const FullScreenMask = "full-screen-mask"
-export const showFullScreenMask = (
-    content: ReactNode,
-    maskClassName?: string,
-    maskStyle?: CSSProperties,
-    onCancel?: (e: MouseEvent) => any
-) => {
-    const fullScreenDiv = document.getElementById(FullScreenMask)
-    const div: HTMLDivElement = fullScreenDiv ? (fullScreenDiv as HTMLDivElement) : document.createElement("div")
-    if (onCancel) div.onclick = (e) => onCancel(e)
-    div.id = FullScreenMask
-    div.className = FullScreenMask
-    document.body.appendChild(div)
-
-    const destory = () => {
-        const unmountResult = ReactDOM.unmountComponentAtNode(div)
-        if (unmountResult && div.parentNode) {
-            div.parentNode.removeChild(div)
-        }
-    }
-
-    const render = () => {
-        setTimeout(() => {
-            ReactDOM.render(
-                <div className={maskClassName || ""} style={maskStyle || undefined}>
-                    {content}
-                </div>,
-                div
-            )
-        })
-    }
-    render()
-
-    return {destroy: destory}
-}
 /**
  * @param {ReactNode} reactNode 内容
  * @param {number} height 内容的高度

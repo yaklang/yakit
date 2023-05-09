@@ -40,7 +40,7 @@ import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
 import {YakEditor} from "@/utils/editors"
 import {YakScript} from "@/pages/invoker/schema"
 import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {GetReleaseEdition, isEnterpriseEdition} from "@/utils/envfile"
 import Login from "@/pages/Login"
 import {fail} from "assert"
 import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
@@ -218,9 +218,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const onRemove = useMemoizedFn((isDel: boolean) => {
         if (!plugin) return
         if (["admin", "superAdmin"].includes(userInfo.role || "") || plugin?.user_id === userInfo.user_id) {
-            const deletedParams: API.DeletePluginUuid = {
-                uuid: plugin.uuid ? [plugin.uuid] : [],
-                dump: isDel
+            const deletedParams: API.GetPluginWhere = {
+                bind_me: false,
+                recycle: false,
+                delete_uuid: plugin.uuid ? [plugin.uuid] : [],
+                delete_dump: isDel
             }
             setLoading(true)
             // 查询本地数据
@@ -240,7 +242,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
     const onRemoveOnline = useMemoizedFn((plugin, deletedParams, newSrcipt) => {
         // 删除线上的
-        NetWorkApi<API.DeletePluginUuid, API.ActionSucceeded>({
+        NetWorkApi<API.GetPluginWhere, API.ActionSucceeded>({
             method: "delete",
             url: "yakit/plugin",
             data: deletedParams
@@ -281,8 +283,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
     const isShowAdmin = (isAdmin || userInfo.showStatusSearch) && !plugin.is_private
     // 是否为企业版
-    const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
-
+    const isEnterprise = isEnterpriseEdition()
     return (
         <div className={`plugin-info`} id='plugin-info-scroll'>
             <Spin spinning={loading} style={{height: "100%"}}>

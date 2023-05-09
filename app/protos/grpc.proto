@@ -178,6 +178,9 @@ service Yak {
   rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
+  rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
+  rpc ExtractHTTPResponse(ExtractHTTPResponseParams) returns (ExtractHTTPResponseResult);
   rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
   rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
   rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
@@ -305,6 +308,7 @@ service Yak {
   rpc QueryAvailableTarget(Empty) returns (Fields);
   rpc QueryNewRisk(QueryNewRiskRequest) returns (QueryNewRiskResponse);
   rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
+  rpc UploadRiskToOnline(UploadRiskToOnlineRequest) returns (Empty);
 
   // Report
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
@@ -525,6 +529,7 @@ message QueryCVERequest {
   // by published_date
   string AfterYear = 9;
   bool ChineseTranslationFirst = 10;
+  string Keywords = 11;
 }
 
 message CWEDetail {
@@ -556,6 +561,7 @@ message CVEDetail {
   string DescriptionOrigin = 3;
   string Title = 4;
   string Solution = 5;
+  string References = 6;
   string AccessVector = 7;
   string AccessComplexity = 8;
   string Authentication = 9;
@@ -574,6 +580,8 @@ message CVEDetail {
   bool ObtainOtherPrivileged = 23;
   bool UserInteractionRequired = 24;
   string Product = 25;
+  int64  UpdatedAt = 26;
+  int64  LastModifiedData = 27;
 }
 
 message QueryCVEResponse {
@@ -600,6 +608,7 @@ message ExportsProfileDatabaseRequest {
 
 message UpdateCVEDatabaseRequest {
   string Proxy = 1;
+  bool JustUpdateLatestCVE = 2;
 }
 
 message IsCVEDatabaseReadyResponse {
@@ -1039,6 +1048,8 @@ message DownloadOnlinePluginByScriptName {
 message OnlineProfile {
   string BaseUrl = 1;
   string Password = 2;
+  string Proxy = 3;
+  bool   IsCompany = 4;
 }
 
 message SetKeyRequest {
@@ -1654,6 +1665,7 @@ message Risk {
   string CVE = 23;
   string Description = 24;
   string Solution = 25;
+  string TaskName = 26;
 }
 
 message QueryRisksRequest {
@@ -1697,6 +1709,10 @@ message NewRisk {
 message NewRiskReadRequest {
   int64 AfterId = 1;
   repeated int64 Ids = 2;
+}
+
+message UploadRiskToOnlineRequest {
+  string Token = 1;
 }
 
 message VerifyTunnelServerDomainParams {
@@ -2099,6 +2115,7 @@ message LastRecord {
   int64 LastRecordPtr = 1;
   double Percent = 2;
   string YakScriptOnlineGroup = 3;
+  string ExtraInfo = 4;
 }
 
 message RecordPortScanRequest {
@@ -2206,6 +2223,7 @@ message Port {
   int64 Id = 11;
   int64 CreatedAt = 12;
   int64 UpdatedAt = 13;
+  string TaskName = 14;
 }
 
 message YakitCompletionRawResponse {
@@ -2476,9 +2494,64 @@ message HTTPRequestAnalysis {
   bool IsHTTPS = 3;
 }
 
+message HTTPResponseMatcher {
+  repeated HTTPResponseMatcher SubMatchers = 1;
+  string SubMatcherCondition = 2;
+
+  string MatcherType = 3;
+  string Scope = 4;
+  string Condition = 5;
+  repeated string Group = 6;
+  string GroupEncoding = 7;
+  bool Negative = 8;
+  string ExprType = 9;
+}
+
+message MatchHTTPResponseParams {
+  repeated HTTPResponseMatcher Matchers = 1;
+  string MatcherCondition = 2;
+
+  bool IsHTTPS = 3;
+  string HTTPResponse = 4;
+  string HTTPRequest = 5;
+}
+
+message MatchHTTPResponseResult {
+  bool Matched = 1;
+}
+
+message HTTPResponseExtractor {
+  string Name = 1; // default for index
+  string Type = 2; // regex / xpath / kval / json / nuclei-dsl
+  string Scope = 3; // body / header / raw
+  repeated string Groups = 4;
+  repeated int64 RegexpMatchGroup = 5;
+  string XPathAttribute = 6;
+}
+
+message ExtractHTTPResponseResult {
+  repeated FuzzerParamItem Values = 1;
+}
+
+message ExtractHTTPResponseParams {
+  repeated HTTPResponseExtractor Extractors = 1;
+  string HTTPResponse = 2;
+}
+
+message PreloadHTTPFuzzerParamsRequest {
+  repeated FuzzerParamItem Params = 1;
+}
+
+message PreloadHTTPFuzzerParamsResponse {
+  repeated FuzzerParamItem Values = 2;
+}
+
 message FuzzerParamItem {
   string Key = 1;
   string Value = 2;
+
+  // nuclei-dsl / raw
+  string Type = 3;
 }
 
 message FuzzerRequest {
@@ -2496,8 +2569,10 @@ message FuzzerRequest {
 
   // redirect setting
   bool NoFollowRedirect = 9;
+  // 这个弃用了，Meta 自动归类到 Redirect 里面
   bool NoFollowMetaRedirect = 10;
   bool FollowJSRedirect = 11;
+  double RedirectTimes = 27;
 
   // 如果从历史加载，就用这个！
   int32 HistoryWebFuzzerId = 12;
@@ -2522,6 +2597,8 @@ message FuzzerRequest {
   int64 MaxRetryTimes = 20; // 最大重试次数
   string RetryInStatusCode = 21; // 命中这些状态码的时候，重试
   string RetryNotInStatusCode = 22; // 不是这些状态的时候，重试
+  double RetryWaitSeconds = 25; // 重试等待时间
+  double RetryMaxWaitSeconds = 26; // 最大重试等待时间
 
   // Response Charset
   // 默认或者不填为 UTF8
@@ -2532,6 +2609,21 @@ message FuzzerRequest {
   // 这个字段不需要用户做任何处理，也不需要客户端传递
   // 这是服务端用来初始化的字段，用以构建快速搜索
   string Verbose = 24;
+
+  // dns config
+  repeated string DNSServers = 28;
+  repeated KVPair EtcHosts = 29;
+
+  // 不启用系统代理
+  bool NoSystemProxy = 30;
+
+  // 重复次数
+  int64 RepeatTimes = 31;
+}
+
+message KVPair {
+  string Key = 1;
+  string Value = 2;
 }
 
 message FuzzerResponseFilter {
@@ -2570,7 +2662,11 @@ message FuzzerResponse {
   // response body 的长度
   int64 BodyLength = 7;
   // 这个请求大约花费了多长时间
-  int64 DurationMs = 8;
+  int64 DurationMs = 8; // FirstByte Duration
+  int64 DNSDurationMs = 40;
+  int64 FirstByteDurationMs = 41;
+  int64 TotalDurationMs = 42;
+
   // 给一个随机 ID
   string UUID = 9;
   // timestamp 请求
@@ -2601,6 +2697,10 @@ message FuzzerResponse {
   string Url = 38;
 
   int64 TaskId = 39;
+
+  // 使用哪个代理
+  string Proxy = 43;
+  string RemoteAddr = 44;
 }
 
 message Paging {
@@ -2894,6 +2994,11 @@ message MITMRequest {
   bool enableGMTLS = 46;
   bool onlyEnableGMTLS = 47;
   bool preferGMTLS = 48;
+
+  // 代理用户名和密码
+  bool enableProxyAuth = 51;
+  string proxyUsername = 49;
+  string proxyPassword = 50;
 }
 
 message Certificate {
@@ -2923,6 +3028,7 @@ message MITMContentReplacer {
   bool EnableForResponse = 6;
   bool EnableForHeader = 9;
   bool EnableForBody = 10;
+  bool EnableForURI = 15;
 
   // Index
   int32 Index = 7;
@@ -2939,6 +3045,14 @@ message MITMContentReplacer {
   // 为数据包新增 Header
   repeated HTTPHeader ExtraHeaders = 13;
   repeated HTTPCookieSetting ExtraCookies = 14;
+
+  // Action
+  // 额外重复一次这个数据包（替换后的数据）
+  // 只有替换数据
+  bool ExtraRepeat = 16;
+  // 匹配掉之后直接丢包
+  bool Drop = 17;
+
 }
 
 message RemoveHookParams {

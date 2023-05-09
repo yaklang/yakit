@@ -1,18 +1,9 @@
-import React, {forwardRef, ReactNode, useEffect, useRef, useState} from "react"
-import {Button, Input, Layout, Menu, Modal, Popover, Space, Spin, Tabs, Typography, Upload, Avatar, Alert} from "antd"
-import {
-    ContentByRoute,
-    DefaultRouteMenuData,
-    MenuDataProps,
-    NoScrollRoutes,
-    Route,
-    RouteNameToVerboseName
-} from "../routes/routeSpec"
-import {CloseOutlined, EditOutlined, EllipsisOutlined, CameraOutlined} from "@ant-design/icons"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
+import {Alert, Avatar, Button, Layout, Modal, Space, Tabs, Upload} from "antd"
+import {ContentByRoute, NoScrollRoutes, Route, RouteNameToVerboseName} from "../routes/routeSpec"
+import {CameraOutlined, CloseOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import {failed, info, success} from "../utils/notification"
 import {showModal} from "../utils/showModal"
-// import {YakLogoBanner} from "../utils/logo"
-// import {ConfigGlobalReverse, ReversePlatformStatus, YakitVersion, YakVersion} from "../utils/basic"
 import {
     CompletionTotal,
     MethodSuggestion,
@@ -21,51 +12,38 @@ import {
 } from "../utils/monacoSpec/yakCompletionSchema"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
-import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "./invoker/schema"
+import {QueryYakScriptsResponse} from "./invoker/schema"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useGetState, useMemoizedFn} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
-import cloneDeep from "lodash/cloneDeep"
-// import {RiskStatsTag} from "../utils/RiskStatsTag"
 import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
 import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
-import {coordinate, UserPlatformType} from "./globalVariable"
 import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {MainTabs} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
-// import yakitImg from "../assets/yakit.jpg"
 import {UserInfoProps, useStore} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import {UnfinishedBatchTask,UnfinishedSimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
-// import {LoadYakitPluginForm} from "./yakitStore/YakitStorePage"
-// import {showConfigMenuItems} from "../utils/ConfigMenuItems"
-// import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
+import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
 import "./GlobalClass.scss"
-import {loginOut, refreshToken} from "@/utils/login"
-import {getRemoteValue, setRemoteValue, setLocalValue} from "@/utils/kv"
-// import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-// import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
-// import {onImportShare} from "./fuzzer/components/ShareImport"
-// import {ShareImportIcon} from "@/assets/icons"
+import {refreshToken} from "@/utils/login"
+import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-// import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
-import {EDITION_STATUS, ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
-import HeardMenu, {getScriptHoverIcon, getScriptIcon} from "./layout/HeardMenu/HeardMenu"
-import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
+import {globalUserLogin, isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {LocalGV} from "@/yakitGV"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-import {isSimpleEnterprise} from "@/utils/envfile"
-import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect";
-const IsEnterprise: boolean = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
+import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
+import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscribe"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {RemoveIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
-const MenuItem = Menu.Item
 const {Content} = Layout
 
 const FuzzerCache = "fuzzer-list-cache"
@@ -73,7 +51,6 @@ const FuzzerCache = "fuzzer-list-cache"
 const singletonRoute: Route[] = [
     Route.HTTPHacker,
     Route.ShellReceiver,
-    // Route.ReverseServer,
     Route.PayloadManager,
     Route.ModManager,
     Route.ModManagerLegacy,
@@ -85,8 +62,6 @@ const singletonRoute: Route[] = [
     Route.DB_Domain,
     Route.DB_Risk,
     Route.DB_Report,
-    Route.DB_Projects,
-    Route.DB_WebShells,
     Route.DB_ChaosMaker,
     Route.DB_CVE,
 
@@ -104,6 +79,8 @@ const singletonRoute: Route[] = [
     Route.AccountAdminPage,
     // 角色管理
     Route.RoleAdminPage,
+    // 漏洞汇总
+    Route.HoleCollectPage,
     // License管理
     Route.LicenseAdminPage,
     // 信任用户管理
@@ -116,10 +93,10 @@ const singletonRoute: Route[] = [
     Route.NewHome,
 
     // 录屏
-    Route.ScreenRecorderPage,
+    Route.ScreenRecorderPage
 ]
 /** 不需要首页组件安全边距的页面 */
-const noPaddingPage = [
+export const noPaddingPage = [
     Route.PayloadGenerater_New,
     Route.DataCompare,
     Route.YakScript,
@@ -129,7 +106,8 @@ const noPaddingPage = [
     Route.TCPPortLog,
     Route.DNSLog,
     Route.NewHome,
-    Route.DB_CVE
+    Route.DB_CVE,
+    Route.HTTPFuzzer
 ]
 
 export const defaultUserInfo: UserInfoProps = {
@@ -338,20 +316,47 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     )
 })
 
-const Main: React.FC<MainProp> = React.memo((props) => {
-    const [loading, setLoading] = useState(false)
+const getInitPageCache = () => {
+    if (isEnpriTraceAgent()) {
+        return []
+    }
 
-    const [notification, setNotification] = useState("")
+    if (isBreachTrace()) {
+        return [
+            {
+                verbose: "入侵模拟",
+                route: Route.DB_ChaosMaker,
+                singleNode: ContentByRoute(Route.DB_ChaosMaker),
+                multipleNode: []
+            }
+        ]
+    }
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(isSimpleEnterprise?[]:[
+    return [
         {
             verbose: "首页",
             route: Route.NewHome,
             singleNode: ContentByRoute(Route.NewHome),
             multipleNode: []
         }
-    ])
-    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(isSimpleEnterprise?"":Route.NewHome)
+    ]
+}
+
+const getInitActiveTabKey = () => {
+    if (isEnpriTraceAgent()) {
+        return ""
+    }
+
+    return Route.NewHome
+}
+
+const Main: React.FC<MainProp> = React.memo((props) => {
+    const [loading, setLoading] = useState(false)
+
+    const [notification, setNotification] = useState("")
+
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(getInitPageCache())
+    const [currentTabKey, setCurrentTabKey] = useState<Route | string>(getInitActiveTabKey())
 
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
@@ -367,8 +372,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
 
-    useEffect(()=>{
-        if(isSimpleEnterprise){
+    useEffect(() => {
+        if (isEnpriTraceAgent()) {
             // 简易企业版页面控制
             addTabPage(Route.SimpleDetect)
             // 简易企业版判断本地插件数-导入弹窗
@@ -378,20 +383,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
                 UserId: 0
             }
-            ipcRenderer
-            .invoke("QueryYakScript", newParams)
-            .then((item: QueryYakScriptsResponse) => {
-                if(item.Data.length===0){
+            ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
+                if (item.Data.length === 0) {
                     const m = showModal({
                         title: "导入插件",
-                        content: <DownloadAllPlugin type="modal" onClose={() => m.destroy()} />
+                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
                     })
                     return m
                 }
             })
-
         }
-    },[])
+
+        if (isBreachTrace()) {
+            addTabPage(Route.DB_ChaosMaker)
+        }
+    }, [])
 
     // 监听console方向打开
     useEffect(() => {
@@ -595,12 +601,23 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
         } else addTabPage(route as Route)
     })
-    const removePage = (route: string, isClose: boolean = true) => {
-        const targetIndex = getCacheIndex(route)
-        if (route === Route.AddYakitScript && isClose) {
-            ipcRenderer.invoke("tab-isClose")
-            return
+    const {getSubscribeClose} = useSubscribeClose()
+    const onBeforeRemovePage = useMemoizedFn((route: string) => {
+        switch (route) {
+            case Route.AddYakitScript:
+            case Route.HTTPFuzzer:
+                const modalProps = getSubscribeClose(route)
+                onModalSecondaryConfirm(modalProps)
+                break
+
+            default:
+                removePage(route)
+                break
         }
+    })
+    const removePage = (route: string) => {
+        const targetIndex = getCacheIndex(route)
+
         if (targetIndex > 0 && getPageCache()[targetIndex - 1]) {
             const targetCache = getPageCache()[targetIndex - 1]
             setCurrentTabKey(targetCache.route)
@@ -611,12 +628,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
-        if (route === Route.AddYakitScript && !isClose) {
+        setPageCache(getPageCache().filter((i) => i.route !== route))
+        if (route === Route.AddYakitScript) {
             setCurrentTabKey(Route.ModManager)
         }
-
-        setPageCache(getPageCache().filter((i) => i.route !== route))
-
         if (route === Route.HTTPFuzzer) delFuzzerList(1)
     }
     const updateCacheVerbose = (id: string, verbose: string) => {
@@ -730,14 +745,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // }, [])
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
+    const IsEnpriTrace = shouldVerifyEnpriTraceLogin()
+
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
             // 刷新用户信息
             setStoreUserInfo(res)
             // 刷新引擎
-            IsEnterprise
-                ? setRemoteValue("token-online-enterprise", res.token)
-                : setRemoteValue("token-online", res.token)
+            globalUserLogin(res.token)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-signin-token")
@@ -746,7 +761,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     useEffect(() => {
         // 企业版初始进入页面（已登录）已获取用户信息 因此刷新
-        if (IsEnterprise) {
+        if (shouldVerifyEnpriTraceLogin()) {
             ipcRenderer.send("company-refresh-in")
         }
     }, [])
@@ -754,79 +769,22 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            if (IsEnterprise) {
+            if (IsEnpriTrace) {
                 ipcRenderer.invoke("update-judge-license", true)
-                removePage(Route.AccountAdminPage, false)
-                removePage(Route.RoleAdminPage, false)
+                removePage(Route.AccountAdminPage)
+                removePage(Route.RoleAdminPage)
+                removePage(Route.HoleCollectPage)
             } else {
-                removePage(Route.LicenseAdminPage, false)
-                removePage(Route.TrustListPage, false)
-                removePage(Route.PlugInAdminPage, false)
+                removePage(Route.LicenseAdminPage)
+                removePage(Route.TrustListPage)
+                removePage(Route.PlugInAdminPage)
             }
-            IsEnterprise ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
+            IsEnpriTrace ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
         return () => {
             ipcRenderer.removeAllListeners("login-out")
         }
     }, [])
-
-    const [userMenu, setUserMenu] = useState<MenuItemType[]>([
-        {key: "sign-out", title: "退出登录"},
-        {key: "account-bind", title: "帐号绑定(监修)", disabled: true}
-    ])
-
-    useEffect(() => {
-        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
-        // 非企业管理员登录
-        if (userInfo.role === "admin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 非企业超级管理员登录
-        else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "trust-list", title: "用户管理"},
-                {key: "license-admin", title: "License管理"},
-                {key: "plugIn-admin", title: "插件权限"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 非企业license管理员
-        else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "license-admin", title: "License管理"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 企业用户管理员登录
-        else if (userInfo.role === "admin" && userInfo.platform === "company") {
-            setUserMenu([
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "role-admin", title: "角色管理"},
-                {key: "account-admin", title: "用户管理"},
-                {key: "set-password", title: "修改密码"},
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 企业用户非管理员登录
-        else if (userInfo.role !== "admin" && userInfo.platform === "company") {
-            setUserMenu([
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "set-password", title: "修改密码"},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        } else {
-            setUserMenu([
-                {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-    }, [userInfo.role, userInfo.companyHeadImg])
 
     // 全局注册快捷键功能
     const documentKeyDown = useMemoizedFn((e: any) => {
@@ -1203,12 +1161,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "add-yak-running") addYakRunning(data)
             if (type === "**screen-recorder") addTabPage(Route.ScreenRecorderPage)
             if (type === "**chaos-maker") addTabPage(Route.DB_ChaosMaker)
-            if (type === "open-plugin-store"){
-                const flag = getPageCache().filter(item => item.route === Route.ModManager).length
-                if(flag === 0 ){ addTabPage(Route.ModManager) }
-                else{
-                    removePage(Route.AddYakitScript, false)
-                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50);
+            if (type === "open-plugin-store") {
+                const flag = getPageCache().filter((item) => item.route === Route.ModManager).length
+                if (flag === 0) {
+                    addTabPage(Route.ModManager)
+                } else {
+                    removePage(Route.AddYakitScript)
+                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
                 }
             }
             console.info("send to tab: ", type)
@@ -1220,10 +1179,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-close-tab", (e, res: any) => {
-            const {router, singleNode} = res
-            if (singleNode) {
-                removePage(router, false)
-            }
+            const {router} = res
+            removePage(router)
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-close-tab")
@@ -1237,15 +1194,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 delFuzzerList(1)
-                setPageCache(isSimpleEnterprise?[]:[
-                    {
-                        verbose: "首页",
-                        route: Route.NewHome,
-                        singleNode: ContentByRoute(Route.NewHome),
-                        multipleNode: []
-                    }
-                ])
-                setCurrentTabKey(isSimpleEnterprise?"":Route.NewHome)
+                setPageCache(getInitPageCache())
+                setCurrentTabKey(getInitActiveTabKey())
             }
         })
     })
@@ -1255,20 +1205,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             content: "这样将会关闭所有进行中的进程",
             onOk: () => {
                 const arr = pageCache.filter((i) => i.route === route)
-                if(isSimpleEnterprise){
-                    setPageCache([...arr])
-                }
-                if(!isSimpleEnterprise){
-                    setPageCache([
-                    {
+                if (!isEnpriTraceAgent()) {
+                    arr.unshift({
                         verbose: "首页",
                         route: Route.NewHome,
                         singleNode: ContentByRoute(Route.NewHome),
                         multipleNode: []
-                    },
-                    ...arr
-                ])
+                    })
                 }
+                setPageCache(arr)
                 if (route === Route.HTTPFuzzer) delFuzzerList(1)
             }
         })
@@ -1437,7 +1382,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 {i.verbose !== "首页" && (
                                                                     <CloseOutlined
                                                                         className='main-container-cion'
-                                                                        onClick={() => removePage(`${i.route}`)}
+                                                                        onClick={() => onBeforeRemovePage(`${i.route}`)}
                                                                     />
                                                                 )}
                                                             </Space>
@@ -1458,7 +1403,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             }}
                                                         >
                                                             {i.singleNode ? (
-                                                                        i.singleNode
+                                                                i.singleNode
                                                             ) : (
                                                                 <MainTabs
                                                                     currentTabKey={currentTabKey}
@@ -1567,3 +1512,34 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 })
 
 export default Main
+
+export const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
+    let m = YakitModalConfirm({
+        width: 420,
+        type: "white",
+        onCancelText: "不保存",
+        onOkText: "保存",
+        icon: <ExclamationCircleOutlined />,
+        ...(props || {}),
+        onOk: () => {
+            if (props?.onOk) {
+                props.onOk(m)
+            } else {
+                m.destroy()
+            }
+        },
+        closeIcon: (
+            <div
+                onClick={(e) => {
+                    e.stopPropagation()
+                    m.destroy()
+                }}
+                className='modal-remove-icon'
+            >
+                <RemoveIcon />
+            </div>
+        ),
+        content: <div style={{paddingTop: 8}}>{props?.content}</div>
+    })
+    return m
+}

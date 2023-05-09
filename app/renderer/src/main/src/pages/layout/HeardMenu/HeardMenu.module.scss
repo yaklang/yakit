@@ -111,10 +111,10 @@ border-radius: 0px 4px 4px 0px;
             }
 
             &:hover {
-                color: var(--yakit-primary-color-hover);
+                color: var(--yakit-primary-4);
 
                 svg {
-                    color: var(--yakit-primary-color-hover);
+                    color: var(--yakit-primary-4);
                 }
             }
         }
@@ -124,10 +124,10 @@ border-radius: 0px 4px 4px 0px;
         }
 
         .heard-menu-item-active {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
 
             svg {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
 
@@ -141,10 +141,10 @@ border-radius: 0px 4px 4px 0px;
         }
 
         .heard-menu-item-open {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
 
             svg {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
                 margin-left: 2px;
                 width: 16px;
                 height: 16px;
@@ -194,13 +194,13 @@ border-radius: 0px 4px 4px 0px;
         }
 
         .heard-menu-customize-menu {
-            background: var(--yakit-primary-background-color);
-            border: 1px solid var(--yakit-primary-border-color);
+            background: var(--yakit-primary-1);
+            border: 1px solid var(--yakit-primary-3);
             border-radius: 4px;
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
 
             svg {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
 
@@ -264,11 +264,11 @@ border-radius: 0px 4px 4px 0px;
         }
 
         &:hover {
-            background-color: var(--yakit-primary-background-color);
+            background-color: var(--yakit-primary-1);
             border-radius: 4px;
 
             .heard-sub-menu-label {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
 
             .heard-sub-menu-item-icon {
@@ -374,7 +374,7 @@ border-radius: 0px 4px 4px 0px;
 
         .ant-tabs-dropdown-open {
             svg {
-                color: var(--yakit-primary-color-hover);
+                color: var(--yakit-primary-4);
             }
         }
 
@@ -406,7 +406,7 @@ border-radius: 0px 4px 4px 0px;
         cursor: pointer;
 
         &:hover {
-            color: var(--yakit-primary-color-hover);
+            color: var(--yakit-primary-4);
         }
     }
 
@@ -425,7 +425,7 @@ border-radius: 0px 4px 4px 0px;
             height: 34px;
 
             &:hover {
-                color: var(--yakit-primary-color-hover);
+                color: var(--yakit-primary-4);
 
                 .sub-menu-expand-item-icon {
                     .item-icon {
@@ -552,11 +552,11 @@ border-radius: 0px 4px 4px 0px;
         }
 
         &:hover {
-            background-color: var(--yakit-primary-background-color);
+            background-color: var(--yakit-primary-1);
             border-radius: 4px;
 
             .sub-menu-expand-item-label {
-                color: var(--yakit-primary-color);
+                color: var(--yakit-primary-5);
             }
         }
     }
@@ -588,7 +588,7 @@ border-radius: 0px 4px 4px 0px;
         }
 
         &:hover {
-            background-color: var(--yakit-primary-color);
+            background-color: var(--yakit-primary-5);
             color: #fff;
 
             svg {
@@ -608,10 +608,10 @@ border-radius: 0px 4px 4px 0px;
     }
 
     .customize-item-select {
-        color: var(--yakit-primary-color);
+        color: var(--yakit-primary-5);
 
         svg {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
         }
     }
 }
@@ -643,7 +643,7 @@ border-radius: 0px 4px 4px 0px;
 
         .ant-modal-close:focus,
         .ant-modal-close:hover {
-            color: var(--yakit-primary-color);
+            color: var(--yakit-primary-5);
         }
     }
 }
@@ -653,7 +653,7 @@ border-radius: 0px 4px 4px 0px;
 
     .menuItem-yakScripName {
         margin: 0 4px;
-        color: var(--yakit-primary-color);
+        color: var(--yakit-primary-5);
     }
 }
 

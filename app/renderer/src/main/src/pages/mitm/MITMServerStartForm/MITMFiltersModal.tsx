@@ -82,9 +82,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         <YakitModal
             visible={visible}
             onCancel={() => setVisible(false)}
-            closable={true}
+            closable={false}
             title='过滤器配置'
             width={720}
+            maskClosable={false}
             subTitle={
                 isStartMITM && (
                     <div className={styles["mitm-filters-subTitle"]}>

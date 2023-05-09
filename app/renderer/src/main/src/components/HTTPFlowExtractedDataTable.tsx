@@ -4,6 +4,7 @@ import {Paging} from "@/utils/yakQueryHTTPFlow";
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@/pages/invoker/schema";
 import {useMemoizedFn} from "ahooks";
 import {CopyableField} from "@/utils/inputUtil";
+import styles from "./hTTPFlowDetail.module.scss"
 
 export interface HTTPFlowExtractedDataTableProp {
     title: React.ReactNode
@@ -21,7 +22,6 @@ interface HTTPFlowExtractedData {
     RuleName: string
     Data: string
 }
-
 
 export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = (props) => {
     const [pagination, setPagination] = useState<Paging>(genDefaultPagination());
@@ -54,7 +54,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         update(1, 10)
     }, [props.httpFlowHash])
 
-    return <div style={{width: "100%", height: "100%"}}>
+    return <div className={styles["httpFlow-data-table"]}>
         <Table<HTTPFlowExtractedData>
             bordered={true}
             title={() => <>

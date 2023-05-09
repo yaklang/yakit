@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
+import ReactDOM from "react-dom"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -7,7 +8,7 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP"
 import "./monacoSpec/yakEditor"
 import "./monacoSpec/html"
-import {Button, Card, Empty, Form, Input, Modal, Popover, Space, Tag, Tooltip, Row, Col} from "antd"
+import {Button, Card, Empty, Form, Input, Modal, Popover, Space, Tag, Tooltip, Row, Col, Switch} from "antd"
 import {SelectOne} from "./inputUtil"
 import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {showDrawer} from "./showModal"
@@ -21,8 +22,8 @@ import {
 import {HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
-import "./editors.css"
-import {useDebounceFn, useFocusWithin, useMemoizedFn} from "ahooks"
+import "./editors.scss"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Buffer} from "buffer"
 import {failed, info} from "./notification"
 import {StringToUint8Array, Uint8ArrayToString} from "./str"
@@ -36,6 +37,7 @@ import ITextModel = editor.ITextModel
 import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
+import IModelDecoration = editor.IModelDecoration
 
 const {ipcRenderer} = window.require("electron")
 
@@ -58,6 +60,8 @@ export interface EditorProps {
 
     // 自动换行？ true 应该不换行，false 换行
     noWordWrap?: boolean
+    /**@name 是否显示换行符 */
+    showLineBreaks?: boolean
 
     noMiniMap?: boolean
     noLineNumber?: boolean
@@ -86,9 +90,11 @@ export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
         />
     )
 }
+
 export interface YakInteractiveEditorProp {
     yakEditorProp: EditorProps
 }
+
 export const YakEditor: React.FC<EditorProps> = (props) => {
     const [editor, setEditor] = useState<IMonacoEditor>()
     const [reload, setReload] = useState(false)
@@ -127,11 +133,43 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             setLoading(false)
         }, 200)
 
-        if (props.type === "yak") {
-            const model = editor.getModel()
+        const model = editor.getModel()
+        if (!model) {
+            return
+        }
+
+        if (props.type === "http") {
             if (!model) {
                 return
             }
+            let current: string[] = []
+            const applyKeywordDecoration = () => {
+                const text = model.getValue()
+                const keywordRegExp = /\r?\n/g
+                const decorations: IModelDecoration[] = []
+                let match
+
+                while ((match = keywordRegExp.exec(text)) !== null) {
+                    const start = model.getPositionAt(match.index)
+                    const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
+                    const end = model.getPositionAt(match.index + match[0].length)
+                    decorations.push({
+                        id: "keyword" + match.index,
+                        ownerId: 1,
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                        options: {beforeContentClassName: className}
+                    } as IModelDecoration)
+                }
+                // 使用 deltaDecorations 应用装饰
+                current = model.deltaDecorations(current, decorations)
+            }
+            model.onDidChangeContent((e) => {
+                applyKeywordDecoration()
+            })
+            applyKeywordDecoration()
+        }
+
+        if (props.type === "yak") {
             editor.addAction({
                 contextMenuGroupId: "yaklang",
                 id: YAK_FORMATTER_COMMAND_ID,
@@ -290,7 +328,10 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         refreshMode={"debounce"}
                         refreshRate={30}
                     >
-                        <div style={{height: "100%", width: "100%", overflow: "hidden"}}>
+                        <div
+                            className={`${props.showLineBreaks ? "" : "monaco-editor-style"}`}
+                            style={{height: "100%", width: "100%", overflow: "hidden"}}
+                        >
                             <MonacoEditor
                                 theme={props.theme || "kurior"}
                                 value={
@@ -337,7 +378,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     renderLineHighlight: "line",
                                     lineNumbers: props.noLineNumber ? "off" : "on",
                                     minimap: props.noMiniMap ? {enabled: false} : undefined,
-                                    lineNumbersMinChars: props.lineNumbersMinChars || 5
+                                    lineNumbersMinChars: props.lineNumbersMinChars || 5,
+                                    renderWhitespace: "all"
                                 }}
                             />
                         </div>
@@ -357,6 +399,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     defaultHeight?: number
     bordered?: boolean
     onEditor?: (editor: IMonacoEditor) => any
+    onAddOverlayWidget?: (editor: IMonacoEditor) => any
     hideSearch?: boolean
     extra?: React.ReactNode
     emptyOr?: React.ReactNode
@@ -385,6 +428,13 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     utf8?: boolean
 
     defaultSearchKeyword?: string
+
+    /**@name 外部控制换行状态 */
+    noWordWrapState?: boolean
+    /**@name 外部控制字体大小 */
+    fontSizeState?: number
+    /**@name 是否显示换行符 */
+    showLineBreaksState?: boolean
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
@@ -416,7 +466,10 @@ export const YakInteractiveEditor: React.FC<YakInteractiveEditorProp> = React.me
         )
     }
 )
+/**@name 字体大小 */
 export const HTTP_PACKET_EDITOR_FONT_SIZE = "HTTP_PACKET_EDITOR_FONT_SIZE"
+/**@name 获取换行符是否显示 */
+export const HTTP_PACKET_EDITOR_Line_Breaks = "HTTP_PACKET_EDITOR_Line_Breaks"
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
     const isResponse = props.isResponse
@@ -433,12 +486,24 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     const [searchValue, setSearchValue] = useState("")
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
     const [fontSize, setFontSize] = useState<undefined | number>()
+    const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([])
     const [noWordwrap, setNoWordwrap] = useState(false)
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
 
     // 操作系统类型
     const [system, setSystem] = useState<string>()
+
+    useUpdateEffect(() => {
+        setNoWordwrap(props.noWordWrapState || false)
+    }, [props.noWordWrapState])
+    useUpdateEffect(() => {
+        if (!props.fontSizeState) return
+        setFontSize(props.fontSizeState)
+    }, [props.fontSizeState])
+    useUpdateEffect(() => {
+        setShowLineBreaks(props.showLineBreaksState || false)
+    }, [props.showLineBreaksState])
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
@@ -459,6 +524,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             })
             .catch(() => {
                 setFontSize(12)
+            })
+        getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
+            .then((data) => {
+                setShowLineBreaks(data === "true")
+            })
+            .catch(() => {
+                setShowLineBreaks(true)
             })
     }, [])
 
@@ -496,6 +568,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         if (monacoEditor) {
             props.onEditor && props.onEditor(monacoEditor)
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+        }
+        if (monacoEditor) {
+            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor)
         }
         if (!props.simpleMode && !props.hideSearch && monacoEditor) {
             setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
@@ -670,8 +745,8 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 }}
                                                 size={"small"}
                                                 layout={"horizontal"}
-                                                wrapperCol={{span: 16}}
-                                                labelCol={{span: 8}}
+                                                wrapperCol={{span: 14}}
+                                                labelCol={{span: 10}}
                                             >
                                                 {(fontSize || 0) > 0 && (
                                                     <SelectOne
@@ -689,7 +764,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                         }}
                                                     />
                                                 )}
-                                                <Form.Item label={"全屏"}>
+                                                <Form.Item label={"全屏"} style={{marginBottom: 4}}>
                                                     <Button
                                                         size={"small"}
                                                         type={"link"}
@@ -712,12 +787,30 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                         }}
                                                     />
                                                 </Form.Item>
+                                                {(props.language === "http" || !isResponse) && (
+                                                    <Form.Item
+                                                        label='是否显示换行符'
+                                                        style={{marginBottom: 4, lineHeight: "16px"}}
+                                                    >
+                                                        <Switch
+                                                            checked={showLineBreaks}
+                                                            onChange={(checked) => {
+                                                                setRemoteValue(
+                                                                    HTTP_PACKET_EDITOR_Line_Breaks,
+                                                                    `${checked}`
+                                                                )
+                                                                setShowLineBreaks(checked)
+                                                            }}
+                                                        />
+                                                    </Form.Item>
+                                                )}
                                             </Form>
                                         </>
                                     }
                                     onVisibleChange={(v) => {
                                         setPopoverVisible(v)
                                     }}
+                                    overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
                                     <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
@@ -747,6 +840,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                             setValue={setStrValue}
                             noWordWrap={noWordwrap}
                             fontSize={fontSize}
+                            showLineBreaks={showLineBreaks}
                             actions={[
                                 ...(props.actions || []),
                                 ...[

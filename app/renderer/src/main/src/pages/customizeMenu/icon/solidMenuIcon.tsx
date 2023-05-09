@@ -119,7 +119,7 @@ const SolidSpaceEngineHunter = () => (
 )
 
 /**
- * @description:空间引擎: Hunter
+ * @description:空间引擎集成版本
  */
 export const MenuSolidSpaceEngineHunterIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={SolidSpaceEngineHunter} {...props} />

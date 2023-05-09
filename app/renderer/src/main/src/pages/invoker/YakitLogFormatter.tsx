@@ -100,11 +100,13 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                 return <div>Risk</div>
             }
         case "json":
-            return <Space>
-                {props.timestamp > 0 &&
-                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
-                <CodeViewer value={`${props.data}`} height={150} width={"100%"} mode={"json"}/>
-            </Space>
+            return <div style={{display:'flex'}}>
+                <div style={{width:70}}>
+                    {props.timestamp > 0 &&
+                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
+                </div>
+                <CodeViewer value={`${props.data}`} height={150} width={'calc(100% - 70px)'} mode={"json"} fullHeight={true}/>
+            </div>
         case "markdown":
             return <MDEditor.Markdown source={props.data}/>
         case "text":

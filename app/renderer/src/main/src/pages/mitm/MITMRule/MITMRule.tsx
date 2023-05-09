@@ -21,7 +21,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -98,6 +98,10 @@ const batchMenuData: YakitMenuItemProps[] = [
     {
         key: "no-replace",
         label: "不替换"
+    },
+    {
+        key: "replace",
+        label: "替换"
     },
     {
         key: "remove",
@@ -232,6 +236,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const rulesRangeList = useCreation(() => {
         return [
             {
+                label: "URI",
+                value: "EnableForURI"
+            },
+            {
                 label: "请求",
                 value: "EnableForRequest"
             },
@@ -289,9 +297,48 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 )
             },
             {
+                title: "丢弃结果",
+                dataKey: "Drop",
+                width: 110,
+                tip: "设置开启替代之后，可丢弃当前请求/响应",
+                render: (_, i: MITMContentReplacerRule) => (
+                    <YakitProtoSwitch
+                        checked={i.Drop}
+                        disabled={i.Disabled}
+                        onChange={(val) => {
+                            if (val) {
+                                onEdit({Id: i.Id, Drop: val, NoReplace: false}, "Drop")
+                            } else {
+                                onEdit({Id: i.Id, Drop: val}, "Drop")
+                            }
+                        }}
+                    />
+                )
+            },
+            {
+                title: "自动重发",
+                dataKey: "ExtraRepeat",
+                width: 110,
+                tip: "设置改选项后，将不会替换（请求）数据包，会把替换后的结果进行额外发包",
+                render: (_, i: MITMContentReplacerRule) => (
+                    <YakitProtoSwitch
+                        disabled={i.Disabled}
+                        checked={i.ExtraRepeat}
+                        onChange={(val) => {
+                            if (val) {
+                                onEdit({Id: i.Id, ExtraRepeat: val, NoReplace: false}, "ExtraRepeat")
+                            } else {
+                                onEdit({Id: i.Id, ExtraRepeat: val}, "ExtraRepeat")
+                            }
+                        }}
+                    />
+                )
+            },
+            {
                 title: "规则作用范围",
                 dataKey: "EnableForRequest",
-                width: 235,
+                tip: "选择请求或响应后，Header和Body至少选择一个",
+                width: 280,
                 render: (_, record: MITMContentReplacerRule) => {
                     return (
                         <div>
@@ -300,7 +347,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                     key={item.value}
                                     checked={record[item.value]}
                                     onChange={(checked) => {
-                                        onEdit({Id: record.Id, [item.value]: checked}, item.value)
+                                        onEditRuleAction(checked, record, item)
                                     }}
                                     disable={record.Disabled}
                                 >
@@ -315,7 +362,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 title: "命中颜色",
                 dataKey: "Color",
                 ellipsis: false,
-                width: 80,
+                width: 85,
                 render: (text, record: MITMContentReplacerRule) => (
                     <div className={classNames(styles["table-hit-color-content"])}>
                         <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
@@ -368,6 +415,45 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         ]
     }, [])
 
+    const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
+        record[item.value] = checked
+        const first = item.value === "EnableForRequest" || item.value === "EnableForResponse"
+        const firstChecked = record["EnableForRequest"] || record["EnableForResponse"]
+        const second = item.value === "EnableForHeader" || item.value === "EnableForBody"
+        const secondChecked = record["EnableForHeader"] || record["EnableForBody"]
+        // 请求和响应其中一个为true,那么 Header和Body必须要选中一个
+        // 请求和响应都为false,那么 Header和Body都为 false
+        if (first) {
+            if (firstChecked) {
+                if (!secondChecked) {
+                    record["EnableForHeader"] = true
+                    record["EnableForBody"] = true
+                }
+            } else {
+                record["EnableForHeader"] = false
+                record["EnableForBody"] = false
+            }
+        }
+        if (second) {
+            if (secondChecked) {
+                if (!firstChecked) {
+                    record["EnableForRequest"] = true
+                    record["EnableForResponse"] = true
+                }
+            } else {
+                record["EnableForRequest"] = false
+                record["EnableForResponse"] = false
+            }
+        }
+        const newRules: MITMContentReplacerRule[] = rules.map((item) => {
+            if (item.Id === record.Id) {
+                item = record
+            }
+            return {...item}
+        })
+        setRules(newRules)
+    })
+
     const onEdit = useMemoizedFn((record, text: string) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item) => {
             if (item.Id === record.Id) {
@@ -378,14 +464,21 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setRules(newRules)
     })
     const onMenuSelect = useMemoizedFn((key: string) => {
-        if (key === "ban") {
-            onBatchNoReplaceOrBan(true, "Disabled")
-        }
-        if (key === "no-replace") {
-            onBatchNoReplaceOrBan(false, "NoReplace")
-        }
-        if (key === "remove") {
-            onBatchRemove()
+        switch (key) {
+            case "ban":
+                onBatchNoReplaceOrBan(true, "Disabled")
+                break
+            case "replace":
+                onBatchNoReplaceOrBan(false, "NoReplace")
+                break
+            case "no-replace":
+                onBatchNoReplaceOrBan(true, "NoReplace")
+                break
+            case "remove":
+                onBatchRemove()
+                break
+            default:
+                break
         }
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
@@ -397,7 +490,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 EnableForResponse: true,
                 EnableForBody: true,
                 EnableForHeader: true,
+                EnableForURI: false,
                 Index: index,
+                Drop: false,
+                ExtraRepeat: false,
                 Id: index,
                 NoReplace: false,
                 Result: "",
@@ -553,7 +649,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             e.stopPropagation()
                             Modal.destroyAll()
                         }}
-                        className="modal-remove-icon"
+                        className='modal-remove-icon'
                     >
                         <RemoveIcon />
                     </div>
@@ -571,7 +667,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setVisible(false)
         }
     })
-
     return (
         <>
             <YakitDrawer
@@ -691,6 +786,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         onRowClick={onSetCurrentRow}
                         onMoveRow={onMoveRow}
                         enableDragSort={true}
+                        enableDrag={true}
                         onMoveRowEnd={onMoveRowEnd}
                     />
                 </div>
@@ -800,25 +896,25 @@ const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
                 {props.Result}
             </div>
         )
-        // if (
-        //     (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
-        //     (props.ExtraCookies && props.ExtraCookies.length > 0)
-        // ) {
-        //     node = (
-        //         <div>
-        //             {props.ExtraHeaders.length > 0 && (
-        //                 <YakitTag size='small' color='purple' disable={props.disabled}>
-        //                     HTTP Header: {props.ExtraHeaders.length}
-        //                 </YakitTag>
-        //             )}
-        //             {props.ExtraCookies.length > 0 && (
-        //                 <YakitTag size='small' color='success' disable={props.disabled}>
-        //                     HTTP Cookie: {props.ExtraCookies.length}
-        //                 </YakitTag>
-        //             )}
-        //         </div>
-        //     )
-        // }
+        if (
+            (props.ExtraHeaders && props.ExtraHeaders.length > 0) ||
+            (props.ExtraCookies && props.ExtraCookies.length > 0)
+        ) {
+            node = (
+                <div>
+                    {props.ExtraHeaders.length > 0 && (
+                        <YakitTag size='small' color='purple' disable={props.disabled}>
+                            HTTP Header: {props.ExtraHeaders.length}
+                        </YakitTag>
+                    )}
+                    {props.ExtraCookies.length > 0 && (
+                        <YakitTag size='small' color='success' disable={props.disabled}>
+                            HTTP Cookie: {props.ExtraCookies.length}
+                        </YakitTag>
+                    )}
+                </div>
+            )
+        }
         return (
             <div className={styles["table-result"]}>
                 {node}

@@ -1,0 +1,39 @@
+.hex-editor-style .byteValue > .nybbleHighValue {
+    word-spacing: -0.5em;
+}
+
+.hex-editor-style .byteValue > .nybbleLowValue {
+    word-spacing: -0.5em;
+}
+
+.hex-editor-style .asciiValue {
+    word-spacing: -0.5em;
+}
+
+.crlf::before {
+    content: "↵";
+    background-color: #808080; /* 灰色背景 */
+    margin: 4px;
+    padding: 2px; /* 根据需要添加内边距 */
+    border-radius: 3px; /* 添加圆角以使样式更好看 */
+    color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+    opacity: 0.3;
+}
+
+.lf::before {
+    content: "↓";
+    background-color: #808080; /* 灰色背景 */
+    margin: 4px;
+    padding: 2px; /* 根据需要添加内边距 */
+    border-radius: 3px; /* 添加圆角以使样式更好看 */
+    color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+    opacity: 0.3;
+}
+.monaco-editor-style {
+    .crlf::before {
+        opacity: 0;
+    }
+    .lf::before{
+        opacity: 0;
+    }
+}

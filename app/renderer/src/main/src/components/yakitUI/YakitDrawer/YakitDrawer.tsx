@@ -1,9 +1,12 @@
 import {Drawer} from "antd"
-import React, {useEffect} from "react"
+import React, {useEffect, useState} from "react"
 import {YakitDrawerProps} from "./YakitDrawerType"
 import styles from "./YakitDrawer.module.scss"
 import classNames from "classnames"
 import {RemoveIcon} from "@/assets/newIcon"
+import { ShowDrawerProps } from "@/utils/showModal"
+import ReactDOM from "react-dom"
+import { ErrorBoundary } from "react-error-boundary"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,4 +36,87 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
             {props.children}
         </Drawer>
     )
+}
+
+
+const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
+    const [visible, setVisible] = useState<boolean>(true)
+
+    useEffect(() => {
+        if (visible && props.onVisibleSetter) {
+            props.onVisibleSetter(setVisible)
+        }
+    }, [visible])
+
+    return (
+        <YakitDrawer
+            onClose={(e) => {
+                if (props.onCancel) props.onCancel(e)
+                setVisible(false)
+            }}
+            visible={visible}
+            closable={true}
+            destroyOnClose={true}
+            {...props}
+        />
+    )
+}
+
+export const showYakitDrawer = (props: ShowDrawerProps) => {
+    const div = document.createElement("div")
+    document.body.appendChild(div)
+
+    let setter: (r: boolean) => any = () => {}
+    const render = (targetConfig: ShowDrawerProps) => {
+        setTimeout(() => {
+            ReactDOM.render(
+                <>
+                    <YakitBaseDrawer
+                        {...(targetConfig as YakitDrawerProps)}
+                        onVisibleSetter={(r) => {
+                            setter = r
+                        }}
+                        afterClose={() => {
+                            if (props.modalAfterClose) props.modalAfterClose()
+                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                            if (unmountResult && div.parentNode) {
+                                div.parentNode.removeChild(div)
+                            }
+                        }}
+                    >
+                        <ErrorBoundary
+                            FallbackComponent={({error, resetErrorBoundary}) => {
+                                if (!error) {
+                                    return <div>未知错误</div>
+                                }
+                                return (
+                                    <div>
+                                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                                        <pre>{error?.message}</pre>
+                                    </div>
+                                )
+                            }}
+                        >
+                            {targetConfig.content}
+                        </ErrorBoundary>
+                    </YakitBaseDrawer>
+                </>,
+                div
+            )
+        })
+    }
+    render(props)
+    return {
+        destroy: () => {
+            if (setter) {
+                setter(false)
+            }
+            setTimeout(() => {
+                const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                if (unmountResult && div.parentNode) {
+                    div.parentNode.removeChild(div)
+                }
+            }, 400)
+        }
+    }
 }

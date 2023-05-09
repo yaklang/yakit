@@ -1,4 +1,4 @@
-import React, { Ref, useEffect, useMemo, useRef, useState } from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -15,29 +15,28 @@ import {
     InputNumber,
     Dropdown
 } from "antd"
-import { YakQueryHTTPFlowRequest } from "../../utils/yakQueryHTTPFlow"
-import { showByCursorMenu } from "../../utils/showByCursor"
-import { showDrawer } from "../../utils/showModal"
-import { PaginationSchema } from "../../pages/invoker/schema"
-import { InputItem, ManyMultiSelectForString, SwitchItem } from "../../utils/inputUtil"
-import { HTTPFlowDetail } from "../HTTPFlowDetail"
-import { failed, info, warn } from "../../utils/notification"
-import "../style.css"
+import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
+import {showByCursorMenu} from "../../utils/showByCursor"
+import {showDrawer} from "../../utils/showModal"
+import {PaginationSchema} from "../../pages/invoker/schema"
+import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
+import {HTTPFlowDetail} from "../HTTPFlowDetail"
+import {failed, info, warn} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
-import { formatTime, formatTimestamp } from "../../utils/timeUtil"
-import { useHotkeys } from "react-hotkeys-hook"
-import { useClickAway, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useVirtualList } from "ahooks"
+import {formatTime, formatTimestamp} from "../../utils/timeUtil"
+import {useHotkeys} from "react-hotkeys-hook"
+import {useClickAway, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useVirtualList} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import { callCopyToClipboard } from "../../utils/basic"
+import {callCopyToClipboard} from "../../utils/basic"
 import {
     generateCSRFPocByRequest,
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
 } from "../../pages/invoker/fromPacketToYakCode"
-import { execPacketScan } from "@/pages/packetScanner/PacketScanner"
-import { GetPacketScanByCursorMenuItem, packetScanDefaultValue } from "@/pages/packetScanner/DefaultPacketScanGroup"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import { FooterBottom, TableVirtualResize } from "../TableVirtualResize/TableVirtualResize"
+import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
+import {GetPacketScanByCursorMenuItem, packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {FooterBottom, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {
     CheckCircleIcon,
     FilterIcon,
@@ -52,23 +51,23 @@ import {
     CheckIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
-import { ColumnsTypeProps, FiltersItemProps, SortProps } from "../TableVirtualResize/TableVirtualResizeType"
-import { saveABSFileToOpen } from "@/utils/openWebsite"
-import { showResponseViaHTTPFlowID, showResponseViaResponseRaw } from "@/components/ShowInBrowser"
-import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
-import { YakitCheckbox } from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import { YakitCheckableTag } from "../yakitUI/YakitTag/YakitCheckableTag"
-import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
-import { YakitMenu, YakitMenuItemProps } from "../yakitUI/YakitMenu/YakitMenu"
-import { YakitDropdownMenu } from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import { YakitButton } from "../yakitUI/YakitButton/YakitButton"
-import { YakitPopover } from "../yakitUI/YakitPopover/YakitPopover"
-import { showByRightContext } from "../yakitUI/YakitMenu/showByRightContext"
-import { YakitInputNumber } from "../yakitUI/YakitInputNumber/YakitInputNumber"
+import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {showResponseViaHTTPFlowID, showResponseViaResponseRaw} from "@/components/ShowInBrowser"
+import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
+import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
+import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
-const { Option } = Select
+const {Option} = Select
 
 export interface HTTPHeaderItem {
     Header: string
@@ -178,9 +177,9 @@ export const TableFilterDropdownForm: React.FC<TableFilterDropdownStringProp<any
 }
 
 export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (props) => {
-    const { params, setParams, setSelectedKeys, restSearch } = props
+    const {params, setParams, setSelectedKeys, restSearch} = props
     return (
-        <div style={{ padding: 8 }}>
+        <div style={{padding: 8}}>
             <Form
                 size={"small"}
                 onSubmitCapture={(e) => {
@@ -192,7 +191,7 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                             setSelectedKeys([
                                 `${props.filterName}: ${JSON.stringify(
                                     // @ts-ignore
-                                    params ? { result: params[props.filterName] } : {}
+                                    params ? {result: params[props.filterName]} : {}
                                 )}`
                             ])
                         } else {
@@ -207,13 +206,13 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                 {props.pureBool ? (
                     <>
                         <SwitchItem
-                            formItemStyle={{ marginBottom: 4 }}
+                            formItemStyle={{marginBottom: 4}}
                             label={props.label}
                             // @ts-ignore
                             value={params[props.filterName]}
                             setValue={(e) => {
                                 if (params && setParams) {
-                                    const newParams = { ...params }
+                                    const newParams = {...params}
                                     // @ts-ignore
                                     newParams[props.filterName] = e
                                     setParams(newParams)
@@ -225,13 +224,13 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                     <>
                         {props.pureString ? (
                             <InputItem
-                                style={{ marginBottom: 4 }}
+                                style={{marginBottom: 4}}
                                 label={props.label}
                                 // @ts-ignore
                                 value={params[props.filterName]}
                                 setValue={(e) => {
                                     if (params && setParams) {
-                                        const newParams = { ...params }
+                                        const newParams = {...params}
                                         // @ts-ignore
                                         newParams[props.filterName] = e
                                         setParams(newParams)
@@ -241,10 +240,10 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                         ) : (
                             <ManyMultiSelectForString
                                 mode={"tags"}
-                                formItemStyle={{ marginBottom: 4 }}
+                                formItemStyle={{marginBottom: 4}}
                                 label={props.label}
                                 data={(props.autoCompletions || []).map((i) => {
-                                    return { value: i, label: i }
+                                    return {value: i, label: i}
                                 })}
                                 // @ts-ignore
                                 value={params[props.filterName]}
@@ -255,7 +254,7 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                                         }
                                     }
                                     if (params && setParams) {
-                                        const newParams = { ...params }
+                                        const newParams = {...params}
                                         // @ts-ignore
                                         newParams[props.filterName] = e
                                         setParams(newParams)
@@ -265,7 +264,7 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                         )}
                     </>
                 )}
-                <Form.Item style={{ marginBottom: 0, marginTop: 0 }} colon={false} label={" "}>
+                <Form.Item style={{marginBottom: 0, marginTop: 0}} colon={false} label={" "}>
                     <Space>
                         <Button type='primary' htmlType='submit'>
                             {" "}
@@ -275,7 +274,7 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
                             onClick={() => {
                                 setSelectedKeys && setSelectedKeys([])
                                 if (params && setParams) {
-                                    const newParams = { ...params }
+                                    const newParams = {...params}
                                     // @ts-ignore
                                     newParams[props.filterName] = ""
                                     setParams(newParams)
@@ -296,10 +295,10 @@ export const HTTLFlowFilterDropdownForm: React.FC<FilterDropdownStringProp> = (p
 }
 
 export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = (props) => {
-    const { params, setParams } = props
+    const {params, setParams} = props
 
     return (
-        <div style={{ padding: 8 }}>
+        <div style={{padding: 8}}>
             <Form
                 size={"small"}
                 onSubmitCapture={(e) => {
@@ -310,13 +309,13 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
                 {props.pureBool ? (
                     <>
                         <SwitchItem
-                            formItemStyle={{ marginBottom: 4 }}
+                            formItemStyle={{marginBottom: 4}}
                             label={props.label}
                             // @ts-ignore
                             value={params[props.filterName]}
                             setValue={(e) => {
                                 if (params && setParams) {
-                                    const newParams = { ...params }
+                                    const newParams = {...params}
                                     // @ts-ignore
                                     newParams[props.filterName] = e
                                     setParams(newParams)
@@ -328,13 +327,13 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
                     <>
                         {props.pureString ? (
                             <InputItem
-                                style={{ marginBottom: 4 }}
+                                style={{marginBottom: 4}}
                                 label={props.label}
                                 // @ts-ignore
                                 value={params[props.filterName]}
                                 setValue={(e) => {
                                     if (params && setParams) {
-                                        const newParams = { ...params }
+                                        const newParams = {...params}
                                         // @ts-ignore
                                         newParams[props.filterName] = e
                                         setParams(newParams)
@@ -344,16 +343,16 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
                         ) : (
                             <ManyMultiSelectForString
                                 mode={"tags"}
-                                formItemStyle={{ marginBottom: 4 }}
+                                formItemStyle={{marginBottom: 4}}
                                 label={props.label}
                                 data={(props.autoCompletions || []).map((i) => {
-                                    return { value: i, label: i }
+                                    return {value: i, label: i}
                                 })}
                                 // @ts-ignore
                                 value={params[props.filterName]}
                                 setValue={(e) => {
                                     if (params && setParams) {
-                                        const newParams = { ...params }
+                                        const newParams = {...params}
                                         // @ts-ignore
                                         newParams[props.filterName] = e
                                         setParams(newParams)
@@ -363,7 +362,7 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
                         )}
                     </>
                 )}
-                <Form.Item style={{ marginBottom: 0, marginTop: 0 }} colon={false} label={" "}>
+                <Form.Item style={{marginBottom: 0, marginTop: 0}} colon={false} label={" "}>
                     <Space>
                         <Button type='primary' htmlType='submit'>
                             {" "}
@@ -372,7 +371,7 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
                         <Button
                             onClick={() => {
                                 if (params && setParams) {
-                                    const newParams = { ...params }
+                                    const newParams = {...params}
                                     // @ts-ignore
                                     newParams[props.filterName] = ""
                                     setParams(newParams)
@@ -395,7 +394,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
     }
 
     return (
-        <div style={{ width: "100%" }}>
+        <div style={{width: "100%"}}>
             <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
         </div>
     )
@@ -414,21 +413,21 @@ export interface HTTPFlowTableProp {
 
 export const StatusCodeToColor = (code: number) => {
     if (code >= 400) {
-        return "red"
+        return "var( --yakit-danger-5)"
     } else if (code < 400 && code >= 300) {
-        return "orange"
+        return "var( --yakit-warning-5)"
     } else {
-        return "green"
+        return "var( --yakit-success-5)"
     }
 }
 
 export const DurationMsToColor = (code: number) => {
     if (code >= 600) {
-        return "red"
+        return "var( --yakit-danger-5)"
     } else if (code < 600 && code >= 300) {
-        return "orange"
+        return "var( --yakit-warning-5)"
     } else {
-        return "green"
+        return "var( --yakit-success-5)"
     }
 }
 
@@ -644,8 +643,8 @@ const defSort: SortProps = {
 }
 
 const SourceType = [
-    { text: "MITM", value: "mitm" },
-    { text: "插件", value: "scan" },
+    {text: "MITM", value: "mitm"},
+    {text: "插件", value: "scan"},
     {
         text: "爬虫",
         value: "basic-crawler"
@@ -673,13 +672,47 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
     }
     return newData
 }
+/**
+ * @description 根据单位转为对应的值
+ * @returns {number}
+ */
+export const onConvertBodySizeByUnit = (length: number, unit: "B" | "K" | "M") => {
+    switch (unit) {
+        case "K":
+            return Number(length) * 1024
+        case "M":
+            return Number(length) * 1024 * 1024
+        default:
+            return Number(length)
+    }
+}
+
+/**
+ * @description 根据单位转为B
+ * @returns {number}
+ */
+export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
+    let v = length
+    switch (unit) {
+        case "K":
+            v = Number(length) / 1024
+            break
+        case "M":
+            v = Number(length) / 1024 / 1024
+            break
+        default:
+            v = Number(length)
+            break
+    }
+    return Math.ceil(v)
+}
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>({
-        ...(props.params || { SourceType: "mitm", Tags: [] }),
+        ...(props.params || {SourceType: "mitm", Tags: []}),
         SourceType: props.params?.SourceType || "mitm"
     })
     const [tagsQuery, setTagsQuery] = useState<string[]>([])
@@ -697,8 +730,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
 
-    const [compareLeft, setCompareLeft] = useState<CompateData>({ content: "", language: "http" })
-    const [compareRight, setCompareRight] = useState<CompateData>({ content: "", language: "http" })
+    const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
+    const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
     const [compareState, setCompareState] = useState(0)
 
     // 屏蔽数据
@@ -706,7 +739,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         data: []
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "k" | "M">("B")
+    const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "K" | "M">("B")
     const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
@@ -743,7 +776,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 向主页发送对比数据
     useEffect(() => {
         if (compareLeft.content) {
-            const params = { info: compareLeft, type: 1 }
+            const params = {info: compareLeft, type: 1}
             setCompareState(compareState === 0 ? 1 : 0)
 
             ipcRenderer.invoke("add-data-compare", params)
@@ -752,7 +785,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     useEffect(() => {
         if (compareRight.content) {
-            const params = { info: compareRight, type: 2 }
+            const params = {info: compareRight, type: 2}
             setCompareState(compareState === 0 ? 2 : 0)
 
             ipcRenderer.invoke("add-data-compare", params)
@@ -778,7 +811,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     idArr = [...idArr, item]
                 }
             })
-            setParams({ ...params, ExcludeId: idArr, ExcludeInUrl: urlArr })
+            setParams({...params, ExcludeId: idArr, ExcludeInUrl: urlArr})
         }
     }, [shieldData])
     useEffect(() => {
@@ -838,7 +871,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 update(1, limit)
             }, 10)
         },
-        { wait: 500 }
+        {wait: 500}
     ).run
 
     const update = useMemoizedFn(
@@ -856,13 +889,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 SourceType: sourceType,
                 ...params,
                 Tags: params.Tags,
-                Pagination: { ...paginationProps },
+                Pagination: {...paginationProps},
                 OffsetId:
                     paginationProps.Page == 1
                         ? undefined
                         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
-                AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
-                BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined
+                AfterBodyLength: params.AfterBodyLength
+                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                    : undefined,
+                BeforeBodyLength: params.BeforeBodyLength
+                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                    : undefined
             }
 
             if (checkBodyLength && !query.AfterBodyLength) {
@@ -916,7 +953,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 // SourceType: "mitm",
                 SourceType: props.params?.SourceType || "mitm",
                 ...params,
-                Pagination: { Page: 1, Limit: 1, Order: "desc", OrderBy: "id" }
+                Pagination: {Page: 1, Limit: 1, Order: "desc", OrderBy: "id"}
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 if (rsp.Data.length > 0) {
@@ -937,7 +974,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
                 // const statusCode = rsp.StatusCode.map((ele) => ({value: ele.Value, total: ele.Total, label: ele.Value}))
                 const tags = rsp.Tags
-                setTags(tags.map((ele) => ({ label: ele.Value, value: ele.Value })))
+                setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
                 // setStatusCode([...statusCode])
             })
             .catch((e: any) => {
@@ -962,12 +999,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ...params,
             Tags: params.Tags,
             Color: color ? [color] : undefined,
-            AfterBodyLength: params.AfterBodyLength ? getLength(params.AfterBodyLength) : undefined,
-            BeforeBodyLength: params.BeforeBodyLength ? getLength(params.BeforeBodyLength) : undefined,
+            AfterBodyLength: params.AfterBodyLength
+                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                : undefined,
+            BeforeBodyLength: params.BeforeBodyLength
+                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                : undefined,
             // SourceType: "mitm",
             SourceType: props.params?.SourceType || "mitm",
             AfterId: maxId, // 用于计算增量的
-            Pagination: { ...paginationProps }
+            Pagination: {...paginationProps}
         }
         // 查询数据
         ipcRenderer
@@ -1000,7 +1041,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             props.onSelected && props.onSelected(selected)
         },
         [selected],
-        { wait: 400, trailing: true, leading: true }
+        {wait: 400, trailing: true, leading: true}
     )
     // 设置是否自动刷新
     useEffect(() => {
@@ -1019,7 +1060,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 取消屏蔽筛选
     const cancleFilter = (value) => {
         const newArr = filterNonUnique([...shieldData.data, value])
-        const newObj = { ...shieldData, data: newArr }
+        const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     }
 
@@ -1075,18 +1116,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         (rowDate: HTTPFlow) => {
             onRowClick(rowDate)
         },
-        { wait: 200 }
+        {wait: 200}
     ).run
-    const getLength = useMemoizedFn((length: number) => {
-        switch (getBodyLengthUnit()) {
-            case "k":
-                return length * 1024
-            case "M":
-                return length * 1024 * 1024
-            default:
-                return length
-        }
-    })
 
     const onCheckThan0 = useDebounceFn(
         (check: boolean) => {
@@ -1095,7 +1126,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 update(1)
             }, 100)
         },
-        { wait: 200 }
+        {wait: 200}
     ).run
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -1141,7 +1172,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterMultiple: true,
                     filtersType: "select",
                     filterSearchInputProps: {
-                        size: "small",
+                        size: "small"
                     },
                     filterOptionRender: (item: FiltersItemProps) => (
                         <div>
@@ -1190,9 +1221,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 render: (text) => {
                     return text
                         ? `${text}`
-                            .split("|")
-                            .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                            .join(", ")
+                              .split("|")
+                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                              .join(", ")
                         : ""
                 },
                 filterProps: {
@@ -1224,64 +1255,46 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filterProps: {
                     filterKey: "bodyLength",
                     filterRender: () => (
-                        <div className={style["table-body-length-filter"]}>
-                            <Input.Group compact size='small' className={style["input-group"]}>
-                                <YakitInputNumber
-                                    className={style["input-left"]}
-                                    placeholder='Minimum'
-                                    min={0}
-                                    value={getAfterBodyLength()}
-                                    onChange={(v) => setAfterBodyLength(v as number)}
-                                    size='small'
-                                />
-                                {/* <YakitInput className={style["input-split"]} placeholder='~' disabled /> */}
-                                <div className={style["input-split"]}>~</div>
-                                <YakitInputNumber
-                                    className={style["input-right"]}
-                                    placeholder='Maximum'
-                                    min={getAfterBodyLength()}
-                                    value={getBeforeBodyLength()}
-                                    onChange={(v) => {
-                                        setBeforeBodyLength(v as number)
-                                    }}
-                                    size='small'
-                                />
+                        <RangeInputNumberTable
+                            minNumber={getAfterBodyLength()}
+                            setMinNumber={setAfterBodyLength}
+                            maxNumber={getBeforeBodyLength()}
+                            setMaxNumber={setBeforeBodyLength}
+                            onReset={() => {
+                                setParams({
+                                    ...getParams(),
+                                    AfterBodyLength: getAfterBodyLength(),
+                                    BeforeBodyLength: getBeforeBodyLength()
+                                })
+                                setBeforeBodyLength(undefined)
+                                setAfterBodyLength(undefined)
+                                setBodyLengthUnit("B")
+                            }}
+                            onSure={() => {
+                                setParams({
+                                    ...getParams(),
+                                    AfterBodyLength: getAfterBodyLength(),
+                                    BeforeBodyLength: getBeforeBodyLength()
+                                })
+                                setTimeout(() => {
+                                    update(1)
+                                }, 100)
+                            }}
+                            extra={
                                 <YakitSelect
                                     value={getBodyLengthUnit()}
                                     onSelect={(val) => {
                                         setBodyLengthUnit(val)
                                     }}
                                     wrapperClassName={style["unit-select"]}
+                                    size='small'
                                 >
                                     <YakitSelect value='B'>B</YakitSelect>
                                     <YakitSelect value='k'>K</YakitSelect>
                                     <YakitSelect value='M'>M</YakitSelect>
                                 </YakitSelect>
-                            </Input.Group>
-                            <FooterBottom
-                                className={style["input-footer"]}
-                                onReset={() => {
-                                    setParams({
-                                        ...getParams(),
-                                        AfterBodyLength: getAfterBodyLength(),
-                                        BeforeBodyLength: getBeforeBodyLength()
-                                    })
-                                    setBeforeBodyLength(undefined)
-                                    setAfterBodyLength(undefined)
-                                    setBodyLengthUnit("B")
-                                }}
-                                onSure={() => {
-                                    setParams({
-                                        ...getParams(),
-                                        AfterBodyLength: getAfterBodyLength(),
-                                        BeforeBodyLength: getBeforeBodyLength()
-                                    })
-                                    setTimeout(() => {
-                                        update(1)
-                                    }, 100)
-                                }}
-                            />
-                        </div>
+                            }
+                        />
                     )
                 },
                 render: (_, rowData) => {
@@ -1381,7 +1394,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 className={style["icon-style"]}
                                 onClick={() => {
                                     ipcRenderer
-                                        .invoke("GetHTTPFlowById", { Id: rowData?.Id })
+                                        .invoke("GetHTTPFlowById", {Id: rowData?.Id})
                                         .then((i: HTTPFlow) => {
                                             showResponseViaResponseRaw(i?.Response)
                                         })
@@ -1423,7 +1436,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
                 : []
             existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
-            return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
+            return {Id: flow.Id, Hash: flow.Hash, Tags: existedTags}
         })
         ipcRenderer
             .invoke("SetTagForHTTPFlow", {
@@ -1461,7 +1474,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
                 : []
             existedTags.pop()
-            return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
+            return {Id: flow.Id, Hash: flow.Hash, Tags: existedTags}
         })
         ipcRenderer
             .invoke("SetTagForHTTPFlow", {
@@ -1506,12 +1519,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteHTTPFlows", { DeleteAll: true })
-            .then(() => setTimeout(() => setLoading(false), 500))
+            .invoke("DeleteHTTPFlows", {DeleteAll: true})
+            .then(() => {
+                update(1)
+            })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
             })
-            .finally(() => update(1))
+            .finally(() => {
+                setTimeout(() => setLoading(false), 500)
+            })
     })
     // 不重置请求 ID
     const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any) => {
@@ -1533,23 +1550,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
                 const newParams: YakQueryHTTPFlowRequest = {
-                    ...(props.params || { SourceType: "mitm" }),
+                    ...(props.params || {SourceType: "mitm"}),
                     SourceType: props.params?.SourceType || "mitm",
                     ExcludeId: params.ExcludeId,
                     ExcludeInUrl: params.ExcludeInUrl
                 }
-                setParams({ ...newParams })
+                setParams({...newParams})
+                update(1)
             })
             .catch((e: any) => {
                 failed(`历史记录删除失败: ${e}`)
-            }).finally(() => setTimeout(() => setLoading(false), 300))
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
         setLoading(true)
         info("正在删除...如自动刷新失败请手动刷新")
-        setCompareLeft({ content: "", language: "http" })
-        setCompareRight({ content: "", language: "http" })
+        setCompareLeft({content: "", language: "http"})
+        setCompareRight({content: "", language: "http"})
         setCompareState(0)
         setTimeout(() => {
-            update(1)
             if (props.onSelected) props.onSelected(undefined)
         }, 400)
     })
@@ -1588,8 +1608,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "数据包扫描",
             label: "数据包扫描",
             number: 10,
-            onClickSingle: () => { },
-            onClickBatch: () => { },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
                 key: ele.title,
                 label: ele.title
@@ -1618,7 +1638,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "下载 Response Body",
             label: "下载 Response Body",
             onClickSingle: (v) => {
-                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", { Id: v.Id }).then((bytes: { Raw: Uint8Array }) => {
+                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
                 })
             }
@@ -1644,7 +1664,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 Yak PoC 模版",
             label: "复制为 Yak PoC 模版",
-            onClickSingle: () => { },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "数据包 PoC 模版",
@@ -1660,8 +1680,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "标注颜色",
             label: "标注颜色",
             number: 20,
-            onClickSingle: () => { },
-            onClickBatch: () => { },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             children: availableColors.map((i) => {
                 return {
                     key: i.title,
@@ -1681,7 +1701,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "发送到对比器",
             label: "发送到对比器",
-            onClickSingle: () => { },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "发送到对比器左侧",
@@ -1698,7 +1718,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "屏蔽",
             label: "屏蔽",
-            onClickSingle: () => { },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "屏蔽该记录",
@@ -1717,22 +1737,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "删除",
             label: "删除",
-            onClickSingle: () => { },
-            onClickBatch: () => { },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             all: true,
             children: [
                 {
                     key: "删除记录",
                     label: "删除记录",
-                    onClick: (v) => onRemoveHttpHistory({ Id: [v.Id] }),
+                    onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
                     onClickBatch: (list) => {
-                        onRemoveHttpHistory({ Id: list.map((ele) => ele.Id) })
+                        onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
                     }
                 },
                 {
                     key: "删除URL",
                     label: "删除URL",
-                    onClick: (v) => onRemoveHttpHistory({ URLPrefix: v.Url }),
+                    onClick: (v) => onRemoveHttpHistory({URLPrefix: v.Url}),
                     onClickBatch: (list) => {
                         const urls = list.map((ele) => ele.Url)
                         onRemoveHttpHistory({
@@ -1745,7 +1765,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     key: "删除域名",
                     label: "删除域名",
-                    onClick: (v) => onRemoveHttpHistory({ URLPrefix: v?.HostPort?.split(":")[0] }),
+                    onClick: (v) => onRemoveHttpHistory({URLPrefix: v?.HostPort?.split(":")[0]}),
                     onClickBatch: (list) => {
                         const hosts = list.map((ele) => ele.HostPort?.split(":")[0])
                         onRemoveHttpHistory({
@@ -1773,7 +1793,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 }),
                 // openKeys:['复制为 Yak PoC 模版',],
-                onClick: ({ key, keyPath }) => {
+                onClick: ({key, keyPath}) => {
                     if (keyPath.includes("数据包扫描")) {
                         const scanItem = packetScanDefaultValue.find((e) => e.Verbose === key)
                         if (!scanItem) return
@@ -1803,13 +1823,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             onShieldDomain(rowData)
                             break
                         case "删除记录":
-                            onRemoveHttpHistory({ Id: [rowData.Id] })
+                            onRemoveHttpHistory({Id: [rowData.Id]})
                             break
                         case "删除URL":
-                            onRemoveHttpHistory({ URLPrefix: rowData.Url })
+                            onRemoveHttpHistory({URLPrefix: rowData.Url})
                             break
                         case "删除域名":
-                            onRemoveHttpHistory({ URLPrefix: rowData?.HostPort?.split(":")[0] })
+                            onRemoveHttpHistory({URLPrefix: rowData?.HostPort?.split(":")[0]})
                             break
                         case "发送到对比器左侧":
                             setCompareLeft({
@@ -1872,7 +1892,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (!(v && v.Id)) return
         const id = Math.ceil(v.Id)
         const newArr = filterItem([...shieldData.data, id])
-        const newObj = { ...shieldData, data: newArr }
+        const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     })
     /**
@@ -1882,7 +1902,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         let Url = v?.Url
         // 根据URL拿到ID数组
         const newArr = filterItem([...shieldData.data, Url])
-        const newObj = { ...shieldData, data: newArr }
+        const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     })
     /**
@@ -1892,17 +1912,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const host = v?.HostPort?.split(":")[0] || ""
         // 根据host拿到对应ID数组
         const newArr = filterItem([...shieldData.data, host])
-        const newObj = { ...shieldData, data: newArr }
+        const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     })
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
-        <div
-            className='http-flow-table'
-            ref={ref as Ref<any>}
-            tabIndex={-1}
-            style={{ width: "100%", height: "100%", overflow: "hidden" }}
-        >
+        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -1935,12 +1950,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                         ...(params.SourceType?.split(",") || []),
                                                         tag.value
                                                     ]
-                                                    setParams({ ...params, SourceType: selectTypeList.join(",") })
+                                                    setParams({...params, SourceType: selectTypeList.join(",")})
                                                 } else {
                                                     const selectTypeList = (params.SourceType?.split(",") || []).filter(
                                                         (ele) => ele !== tag.value
                                                     )
-                                                    setParams({ ...params, SourceType: selectTypeList.join(",") })
+                                                    setParams({...params, SourceType: selectTypeList.join(",")})
                                                 }
                                                 setTimeout(() => {
                                                     update(1)
@@ -1957,7 +1972,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         placeholder='请输入关键词搜索'
                                         value={params.Keyword}
                                         onChange={(e) => {
-                                            setParams({ ...params, Keyword: e.target.value })
+                                            setParams({...params, Keyword: e.target.value})
                                         }}
                                         onSearch={(v) => {
                                             update(1)
@@ -1983,7 +1998,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                         label: "不重置请求 ID"
                                                     }
                                                 ],
-                                                onClick: ({ key }) => {
+                                                onClick: ({key}) => {
                                                     switch (key) {
                                                         case "resetId":
                                                             onRemoveHttpHistoryAllAndResetId()
@@ -2015,7 +2030,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             onClick={() => {
                                                 sortRef.current = defSort
                                                 const newParams: YakQueryHTTPFlowRequest = {
-                                                    ...(props.params || { SourceType: "mitm" }),
+                                                    ...(props.params || {SourceType: "mitm"}),
                                                     SourceType: props.params?.SourceType || "mitm",
                                                     ExcludeId: params.ExcludeId,
                                                     ExcludeInUrl: params.ExcludeInUrl
@@ -2041,7 +2056,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             >
                                 <div className={style["http-history-table-flex"]}>
                                     {shieldData?.data.length > 0 && (
-                                        <div style={{ marginRight: 16 }}>
+                                        <div style={{marginRight: 16}}>
                                             <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
                                         </div>
                                     )}
@@ -2069,9 +2084,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         <YakitSelect
                                             size='small'
                                             value={params.IsWebsocket || ""}
-                                            wrapperStyle={{ width: 150 }}
+                                            wrapperStyle={{width: 150}}
                                             onSelect={(val) => {
-                                                setParams({ ...params, IsWebsocket: val })
+                                                setParams({...params, IsWebsocket: val})
                                                 setTimeout(() => {
                                                     update(1)
                                                 }, 50)
@@ -2160,7 +2175,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     "button-text-primary": isShowColor
                                                 })}
                                                 type='outline2'
-                                                style={{ padding: 4 }}
+                                                style={{padding: 4}}
                                                 onClick={() => setIsShowColor(true)}
                                             >
                                                 <ColorSwatchIcon
@@ -2180,102 +2195,106 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }}
                                         >
                                             批量操作
-                                            <ChevronDownIcon style={{ color: "#85899E" }} />
+                                            <ChevronDownIcon style={{color: "#85899E"}} />
                                         </YakitButton>
                                     )) || (
-                                            <YakitPopover
-                                                overlayClassName={style["http-history-table-drop-down-popover"]}
-                                                content={
-                                                    <YakitMenu
-                                                        width={150}
-                                                        data={menuData
-                                                            .filter((f) => f.onClickBatch)
-                                                            .map((m) => {
-                                                                return {
-                                                                    key: m.key,
-                                                                    label: m.label,
-                                                                    children: m.children?.map((ele) => ({
-                                                                        key: ele.key,
-                                                                        label: ele.label
-                                                                    }))
-                                                                }
-                                                            })}
-                                                        onClick={({ key, keyPath }) => {
-                                                            if (keyPath.includes("数据包扫描")) {
-                                                                const currentItemScan = menuData.find(
-                                                                    (f) => f.onClickBatch && f.key === "数据包扫描"
-                                                                )
-                                                                if (!currentItemScan) return
-                                                                onBatch(
-                                                                    (v) => execPacketScan([v.Id], key),
-                                                                    currentItemScan.number || 0,
-                                                                    selectedRowKeys.length === total
-                                                                )
-                                                                return
+                                        <YakitPopover
+                                            overlayClassName={style["http-history-table-drop-down-popover"]}
+                                            content={
+                                                <YakitMenu
+                                                    width={150}
+                                                    data={menuData
+                                                        .filter((f) => f.onClickBatch)
+                                                        .map((m) => {
+                                                            return {
+                                                                key: m.key,
+                                                                label: m.label,
+                                                                children: m.children?.map((ele) => ({
+                                                                    key: ele.key,
+                                                                    label: ele.label
+                                                                }))
                                                             }
-                                                            if (keyPath.includes("标注颜色")) {
-                                                                const currentItemColor = menuData.find(
-                                                                    (f) => f.onClickBatch && f.key === "标注颜色"
+                                                        })}
+                                                    onClick={({key, keyPath}) => {
+                                                        if (keyPath.includes("数据包扫描")) {
+                                                            const currentItemScan = menuData.find(
+                                                                (f) => f.onClickBatch && f.key === "数据包扫描"
+                                                            )
+                                                            if (!currentItemScan) return
+                                                            onBatch(
+                                                                (v) => execPacketScan([v.Id], key),
+                                                                currentItemScan.number || 0,
+                                                                selectedRowKeys.length === total
+                                                            )
+                                                            return
+                                                        }
+                                                        if (keyPath.includes("标注颜色")) {
+                                                            const currentItemColor = menuData.find(
+                                                                (f) => f.onClickBatch && f.key === "标注颜色"
+                                                            )
+                                                            const colorItem = availableColors.find(
+                                                                (e) => e.title === key
+                                                            )
+                                                            if (!currentItemColor || !colorItem) return
+                                                            CalloutColorBatch(
+                                                                selectedRows,
+                                                                currentItemColor?.number || 0,
+                                                                colorItem
+                                                            )
+                                                            return
+                                                        }
+                                                        switch (key) {
+                                                            case "删除记录":
+                                                                onRemoveHttpHistory({Id: selectedRowKeys})
+                                                                break
+                                                            case "删除URL":
+                                                                const urls = selectedRows.map((ele) => ele.Url)
+                                                                onRemoveHttpHistory({
+                                                                    Filter: {
+                                                                        IncludeInUrl: urls
+                                                                    }
+                                                                })
+                                                                break
+                                                            case "删除域名":
+                                                                const hosts = selectedRows.map(
+                                                                    (ele) => ele.HostPort?.split(":")[0]
                                                                 )
-                                                                const colorItem = availableColors.find(
-                                                                    (e) => e.title === key
+                                                                onRemoveHttpHistory({
+                                                                    Filter: {
+                                                                        IncludeInUrl: hosts
+                                                                    }
+                                                                })
+                                                                break
+                                                            default:
+                                                                const currentItem = menuData.find(
+                                                                    (f) => f.onClickBatch && f.key === key
                                                                 )
-                                                                if (!currentItemColor || !colorItem) return
-                                                                CalloutColorBatch(
-                                                                    selectedRows,
-                                                                    currentItemColor?.number || 0,
-                                                                    colorItem
-                                                                )
-                                                                return
-                                                            }
-                                                            switch (key) {
-                                                                case "删除记录":
-                                                                    onRemoveHttpHistory({ Id: selectedRowKeys })
-                                                                    break
-                                                                case "删除URL":
-                                                                    const urls = selectedRows.map((ele) => ele.Url)
-                                                                    onRemoveHttpHistory({
-                                                                        Filter: {
-                                                                            IncludeInUrl: urls
-                                                                        }
-                                                                    })
-                                                                    break
-                                                                case "删除域名":
-                                                                    const hosts = selectedRows.map((ele) => ele.HostPort?.split(":")[0])
-                                                                    onRemoveHttpHistory({
-                                                                        Filter: {
-                                                                            IncludeInUrl: hosts
-                                                                        }
-                                                                    })
-                                                                    break
-                                                                default:
-                                                                    const currentItem = menuData.find(
-                                                                        (f) => f.onClickBatch && f.key === key
+                                                                if (!currentItem) return
+                                                                if (currentItem.onClickBatch)
+                                                                    currentItem.onClickBatch(
+                                                                        selectedRows,
+                                                                        currentItem.number
                                                                     )
-                                                                    if (!currentItem) return
-                                                                    if (currentItem.onClickBatch)
-                                                                        currentItem.onClickBatch(selectedRows, currentItem.number)
-                                                                    break
-                                                            }
-
-                                                        }}
-                                                    />
-                                                }
-                                                trigger='click'
-                                                placement='bottomLeft'
-                                            >
-                                                <YakitButton
-                                                    type='outline2'
-                                                    disabled={selectedRowKeys.length === 0}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
+                                                                break
+                                                        }
                                                     }}
-                                                >
-                                                    批量操作
-                                                    <ChevronDownIcon style={{ color: "#85899E" }} />
-                                                </YakitButton>
-                                            </YakitPopover>
-                                        )}
+                                                />
+                                            }
+                                            trigger='click'
+                                            placement='bottomLeft'
+                                        >
+                                            <YakitButton
+                                                type='outline2'
+                                                disabled={selectedRowKeys.length === 0}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                }}
+                                            >
+                                                批量操作
+                                                <ChevronDownIcon style={{color: "#85899E"}} />
+                                            </YakitButton>
+                                        </YakitPopover>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -2318,7 +2337,7 @@ interface HTTPFlowShieldProps {
 }
 
 export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlowShieldProps) => {
-    const { shieldData, cancleFilter } = props
+    const {shieldData, cancleFilter} = props
     return (
         <>
             {shieldData?.data.length > 0 && (
@@ -2364,7 +2383,7 @@ interface ColorSearchProps {
 }
 
 const ColorSearch = React.memo((props: ColorSearchProps) => {
-    const { color, setColor, onReset, onSure, setIsShowColor } = props
+    const {color, setColor, onReset, onSure, setIsShowColor} = props
     const onMouseLeave = useMemoizedFn(() => {
         setIsShowColor(false)
         onSure()
@@ -2482,7 +2501,7 @@ interface TableFilterProps {
 }
 
 const TableFilter: React.FC<TableFilterProps> = (props) => {
-    const { isVertical, tags, tagsValue, setTags, contentTypeValue, setContentType, onSure } = props
+    const {isVertical, tags, tagsValue, setTags, contentTypeValue, setContentType, onSure} = props
     const onSelect = useMemoizedFn((values: string[]) => {
         setTags([...values])
     })
@@ -2524,7 +2543,7 @@ interface MultipleSelectProps {
 }
 
 const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
-    const { onSelect, value, options } = props
+    const {onSelect, value, options} = props
     const [showList, setShowList] = useState<boolean>(false)
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
@@ -2591,11 +2610,11 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                 <YakitSelect
                     size='small'
                     mode='tags'
-                    style={{ width: 150 }}
+                    style={{width: 150}}
                     onChange={(values, option) => onChangeSelect(values, option as FiltersItemProps[])}
                     allowClear
                     value={Array.isArray(value) ? [...value] : []}
-                    dropdownStyle={{ height: 0, padding: 0 }}
+                    dropdownStyle={{height: 0, padding: 0}}
                     options={options}
                     className='select-small'
                     onFocus={() => onHandleScroll()}
@@ -2638,6 +2657,58 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
         </div>
     )
 }
+interface RangeInputNumberProps {
+    minNumber?: number
+    setMinNumber?: (b: number) => void
+    maxNumber?: number
+    setMaxNumber?: (b: number) => void
+    extra?: ReactNode
+    onReset?: () => void
+    onSure?: () => void
+    showFooter?: boolean
+}
+export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo((props) => {
+    const {minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter} = props
+    return (
+        <div className={style["table-body-length-filter"]}>
+            <Input.Group compact size='small' className={style["input-group"]}>
+                <YakitInputNumber
+                    className={style["input-left"]}
+                    placeholder='Minimum'
+                    min={0}
+                    value={minNumber}
+                    onChange={(v) => {
+                        if (setMinNumber) setMinNumber(v as number)
+                    }}
+                    size='small'
+                />
+                <div className={style["input-split"]}>~</div>
+                <YakitInputNumber
+                    className={style["input-right"]}
+                    placeholder='Maximum'
+                    min={minNumber}
+                    value={maxNumber}
+                    onChange={(v) => {
+                        if (setMaxNumber) setMaxNumber(v as number)
+                    }}
+                    size='small'
+                />
+                {extra}
+            </Input.Group>
+            {showFooter !== false && (
+                <FooterBottom
+                    className={style["input-footer"]}
+                    onReset={() => {
+                        if (onReset) onReset()
+                    }}
+                    onSure={() => {
+                        if (onSure) onSure()
+                    }}
+                />
+            )}
+        </div>
+    )
+})
 
 // 发送web fuzzerconst
 export const onSendToTab = (rowData) => {

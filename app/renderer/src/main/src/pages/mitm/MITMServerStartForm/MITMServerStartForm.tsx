@@ -16,6 +16,8 @@ import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
 import ReactResizeDetector from "react-resize-detector"
+import {useWatch} from "antd/es/form/Form"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -29,12 +31,14 @@ export interface MITMServerStartFormProp {
         downstreamProxy: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
-        clientCertificates: ClientCertificate[]
+        clientCertificates: ClientCertificate[],
+        extra?: object
     ) => any
     visible: boolean
     setVisible: (b: boolean) => void
     enableInitialPlugin: boolean
     setEnableInitialPlugin: (b: boolean) => void
+    status: "idle" | "hijacked" | "hijacking"
 }
 
 const {Item} = Form
@@ -45,6 +49,7 @@ export interface ClientCertificate {
     KeyPem: Uint8Array
     CaCertificates: Uint8Array[]
 }
+
 const defHost = "127.0.0.1"
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
     const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
@@ -54,16 +59,17 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
 
-    const [advancedValue, setAdvancedValue] = useState<AdvancedConfigurationFromValue>({
-        downstreamProxy: "",
-        certs: []
-    })
+    // 高级配置 关闭后存的最新的form值
+    const [advancedValue, setAdvancedValue] = useState<AdvancedConfigurationFromValue>()
 
     const ruleButtonRef = useRef<any>()
+    const advancedFormRef = useRef<any>()
 
     const [form] = Form.useForm()
+    const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
 
     useEffect(() => {
+        if (props.status !== "idle") return
         // 设置 MITM 初始启动插件选项
         getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((a) => {
             form.setFieldsValue({enableInitialPlugin: !!a})
@@ -89,7 +95,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 })
             }
         })
-    }, [])
+        getRemoteValue(MITMConsts.MITMDefaultDownstreamProxy).then((e) => {
+            form.setFieldsValue({downstreamProxy: e})
+        })
+    }, [props.status])
     useUpdateEffect(() => {
         form.setFieldsValue({enableInitialPlugin: props.enableInitialPlugin})
     }, [props.enableInitialPlugin])
@@ -109,8 +118,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         props.setEnableInitialPlugin(checked)
     })
     const onStartMITM = useMemoizedFn((values) => {
+        // 获取高级配置的默认值
+        const advancedFormValue = advancedFormRef.current?.getValue()
         let params = {
             ...values,
+            ...advancedFormValue,
             ...advancedValue
         }
         props.onStartMITMServer(
@@ -119,19 +131,28 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.downstreamProxy,
             params.enableInitialPlugin,
             params.enableHttp2,
-            params.certs
+            params.certs,
+            {
+                enableGMTLS: params.enableGMTLS,
+                onlyEnableGMTLS: params.onlyEnableGMTLS,
+                preferGMTLS: params.preferGMTLS,
+                enableProxyAuth: params.enableProxyAuth,
+                proxyUsername: params.proxyUsername,
+                proxyPassword: params.proxyPassword
+            }
         )
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
         if (index === -1) {
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
             setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
         }
-        // setLocalValue(WEB_FUZZ_PROXY, params.downstreamProxy)
+        setRemoteValue(
+            MITMConsts.MITMDefaultDownstreamProxy,
+            params.downstreamProxy ? params.downstreamProxy : undefined
+        )
         setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
-        // setRemoteValue(MITMConsts.MITMDefaultDownstreamProxy, params.downstreamProxy)
-        // setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(params.certs))
-        setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, values.enableInitialPlugin ? "true" : "")
+        setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
     })
     const [width, setWidth] = useState<number>(0)
     return (
@@ -172,6 +193,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     />
                 </Item>
                 <Item
+                    label='下游代理'
+                    name='downstreamProxy'
+                    help={
+                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"
+                    }
+                >
+                    <YakitInput placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                </Item>
+                <Item
                     label={"HTTP/2.0 支持"}
                     name='enableHttp2'
                     help={
@@ -181,6 +211,16 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 >
                     <YakitSwitch size='large' />
                 </Item>
+                <Item
+                    label={"国密劫持"}
+                    name='enableGMTLS'
+                    initialValue={true}
+                    help={"适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"}
+                    valuePropName='checked'
+                >
+                    <YakitSwitch size='large' />
+                </Item>
+
                 <Item
                     label={"内容规则"}
                     help={
@@ -250,6 +290,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         setAdvancedValue(val)
                         setAdvancedFormVisible(false)
                     }}
+                    enableGMTLS={enableGMTLS}
+                    ref={advancedFormRef}
                 />
             </React.Suspense>
         </div>

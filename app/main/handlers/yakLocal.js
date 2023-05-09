@@ -6,7 +6,7 @@ const _sudoPrompt = require("sudo-prompt");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-
+const {setLocalCache} = require("../localCache")
 const isWindows = process.platform === "win32";
 
 if (process.platform === "darwin" || process.platform === "linux") {
@@ -68,7 +68,8 @@ module.exports = {
     clearing: () => {
     },
     register: (win, getClient) => {
-        ipcMain.handle("callback-process-env",(e,type)=>{
+        ipcMain.handle("set-release-edition-raw",(e,type)=>{
+            setLocalCache("REACT_APP_PLATFORM",type)
             dbFile = type === "enterprise" ?  "company-default-yakit.db" : "default-yakit.db"
             return""
         })
@@ -196,77 +197,8 @@ module.exports = {
             }
         })
 
-        // asyncStartLocalYakGRPCServer wrapper
-        const asyncStartLocalYakGRPCServer = (params) => {
-            return new Promise((resolve, reject) => {
-                const {sudo} = params;
-
-                let randPort = 40000 + getRandomInt(9999);
-                try {
-                    if (sudo) {
-                        if (isWindows) {
-                            childProcess.exec(
-                                generateWindowsSudoCommand(
-                                    getLatestYakLocalEngine(), `grpc --port ${randPort}`,
-                                ),
-                                {maxBuffer: 1000 * 1000 * 1000, env: {"YAK_DEFAULT_DATABASE_NAME": dbFile}},
-                            ).on("error", err => {
-                                if (err) {
-                                    reject(err)
-                                }
-                            }).on("spawn", () => {
-                                resolve()
-                            })
-                        } else {
-                            const cmd = `${getLatestYakLocalEngine()} grpc --port ${randPort}`;
-                            sudoExec(cmd, {
-                                    name: `yak grpc port ${randPort}`,
-                                },
-                                function (error) {
-                                    if (error) {
-                                        reject(error)
-                                    } else {
-                                        resolve()
-                                    }
-                                }
-                            )
-                        }
-                    } else {
-                        childProcess.spawn(
-                            getLatestYakLocalEngine(),
-                            ["grpc", "--port", `${randPort}`],
-                            {stdio: ["ignore", "ignore", "ignore"], env: {"YAK_DEFAULT_DATABASE_NAME": dbFile}},
-                        ).on("error", err => {
-                            if (err) {
-                                fs.writeFileSync("/tmp/yakit-yak-process-from-callback.txt", new Buffer(`${err}`))
-                                reject(err)
-                            }
-                        }).on("spawn", () => resolve())
-                    }
-                } catch (e) {
-                    reject(e)
-                }
-
-                return randPort
-            })
-        }
-        ipcMain.handle("start-local-yak-grpc-server", async (e, params) => {
-            return await asyncStartLocalYakGRPCServer(params)
-        })
-
         ipcMain.handle("is-yak-engine-installed", e => {
             return fs.existsSync(getLatestYakLocalEngine())
-
-            // if (!isWindows) {
-            //     // 如果是 mac/ubuntu
-            //     if (!fs.existsSync("/usr/local/bin")) {
-            //         return false
-            //     }
-            //     return fs.existsSync("/usr/local/bin/yak");
-            //
-            // } else {
-            //     return fs.existsSync(getWindowsInstallPath())
-            // }
         })
 
         ipcMain.handle("is-windows", e => {

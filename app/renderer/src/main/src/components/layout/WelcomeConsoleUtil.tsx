@@ -1,7 +1,4 @@
-import React from "react";
 import {randomString} from "@/utils/randomUtil";
-import {showModal} from "@/utils/showModal";
-import {YakLocalProcess} from "@/protected/YakLocalProcess";
 
 const {ipcRenderer} = window.require("electron");
 

@@ -7,16 +7,14 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {ENTERPRISE_STATUS, getJuageEnvFile} from "@/utils/envfile"
+import {isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
-import {isSimpleEnterprise} from "@/utils/envfile"
 import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
 const {ipcRenderer} = window.require("electron")
-const isEnterprise = ENTERPRISE_STATUS.IS_ENTERPRISE_STATUS === getJuageEnvFile()
 
 export interface UpdateYakitAndYaklangProps {
     currentYakit: string
@@ -85,7 +83,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             diyHome: "https://www.yaklang.com",
             method: "get",
             url: "yak/versions",
-            params: {type: "yakit", source: isEnterprise ? "company" : "community"}
+            params: {type: "yakit", source: isEnterpriseEdition() ? "company" : "community"}
         })
             .then((res: any) => {
                 if (!res) return
@@ -141,7 +139,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
-        if (isSimpleEnterprise) return false
+        if (isEnpriTraceAgent()) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true
@@ -163,8 +161,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }
 
     const yakitLater = useMemoizedFn(() => {
-        if (isShowYaklang) setLatestYakit("")
-        else onCancel()
+        setLatestYakit("")
+        if (!isShowYaklang) onCancel()
     })
     const yaklangLater = useMemoizedFn(() => {
         setLatestYaklang("")
@@ -177,7 +175,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         isYakitBreak.current = false
         setInstallYakit(true)
         ipcRenderer
-            .invoke("download-latest-yakit", version)
+            .invoke("download-latest-yakit", version, isEnterpriseEdition())
             .then(() => {
                 if (isYakitBreak.current) return
                 success("下载完毕")
