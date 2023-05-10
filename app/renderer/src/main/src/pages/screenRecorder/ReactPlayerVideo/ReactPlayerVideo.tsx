@@ -31,6 +31,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
     const playerRef = useRef<any>()
     useEffect(() => {
         if (!playerRef.current) return
+        playerRef.current.load()
         setTimeout(() => {
             setError(playerRef.current?.getState()?.player?.error)
         }, 100)

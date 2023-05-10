@@ -41,6 +41,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {ReactPlayerVideo} from "./ReactPlayerVideo/ReactPlayerVideo"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -271,6 +272,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             loading={loading}
                             loadMoreData={loadMoreData}
                             defItemHeight={96}
+                            rowKey='Id'
                             classNameRow={styles["list-item"]}
                             renderRow={(item: ScreenRecorder, index) => {
                                 return (
@@ -342,6 +344,7 @@ interface ScreenRecorderListItemProps {
 const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo((props) => {
     const {item, isSelected, onSelect} = props
     const [urlVideo, setUrlVideo] = useState<string>("")
+    const [visible, setVisible] = useState<boolean>(false)
     const [form] = Form.useForm()
     useEffect(() => {
         setUrlVideo(`atom://${item.Filename}`)
@@ -351,21 +354,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             .invoke("is-file-exists", item.Filename)
             .then((flag: boolean) => {
                 if (flag) {
-                    const m = showYakitModal({
-                        title: null,
-                        footer: <></>,
-                        width: 922,
-                        closeIcon: <></>,
-                        centered: true,
-                        content: (
-                            <ReactPlayerVideo
-                                url={urlVideo}
-                                title={item.Filename}
-                                onPreClick={() => onPreVideo(item)}
-                                onNextClick={() => onNextVideo(item)}
-                            />
-                        )
-                    })
+                    setVisible(true)
                 } else {
                     failed("目标文件已不存在!")
                 }
@@ -373,9 +362,13 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             .catch(() => {})
     })
     /** @description 播放上一个视频 */
-    const onPreVideo = useMemoizedFn((item: ScreenRecorder) => {})
+    const onPreVideo = useMemoizedFn((item: ScreenRecorder) => {
+        // setUrlVideo(`atom://C:Users/14257/yakit-projects/projects/records/screen_records_20230510_14_40_06.mp4`)
+    })
     /** @description 播放下一个视频 */
-    const onNextVideo = useMemoizedFn((item: ScreenRecorder) => {})
+    const onNextVideo = useMemoizedFn((item: ScreenRecorder) => {
+        // setUrlVideo(`atom://C:/Users/14257/yakit-projects/projects/records/screen_records_20230510_11_41_02.mp4`)
+    })
     const onEdit = useMemoizedFn(() => {
         showYakitModal({
             title: "编辑视频信息",
@@ -411,7 +404,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
             <div className={styles["list-item-cover"]} onClick={() => onPlayVideo()}>
-                <img alt='' src='atom://C:\Users\14257\yakit-projects\projects\records\123.jpg' />
+                <img alt='' src='atom://C:/Users/14257/yakit-projects/projects/records/123.jpg' />
                 <div className={styles["list-item-cover-hover"]}>
                     <PlayIcon />
                 </div>
@@ -450,6 +443,21 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                     <TrashIcon className={styles["icon-trash"]} />
                 </YakitPopconfirm>
             </div>
+            <YakitModal
+                visible={visible}
+                footer={null}
+                closeIcon={<></>}
+                centered
+                width={922}
+                onCancel={() => setVisible(false)}
+            >
+                <ReactPlayerVideo
+                    url={urlVideo}
+                    title={item.Filename}
+                    onPreClick={() => onPreVideo(item)}
+                    onNextClick={() => onNextVideo(item)}
+                />
+            </YakitModal>
         </>
     )
 })
