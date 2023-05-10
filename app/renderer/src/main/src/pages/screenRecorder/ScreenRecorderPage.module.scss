@@ -1,0 +1,32 @@
+.not-installed-empty {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    margin-top: 144px;
+    .not-installed-buttons {
+        margin-top: 16px;
+    }
+}
+
+.download-progress {
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
+            margin-bottom: 8px;
+        }
+    }
+}
+.download-progress-messages {
+    color: var(--yakit-body-text-color);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 24px;
+    min-height: 30px;
+    max-height: 200px;
+    overflow-y: auto;
+}

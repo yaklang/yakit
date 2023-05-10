@@ -365,13 +365,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             .catch(() => {})
     })
     /** @description 播放上一个视频 */
-    const onPreVideo = useMemoizedFn((item: ScreenRecorder) => {
-        console.log("onPreVideo", item)
-    })
+    const onPreVideo = useMemoizedFn((item: ScreenRecorder) => {})
     /** @description 播放下一个视频 */
-    const onNextVideo = useMemoizedFn((item: ScreenRecorder) => {
-        console.log("onNextVideo", item)
-    })
+    const onNextVideo = useMemoizedFn((item: ScreenRecorder) => {})
     const onEdit = useMemoizedFn(() => {
         showYakitModal({
             title: "编辑视频信息",
@@ -380,9 +376,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             onOkText: "保存",
             onOk: () => {
                 form.validateFields()
-                    .then((val) => {
-                        console.log("edit", val)
-                    })
+                    .then((val) => {})
                     .catch(() => {})
             },
             content: (

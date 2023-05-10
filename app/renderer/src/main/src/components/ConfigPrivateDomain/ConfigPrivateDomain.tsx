@@ -72,7 +72,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         })
             .then((res: API.UserData) => {
-                console.log("返回结果：", res)
                 ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
                     const user = {
                         isLogin: true,

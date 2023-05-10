@@ -47,9 +47,6 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
                 src={url}
                 // poster='https://video-react.js.org/assets/poster.png'
                 className={styles["player-video"]}
-                videoWidth={(e) => {
-                    console.log("e", e)
-                }}
             >
                 <BigPlayButton position='center' />
                 {error && <div className={styles["player-video-tip"]}>该视频文件不可播放</div>}

@@ -188,7 +188,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
     useEffect(() => {
-        console.log("1111", screenRecorderInfo.token)
         ipcRenderer.on(`${screenRecorderInfo.token}-data`, async (e, data) => {})
         ipcRenderer.on(`${screenRecorderInfo.token}-error`, (e, error) => {})
         ipcRenderer.on(`${screenRecorderInfo.token}-end`, (e, data) => {
