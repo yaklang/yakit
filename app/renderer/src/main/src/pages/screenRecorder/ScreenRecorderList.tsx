@@ -100,7 +100,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Pagination: paginationProps
             })
             .then((item: QueryGeneralResponse<any>) => {
-                console.log("item", item)
                 const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
