@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
-import {useMemoizedFn, useSelections} from "ahooks"
+import {useMemoizedFn, useSelections, useUpdateEffect} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Divider, Form, List, Tag} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -99,6 +99,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Pagination: paginationProps
             })
             .then((item: QueryGeneralResponse<any>) => {
+                console.log("item", item)
                 const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
@@ -119,6 +120,13 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     useEffect(() => {
         onRefresh()
     }, [props.refreshTrigger])
+    useUpdateEffect(() => {
+        if (!screenRecorderInfo.isRecording) {
+            setTimeout(() => {
+                onRefresh()
+            }, 1000)
+        }
+    }, [screenRecorderInfo.isRecording])
     /**@description 列表加载更多 */
     const loadMoreData = useMemoizedFn(() => {
         update(parseInt(`${pagination.Page}`) + 1, 20)
@@ -136,7 +144,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             <div className={styles["screen-recorder-heard"]}>
                 <div className={styles["heard-title"]}>
                     <span className={styles["heard-title-text"]}>录屏管理</span>
-                    <span className={styles["heard-subTitle-text"]}>
+                    <span className={classNames("content-ellipsis", styles["heard-subTitle-text"])}>
                         本录屏在 Windows 下，会同时录制所有屏幕，合并在一个文件中；在 MacOS 下多屏会生成多个文件
                     </span>
                 </div>
@@ -410,7 +418,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             </div>
 
             <div className={styles["list-item-info"]}>
-                <div className={styles["list-item-name"]} onClick={() => onPlayVideo()}>
+                <div className={classNames("content-ellipsis", styles["list-item-name"])} onClick={() => onPlayVideo()}>
                     {item.Filename}
                 </div>
                 <div className={styles["list-item-notes"]}>
@@ -422,9 +430,15 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                     <div className={styles["list-item-duration"]}>
                         <ClockIcon style={{marginRight: 4}} /> 28:56s
                     </div>
-                    <div>{formatTimestamp(item.CreatedAt)}</div>
-                    <div className={styles["list-item-filename"]} onClick={() => openABSFileLocated(item.Filename)}>
-                        {item.Filename} <CopyComponents copyText={item.Filename} />
+                    <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
+                    <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
+                        <span
+                            className={classNames("content-ellipsis")}
+                            onClick={() => openABSFileLocated(item.Filename)}
+                        >
+                            {item.Filename}
+                        </span>
+                        <CopyComponents copyText={item.Filename} />
                     </div>
                 </div>
             </div>
