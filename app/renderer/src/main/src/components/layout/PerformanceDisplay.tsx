@@ -180,7 +180,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     const isLocal = useMemo(() => {
         return engineMode === "admin" || engineMode === "local"
     }, [engineMode])
-    console.log("isDev", isDev)
+
     return (
         <YakitPopover
             visible={show}
@@ -254,11 +254,15 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                             Port: i.port,
                                                             Host: "127.0.0.1",
                                                         }
+                                                        ipcRenderer.invoke("switch-conn-refresh", true)
                                                         ipcRenderer
                                                             .invoke("connect-yaklang-engine", switchEngine)
                                                             .then(() => {
-                                                                ipcRenderer.invoke("switch-conn-refresh", true)
-                                                                success(`切换核心引擎成功！`)
+                                                                
+                                                                setTimeout(()=>{
+                                                                    ipcRenderer.invoke("switch-conn-refresh", false)
+                                                                    success(`切换核心引擎成功！`)
+                                                                },500)
                                                             })
                                                             .catch((e) => {
                                                                 failed(e)

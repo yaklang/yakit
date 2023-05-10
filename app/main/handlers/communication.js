@@ -66,6 +66,10 @@ module.exports = (win, getClient) => {
     })
     /** 风车切换引擎 */
     ipcMain.handle("switch-conn-refresh", (e, params) => {
+        if(!params){
+            // 关闭所有菜单
+            win.webContents.send("fetch-close-all-tab")
+        }
         win.webContents.send("fetch-switch-conn-refresh", params)
     })
     /** License验证通信 */

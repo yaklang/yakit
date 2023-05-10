@@ -839,8 +839,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
-    console.log("refresh ", refresh)
-
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <div className={styles["ui-layout-container"]}>
@@ -1048,8 +1046,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         )}
                     </div>
-
+                    
                     <div className={styles["ui-layout-body"]}>
+                        <Spin spinning={refresh}>
                         {engineLink &&
                             (isJudgeLicense ? (
                                 <EnterpriseJudgeLogin
@@ -1066,7 +1065,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             ) : (
                                 props.children
                             ))}
-
+                        </Spin>
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}
@@ -1135,6 +1134,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         )}
                     </div>
+                  
                 </div>
             </div>
 

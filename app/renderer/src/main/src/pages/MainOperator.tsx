@@ -1182,8 +1182,14 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             const {router} = res
             removePage(router)
         })
+        ipcRenderer.on("fetch-close-all-tab", () => {
+            delFuzzerList(1)
+            setPageCache(getInitPageCache())
+            setCurrentTabKey(getInitActiveTabKey())
+        })
         return () => {
             ipcRenderer.removeAllListeners("fetch-close-tab")
+            ipcRenderer.removeAllListeners("fetch-close-all-tab")
         }
     }, [])
 
