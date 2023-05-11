@@ -189,7 +189,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
     useEffect(() => {
         ipcRenderer.on(`${screenRecorderInfo.token}-data`, async (e, data) => {})
-        ipcRenderer.on(`${screenRecorderInfo.token}-error`, (e, error) => {})
+        ipcRenderer.on(`${screenRecorderInfo.token}-error`, (e, error) => {
+            setRecording(false)
+        })
         ipcRenderer.on(`${screenRecorderInfo.token}-end`, (e, data) => {
             setRecording(false)
         })
@@ -211,24 +213,35 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     }, [])
 
     const openScreenRecorder = useMemoizedFn(() => {
-        const m = showYakitModal({
-            title: "录屏须知",
-            footer: null,
-            type: "white",
-            width: 520,
-            content: (
-                <ScrecorderModal
-                    onClose={() => {
-                        m.destroy()
-                    }}
-                    token={screenRecorderInfo.token}
-                    onStartCallback={() => {
-                        setRecording(true)
-                        m.destroy()
-                    }}
-                />
-            )
+        ipcRenderer
+        .invoke("IsScrecorderReady", {})
+        .then((data: {Ok: boolean; Reason: string}) => {
+            if(data.Ok){
+                const m = showYakitModal({
+                    title: "录屏须知",
+                    footer: null,
+                    type: "white",
+                    width: 520,
+                    content: (
+                        <ScrecorderModal
+                            onClose={() => {
+                                m.destroy()
+                            }}
+                            token={screenRecorderInfo.token}
+                            onStartCallback={() => {
+                                setRecording(true)
+                                m.destroy()
+                            }}
+                        />
+                    )
+                })
+            }else{
+                addToTab('**screen-recorder')
+            }
+        }).catch((err)=>{
+            yakitFailed('IsScrecorderReady失败:'+err)
         })
+        
     })
 
     return (

@@ -1,26 +1,20 @@
 import React, {useEffect, useState} from "react"
-import {AutoCard} from "@/components/AutoCard"
 import {useMemoizedFn, useSelections, useUpdateEffect} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
-import {Divider, Form, List, Tag} from "antd"
+import {Divider, Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {failed} from "@/utils/notification"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {showByContextMenu} from "@/components/functionTemplate/showByContext"
-import {showByCursorMenu} from "@/utils/showByCursor"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import {callCopyToClipboard} from "@/utils/basic"
 import styles from "./ScreenRecorder.module.scss"
 import {
     ChevronDownIcon,
     ClockIcon,
-    CloudPluginIcon,
     CloudUploadIcon,
     InformationCircleIcon,
     PencilAltIcon,
     PlayIcon,
     RefreshIcon,
-    RemoveIcon,
     StopIcon,
     TrashIcon
 } from "@/assets/newIcon"
@@ -33,7 +27,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import classNames from "classnames"
-import {UploadIcon} from "@/assets/icons"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {useScreenRecorder} from "@/store/screenRecorder"
@@ -125,6 +118,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             setTimeout(() => {
                 onRefresh()
             }, 1000)
+            setIsShowRefText(true)
         }
     }, [screenRecorderInfo.isRecording])
     /**@description 列表加载更多 */
@@ -232,7 +226,16 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 content={
                                     <YakitMenu
                                         type='secondary'
-                                        data={batchMenuDataEnterprise}
+                                        data={
+                                            isEnterpriseEdition()
+                                                ? batchMenuDataEnterprise
+                                                : [
+                                                      {
+                                                          key: "remove",
+                                                          label: "删除"
+                                                      }
+                                                  ]
+                                        }
                                         selectedKeys={[]}
                                         width={92}
                                         onSelect={({key}) => onMenuSelect(key)}
@@ -251,12 +254,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 </YakitButton>
                             </YakitPopover>
                             <YakitPopconfirm title={"确定清空吗？"} onConfirm={() => {}} className='button-text-danger'>
-                                <YakitButton
-                                    type='outline2'
-                                    onClick={() => {}}
-                                    disabled={selected.length === 0}
-                                    className={classNames("button-outline2-danger")}
-                                >
+                                <YakitButton type='outline2' className={classNames("button-outline2-danger")}>
                                     清空
                                 </YakitButton>
                             </YakitPopconfirm>
