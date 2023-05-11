@@ -58,9 +58,6 @@ const Login: React.FC<LoginProp> = (props) => {
             }
         })
             .then((res) => {
-                console.log("rrrrrrr ",res)
-                 res = 'https://github.com/login/oauth/authorize?client_id=9b715cd4290a40a17978&redirect_uri=http://localhost:3001/callback&scope=user'
-
                 if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
             })
             .catch((err) => {
@@ -123,7 +120,6 @@ const Login: React.FC<LoginProp> = (props) => {
                 <div className='login-type-body'>
                     <h2 className='login-text'>登录</h2>
                     <div className='login-icon-body'>
-                        {/*<div className='login-icon' onClick={() => githubAuth()}>*/}
                         <div className='login-icon' onClick={() => fetchLogin("github")}>
                             <div className='login-icon-text'>
                                 <GithubOutlined className='type-icon' />
