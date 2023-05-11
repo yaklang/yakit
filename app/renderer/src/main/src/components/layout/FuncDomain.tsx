@@ -65,6 +65,9 @@ import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
+import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog";
+import {Popconfirm} from "antd"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -844,7 +847,25 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                             立即下载
                         </div>
                     ) : (
-                        "已是最新"
+                        <>
+                            <Popconfirm
+                                title={
+                                    <>
+                                        确定是回退到上一个版本?
+                                    </>
+                                }
+                                onConfirm={() => {
+
+                                }}
+                            >
+                                <YakitButton themeClass={styles["success-btn-coloc"]}>
+                                    {"回退版本"}
+                                </YakitButton>
+                            </Popconfirm>
+                            <YakitTag color={"success"}>
+                                {"已是最新"}
+                            </YakitTag>
+                        </>
                     )}
                     {role === "superAdmin" && (
                         <div
@@ -938,7 +959,27 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                             onClick={() => ipcRenderer.invoke("kill-old-engine-process")}
                         >{`更新 `}</YakitButton>
                     )}
-                    {!isUpdate && !isKillEngine && "已是最新"}
+                    {!isUpdate && !isKillEngine && (
+                        <>
+                            <Popconfirm
+                                title={
+                                    <>
+                                        确定是回退到上一个版本?
+                                    </>
+                                }
+                                onConfirm={() => {
+
+                                }}
+                            >
+                                <YakitButton themeClass={styles["success-btn-coloc"]}>
+                                    {"回退版本"}
+                                </YakitButton>
+                            </Popconfirm>
+                            <YakitTag color={"success"}>
+                                {"已是最新"}
+                            </YakitTag>
+                        </>
+                    )}
                     {isRemoteMode && isUpdate && "远程连接无法更新"}
                     {!isRemoteMode && role === "superAdmin" && (
                         <div
