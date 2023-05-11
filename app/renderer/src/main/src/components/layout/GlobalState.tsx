@@ -161,6 +161,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 resolve("global-reverse")
                             })
                             .catch((e) => reject(`error-global-reverse ${e}`))
+                    } else {
+                        resolve("global-reverse")
                     }
                 })
                 .catch((e) => reject(`error-global-reverse ${e}`))
@@ -201,11 +203,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 count = count + 1
             }
         }
-        if (pluginTotal === 0) {
-            status = "error"
+        if (!pcap.IsPrivileged) {
+            status = system === "Windows_NT" ? "warning" : "error"
             count = count + 1
         }
-        if (!pcap.IsPrivileged) {
+        if (pluginTotal === 0) {
             status = "error"
             count = count + 1
         }
@@ -313,6 +315,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <div className={styles["info-right"]}>
                                         <YakitButton
                                             type='text'
+                                            className={styles["btn-style"]}
                                             onClick={() => {
                                                 if (pcapHintShow) return
                                                 setShow(false)
@@ -345,7 +348,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </div>
                             </div>
                             <div className={styles["info-right"]}>
-                                <YakitButton type='text' onClick={downloadAllPlugin}>
+                                <YakitButton type='text' className={styles["btn-style"]} onClick={downloadAllPlugin}>
                                     一键下载
                                 </YakitButton>
                             </div>
@@ -366,6 +369,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <div className={styles["info-right"]}>
                                         <YakitButton
                                             type='text'
+                                            className={styles["btn-style"]}
                                             onClick={() => {
                                                 setShow(false)
                                                 showModal({
@@ -404,10 +408,25 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </div>
                                 <div className={styles["info-right"]}>
                                     {systemProxy.Enable ? (
-                                        <div>{systemProxy.CurrentProxy}</div>
+                                        <div className={styles["system-proxy-info"]}>
+                                            {systemProxy.CurrentProxy}
+                                            <YakitButton
+                                                type='text'
+                                                className={styles["btn-style"]}
+                                                style={{color: "var(--yakit-danger-5)"}}
+                                                onClick={() => {
+                                                    setShow(false)
+                                                    showConfigSystemProxyForm()
+                                                }}
+                                            >
+                                                {" "}
+                                                停用
+                                            </YakitButton>
+                                        </div>
                                     ) : (
                                         <YakitButton
                                             type='text'
+                                            className={styles["btn-style"]}
                                             onClick={() => {
                                                 setShow(false)
                                                 showConfigSystemProxyForm()
@@ -455,7 +474,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
                 content={
                     pcapResult
-                        ? "您可以正常使用 SYN 扫描等功能，无需修复"
+                        ? "网卡修复需要时间，请耐心等待"
                         : "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限"
                 }
                 okButtonText='开启 PCAP 权限'
@@ -463,11 +482,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 okButtonProps={{loading: pcapHintLoading, style: pcapResult ? {display: "none"} : undefined}}
                 cancelButtonProps={{loading: !pcapResult && pcapHintLoading}}
                 onOk={openPcapPower}
-                onCancel={() => setPcapHintShow(false)}
+                onCancel={() => {
+                    setPcapResult(false)
+                    setPcapHintShow(false)
+                }}
                 footerExtra={
                     pcapResult ? undefined : (
                         <Tooltip title={`${pcap.AdviceVerbose}: ${pcap.Advice}`}>
-                            <YakitButton type='text' size='max'>
+                            <YakitButton className={styles["btn-style"]} type='text' size='max'>
                                 手动修复
                             </YakitButton>
                         </Tooltip>

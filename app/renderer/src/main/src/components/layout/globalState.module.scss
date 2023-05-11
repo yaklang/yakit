@@ -18,6 +18,10 @@
         height: 20px;
     }
 }
+.btn-style {
+    padding-left: 0px;
+    padding-right: 0px;
+}
 
 .global-state-wrapper {
     box-sizing: border-box;
@@ -85,7 +89,6 @@
                 font-weight: 400;
                 font-size: 12px;
                 line-height: 16px;
-                text-decoration-line: underline;
                 color: var(--yakit-font-white-color);
             }
         }
@@ -164,10 +167,12 @@
                 justify-content: right;
                 align-items: center;
 
-                .system-proxy-title {
+                .system-proxy-info {
                     height: 100%;
                     display: inline-flex;
+                    justify-content: right;
                     align-items: center;
+                    gap: 8px;
                     font-size: 12px;
                     color: var(--yakit-header-color);
                 }
