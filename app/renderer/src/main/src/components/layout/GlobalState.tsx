@@ -330,7 +330,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 <div className={styles["info-left"]}>
                                     <WarningIcon />
                                     <div className={styles["left-body"]}>
-                                        <div className={styles["title-style"]}>建议使用管理员权限运行软件</div>
+                                        <div className={styles["title-style"]}>建议使用管理员身份运行软件</div>
                                         <div className={styles["subtitle-style"]}>普通权限可能会影响部分功能的使用</div>
                                     </div>
                                 </div>
