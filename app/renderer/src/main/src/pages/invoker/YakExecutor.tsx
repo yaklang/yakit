@@ -648,7 +648,25 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             />
         )
     }
-
+    const onRunYak = useMemoizedFn(() => {
+        setErrors([])
+        setExecuting(true)
+        if (!isInteractive) {
+            ipcRenderer.invoke("exec-yak", {
+                Script: tabList[+activeTab].code,
+                Params: [],
+                RunnerParamRaw: extraParams
+            })
+        } else {
+            sendRequest({
+                Input: JSON.stringify({
+                    mode: "interactive",
+                    script: tabList[+activeTab].code,
+                    token: token
+                })
+            })
+        }
+    })
     return (
         <AutoCard
             className={"yak-executor-body"}
@@ -862,25 +880,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                         disabled={
                                                             tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
                                                         }
-                                                        onClick={() => {
-                                                            setErrors([])
-                                                            setExecuting(true)
-                                                            if (!isInteractive) {
-                                                                ipcRenderer.invoke("exec-yak", {
-                                                                    Script: tabList[+activeTab].code,
-                                                                    Params: [],
-                                                                    RunnerParamRaw: extraParams
-                                                                })
-                                                            } else {
-                                                                sendRequest({
-                                                                    Input: JSON.stringify({
-                                                                        mode: "interactive",
-                                                                        script: tabList[+activeTab].code,
-                                                                        token: token
-                                                                    })
-                                                                })
-                                                            }
-                                                        }}
+                                                        onClick={() => onRunYak()}
                                                     />
                                                 )}
                                             </Space>
@@ -902,6 +902,17 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                 setValue={(value) => {
                                                                     modifyCode(value, index)
                                                                 }}
+                                                                actions={[
+                                                                    {
+                                                                        contextMenuGroupId: "9_cutcopypaste",
+                                                                        label: "Run",
+                                                                        contextMenuOrder:4,
+                                                                        id: "run-yak",
+                                                                        run: () => {
+                                                                            onRunYak()
+                                                                        }
+                                                                    }
+                                                                ]}
                                                             />
                                                         </div>
                                                     </AutoSpin>
