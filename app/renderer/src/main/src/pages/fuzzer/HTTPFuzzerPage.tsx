@@ -4,7 +4,7 @@ import {
     HTTP_PACKET_EDITOR_FONT_SIZE,
     HTTP_PACKET_EDITOR_Line_Breaks,
     IMonacoEditor,
-    NewHTTPPacketEditor
+    NewHTTPPacketEditor,
     HTTP_PACKET_EDITOR_Response_Info,
 } from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -825,6 +825,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowResponseInfoSecondEditor(true)
             })
     }, [])
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            overlayWidgetv: {
+                menu: [{key: "is-show-add-overlay-widgetv", label: showResponseInfoSecondEditor?"隐藏响应信息":'显示响应信息'}],
+                onRun: () => {
+                    setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+                }
+            }
+        }
+    }, [showResponseInfoSecondEditor])
     const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
         let reason = "未知原因"
         try {
@@ -881,6 +891,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     onAddOverlayWidget(editor, rsp, isShow)
                 }}
                 isAddOverlayWidget={showResponseInfoSecondEditor}
+                contextMenu={responseEditorRightMenu}
             />
         )
     })
@@ -1182,7 +1193,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         default:
                             break
                     }
-                }
+                },
             },
             copyURL: {
                 menu: [{key: "copy-as-url", label: "复制为 URL"}],
