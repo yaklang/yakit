@@ -51,8 +51,6 @@ import {
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {FeatureRequest, ReportBug} from "@/utils/template/issues"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
