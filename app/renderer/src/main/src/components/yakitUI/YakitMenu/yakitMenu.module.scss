@@ -344,6 +344,8 @@
 
     .yakit-menu-item-title {
         width: 100%;
-        line-height: var(--menu-content-height);
+        height: var(--menu-content-height);
+        display: flex;
+        align-items: center;
     }
 }

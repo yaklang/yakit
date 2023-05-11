@@ -7,8 +7,87 @@ import {YakitEditor} from "./YakitEditor"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
 import {failed} from "@/utils/notification"
+import {fetchCursorContent, fetchSelectionRange} from "./editorUtils"
 
 const {ipcRenderer} = window.require("electron")
+
+/** @name 基础菜单组配置信息 */
+export const baseMenuLists: OtherMenuListProps = {
+    fontSize: {
+        menu: [
+            {
+                key: "font-size",
+                label: "字体大小",
+                children: [
+                    {key: "font-size-small", label: "小"},
+                    {key: "font-size-middle", label: "中"},
+                    {key: "font-size-large", label: "大"}
+                ]
+            }
+        ],
+        onRun: (editor: YakitIMonacoEditor, key: string) => {}
+    },
+    cut: {
+        menu: [{key: "cut", label: "剪切"}],
+        onRun: (editor: YakitIMonacoEditor, key: string) => {
+            if (editor?.executeEdits) {
+                /** 获取需要剪切的范围 */
+                const position = fetchSelectionRange(editor, true)
+                if (!position) return
+                /** 获取需要剪切的内容 */
+                const content = fetchCursorContent(editor, true)
+
+                const flag = editor.executeEdits("", [
+                    {
+                        range: position,
+                        text: "",
+                        forceMoveMarkers: true
+                    }
+                ])
+                if (flag) {
+                    ipcRenderer.invoke("set-copy-clipboard", `${content}`)
+                    editor.focus()
+                }
+            }
+            return
+        }
+    },
+    copy: {
+        menu: [{key: "copy", label: "复制"}],
+        onRun: (editor: YakitIMonacoEditor, key: string) => {
+            if (editor) ipcRenderer.invoke("set-copy-clipboard", `${fetchCursorContent(editor, true)}`)
+            return
+        }
+    },
+    paste: {
+        menu: [{key: "paste", label: "粘贴"}],
+        onRun: (editor: YakitIMonacoEditor, key: string) => {
+            if (!editor) return
+
+            /** 获取需要粘贴的范围 */
+            const position = fetchSelectionRange(editor, false)
+            if (!position) return
+
+            ipcRenderer
+                .invoke("get-copy-clipboard")
+                .then((str: string) => {
+                    if (editor?.executeEdits) {
+                        editor.executeEdits("", [
+                            {
+                                range: position,
+                                text: str || "",
+                                forceMoveMarkers: true
+                            }
+                        ])
+                        editor.focus()
+                    }
+                })
+                .catch(() => {})
+
+            return
+        }
+    }
+}
 
 interface MutateHTTPRequestParams {
     Request: Uint8Array
@@ -17,27 +96,30 @@ interface MutateHTTPRequestParams {
     UploadEncode: boolean
 }
 
-/** @name codec模块子菜单 */
-const codecSubmenu: {key: string; label: string}[] = [
+/** @name 编码模块子菜单 */
+const codeSubmenu: {key: string; label: string}[] = [
     {key: "double-urlencode", label: "双重 URL 编码"},
     {key: "base64-url-encode", label: "先 Base64 后 URL 编码"},
-    {key: "url-base64-decode", label: "先 URL 后 Base64 解码"},
     {key: "base64", label: "Base64 编码"},
-    {key: "base64-decode", label: "Base64 解码"},
     {key: "hex-encode", label: "HEX 编码（十六进制编码）"},
-    {key: "hex-decode", label: "HEX 解码（十六进制解码）"},
     {key: "htmlencode", label: "HTML 编码"},
+    {key: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）"},
+    {key: "urlencode", label: "URL 编码"},
+    {key: "urlescape", label: "URL 编码(只编码特殊字符)"}
+]
+/** @name 解码模块子菜单 */
+const decodeSubmenu: {key: string; label: string}[] = [
+    {key: "url-base64-decode", label: "先 URL 后 Base64 解码"},
+    {key: "base64-decode", label: "Base64 解码"},
+    {key: "hex-decode", label: "HEX 解码（十六进制解码）"},
     {key: "htmldecode", label: "HTML 解码"},
     {key: "jwt-parse-weak", label: "JWT 解析（同时测试弱 Key）"},
-    {key: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）"},
     {key: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）"},
-    {key: "urlencode", label: "URL 编码"},
-    {key: "urlescape", label: "URL 编码(只编码特殊字符)"},
     {key: "urlunescape", label: "URL 解码"}
 ]
 /** @name 美化数据包(JSON)菜单 */
-const prettySubmenu: {key: string; label: string}[] = [{key: "pretty-packet", label: "美化数据包(JSON)"}]
-/** @name http模块子菜单 */
+const prettySubmenu: {key: string; label: string}[] = [{key: "pretty", label: "美化数据包(JSON)"}]
+/** @name HTTP数据包变形模块子菜单 */
 const httpSubmenu: {
     key: string
     label: string
@@ -48,7 +130,11 @@ const httpSubmenu: {
         key: "mutate-http-method-get",
         label: "改变 HTTP 方法成 GET",
         params: {FuzzMethods: ["GET"]} as MutateHTTPRequestParams,
-        keybindings:[YakitEditorKeyCode.Meta,YakitEditorKeyCode.Shift,YakitEditorKeyCode.KEY_H]
+        keybindings: [
+            process.platform === "darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
+            YakitEditorKeyCode.Shift,
+            YakitEditorKeyCode.KEY_H
+        ]
     },
     {
         key: "mutate-http-method-post",
@@ -63,14 +149,14 @@ const httpSubmenu: {
     {key: "mutate-chunked", label: "HTTP Chunk 编码", params: {ChunkEncode: true} as MutateHTTPRequestParams},
     {key: "mutate-upload", label: "修改为上传数据包", params: {UploadEncode: true} as MutateHTTPRequestParams}
 ]
-
+/** @name 内置菜单组配置信息 */
 export const extraMenuLists: OtherMenuListProps = {
-    codec: {
+    code: {
         menu: [
             {
-                key: "codec",
-                label: "codec 模块",
-                children: [...codecSubmenu] as any as EditorMenuItemType[]
+                key: "code",
+                label: "编码",
+                children: [...codeSubmenu] as any as EditorMenuItemType[]
             }
         ],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -79,7 +165,25 @@ export const extraMenuLists: OtherMenuListProps = {
                 const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ""
                 execCodec(key, text, false, editor)
             } catch (e) {
-                failed("editor exec codec failed")
+                failed(`editor exec code failed ${e}`)
+            }
+        }
+    },
+    decode: {
+        menu: [
+            {
+                key: "decode",
+                label: "解码",
+                children: [...decodeSubmenu] as any as EditorMenuItemType[]
+            }
+        ],
+        onRun: (editor: YakitIMonacoEditor, key: string) => {
+            try {
+                // @ts-ignore
+                const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ""
+                execCodec(key, text, false, editor)
+            } catch (e) {
+                failed(`editor exec decode failed ${e}`)
             }
         }
     },
@@ -90,15 +194,14 @@ export const extraMenuLists: OtherMenuListProps = {
                 // @ts-ignore
                 const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ""
                 if (!!text) {
-                    execCodec(key, text, false, editor)
+                    execCodec("pretty-packet", text, false, editor)
                 } else {
                     const model = editor.getModel()
                     const fullText = model?.getValue()
-                    execCodec(key, fullText || "", false, editor, true)
+                    execCodec("pretty-packet", fullText || "", false, editor, true)
                 }
             } catch (e) {
-                failed("editor exec codec failed")
-                console.error(e)
+                failed(`editor exec pretty failed ${e}`)
             }
         }
     },
@@ -106,7 +209,7 @@ export const extraMenuLists: OtherMenuListProps = {
         menu: [
             {
                 key: "http",
-                label: "HTTP 模块",
+                label: "HTTP数据包变形",
                 children: [...httpSubmenu] as any as EditorMenuItemType[]
             }
         ],
@@ -191,6 +294,7 @@ interface MutateHTTPRequestResponse {
     Result: Uint8Array
     ExtraResults: Uint8Array[]
 }
+/** @name HTTP数据包变形模块处理函数 */
 const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEditor) => {
     ipcRenderer.invoke("HTTPRequestMutate", params).then((result: MutateHTTPRequestResponse) => {
         if (editor) {

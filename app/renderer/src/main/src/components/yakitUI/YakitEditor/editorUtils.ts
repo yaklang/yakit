@@ -3,7 +3,10 @@ import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
 import {YakitIMonacoEditor} from "./YakitEditorType"
 
-/** 除meta、ctrl、alt、shift键外的keycode映射字符 */
+/**
+ * 除meta、ctrl、alt、shift键外的keycode映射字符
+ * 暂时只包括A-Z,F1-12这些按键
+ */
 export const KeyboardToValue = {
     65: "A",
     66: "B",
@@ -69,7 +72,7 @@ export const keySortHandle = (keys: number[]) => {
     return sortKeys
 }
 /**
- * @name 将对应键盘枚举数组 转化为 可展示的键盘键符
+ * @name 将对应键盘枚举数组转化为可展示的键盘键符
  * @returns string | null
  */
 export const convertKeyboard: (system: YakitSystem, keys: number[]) => string | null = (system, keys) => {
@@ -130,6 +133,7 @@ export const fetchCursorContent = (editor: YakitIMonacoEditor, isGetRow?: boolea
 /**
  * @name 获取自定义菜单所有项的key值，并整合成一个一维数组
  * @description 注意！！！ 本方法使用了ES10中数据对象新方法 flat 使用时请确定是否存在该方法
+ * @description 全局暂未使用该方法，如后续有使用，请修改该条注释内容
  */
 export const flatContextMenu = (menus: EditorMenuItemType[]) => {
     const filterDividerMenus = menus

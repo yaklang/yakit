@@ -10,13 +10,14 @@ import classNames from "classnames"
 import styles from "@/components/yakitUI/YakitMenu/yakitMenu.module.scss"
 
 export interface EditorMenuItemProps {
+    /** 不建议使用reactnode类型 */
     label: string | ReactNode
     key: string
     disabled?: boolean
     children?: EditorMenuItemType[]
+    /** 不建议使用 */
     itemIcon?: ReactNode
     title?: string
-    width?: number
     /** @description !!! 请最少使用其中一个(ctrl/alt/meta/shift)[不能重复使用] 搭配 字母或F1-12 使用快捷键功能 */
     keybindings?: YakitEditorKeyCode[]
 }
@@ -27,7 +28,6 @@ export type EditorMenuItemType = EditorMenuItemProps | EditorMenuItemDividerProp
 
 export interface EditorMenuProp extends MenuProps {
     data?: EditorMenuItemType[]
-    width?: number
     /** 有默认菜单样式(深底白字)和'secondary-浅底深字'样式 */
     type?: "secondary" | "primary"
     /** 是否鼠标悬浮展示文字内容弹窗 */
@@ -40,7 +40,6 @@ export interface EditorMenuProp extends MenuProps {
 export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
     const {
         data = [],
-        width,
         type = "primary",
         isHint = false,
         className,
@@ -65,38 +64,20 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
             const hintTitle = !!info.title ? info.title : typeof info.label === "string" ? info.label : ""
 
             if (info.children && info.children.length > 0) {
-                const itemWidth = info.width ? info.width : width
                 const itemInfo: ItemType = {
                     label: (
-                        <div
-                            style={itemWidth ? {width: itemWidth} : {}}
-                            className={classNames(styles["yakit-menu-item"])}
-                        >
+                        <div className={classNames(styles["yakit-menu-item"])}>
                             <div className={styles["yakit-submenu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
                                     <Tooltip zIndex={9999} title={hintTitle} placement='leftBottom'>
-                                        <div
-                                            className={classNames(
-                                                styles["yakit-menu-item-title"],
-                                                "yakit-single-line-ellipsis"
-                                            )}
-                                        >
-                                            {info.label}
-                                        </div>
+                                        <div className={classNames(styles["yakit-menu-item-title"])}>{info.label}</div>
                                     </Tooltip>
                                 ) : (
-                                    <div
-                                        className={classNames(
-                                            styles["yakit-menu-item-title"],
-                                            "yakit-single-line-ellipsis"
-                                        )}
-                                    >
-                                        {info.label}
-                                    </div>
+                                    <div className={classNames(styles["yakit-menu-item-title"])}>{info.label}</div>
                                 )}
                             </div>
-                            <ChevronRightIcon className='icon-style' />
+                            <ChevronRightIcon className='icon-style' style={{marginLeft: 4}} />
                         </div>
                     ),
                     key: info.key,
@@ -119,35 +100,17 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                 itemInfo.children = itemInfo.children.concat(arr)
                 return itemInfo
             } else {
-                const itemWidth = info.width ? info.width : width
                 const itemInfo: ItemType = {
                     label: (
-                        <div
-                            style={itemWidth ? {width: itemWidth} : {}}
-                            className={classNames(styles["yakit-menu-item"])}
-                        >
+                        <div className={classNames(styles["yakit-menu-item"])}>
                             <div className={styles["yakit-menu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
                                     <Tooltip zIndex={9999} title={hintTitle} placement='leftBottom'>
-                                        <div
-                                            className={classNames(
-                                                styles["yakit-menu-item-title"],
-                                                "yakit-single-line-ellipsis"
-                                            )}
-                                        >
-                                            {info.label}
-                                        </div>
+                                        <div className={classNames(styles["yakit-menu-item-title"])}>{info.label}</div>
                                     </Tooltip>
                                 ) : (
-                                    <div
-                                        className={classNames(
-                                            styles["yakit-menu-item-title"],
-                                            "yakit-single-line-ellipsis"
-                                        )}
-                                    >
-                                        {info.label}
-                                    </div>
+                                    <div className={classNames(styles["yakit-menu-item-title"])}>{info.label}</div>
                                 )}
                             </div>
                         </div>
