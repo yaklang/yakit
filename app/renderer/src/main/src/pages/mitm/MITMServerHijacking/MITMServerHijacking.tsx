@@ -16,6 +16,7 @@ import style from "./MITMServerHijacking.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -80,8 +81,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 <div className={style["mitm-server-title"]}>
                     <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
                     <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
-                        {addr}
-                        {tip}
+                        <span style={{marginRight: 8}}>{addr}</span>
+                        {tip
+                            .split("|")
+                            .map(
+                                (item, index) =>
+                                    item &&
+                                    (index > 0 ? (
+                                        <YakitTag color='success'>{item}</YakitTag>
+                                    ) : (
+                                        <YakitTag>{item}</YakitTag>
+                                    ))
+                            )}
                     </div>
                 </div>
                 <div className={style["mitm-server-extra"]}>

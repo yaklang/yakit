@@ -250,18 +250,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
             startMITMServer(host, port, downstreamProxy, enableHttp2, certs, extra)
-            console.log("extra", extra)
             let tip = ""
             if (downstreamProxy) {
-                // tip += ";下游代理:http://192.168.0.1:8080"
-                tip += `;下游代理:${downstreamProxy}`
+                tip += `下游代理:${downstreamProxy}`
             }
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
-                    tip += ";仅国密"
+                    tip += "|仅国密 TLS"
                 }
                 if (extra.enableProxyAuth) {
-                    tip += ";开启代理认证"
+                    tip += "|开启代理认证"
                 }
             }
             setTip(tip)

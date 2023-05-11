@@ -76,3 +76,12 @@
         }
     }
 }
+
+.extracted-checkbox {
+    display: flex;
+    align-items: center;
+
+    .tip {
+        margin-left: 4px;
+    }
+}
