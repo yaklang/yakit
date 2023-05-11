@@ -906,7 +906,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                     {
                                                                         contextMenuGroupId: "9_cutcopypaste",
                                                                         label: "Run",
-                                                                        contextMenuOrder:4,
                                                                         id: "run-yak",
                                                                         run: () => {
                                                                             onRunYak()
