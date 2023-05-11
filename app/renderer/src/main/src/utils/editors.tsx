@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from "react"
-import ReactDOM from "react-dom"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -8,7 +7,7 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP"
 import "./monacoSpec/yakEditor"
 import "./monacoSpec/html"
-import {Button, Card, Empty, Form, Input, Modal, Popover, Space, Tag, Tooltip, Row, Col, Switch} from "antd"
+import {Button, Card, Form, Input, Modal, Popover, Space, Tag, Tooltip, Row, Col, Switch} from "antd"
 import {SelectOne} from "./inputUtil"
 import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {showDrawer} from "./showModal"
@@ -29,7 +28,7 @@ import {failed, info} from "./notification"
 import {StringToUint8Array, Uint8ArrayToString} from "./str"
 import {newWebFuzzerTab} from "../pages/fuzzer/HTTPFuzzerPage"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {editor, IPosition, IRange, MarkerSeverity} from "monaco-editor"
+import {editor, IPosition, IRange} from "monaco-editor"
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -38,6 +37,8 @@ import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
+import { OtherMenuListProps, YakitEditorProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import { HTTPPacketYakitEditor } from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -979,6 +980,449 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
                                 ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions)
                             ].filter((i) => !!i)}
+                            editorDidMount={(editor) => {
+                                setMonacoEditor(editor)
+                            }}
+                            {...props.extraEditorProps}
+                        />
+                    )}
+                    {mode === "hex" && !empty && (
+                        <HexEditor
+                            className={props.system === "Windows_NT" ? "hex-editor-style" : ""}
+                            showAscii={true}
+                            data={hexValue}
+                            showRowLabels={true}
+                            showColumnLabels={false}
+                            nonce={nonce}
+                            onSetValue={props.readOnly ? undefined : handleSetValue}
+                        />
+                    )}
+                </div>
+            </Card>
+        </div>
+    )
+})
+
+export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
+    /** yakit-editor组件基础属性 */
+    readOnly?: boolean
+    contextMenu?: OtherMenuListProps
+    noLineNumber?: boolean
+    lineNumbersMinChars?: number
+    noMinimap?: boolean
+    onAddOverlayWidget?: (editor: IMonacoEditor) => any
+    extraEditorProps?: YakitEditorProps | any
+    
+    /** 扩展属性 */
+    originValue: Uint8Array
+    defaultStringValue?: string
+    onChange?: (i: Buffer) => any
+    disableFullscreen?: boolean
+    defaultHeight?: number
+    bordered?: boolean
+    onEditor?: (editor: IMonacoEditor) => any
+    hideSearch?: boolean
+    extra?: React.ReactNode
+    emptyOr?: React.ReactNode
+
+    refreshTrigger?: boolean | any
+    simpleMode?: boolean
+    noHeader?: boolean
+    loading?: boolean
+
+    noPacketModifier?: boolean
+    noTitle?: boolean
+    title?: React.ReactNode
+    noHex?: boolean
+
+    // lang
+    language?: "html" | "http" | "yak" | any
+
+    system?: string
+    isResponse?: boolean
+    utf8?: boolean
+
+    defaultSearchKeyword?: string
+
+    /**@name 外部控制换行状态 */
+    noWordWrapState?: boolean
+    /**@name 外部控制字体大小 */
+    fontSizeState?: number
+    /**@name 是否显示换行符 */
+    showLineBreaksState?: boolean
+}
+
+export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
+    const isResponse = props.isResponse
+    const getEncoding = (): "utf8" | "latin1" | "ascii" => {
+        if (isResponse || props.readOnly || props.utf8) {
+            return "utf8"
+        }
+        // return "latin1"
+        return "utf8" // 默认还是 UTF8 吧，不然识别不了
+    }
+    const [mode, setMode] = useState("text")
+    const [strValue, setStrValue] = useState(Uint8ArrayToString(props.originValue, getEncoding()))
+    const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(props.originValue))
+    const [searchValue, setSearchValue] = useState("")
+    const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
+    const [fontSize, setFontSize] = useState<undefined | number>()
+    const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
+    const [highlightDecorations, setHighlightDecorations] = useState<any[]>([])
+    const [noWordwrap, setNoWordwrap] = useState(false)
+    const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
+
+    // 操作系统类型
+    const [system, setSystem] = useState<string>()
+
+    useUpdateEffect(() => {
+        setNoWordwrap(props.noWordWrapState || false)
+    }, [props.noWordWrapState])
+    useUpdateEffect(() => {
+        if (!props.fontSizeState) return
+        setFontSize(props.fontSizeState)
+    }, [props.fontSizeState])
+    useUpdateEffect(() => {
+        setShowLineBreaks(props.showLineBreaksState || false)
+    }, [props.showLineBreaksState])
+
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
+
+        // 无落如何都会设置，最小为 12
+        getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
+            .then((data: string) => {
+                try {
+                    const size = parseInt(data)
+                    if (size > 0) {
+                        setFontSize(size)
+                    } else {
+                        setFontSize(12)
+                    }
+                } catch (e) {
+                    setFontSize(12)
+                }
+            })
+            .catch(() => {
+                setFontSize(12)
+            })
+        getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
+            .then((data) => {
+                setShowLineBreaks(data === "true")
+            })
+            .catch(() => {
+                setShowLineBreaks(true)
+            })
+    }, [])
+
+    const highlightActive = useMemoizedFn((search: string, regexp?: boolean) => {
+        if (!monacoEditor) {
+            return
+        }
+    })
+
+    /*如何实现 monaco editor 高亮？*/
+    // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
+
+    // hex editor
+    const [nonce, setNonce] = useState(0)
+    // The callback facilitates updates to the source data.
+    const handleSetValue = React.useCallback(
+        (offset, value) => {
+            hexValue[offset] = value
+            setNonce((v) => v + 1)
+            setHexValue(new Uint8Array(hexValue))
+        },
+        [hexValue]
+    )
+
+    useEffect(() => {
+        if (!props.defaultHeight) {
+            return
+        }
+
+        setStrValue(props.defaultStringValue || "")
+        setHexValue(StringToUint8Array(props.defaultStringValue || "", getEncoding()))
+    }, [props.defaultStringValue])
+
+    useEffect(() => {
+        if (monacoEditor) {
+            props.onEditor && props.onEditor(monacoEditor)
+            monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+        }
+        if (monacoEditor) {
+            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor)
+        }
+        if (!props.simpleMode && !props.hideSearch && monacoEditor) {
+            setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
+        }
+    }, [monacoEditor])
+
+    useEffect(() => {
+        if (props.readOnly) {
+            const value = Uint8ArrayToString(props.originValue, getEncoding())
+            setStrValue(value)
+            setHexValue(new Uint8Array(props.originValue))
+        }
+        if (props.readOnly && monacoEditor) {
+            monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+        }
+    }, [
+        props.originValue,
+        props.readOnly
+        // monacoEditor,
+    ])
+
+    useEffect(() => {
+        if (props.readOnly) {
+            return
+        }
+        setStrValue(Uint8ArrayToString(props.originValue, getEncoding()))
+        setHexValue(new Uint8Array(props.originValue))
+    }, [props.refreshTrigger])
+
+    useEffect(() => {
+        props.onChange && props.onChange(new Buffer(StringToUint8Array(strValue, getEncoding())))
+    }, [strValue])
+
+    useEffect(() => {
+        props.onChange && props.onChange(new Buffer(hexValue))
+    }, [hexValue])
+
+    const empty = !!props.emptyOr && props.originValue.length == 0
+
+    // 如果这个不为空的话，默认直接打开搜索功能
+    useEffect(() => {
+        if (!props.defaultSearchKeyword) {
+            return
+        }
+
+        if (!monacoEditor) {
+            return
+        }
+
+        try {
+            const model = monacoEditor.getModel()
+            // @ts-ignore
+            const range: IRange = model.findNextMatch(
+                props.defaultSearchKeyword,
+                {lineNumber: 0, column: 0} as IPosition,
+                false,
+                false,
+                null,
+                false
+            ).range
+            monacoEditor.setSelection(range)
+            monacoEditor.revealRangeNearTop(range)
+            monacoEditor.trigger("", "actions.find", undefined)
+        } catch (e) {
+            console.info("加载默认搜索字符串失败", props.defaultSearchKeyword)
+        }
+    }, [props.defaultSearchKeyword, monacoEditor])
+    return (
+        <div style={{width: "100%", height: "100%"}}>
+            <Card
+                className={"flex-card"}
+                size={"small"}
+                loading={props.loading}
+                bordered={props.bordered}
+                style={{height: "100%", width: "100%"}}
+                title={
+                    !props.noHeader && (
+                        <Space>
+                            {!props.noTitle &&
+                                (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
+                            {!props.simpleMode ? (
+                                !props.noHex && (
+                                    <SelectOne
+                                        label={" "}
+                                        colon={false}
+                                        value={mode}
+                                        setValue={(e) => {
+                                            if (mode === "text" && e === "hex") {
+                                                console.info("切换到 HEX 模式")
+                                                setHexValue(StringToUint8Array(strValue, getEncoding()))
+                                            }
+
+                                            if (mode === "hex" && e === "text") {
+                                                console.info("切换到 TEXT 模式")
+                                                setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
+                                            }
+                                            setMode(e)
+                                        }}
+                                        data={[
+                                            {text: "TEXT", value: "text"},
+                                            {text: "HEX", value: "hex"}
+                                        ]}
+                                        size={"small"}
+                                        formItemStyle={{marginBottom: 0}}
+                                    />
+                                )
+                            ) : (
+                                <Form.Item style={{marginBottom: 0}}>
+                                    <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                </Form.Item>
+                            )}
+                            {mode === "text" && !props.hideSearch && !props.simpleMode && (
+                                <Input.Search
+                                    size={"small"}
+                                    value={searchValue}
+                                    onChange={(e) => {
+                                        setSearchValue(e.target.value)
+                                    }}
+                                    enterButton={true}
+                                    onSearch={(e) => {
+                                        highlightActive(searchValue)
+                                    }}
+                                />
+                            )}
+                        </Space>
+                    )
+                }
+                bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
+                extra={
+                    !props.noHeader && (
+                        <Space size={2}>
+                            {props.extra}
+                            {props.sendToWebFuzzer && props.readOnly && (
+                                <Button
+                                    size={"small"}
+                                    type={"primary"}
+                                    icon={<ThunderboltFilled />}
+                                    onClick={() => {
+                                        ipcRenderer.invoke("send-to-tab", {
+                                            type: "fuzzer",
+                                            // 这儿的编码为了保证不要乱动
+                                            data: {
+                                                isHttps: props.defaultHttps || false,
+                                                request: props.defaultPacket
+                                                    ? props.defaultPacket
+                                                    : Uint8ArrayToString(props.originValue, "utf8")
+                                            }
+                                        })
+                                    }}
+                                >
+                                    FUZZ
+                                </Button>
+                            )}
+                            <Tooltip title={"不自动换行"}>
+                                <Button
+                                    size={"small"}
+                                    type={noWordwrap ? "link" : "primary"}
+                                    icon={<EnterOutlined />}
+                                    onClick={() => {
+                                        setNoWordwrap(!noWordwrap)
+                                    }}
+                                />
+                            </Tooltip>
+                            {!props.simpleMode && (
+                                <Popover
+                                    title={"配置编辑器"}
+                                    content={
+                                        <>
+                                            <Form
+                                                onSubmitCapture={(e) => {
+                                                    e.preventDefault()
+                                                }}
+                                                size={"small"}
+                                                layout={"horizontal"}
+                                                wrapperCol={{span: 14}}
+                                                labelCol={{span: 10}}
+                                            >
+                                                {(fontSize || 0) > 0 && (
+                                                    <SelectOne
+                                                        formItemStyle={{marginBottom: 4}}
+                                                        label={"字号"}
+                                                        data={[
+                                                            {text: "小", value: 12},
+                                                            {text: "中", value: 16},
+                                                            {text: "大", value: 20}
+                                                        ]}
+                                                        value={fontSize}
+                                                        setValue={(size) => {
+                                                            setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
+                                                            setFontSize(size)
+                                                        }}
+                                                    />
+                                                )}
+                                                <Form.Item label={"全屏"} style={{marginBottom: 4}}>
+                                                    <Button
+                                                        size={"small"}
+                                                        type={"link"}
+                                                        icon={<FullscreenOutlined />}
+                                                        onClick={() => {
+                                                            showDrawer({
+                                                                title: "全屏",
+                                                                width: "100%",
+                                                                content: (
+                                                                    <div style={{height: "100%", width: "100%"}}>
+                                                                        <HTTPPacketEditor
+                                                                            {...props}
+                                                                            disableFullscreen={true}
+                                                                            defaultHeight={670}
+                                                                        />
+                                                                    </div>
+                                                                )
+                                                            })
+                                                            setPopoverVisible(false)
+                                                        }}
+                                                    />
+                                                </Form.Item>
+                                                {(props.language === "http" || !isResponse) && (
+                                                    <Form.Item
+                                                        label='是否显示换行符'
+                                                        style={{marginBottom: 4, lineHeight: "16px"}}
+                                                    >
+                                                        <Switch
+                                                            checked={showLineBreaks}
+                                                            onChange={(checked) => {
+                                                                setRemoteValue(
+                                                                    HTTP_PACKET_EDITOR_Line_Breaks,
+                                                                    `${checked}`
+                                                                )
+                                                                setShowLineBreaks(checked)
+                                                            }}
+                                                        />
+                                                    </Form.Item>
+                                                )}
+                                            </Form>
+                                        </>
+                                    }
+                                    onVisibleChange={(v) => {
+                                        setPopoverVisible(v)
+                                    }}
+                                    overlayInnerStyle={{width: 300}}
+                                    visible={popoverVisible}
+                                >
+                                    <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
+                                </Popover>
+                            )}
+                        </Space>
+                    )
+                }
+            >
+                <div style={{flex: 1}}>
+                    {empty && props.emptyOr}
+                    {mode === "text" && !empty && (
+                        <HTTPPacketYakitEditor
+                            noLineNumber={props.noLineNumber}
+                            lineNumbersMinChars={props.lineNumbersMinChars}
+                            noMiniMap={props.noMinimap}
+                            type={props.language || (isResponse ? "html" : "http")}
+                            originValue={props.originValue}
+                            value={
+                                props.readOnly && props.originValue.length > 0
+                                    ? new Buffer(props.originValue).toString(getEncoding())
+                                    : strValue
+                                // Uint8ArrayToString(props.originValue, getEncoding()) : strValue
+                            }
+                            readOnly={props.readOnly}
+                            setValue={setStrValue}
+                            noWordWrap={noWordwrap}
+                            fontSize={12}
+                            showLineBreaks={false}
+                            contextMenu={props.contextMenu || {}}
+                            noPacketModifier={props.noPacketModifier}
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
                             }}

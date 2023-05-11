@@ -271,7 +271,11 @@ interface YakitGetOnlinePluginProps {
     visible: boolean
     setVisible: (b: boolean) => void
 }
-const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
+/**
+ * 额外使用该组件的组件:
+ * 1、GlobalState
+ */
+export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
     const {visible, setVisible} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)

@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider, Collapse, Tag} from "antd"
 import {
-    HTTPPacketEditor,
     HTTP_PACKET_EDITOR_FONT_SIZE,
     HTTP_PACKET_EDITOR_Line_Breaks,
-    IMonacoEditor
+    IMonacoEditor,
+    NewHTTPPacketEditor
 } from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -12,7 +12,7 @@ import {StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed} from "../../utils/notification"
-import {useGetState, useInViewport, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useGetState, useInViewport, useMap, useMemoizedFn, useSize} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -72,6 +72,7 @@ import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
+import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -109,6 +110,7 @@ interface AdvancedConfigurationProps {
     timeout: number
     minDelaySeconds: number
     maxDelaySeconds: number
+    repeatTimes: number
     _filterMode: "drop" | "match"
     getFilter: FuzzResponseFilter
 }
@@ -324,6 +326,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
     const [minDelaySeconds, setMinDelaySeconds] = useState<number>(0)
     const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
+    const [repeatTimes, setRepeatTimes] = useState<number>(0)
     const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
     const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
@@ -574,6 +577,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             },
             DelayMinSeconds: minDelaySeconds,
             DelayMaxSeconds: maxDelaySeconds,
+            RepeatTimes: repeatTimes,
 
             // retry config
             MaxRetryTimes: retryMaxTimes,
@@ -817,7 +821,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             reason = rsp!.Reason
         } catch (e) {}
         return (
-            <HTTPPacketEditor
+            <NewHTTPPacketEditor
                 defaultSearchKeyword={defaultResponseSearch}
                 system={props.system}
                 originValue={rsp.ResponseRaw}
@@ -914,6 +918,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 timeout,
                 minDelaySeconds,
                 maxDelaySeconds,
+                repeatTimes,
                 _filterMode: getFilterMode(),
                 getFilter: getFilter()
             },
@@ -949,6 +954,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
         setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
         setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
+        setRepeatTimes(shareContent.advancedConfiguration.repeatTimes)
         setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
         setFilter(shareContent.advancedConfiguration.getFilter)
         // 重试配置
@@ -1087,6 +1093,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setProxy(val.proxy ? val.proxy?.join(",") : "")
         setMinDelaySeconds(val.minDelaySeconds ? Number(val.minDelaySeconds) : 0)
         setMaxDelaySeconds(val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0)
+        setRepeatTimes(val.repeatTimes ? Number(val.repeatTimes) : 0)
         // 重试配置
         if (val.maxRetryTimes > 0) {
             setRetryMaxTimes(val.maxRetryTimes)
@@ -1123,6 +1130,58 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
     })
+
+    const editorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            insertLabelTag: {
+                menu: [
+                    {
+                        key: "insert-label-tag",
+                        label: "插入标签/字典",
+                        children: [
+                            {type: "divider"},
+                            {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
+                            {key: "insert-temporary-file-tag", label: "插入临时字典"},
+                            {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
+                            {key: "insert-hotpatch-tag", label: "插入热加载标签"},
+                            {key: "insert-fuzzfile-tag", label: "插入文件标签"}
+                        ]
+                    }
+                ],
+                onRun: (editor, key) => {
+                    switch (key) {
+                        case "insert-nullbyte":
+                            editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
+                            return
+                        case "insert-temporary-file-tag":
+                            insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                            return
+                        case "insert-intruder-tag":
+                            showDictsAndSelect((i) => {
+                                monacoEditorWrite(editor, i, editor.getSelection())
+                            })
+                            return
+                        case "insert-hotpatch-tag":
+                            hotPatchTrigger()
+                            return
+                        case "insert-fuzzfile-tag":
+                            insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
+                            return
+
+                        default:
+                            break
+                    }
+                }
+            },
+            copyURL: {
+                menu: [{key: "copy-as-url", label: "复制为 URL"}],
+                onRun: (editor, key) => {
+                    copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
+                }
+            }
+        }
+    }, [])
+
     return (
         <div className={styles["http-fuzzer-body"]}>
             <HttpQueryAdvancedConfig
@@ -1139,6 +1198,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     proxy: proxy ? proxy?.split(",") : [],
                     minDelaySeconds,
                     maxDelaySeconds,
+                    repeatTimes,
                     // 重试配置
                     maxRetryTimes: retryMaxTimes,
                     retrying: retry,
@@ -1399,14 +1459,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         构造请求
                                     </YakitButton>
                                 </YakitPopover>
-                                <EditorsSetting
+                                {/* <EditorsSetting
                                     noWordwrap={noWordwrapFirstEditor}
                                     setNoWordwrap={setNoWordwrapFirstEditor}
                                     fontSize={fontSizeFirstEditor}
                                     setFontSize={setFontSizeFirstEditor}
                                     showLineBreaks={showLineBreaksFirstEditor}
                                     setShowLineBreaks={setShowLineBreaksFirstEditor}
-                                />
+                                /> */}
                             </div>
                         )
                     }}
@@ -1454,7 +1514,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     query={query}
                                     setQuery={(q) => setQuery({...q})}
                                 />
-                                {onlyOneResponse && (
+                                {/* {onlyOneResponse && (
                                     <EditorsSetting
                                         fontSize={fontSizeSecondEditor}
                                         setFontSize={setFontSizeSecondEditor}
@@ -1463,12 +1523,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         showLineBreaks={showLineBreaksSecondEditor}
                                         setShowLineBreaks={setShowLineBreaksSecondEditor}
                                     />
-                                )}
+                                )} */}
                             </div>
                         )
                     }}
                     firstNode={
-                        <HTTPPacketEditor
+                        <NewHTTPPacketEditor
                             system={props.system}
                             noHex={true}
                             noHeader={true}
@@ -1478,58 +1538,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             noMinimap={true}
                             utf8={true}
                             originValue={StringToUint8Array(request)}
-                            actions={[
-                                {
-                                    id: "copy-as-url",
-                                    label: "复制为 URL",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: () => {
-                                        copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
-                                    }
-                                },
-                                {
-                                    id: "insert-intruder-tag",
-                                    label: "插入模糊测试字典标签",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        showDictsAndSelect((i) => {
-                                            monacoEditorWrite(editor, i, editor.getSelection())
-                                        })
-                                    }
-                                },
-                                {
-                                    id: "insert-nullbyte",
-                                    label: "插入空字节标签: {{hexd(00)}}",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
-                                    }
-                                },
-                                {
-                                    id: "insert-hotpatch-tag",
-                                    label: "插入热加载标签",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        hotPatchTrigger()
-                                    }
-                                },
-                                {
-                                    id: "insert-fuzzfile-tag",
-                                    label: "插入文件标签",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                                    }
-                                },
-                                {
-                                    id: "insert-temporary-file-tag",
-                                    label: "插入临时字典",
-                                    contextMenuGroupId: "1_urlPacket",
-                                    run: (editor) => {
-                                        insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                                    }
-                                }
-                            ]}
+                            contextMenu={editorRightMenu}
                             onEditor={setReqEditor}
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                             noWordWrapState={noWordwrapFirstEditor}
@@ -1666,8 +1675,8 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         )
         return (
             <>
-                {(secondNodeSize?.width || 0) > 620 && searchNode}
-                {(secondNodeSize?.width || 0) < 620 && (
+                {+(secondNodeSize?.width || 0) > 620 && searchNode}
+                {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover content={searchNode}>
                         <YakitButton
                             icon={<SearchIcon />}
@@ -1734,8 +1743,8 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         )
         return (
             <>
-                {(secondNodeSize?.width || 0) > 620 && searchNode}
-                {(secondNodeSize?.width || 0) < 620 && (
+                {+(secondNodeSize?.width || 0) > 620 && searchNode}
+                {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover
                         content={searchNode}
                         onVisibleChange={(b) => {
@@ -1944,6 +1953,7 @@ interface AdvancedConfigValueProps {
     proxy: string[]
     minDelaySeconds: number
     maxDelaySeconds: number
+    repeatTimes: number
     // 重试配置
     maxRetryTimes: number
     /**@name 重试条件的checked */
@@ -2243,7 +2253,8 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         proxy: [],
                                         noSystemProxy: false,
                                         minDelaySeconds: undefined,
-                                        maxDelaySeconds: undefined
+                                        maxDelaySeconds: undefined,
+                                        repeatTimes: 0,
                                     }
                                     form.setFieldsValue({
                                         ...restValue
@@ -2259,6 +2270,9 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </YakitButton>
                         }
                     >
+                        <Form.Item label='重复发包' name='repeatTimes' help={`一般用来测试条件竞争或者大并发的情况`}>
+                            <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
                         <Form.Item label='并发线程' name='concurrent'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>

@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useDebounceFn, useKeyPress, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 // 编辑器 注册
@@ -13,21 +13,30 @@ import {
     YakitEditorProps,
     YakitITextModel,
     YakitEditorKeyCode,
-    KeyboardToFuncProps
+    KeyboardToFuncProps,
+    YakitIModelDecoration
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
 import {StringToUint8Array} from "@/utils/str"
-import {extraMenuLists} from "./contextMenus"
+import {baseMenuLists, extraMenuLists} from "./contextMenus"
 import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
 import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
-import {convertKeyboard, fetchCursorContent, fetchSelectionRange, keySortHandle} from "./editorUtils"
+import {convertKeyboard, keySortHandle} from "./editorUtils"
 
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
+import "./StaticYakitEditor.scss"
 
 const {ipcRenderer} = window.require("electron")
+
+/** @name 字体key值对应字体大小 */
+const keyToFontSize: Record<string, number> = {
+    "font-size-small": 12,
+    "font-size-middle": 16,
+    "font-size-large": 20
+}
 
 /** 编辑器右键默认菜单 */
 const DefaultMenu: EditorMenuItemType[] = [
@@ -63,7 +72,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         noMiniMap = false,
         noLineNumber = false,
         lineNumbersMinChars = 5,
-        fontSize = 12
+        fontSize = 12,
+        showLineBreaks = false
     } = props
 
     const systemRef = useRef<YakitSystem>("Darwin")
@@ -74,26 +84,69 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const preWidthRef = useRef<number>(0)
     const preHeightRef = useRef<number>(0)
 
+    /** @name 记录右键菜单组信息 */
     const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenu])
-
+    /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
     const keyBindingRef = useRef<KeyboardToFuncProps>({})
+    /** @name 记录右键菜单关系[菜单组key值-菜单组内菜单项key值数组] */
+    const keyToOnRunRef = useRef<Record<string, string[]>>({})
+
+    const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
+    const [fontsize, setFontsize] = useState<number>(fontSize)
+
+    /**
+     * 整理右键菜单的对应关系
+     * 菜单组的key值对应的组内菜单项的key值数组
+     */
+    useEffect(() => {
+        const keyToRun: Record<string, string[]> = {}
+        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+
+        for (let key in allMenu) {
+            const keys: string[] = []
+            for (let item of allMenu[key].menu) {
+                if ((item as EditorMenuItemProps)?.key) keys.push((item as EditorMenuItemProps)?.key)
+            }
+            keyToRun[key] = keys
+        }
+
+        keyToOnRunRef.current = {...keyToRun}
+    }, [contextMenu])
 
     /** 菜单功能点击处理事件 */
     const {run: menuItemHandle} = useDebounceFn(
         useMemoizedFn((key: string, keyPath: string[]) => {
             if (!editor) return
+            /** 是否执行过方法(onRightContextMenu) */
+            let executeFunc = false
 
             if (keyPath.length === 2) {
-                if (Object.keys(extraMenuLists).includes(keyPath[1])) {
-                    if (!!extraMenuLists[keyPath[1]].onRun) extraMenuLists[keyPath[1]].onRun(editor, key)
-                } else {
-                    if (!!contextMenu[keyPath[1]].onRun) contextMenu[keyPath[1]].onRun(editor, key)
+                const menuName = keyPath[1]
+                const menuItemName = keyPath[0]
+                for (let name in keyToOnRunRef.current) {
+                    if (keyToOnRunRef.current[name].includes(menuName)) {
+                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        allMenu[name].onRun(editor, menuItemName)
+                        executeFunc = true
+                        onRightContextMenu(menuItemName)
+                        break
+                    }
                 }
             }
             if (keyPath.length === 1) {
-                if (key === "pretty" && !!extraMenuLists[keyPath[1]].onRun) extraMenuLists[key].onRun(editor, key)
-                else onRightContextMenu(key)
+                const menuName = keyPath[0]
+                for (let name in keyToOnRunRef.current) {
+                    if (keyToOnRunRef.current[name].includes(menuName)) {
+                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        allMenu[name].onRun(editor, menuName)
+                        executeFunc = true
+                        onRightContextMenu(menuName)
+                        break
+                    }
+                }
             }
+
+            if (!executeFunc) onRightContextMenu(key)
             return
         }),
         {wait: 300}
@@ -105,64 +158,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
         switch (key) {
             case "font-size-small":
-                if (editor?.updateOptions) editor.updateOptions({fontSize: 12})
-                return
             case "font-size-middle":
-                if (editor?.updateOptions) editor.updateOptions({fontSize: 16})
-                return
             case "font-size-large":
-                if (editor?.updateOptions) editor.updateOptions({fontSize: 20})
-                return
-            case "cut":
-                if (editor?.executeEdits) {
-                    /** 获取需要剪切的范围 */
-                    const position = fetchSelectionRange(editor, true)
-                    if (!position) return
-                    /** 获取需要剪切的内容 */
-                    const content = fetchCursorContent(editor, true)
-
-                    const flag = editor.executeEdits("", [
-                        {
-                            range: position,
-                            text: "",
-                            forceMoveMarkers: true
-                        }
-                    ])
-                    if (flag) {
-                        ipcRenderer.invoke("set-copy-clipboard", `${content}`)
-                        editor.focus()
-                    }
+                if (editor?.updateOptions) {
+                    setFontsize(keyToFontSize[key] || 12)
                 }
-
                 return
-            case "copy":
-                if (!model) return
-                if (editor) ipcRenderer.invoke("set-copy-clipboard", `${fetchCursorContent(editor, true)}`)
-                return
-            case "paste":
-                if (!editor) return
-                if (!model) return
-
-                /** 获取需要粘贴的范围 */
-                const position = fetchSelectionRange(editor, false)
-                if (!position) return
-
-                ipcRenderer
-                    .invoke("get-copy-clipboard")
-                    .then((str: string) => {
-                        if (editor?.executeEdits) {
-                            editor.executeEdits("", [
-                                {
-                                    range: position,
-                                    text: str || "",
-                                    forceMoveMarkers: true
-                                }
-                            ])
-                            editor.focus()
-                        }
-                    })
-                    .catch(() => {})
-
+            case "http-show-break":
+                setShowBreak(!getShowBreak())
                 return
             case "yak-formatter":
                 if (!model) return
@@ -170,7 +173,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 return
 
             default:
-                if (editor && !!contextMenu[key].onRun) contextMenu[key].onRun(editor, key)
                 if (onContextMenu && editor) onContextMenu(editor, key)
                 return
         }
@@ -261,7 +263,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
     useEffect(() => {
-        if (isInitRef.current) return
+        /**
+         * @description 使用下方的判断逻辑，将导致后续的(额外菜单变动)无法在右键菜单再渲染中生效
+         */
+        // if (isInitRef.current) return
 
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
             systemRef.current = systemType
@@ -269,6 +274,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             rightContextMenu.current = [...DefaultMenu]
             keyBindingRef.current = {}
 
+            if (type === "http") {
+                rightContextMenu.current = rightContextMenu.current.concat([
+                    {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
+                ])
+            }
             if (type === "yak") {
                 rightContextMenu.current = rightContextMenu.current.concat([
                     {type: "divider"},
@@ -285,7 +295,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
 
             for (let menus in contextMenu) {
-                rightContextMenu.current.push(cloneDeep(contextMenu[menus].menu[0]))
+                /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
+                rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
             }
 
             rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
@@ -293,6 +304,57 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (!forceRenderMenu) isInitRef.current = true
         })
     }, [forceRenderMenu, menuType, contextMenu])
+
+    /**
+     * editor编辑器的额外渲染功能:
+     * 1、每行的换行符进行可视字符展示
+     */
+    useEffect(() => {
+        if (props.type === "http") {
+            const model = editor?.getModel()
+            if (!model) {
+                return
+            }
+            let current: string[] = []
+            const applyKeywordDecoration = () => {
+                const text = model.getValue()
+                const keywordRegExp = /\r?\n/g
+                const decorations: YakitIModelDecoration[] = []
+                let match
+
+                while ((match = keywordRegExp.exec(text)) !== null) {
+                    const start = model.getPositionAt(match.index)
+                    const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
+                    const end = model.getPositionAt(match.index + match[0].length)
+                    decorations.push({
+                        id: "keyword" + match.index,
+                        ownerId: 1,
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                        options: {beforeContentClassName: className}
+                    } as YakitIModelDecoration)
+                }
+                // 使用 deltaDecorations 应用装饰
+                current = model.deltaDecorations(current, decorations)
+            }
+            model.onDidChangeContent((e) => {
+                applyKeywordDecoration()
+            })
+            applyKeywordDecoration()
+        }
+    }, [editor])
+
+    /** 右键菜单-重渲染换行符功能是否显示的开关文字内容 */
+    useEffect(() => {
+        const flag = rightContextMenu.current.filter((item) => {
+            return (item as EditorMenuItemProps)?.key === "http-show-break"
+        })
+        if (flag.length > 0 && type === "http") {
+            for (let item of rightContextMenu.current) {
+                const info = item as EditorMenuItemProps
+                if (info?.key === "http-show-break") info.label = getShowBreak() ? "隐藏换行符" : "显示换行符"
+            }
+        }
+    }, [showBreak])
 
     const showContextMenu = useMemoizedFn(() => {
         showByRightContext(
@@ -383,7 +445,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     console.info(e)
                 })
         }),
-        {wait: 500}
+        {wait: 500, leading: true, trailing: false}
     )
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakSyntaxChecking = useDebounceFn(
@@ -404,7 +466,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     )
 
     return (
-        <div className={styles["yakit-editor-wrapper"]}>
+        <div
+            className={classNames("yakit-editor-code", styles["yakit-editor-wrapper"], {
+                "yakit-editor-wrap-style": !showBreak
+            })}
+        >
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -447,16 +513,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             }
                         }
 
-                        // if (props.full) {
-                        //     handleEditorMount(editor, monaco)
-                        // }
                         if (editorDidMount) editorDidMount(editor)
                     }}
                     options={{
                         readOnly: readOnly,
                         scrollBeyondLastLine: false,
                         fontWeight: "500",
-                        fontSize: fontSize || 12,
+                        fontSize: fontsize || 12,
                         showFoldingControls: "always",
                         showUnused: true,
                         wordWrap: noWordWrap ? "off" : "on",
@@ -464,7 +527,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         lineNumbers: noLineNumber ? "off" : "on",
                         minimap: noMiniMap ? {enabled: false} : undefined,
                         lineNumbersMinChars: lineNumbersMinChars || 5,
-                        contextmenu: false
+                        contextmenu: false,
+                        renderWhitespace: "all"
                     }}
                 />
             </div>
