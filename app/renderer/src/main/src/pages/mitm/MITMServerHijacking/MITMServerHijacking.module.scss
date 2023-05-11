@@ -7,11 +7,15 @@
         .mitm-server-title {
             display: flex;
             align-items: center;
+            overflow: hidden;
+            flex: 1;
             .mitm-server-heard-name {
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
                 color: var(--yakit-header-color);
+                word-break: keep-all;
+                white-space: nowrap;
             }
             .mitm-server-heard-addr {
                 font-weight: 400;
