@@ -3,64 +3,66 @@ const {platform, arch} = process
 let nativeBinding = null
 let loadError = null
 
-switch (platform) {
-    case "win32":
-        switch (arch) {
-            case "x64":
-                try {
-                    nativeBinding = require("./lib/node-screenshots.win32-x64-msvc.node")
-                } catch (e) {
-                    loadError = e
-                }
-                break
-            case "ia32":
-                try {
-                    nativeBinding = require("./lib/node-screenshots.win32-ia32-msvc.node")
-                } catch (e) {
-                    loadError = e
-                }
-                break
-            case "arm64":
-                try {
-                    nativeBinding = require("./lib/node-screenshots.win32-arm64-msvc.node")
-                } catch (e) {
-                    loadError = e
-                }
-                break
-            default:
-                throw new Error(`Unsupported architecture on Windows: ${arch}`)
-        }
-        break
-    case "darwin":
-        switch (arch) {
-            case "x64":
-                try {
-                    nativeBinding = require("./lib/node-screenshots.darwin-x64.node")
-                } catch (e) {
-                    loadError = e
-                }
-                break
-            case "arm64":
-                try {
-                    nativeBinding = require("./lib/node-screenshots.darwin-arm64.node")
-                } catch (e) {
-                    loadError = e
-                }
-                break
-            default:
-                throw new Error(`Unsupported architecture on macOS: ${arch}`)
-        }
-        break
-    default:
-        throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
-}
-
-if (!nativeBinding) {
-    if (loadError) {
-        throw loadError
+try {
+    switch (platform) {
+        case "win32":
+            switch (arch) {
+                case "x64":
+                    try {
+                        nativeBinding = require("./lib/node-screenshots.win32-x64-msvc.node")
+                    } catch (e) {
+                        loadError = e
+                    }
+                    break
+                case "ia32":
+                    try {
+                        nativeBinding = require("./lib/node-screenshots.win32-ia32-msvc.node")
+                    } catch (e) {
+                        loadError = e
+                    }
+                    break
+                case "arm64":
+                    try {
+                        nativeBinding = require("./lib/node-screenshots.win32-arm64-msvc.node")
+                    } catch (e) {
+                        loadError = e
+                    }
+                    break
+                default:
+                    throw new Error(`Unsupported architecture on Windows: ${arch}`)
+            }
+            break
+        case "darwin":
+            switch (arch) {
+                case "x64":
+                    try {
+                        nativeBinding = require("./lib/node-screenshots.darwin-x64.node")
+                    } catch (e) {
+                        loadError = e
+                    }
+                    break
+                case "arm64":
+                    try {
+                        nativeBinding = require("./lib/node-screenshots.darwin-arm64.node")
+                    } catch (e) {
+                        loadError = e
+                    }
+                    break
+                default:
+                    throw new Error(`Unsupported architecture on macOS: ${arch}`)
+            }
+            break
+        default:
+            throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
     }
-    throw new Error(`Failed to load native binding`)
-}
+
+    if (!nativeBinding) {
+        if (loadError) {
+            throw loadError
+        }
+        throw new Error(`Failed to load native binding`)
+    }
+} catch (error) {}
 
 /**
  * @typedef {Object} NodeScreenshots
@@ -85,6 +87,6 @@ if (!nativeBinding) {
  */
 
 /** @type {info} */
-const {Screenshots} = nativeBinding
+const {Screenshots} = nativeBinding || {}
 
 module.exports.NodeScreenshots = Screenshots
