@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {Button, Col, PageHeader, Row, Space, Tag} from "antd";
 import {AutoCard} from "@/components/AutoCard";
-import {ResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {HTTPPacketEditor} from "@/utils/editors";
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
@@ -38,7 +38,7 @@ export const MatcherExtractorPage: React.FC<MatcherExtractorPageProp> = (props) 
         size={"small"}
     >
         <div style={{height: "100%"}}>
-            <ResizeBox
+            <YakitResizeBox
                 isVer={true}
                 firstNode={<AutoCard
                     size={"small"} bordered={false} bodyStyle={{padding: 0}}
@@ -72,7 +72,7 @@ export const MatcherExtractorPage: React.FC<MatcherExtractorPageProp> = (props) 
                         })()}</Tag>
                     </Space>} bordered={false}
                 >
-                    <ResizeBox
+                    <YakitResizeBox
                         isVer={false}
                         firstNode={<MatcherForm
                             onChange={(condition: string, matchers: MatcherItem[]) => {
