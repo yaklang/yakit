@@ -51,12 +51,12 @@ import {
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {FeatureRequest, ReportBug} from "@/utils/template/issues"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu";
-import {FeatureRequest, ReportBug} from "@/utils/template/issues";
-import {ExclamationCircleOutlined} from "@ant-design/icons";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1058,25 +1058,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         )}
                     </div>
-                    
+
                     <div className={styles["ui-layout-body"]}>
-                        <Spin spinning={refresh}>
-                        {engineLink &&
-                            (isJudgeLicense ? (
-                                <EnterpriseJudgeLogin
-                                    setJudgeLicense={setJudgeLicense}
-                                    setJudgeLogin={(v: boolean) => {}}
-                                />
-                            ) : linkDatabase ? (
-                                <SoftwareSettings
-                                    engineMode={engineMode || "local"}
-                                    onEngineModeChange={changeEngineMode}
-                                    onFinish={softwareSettingFinish}
-                                />
-                            ) : (
-                                props.children
-                            ))}
-                        </Spin>
+                        {engineLink && (
+                            <YakitSpin spinning={refresh}>
+                                {isJudgeLicense ? (
+                                    <EnterpriseJudgeLogin
+                                        setJudgeLicense={setJudgeLicense}
+                                        setJudgeLogin={(v: boolean) => {}}
+                                    />
+                                ) : linkDatabase ? (
+                                    <SoftwareSettings
+                                        engineMode={engineMode || "local"}
+                                        onEngineModeChange={changeEngineMode}
+                                        onFinish={softwareSettingFinish}
+                                    />
+                                ) : (
+                                    props.children
+                                )}
+                            </YakitSpin>
+                        )}
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 yakitStatus={yakitStatus}
@@ -1145,7 +1146,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         )}
                     </div>
-                  
                 </div>
             </div>
 
