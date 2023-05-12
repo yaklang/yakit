@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -98,12 +98,27 @@ export const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
     const {onFinish, visible} = props
     const [token, setToken] = useState(randomString(40))
     const [results, setResults, getResult] = useGetState<string[]>([])
+    const [percent, setPercent, getPercent] = useGetState<number>(0)
+
+    const timer = useRef<number>(0) //超时处理
+    const prePercent = useRef<number>(0) // 上一次的进度数值
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
             if (!data.IsMessage) {
                 return
             }
+            if (getPercent() === prePercent.current) {
+                timer.current += 1
+            } else {
+                prePercent.current = getPercent()
+                timer.current = 0
+            }
+            if (timer.current > 30) {
+                yakitFailed(`[InstallScrecorder] error:连接超时`)
+                timer.current = 0
+            }
+            setPercent(Math.ceil(data.Progress))
             setResults([Uint8ArrayToString(data.Message), ...getResult()])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -125,8 +140,15 @@ export const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
     })
 
     useEffect(() => {
-        if (visible) install()
+        if (visible) {
+            install()
+        } else {
+            ipcRenderer.invoke("cancel-InstallScrecorder", token)
+        }
+        setPercent(0)
         setResults([])
+        timer.current = 0
+        prePercent.current = 0
     }, [visible])
 
     return (
@@ -135,7 +157,7 @@ export const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
                 <Progress
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'
-                    percent={50}
+                    percent={percent}
                     format={(percent) => `已下载 ${percent}%`}
                 />
             </div>
