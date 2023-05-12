@@ -85,6 +85,12 @@
         background-color: var(--yakit-background-color);
     }
 
+    .size-style {
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
     .icon-style {
         color: var(--yakit-body-text-color);
     }

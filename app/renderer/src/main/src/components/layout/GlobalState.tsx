@@ -1,13 +1,21 @@
 import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {getRemoteValue} from "@/utils/kv"
+import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {failed, info} from "@/utils/notification"
-import {ExclamationIcon, QuestionMarkCircleIcon, ShieldCheckIcon} from "@/assets/newIcon"
+import {ExclamationIcon} from "@/assets/newIcon"
 import {YakitSystem} from "@/yakitGVDefine"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {ErrorIcon, HelpIcon, ShieldCheckIcon as AllShieldCheckIcon, SuccessIcon, WarningIcon} from "./globalStateIcon"
+import {
+    ErrorIcon,
+    HelpIcon,
+    ShieldCheckIcon as AllShieldCheckIcon,
+    SuccessIcon,
+    WarningIcon,
+    RocketIcon,
+    RocketOffIcon
+} from "./globalStateIcon"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
@@ -16,6 +24,7 @@ import {Tooltip} from "antd"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 
 import classNames from "classnames"
 import styles from "./globalState.module.scss"
@@ -26,8 +35,8 @@ const {ipcRenderer} = window.require("electron")
 const ShowIcon: Record<string, ReactNode> = {
     error: <ExclamationIcon className={styles["icon-style"]} />,
     warning: <ExclamationIcon className={styles["icon-style"]} />,
-    success: <ShieldCheckIcon className={styles["icon-style"]} />,
-    help: <QuestionMarkCircleIcon className={styles["icon-style"]} />
+    success: <RocketIcon className={styles["icon-style"]} />,
+    help: <RocketOffIcon className={styles["icon-style"]} />
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {
@@ -228,12 +237,21 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             .catch(() => {})
     })
 
+    const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
     const timeRef = useRef<any>(null)
     // 启动全局状态轮询定时器
     useEffect(() => {
+        let timer: any = null
         if (isEngineLink) {
-            if (timeRef.current) clearInterval(timeRef.current)
-            timeRef.current = setInterval(updateAllInfo, 1000)
+            getRemoteValue(RemoteGV.GlobalStateTimeInterval).then((time: any) => {
+                setTimeInterval(+time || 5)
+                if ((+time || 5) > 5) updateAllInfo()
+            })
+
+            if (timer) clearInterval(timer)
+            timer = setInterval(() => {
+                setRemoteValue(RemoteGV.GlobalStateTimeInterval, `${getTimeInterval()}`)
+            }, 20000)
         } else {
             // init
             setPcap({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
@@ -249,14 +267,32 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
             setState("error")
             setStateNum(0)
-        }
 
-        return () => {
             isRunRef.current = false
             if (timeRef.current) clearInterval(timeRef.current)
             timeRef.current = null
         }
+
+        return () => {
+            if (timer) clearInterval(timer)
+            timer = null
+        }
     }, [isEngineLink])
+    // 修改查询间隔时间后
+    useDebounceEffect(
+        () => {
+            if (timeRef.current) clearInterval(timeRef.current)
+            timeRef.current = setInterval(updateAllInfo, timeInterval * 1000)
+
+            return () => {
+                isRunRef.current = false
+                if (timeRef.current) clearInterval(timeRef.current)
+                timeRef.current = null
+            }
+        },
+        [timeInterval],
+        {wait: 300}
+    )
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -451,9 +487,27 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         </div>
                     )}
                 </div>
+                <div className={styles["body-setting"]}>
+                    状态刷新间隔时间
+                    <YakitInputNumber
+                        size='small'
+                        type='horizontal'
+                        wrapperClassName={styles["yakit-input-number"]}
+                        min={1}
+                        formatter={(value) => `${value}s`}
+                        parser={(value) => value!.replace("s", "")}
+                        value={timeInterval}
+                        onChange={(value) => {
+                            if (!value) setTimeInterval(1)
+                            else {
+                                if (+value !== timeInterval) setTimeInterval(+value || 5)
+                            }
+                        }}
+                    />
+                </div>
             </div>
         )
-    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy])
+    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy, timeInterval])
 
     return (
         <>
