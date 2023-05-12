@@ -660,7 +660,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
             })
             .finally(() => {
                 if (isBreakRef.current) return
-                // if (getIsFailed()) return
+                if (getIsFailed()) return
 
                 ipcRenderer
                     .invoke("download-latest-yak", getLatestVersion())
