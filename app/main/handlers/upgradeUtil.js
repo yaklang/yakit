@@ -125,14 +125,14 @@ const saveAllSecret = (authInfos) => {
     fs.writeFileSync(secretFile, new Buffer(authFileStr, "utf8"))
 };
 
-const getYakDownloadUrl = () => {
+const getYakDownloadUrl = (version) => {
     switch (process.platform) {
         case "darwin":
-            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_darwin_amd64"
+            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/yak_darwin_amd64`
         case "win32":
-            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_windows_amd64.exe"
+            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/yak_windows_amd64.exe`
         case "linux":
-            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_linux_amd64"
+            return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/yak_linux_amd64`
     }
 }
 
@@ -305,14 +305,14 @@ module.exports = {
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise((resolve, reject) => {
+                version = "1.2.1"
                 const dest = path.join(yakEngineDir, `yak-${version}`);
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
 
                 }
-
-                const downloadUrl = getYakDownloadUrl();
+                const downloadUrl = getYakDownloadUrl(version);
                 // https://github.com/IndigoUnited/node-request-progress
                 // The options argument is optional so you can omit it
                 requestProgress(request(downloadUrl), {

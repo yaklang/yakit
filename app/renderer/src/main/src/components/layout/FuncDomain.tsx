@@ -783,12 +783,12 @@ interface UIOpUpdateProps {
     localVersion?: string
     isUpdateWait?: boolean
     isRemoteMode?: boolean
-    onDownload: (type: "yakit" | "yaklang") => any
+    onDownload: (type: "yakit" | "yakit-rollback" | "yaklang" | "yaklang-rollback") => any
     isSimple?: boolean
     isEnterprise: boolean
     role?: string | null
     updateContent?: string
-    onUpdateEdit?: (type: "yakit" | "yaklang", isEnterprise?: boolean) => any
+    onUpdateEdit?: (type: "yakit" | "yakit-rollback" | "yaklang" | "yaklang-rollback", isEnterprise?: boolean) => any
 }
 
 /** @name Yakit版本 */
@@ -855,7 +855,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                     </>
                                 }
                                 onConfirm={() => {
-
+                                    onDownload("yakit-rollback")
                                 }}
                             >
                                 <YakitButton themeClass={styles["success-btn-coloc"]}>
@@ -968,7 +968,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                     </>
                                 }
                                 onConfirm={() => {
-
+                                    onDownload("yaklang-rollback")
                                 }}
                             >
                                 <YakitButton themeClass={styles["success-btn-coloc"]}>
@@ -1103,7 +1103,7 @@ export interface UpdateContentProp {
 
 export interface FetchUpdateContentProp {
     source: "company" | "community"
-    type: "yakit" | "yaklang"
+    type: "yakit" | "yakit-rollback" | "yaklang" | "yaklang-rollback"
 }
 
 interface SetUpdateContentProp extends FetchUpdateContentProp {
@@ -1271,7 +1271,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         }
     }, [isEngineLink])
 
-    const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
+    const onDownload = useMemoizedFn((type) => {
         ipcRenderer.invoke("receive-download-yaklang-or-yakit", type)
     })
 
@@ -1288,12 +1288,12 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [])
 
     const [editLoading, setEditLoading] = useState<boolean>(false)
-    const [editShow, setEditShow] = useState<{visible: boolean; type: "yakit" | "yaklang"; isEnterprise?: boolean}>({
+    const [editShow, setEditShow] = useState<{visible: boolean; type: "yakit" | "yakit-rollback" | "yaklang" | "yaklang-rollback"; isEnterprise?: boolean}>({
         visible: false,
         type: "yakit"
     })
     const [editInfo, setEditInfo] = useState<string>("")
-    const UpdateContentEdit = useMemoizedFn((type: "yakit" | "yaklang", isEnterprise?: boolean) => {
+    const UpdateContentEdit = useMemoizedFn((type: "yakit" | "yakit-rollback" | "yaklang" | "yaklang-rollback", isEnterprise?: boolean) => {
         if (editShow.visible) return
         setEditInfo(type === "yakit" ? (isEnterprise ? companyYakit : communityYakit) : communityYaklang)
         setEditShow({visible: true, type: type, isEnterprise: !!isEnterprise})

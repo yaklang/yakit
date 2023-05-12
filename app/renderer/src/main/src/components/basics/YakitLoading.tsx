@@ -73,7 +73,8 @@ export interface YakitLoadingProp {
     currentYaklang: string
     latestYaklang: string
     setLatestYaklang: (val: string) => any
-
+    previousYaklang: string
+    setPreviousYaklang: (val: string) => any
     localPort: number
     adminPort: number
     onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
@@ -93,6 +94,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         currentYaklang,
         latestYaklang,
         setLatestYaklang,
+        previousYaklang,
+        setPreviousYaklang,
         showEngineLog,
         setShowEngineLog,
         onEngineModeChange
@@ -290,7 +293,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             engineMode === "local" ? (
                                 <div className={styles["engine-mode-change-menu-item"]}>
                                     本地模式
-                                    <CheckIcon />
+                                    <CheckIcon/>
                                 </div>
                             ) : (
                                 "本地模式"
@@ -302,7 +305,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             engineMode === "remote" ? (
                                 <div className={styles["engine-mode-change-menu-item"]}>
                                     远程模式
-                                    <CheckIcon />
+                                    <CheckIcon/>
                                 </div>
                             ) : (
                                 "远程模式"
@@ -395,6 +398,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
+                            loading={restartLoading}
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            回退引擎版本
+                        </YakitButton>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
                             type='text'
                             onClick={() => setShowEngineLog(!showEngineLog)}
                         >
@@ -427,6 +439,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
+                            loading={restartLoading}
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            回退引擎版本
+                        </YakitButton>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
                             type='text'
                             onClick={() => setShowEngineLog(!showEngineLog)}
                         >
@@ -452,6 +473,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            loading={restartLoading}
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            回退引擎版本
+                        </YakitButton>
                         <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
                             <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
                                 切换连接模式
@@ -471,6 +501,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             onClick={manuallyStartEngine}
                         >
                             手动连接引擎
+                        </YakitButton>
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            loading={restartLoading}
+                            disabled={loading}
+                            onClick={manuallyStartEngine}
+                        >
+                            回退引擎版本
                         </YakitButton>
                         <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
                             <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
@@ -523,11 +562,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     <div className={styles["yakit-loading-icon-wrapper"]}>
                         <div className={styles["theme-icon-wrapper"]}>
                             <div className={styles["theme-icon"]}>
-                                <YakitThemeLoadingSvgIcon />
+                                <YakitThemeLoadingSvgIcon/>
                             </div>
                         </div>
                         <div className={styles["white-icon"]}>
-                            <YakitLoadingSvgIcon />
+                            <YakitLoadingSvgIcon/>
                         </div>
                     </div>
 
@@ -541,6 +580,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             <DownloadYaklang
                 system={system}
                 visible={yakitStatus === "update"}
+                previousYaklang={previousYaklang}
                 onCancel={() => yakitStatusCallback("update")}
             />
 
@@ -562,20 +602,21 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 onCancel={() => yakitStatusCallback("update")}
             />
 
-            <DatabaseErrorHint visible={yakitStatus === "database"} onSuccess={() => yakitStatusCallback("database")} />
+            <DatabaseErrorHint visible={yakitStatus === "database"} onSuccess={() => yakitStatusCallback("database")}/>
         </div>
     )
 }
 
 interface DownloadYaklangProps {
     system: YakitSystem
+    previousYaklang: string
     visible: boolean
     onCancel: () => any
 }
 
 /** @name Yaklang引擎更新下载弹窗 */
 const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
-    const {system, visible, onCancel} = props
+    const {system, visible, previousYaklang, onCancel} = props
 
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
@@ -603,7 +644,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
         setDownloadProgress(undefined)
 
         ipcRenderer
-            .invoke("fetch-latest-yaklang-version")
+            .invoke("fetch-latest-yaklang-version", "rollback")
             .then((data: string) => setLatestVersion(data))
             .catch((e: any) => {
                 if (isBreakRef.current) return
@@ -728,7 +769,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
+                                    <YaklangInstallHintSvgIcon/>
                                 </div>
                                 <div
                                     className={styles["qs-icon"]}
@@ -738,7 +779,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
                                         setIsTop(2)
                                     }}
                                 >
-                                    <HelpSvgIcon style={{fontSize: 20}} />
+                                    <HelpSvgIcon style={{fontSize: 20}}/>
                                 </div>
                             </div>
 
@@ -791,7 +832,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
                     </div>
                 </div>
             </Draggable>
-            <QuestionModal isTop={isTop} setIsTop={setIsTop} system={system} visible={qsShow} setVisible={setQSShow} />
+            <QuestionModal isTop={isTop} setIsTop={setIsTop} system={system} visible={qsShow} setVisible={setQSShow}/>
         </div>
     )
 })
@@ -867,7 +908,7 @@ const DatabaseErrorHint: React.FC<DatabaseErrorHintProps> = React.memo((props) =
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
+                                    <YaklangInstallHintSvgIcon/>
                                 </div>
                             </div>
 

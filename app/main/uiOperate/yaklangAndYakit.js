@@ -11,9 +11,14 @@ module.exports = (win, getClient) => {
     })
 
     /** 获取Yaklang引擎最新版本号 */
-    const asyncFetchLatestYaklangVersion = () => {
+    const asyncFetchLatestYaklangVersion = (version) => {
+        if (version === "rollback") {
+            version = "previous_";
+        } else {
+            version = "";
+        }
         return new Promise((resolve, reject) => {
-            let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/version.txt")
+            let rsp = https.get(`https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/${version}version.txt`)
             rsp.on("response", (rsp) => {
                 rsp.on("data", (data) => {
                     resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
@@ -25,8 +30,8 @@ module.exports = (win, getClient) => {
         })
     }
     /** 获取Yaklang引擎最新版本号 */
-    ipcMain.handle("fetch-latest-yaklang-version", async (e) => {
-        return await asyncFetchLatestYaklangVersion()
+    ipcMain.handle("fetch-latest-yaklang-version", async (e,version) => {
+        return await asyncFetchLatestYaklangVersion(version)
     })
 
     /** 获取Yakit最新版本号 */
