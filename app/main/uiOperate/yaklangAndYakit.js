@@ -11,14 +11,9 @@ module.exports = (win, getClient) => {
     })
 
     /** 获取Yaklang引擎最新版本号 */
-    const asyncFetchLatestYaklangVersion = (version) => {
-        if (version === "rollback") {
-            version = "previous_";
-        } else {
-            version = "";
-        }
+    const asyncFetchLatestYaklangVersion = (isRollBack) => {
         return new Promise((resolve, reject) => {
-            let rsp = https.get(`https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/${version}version.txt`)
+            let rsp = https.get(`https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/${isRollBack?"previous_":""}version.txt`)
             rsp.on("response", (rsp) => {
                 rsp.on("data", (data) => {
                     resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
@@ -51,6 +46,24 @@ module.exports = (win, getClient) => {
         return await asyncFetchLatestYakitVersion()
     })
 
+    /** 获取Yakit上一个版本号 */
+    const asyncFetchPreviousYakitVersion = () => {
+        return new Promise((resolve, reject) => {
+            let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yakit-previous-version.txt")
+            rsp.on("response", (rsp) => {
+                rsp.on("data", (data) => {
+                    resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
+                }).on("error", (err) => reject(err))
+            })
+            rsp.on("error", reject)
+        })
+    }
+
+    /** 获取Yakit上一个版本号 */
+    ipcMain.handle("fetch-previous-yakit-version", async (e) => {
+        return await asyncFetchPreviousYakitVersion()
+    })
+
     /** 获取Yakit本地版本号 */
     ipcMain.handle("fetch-yakit-version", async (e) => {
         return app.getVersion()
@@ -71,5 +84,9 @@ module.exports = (win, getClient) => {
     /** 连接引擎的指令 */
     ipcMain.handle("engine-ready-link", () => {
         win.webContents.send("engine-ready-link-callback")
+    })
+    /** 回退引擎的指令 */
+    ipcMain.handle("roll-back-engine", () => {
+        win.webContents.send("roll-back-engine-callback")
     })
 }

@@ -170,7 +170,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [previousYakit, setPreviousYakit] = useState<string>("")
     const [currentYaklang, setCurrentYaklang] = useState<string>("")
     const [latestYaklang, setLatestYaklang] = useState<string>("")
-    const [previousYaklang, setPreviousYaklang] = useState<string>("")
 
     /**
      * 1、获取软件运行环境
@@ -198,7 +197,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ipcRenderer.invoke("fetch-latest-yaklang-version").then((data: string) => {
                     setLatestYaklang(data)
                 })
-                setPreviousYaklang("v1.2.1")
             }
         })
     }, [])
@@ -341,6 +339,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [adminPort, localPort])
 
+    /** 接受连接引擎的指令 */
+    useEffect(() => {
+        ipcRenderer.on("roll-back-engine-callback", async () => {
+            setYakitStatus("roll-back-update")
+            cacheYakitStatus.current = "roll-back-update"
+        })
+
+        return () => {
+            ipcRenderer.removeAllListeners("roll-back-engine-callback")
+        }
+    }, [])
+
     /**
      * 根据引擎状态处理不同的方式
      * 这儿并不直接控制啥时候发起连接，只是设置好对应的连接参数即可
@@ -475,6 +485,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (type) {
             case "install":
             case "update":
+            case "roll-back-update":
                 setYakitStatus("")
                 cacheYakitStatus.current = ""
                 getCacheEngineMode()
@@ -1099,8 +1110,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 currentYaklang={currentYaklang}
                                 latestYaklang={latestYaklang}
                                 setLatestYaklang={setLatestYaklang}
-                                previousYaklang={previousYaklang}
-                                setPreviousYaklang={setPreviousYaklang}
                                 localPort={localPort}
                                 adminPort={adminPort}
                                 onEngineModeChange={changeEngineMode}
@@ -1147,14 +1156,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     setVisible={setYaklangRollBackDownload}
                                     onSuccess={() => {
                                         setYaklangRollBackDownload(false)
-                                        setYakitStatus("update")
-                                        cacheYakitStatus.current = "update"
+                                        setYakitStatus("roll-back-update")
+                                        cacheYakitStatus.current = "roll-back-update"
                                         setEngineLink(false)
                                         setKeepalive(false)
                                     }}
                                 />
 
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload}/>
+                                <DownloadYakit system={system} rollBack={true} visible={yakitRollBackDownload} setVisible={setYakitRollBackDownload}/>
                             </div>
                         )}
                         {engineLink && __killOldEngine && (
@@ -1624,13 +1633,14 @@ interface DownloadYakitProps {
     system: YakitSystem
     visible: boolean
     setVisible: (flag: boolean) => any
+    rollBack?: boolean
 }
 
-/** @name Yakit软件更新下载弹窗 */
+/** @name Yakit软件更新/回退下载弹窗 */
 const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
     console.log("xxxxxxxxxxxxxxxxxxxxxxxxxx DownloadYakit")
-    const {system, visible, setVisible} = props
-
+    const {system, visible, setVisible,rollBack} = props
+    
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
 
@@ -1657,8 +1667,9 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
         if (visible) {
             isBreakRef.current = true
             setDownloadProgress(undefined)
+            const isRollBackIpc:string = rollBack?"fetch-previous-yakit-version":"fetch-latest-yakit-version"
             ipcRenderer
-                .invoke("fetch-latest-yakit-version")
+                .invoke(isRollBackIpc)
                 .then((data: string) => {
                     let version = data
                     if (version.startsWith("v")) version = version.substr(1)

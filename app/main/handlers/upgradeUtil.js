@@ -305,14 +305,13 @@ module.exports = {
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise((resolve, reject) => {
-                version = "1.2.1"
                 const dest = path.join(yakEngineDir, `yak-${version}`);
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
 
                 }
-                const downloadUrl = getYakDownloadUrl(version);
+                const downloadUrl = getYakDownloadUrl(version.slice(1));
                 // https://github.com/IndigoUnited/node-request-progress
                 // The options argument is optional so you can omit it
                 requestProgress(request(downloadUrl), {

@@ -73,8 +73,6 @@ export interface YakitLoadingProp {
     currentYaklang: string
     latestYaklang: string
     setLatestYaklang: (val: string) => any
-    previousYaklang: string
-    setPreviousYaklang: (val: string) => any
     localPort: number
     adminPort: number
     onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
@@ -94,8 +92,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         currentYaklang,
         latestYaklang,
         setLatestYaklang,
-        previousYaklang,
-        setPreviousYaklang,
         showEngineLog,
         setShowEngineLog,
         onEngineModeChange
@@ -264,6 +260,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         }, 1000)
     })
 
+    /** 回退引擎版本 */
+    const rollBackEngine = useMemoizedFn(() => {
+        ipcRenderer.invoke("roll-back-engine")
+    })
+
     /** 切换模式 */
     const changeMode = useMemoizedFn((val: boolean) => {
         if (val) clearInterval(readyTime.current)
@@ -390,20 +391,20 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
                             loading={restartLoading}
                             disabled={loading}
-                            onClick={manuallyStartEngine}
+                            onClick={rollBackEngine}
                         >
                             回退引擎版本
                         </YakitButton>
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
@@ -431,20 +432,20 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
                             loading={restartLoading}
                             disabled={loading}
-                            onClick={manuallyStartEngine}
+                            onClick={rollBackEngine}
                         >
                             回退引擎版本
                         </YakitButton>
+                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
+                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
+                                切换连接模式
+                            </YakitButton>
+                        </Dropdown>
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
@@ -478,7 +479,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             size='max'
                             loading={restartLoading}
                             disabled={loading}
-                            onClick={manuallyStartEngine}
+                            onClick={rollBackEngine}
                         >
                             回退引擎版本
                         </YakitButton>
@@ -507,7 +508,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             size='max'
                             loading={restartLoading}
                             disabled={loading}
-                            onClick={manuallyStartEngine}
+                            onClick={rollBackEngine}
                         >
                             回退引擎版本
                         </YakitButton>
@@ -580,8 +581,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             <DownloadYaklang
                 system={system}
                 visible={yakitStatus === "update"}
-                previousYaklang={previousYaklang}
                 onCancel={() => yakitStatusCallback("update")}
+            />
+
+            <DownloadYaklang
+                system={system}
+                visible={yakitStatus === "roll-back-update"}
+                isRollBack={true}
+                onCancel={() => yakitStatusCallback("roll-back-update")}
             />
 
             <InstallEngine
@@ -609,14 +616,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
 interface DownloadYaklangProps {
     system: YakitSystem
-    previousYaklang: string
+    isRollBack?: boolean
     visible: boolean
     onCancel: () => any
 }
 
 /** @name Yaklang引擎更新下载弹窗 */
 const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
-    const {system, visible, previousYaklang, onCancel} = props
+    const {system, visible, isRollBack, onCancel} = props
 
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
@@ -642,10 +649,10 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
     const fetchVersion = useMemoizedFn(() => {
         setIsFailed(false)
         setDownloadProgress(undefined)
-
+        
         ipcRenderer
-            .invoke("fetch-latest-yaklang-version", "rollback")
-            .then((data: string) => setLatestVersion(data))
+            .invoke("fetch-latest-yaklang-version",isRollBack)
+            .then((data: string) => setLatestVersion(`v1.2.1`))//`v1.2.1`
             .catch((e: any) => {
                 if (isBreakRef.current) return
                 failed(`获取引擎最新版本失败 ${e}`)
@@ -653,7 +660,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
             })
             .finally(() => {
                 if (isBreakRef.current) return
-                if (getIsFailed()) return
+                // if (getIsFailed()) return
 
                 ipcRenderer
                     .invoke("download-latest-yak", getLatestVersion())
