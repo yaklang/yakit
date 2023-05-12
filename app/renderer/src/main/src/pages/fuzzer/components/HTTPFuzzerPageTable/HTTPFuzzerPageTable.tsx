@@ -8,7 +8,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTPPacketEditor, IMonacoEditor} from "@/utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -492,7 +492,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     />
                 }
                 secondNode={
-                    <HTTPPacketEditor
+                    <NewHTTPPacketEditor
+                        isResponse={true}
                         readOnly={true}
                         hideSearch={true}
                         noHex={true}
