@@ -36,6 +36,7 @@ import {ReactPlayerVideo} from "./ReactPlayerVideo/ReactPlayerVideo"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {useStore} from "@/store"
+import noPictures from "@/assets/noPictures.png"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -437,7 +438,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
             <div className={styles["list-item-cover"]} onClick={() => onPlayVideo()}>
-                <img alt='暂无图片' src={item.VideoName} />
+                <img alt='暂无图片' src={item.VideoName || noPictures} />
                 <div className={styles["list-item-cover-hover"]}>
                     <PlayIcon />
                 </div>
