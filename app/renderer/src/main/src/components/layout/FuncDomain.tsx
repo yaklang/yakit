@@ -3,7 +3,6 @@ import {Badge, Modal, Tooltip, Form, Input, Button} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
-    RocketSvgIcon,
     ScreensHotSvgIcon,
     UISettingSvgIcon,
     UnLoginSvgIcon,
@@ -51,7 +50,7 @@ import {CodeGV, LocalGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
-import {GithubSvgIcon, PencilAltIcon} from "@/assets/newIcon"
+import {GithubSvgIcon, PencilAltIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {NetWorkApi} from "@/services/fetch"
@@ -226,7 +225,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     >
                         <div className={styles["op-btn-body"]}>
                             <Tooltip placement='bottom' title='引擎Console'>
-                                <RocketSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                <TerminalIcon className={classNames(styles["icon-style"], styles["size-style"])} />
                             </Tooltip>
                         </div>
                     </div>
@@ -288,7 +287,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 const key = Route.PlugInAdminPage
                                                 openMenu(key)
                                             }
-                                            if(key === "hole-collect"){
+                                            if (key === "hole-collect") {
                                                 const key = Route.HoleCollectPage
                                                 openMenu(key)
                                             }

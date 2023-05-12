@@ -40,7 +40,9 @@ export enum RemoteGV {
     /** @name 登录账户Token */
     TokenOnline = "token-online",
     /** @name 连接的项目数据库 */
-    LinkDatabase = "link-database"
+    LinkDatabase = "link-database",
+    /** @name 全局状态的查询间隔时间 */
+    GlobalStateTimeInterval = "global-state-time-interval"
 }
 
 /** 项目逻辑全局变量 */
