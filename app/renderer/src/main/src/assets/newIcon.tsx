@@ -1544,3 +1544,39 @@ const Rewind = () => (
 export const RewindIcon = (props: Partial<IconProps>) => {
     return <Icon component={Rewind} {...props} />
 }
+
+const CheckCircleOutline = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  CheckCircle x 圈 边框
+ */
+export const CheckCircleOutlineIcon = (props: Partial<IconProps>) => {
+    return <Icon component={CheckCircleOutline} {...props} />
+}
+
+const ExclamationOutline = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  CheckCircle 警告 三角
+ */
+export const ExclamationOutlineIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ExclamationOutline} {...props} />
+}

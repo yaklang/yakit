@@ -3,7 +3,7 @@ import {useMemoizedFn, useSelections, useUpdateEffect} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Divider, Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {failed} from "@/utils/notification"
+import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import styles from "./ScreenRecorder.module.scss"
@@ -35,6 +35,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {ReactPlayerVideo} from "./ReactPlayerVideo/ReactPlayerVideo"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {useStore} from "@/store"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -49,6 +50,8 @@ export interface ScreenRecorder {
     Project: string
     CreatedAt: number
     UpdatedAt: number
+    VideoName: string
+    Cover: string
 }
 const batchMenuDataEnterprise: YakitMenuItemProps[] = [
     {
@@ -93,6 +96,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Pagination: paginationProps
             })
             .then((item: QueryGeneralResponse<any>) => {
+                console.log("item", item)
                 const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
@@ -381,13 +385,13 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                 <Form
                     form={form}
                     initialValues={{
-                        Filename: item.Filename,
+                        VideoName: item.VideoName || `视频-${item.Id}`,
                         NoteInfo: item.NoteInfo
                     }}
                     layout='vertical'
                     style={{padding: 24}}
                 >
-                    <Form.Item name='Filename' label='视频名称' rules={[{required: true, message: "该项为必填"}]}>
+                    <Form.Item name='VideoName' label='视频名称' rules={[{required: true, message: "该项为必填"}]}>
                         <YakitInput />
                     </Form.Item>
                     <Form.Item name='NoteInfo' label='备注'>
@@ -397,11 +401,43 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             )
         })
     })
+    // 全局监听登录状态
+    const {userInfo} = useStore()
+    const onUpload = useMemoizedFn(() => {
+        if (userInfo.isLogin) {
+            ipcRenderer
+                .invoke("UploadScreenRecorders", {
+                    Project: item.Project,
+                    Token: userInfo.token
+                })
+                .then((e) => {
+                    yakitNotify("success", "上传成功")
+                })
+                .catch((err) => {
+                    yakitNotify("error", "上传失败：" + err)
+                })
+        } else {
+            yakitNotify("warning", "请先登录，登录后方可使用")
+        }
+    })
+    const onRemove = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeleteScreenRecorders", {
+                // Project: item.Project,
+                // Token: userInfo.token
+            })
+            .then((e) => {
+                yakitNotify("success", "删除成功")
+            })
+            .catch((err) => {
+                yakitNotify("error", "上传失败：" + err)
+            })
+    })
     return (
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
             <div className={styles["list-item-cover"]} onClick={() => onPlayVideo()}>
-                <img alt='' src='atom://C:/Users/14257/yakit-projects/projects/records/123.jpg' />
+                <img alt='暂无图片' src={item.VideoName} />
                 <div className={styles["list-item-cover-hover"]}>
                     <PlayIcon />
                 </div>
@@ -409,13 +445,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
 
             <div className={styles["list-item-info"]}>
                 <div className={classNames("content-ellipsis", styles["list-item-name"])} onClick={() => onPlayVideo()}>
-                    {item.Filename}
+                    {item.VideoName || `视频-${item.Id}`}
                 </div>
-                <div className={styles["list-item-notes"]}>
-                    {item.Id === "13"
-                        ? "这里是备注信息"
-                        : "这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信息，这里是备注信息这里是备注信备注信息信息虚拟"}
-                </div>
+                <div className={styles["list-item-notes"]}>{item.NoteInfo || "No Description about it."}</div>
                 <div className={styles["list-item-extra"]}>
                     <div className={styles["list-item-duration"]}>
                         <ClockIcon style={{marginRight: 4}} /> 28:56s
@@ -424,7 +456,18 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
                         <span
                             className={classNames("content-ellipsis")}
-                            onClick={() => openABSFileLocated(item.Filename)}
+                            onClick={() => {
+                                ipcRenderer
+                                    .invoke("is-file-exists", item.Filename)
+                                    .then((flag: boolean) => {
+                                        if (flag) {
+                                            openABSFileLocated(item.Filename)
+                                        } else {
+                                            failed("目标文件已不存在!")
+                                        }
+                                    })
+                                    .catch(() => {})
+                            }}
                         >
                             {item.Filename}
                         </span>
@@ -434,9 +477,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             </div>
             <div className={styles["list-item-operate"]}>
                 <PencilAltIcon onClick={() => onEdit()} />
-                {/* {isEnterpriseEdition() && <CloudUploadIcon />} */}
-                <CloudUploadIcon />
-                <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => {}} className='button-text-danger'>
+                {isEnterpriseEdition() && <CloudUploadIcon onClick={() => onUpload()} />}
+                <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => onRemove()} className='button-text-danger'>
                     <TrashIcon className={styles["icon-trash"]} />
                 </YakitPopconfirm>
             </div>
@@ -450,7 +492,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             >
                 <ReactPlayerVideo
                     url={urlVideo}
-                    title={item.Filename}
+                    title={item.VideoName || `视频-${item.Id}`}
                     onPreClick={() => onPreVideo(item)}
                     onNextClick={() => onNextVideo(item)}
                 />
