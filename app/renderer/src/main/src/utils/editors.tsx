@@ -400,7 +400,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     defaultHeight?: number
     bordered?: boolean
     onEditor?: (editor: IMonacoEditor) => any
-    onAddOverlayWidget?: (editor: IMonacoEditor) => any
+    onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
     hideSearch?: boolean
     extra?: React.ReactNode
     emptyOr?: React.ReactNode
@@ -436,6 +436,8 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     fontSizeState?: number
     /**@name 是否显示换行符 */
     showLineBreaksState?: boolean
+    /**@name 是否增加OverlayWidget */
+    isAddOverlayWidget?: boolean
 }
 
 export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
@@ -471,6 +473,8 @@ export const YakInteractiveEditor: React.FC<YakInteractiveEditorProp> = React.me
 export const HTTP_PACKET_EDITOR_FONT_SIZE = "HTTP_PACKET_EDITOR_FONT_SIZE"
 /**@name 获取换行符是否显示 */
 export const HTTP_PACKET_EDITOR_Line_Breaks = "HTTP_PACKET_EDITOR_Line_Breaks"
+/**@name 是否显示响应信息 */
+export const HTTP_PACKET_EDITOR_Response_Info = "HTTP_PACKET_EDITOR_Response_Info"
 
 export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: HTTPPacketEditorProp) => {
     const isResponse = props.isResponse
@@ -570,13 +574,16 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
             props.onEditor && props.onEditor(monacoEditor)
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
         }
-        if (monacoEditor) {
-            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor)
-        }
         if (!props.simpleMode && !props.hideSearch && monacoEditor) {
             setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
         }
     }, [monacoEditor])
+
+    useEffect(() => {
+        if (monacoEditor) {
+            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor, props.isAddOverlayWidget)
+        }
+    }, [monacoEditor, props.isAddOverlayWidget])
 
     useEffect(() => {
         if (props.readOnly) {
@@ -1010,7 +1017,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     noLineNumber?: boolean
     lineNumbersMinChars?: number
     noMinimap?: boolean
-    onAddOverlayWidget?: (editor: IMonacoEditor) => any
+    onAddOverlayWidget?: (editor: IMonacoEditor,isShow?:boolean) => any
     extraEditorProps?: YakitEditorProps | any
     
     /** 扩展属性 */
@@ -1050,6 +1057,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     fontSizeState?: number
     /**@name 是否显示换行符 */
     showLineBreaksState?: boolean
+    /**@name 是否增加OverlayWidget */
+    isAddOverlayWidget?: boolean
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
@@ -1150,14 +1159,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             props.onEditor && props.onEditor(monacoEditor)
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
         }
-        if (monacoEditor) {
-            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor)
-        }
         if (!props.simpleMode && !props.hideSearch && monacoEditor) {
             setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
         }
     }, [monacoEditor])
-
+    useEffect(() => {
+        if (monacoEditor) {
+            props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor, props.isAddOverlayWidget)
+        }
+    }, [monacoEditor, props.isAddOverlayWidget])
     useEffect(() => {
         if (props.readOnly) {
             const value = Uint8ArrayToString(props.originValue, getEncoding())

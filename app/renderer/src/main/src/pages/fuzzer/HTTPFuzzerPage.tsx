@@ -4,7 +4,8 @@ import {
     HTTP_PACKET_EDITOR_FONT_SIZE,
     HTTP_PACKET_EDITOR_Line_Breaks,
     IMonacoEditor,
-    NewHTTPPacketEditor
+    NewHTTPPacketEditor,
+    HTTP_PACKET_EDITOR_Response_Info,
 } from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -400,6 +401,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
     const [fontSizeSecondEditor, setFontSizeSecondEditor] = useState<number>()
     const [showLineBreaksSecondEditor, setShowLineBreaksSecondEditor] = useState<boolean>(true)
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
     // second Node
     const secondNodeRef = useRef(null)
@@ -814,7 +816,25 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         sendFuzzerSettingInfo()
     }, [isHttps, forceFuzz, concurrent, proxy, actualHost, timeout, request])
-
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            overlayWidgetv: {
+                menu: [{key: "is-show-add-overlay-widgetv", label: showResponseInfoSecondEditor?"隐藏响应信息":'显示响应信息'}],
+                onRun: () => {
+                    setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+                }
+            }
+        }
+    }, [showResponseInfoSecondEditor])
     const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
         let reason = "未知原因"
         try {
@@ -867,9 +887,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 readOnly={true}
                 fontSizeState={fontSizeSecondEditor}
                 noWordWrapState={noWordwrapSecondEditor}
-                onAddOverlayWidget={(editor) => {
-                    onAddOverlayWidget(editor, rsp)
+                onAddOverlayWidget={(editor, isShow) => {
+                    onAddOverlayWidget(editor, rsp, isShow)
                 }}
+                isAddOverlayWidget={showResponseInfoSecondEditor}
+                contextMenu={responseEditorRightMenu}
             />
         )
     })
@@ -1171,7 +1193,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         default:
                             break
                     }
-                }
+                },
             },
             copyURL: {
                 menu: [{key: "copy-as-url", label: "复制为 URL"}],
@@ -1522,6 +1544,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         setNoWordwrap={setNoWordwrapSecondEditor}
                                         showLineBreaks={showLineBreaksSecondEditor}
                                         setShowLineBreaks={setShowLineBreaksSecondEditor}
+                                        isResponse={true}
+                                        showResponseInfo={showResponseInfoSecondEditor}
+                                        setShowResponseInfo={setShowResponseInfoSecondEditor}
                                     />
                                 )} */}
                             </div>
@@ -2254,7 +2279,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         noSystemProxy: false,
                                         minDelaySeconds: undefined,
                                         maxDelaySeconds: undefined,
-                                        repeatTimes: 0,
+                                        repeatTimes: 0
                                     }
                                     form.setFieldsValue({
                                         ...restValue
@@ -2666,13 +2691,28 @@ interface EditorsSettingProps {
     /**@name 是否显示换行符 */
     showLineBreaks: boolean
     setShowLineBreaks: (b: boolean) => void
+
+    /**@name 是否显示响应信息 */
+    showResponseInfo?: boolean
+    setShowResponseInfo?: (b: boolean) => void
+    isResponse?: boolean
 }
 
 /**
  * @description 编辑器配置
  */
 const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
-    const {noWordwrap, setNoWordwrap, fontSize, setFontSize, showLineBreaks, setShowLineBreaks} = props
+    const {
+        noWordwrap,
+        setNoWordwrap,
+        fontSize,
+        setFontSize,
+        showLineBreaks,
+        setShowLineBreaks,
+        isResponse,
+        showResponseInfo,
+        setShowResponseInfo
+    } = props
     useEffect(() => {
         // 无落如何都会设置，最小为 12
         getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
@@ -2754,15 +2794,29 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
                                     />
                                 </Form.Item>
                             )}
-                            <Form.Item label='是否显示换行符'>
-                                <YakitSwitch
-                                    checked={showLineBreaks}
-                                    onChange={(checked) => {
-                                        setRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks, `${checked}`)
-                                        setShowLineBreaks(checked)
-                                    }}
-                                />
-                            </Form.Item>
+                            {isResponse ? (
+                                <Form.Item label='是否显示响应信息'>
+                                    <YakitSwitch
+                                        checked={showResponseInfo}
+                                        onChange={(checked) => {
+                                            if (setShowResponseInfo) {
+                                                setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${checked}`)
+                                                setShowResponseInfo(checked)
+                                            }
+                                        }}
+                                    />
+                                </Form.Item>
+                            ) : (
+                                <Form.Item label='是否显示换行符'>
+                                    <YakitSwitch
+                                        checked={showLineBreaks}
+                                        onChange={(checked) => {
+                                            setRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks, `${checked}`)
+                                            setShowLineBreaks(checked)
+                                        }}
+                                    />
+                                </Form.Item>
+                            )}
                         </Form>
                     </>
                 }
@@ -2776,12 +2830,13 @@ const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
     )
 })
 
-export const onAddOverlayWidget = (editor, rsp) => {
+export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
     editor.removeOverlayWidget({
         getId() {
             return "monaco.fizz.overlaywidget"
         }
     })
+    if (!isShow) return
     const fizzOverlayWidget = {
         getDomNode() {
             const domNode = document.createElement("div")
@@ -2809,10 +2864,10 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
         <div className={styles["editor-overlay-widget"]}>
             {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
             {rsp.RemoteAddr && <span>远端地址:{rsp.RemoteAddr}</span>}
-            {rsp.Url && <span>URL:{rsp.Url}</span>}
             {rsp.Proxy && <span>代理:{rsp.Proxy}</span>}
             {Number(rsp.FirstByteDurationMs) > 0 ? <span>响应时间:{rsp.FirstByteDurationMs}ms</span> : ""}
             {Number(rsp.TotalDurationMs) > 0 ? <span>总耗时:{rsp.TotalDurationMs}ms</span> : ""}
+            {rsp.Url && <span>URL:{rsp.Url.length > 30 ? rsp.Url.substring(0, 30) + "..." : rsp.Url}</span>}
         </div>
     )
 })

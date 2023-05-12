@@ -1618,15 +1618,16 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     })
     /** 查看全部 */
     const viewAll = useMemoizedFn(() => {
-        showDrawer({
-            title: "Vulnerabilities && Risks",
-            width: "70%",
-            content: (
-                <>
-                    <RiskTable />
-                </>
-            )
-        })
+        // showDrawer({
+        //     title: "Vulnerabilities && Risks",
+        //     width: "70%",
+        //     content: (
+        //         <>
+        //             <RiskTable />
+        //         </>
+        //     )
+        // })
+        addToTab(Route.DB_Risk)
     })
 
     const notice = useMemo(() => {

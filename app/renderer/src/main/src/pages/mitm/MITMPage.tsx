@@ -74,6 +74,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [port, setPort] = useState(8083)
     const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
+    const [tip, setTip] = useState("")
 
     // yakit log message
     const [logs, setLogs] = useState<ExecResultLog[]>([])
@@ -215,7 +216,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
     // 通过 gRPC 调用，启动 MITM 劫持
     const startMITMServer = useMemoizedFn(
-        (targetHost, targetPort, downstreamProxy, enableHttp2, certs: ClientCertificate[], extra?: object) => {
+        (
+            targetHost,
+            targetPort,
+            downstreamProxy,
+            enableHttp2,
+            certs: ClientCertificate[],
+            extra?: ExtraMITMServerProps
+        ) => {
             return ipcRenderer
                 .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs, extra)
                 .catch((e: any) => {
@@ -234,7 +242,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             plugins,
             enableHttp2,
             certs: ClientCertificate[],
-            extra?: object
+            extra?: ExtraMITMServerProps
         ) => {
             setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
@@ -242,6 +250,19 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
             startMITMServer(host, port, downstreamProxy, enableHttp2, certs, extra)
+            let tip = ""
+            if (downstreamProxy) {
+                tip += `下游代理:${downstreamProxy}`
+            }
+            if (extra) {
+                if (extra.onlyEnableGMTLS) {
+                    tip += "|仅国密 TLS"
+                }
+                if (extra.enableProxyAuth) {
+                    tip += "|开启代理认证"
+                }
+            }
+            setTip(tip)
         }
     )
 
@@ -284,6 +305,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setVisible={setVisible}
                         logs={logs}
                         statusCards={statusCards}
+                        tip={tip}
                     />
                 )
         }
@@ -310,6 +332,19 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     )
 }
 
+export interface ExtraMITMServerProps {
+    /**@name 国密劫持*/
+    enableGMTLS: boolean
+    /**@name 代理认证 */
+    enableProxyAuth: boolean
+    /**@name 仅国密 TLS */
+    onlyEnableGMTLS: boolean
+    /**@name 国密TLS优先 TLS */
+    preferGMTLS: boolean
+    proxyPassword: string
+    proxyUsername: string
+}
+
 interface MITMServerProps {
     onStartMITMServer?: (
         host: string,
@@ -319,7 +354,7 @@ interface MITMServerProps {
         defaultPlugins: string[],
         enableHttp2: boolean,
         clientCertificates: ClientCertificate[],
-        extra?: object
+        extra?: ExtraMITMServerProps
     ) => any
     visible?: boolean
     setVisible?: (b: boolean) => void
@@ -358,7 +393,15 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
     })
     const onStartMITMServer = useMemoizedFn(
-        (host, port, downstreamProxy, enableInitialPlugin, enableHttp2, certs: ClientCertificate[], extra?: object) => {
+        (
+            host,
+            port,
+            downstreamProxy,
+            enableInitialPlugin,
+            enableHttp2,
+            certs: ClientCertificate[],
+            extra?: ExtraMITMServerProps
+        ) => {
             if (props.onStartMITMServer)
                 props.onStartMITMServer(
                     host,
