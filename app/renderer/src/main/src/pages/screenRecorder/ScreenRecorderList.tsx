@@ -438,7 +438,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
             <div className={styles["list-item-cover"]} onClick={() => onPlayVideo()}>
-                <img alt='暂无图片' src={item.VideoName || noPictures} />
+                <img alt='暂无图片' src={item.Cover || noPictures} />
                 <div className={styles["list-item-cover-hover"]}>
                     <PlayIcon />
                 </div>
