@@ -53,6 +53,7 @@ export interface ScreenRecorder {
     UpdatedAt: number
     VideoName: string
     Cover: string
+    Duration: string
 }
 const batchMenuDataEnterprise: YakitMenuItemProps[] = [
     {
@@ -64,20 +65,36 @@ const batchMenuDataEnterprise: YakitMenuItemProps[] = [
         label: "删除"
     }
 ]
+interface QueryScreenRecordersProps {
+    Keywords: string
+}
 export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
-    const [params, setParams] = useState({})
+    const [params, setParams] = useState<QueryScreenRecordersProps>({
+        Keywords: ""
+    })
     const [pagination, setPagination] = useState(genDefaultPagination(20))
     const [loading, setLoading] = useState(false)
     const [data, setData] = useState<ScreenRecorder[]>([])
-    const [total, setTotal] = useState(0)
+    const [total, setTotal] = useState<number>(0)
 
-    const [keyword, setKeyword] = useState<string>("")
-    const [hasMore, setHasMore] = useState(false)
-    const [isRef, setIsRef] = useState(false)
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [isRef, setIsRef] = useState<boolean>(false)
+    const [recalculation, setRecalculation] = useState<boolean>(false)
+    const [isShowScreenRecording, setIsShowScreenRecording] = useState<boolean>(false)
 
     const [isShowRefText, setIsShowRefText] = useState<boolean>(false)
 
-    const {selected, allSelected, isSelected, toggle, toggleAll, partiallySelected} = useSelections(data)
+    const {
+        selected,
+        allSelected,
+        isSelected,
+        select,
+        unSelect,
+        selectAll,
+        unSelectAll,
+        setSelected,
+        partiallySelected
+    } = useSelections(data)
 
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
 
@@ -104,16 +121,32 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 if (Number(item.Pagination.Page) === 1) {
                     setIsRef(!isRef)
                 }
+                if (allSelected) setSelected(newData)
                 setData(newData)
-
                 setPagination(item.Pagination || genDefaultPagination(200))
                 setTotal(item.Total)
             })
             .catch((e) => {
-                failed(`${e}`)
+                yakitNotify("error", "获取列表数据失败：" + e)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
+
+    useEffect(() => {
+        ipcRenderer
+            .invoke("QueryScreenRecorders", {
+                Pagination: {
+                    Page: 1,
+                    Limit: 1
+                }
+            })
+            .then((item: QueryGeneralResponse<any>) => {
+                setIsShowScreenRecording(!(item.Total > 0))
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取列表数据失败：" + e)
+            })
+    }, [])
 
     useEffect(() => {
         onRefresh()
@@ -131,14 +164,126 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         update(parseInt(`${pagination.Page}`) + 1, 20)
     })
     /** @description 批量操作的菜单操作 */
-    const onMenuSelect = useMemoizedFn((key: string) => {})
+    const onMenuSelect = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "remove":
+                onBatchRemove()
+                break
+            case "upload":
+                onBatchUpload()
+                break
+            default:
+                break
+        }
+    })
+    const onBatchUpload = useMemoizedFn(() => {})
+    const onBatchRemove = useMemoizedFn(() => {
+        console.log("allSelected", allSelected, params, selected)
+        let paramsRemove = {}
+        if (allSelected) {
+            paramsRemove = {
+                ...params
+            }
+        } else {
+            paramsRemove = {
+                Ids: selected.map((i) => i.Id)
+            }
+        }
+        console.log("paramsRemove", paramsRemove)
+        ipcRenderer
+            .invoke("DeleteScreenRecorders", paramsRemove)
+            .then((e) => {
+                yakitNotify("success", "删除成功")
+                onSearch()
+                // unSelectAll()
+                // toggleAll()
+                setSelected([])
+            })
+            .catch((err) => {
+                yakitNotify("error", "删除失败：" + err)
+            })
+    })
     const onRefresh = useMemoizedFn(() => {
         update(1, undefined, true)
     })
     const onSearch = useMemoizedFn(() => {
         update(1, undefined, true)
     })
-    return total > 0 ? (
+    /** @description 清空录屏数据 */
+    const onClear = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("DeleteScreenRecorders", {})
+            .then((e) => {
+                yakitNotify("success", "清空成功")
+                onSearch()
+            })
+            .catch((err) => {
+                yakitNotify("error", "清空失败：" + err)
+            })
+    })
+    const onUpdateScreenList = useMemoizedFn((updateItem: ScreenRecorder) => {
+        const index = data.findIndex((l) => l.Id === updateItem.Id)
+        if (index === -1) return
+        data[index] = updateItem
+        setData(data)
+        setTimeout(() => {
+            setRecalculation(!recalculation)
+        }, 100)
+    })
+    const onRemoveScreenItem = useMemoizedFn((removeItem: ScreenRecorder) => {
+        const index = data.findIndex((l) => l.Id === removeItem.Id)
+        if (index === -1) return
+        data.splice(index, 1)
+        setData(data)
+        setTimeout(() => {
+            setRecalculation(!recalculation)
+        }, 100)
+    })
+    return isShowScreenRecording ? (
+        <div className={styles["screen-recorder-empty"]}>
+            <div className={styles["empty-title"]}>录屏管理</div>
+            <ScrecorderModal
+                disabled={screenRecorderInfo.isRecording}
+                onClose={() => {}}
+                token={screenRecorderInfo.token}
+                onStartCallback={() => {
+                    setRecording(true)
+                }}
+                formStyle={{padding: "24px 0 "}}
+                footer={
+                    <div className={styles["empty-footer"]}>
+                        {screenRecorderInfo.isRecording ? (
+                            <YakitButton
+                                onClick={() => {
+                                    ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
+                                    setIsShowRefText(true)
+                                    setTimeout(() => {
+                                        onRefresh()
+                                    }, 1000)
+                                }}
+                                type='primary'
+                                className='button-primary-danger'
+                                size='large'
+                            >
+                                <StopIcon className={styles["stop-icon"]} />
+                                停止录屏
+                            </YakitButton>
+                        ) : (
+                            <YakitButton htmlType='submit' type='primary' size='large'>
+                                <PlayIcon style={{height: 16}} />
+                                开始录屏
+                            </YakitButton>
+                        )}
+                        {isShowRefText && (
+                            <YakitButton type='text' style={{marginTop: 12}}>
+                                刷新
+                            </YakitButton>
+                        )}
+                    </div>
+                }
+            />
+        </div>
+    ) : (
         <div className={styles["screen-recorder"]}>
             <div className={styles["screen-recorder-heard"]}>
                 <div className={styles["heard-title"]}>
@@ -207,7 +352,17 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 <YakitSpin spinning={loading}>
                     <div className={styles["content-heard"]}>
                         <div className={styles["content-heard-title"]}>
-                            <YakitCheckbox checked={allSelected} onChange={toggleAll} indeterminate={partiallySelected}>
+                            <YakitCheckbox
+                                checked={allSelected}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        selectAll()
+                                    } else {
+                                        unSelectAll()
+                                    }
+                                }}
+                                indeterminate={partiallySelected}
+                            >
                                 全选
                             </YakitCheckbox>
                             <div className={styles["title-text"]} style={{marginLeft: 8}}>
@@ -215,15 +370,32 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             </div>
                             <Divider type='vertical' style={{top: 2}} />
                             <div className={styles["title-text"]}>
-                                Selected<span className={styles["title-number"]}>{selected.length}</span>
+                                Selected
+                                <span className={styles["title-number"]}>{allSelected ? total : selected.length}</span>
                             </div>
                         </div>
                         <div className={styles["content-heard-extra"]}>
                             <YakitInput.Search
                                 placeholder='请输入关键词搜索'
-                                value={keyword}
-                                onChange={(e) => setKeyword(e.target.value)}
-                                onSearch={onSearch}
+                                value={params.Keywords}
+                                onChange={(e) =>
+                                    setParams({
+                                        ...params,
+                                        Keywords: e.target.value
+                                    })
+                                }
+                                onSearch={(v) => {
+                                    setParams({
+                                        ...params,
+                                        Keywords: v
+                                    })
+                                    setTimeout(() => {
+                                        onSearch()
+                                    }, 100)
+                                }}
+                                onPressEnter={(v) => {
+                                    onSearch()
+                                }}
                             />
                             <YakitPopover
                                 placement={"bottom"}
@@ -258,7 +430,11 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     <ChevronDownIcon />
                                 </YakitButton>
                             </YakitPopover>
-                            <YakitPopconfirm title={"确定清空吗？"} onConfirm={() => {}} className='button-text-danger'>
+                            <YakitPopconfirm
+                                title={"确定清空吗？"}
+                                onConfirm={() => onClear()}
+                                className='button-text-danger'
+                            >
                                 <YakitButton type='outline2' className={classNames("button-outline2-danger")}>
                                     清空
                                 </YakitButton>
@@ -267,6 +443,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                     </div>
                     <div className={styles["screen-recorder-list"]}>
                         <RollingLoadList<ScreenRecorder>
+                            recalculation={recalculation}
                             isRef={isRef}
                             data={data}
                             page={pagination.Page}
@@ -279,10 +456,17 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             renderRow={(item: ScreenRecorder, index) => {
                                 return (
                                     <ScreenRecorderListItem
-                                        key={item.Id}
                                         item={item}
                                         isSelected={isSelected(item)}
-                                        onSelect={toggle}
+                                        onSelect={(item) => {
+                                            if (isSelected(item)) {
+                                                unSelect(item)
+                                            } else {
+                                                select(item)
+                                            }
+                                        }}
+                                        onUpdateScreenList={onUpdateScreenList}
+                                        onRemoveScreenItem={onRemoveScreenItem}
                                     />
                                 )
                             }}
@@ -291,50 +475,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 </YakitSpin>
             </div>
         </div>
-    ) : (
-        <div className={styles["screen-recorder-empty"]}>
-            <div className={styles["empty-title"]}>录屏管理</div>
-            <ScrecorderModal
-                disabled={screenRecorderInfo.isRecording}
-                onClose={() => {}}
-                token={screenRecorderInfo.token}
-                onStartCallback={() => {
-                    setRecording(true)
-                }}
-                formStyle={{padding: "24px 0 "}}
-                footer={
-                    <div className={styles["empty-footer"]}>
-                        {screenRecorderInfo.isRecording ? (
-                            <YakitButton
-                                onClick={() => {
-                                    ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
-                                    setIsShowRefText(true)
-                                    setTimeout(() => {
-                                        onRefresh()
-                                    }, 1000)
-                                }}
-                                type='primary'
-                                className='button-primary-danger'
-                                size='large'
-                            >
-                                <StopIcon className={styles["stop-icon"]} />
-                                停止录屏
-                            </YakitButton>
-                        ) : (
-                            <YakitButton htmlType='submit' type='primary' size='large'>
-                                <PlayIcon style={{height: 16}} />
-                                开始录屏
-                            </YakitButton>
-                        )}
-                        {isShowRefText && (
-                            <YakitButton type='text' style={{marginTop: 12}}>
-                                刷新
-                            </YakitButton>
-                        )}
-                    </div>
-                }
-            />
-        </div>
     )
 }
 
@@ -342,11 +482,14 @@ interface ScreenRecorderListItemProps {
     item: ScreenRecorder
     isSelected: boolean
     onSelect: (s: ScreenRecorder) => void
+    onUpdateScreenList: (s: ScreenRecorder) => void
+    onRemoveScreenItem: (s: ScreenRecorder) => void
 }
-const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo((props) => {
-    const {item, isSelected, onSelect} = props
+const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) => {
+    const {item, isSelected, onSelect, onUpdateScreenList, onRemoveScreenItem} = props
     const [urlVideo, setUrlVideo] = useState<string>("")
     const [visible, setVisible] = useState<boolean>(false)
+    const [videoItem, setVideoItem] = useState<ScreenRecorder>(item)
     const [form] = Form.useForm()
     useEffect(() => {
         setUrlVideo(`atom://${item.Filename}`)
@@ -356,6 +499,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             .invoke("is-file-exists", item.Filename)
             .then((flag: boolean) => {
                 if (flag) {
+                    setVideoItem(item)
                     setVisible(true)
                 } else {
                     failed("目标文件已不存在!")
@@ -363,23 +507,50 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             })
             .catch(() => {})
     })
-    /** @description 播放上一个视频 */
-    const onPreVideo = useMemoizedFn((item: ScreenRecorder) => {
-        // setUrlVideo(`atom://C:Users/14257/yakit-projects/projects/records/screen_records_20230510_14_40_06.mp4`)
-    })
-    /** @description 播放下一个视频 */
-    const onNextVideo = useMemoizedFn((item: ScreenRecorder) => {
-        // setUrlVideo(`atom://C:/Users/14257/yakit-projects/projects/records/screen_records_20230510_11_41_02.mp4`)
+    const onGetOneScreenRecorders = useMemoizedFn((order: "asc" | "desc") => {
+        if (!videoItem) return
+        const params = {
+            Id: videoItem.Id,
+            Order: order
+        }
+        console.log("params", params)
+        ipcRenderer
+            .invoke("GetOneScreenRecorders", params)
+            .then((data) => {
+                console.log("data", data)
+                setVideoItem(data)
+                setUrlVideo(`atom://${data.Filename}`)
+            })
+            .catch((err) => {
+                yakitNotify("error", "播放失败：" + err)
+            })
     })
     const onEdit = useMemoizedFn(() => {
-        showYakitModal({
+        const m = showYakitModal({
             title: "编辑视频信息",
             type: "white",
             width: 720,
             onOkText: "保存",
             onOk: () => {
                 form.validateFields()
-                    .then((val) => {})
+                    .then((val) => {
+                        const editItem = {
+                            ...val,
+                            Id: item.Id
+                        }
+                        ipcRenderer
+                            .invoke("UpdateScreenRecorders", editItem)
+                            .then(() => {
+                                onUpdateScreenList({
+                                    ...item,
+                                    ...val
+                                })
+                                m.destroy()
+                            })
+                            .catch((err) => {
+                                yakitNotify("error", "修改失败：" + err)
+                            })
+                    })
                     .catch(() => {})
             },
             content: (
@@ -424,14 +595,14 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
     const onRemove = useMemoizedFn(() => {
         ipcRenderer
             .invoke("DeleteScreenRecorders", {
-                // Project: item.Project,
-                // Token: userInfo.token
+                Ids: [item.Id]
             })
             .then((e) => {
+                onRemoveScreenItem(item)
                 yakitNotify("success", "删除成功")
             })
             .catch((err) => {
-                yakitNotify("error", "上传失败：" + err)
+                yakitNotify("error", "删除失败：" + err)
             })
     })
     return (
@@ -451,7 +622,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
                 <div className={styles["list-item-notes"]}>{item.NoteInfo || "No Description about it."}</div>
                 <div className={styles["list-item-extra"]}>
                     <div className={styles["list-item-duration"]}>
-                        <ClockIcon style={{marginRight: 4}} /> 28:56s
+                        <ClockIcon style={{marginRight: 4}} /> {item.Duration || "0s"}
                     </div>
                     <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
@@ -478,7 +649,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             </div>
             <div className={styles["list-item-operate"]}>
                 <PencilAltIcon onClick={() => onEdit()} />
-                {isEnterpriseEdition() && <CloudUploadIcon onClick={() => onUpload()} />}
+                {/* {isEnterpriseEdition() &&  */}
+                <CloudUploadIcon onClick={() => onUpload()} />
+                {/* } */}
                 <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => onRemove()} className='button-text-danger'>
                     <TrashIcon className={styles["icon-trash"]} />
                 </YakitPopconfirm>
@@ -493,11 +666,11 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = React.memo
             >
                 <ReactPlayerVideo
                     url={urlVideo}
-                    title={item.VideoName || `视频-${item.Id}`}
-                    onPreClick={() => onPreVideo(item)}
-                    onNextClick={() => onNextVideo(item)}
+                    title={videoItem.VideoName || `视频-${videoItem.Id}`}
+                    onPreClick={() => onGetOneScreenRecorders("asc")}
+                    onNextClick={() => onGetOneScreenRecorders("desc")}
                 />
             </YakitModal>
         </>
     )
-})
+}

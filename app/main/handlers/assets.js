@@ -491,6 +491,36 @@ module.exports = (win, getClient) => {
         return await asyncUploadScreenRecorders(params)
     })
 
+    const asyncGetOneScreenRecorders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetOneScreenRecorders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetOneScreenRecorders", async (e, params) => {
+        return await asyncGetOneScreenRecorders(params)
+    })
+
+    const asyncUpdateScreenRecorders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateScreenRecorders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateScreenRecorders", async (e, params) => {
+        return await asyncUpdateScreenRecorders(params)
+    })
+
     const asyncDeleteScreenRecorders = (params) => {
         return new Promise((resolve, reject) => {
             getClient().DeleteScreenRecorders(params, (err, data) => {
