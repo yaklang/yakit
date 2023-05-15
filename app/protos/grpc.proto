@@ -481,6 +481,7 @@ message ScreenRecorder {
   int64 UpdatedAt = 6;
   string VideoName = 7;
   string Cover = 8;
+  string Duration = 9;
 }
 
 message QueryScreenRecorderRequest {
