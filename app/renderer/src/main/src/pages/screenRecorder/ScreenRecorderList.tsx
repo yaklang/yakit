@@ -37,6 +37,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {useStore} from "@/store"
 import noPictures from "@/assets/noPictures.png"
+import {LoadingOutlined} from "@ant-design/icons"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -178,7 +179,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     })
     const onBatchUpload = useMemoizedFn(() => {})
     const onBatchRemove = useMemoizedFn(() => {
-        console.log("allSelected", allSelected, params, selected)
         let paramsRemove = {}
         if (allSelected) {
             paramsRemove = {
@@ -189,14 +189,11 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Ids: selected.map((i) => i.Id)
             }
         }
-        console.log("paramsRemove", paramsRemove)
         ipcRenderer
             .invoke("DeleteScreenRecorders", paramsRemove)
             .then((e) => {
                 yakitNotify("success", "删除成功")
                 onSearch()
-                // unSelectAll()
-                // toggleAll()
                 setSelected([])
             })
             .catch((err) => {
@@ -490,6 +487,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
     const [urlVideo, setUrlVideo] = useState<string>("")
     const [visible, setVisible] = useState<boolean>(false)
     const [videoItem, setVideoItem] = useState<ScreenRecorder>(item)
+
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
+
     const [form] = Form.useForm()
     useEffect(() => {
         setUrlVideo(`atom://${item.Filename}`)
@@ -513,11 +513,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
             Id: videoItem.Id,
             Order: order
         }
-        console.log("params", params)
         ipcRenderer
             .invoke("GetOneScreenRecorders", params)
             .then((data) => {
-                console.log("data", data)
                 setVideoItem(data)
                 setUrlVideo(`atom://${data.Filename}`)
             })
@@ -577,10 +575,12 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
     const {userInfo} = useStore()
     const onUpload = useMemoizedFn(() => {
         if (userInfo.isLogin) {
+            setUploadLoading(true)
             ipcRenderer
                 .invoke("UploadScreenRecorders", {
                     Project: item.Project,
-                    Token: userInfo.token
+                    Token: userInfo.token,
+                    Ids: [item.Id]
                 })
                 .then((e) => {
                     yakitNotify("success", "上传成功")
@@ -588,6 +588,11 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 .catch((err) => {
                     yakitNotify("error", "上传失败：" + err)
                 })
+                .finally(() =>
+                    setTimeout(() => {
+                        setUploadLoading(false)
+                    }, 200)
+                )
         } else {
             yakitNotify("warning", "请先登录，登录后方可使用")
         }
@@ -647,11 +652,14 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     </div>
                 </div>
             </div>
+
             <div className={styles["list-item-operate"]}>
                 <PencilAltIcon onClick={() => onEdit()} />
-                {/* {isEnterpriseEdition() &&  */}
-                <CloudUploadIcon onClick={() => onUpload()} />
-                {/* } */}
+                <Divider type='vertical' style={{margin: "0 16px"}} />
+                {/* {isEnterpriseEdition() && ( */}
+                <>{uploadLoading ? <LoadingOutlined /> : <CloudUploadIcon onClick={() => onUpload()} />}</>
+                {/* )} */}
+                <Divider type='vertical' style={{margin: "0 16px"}} />
                 <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => onRemove()} className='button-text-danger'>
                     <TrashIcon className={styles["icon-trash"]} />
                 </YakitPopconfirm>

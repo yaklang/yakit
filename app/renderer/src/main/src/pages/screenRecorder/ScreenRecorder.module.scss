@@ -191,7 +191,7 @@
                     flex-direction: row;
                     align-items: center;
                     padding: 6px 0px;
-                    gap: 12px;
+                    // gap: 12px;
                     height: 28px;
                     color: var(--yakit-body-text-color);
                     flex: 1;
@@ -208,9 +208,9 @@
                             color: var(--yakit-danger-4);
                         }
                     }
-                    span + span::before {
-                        content: "|";
-                    }
+                    // span + span::before {
+                    //     content: "|";
+                    // }
                 }
             }
             .list-item:hover + .list-item {
