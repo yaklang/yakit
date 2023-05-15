@@ -214,34 +214,34 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
     const openScreenRecorder = useMemoizedFn(() => {
         ipcRenderer
-        .invoke("IsScrecorderReady", {})
-        .then((data: {Ok: boolean; Reason: string}) => {
-            if(data.Ok){
-                const m = showYakitModal({
-                    title: "录屏须知",
-                    footer: null,
-                    type: "white",
-                    width: 520,
-                    content: (
-                        <ScrecorderModal
-                            onClose={() => {
-                                m.destroy()
-                            }}
-                            token={screenRecorderInfo.token}
-                            onStartCallback={() => {
-                                setRecording(true)
-                                m.destroy()
-                            }}
-                        />
-                    )
-                })
-            }else{
-                addToTab('**screen-recorder')
-            }
-        }).catch((err)=>{
-            yakitFailed('IsScrecorderReady失败:'+err)
-        })
-        
+            .invoke("IsScrecorderReady", {})
+            .then((data: {Ok: boolean; Reason: string}) => {
+                if (data.Ok) {
+                    const m = showYakitModal({
+                        title: "录屏须知",
+                        footer: null,
+                        type: "white",
+                        width: 520,
+                        content: (
+                            <ScrecorderModal
+                                onClose={() => {
+                                    m.destroy()
+                                }}
+                                token={screenRecorderInfo.token}
+                                onStartCallback={() => {
+                                    setRecording(true)
+                                    m.destroy()
+                                }}
+                            />
+                        )
+                    })
+                } else {
+                    addToTab("**screen-recorder")
+                }
+            })
+            .catch((err) => {
+                yakitFailed("IsScrecorderReady失败:" + err)
+            })
     })
 
     return (
@@ -1842,6 +1842,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         ]
     }, [system, screenshotLoading, isRecording])
     const menuSelect = useMemoizedFn((type: string) => {
+        setShow(false)
         switch (type) {
             case "screenCap":
                 if (isRecording) {
@@ -1882,8 +1883,8 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 overlayStyle={{paddingBottom: 0}}
                 placement={"bottom"}
                 content={menu}
+                visible={show}
                 onVisibleChange={(visible) => setShow(visible)}
-                // visible={true}
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>

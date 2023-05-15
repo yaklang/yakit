@@ -55,6 +55,8 @@ export interface ScreenRecorder {
     VideoName: string
     Cover: string
     Duration: string
+    Before?: boolean
+    After?: boolean
 }
 const batchMenuDataEnterprise: YakitMenuItemProps[] = [
     {
@@ -177,7 +179,28 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 break
         }
     })
-    const onBatchUpload = useMemoizedFn(() => {})
+    const onBatchUpload = useMemoizedFn(() => {
+        let paramsUpload = {}
+        if (allSelected) {
+            paramsUpload = {
+                ...params
+            }
+        } else {
+            paramsUpload = {
+                Ids: selected.map((i) => i.Id)
+            }
+        }
+        ipcRenderer
+            .invoke("UploadScreenRecorders", paramsUpload)
+            .then((e) => {
+                yakitNotify("success", "上传成功")
+                onSearch()
+                setSelected([])
+            })
+            .catch((err) => {
+                yakitNotify("error", "上传失败：" + err)
+            })
+    })
     const onBatchRemove = useMemoizedFn(() => {
         let paramsRemove = {}
         if (allSelected) {
@@ -272,7 +295,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             </YakitButton>
                         )}
                         {isShowRefText && (
-                            <YakitButton type='text' style={{marginTop: 12}}>
+                            <YakitButton type='text' style={{marginTop: 12}} onClick={() => onRefresh()}>
                                 刷新
                             </YakitButton>
                         )}
@@ -318,10 +341,15 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             }}
                             name='Framerate'
                         >
-                            <YakitSelect options={FramerateData} style={{width: 120}} size='small' />
+                            <YakitSelect
+                                options={FramerateData}
+                                style={{width: 120}}
+                                size='small'
+                                disabled={screenRecorderInfo.isRecording}
+                            />
                         </Form.Item>
                         <Form.Item label='鼠标捕捉' valuePropName='checked' name='DisableMouse'>
-                            <YakitSwitch />
+                            <YakitSwitch disabled={screenRecorderInfo.isRecording} />
                         </Form.Item>
                         <Divider type='vertical' style={{margin: 0, height: 16, marginRight: 16, top: 4}} />
                         {screenRecorderInfo.isRecording ? (
@@ -516,6 +544,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         ipcRenderer
             .invoke("GetOneScreenRecorders", params)
             .then((data) => {
+                console.log("data", data)
                 setVideoItem(data)
                 setUrlVideo(`atom://${data.Filename}`)
             })
@@ -655,10 +684,13 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
 
             <div className={styles["list-item-operate"]}>
                 <PencilAltIcon onClick={() => onEdit()} />
-                <Divider type='vertical' style={{margin: "0 16px"}} />
-                {/* {isEnterpriseEdition() && ( */}
-                <>{uploadLoading ? <LoadingOutlined /> : <CloudUploadIcon onClick={() => onUpload()} />}</>
-                {/* )} */}
+
+                {isEnterpriseEdition() && (
+                    <>
+                        <Divider type='vertical' style={{margin: "0 16px"}} />
+                        {uploadLoading ? <LoadingOutlined /> : <CloudUploadIcon onClick={() => onUpload()} />}
+                    </>
+                )}
                 <Divider type='vertical' style={{margin: "0 16px"}} />
                 <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => onRemove()} className='button-text-danger'>
                     <TrashIcon className={styles["icon-trash"]} />
@@ -677,6 +709,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     title={videoItem.VideoName || `视频-${videoItem.Id}`}
                     onPreClick={() => onGetOneScreenRecorders("asc")}
                     onNextClick={() => onGetOneScreenRecorders("desc")}
+                    isPre={videoItem.Before}
+                    isNext={videoItem.After}
                 />
             </YakitModal>
         </>

@@ -593,6 +593,7 @@
 .screen-and-screenshot-menu-item {
     display: flex;
     justify-content: space-between;
+    flex: 1;
     .shortcut-keys {
         font-size: 12px;
         color: var(--yakit-disable-text-color);

@@ -22,11 +22,13 @@ import classNames from "classnames"
 interface ReactPlayerVideoProps {
     title: string
     url: string
+    isPre?: boolean
+    isNext?: boolean
     onPreClick?: () => void
     onNextClick?: () => void
 }
 export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((props) => {
-    const {url, title, onPreClick, onNextClick} = props
+    const {url, title, isPre, isNext, onPreClick, onNextClick} = props
     const [error, setError] = useState<string>()
     const playerRef = useRef<any>()
     useEffect(() => {
@@ -52,23 +54,29 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
                 <BigPlayButton position='center' />
                 {error && <div className={styles["player-video-tip"]}>该视频文件不可播放</div>}
                 <ControlBar autoHide={true} disableDefaultControls={false} className={styles["player-control-bar"]}>
-                    <div className='hint--top-right' aria-label='上一个'>
+                    <div className={isPre ? "hint--top-right" : ""} aria-label='上一个'>
                         <RewindIcon
-                            className={styles["bar-icon"]}
+                            className={classNames(styles["bar-icon"], {
+                                [styles["not-allowed-icon"]]: !isPre
+                            })}
                             onClick={() => {
+                                if (!isPre) return
                                 if (onPreClick) onPreClick()
                             }}
                         />
                     </div>
                     <PlayToggle
                         className={classNames({
-                            [styles["player-video-toggle"]]: error
+                            [styles["not-allowed-icon"]]: error
                         })}
                     />
-                    <div className='hint--top' aria-label='下一个'>
+                    <div className={isNext ? "hint--top" : ""} aria-label='下一个'>
                         <FastForwardIcon
-                            className={styles["bar-icon"]}
+                            className={classNames(styles["bar-icon"], {
+                                [styles["not-allowed-icon"]]: !isNext
+                            })}
                             onClick={() => {
+                                if (!isNext) return
                                 if (onNextClick) onNextClick()
                             }}
                             style={{marginRight: "0.5em"}}

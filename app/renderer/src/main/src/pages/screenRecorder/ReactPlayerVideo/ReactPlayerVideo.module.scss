@@ -92,10 +92,7 @@
             z-index: 2;
             background: #000;
         }
-        .player-video-toggle {
-            color: var(--yakit-disable-text-color);
-            cursor: not-allowed;
-        }
+       
     }
     .player-control-bar {
         display: flex;
@@ -114,5 +111,9 @@
                 height: 24px;
             }
         }
+    }
+    .not-allowed-icon {
+        color: var(--yakit-disable-text-color);
+        cursor: not-allowed !important;
     }
 }
