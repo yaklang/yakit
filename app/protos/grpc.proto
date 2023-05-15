@@ -504,7 +504,7 @@ message GetOneScreenRecorderRequest {
 }
 
 message UpdateScreenRecorderRequest {
-  int64 id = 1;
+  int64 Id = 1;
   string VideoName = 2;
   string NoteInfo = 3;
 }
