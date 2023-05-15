@@ -469,6 +469,7 @@ service Yak {
   rpc DeleteScreenRecorders(QueryScreenRecorderRequest) returns (Empty);
   rpc UploadScreenRecorders(UploadScreenRecorderRequest) returns (Empty);
   rpc GetOneScreenRecorders(GetOneScreenRecorderRequest) returns (ScreenRecorder);
+  rpc UpdateScreenRecorders(UpdateScreenRecorderRequest) returns (Empty);
 }
 
 message ScreenRecorder {
@@ -499,6 +500,12 @@ message UploadScreenRecorderRequest{
 message GetOneScreenRecorderRequest {
   int64 Id = 1;
   string Order = 2;
+}
+
+message UpdateScreenRecorderRequest {
+  int64 id = 1;
+  string VideoName = 2;
+  string NoteInfo = 3;
 }
 
 message QueryScreenRecorderResponse {
