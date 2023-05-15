@@ -482,6 +482,8 @@ message ScreenRecorder {
   string VideoName = 7;
   string Cover = 8;
   string Duration = 9;
+  bool  Before = 10;
+  bool After = 11;
 }
 
 message QueryScreenRecorderRequest {
