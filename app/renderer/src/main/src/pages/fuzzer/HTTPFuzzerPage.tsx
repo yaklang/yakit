@@ -5,7 +5,7 @@ import {
     HTTP_PACKET_EDITOR_Line_Breaks,
     IMonacoEditor,
     NewHTTPPacketEditor,
-    HTTP_PACKET_EDITOR_Response_Info,
+    HTTP_PACKET_EDITOR_Response_Info
 } from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -73,7 +73,7 @@ import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
-import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -411,7 +411,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
-
+    const fuzzerRef = useRef<any>()
+    const [inViewport] = useInViewport(fuzzerRef)
     useEffect(() => {
         setSubscribeClose(Route.HTTPFuzzer, {
             title: "关闭提示",
@@ -423,7 +424,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return () => {
             removeSubscribeClose(Route.HTTPFuzzer)
         }
-    }, [])
+    }, [inViewport])
 
     const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
@@ -828,7 +829,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
         return {
             overlayWidgetv: {
-                menu: [{key: "is-show-add-overlay-widgetv", label: showResponseInfoSecondEditor?"隐藏响应信息":'显示响应信息'}],
+                menu: [
+                    {
+                        key: "is-show-add-overlay-widgetv",
+                        label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
+                    }
+                ],
                 onRun: () => {
                     setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
                 }
@@ -1193,7 +1199,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         default:
                             break
                     }
-                },
+                }
             },
             copyURL: {
                 menu: [{key: "copy-as-url", label: "复制为 URL"}],
@@ -1205,7 +1211,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     return (
-        <div className={styles["http-fuzzer-body"]}>
+        <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
                 defAdvancedConfigValue={{
                     // 请求包配置
