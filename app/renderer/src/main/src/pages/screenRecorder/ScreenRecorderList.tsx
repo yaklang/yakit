@@ -206,11 +206,12 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Ids: selected
             }
         }
+        console.log("paramsUpload", paramsUpload)
         ipcRenderer
             .invoke("UploadScreenRecorders", paramsUpload)
             .then(() => {
                 yakitNotify("success", "上传成功")
-                onRefresh()
+                onSearch()
                 setSelected([])
             })
             .catch((err) => {
@@ -233,7 +234,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             .invoke("DeleteScreenRecorders", paramsRemove)
             .then((e) => {
                 yakitNotify("success", "删除成功")
-                onRefresh()
+                onSearch()
                 setSelected([])
             })
             .catch((err) => {
@@ -628,12 +629,12 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
     const onUpload = useMemoizedFn(() => {
         if (userInfo.isLogin) {
             setUploadLoading(true)
+            const paramsUpload = {
+                Token: userInfo.token,
+                Ids: [item.Id]
+            }
             ipcRenderer
-                .invoke("UploadScreenRecorders", {
-                    Project: item.Project,
-                    Token: userInfo.token,
-                    Ids: [item.Id]
-                })
+                .invoke("UploadScreenRecorders", paramsUpload)
                 .then((e) => {
                     yakitNotify("success", "上传成功")
                 })
