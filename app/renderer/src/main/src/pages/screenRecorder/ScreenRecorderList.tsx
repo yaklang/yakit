@@ -38,6 +38,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {useStore} from "@/store"
 import noPictures from "@/assets/noPictures.png"
 import {LoadingOutlined} from "@ant-design/icons"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -90,7 +91,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const [recalculation, setRecalculation] = useState<boolean>(false)
     const [isShowScreenRecording, setIsShowScreenRecording] = useState<boolean>(false)
 
-    const [isShowRefText, setIsShowRefText] = useState<boolean>(false)
+    const [delShow, setDelShow] = useState<boolean>(false)
+
     const selectedId = useCreation(() => {
         return data.map((i) => i.Id)
     }, [data])
@@ -153,7 +155,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             setTimeout(() => {
                 onRefresh()
             }, 1000)
-            setIsShowRefText(true)
         }
     }, [screenRecorderInfo.isRecording])
     const onShowScreenRecording = useMemoizedFn(() => {
@@ -179,7 +180,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const onMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
             case "remove":
-                onBatchRemove()
+                setDelShow(true)
                 break
             case "upload":
                 onBatchUpload()
@@ -239,6 +240,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 yakitNotify("success", "删除成功")
                 onSearch()
                 setSelected([])
+                setDelShow(false)
             })
             .catch((err) => {
                 yakitNotify("error", "删除失败：" + err)
@@ -304,7 +306,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             <YakitButton
                                 onClick={() => {
                                     ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
-                                    setIsShowRefText(true)
                                     setTimeout(() => {
                                         onRefresh()
                                     }, 1000)
@@ -322,11 +323,9 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 开始录屏
                             </YakitButton>
                         )}
-                        {isShowRefText && (
-                            <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
-                                刷新
-                            </YakitButton>
-                        )}
+                        <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
+                            刷新
+                        </YakitButton>
                     </div>
                 }
             />
@@ -450,48 +449,48 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     onSearch()
                                 }}
                             />
-                            <YakitPopover
-                                placement={"bottom"}
-                                arrowPointAtCenter={true}
-                                content={
-                                    <YakitMenu
-                                        type='secondary'
-                                        data={
-                                            isEnterpriseEdition()
-                                                ? batchMenuDataEnterprise
-                                                : [
-                                                      {
-                                                          key: "remove",
-                                                          label: "删除"
-                                                      }
-                                                  ]
-                                        }
-                                        selectedKeys={[]}
-                                        width={92}
-                                        onSelect={({key}) => onMenuSelect(key)}
-                                    />
-                                }
-                                trigger='hover'
-                                overlayClassName={classNames(styles["popover-remove"])}
-                            >
+                            {isEnterpriseEdition() ? (
+                                <YakitPopover
+                                    placement={"bottom"}
+                                    arrowPointAtCenter={true}
+                                    content={
+                                        <YakitMenu
+                                            type='secondary'
+                                            data={batchMenuDataEnterprise}
+                                            selectedKeys={[]}
+                                            width={92}
+                                            onSelect={({key}) => onMenuSelect(key)}
+                                        />
+                                    }
+                                    trigger='hover'
+                                    overlayClassName={classNames(styles["popover-remove"])}
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        disabled={selected.length === 0}
+                                        className={classNames(styles["button-batch-operate"])}
+                                    >
+                                        批量操作
+                                        <ChevronDownIcon />
+                                    </YakitButton>
+                                </YakitPopover>
+                            ) : (
                                 <YakitButton
-                                    type='outline2'
+                                    type='danger'
                                     disabled={selected.length === 0}
                                     className={classNames(styles["button-batch-remove"])}
+                                    onClick={() => setDelShow(true)}
                                 >
-                                    批量操作
-                                    <ChevronDownIcon />
+                                    批量删除
                                 </YakitButton>
-                            </YakitPopover>
-                            <YakitPopconfirm
-                                title={"确定清空吗？"}
-                                onConfirm={() => onClear()}
-                                className='button-text-danger'
+                            )}
+                            <YakitButton
+                                type='outline2'
+                                className={classNames("button-outline2-danger")}
+                                onClick={() => setDelShow(true)}
                             >
-                                <YakitButton type='outline2' className={classNames("button-outline2-danger")}>
-                                    清空
-                                </YakitButton>
-                            </YakitPopconfirm>
+                                清空
+                            </YakitButton>
                         </div>
                     </div>
                     <div className={styles["screen-recorder-list"]}>
@@ -527,6 +526,13 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                     </div>
                 </YakitSpin>
             </div>
+            <YakitHint
+                visible={delShow}
+                title='删除录屏'
+                content='删除录屏的同时会清除本地视频文件'
+                onOk={() => onBatchRemove()}
+                onCancel={() => setDelShow(false)}
+            />
         </div>
     )
 }
@@ -618,7 +624,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     style={{padding: 24}}
                 >
                     <Form.Item name='VideoName' label='视频名称' rules={[{required: true, message: "该项为必填"}]}>
-                        <YakitInput />
+                        <YakitInput maxLength={50} />
                     </Form.Item>
                     <Form.Item name='NoteInfo' label='备注'>
                         <YakitInput.TextArea rows={6} />
@@ -683,7 +689,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 <div className={styles["list-item-notes"]}>{item.NoteInfo || "No Description about it."}</div>
                 <div className={styles["list-item-extra"]}>
                     <div className={styles["list-item-duration"]}>
-                        <ClockIcon style={{marginRight: 4}} /> {item.Duration}
+                        <ClockIcon style={{marginRight: 4}} /> {item.Duration || "0s"}
                     </div>
                     <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
@@ -719,7 +725,11 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     </>
                 )}
                 <Divider type='vertical' style={{margin: "0 16px"}} />
-                <YakitPopconfirm title={"确定删除吗？"} onConfirm={() => onRemove()} className='button-text-danger'>
+                <YakitPopconfirm
+                    title={"删除录屏的同时会删除本地录屏文件"}
+                    onConfirm={() => onRemove()}
+                    className='button-text-danger'
+                >
                     <TrashIcon className={styles["icon-trash"]} />
                 </YakitPopconfirm>
             </div>
