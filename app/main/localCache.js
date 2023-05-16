@@ -51,6 +51,29 @@ function setExtraLocalCache(key, value) {
     localCacheState.extraCacheChanged = true
 }
 /**
+ * 退出时的缓存
+ */
+function setCloeseExtraLocalCache(key, value){
+    extraKVCache.set(key, value)
+    return new Promise((resolve, reject) => {
+        try {
+            localCacheState.writingFile = true
+            const cache = extraKVCache
+            let value = []
+            cache.forEach((v, k) => {
+                value.push({key: k, value: v})
+            })
+            value.sort((a, b) => `${a.key}`.localeCompare(`${b.key}`))
+            syncLocalCacheFile(type, JSON.stringify(value))
+        } catch (e) {
+            console.info(e)
+        } finally {
+            localCacheState.writingFile = false
+            resolve()
+        }
+    })
+}
+/**
  * 写操作定时器
  * @param {"cache"|"extraCache"} type
  */
@@ -159,6 +182,7 @@ const syncCacheToFile = (type) => {
 module.exports = {
     getExtraLocalCacheValue,
     setExtraLocalCache,
+    setCloeseExtraLocalCache,
     getLocalCacheValue,
     setLocalCache,
     initLocalCache,
