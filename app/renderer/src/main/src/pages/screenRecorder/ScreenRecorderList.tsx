@@ -124,7 +124,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Pagination: paginationProps
             })
             .then((item: QueryGeneralResponse<any>) => {
-                console.log("item", item, page)
                 const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
@@ -189,6 +188,9 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     // 全局监听登录状态
     const {userInfo} = useStore()
     const onBatchUpload = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            yakitNotify("warning", "请先登录，登录后方可使用")
+        }
         let paramsUpload: UploadScreenRecorderRequest = {
             Token: userInfo.token
         }
@@ -204,7 +206,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Ids: selected
             }
         }
-        console.log("paramsUpload", paramsUpload)
         ipcRenderer
             .invoke("UploadScreenRecorders", paramsUpload)
             .then(() => {
@@ -567,7 +568,6 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         ipcRenderer
             .invoke("GetOneScreenRecorders", params)
             .then((data) => {
-                console.log("data", data)
                 setVideoItem(data)
                 setUrlVideo(`atom://${data.Filename}`)
             })

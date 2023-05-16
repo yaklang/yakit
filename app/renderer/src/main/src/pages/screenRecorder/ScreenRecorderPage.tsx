@@ -29,7 +29,6 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
         ipcRenderer
             .invoke("IsScrecorderReady", {})
             .then((data: {Ok: boolean; Reason: string}) => {
-                console.log("IsScrecorderReady", data)
                 setAvailable(data.Ok)
             })
             .catch((err) => {
