@@ -683,7 +683,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 <div className={styles["list-item-notes"]}>{item.NoteInfo || "No Description about it."}</div>
                 <div className={styles["list-item-extra"]}>
                     <div className={styles["list-item-duration"]}>
-                        <ClockIcon style={{marginRight: 4}} /> {item.Duration || "0s"}
+                        <ClockIcon style={{marginRight: 4}} /> {item.Duration}
                     </div>
                     <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
