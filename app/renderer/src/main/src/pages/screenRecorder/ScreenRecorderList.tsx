@@ -142,19 +142,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     })
 
     useEffect(() => {
-        ipcRenderer
-            .invoke("QueryScreenRecorders", {
-                Pagination: {
-                    Page: 1,
-                    Limit: 1
-                }
-            })
-            .then((item: QueryGeneralResponse<any>) => {
-                setIsShowScreenRecording(!(item.Total > 0))
-            })
-            .catch((e) => {
-                yakitNotify("error", "获取列表数据失败：" + e)
-            })
+        onShowScreenRecording()
     }, [])
 
     useEffect(() => {
@@ -168,6 +156,21 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             setIsShowRefText(true)
         }
     }, [screenRecorderInfo.isRecording])
+    const onShowScreenRecording = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("QueryScreenRecorders", {
+                Pagination: {
+                    Page: 1,
+                    Limit: 1
+                }
+            })
+            .then((item: QueryGeneralResponse<any>) => {
+                setIsShowScreenRecording(!(item.Total > 0))
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取列表数据失败：" + e)
+            })
+    })
     /**@description 列表加载更多 */
     const loadMoreData = useMemoizedFn(() => {
         update(parseInt(`${pagination.Page}`) + 1, 20)
@@ -320,7 +323,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             </YakitButton>
                         )}
                         {isShowRefText && (
-                            <YakitButton type='text' style={{marginTop: 12}} onClick={() => onRefresh()}>
+                            <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
                                 刷新
                             </YakitButton>
                         )}
@@ -667,7 +670,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         <>
             <YakitCheckbox checked={isSelected} onClick={() => onSelect(item)} />
             <div className={styles["list-item-cover"]} onClick={() => onPlayVideo()}>
-                <img alt='暂无图片' src={item.Cover || noPictures} />
+                <img alt='暂无图片' src={item.Cover ? `data:image/png;base64,${item.Cover}` : noPictures} />
                 <div className={styles["list-item-cover-hover"]}>
                     <PlayIcon />
                 </div>
