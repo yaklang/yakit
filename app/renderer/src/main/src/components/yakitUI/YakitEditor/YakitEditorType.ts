@@ -55,6 +55,9 @@ export interface YakitEditorProps {
 
     /** @name 是否展示换行字符(只有在[type="http"]下有效,同时可在右键菜单中关闭显示功能) */
     showLineBreaks?: boolean
+
+    /** @name 配置项-操作记录(拥有此项可记录字体大小及换行符) */
+    editorOperationRecord?: string
 }
 
 /**
@@ -117,4 +120,14 @@ export enum YakitEditorKeyCode {
 /** 自定义快捷键对应的菜单项key值 */
 export interface KeyboardToFuncProps {
     [key: string]: string[]
+}
+
+/** 操作记录存储 */
+export interface OperationRecord {
+    [key: string]: number|boolean
+}
+
+export interface OperationRecordRes {
+    fontSize?: number
+    showBreak?: boolean
 }

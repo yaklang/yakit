@@ -1569,6 +1569,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             noWordWrapState={noWordwrapFirstEditor}
                             fontSizeState={fontSizeFirstEditor}
                             showLineBreaksState={showLineBreaksFirstEditor}
+                            editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF"
                         />
                     }
                     secondNode={

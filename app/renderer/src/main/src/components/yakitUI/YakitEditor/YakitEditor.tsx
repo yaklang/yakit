@@ -14,7 +14,9 @@ import {
     YakitITextModel,
     YakitEditorKeyCode,
     KeyboardToFuncProps,
-    YakitIModelDecoration
+    YakitIModelDecoration,
+    OperationRecord,
+    OperationRecordRes
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -24,6 +26,7 @@ import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuI
 import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
 import {convertKeyboard, keySortHandle} from "./editorUtils"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
@@ -73,9 +76,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         noLineNumber = false,
         lineNumbersMinChars = 5,
         fontSize = 12,
-        showLineBreaks = false
+        showLineBreaks = false,
+        editorOperationRecord
     } = props
-
+    
     const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
@@ -93,6 +97,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [fontsize, setFontsize] = useState<number>(fontSize)
+
+    // 读取上次选择的字体大小 
+    useEffect(()=>{
+        if(editorOperationRecord){
+            getRemoteValue(editorOperationRecord).then((data) => {
+                if (!data) return
+                let obj:OperationRecordRes = JSON.parse(data)
+                if(obj?.fontSize){
+                    setFontsize(obj?.fontSize)
+                }
+                if(typeof obj?.showBreak === "boolean"){
+                    setShowBreak(obj?.showBreak)
+                }
+            })
+        }
+    },[])
 
     /**
      * 整理右键菜单的对应关系
@@ -151,6 +171,25 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }),
         {wait: 300}
     )
+    /** 操作记录存储 */
+    const onOperationRecord = (type:"fontSize"|"showBreak",value:number|boolean) => {
+        if(editorOperationRecord){
+            getRemoteValue(editorOperationRecord).then((data) => {
+                if (!data) {
+                    let obj:OperationRecord = {
+                        [type]:value
+                    }
+                    setRemoteValue(editorOperationRecord,JSON.stringify(obj))
+                }
+                else{
+                    let obj:OperationRecord = JSON.parse(data)
+                    obj[type] = value
+                    setRemoteValue(editorOperationRecord,JSON.stringify(obj))
+                }
+            })
+        }
+    }
+
     /** 右键菜单功能点击回调事件 */
     const onRightContextMenu = useMemoizedFn((key: string) => {
         /** 获取 ITextModel 实例 */
@@ -162,10 +201,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             case "font-size-large":
                 if (editor?.updateOptions) {
                     setFontsize(keyToFontSize[key] || 12)
+                    onOperationRecord("fontSize",keyToFontSize[key] || 12)
                 }
                 return
             case "http-show-break":
                 setShowBreak(!getShowBreak())
+                onOperationRecord("showBreak",getShowBreak())
                 return
             case "yak-formatter":
                 if (!model) return
