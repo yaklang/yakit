@@ -93,13 +93,13 @@
                 &:hover {
                     background: var(--yakit-card-background-color);
                     border-radius: 8px;
-                    border-top: 0;
+                    border-top-color: transparent;
                     .list-item-cover .list-item-cover-hover {
                         display: flex;
                     }
                 }
                 &:first-child {
-                    border-top: 0;
+                    border-top-color: transparent;
                 }
                 .list-item-cover {
                     border: 1px solid #f0f1f3;
@@ -214,7 +214,7 @@
                 }
             }
             .list-item:hover + .list-item {
-                border-top: 0;
+                border-top-color: transparent;
             }
         }
     }

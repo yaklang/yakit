@@ -58,6 +58,11 @@ export interface ScreenRecorder {
     Before?: boolean
     After?: boolean
 }
+interface UploadScreenRecorderRequest {
+    Token: string
+    Keywords?: string
+    Ids?: string[]
+}
 const batchMenuDataEnterprise: YakitMenuItemProps[] = [
     {
         key: "upload",
@@ -119,7 +124,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Pagination: paginationProps
             })
             .then((item: QueryGeneralResponse<any>) => {
-                console.log("item", item,page)
+                console.log("item", item, page)
                 const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
@@ -181,21 +186,28 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 break
         }
     })
+    // 全局监听登录状态
+    const {userInfo} = useStore()
     const onBatchUpload = useMemoizedFn(() => {
-        let paramsUpload = {}
+        let paramsUpload: UploadScreenRecorderRequest = {
+            Token: userInfo.token
+        }
         if (allSelected) {
             paramsUpload = {
+                ...paramsUpload,
                 ...params
             }
         } else {
             paramsUpload = {
+                ...paramsUpload,
                 // Ids: selected.map((i) => i.Id)
                 Ids: selected
             }
         }
+        console.log("paramsUpload", paramsUpload)
         ipcRenderer
             .invoke("UploadScreenRecorders", paramsUpload)
-            .then((e) => {
+            .then(() => {
                 yakitNotify("success", "上传成功")
                 onRefresh()
                 setSelected([])
