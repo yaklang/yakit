@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {useMemoizedFn, useSelections, useUpdateEffect} from "ahooks"
+import {useCreation, useMemoizedFn, useSelections, useUpdateEffect} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Divider, Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -86,7 +86,9 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const [isShowScreenRecording, setIsShowScreenRecording] = useState<boolean>(false)
 
     const [isShowRefText, setIsShowRefText] = useState<boolean>(false)
-
+    const selectedId = useCreation(() => {
+        return data.map((i) => i.Id)
+    }, [data])
     const {
         selected,
         allSelected,
@@ -97,7 +99,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         unSelectAll,
         setSelected,
         partiallySelected
-    } = useSelections(data)
+    } = useSelections(selectedId)
 
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
 
@@ -117,7 +119,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Pagination: paginationProps
             })
             .then((item: QueryGeneralResponse<any>) => {
-                console.log("item", item)
+                console.log("item", item,page)
                 const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
                 const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
                 setHasMore(!isMore)
@@ -187,14 +189,15 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             }
         } else {
             paramsUpload = {
-                Ids: selected.map((i) => i.Id)
+                // Ids: selected.map((i) => i.Id)
+                Ids: selected
             }
         }
         ipcRenderer
             .invoke("UploadScreenRecorders", paramsUpload)
             .then((e) => {
                 yakitNotify("success", "上传成功")
-                onSearch()
+                onRefresh()
                 setSelected([])
             })
             .catch((err) => {
@@ -209,14 +212,15 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             }
         } else {
             paramsRemove = {
-                Ids: selected.map((i) => i.Id)
+                // Ids: selected.map((i) => i.Id)
+                Ids: selected
             }
         }
         ipcRenderer
             .invoke("DeleteScreenRecorders", paramsRemove)
             .then((e) => {
                 yakitNotify("success", "删除成功")
-                onSearch()
+                onRefresh()
                 setSelected([])
             })
             .catch((err) => {
@@ -224,9 +228,16 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             })
     })
     const onRefresh = useMemoizedFn(() => {
-        update(1, undefined, true)
+        setParams({
+            Keywords: ""
+        })
+        setSelected([])
+        setTimeout(() => {
+            update(1, undefined, true)
+        }, 100)
     })
     const onSearch = useMemoizedFn(() => {
+        setSelected([])
         update(1, undefined, true)
     })
     /** @description 清空录屏数据 */
@@ -235,7 +246,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             .invoke("DeleteScreenRecorders", {})
             .then((e) => {
                 yakitNotify("success", "清空成功")
-                onSearch()
+                onRefresh()
             })
             .catch((err) => {
                 yakitNotify("error", "清空失败：" + err)
@@ -482,12 +493,12 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 return (
                                     <ScreenRecorderListItem
                                         item={item}
-                                        isSelected={isSelected(item)}
+                                        isSelected={isSelected(item.Id)}
                                         onSelect={(item) => {
-                                            if (isSelected(item)) {
-                                                unSelect(item)
+                                            if (isSelected(item.Id)) {
+                                                unSelect(item.Id)
                                             } else {
-                                                select(item)
+                                                select(item.Id)
                                             }
                                         }}
                                         onUpdateScreenList={onUpdateScreenList}
