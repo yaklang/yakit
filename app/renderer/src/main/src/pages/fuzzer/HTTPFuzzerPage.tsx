@@ -850,6 +850,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 isResponse={true}
                 noHex={true}
                 noHeader={true}
+                editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE"
                 emptyOr={
                     !rsp?.Ok && (
                         <Result
