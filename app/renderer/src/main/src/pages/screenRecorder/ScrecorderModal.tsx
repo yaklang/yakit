@@ -67,7 +67,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
     const {onClose, token, onStartCallback, formStyle, footer, disabled} = props
     const [params, setParams] = useState<StartScrecorderParams>({
         CoefficientPTS: 0,
-        DisableMouse: false, // 鼠标捕捉
+        DisableMouse: true, // 鼠标捕捉
         Framerate: "7", // 帧率
         ResolutionSize: "" // 分辨率
     })

@@ -344,12 +344,13 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         layout='inline'
                         size='small'
                         initialValues={{
-                            DisableMouse: false, // 鼠标捕捉
+                            DisableMouse: true, // 鼠标捕捉
                             Framerate: "7" // 帧率
                         }}
                         onFinish={(v) => {
                             const newValue = {
-                                ...v
+                                ...v,
+                                DisableMouse: !v.DisableMouse
                             }
                             if (screenRecorderInfo.isRecording) {
                                 ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
