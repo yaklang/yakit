@@ -5,10 +5,12 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
+import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -80,7 +82,7 @@ const sorterFunction = (list, sorterTable) => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd} = props
+    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd,} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -89,6 +91,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
 
     const [isHaveData, setIsHaveData] = useState<boolean>(false) // 查询提取数据不为空
+
+    const [editor, setEditor] = useState<IMonacoEditor>()
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
     const bodyLengthRef = useRef<any>()
     const tableRef = useRef<any>(null)
@@ -324,6 +329,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     useUpdateEffect(() => {
         update()
     }, [query, isHaveData])
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
     const onDetails = useMemoizedFn((record, index: number) => {
         if (props.onSendToWebFuzzer) {
             analyzeFuzzerResponse(record, props.onSendToWebFuzzer, index, data)
@@ -460,11 +474,27 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }
         return p
     }, [firstFull])
-    const [editor, setEditor] = useState<IMonacoEditor>()
+
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            overlayWidgetv: {
+                menu: [
+                    {
+                        key: "is-show-add-overlay-widgetv",
+                        label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
+                    }
+                ],
+                onRun: () => {
+                    setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
+                    setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+                }
+            }
+        }
+    }, [showResponseInfoSecondEditor])
     useEffect(() => {
         if (!editor || !currentSelectItem) return
-        onAddOverlayWidget(editor, currentSelectItem)
-    }, [currentSelectItem])
+        onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
+    }, [currentSelectItem, showResponseInfoSecondEditor])
     return (
         <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
             <ResizeBox
@@ -502,6 +532,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         onAddOverlayWidget={(editor) => {
                             setEditor(editor)
                         }}
+                        isAddOverlayWidget={showResponseInfoSecondEditor}
+                        contextMenu={responseEditorRightMenu}
                     />
                 }
                 {...ResizeBoxProps}
