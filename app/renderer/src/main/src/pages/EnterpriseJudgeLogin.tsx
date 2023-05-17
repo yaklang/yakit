@@ -90,17 +90,17 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                 </div>
             ) : (
                 <>
-                    {activateLicense ? (
+                    {/* {activateLicense ? ( */}
                         <div style={{width: 480, margin: "0 auto", paddingTop: 200,height:"100%"}}>
                             <ConfigPrivateDomain enterpriseLogin={true} onSuccee={() => setJudgeLicense(false)} skipShow={true}/>
                         </div>
-                    ) : (
+                    {/* ) : (
                         <LicensePage
                             judgeLicense={judgeLicense}
                             licensePageLoading={licensePageLoading}
                             setLicensePageLoading={setLicensePageLoading}
                         />
-                    )}
+                    )} */}
                 </>
             )}
         </>

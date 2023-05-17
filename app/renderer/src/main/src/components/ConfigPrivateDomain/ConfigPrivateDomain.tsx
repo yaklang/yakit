@@ -291,28 +291,42 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     </Form.Item>
                 )}
                 {enterpriseLogin ? (
-                    <Form.Item label={" "} colon={false} className='form-item-submit'>
-                        {enterpriseLogin && skipShow && (
-                            <YakitButton
-                                style={{width: 165, marginRight: 12, display: "flex", justifyContent: "center"}}
-                                onClick={() => {
-                                    onSuccee && onSuccee()
-                                }}
-                                size='large'
-                            >
-                                跳过
-                            </YakitButton>
+                    <>
+                        {enterpriseLogin && skipShow ? (
+                            <Form.Item label={" "} colon={false} className='form-item-submit'>
+                                <YakitButton
+                                    style={{width: 165, marginRight: 12, display: "flex", justifyContent: "center"}}
+                                    onClick={() => {
+                                        onSuccee && onSuccee()
+                                    }}
+                                    size='large'
+                                >
+                                    跳过
+                                </YakitButton>
+                                <YakitButton
+                                    size='large'
+                                    type='primary'
+                                    htmlType='submit'
+                                    style={{width: 165, display: "flex", justifyContent: "center"}}
+                                    loading={loading}
+                                >
+                                    登录
+                                </YakitButton>
+                            </Form.Item>
+                        ) : (
+                            <div className='form-item-submit'>
+                                <YakitButton
+                                    size='large'
+                                    type='primary'
+                                    htmlType='submit'
+                                    style={{width: 165, display: "flex", justifyContent: "center"}}
+                                    loading={loading}
+                                >
+                                    登录
+                                </YakitButton>
+                            </div>
                         )}
-                        <YakitButton
-                            size='large'
-                            type='primary'
-                            htmlType='submit'
-                            style={{width: 165, display: "flex", justifyContent: "center"}}
-                            loading={loading}
-                        >
-                            登录
-                        </YakitButton>
-                    </Form.Item>
+                    </>
                 ) : (
                     <div className='form-btns'>
                         <YakitButton type='outline2' onClick={(e) => onClose && onClose()}>
