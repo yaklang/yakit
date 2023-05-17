@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service SystemProxyApi {
+  rpc GetSystemProxy(Empty) returns (GetSystemProxyResult);
+  rpc SetSystemProxy(SetSystemProxyRequest) returns (Empty);
+}
+
+message SetSystemProxyRequest {
+  string HttpProxy = 1;
+  bool Enable = 2;
+}
+
+
+message GetSystemProxyResult {
+  string CurrentProxy = 1;
+  bool Enable = 2;
+}

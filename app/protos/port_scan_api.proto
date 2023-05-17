@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service PortScanApi{
+  // 端口扫描的封装
+  rpc PortScan(PortScanRequest) returns (stream ExecResult);
+  rpc ViewPortScanCode(Empty) returns (SimpleScript);
+
+  rpc SimpleDetect(RecordPortScanRequest) returns (stream ExecResult);
+  rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
+
+  rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
+  rpc GetSimpleDetectUnfinishedTaskByUid(SimpleDetectYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc PopSimpleDetectUnfinishedTaskByUid(SimpleDetectYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
+  rpc RecoverSimpleDetectUnfinishedTask(SimpleDetectYakScriptUnfinishedTaskByUidRequest) returns (stream ExecResult);
+
+}
+
+
+
+
+message LastRecord {
+  int64 LastRecordPtr = 1;
+  double Percent = 2;
+  string YakScriptOnlineGroup = 3;
+  string ExtraInfo = 4;
+}
+
+message SimpleDetectUnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string Uid = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+  int64  LastRecordPtr = 6;
+}
+
+message GetSimpleDetectUnfinishedTaskResponse {
+  repeated SimpleDetectUnfinishedTask Tasks = 1;
+}
+
+message RecordPortScanRequest {
+  LastRecord LastRecord = 1;
+  PortScanRequest PortScanRequest = 2;
+}
+
+message PortScanRequest {
+  string Targets = 1;
+  string Ports = 2;
+  string Mode = 3;
+  repeated string Proto = 4;
+  int64 Concurrent = 5;
+  // 主动发包模式
+  bool Active = 6;
+  // service / web / all
+  string FingerprintMode = 7;
+
+  // 保存数据库
+  bool SaveToDB = 8;
+
+  // 保存已经关闭的端口
+  bool SaveClosedPorts = 9;
+
+  // 上传扫描目标为文件
+  string TargetsFile = 10;
+
+  // 设置上传的文件
+  repeated string ScriptNames = 11;
+
+  // TCPProxy
+  repeated string Proxy = 12;
+
+  // 设置单次探测超时时间
+  double ProbeTimeout = 13;
+
+  // ProbeMax 设置指纹探测条数
+  int32 ProbeMax = 14;
+
+  // 启用 C 段扫描
+  bool EnableCClassScan = 15;
+
+  // HostAlive Scan
+  bool SkippedHostAliveScan = 16;
+  double HostAliveTimeout = 17;
+  int32 HostAliveConcurrent = 18;
+  string HostAlivePorts = 19;
+
+  // 排除端口与主机
+  string ExcludeHosts = 20;
+  string ExcludePorts = 21;
+
+  // EnableBasicCrawler
+  // 是否启用基础爬虫，以及基础爬虫最多几个请求？
+  bool EnableBasicCrawler = 22;
+  int64 BasicCrawlerRequestMax = 23;
+
+  // SYN Concurrent
+  // 简易设置 SYN 每秒并发
+  int64 SynConcurrent = 24;
+
+  string TaskName = 25;
+}
+
+message SimpleDetectYakScriptUnfinishedTaskByUidRequest {
+  string Uid = 1;
+}
+

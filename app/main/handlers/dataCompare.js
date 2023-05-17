@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 
-module.exports = (win, getClient) => {
+module.exports = (win) => {
   // 存储多对比页面的token和data
   const dataMap = new Map();
   // 当前token值

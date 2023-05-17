@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+import "yak_script_api.proto";
+
+service YakApi {
+  // version
+  rpc Version(Empty) returns (VersionResponse);
+
+  // echo 通常用于测试服务是否通畅
+  rpc Echo(EchoRequest) returns(EchoResposne);
+
+  // 开启端口
+  rpc OpenPort(stream Input) returns (stream Output);
+
+
+
+
+}
+
+
+// 开启一个端口，对接 GRPC 服务器
+message Input {
+  bytes raw = 1;
+
+  string host = 2;
+  uint32 port = 3;
+}
+
+message Output {
+  bytes raw = 1;
+  string remoteAddr = 11;
+  string localAddr = 12;
+
+  // 如果 control 为 true 说明这是一个控制信息
+  bool control = 2;
+  // 服务端需要关闭
+  bool closed = 3;
+  // 服务端正在等待连接接入
+  bool waiting = 4;
+}
+
+
+message EchoResposne {
+  string result = 1;
+}
+
+// 最基础的 ECHO
+message EchoRequest {
+  string text = 1;
+}
+
+
+
+message VersionResponse {
+  string Version = 1;
+}

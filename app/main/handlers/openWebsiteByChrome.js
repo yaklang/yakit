@@ -1,7 +1,7 @@
 const electronFull = require("electron");
 const {ipcMain, shell} = electronFull;
 
-module.exports = (win, getClient) => {
+module.exports = () => {
     ipcMain.handle("shell-open-external", async (e, url) => {
         await shell.openExternal(url)
     })

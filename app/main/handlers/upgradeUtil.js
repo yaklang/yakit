@@ -182,7 +182,7 @@ module.exports = {
     initial: async () => {
         return await initMkbaseDir();
     },
-    register: (win, getClient) => {
+    register: (win) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;
             name = name || `${host}:${port}`
@@ -295,8 +295,8 @@ module.exports = {
             const localYakit = app.getVersion()
             const localYaklang = await asyncGetCurrentLatestYakVersion()
             return {
-                system:process.platform,
-                arch:process.arch,
+                system: process.platform,
+                arch: process.arch,
                 localYakit,
                 localYaklang
             }
@@ -357,7 +357,7 @@ module.exports = {
                         // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
                         // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
                     })
-                    .on("response",function (resp){
+                    .on("response", function (resp) {
                         if (resp.statusCode === 404) {
                             reject("暂无最新安装包")
                         }

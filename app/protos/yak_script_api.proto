@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service YakScriptApi {
+  // yakScript
+  rpc QueryYakScript(QueryYakScriptRequest) returns (QueryYakScriptResponse);
+  rpc QueryYakScriptByYakScriptName(QueryYakScriptRequest) returns (stream YakScript);
+  rpc SaveYakScript(YakScript) returns (YakScript);
+  rpc DeleteYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc GetYakScriptById(GetYakScriptByIdRequest) returns (YakScript);
+  rpc GetYakScriptByName(GetYakScriptByNameRequest) returns (YakScript);
+  rpc GetYakScriptByOnlineID(GetYakScriptByOnlineIDRequest) returns (YakScript);
+  rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
+  rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
+
+  rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
+  rpc QueryYakScriptLocalAndUser(QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptByOnlineGroup(QueryYakScriptByOnlineGroupRequest) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
+
+  // 对插件结果的操作
+  rpc QueryYakScriptExecResult(QueryYakScriptExecResultRequest) returns (QueryYakScriptExecResultResponse);
+  rpc QueryYakScriptNameInExecResult(Empty) returns (YakScriptNames);
+  rpc DeleteYakScriptExecResult(DeleteYakScriptExecResultRequest) returns (Empty);
+  rpc DeleteYakScriptExec(Empty) returns (Empty);
+
+  // 获取 Tags
+  rpc GetAvailableYakScriptTags(Empty) returns (Fields);
+  rpc ForceUpdateAvailableYakScriptTags(Empty) returns (Empty);
+}
+
+message YakScriptNames {
+  repeated string YakScriptNames = 1;
+}
+
+message DeleteYakScriptExecResultRequest {
+  repeated int64 Id = 1;
+  string YakScriptName = 2;
+}
+
+message QueryYakScriptExecResultResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated ExecResult Data = 3;
+}
+
+
+message QueryYakScriptExecResultRequest {
+  Paging Pagination = 1;
+  string YakScriptName = 2;
+}
+
+message QueryYakScriptByOnlineGroupRequest {
+  string OnlineGroup = 1;
+}
+
+message QueryYakScriptLocalAndUserResponse {
+  repeated YakScript Data = 1;
+}
+
+message QueryYakScriptLocalAndUserRequest {
+  string OnlineBaseUrl = 1;
+  int64 UserId = 2;
+}
+
+message Tags {
+  string Value = 1;
+  int32 Total = 2;
+}
+
+message GetYakScriptTagsResponse {
+  repeated Tags Tag = 1;
+}
+
+
+
+message ExportYakScriptResponse {
+  string OutputDir = 2;
+}
+
+message ExecuteBatchPacketYakScriptParams {
+  repeated string ScriptName = 1;
+  bool IsHttps = 2;
+  bytes Request = 3;
+  bytes Response = 4;
+
+  // 并发
+  int32 Concurrent = 5;
+  // 设置单个超时时间
+  double PerTaskTimeout = 6;
+}
+
+message ExecutePacketYakScriptParams {
+  string ScriptName = 1;
+  bool IsHttps = 2;
+  bytes Request = 3;
+  bytes Response = 4;
+}
+
+message ExportYakScriptRequest {
+  int64 YakScriptId = 1;
+  string OutputDir = 2;
+  string OutputPluginDir = 3;
+  repeated int64 YakScriptIds = 4;
+  bool All = 5;
+}
+
+message GetYakScriptByOnlineIDRequest {
+  string UUID = 1;
+  int64 OnlineID = 2;
+}
+
+message GetYakScriptByNameRequest {
+  string Name = 1;
+}
+
+message QueryYakScriptRequest {
+  Paging Pagination = 1;
+  string Type = 2;
+  string Keyword = 3;
+  bool IsHistory = 4;
+  bool IsIgnore = 5;
+  bool IsGeneralModule = 6;
+  bool IsBatch = 7;
+  bool ExcludeNucleiWorkflow = 8;
+  repeated string ExcludeScriptNames = 9;
+  repeated string IncludedScriptNames = 10;
+  repeated string Tag = 11;
+  bool NoResultReturn = 12; // 这是一很特殊的选项，如果开启了，total 将会为 0
+  int64 UserId = 13;
+  string UserName = 14;
+
+  bool IgnoreGeneralModuleOrder = 15;
+}
+
+
+message QueryYakScriptResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated YakScript Data = 3;
+}
+
+message YakScriptParam {
+  string Field = 1;
+  string DefaultValue = 2;
+
+  // int/number/integer/float/str/bool
+  string TypeVerbose = 3;
+
+  string FieldVerbose = 4;
+
+  string Help = 5;
+
+  bool Required = 6;
+  string Group = 7;
+
+  string ExtraSetting = 8;
+}
+
+message YakScript {
+  int64 Id = 1;
+  string Content = 2;
+  string Type = 3;
+  repeated YakScriptParam Params = 4;
+  int64 CreatedAt = 5;
+  string ScriptName = 6;
+  string Help = 7;
+  string Level = 8;
+  string Author = 9;
+  string Tags = 10;
+  bool IsHistory = 11;
+  bool IsIgnore = 12;
+  bool IsGeneralModule = 13;
+  string GeneralModuleVerbose = 14;
+  string GeneralModuleKey = 15;
+  string FromGit = 16;
+  bool EnablePluginSelector = 17;
+  string PluginSelectorTypes = 18;
+  int64 OnlineId = 19;
+  int64 UserId = 20;
+  string OnlineScriptName = 21;
+  string OnlineContributors = 22;
+  string UUID = 23;
+  bool OnlineIsPrivate = 24;
+  string HeadImg = 25;
+  string OnlineBaseUrl = 26;
+  int64  BaseOnlineId = 27;
+  bool OnlineOfficial = 28;
+}
+
+
+message DeleteYakScriptRequest {
+  int64  Id = 3;
+  repeated int64 Ids = 4;
+}
+
+message GetYakScriptByIdRequest {
+  int64 Id = 1;
+}

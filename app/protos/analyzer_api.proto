@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+
+
+service AnalyzerApi {
+  // 分析一个 HTTP 请求详情
+  rpc HTTPRequestAnalyzer(HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
+
+}
+message HTTPRequestParamItem {
+  string TypePosition = 1;
+  string ParamOriginValue = 2;
+  string ParamName = 3;
+  string TypePositionVerbose = 4;
+}
+
+
+message HTTPRequestAnalysis {
+  repeated HTTPRequestParamItem Params = 1;
+  repeated string Requests = 2;
+  bool IsHTTPS = 3;
+}
+
+
+message HTTPRequestAnalysisMaterial {
+  string Request = 1;
+  bool IsHTTPS = 2;
+  string Response = 3;
+}

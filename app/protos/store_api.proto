@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service StoreApi {
+  // 设置通用存储
+  rpc GetKey(GetKeyRequest) returns (GetKeyResult);
+  rpc SetKey(SetKeyRequest) returns (Empty);
+  rpc DelKey(GetKeyRequest) returns (Empty);
+  rpc GetAllProcessEnvKey(Empty) returns (GetProcessEnvKeyResult);
+  rpc SetProcessEnvKey(SetKeyRequest) returns (Empty);
+}
+
+message GeneralStorage {
+  string Key = 1;
+  string Value = 2;
+  int64 ExpiredAt = 3;
+  bool ProcessEnv = 4;
+  string Verbose = 5;
+  string Group = 6;
+}
+
+message GetProcessEnvKeyResult {
+  repeated GeneralStorage Results = 1;
+}
+
+message SetKeyRequest {
+  string Key = 1;
+  string Value = 2;
+  int64 TTL = 3;
+}
+
+message GetKeyRequest {
+  string Key = 1;
+}
+
+message GetKeyResult {
+  string Value = 1;
+}

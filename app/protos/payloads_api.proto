@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service PayloadsApi {
+  // Payload 相关接口
+  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse);
+  rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
+  rpc SavePayload(SavePayloadRequest) returns (Empty);
+  rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
+  rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
+  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
+  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse);
+}
+
+message GetAllPayloadGroupResponse {
+  repeated string Groups = 1;
+}
+
+message SavePayloadProgress {
+  double Progress = 1;
+  int64 HandledBytes = 2;
+  string HandledBytesVerbose = 3;
+  int64 TotalBytes = 4;
+  string TotalBytesVerbose = 5;
+  double CostDuration = 6;
+  string CostDurationVerbose = 7;
+}
+
+message DeletePayloadRequest {
+  int64 Id = 1;
+  repeated int64 Ids = 2;
+}
+
+
+message SavePayloadRequest {
+  bool IsFile = 1;
+  string Group = 2;
+  string Content = 3;
+  repeated string FileName = 4;
+}
+
+message UpdatePayloadRequest{
+  string Group = 1;
+  string OldGroup = 2;
+}
+
+message QueryPayloadRequest {
+  Paging Pagination = 1;
+  string Group = 2;
+  string Keyword = 3;
+}
+
+
+message QueryPayloadResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Payload Data = 3;
+}
+
+message Payload {
+  int64 Id = 1;
+  string Group = 2;
+  bytes ContentBytes = 3;
+  string Content = 4;
+}
+
+message GetAllPayloadRequest {
+  string Group = 1;
+}
+
+message GetAllPayloadResponse {
+  repeated Payload Data = 1;
+}
+
+message DeletePayloadByGroupRequest {
+  string Group = 1;
+}

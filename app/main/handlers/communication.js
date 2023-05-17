@@ -1,7 +1,7 @@
 const {ipcMain} = require("electron")
 const isDev = require("electron-is-dev")
 const exec = require("child_process").exec
-module.exports = (win, getClient) => {
+module.exports = (win) => {
     // 刷新主页面左侧菜单内容 / refresh the menu content on the right side of the main page
     ipcMain.handle("change-main-menu", async (e) => {
         win.webContents.send("fetch-new-main-menu")

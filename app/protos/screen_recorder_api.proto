@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service ScreenRecorderApi {
+  rpc IsScrecorderReady(IsScrecorderReadyRequest) returns (IsScrecorderReadyResponse);
+  rpc InstallScrecorder(InstallScrecorderRequest) returns (stream ExecResult);
+  rpc StartScrecorder(StartScrecorderRequest) returns (stream ExecResult);
+  rpc QueryScreenRecorders(QueryScreenRecorderRequest) returns (QueryScreenRecorderResponse);
+}
+
+message ScreenRecorder {
+  int64 Id = 1;
+  string Filename = 2;
+  string NoteInfo = 3;
+  string Project = 4;
+  int64 CreatedAt = 5;
+  int64 UpdatedAt = 6;
+}
+
+message QueryScreenRecorderResponse {
+  repeated ScreenRecorder Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message IsScrecorderReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+
+message QueryScreenRecorderRequest {
+  string Project = 1;
+  Paging Pagination = 2;
+}
+
+message StartScrecorderRequest {
+  int64 Framerate = 1;
+  string ResolutionSize = 2;
+  double CoefficientPTS = 3;
+  bool DisableMouse = 4;
+}
+
+message InstallScrecorderRequest {
+  string Proxy = 1;
+}
+
+message IsScrecorderReadyRequest {
+
+}

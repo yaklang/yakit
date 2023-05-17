@@ -1,7 +1,7 @@
 const {ipcMain} = require("electron");
 const {launch, killAll} = require("chrome-launcher");
 
-module.exports = (win, getClient) => {
+module.exports = () => {
     let started = false;
     ipcMain.handle("IsChromeLaunched", async () => {
         return started

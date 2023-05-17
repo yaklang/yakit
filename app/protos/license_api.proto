@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+service LicenseApi {
+  // license
+  rpc GetLicense(Empty) returns (GetLicenseResponse);
+  rpc CheckLicense(CheckLicenseRequest) returns (Empty);
+}
+
+message GetLicenseResponse {
+  string License = 1;
+}
+
+message CheckLicenseRequest {
+  string LicenseActivation = 1;
+}

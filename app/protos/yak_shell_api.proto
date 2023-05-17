@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+service YakShellApi {
+  // Yaklang Shell
+  // 创建一个交互式 Shell
+  rpc CreateYaklangShell(stream YaklangShellRequest) returns (stream YaklangShellResponse);
+}
+
+message YaklangShellRequest {
+  string Input = 1;
+}
+
+message YaklangShellKVPair {
+  string Key = 1;
+  bytes Value = 2;
+  string ValueVerbose = 3;
+  int64 SymbolId = 4;
+}
+
+message YaklangShellResponse {
+  ExecResult RawResult = 1;
+  repeated YaklangShellKVPair Scope = 2;
+}

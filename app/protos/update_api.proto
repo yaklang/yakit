@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service UpdateApi {
+  // Yakit Store
+  rpc UpdateFromYakitResource(UpdateFromYakitResourceRequest) returns (Empty);
+  rpc UpdateFromGithub(UpdateFromGithubRequest) returns (Empty);
+}
+
+message UpdateFromGithubRequest {
+  string Proxy = 1;
+  string GithubUrl = 2;
+}
+
+
+message UpdateFromYakitResourceRequest {
+  string Proxy = 1;
+  string BaseSourceUrl = 2;
+}

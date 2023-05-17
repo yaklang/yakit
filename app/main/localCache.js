@@ -163,7 +163,7 @@ module.exports = {
     setLocalCache,
     initLocalCache,
     initExtraLocalCache,
-    register: (win, getClient) => {
+    register: () => {
         /** 手动触发写操作 */
         ipcMain.handle("manual-write-file", async (e, type) => {
             syncCacheToFile(type)

@@ -2,7 +2,7 @@ const {ipcMain, BrowserWindow} = require("electron")
 const {httpApi} = require("../httpServer")
 const {USER_INFO, HttpSetting} = require("../state")
 
-module.exports = (win, getClient) => {
+module.exports = (win) => {
     // login modal
     ipcMain.on("user-sign-in", (event, arg) => {
         const excludeUrl = ["github.com", "open.weixin.qq.com"]

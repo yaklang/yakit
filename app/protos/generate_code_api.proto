@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+
+service GenerateCodeApi {
+  // GenerateYakCodeByPacket
+  rpc GenerateYakCodeByPacket(GenerateYakCodeByPacketRequest) returns (GenerateYakCodeByPacketResponse);
+
+  // CSRF Generator
+  rpc GenerateCSRFPocByPacket(GenerateCSRFPocByPacketRequest) returns (GenerateCSRFPocByPacketResponse);
+
+}
+
+message GenerateCSRFPocByPacketResponse {
+  bytes Code = 1;
+}
+
+
+message GenerateCSRFPocByPacketRequest {
+  bool IsHttps = 1;
+  bytes Request = 2;
+}
+
+
+
+message GenerateYakCodeByPacketResponse {
+  bytes Code = 1;
+}
+
+message GenerateYakCodeByPacketRequest {
+  bool IsHttps = 1;
+  bytes Request = 2;
+  enum Template {
+    Ordinary = 0;
+    Batch = 1;
+  }
+  Template CodeTemplate = 3;
+}

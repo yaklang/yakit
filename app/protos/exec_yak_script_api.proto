@@ -1,0 +1,231 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+import "yak_script_api.proto";
+
+
+service ExecYakScriptApi {
+  // Exec
+  rpc Exec(ExecRequest) returns (stream ExecResult);
+  rpc QueryExecHistory(ExecHistoryRequest) returns (ExecHistoryRecordResponse);
+  rpc RemoveExecHistory(Empty) returns (Empty);
+  rpc LoadNucleiTemplates(Empty) returns (Empty);
+  rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
+  rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
+  rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
+  rpc GetExecBatchYakScriptUnfinishedTask(Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
+  rpc GetExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
+  rpc PopExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
+  rpc RecoverExecBatchYakScriptUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecBatchYakScriptResult);
+
+  rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
+  rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
+
+  // 新的扫描模式
+  rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
+
+  // 通用的漏洞检测技术方案
+  rpc ExecYakitPluginsByYakScriptFilter(ExecYakitPluginsByYakScriptFilterRequest) returns (stream ExecResult);
+}
+
+message ExecYakitPluginsByYakScriptFilterRequest {
+  QueryYakScriptRequest Filter = 1;
+
+  // 这个 Target 很复杂，URL / IP / CIDR / Host / Host:port
+  string Target = 2;
+  string Ports = 3;
+  string TargetFile = 5;
+
+  repeated ExecParamItem ExtraParams = 4;
+}
+
+
+message ExecPacketScanRequest {
+  // 选择 HTTPFlow 进行扫描
+  repeated int64 HTTPFlow = 1;
+  bytes HTTPRequest = 2;
+  bool HTTPS = 3;
+
+  // 允许数据包的 Fuzz 打开
+  bool AllowFuzzTag = 5;
+
+  // 扫描进程总超时
+  int64 TotalTimeoutSeconds = 6;
+  // 默认发包的 Timeout
+  int64 Timeout = 7;
+
+  // 并发
+  int64 PluginConcurrent = 8;
+  int64 PacketConcurrent = 9;
+
+  // 插件列表
+  repeated string PluginList = 10;
+
+  // 设置代理
+  string Proxy = 11;
+}
+
+
+message ExecRequest {
+  repeated ExecParamItem Params = 1;
+  string Script = 2;
+  string ScriptId = 3;
+  int64 YakScriptId = 5;
+
+  // 这个是为了满足 Runner 的情况，属于特殊情况
+  string RunnerParamRaw = 6;
+}
+
+
+
+// Yak Invoker
+message ExecHistoryRequest {
+  Paging Pagination = 1;
+  int64 YakScriptId = 3;
+  string YakScriptName = 4;
+}
+
+// 执行的历史记录
+message ExecHistoryRecord {
+  // 脚本内容
+  string Script = 1;
+  // 脚本 ID（如果有的话）
+  string ScriptId = 2;
+  // 执行时间点
+  int64 Timestamp = 3;
+  // 执行间隔
+  int64 DurationMs = 4;
+  // 执行参数（命令行参数部分）
+  string Params = 5;
+
+  // 执行成功还是失败
+  bool Ok = 7;
+  // 失败原因是啥？
+  string Reason = 8;
+  // Uid
+  string Id = 9;
+
+  // 展示界面内容
+  bytes Stdout = 10;
+  bytes Stderr = 11;
+
+  //
+  string RuntimeId = 12;
+  string FromYakModule = 13;
+
+  int64 StdoutLen = 14;
+  int64 StderrLen = 15;
+
+  bytes Messages = 16;
+
+}
+
+message ExecHistoryRecordResponse {
+  repeated ExecHistoryRecord Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+
+message ExecBatchYakScriptRequest {
+  // 目标会被自动拆分
+  string Target = 1;
+  string TargetFile = 11;
+
+  // 额外参数可以被添加
+  repeated ExecParamItem ExtraParams = 7;
+
+  // 筛选与限制
+  string Keyword = 2;
+  repeated string ExcludedYakScript = 22;
+  bool DisableNucleiWorkflow = 23;
+  int64 Limit = 3;
+
+  // 默认总用时
+  int64 TotalTimeoutSeconds = 4;
+
+  // 模块类型，默认为 nuclei
+  string Type = 5;
+
+  // 并发（进程）
+  int64 Concurrent = 6;
+
+  // 精确使用脚本名称
+  // 要注意，这个 Scripts 和 PluginFilter 是冲突的
+  repeated string ScriptNames = 8;
+
+  // Tags with exclude / include
+  QueryYakScriptRequest PluginFilter = 12;
+  bool EnablePluginFilter = 13;
+
+  // 设置一个代理
+  string Proxy = 14;
+
+  // 每个进程的任务数量
+  int64 ProgressTaskCount = 15;
+
+  // 基础进度 - 这个默认是 0.1 一般别用，只在 Recover 的时候可能才会有用处
+  double BaseProgress = 16;
+  // 这个很关键，不然会报错
+  bool FromRecover = 17;
+
+  string YakScriptOnlineGroup = 18;
+  string TaskName = 19;
+}
+
+
+message ExecBatchYakScriptResult {
+  string Id = 1;
+  string Status = 2;
+  bool Ok = 4;
+  string Reason = 5;
+  bool Exploitable = 6;
+
+  // 脚本的详细信息
+  YakScript PoC = 7;
+  ExecResult Result = 8;
+
+  // 如果是整体进度信息，则在这儿展示
+  // 处理这几个消息的时候，其他都不应该生效
+  bool ProgressMessage = 9;
+  double ProgressPercent = 10;
+  int64 ProgressTotal = 11;
+  int64 ProgressCount = 12;
+
+  // 正在执行中的进程数
+  int64 ProgressRunning = 17;
+
+  // 正在执行中的扫描任务数量
+  int64 ScanTaskExecutingCount = 18;
+
+  // 任务相关内容
+  string Target = 13;
+  repeated ExecParamItem ExtraParam = 14;
+  string TaskId = 15;
+
+  // 当前时间
+  int64 Timestamp = 16;
+}
+
+message ExecBatchYakScriptUnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string Uid = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+}
+
+
+message GetExecBatchYakScriptUnfinishedTaskResponse {
+  repeated ExecBatchYakScriptUnfinishedTask Tasks = 1;
+}
+
+message GetExecBatchYakScriptUnfinishedTaskByUidRequest {
+  string Uid = 1;
+}
+
+message RecoverExecBatchYakScriptUnfinishedTaskRequest {
+  string Uid = 1;
+}

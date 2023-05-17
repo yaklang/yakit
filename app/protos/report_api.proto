@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service ReportApi {
+  // Report
+  rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
+  rpc QueryReport(QueryReportRequest) returns (Report);
+  rpc DeleteReport(DeleteReportRequest) returns (Empty);
+  rpc QueryAvailableReportFrom(Empty) returns (Fields);
+  rpc DownloadReport(DownloadReportRequest) returns (Empty);
+
+}
+
+
+message DownloadReportRequest {
+  string FileData = 1;
+  string FileName = 2;
+  string FileDir = 3;
+}
+
+
+message DeleteReportRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  QueryReportsRequest Filter = 3;
+  repeated int64 IDs = 4;
+  bool DeleteAll = 5;
+}
+
+message Report {
+  string Title = 1;
+  uint64 PublishedAt = 2;
+  string Hash = 3;
+  uint64 Id = 4;
+  string Owner = 5;
+  string From = 6;
+  string JsonRaw = 7;
+}
+
+
+message QueryReportRequest {
+  int64 Id = 1;
+  string Hash = 2;
+}
+
+message QueryReportsResponse {
+  repeated Report Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+}
+
+message QueryReportsRequest {
+  Paging Pagination = 1;
+  string Owner = 2;
+  string From = 3;
+  string Keyword = 4;
+  string Title = 5;
+}

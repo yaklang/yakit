@@ -5,7 +5,7 @@ const path = require("path")
 const process = require("process")
 const {yaklangEngineDir, remoteLinkDir} = require("../filePath")
 
-module.exports = (win, getClient) => {
+module.exports = (win) => {
     // CPU瞬时使用均值
     const cpuData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     // CPU监听计时器变量

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+import "yak_script_api.proto";
+
+service DocumentApi {
+  // document
+  rpc SaveMarkdownDocument(SaveMarkdownDocumentRequest) returns (Empty);
+  rpc GetMarkdownDocument(GetMarkdownDocumentRequest) returns (GetMarkdownDocumentResponse);
+  rpc DeleteMarkdownDocument(GetMarkdownDocumentRequest) returns (Empty);
+
+}
+
+message GetMarkdownDocumentResponse {
+  YakScript Script = 1;
+  string Markdown = 2;
+}
+
+message GetMarkdownDocumentRequest {
+  string YakScriptName = 1;
+  int64 YakScriptId = 2;
+}
+
+
+message SaveMarkdownDocumentRequest {
+  string YakScriptName = 1;
+  int64 YakScriptId = 2;
+  string Markdown = 3;
+}

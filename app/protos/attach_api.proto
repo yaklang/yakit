@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+service AttachApi {
+
+  // 接入标准输出和标准错误流
+  rpc AttachCombinedOutput(AttachCombinedOutputRequest) returns (stream ExecResult);
+
+  rpc SaveTextToTemporalFile(SaveTextToTemporalFileRequest) returns (SaveTextToTemporalFileResponse);
+}
+
+message AttachCombinedOutputRequest {
+
+}
+
+
+message SaveTextToTemporalFileRequest {
+  bytes Text = 1;
+}
+
+message SaveTextToTemporalFileResponse {
+  string FileName = 1;
+}

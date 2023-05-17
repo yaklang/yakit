@@ -1,0 +1,173 @@
+const {ipcMain} = require("electron")
+const handlerHelper = require("./handleStreamWithContext");
+const {USER_INFO} = require("../state");
+
+
+module.exports = (win, getClient) => {
+
+    const asyncGetOnlineProfile = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetOnlineProfile(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //获取私有域
+    ipcMain.handle("GetOnlineProfile", async (e, params) => {
+        return await asyncGetOnlineProfile(params)
+    })
+
+
+    const asyncSetOnlineProfile = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetOnlineProfile(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    //设置私有域
+    ipcMain.handle("SetOnlineProfile", async (e, params) => {
+        return await asyncSetOnlineProfile(params)
+    })
+
+    const asyncDownloadOnlinePluginById = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginById(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                if (params.OnlineID&&params.UUID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID,pluginUUID:params.UUID})
+                resolve(data)
+            })
+        })
+    }
+    //下载插件
+    ipcMain.handle("DownloadOnlinePluginById", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePluginById(params)
+    })
+
+    const asyncDownloadOnlinePluginByIds = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByIds(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 下载插件
+    ipcMain.handle("DownloadOnlinePluginByIds", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePluginByIds(params)
+    })
+
+    // 全部添加
+    const streamDownloadOnlinePluginAll = new Map()
+    ipcMain.handle("cancel-DownloadOnlinePluginAll", handlerHelper.cancelHandler(streamDownloadOnlinePluginAll))
+    ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
+        // params传Token，登录时调用：添加该用户名下的所有插件；不传Token：添加所有的
+        const newParams = {
+            ...params
+        }
+        if (params.isAddToken) {
+            newParams.Token = USER_INFO.token
+        }
+        delete newParams.isAddToken
+        let stream = getClient().DownloadOnlinePluginAll(newParams)
+        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
+    })
+
+    const asyncDeletePluginByUserID = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeletePluginByUserID(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除插件
+    ipcMain.handle("DeletePluginByUserID", async (e, params) => {
+        return await asyncDeletePluginByUserID(params)
+    })
+
+
+    const asyncDeleteAllLocalPlugins = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAllLocalPlugins(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除本地插件 暂时废弃
+    ipcMain.handle("DeleteAllLocalPlugins", async (e, params) => {
+        return await asyncDeleteAllLocalPlugins(params)
+    })
+
+    const asyncGetYakScriptTagsAndType = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptTagsAndType(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 统计
+    ipcMain.handle("GetYakScriptTagsAndType", async (e, params) => {
+        return await asyncGetYakScriptTagsAndType(params)
+    })
+
+
+    const asyncDeleteLocalPluginsByWhere = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteLocalPluginsByWhere(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除本地插件,带条件
+    ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
+        return await asyncDeleteLocalPluginsByWhere(params)
+    })
+
+    // 查询所有菜单
+    const asyncDownloadOnlinePluginByScriptNames = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByScriptNames(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadOnlinePluginByScriptNames", async (e, params) => {
+        return await asyncDownloadOnlinePluginByScriptNames(params)
+    })
+}

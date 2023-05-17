@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+service AssetsApi {
+  // 资产管理
+  rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
+  rpc DeletePorts(DeletePortsRequest) returns (Empty);
+  rpc QueryHosts(QueryHostsRequest) returns (QueryHostsResponse);
+  rpc DeleteHosts(DeleteHostsRequest) returns (Empty);
+  rpc QueryDomains(QueryDomainsRequest) returns(QueryDomainsResponse);
+  rpc DeleteDomains(DeleteDomainsRequest)returns(Empty);
+}
+
+
+message QueryPortsRequest {
+  Paging Pagination = 1;
+
+  // 根据 Hosts Ports 查询
+  string Hosts = 2;
+  string Ports = 3;
+  string Service = 4;
+  string State = 5;
+  string Title = 6;
+  bool   All = 7;
+}
+
+message Port {
+  string Host = 1;
+  int64 IPInteger = 2;
+  int64 Port = 3;
+  string Proto = 4;
+  string ServiceType = 5;
+  string State = 6;
+  string Reason = 7;
+  string Fingerprint = 8;
+  repeated string CPE = 9;
+  string HtmlTitle = 10;
+
+  int64 Id = 11;
+  int64 CreatedAt = 12;
+  int64 UpdatedAt = 13;
+  string TaskName = 14;
+}
+
+message QueryPortsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Port Data = 3;
+}
+
+message DeletePortsRequest {
+  string Hosts = 1;
+  string Ports = 2;
+  repeated int64 Id = 3;
+  bool All = 4;
+  repeated int64 Ids = 5;
+  bool DeleteAll = 6;
+  QueryPortsRequest Filter = 7;
+}
+
+message QueryHostsRequest {
+  Paging Pagination = 1;
+
+  string DomainKeyword = 2;
+  string Network = 3;
+}
+
+message Host {
+  int64 Id = 1;
+  string IP = 2;
+  int64 IPInteger = 3;
+  bool IsInPublicNet = 4;
+  repeated string Domains = 5;
+}
+
+message QueryHostsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Host Data = 3;
+}
+
+message DeleteHostsRequest {
+  bool DeleteAll = 1;
+  string DomainKeyword = 2;
+  string Network = 3;
+  int64 ID = 4;
+}
+
+message QueryDomainsRequest {
+  Paging Pagination = 1;
+  string Network = 2;
+  string DomainKeyword = 3;
+  string Title = 4;
+  bool   All = 5;
+}
+
+message Domain {
+  int64 ID = 1;
+  string DomainName = 2;
+  string IPAddr = 3;
+  string HTTPTitle = 4;
+}
+
+
+message QueryDomainsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Domain Data = 3;
+}
+
+message DeleteDomainsRequest {
+  bool DeleteAll = 1;
+  string DomainKeyword = 2;
+  string Network = 3;
+  int64 ID = 4;
+  QueryDomainsRequest Filter = 5;
+  repeated int64 IDs = 6;
+}
+

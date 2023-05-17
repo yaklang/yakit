@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service TunnelApi {
+  // Tunnel Server
+  rpc GetTunnelServerExternalIP(GetTunnelServerExternalIPParams) returns (GetTunnelServerExternalIPResponse);
+  rpc VerifyTunnelServerDomain(VerifyTunnelServerDomainParams) returns (VerifyTunnelServerDomainResponse) ;
+
+  // DNSLog / ICMP / RandomTrigger
+  rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
+  rpc GetCurrentYakBridgeLogServer(Empty) returns (YakDNSLogBridgeAddr);
+  rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
+  rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+  rpc RequireICMPRandomLength(Empty) returns (RequireICMPRandomLengthResponse);
+  rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
+  rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
+  rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+
+}
+
+
+message RandomPortTriggerNotification {
+  string RemoteAddr = 1;
+  string RemoteIP = 2;
+  int32 RemotePort = 3;
+  int32 LocalPort = 4;
+  repeated string History = 5;
+  int32 CurrentRemoteCachedConnectionCount = 6;
+  int32 LocalPortCachedHistoryConnectionCount = 7;
+  int64 TriggerTimestamp = 8;
+  int64 Timestamp = 9;
+}
+
+message QueryRandomPortTriggerRequest {
+  string Token = 1;
+}
+
+message RandomPortInfo {
+  string Token = 1;
+  string Addr = 2;
+  int32 Port = 3;
+}
+
+message ICMPTriggerNotification {
+  int32 Size = 1;
+  string CurrentRemoteAddr = 2;
+  repeated string Histories = 3;
+  int32 CurrentRemoteCachedConnectionCount = 4;
+  int32 SizedCachedHistoryConnectionCount = 5;
+  int64 TriggerTimestamp = 7;
+  int64 Timestamp = 8;
+}
+
+
+message QueryICMPTriggerResponse {
+  repeated ICMPTriggerNotification Notification = 1;
+}
+
+
+message QueryICMPTriggerRequest {
+  int32 Length = 1;
+}
+
+message RequireICMPRandomLengthResponse {
+  int32 Length = 1;
+  string ExternalHost = 2;
+}
+
+message DNSLogEvent {
+  string DNSType = 1;
+  string Token = 2;
+  string Domain = 3;
+  string RemoteAddr = 4;
+  string RemoteIP = 5;
+  int32 RemotePort = 6;
+  bytes Raw = 7;
+  int64 Timestamp = 8;
+}
+
+
+message QueryDNSLogByTokenResponse {
+  repeated DNSLogEvent Events = 1;
+}
+
+
+message QueryDNSLogByTokenRequest {
+  string Token = 1;
+  string DNSLogAddr = 2;
+}
+
+message DNSLogRootDomain {
+  string Domain = 1;
+  string Token = 2;
+}
+
+
+message YakDNSLogBridgeAddr {
+  string DNSLogAddr = 1;
+  string DNSLogAddrSecret = 2;
+}
+
+message GetTunnelServerExternalIPParams {
+  string Addr = 1;
+  string Secret = 2;
+}
+
+message GetTunnelServerExternalIPResponse {
+  string IP = 1;
+}
+
+
+message VerifyTunnelServerDomainParams {
+  GetTunnelServerExternalIPParams ConnectParams = 1;
+  string Domain = 2;
+}
+
+message VerifyTunnelServerDomainResponse {
+  string Domain = 1;
+  bool Ok = 2;
+  string Reason = 3;
+}
+
+

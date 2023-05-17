@@ -123,7 +123,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     setSpinLoading(true)
                     let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                     ipcRenderer
-                        .invoke("DownloadHtmlReport", {
+                        .invoke("download-html-report", {
                             JsonRaw: report.JsonRaw,
                             outputDir: absolutePath,
                             reportName: report.Title

@@ -3,7 +3,7 @@ const {ipcMain} = require("electron")
 const fs = require("fs")
 const FormData = require("form-data")
 
-module.exports = (win, getClient) => {
+module.exports = () => {
     ipcMain.handle("upload-img", async (event, params) => {
         const {path, type} = params
         // 创建数据流

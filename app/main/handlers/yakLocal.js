@@ -67,7 +67,7 @@ const windowsPidTableNetstatANO = (stdout) => {
 module.exports = {
     clearing: () => {
     },
-    register: (win, getClient) => {
+    register: () => {
         ipcMain.handle("set-release-edition-raw",(e,type)=>{
             setLocalCache("REACT_APP_PLATFORM",type)
             dbFile = type === "enterprise" ?  "company-default-yakit.db" : "default-yakit.db"

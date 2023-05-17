@@ -1,0 +1,320 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+import "http_flow_api.proto";
+
+
+service MITMApi {
+  // 中间人劫持
+  rpc MITM(stream MITMRequest) returns (stream MITMResponse);
+  rpc DownloadMITMCert(Empty) returns (MITMCert);
+  rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
+  rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
+
+}
+
+service MITMReplacerApi {
+  // MITM 衍生功能：
+  // Replacers 管理
+  rpc ExportMITMReplacerRules(Empty) returns (ExportMITMReplacerRulesResponse);
+  rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
+
+}
+
+service MITMExtractedDataApi {
+  // 从规则中提取数据
+  rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+}
+
+service MITMFilterApi {
+  // MITM 劫持的过滤器
+  rpc SetMITMFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
+  rpc GetMITMFilter(Empty) returns (SetMITMFilterRequest);
+}
+
+message MITMRuleExtractedData {
+  int64 Id = 1;
+  int64 CreatedAt = 2;
+  string SourceType = 3;
+  string TraceId = 4;
+  string Regexp = 5;
+  string RuleName = 6;
+  string Data = 7;
+}
+
+message QueryMITMRuleExtractedDataResponse {
+  repeated MITMRuleExtractedData Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+}
+
+
+message QueryMITMRuleExtractedDataRequest {
+  Paging Pagination = 1;
+  string HTTPFlowHash = 2;
+}
+
+message MITMContentReplacers {
+  repeated MITMContentReplacer Rules = 1;
+}
+
+message ImportMITMReplacerRulesRequest {
+  bytes JsonRaw = 1;
+  bool ReplaceAll = 2;
+}
+
+message ExportMITMReplacerRulesResponse {
+  bytes JsonRaw = 1;
+}
+
+message MITMCert {
+  bytes CaCerts = 1;
+  string LocalFile = 2;
+}
+
+
+message SetMITMFilterResponse {
+
+}
+
+
+message SetMITMFilterRequest {
+  repeated string includeHostname = 7;
+  repeated string excludeHostname = 8;
+  repeated string excludeSuffix = 9;
+  repeated string includeSuffix = 10;
+  repeated string excludeMethod = 11;
+  repeated string excludeContentTypes = 40;
+  repeated string excludeUri = 43;
+  repeated string includeUri = 44;
+}
+
+message HTTPCookieSetting {
+  string Key = 1;
+  string Value = 2;
+  string Path = 3;
+  string Domain = 4;
+  int64 Expires = 5;
+  int64 MaxAge = 6;
+  bool Secure = 7;
+  bool HttpOnly = 8;
+
+  // default
+  // lax
+  // strict
+  // none
+  string SameSiteMode = 9;
+}
+
+
+message MITMContentReplacer {
+  // 如果是正则的话，就把匹配到的内容替换成对应结果
+  // 优先 Golang 原生规则
+  // 然后再是 Re2 规则
+  // 然后子字符串
+  string Rule = 1;
+
+  // 这个功能意义在于，不要替代内容，仅标注颜色（敏感内容）
+  bool NoReplace = 2;
+
+  // 这里保存对应结果
+  string Result = 3;
+
+  // 选择替换之后的颜色
+  string Color = 4;
+
+  // 生效内容：默认对 body 生效
+  bool EnableForRequest = 5;
+  bool EnableForResponse = 6;
+  bool EnableForHeader = 9;
+  bool EnableForBody = 10;
+  bool EnableForURI = 15;
+
+  // Index
+  int32 Index = 7;
+
+  // 额外标签，用于标注 flow
+  repeated string ExtraTag = 8;
+
+  // 一键禁用启用全部
+  bool Disabled = 11;
+
+  // 展示名称，一般用于助记，不会有啥额外影响
+  string VerboseName = 12;
+
+  // 为数据包新增 Header
+  repeated HTTPHeader ExtraHeaders = 13;
+  repeated HTTPCookieSetting ExtraCookies = 14;
+
+  // Action
+  // 额外重复一次这个数据包（替换后的数据）
+  // 只有替换数据
+  bool ExtraRepeat = 16;
+  // 匹配掉之后直接丢包
+  bool Drop = 17;
+
+}
+
+message YakScriptHookItem {
+  int64 YakScriptId = 1;
+  string YakScriptName = 2;
+  string Verbose = 3;
+}
+
+
+message YakScriptHooks {
+  string HookName = 1;
+  repeated YakScriptHookItem Hooks = 2;
+}
+
+message MITMResponse {
+  bytes request = 1;
+
+  // 劫持的是 HTTPS 吗？
+  bool isHttps = 3;
+  string url = 4;
+
+  // 和 Request 中的一一对应
+  int64 id = 5;
+
+  // 过滤器
+  bool justFilter = 16;
+  repeated string includeHostname = 17;
+  repeated string excludeHostname = 18;
+  repeated string excludeSuffix = 19;
+  repeated string includeSuffix = 110;
+  repeated string excludeMethod = 111;
+  repeated string excludeContentTypes = 113;
+  repeated string excludeUri = 114;
+  repeated string includeUri = 115;
+
+  // 替代过滤器的内容
+  bool justContentReplacer = 120;
+  repeated MITMContentReplacer replacers = 121;
+
+  // 刷新表格: 如果这个是 True 的话，那么不应该发送回劫持器，应该只发送刷新表格的信息
+  bool refresh = 2;
+  HTTPFlow historyHTTPFlow = 22;
+
+  bool forResponse = 23;
+  bytes response = 24;
+  int64 responseId = 26;
+
+  // exec result
+  bool haveMessage = 27;
+  ExecResult message = 28;
+
+  bool getCurrentHook = 30;
+  repeated YakScriptHooks hooks = 31;
+
+  string RemoteAddr = 32;
+
+  // 这里用来展示一些服务端通知，直接弹框就好
+  bool haveNotification = 34;
+  bytes notificationContent = 33;
+
+  // 这两个标志是用来设置 MITM 加载状态的，用于服务端控制用户端的 "加载中"
+  bool haveLoadingSetter = 35;
+  bool loadingFlag = 36;
+
+  // Websocket 相关配置
+  bool isWebsocket = 37;
+  repeated string websocketEncode = 38;
+}
+
+message RemoveHookParams {
+  bool ClearAll = 1;
+
+  repeated string HookName = 2;
+  repeated string RemoveHookID = 3;
+}
+
+message Certificate {
+  bytes CrtPem = 1;
+  bytes KeyPem = 2;
+  repeated bytes CaCertificates = 3;
+}
+
+message MITMRequest {
+  bytes request = 1;
+  bytes response = 111;
+
+  string host = 2;
+  uint32 port = 3;
+  string downstreamProxy = 4;
+
+  // 用来保证不要串台
+  int64 id = 5;
+  // 这个是响应劫持需要注意的字段。保证不串台
+  int64 responseId = 16;
+  bool recover = 6;
+
+  // 过滤器
+  repeated string includeHostname = 7;
+  repeated string excludeHostname = 8;
+  repeated string excludeSuffix = 9;
+  repeated string includeSuffix = 10;
+  repeated string excludeMethod = 11;
+  repeated string excludeContentTypes = 40;
+  repeated string excludeUri = 43;
+  repeated string includeUri = 44;
+  bool updateFilter = 12;
+
+  // 劫持当前请求的响应信息
+  bool hijackResponse = 13;
+
+  // 手动丢包
+  bool drop = 14;
+
+  // 原封不动放行
+  bool forward = 15;
+
+  // mitm plugin 中间人插件，本质上是一段 Yak 代码
+  bool setYakScript = 21;
+  repeated ExecParamItem yakScriptParams = 22;
+  int64 yakScriptID = 23;
+  string yakScriptContent = 25;
+
+  // 查看当前启用插件
+  bool getCurrentHook = 30;
+
+  // 移除插件
+  bool removeHook = 31;  // 当这个为 true 的时候，将会
+  RemoveHookParams removeHookParams = 32;
+
+  // 设置自动转发
+  bool setAutoForward = 33;
+  bool autoForwardValue = 34;
+
+  // 设置清除上下文
+  bool setClearMITMPluginContext = 35;
+
+  // 设置启用插件模式，自动加载所有主插件。
+  // 如果不设置 initPluginNames 的话，启动所有默认插件
+  bool setPluginMode = 36;
+  repeated string initPluginNames = 37;
+
+  // 设置内容替代器
+  bool setContentReplacers = 38;
+  repeated MITMContentReplacer replacers = 39;
+
+  // 恢复 filter, 防止用户删除了全部的 filter
+  bool setResetFilter = 41;
+
+  // enable h2
+  bool enableHttp2 = 42;
+
+  repeated Certificate certificates = 45;
+
+  // gmtls config
+  bool enableGMTLS = 46;
+  bool onlyEnableGMTLS = 47;
+  bool preferGMTLS = 48;
+
+  // 代理用户名和密码
+  bool enableProxyAuth = 51;
+  string proxyUsername = 49;
+  string proxyPassword = 50;
+}

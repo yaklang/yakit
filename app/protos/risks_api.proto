@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+service RisksApi {
+  // Risk
+  rpc QueryRisks(QueryRisksRequest) returns (QueryRisksResponse);
+  rpc QueryRisk(QueryRiskRequest) returns (Risk);
+  rpc DeleteRisk(DeleteRiskRequest) returns (Empty);
+  rpc QueryAvailableRiskType(Empty) returns (Fields);
+  rpc QueryAvailableRiskLevel(Empty) returns (Fields);
+  rpc QueryRiskTableStats(Empty) returns (RiskTableStats);
+  rpc ResetRiskTableStats(Empty) returns (Empty);
+  rpc QueryAvailableTarget(Empty) returns (Fields);
+  rpc QueryNewRisk(QueryNewRiskRequest) returns (QueryNewRiskResponse);
+  rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
+  rpc UploadRiskToOnline(UploadRiskToOnlineRequest) returns (Empty);
+}
+
+message UploadRiskToOnlineRequest {
+  string Token = 1;
+}
+
+message NewRiskReadRequest {
+  int64 AfterId = 1;
+  repeated int64 Ids = 2;
+}
+
+message NewRisk {
+  string Title = 1;
+  int64 Id = 2;
+  int64 CreatedAt = 3;
+  int64 UpdatedAt = 4;
+  string Verbose = 5;
+  string TitleVerbose = 6;
+  bool IsRead = 7;
+}
+
+
+message QueryNewRiskResponse {
+  repeated NewRisk Data = 1;
+  int64 NewRiskTotal = 2;
+  int64 Total = 3;
+}
+
+message QueryNewRiskRequest {
+  int64 AfterId = 1;
+}
+
+message RiskTableStats {
+  // 最近一次更新的漏洞信息
+  int64 LatestCreatedAtTimestamp = 1;
+
+  Fields RiskTypeStats = 2;
+  Fields RiskLevelStats = 3;
+}
+
+
+
+message DeleteRiskRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated int64 Ids = 4;
+  QueryRisksRequest Filter = 3;
+  bool DeleteAll = 5;
+  bool DeleteRepetition = 6;
+}
+
+message Risk {
+  string Hash = 1;
+
+  string IP = 2;
+  string Url = 3;
+  int32  Port = 4;
+  string Host = 5;
+
+  string Title = 6;
+  string TitleVerbose = 7;
+  string RiskType = 8;
+  string RiskTypeVerbose = 9;
+  string Parameter = 10;
+  string Payload = 11;
+  string Details = 12;
+
+  string FromYakScript = 13;
+  bool WaitingVerified = 14;
+  string ReverseToken = 15;
+
+  int64 Id = 18;
+  int64 CreatedAt = 16;
+  int64 UpdatedAt = 17;
+
+  string Severity = 19;
+
+  // 数据包提取出来！
+  bytes Request = 20;
+  bytes Response = 21;
+
+  // 这个一般用于生成报告追踪报告中产生的漏洞
+  string RuntimeId = 22;
+
+  string CVE = 23;
+  string Description = 24;
+  string Solution = 25;
+  string TaskName = 26;
+}
+
+
+message QueryRiskRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated int64 Ids = 4;
+  QueryRisksRequest Filter = 3;
+}
+
+message QueryRisksResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated Risk Data = 3;
+}
+
+message QueryRisksRequest {
+  Paging Pagination = 1;
+
+  string Search = 2;
+  string Network = 3;
+  string Ports = 4;
+  string RiskType = 5;
+  string Token = 6;
+  bool WaitingVerified = 7;
+  string Severity = 8;
+}

@@ -1,0 +1,218 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+service HTTPFlowApi {
+  rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
+  rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
+  rpc QueryHTTPFlowByIds(GetHTTPFlowByIdsRequest) returns (HTTPFlows);
+  rpc GetHTTPFlowByIds(GetHTTPFlowByIdsRequest) returns (HTTPFlows);
+  rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
+  rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
+  rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
+  rpc QueryHTTPFlowsIds(QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
+  rpc HTTPFlowsFieldGroup(HTTPFlowsFieldGroupRequest) returns (HTTPFlowsFieldGroupResponse);
+
+  // Response Body 的魔法操作
+  rpc GetRequestBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
+  rpc GetResponseBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
+  rpc GetHTTPPacketBody(GetHTTPPacketBodyRequest) returns (Bytes);
+
+}
+
+message Bytes {
+  bytes Raw = 1;
+}
+
+message GetHTTPPacketBodyRequest {
+  string Packet = 1;
+  bytes PacketRaw = 2;
+}
+
+message DownloadBodyByHTTPFlowIDRequest {
+  int64 Id = 1;
+}
+message TagsCode {
+  string Value = 1;
+  int32 Total = 2;
+}
+
+message HTTPFlowsFieldGroupResponse {
+  repeated TagsCode Tags = 1;
+  repeated TagsCode StatusCode = 2;
+}
+
+message HTTPFlowsFieldGroupRequest {
+  bool RefreshRequest = 1;
+}
+
+message SetTagForHTTPFlowRequest {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated string Tags = 3;
+  repeated CheckSetTagsHTTPFlow CheckTags = 4;
+}
+
+message CheckSetTagsHTTPFlow {
+  int64 Id = 1;
+  string Hash = 2;
+  repeated string Tags = 3;
+}
+
+message QueryHTTPFlowResponse {
+  Paging Pagination = 1;
+  repeated HTTPFlow Data = 2;
+  int64 Total = 3;
+}
+
+message QueryHTTPFlowRequest {
+  Paging Pagination = 1;
+  string SourceType = 2;
+  string Methods = 3;
+  string SearchURL = 4;
+  string StatusCode = 5;
+  bool HaveCommonParams = 6;
+  bool HaveBody = 7;
+  string SearchContentType = 9;
+
+  // 一般用于查询增量，查询所有更新前的内容
+  int64 BeforeUpdatedAt = 10;
+  int64 AfterUpdatedAt = 11;
+  int64 AfterId = 12;
+  int64 BeforeId = 13;
+
+  string Keyword = 14;
+
+  bool OnlyWebsocket = 15;
+
+  // 查询包含在这个 URL 中的搜索结果
+  repeated string IncludeInUrl = 16;
+  // 不查询当前 URL 中的结果
+  repeated string ExcludeInUrl = 17;
+  // 仅查看当前 IP 对应的结果或不包含
+  repeated string IncludeInIP = 18;
+  repeated string ExcludeInIP = 19;
+
+  repeated int64 ExcludeId = 20;
+
+  repeated string IncludeInWhere = 21;
+  repeated int64 IncludeId = 22;
+
+  repeated string Tags = 23;
+  string HaveParamsTotal = 24;
+  repeated string Color = 25;
+  int64 OffsetId = 26;
+
+  int64 AfterBodyLength = 27;
+  int64 BeforeBodyLength = 28;
+  string IsWebsocket = 29;
+}
+
+message DeleteHTTPFlowRequest {
+  bool DeleteAll = 1;
+  repeated int64 Id = 4;
+  repeated string ItemHash = 2;
+
+  string URLPrefix = 3;
+  QueryHTTPFlowRequest Filter = 5;
+  repeated string  URLPrefixBatch = 6;
+}
+
+message QueryHTTPFlowsIdsRequest {
+  repeated string IncludeInWhere = 1;
+  string SourceType = 2;
+}
+
+message QueryHTTPFlowsIdsResponse {
+  repeated HTTPFlow Data = 1;
+}
+
+message GetHTTPFlowByIdsRequest {
+  repeated int64 Ids = 2;
+}
+
+message GetHTTPFlowByIdRequest {
+  int64 Id = 1;
+}
+
+message GetHTTPFlowByHashRequest {
+  string Hash = 1;
+}
+
+
+
+message FuzzableParam {
+  string Position = 1;
+  string ParamName = 2;
+  bytes OriginValue = 3;
+  bytes AutoTemplate = 4;
+  bool IsHTTPS = 5;
+}
+
+
+message HTTPFlow {
+  bool IsHTTPS = 2;
+  string Url = 3;
+  repeated HTTPHeader RequestHeader = 4;
+  bytes Request = 5;
+  repeated HTTPHeader ResponseHeader = 6;
+  bytes Response = 7;
+  string SourceType = 8;
+  string Path = 9;
+  string Method = 10;
+  int64 BodyLength = 11;
+  string BodySizeVerbose = 19;
+  int64 RequestLength = 31; // 设置 Request Body 长度
+  string RequestSizeVerbose = 32; // 设置 Request
+  string ContentType = 12;
+  int64 StatusCode = 13;
+  int64 GetParamsTotal = 14;
+  int64 PostParamsTotal = 15;
+  int64 CookieParamsTotal = 22;
+  int64 UpdatedAt = 16;
+  int64 CreatedAt = 17;
+  string Hash = 18;
+
+  repeated FuzzableParam GetParams = 20;
+  repeated FuzzableParam PostParams = 21;
+  repeated FuzzableParam CookieParams = 23;
+
+  string HostPort = 24;
+  string IPAddress = 25;
+
+  string HtmlTitle = 26;
+
+  string Tags = 27;
+  bool NoFixContentLength = 28;
+
+  uint64 Id = 29;
+
+  // websocket 相关字段
+  bool IsWebsocket = 30;
+  string WebsocketHash = 33;
+
+  // 标记 UTF8 Invalid
+  /*
+    一般这不是无损的情况，会涉及到用户 Copy Paste 直接 Body 的需求
+  */
+  bool InvalidForUTF8Request = 34;
+  bool InvalidForUTF8Response = 35;
+  string RawRequestBodyBase64 = 36;
+  string RawResponseBodyBase64 = 37;
+
+  // 可以安全的传输到 Fuzzer 的 HTTPRequest
+  string SafeHTTPRequest = 38;
+
+  /*
+  在完全数据下，可加载 Domain 和 RootDomain 还有 Json
+  */
+  repeated string Domains = 40;
+  repeated string RootDomains = 41;
+  repeated string JsonObjects = 42;
+}
+
+message HTTPFlows {
+  repeated HTTPFlow Data = 1;
+}

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+
+message Empty {
+}
+
+// 执行脚本
+message ExecParamItem {
+  string Key = 1;
+  string Value = 2;
+}
+
+message ExecResult {
+  string Hash = 1;
+  string OutputJson = 2;
+  bytes Raw = 3;
+  bool IsMessage = 4;
+  bytes Message = 5;
+
+  // 如果是一个保存过的 ExecResult 他应该有数据库记录 ID
+  int64 Id = 6;
+
+  string RuntimeID = 7;
+  float Progress = 8;
+}
+
+message Paging {
+  int64 Page = 51;
+  int64 Limit = 52;
+  string OrderBy = 53;
+  string Order = 54;
+}
+
+message HTTPHeader {
+  string Header = 1;
+  string Value = 2;
+}
+
+message FieldName {
+  string Name = 1;
+  string Verbose = 2;
+  int32 Total = 3;
+
+  // 比上一次的增量/变化量
+  int32 Delta = 4;
+}
+
+message Fields {
+  repeated FieldName Values = 1;
+}
+
+message SimpleScript {
+  string Content = 1;
+}

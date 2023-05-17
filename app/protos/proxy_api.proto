@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service ProxyApi {
+
+  rpc GetEngineDefaultProxy(Empty) returns (DefaultProxyResult);
+  rpc SetEngineDefaultProxy(DefaultProxyResult) returns (Empty);
+}
+
+message DefaultProxyResult {
+  string Proxy = 1;
+}

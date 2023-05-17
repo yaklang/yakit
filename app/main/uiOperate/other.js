@@ -3,7 +3,7 @@ const URL = require("url")
 const Path = require("path")
 const Fs = require("fs")
 
-module.exports = (win, getClient) => {
+module.exports = (win) => {
     /**
      * @name 判断传入字符串是否为一个正常的URL
      * @param {String} value

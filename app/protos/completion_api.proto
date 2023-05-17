@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+
+service CompletionApi {
+  // 自动生成补全
+  rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
+  rpc GetYakVMBuildInMethodCompletion(GetYakVMBuildInMethodCompletionRequest) returns (GetYakVMBuildInMethodCompletionResponse);
+  rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
+  rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
+
+}
+
+message StaticAnalyzeErrorResult {
+  bytes Message = 1;
+  int64 StartLineNumber = 2;
+  int64 EndLineNumber = 3;
+  int64 StartColumn = 4;
+  int64 EndColumn = 5;
+  bytes RawMessage = 6;
+  string Severity = 7;
+}
+
+// 这个定义我们争取和 monaco editor suggestion 基本一致
+message SuggestionDescription {
+  string Label = 1;
+  string Description = 2;
+  string InsertText = 3;
+  bool JustAppend = 4;
+
+  // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
+  string DefinitionVerbose = 5;
+}
+
+message MethodSuggestion {
+  // 产生这个方法提示的关键词是啥？
+  repeated string ExactKeywords = 1;
+  repeated string FuzzKeywords = 2;
+  repeated string Regexp = 3;
+
+  // 提示的内容是啥？
+  repeated SuggestionDescription Suggestions = 4;
+
+  // 这个代码提示方法组是啥？
+  string Verbose = 5;
+}
+
+
+message GetYakVMBuildInMethodCompletionResponse {
+  repeated MethodSuggestion Suggestions = 1;
+}
+
+
+message YaklangCompileAndFormatResponse {
+  string Code = 1;
+  repeated StaticAnalyzeErrorResult Errors = 2;
+}
+
+
+message YaklangCompileAndFormatRequest {
+  string Code = 1;
+}
+
+message StaticAnalyzeErrorResponse {
+  repeated StaticAnalyzeErrorResult Result = 1;
+}
+
+message StaticAnalyzeErrorRequest {
+  bytes Code = 1;
+}
+
+message YakitCompletionRawResponse {
+  bytes RawJson = 1;
+}
+
+message GetYakVMBuildInMethodCompletionRequest {
+
+}

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service MiscApi {
+
+  // 重置到恢复出厂设置
+  rpc ResetAndInvalidUserData(ResetAndInvalidUserDataRequest) returns (Empty);
+
+  // 判断当前引擎对网卡是否有操作权限？
+  // 主要是能否发包等敏感操作
+  // Windows 判断是否是管理员即可 I Am Admin
+  // Linux 和 MacOS 应该尝试 pcap 打开网卡就行
+  rpc IsPrivilegedForNetRaw(Empty) returns (IsPrivilegedForNetRawResponse);
+  rpc PromotePermissionForUserPcap(Empty) returns (Empty);
+
+  // machine id
+  rpc GetMachineID(Empty) returns (GetMachineIDResponse);
+}
+
+message GetMachineIDResponse {
+  string MachineID = 1;
+}
+
+message ResetAndInvalidUserDataRequest {
+
+}
+
+message IsPrivilegedForNetRawResponse {
+  bool IsPrivileged = 1;
+  string Advice = 2;
+  string AdviceVerbose = 3;
+}

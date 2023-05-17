@@ -1,0 +1,415 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+import "http_flow_api.proto";
+
+
+service FuzzerApi {
+  rpc GetHistoryHTTPFuzzerTask(GetHistoryHTTPFuzzerTaskRequest) returns (HistoryHTTPFuzzerTaskDetail);
+  rpc QueryHistoryHTTPFuzzerTask(Empty) returns (HistoryHTTPFuzzerTasks);
+  rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
+  rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
+  rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
+  rpc RenderVariables(RenderVariablesRequest) returns (RenderVariablesResponse);
+  rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
+  rpc ExtractHTTPResponse(ExtractHTTPResponseParams) returns (ExtractHTTPResponseResult);
+  rpc RedirectRequest(RedirectRequestParams) returns (FuzzerResponse);
+  rpc HTTPRequestMutate(HTTPRequestMutateParams) returns (MutateResult);
+  rpc HTTPResponseMutate(HTTPResponseMutateParams) returns (MutateResult);
+  rpc FixUploadPacket(FixUploadPacketRequest) returns (FixUploadPacketResponse);
+  rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
+  rpc GenerateExtractRule(GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
+  rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
+
+  // HTTPFuzzerResponse
+  // 这个挺特殊的，因为数据包太多了，会卡，所以后端会保存一份，通过这个接口做缓存查询
+  rpc QueryHTTPFuzzerResponseByTaskId(QueryHTTPFuzzerResponseByTaskIdRequest) returns (QueryHTTPFuzzerResponseByTaskIdResponse) ;
+
+  // 从一个 FuzzerRequest 中提取 Url
+  rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
+
+  // FuzzerResponse 对象转 HTTPFlow：以便分析和模糊测试
+  rpc ConvertFuzzerResponseToHTTPFlow(FuzzerResponse) returns (HTTPFlow);
+
+  // 渲染 Fuzzer 模版
+  rpc StringFuzzer(StringFuzzerRequest) returns (StringFuzzerResponse);
+}
+
+message StringFuzzerResponse {
+  repeated bytes Results = 1;
+}
+
+
+// Fuzz 相关模型
+message StringFuzzerRequest {
+  string Template = 1;
+  string HotPatchCode = 2;
+  string HotPatchCodeWithParamGetter = 3;
+  int64 Limit = 4;
+  int64 TimeoutSeconds = 5;
+}
+
+message ExtractedUrl {
+  string Url = 1;
+}
+
+message QueryHTTPFuzzerResponseByTaskIdResponse {
+  Paging Pagination = 1;
+  repeated FuzzerResponse Data = 2;
+  int64 Total = 3;
+  int64 TotalPage = 4;
+}
+
+message QueryHTTPFuzzerResponseByTaskIdRequest {
+  // 用来索引对应的请求
+  int64 TaskId = 1;
+  string FuzzRequestToken = 2;
+
+  // 上一个请求的时间戳
+  int64 LastResponseTimestamp = 3;
+
+  Paging Pagination = 4;
+}
+
+message ExtractDataResponse {
+  string Token = 1;
+  bytes Extracted = 2;
+}
+
+message ExtractDataRequest {
+  bytes Data = 1;
+
+  // regexp mode -> regexp between 模式
+  string Mode = 2;
+
+  // 根据前后缀提取
+  string PrefixRegexp = 3;
+  string SuffixRegexp = 4;
+
+  // 根据一个正则提取
+  string MatchRegexp = 5;
+
+  // Token 用来标注这个数据是谁的，一般可以用来处理提取的数据
+  string Token = 6;
+
+  // 如果不再有数据了，设置这个 flag
+  bool End = 7;
+}
+message GenerateExtractRuleResponse {
+  string PrefixRegexp = 1;
+  string SuffixRegexp = 2;
+  string SelectedRegexp = 3;
+}
+
+message IsMultipartFormDataRequestResult {
+  bool IsMultipartFormData = 1;
+}
+
+message GenerateExtractRuleRequest {
+  // 要提取规则的样例数据
+  bytes Data = 1 ;
+  // 选择的文本
+  bytes Selected = 2;
+  // 选择前后缀的偏移量
+  int64 OffsetSize = 3;
+}
+
+message FixUploadPacketResponse {
+  bytes Request = 1;
+}
+
+message FixUploadPacketRequest {
+  bytes Request = 1;
+}
+
+message HTTPResponseMutateParams {
+  bytes Response = 2;
+}
+
+message MutateResult {
+  bytes Result = 1;
+  repeated bytes ExtraResults = 2;
+}
+
+
+message HTTPRequestMutateParams {
+  bytes Request = 1;
+
+  repeated string FuzzMethods = 2;
+
+  // use chunk encode
+  bool ChunkEncode = 3;
+
+  // multipart boundary
+  bool UploadEncode = 4;
+}
+
+message RedirectRequestParams {
+  string Request = 1;
+  string Response = 2;
+  bool IsHttps = 3;
+  double PerRequestTimeoutSeconds = 4;
+  string Proxy = 5;
+}
+
+message ExtractHTTPResponseResult {
+  repeated FuzzerParamItem Values = 1;
+}
+
+message HTTPResponseExtractor {
+  string Name = 1; // default for index
+  string Type = 2; // regex / xpath / kval / json / nuclei-dsl
+  string Scope = 3; // body / header / raw
+  repeated string Groups = 4;
+  repeated int64 RegexpMatchGroup = 5;
+  string XPathAttribute = 6;
+}
+
+message ExtractHTTPResponseParams {
+  repeated HTTPResponseExtractor Extractors = 1;
+  string HTTPResponse = 2;
+}
+
+message MatchHTTPResponseResult {
+  bool Matched = 1;
+}
+
+message HTTPResponseMatcher {
+  repeated HTTPResponseMatcher SubMatchers = 1;
+  string SubMatcherCondition = 2;
+
+  string MatcherType = 3;
+  string Scope = 4;
+  string Condition = 5;
+  repeated string Group = 6;
+  string GroupEncoding = 7;
+  bool Negative = 8;
+  string ExprType = 9;
+}
+
+message MatchHTTPResponseParams {
+  repeated HTTPResponseMatcher Matchers = 1;
+  string MatcherCondition = 2;
+
+  bool IsHTTPS = 3;
+  string HTTPResponse = 4;
+  string HTTPRequest = 5;
+}
+
+message RenderVariablesResponse {
+  repeated KVPair Results = 1;
+}
+
+message KVPair {
+  string Key = 1;
+  string Value = 2;
+}
+
+message RenderVariablesRequest {
+  repeated KVPair Params = 1;
+  bool IsHTTPS = 2;
+  bytes HTTPRequest = 5;
+  bytes HTTPResponse = 4;
+}
+
+message FuzzerParamItem {
+  string Key = 1;
+  string Value = 2;
+
+  // nuclei-dsl / raw
+  string Type = 3;
+}
+
+message PreloadHTTPFuzzerParamsResponse {
+  repeated FuzzerParamItem Values = 2;
+}
+
+message PreloadHTTPFuzzerParamsRequest {
+  repeated FuzzerParamItem Params = 1;
+}
+
+
+message FuzzerResponse {
+
+  string Method = 1;
+  int32  StatusCode = 2;
+  string Host = 3;
+  string ContentType = 4;
+  repeated HTTPHeader Headers = 5;
+  bytes ResponseRaw = 6;
+
+  // response body 的长度
+  int64 BodyLength = 7;
+  // 这个请求大约花费了多长时间
+  int64 DurationMs = 8; // FirstByte Duration
+  int64 DNSDurationMs = 40;
+  int64 FirstByteDurationMs = 41;
+  int64 TotalDurationMs = 42;
+
+  // 给一个随机 ID
+  string UUID = 9;
+  // timestamp 请求
+  int64 Timestamp = 10;
+
+  // RequestRaw 原始数据包
+  bytes RequestRaw = 11;
+
+  // 猜测可能的编码
+  string GuessResponseEncoding = 12;
+
+  // 基础状态
+  bool Ok = 31;
+  string Reason = 32;
+
+  // IsHTTPS
+  bool IsHTTPS = 33;
+
+  // payloads
+  repeated string Payloads = 34;
+
+  double BodySimilarity = 35;
+  double HeaderSimilarity = 36;
+
+  // Matched by filter
+  bool MatchedByFilter = 37;
+
+  string Url = 38;
+
+  int64 TaskId = 39;
+
+  // 使用哪个代理
+  string Proxy = 43;
+  string RemoteAddr = 44;
+
+  // 如果设置了
+  repeated KVPair ExtractedResults = 45;
+  bool MatchedByMatcher = 46;
+}
+
+message FuzzerResponseFilter {
+  // 设置 body 大小作为过滤依据
+  int64 MinBodySize = 1;
+  int64 MaxBodySize = 2;
+
+  // 设置正则作为过滤依据，这个正则针对整个数据包生效
+  repeated string Regexps = 3;
+  repeated string Keywords = 4;
+
+  repeated string StatusCode = 6;
+}
+
+message FuzzerRequest {
+  string Request = 1;
+  bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
+  repeated FuzzerParamItem Params = 2;
+  int64 Concurrent = 3;
+  bool IsHTTPS = 4;
+  bool ForceFuzz = 5;
+  string Proxy = 6;
+  double PerRequestTimeoutSeconds = 7;
+
+  // 用于处理 Host 和 Header 中 Host 不一致的情况
+  string ActualAddr = 8;
+
+  // redirect setting
+  bool NoFollowRedirect = 9;
+  // 这个弃用了，Meta 自动归类到 Redirect 里面
+  bool NoFollowMetaRedirect = 10;
+  bool FollowJSRedirect = 11;
+  double RedirectTimes = 27;
+
+  // 如果从历史加载，就用这个！
+  int32 HistoryWebFuzzerId = 12;
+
+  // 如果不想自动修复 Content-Length
+  bool NoFixContentLength = 13;
+
+  // 热加载代码
+  string HotPatchCode = 14;
+
+  // 设置 Fuzzer
+  FuzzerResponseFilter Filter = 15;
+
+  // 随时 delay
+  double DelayMinSeconds = 17;
+  double DelayMaxSeconds = 18;
+
+  // 获取模版数据
+  string HotPatchCodeWithParamGetter = 19;
+
+  // retry
+  int64 MaxRetryTimes = 20; // 最大重试次数
+  string RetryInStatusCode = 21; // 命中这些状态码的时候，重试
+  string RetryNotInStatusCode = 22; // 不是这些状态的时候，重试
+  double RetryWaitSeconds = 25; // 重试等待时间
+  double RetryMaxWaitSeconds = 26; // 最大重试等待时间
+
+  // Response Charset
+  // 默认或者不填为 UTF8
+  // 中国的话，用 gb18030
+  string ResponseCharset = 23;
+
+  // Verbose
+  // 这个字段不需要用户做任何处理，也不需要客户端传递
+  // 这是服务端用来初始化的字段，用以构建快速搜索
+  string Verbose = 24;
+
+  // dns config
+  repeated string DNSServers = 28;
+  repeated KVPair EtcHosts = 29;
+
+  // 不启用系统代理
+  bool NoSystemProxy = 30;
+
+  // 重复次数
+  int64 RepeatTimes = 31;
+
+  // Extractor n Matchers
+  repeated HTTPResponseExtractor Extractors = 32;
+  repeated HTTPResponseMatcher Matchers = 33;
+  string MatchersCondition = 34;
+}
+
+
+message DeleteHistoryHTTPFuzzerTaskRequest {
+  int32 Id = 1;
+}
+
+
+message GetHistoryHTTPFuzzerTaskRequest {
+  int32 Id = 1;
+}
+
+message HistoryHTTPFuzzerTaskDetail {
+  HistoryHTTPFuzzerTask BasicInfo = 1;
+  FuzzerRequest OriginRequest = 2;
+}
+
+message HistoryHTTPFuzzerTask {
+  int32 Id = 1;
+  int64 CreatedAt = 2;
+  int32 HTTPFlowTotal = 3;
+  int32 HTTPFlowSuccessCount = 4;
+  int32 HTTPFlowFailedCount = 5;
+  string Host = 6;
+  int32  Port = 7;
+}
+
+message HistoryHTTPFuzzerTasks {
+  repeated HistoryHTTPFuzzerTask Tasks = 1;
+}
+
+message HistoryHTTPFuzzerTasksResponse {
+  repeated HistoryHTTPFuzzerTaskDetail Data = 1;
+  int64 Total = 2;
+  int64 TotalPage = 3;
+  Paging Pagination = 4;
+}
+
+message QueryHistoryHTTPFuzzerTaskExParams {
+  Paging Pagination = 1;
+  string Keyword = 2;
+}

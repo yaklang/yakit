@@ -29,7 +29,7 @@ const MultiHttpFlowViewer: React.FC<MultiHttpFlowViewerProp> = React.memo((props
 
     useEffect(() => {
         setLoading(true)
-        ipcRenderer.invoke("QueryHTTPFlowByIds", {
+        ipcRenderer.invoke("query-http-flow-by-ids", {
             Ids: props.ids,
         }).then((rsp: { Data: HTTPFlow[] }) => {
             setFlows(rsp?.Data || [])

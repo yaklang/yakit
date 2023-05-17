@@ -1,7 +1,7 @@
 const {service} = require("../httpServer")
 const {ipcMain} = require("electron")
 
-module.exports = (win, getClient) => {
+module.exports = () => {
     ipcMain.handle("axios-api", async (e, params) => {
         return service(params)
     })

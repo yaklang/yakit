@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+import "tunnel_api.proto";
+import "ysoserial_go_api.proto";
+
+
+service FacadesApi {
+  //  RMI/DNSLog
+  rpc StartFacades(StartFacadesParams) returns (stream ExecResult);
+  rpc StartFacadesWithYsoObject(StartFacadesWithYsoParams) returns (stream ExecResult);
+  rpc ApplyClassToFacades(ApplyClassToFacadesParamsWithVerbose) returns (Empty);
+  rpc BytesToBase64(BytesToBase64Request) returns (BytesToBase64Response);
+  rpc ConfigGlobalReverse(ConfigGlobalReverseParams) returns (stream Empty);
+  rpc AvailableLocalAddr(Empty) returns (AvailableLocalAddrResponse);
+  rpc GetGlobalReverseServer(Empty) returns (GetGlobalReverseServerResponse);
+
+  // 注册一个 Facades HTTP 响应
+  rpc RegisterFacadesHTTP(RegisterFacadesHTTPRequest) returns (RegisterFacadesHTTPResponse);
+
+}
+
+message RegisterFacadesHTTPResponse {
+  // http(s)://localhost:<facadesport>/...
+  string FacadesUrl = 1;
+}
+
+message RegisterFacadesHTTPRequest {
+  // 这个优先级比较高，如果有这个的话，他的响应应该像是
+  // /_yakit/history/<id>
+  int64 HTTPFlowID = 1;
+
+  // 散装 HTTPFlow
+  bytes HTTPResponse = 2;
+  string Url = 3;
+}
+
+message StartFacadesParams {
+  // 端口复用的
+  string LocalFacadeHost = 41;
+  int32 LocalFacadePort = 42;
+  //  bool EnableRMIServer = 1;
+  //  int32 RMILocalPort = 2;
+  //
+  bool EnableDNSLogServer = 3;
+  int32 DNSLogLocalPort = 4;
+  //
+  //  bool EnableHTTPServer = 23;
+  //  int32 HTTPServerPort = 24;
+
+  // 连接远程端口参数
+  GetTunnelServerExternalIPParams ConnectParam = 5;
+
+  // 远端端口开放情况
+  //  int32 RMIRemotePort = 6;
+  int32 FacadeRemotePort = 16;
+  int32 DNSLogRemotePort = 7;
+
+  // 外部域名
+  string ExternalDomain = 8;
+
+  // 验证端口是否转发成功
+  bool Verify = 9;
+}
+
+
+
+message StartFacadesWithYsoParams {
+  // 端口复用的
+  bool IsRemote = 1;
+  int32 ReversePort = 2;
+  string ReverseHost = 4;
+  string Token = 5;
+  GetTunnelServerExternalIPParams BridgeParam = 6;
+
+  YsoOptionsRequest GenerateClassParams = 7;
+}
+
+message ApplyClassToFacadesParamsWithVerbose {
+  YsoOptionsRequerstWithVerbose GenerateClassParams = 1;
+  string Token = 2;
+}
+
+message BytesToBase64Request{
+  bytes Bytes = 1;
+}
+
+message BytesToBase64Response{
+  string Base64 = 1;
+}
+
+message ConfigGlobalReverseParams {
+  GetTunnelServerExternalIPParams ConnectParams = 1;
+  string LocalAddr = 2;
+}
+
+
+message NetInterface {
+  string Name = 1;
+  string Addr = 2;
+  string IP = 3;
+}
+
+message AvailableLocalAddrResponse {
+  repeated NetInterface Interfaces = 1;
+}
+
+message GetGlobalReverseServerResponse {
+  string PublicReverseIP = 1;
+  int32 PublicReversePort = 2;
+  string LocalReverseAddr = 3;
+  int32 LocalReversePort = 4;
+}

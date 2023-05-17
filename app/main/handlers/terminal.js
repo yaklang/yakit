@@ -4,7 +4,7 @@ const process = require("process");
 const streamLib = require("stream");
 const buffer = require("buffer");
 
-module.exports = (win, getClient) => {
+module.exports = (win) => {
     const streams = new Map();
     ipcMain.handle("terminal", (e, token) => {
         const existed = streams.get(token);

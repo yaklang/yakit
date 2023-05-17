@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+
+service WebSocketApi {
+  // WebSocket
+  rpc CreateWebsocketFuzzer(stream ClientWebsocketRequest) returns (stream ClientWebsocketResponse);
+  rpc QueryWebsocketFlowByHTTPFlowWebsocketHash(QueryWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (WebsocketFlows);
+  rpc DeleteWebsocketFlowByHTTPFlowWebsocketHash(DeleteWebsocketFlowByHTTPFlowWebsocketHashRequest) returns (Empty);
+  rpc DeleteWebsocketFlowAll(Empty) returns (Empty);
+}
+
+message DeleteWebsocketFlowByHTTPFlowWebsocketHashRequest {
+  string WebsocketRequestHash = 1;
+}
+
+message WebsocketFlow {
+  int64 ID = 1;
+  int64 CreatedAt = 2;
+  string WebsocketRequestHash = 3;
+  int64 FrameIndex = 4;
+  bool FromServer = 5;
+  string MessageType = 6;
+  bytes Data = 7;
+  string DataSizeVerbose = 8;
+  int64 DataLength = 9;
+  string DataVerbose = 10;
+  bool IsJson = 11;
+  bool IsProtobuf = 12;
+}
+
+
+message WebsocketFlows {
+  Paging Pagination = 1;
+  repeated WebsocketFlow Data = 2;
+  int64 Total = 4;
+}
+
+
+message QueryWebsocketFlowByHTTPFlowWebsocketHashRequest {
+  string WebsocketRequestHash = 1;
+  Paging Pagination = 2;
+}
+
+message ClientWebsocketResponse {
+  // 切换协议是否成功
+  bool SwitchProtocolSucceeded = 2;
+
+  // 是 Websocket 数据帧吗？
+  bool IsDataFrame = 1;
+  // 服务器端返回还是？
+  bool FromServer = 4;
+  // 编码是啥样的？
+  repeated string GuessEncode = 5;
+
+  // 其他状态，以及出现问题的原因
+  string StatusVerbose = 6;
+  string ReasonVerbose = 7;
+
+  // DataLength
+  int64 DataLength = 8;
+  bytes Data = 9;
+
+  bool IsJson = 10;
+  bool IsProtobuf = 11;
+
+  int64 DataFrameIndex = 12;
+  string WebsocketHash = 13;
+
+  // 设置大小
+  string DataSizeVerbose = 14;
+  string DataVerbose = 15;
+
+  // 升级
+  bool IsUpgradeResponse = 16;
+  bytes UpgradeResponse = 17;
+}
+
+
+message ClientWebsocketRequest {
+  bool IsTLS = 1;
+  bytes UpgradeRequest = 2;
+
+  // 要发送到服务器的请求
+  bytes ToServer = 3;
+  repeated string Encode = 4;
+
+  // 是否允许 fuzz 标签渲染，然后发送
+  bool AllowToFuzz = 5;
+  int64 TotalTimeoutSeconds = 6;
+
+  string Proxy = 7;
+}

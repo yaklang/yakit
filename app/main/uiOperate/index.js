@@ -1,6 +1,6 @@
 const {ipcMain} = require("electron")
 
-module.exports = (win, getClient) => {
+module.exports = (win) => {
     ipcMain.handle("UIOperate", (e, params) => {
         switch (params) {
             case "close":

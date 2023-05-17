@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package ypb;
+option go_package = "/;ypb";
+import "message_api.proto";
+
+
+service OnlineApi {
+  // Online
+  rpc GetOnlineProfile(Empty) returns (OnlineProfile);
+  rpc SetOnlineProfile(OnlineProfile) returns (Empty);
+  rpc DownloadOnlinePluginById(DownloadOnlinePluginByIdRequest) returns (Empty);
+  rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
+  rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
+  rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
+  rpc DeleteAllLocalPlugins(Empty) returns (Empty);
+  rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
+  rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
+  rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+
+}
+
+message DownloadOnlinePluginByScriptName {
+  string ScriptName = 1;
+  int64 Id = 2;
+}
+
+message DownloadOnlinePluginByScriptNamesResponse {
+  repeated DownloadOnlinePluginByScriptName Data = 1;
+}
+
+message DownloadOnlinePluginProgress {
+  // 进度
+  double Progress = 1;
+  string Log = 2;
+}
+
+message DownloadOnlinePluginByScriptNamesRequest {
+  repeated string ScriptNames = 1;
+  string Token = 2;
+}
+
+message DeleteLocalPluginsByWhereRequest {
+  string Keywords = 1;
+  string Type = 2;
+  int64  UserId = 3;
+  string UserName = 4;
+}
+
+message TagsAndType {
+  string Value = 1;
+  int32 Total = 2;
+}
+
+message GetYakScriptTagsAndTypeResponse {
+  repeated TagsAndType Type = 1;
+  repeated TagsAndType Tag = 2;
+}
+
+message DeletePluginByUserIDRequest {
+  int64 UserID = 1;
+  string OnlineBaseUrl = 2;
+}
+
+message DownloadOnlinePluginByTokenRequest {
+  string Token = 1;
+  bool BindMe = 2;
+  string Keywords = 3;
+  string PluginType = 4;
+  string Status = 5;
+  string IsPrivate = 6;
+  string Tags = 7;
+  string UserName = 8;
+  int64  UserId = 9;
+  string TimeSearch = 10;
+  string Group = 11;
+}
+
+message DownloadOnlinePluginByIdsRequest {
+  repeated int64 OnlineIDs = 1;
+  string Token = 2;
+  repeated string UUID = 3;
+}
+
+
+message DownloadOnlinePluginByIdRequest {
+  int64 OnlineID = 1;
+  string Token = 2;
+  string UUID = 3;
+}
+
+message OnlineProfile {
+  string BaseUrl = 1;
+  string Password = 2;
+  string Proxy = 3;
+  bool   IsCompany = 4;
+}
