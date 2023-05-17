@@ -16,7 +16,8 @@ import {
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
-    OperationRecordRes
+    OperationRecordRes,
+    OtherMenuListProps
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -41,8 +42,8 @@ const keyToFontSize: Record<string, number> = {
     "font-size-large": 20
 }
 
-/** 编辑器右键默认菜单 */
-const DefaultMenu: EditorMenuItemType[] = [
+/** 编辑器右键默认菜单 - 顶部 */
+const DefaultMenuTop: EditorMenuItemType[] = [
     {
         key: "font-size",
         label: "字体大小",
@@ -52,6 +53,10 @@ const DefaultMenu: EditorMenuItemType[] = [
             {key: "font-size-large", label: "大"}
         ]
     },
+]
+
+/** 编辑器右键默认菜单 - 底部 */
+const DefaultMenuBottom: EditorMenuItemType[] = [
     {key: "cut", label: "剪切"},
     {key: "copy", label: "复制"},
     {key: "paste", label: "粘贴"}
@@ -89,7 +94,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const preHeightRef = useRef<number>(0)
 
     /** @name 记录右键菜单组信息 */
-    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenu])
+    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop,...DefaultMenuBottom])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
     const keyBindingRef = useRef<KeyboardToFuncProps>({})
     /** @name 记录右键菜单关系[菜单组key值-菜单组内菜单项key值数组] */
@@ -98,7 +103,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [fontsize, setFontsize] = useState<number>(fontSize)
 
-    // 读取上次选择的字体大小 
+    // 读取上次选择的字体大小/换行符 
     useEffect(()=>{
         if(editorOperationRecord){
             getRemoteValue(editorOperationRecord).then((data) => {
@@ -121,7 +126,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useEffect(() => {
         const keyToRun: Record<string, string[]> = {}
         const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
-
+        
         for (let key in allMenu) {
             const keys: string[] = []
             for (let item of allMenu[key].menu) {
@@ -302,6 +307,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         return menus
     })
 
+    const sortMenuFun = useMemoizedFn((dataSource,sortData) => {
+        const result = sortData.reduce((acc, item) => {
+            if(item.order>=0){
+                acc.splice(item.order, 0, ...item.menu)
+            }
+            else{
+                acc.push(...item.menu)
+            }
+            return acc;
+        }, [...dataSource]);   
+        return result
+    })
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
     useEffect(() => {
         /**
@@ -312,7 +329,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
             systemRef.current = systemType
 
-            rightContextMenu.current = [...DefaultMenu]
+            rightContextMenu.current = [...DefaultMenuTop]
             keyBindingRef.current = {}
 
             if (type === "http") {
@@ -335,11 +352,27 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     ])
             }
 
+            // 缓存需要排序的自定义菜单
+            let sortContextMenu:OtherMenuListProps[] = []
             for (let menus in contextMenu) {
-                /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
-                rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
+                /* 需要排序项 */
+                if(typeof contextMenu[menus].order === "number"){
+                    sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]))
+                }
+                else{
+                    /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */  
+                    rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
+                }
             }
 
+            // 底部默认菜单
+            rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottom])
+
+            // 当存在order项则需要排序
+            if(sortContextMenu.length>0){
+                rightContextMenu.current = sortMenuFun(rightContextMenu.current,sortContextMenu)
+            }
+            
             rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
 
             if (!forceRenderMenu) isInitRef.current = true

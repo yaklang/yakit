@@ -1157,11 +1157,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return {
             insertLabelTag: {
                 menu: [
+                    {type: "divider"},
                     {
                         key: "insert-label-tag",
                         label: "插入标签/字典",
                         children: [
-                            {type: "divider"},
                             {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
                             {key: "insert-temporary-file-tag", label: "插入临时字典"},
                             {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
