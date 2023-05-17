@@ -1777,9 +1777,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                         <div className={styles["screen-and-screenshot-menu-item"]}>
                             <span>录屏</span>
                             <span className={styles["shortcut-keys"]}>
-                                {system === "Darwin"
-                                    ? `${MacKeyborad[93]} ${MacKeyborad[16]} X`
-                                    : `${WinKeyborad[17]} ${WinKeyborad[16]} X`}
+                                {WinKeyborad[17]} {WinKeyborad[16]} X
                             </span>
                         </div>
                     ),
@@ -1795,9 +1793,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                                 </div>
                             ) : (
                                 <span className={styles["shortcut-keys"]}>
-                                    {system === "Darwin"
-                                        ? `${MacKeyborad[93]} ${MacKeyborad[16]} B`
-                                        : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
+                                    {WinKeyborad[17]} {WinKeyborad[16]} B
                                 </span>
                             )}
                         </div>
