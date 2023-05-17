@@ -201,7 +201,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     useEffect(() => {
         if (getParams().Id > 0) {
             onCloseTab()
-            removeSubscribeClose(Route.HTTPFuzzer)
+            removeSubscribeClose(Route.AddYakitScript)
             return
         }
         setSubscribeClose(Route.AddYakitScript, {
@@ -217,7 +217,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             }
         })
         return () => {
-            removeSubscribeClose(Route.HTTPFuzzer)
+            removeSubscribeClose(Route.AddYakitScript)
         }
     }, [getParams().Id])
 
