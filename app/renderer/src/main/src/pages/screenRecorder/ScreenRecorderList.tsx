@@ -149,12 +149,16 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
 
     useEffect(() => {
         onRefresh()
-    }, [props.refreshTrigger])
+    }, [props.refreshTrigger, isShowScreenRecording])
     useUpdateEffect(() => {
         if (!screenRecorderInfo.isRecording) {
-            setTimeout(() => {
-                onRefresh()
-            }, 1000)
+            if (isShowScreenRecording) {
+                onShowScreenRecording()
+            } else {
+                setTimeout(() => {
+                    onRefresh()
+                }, 1000)
+            }
         }
     }, [screenRecorderInfo.isRecording])
     const onShowScreenRecording = useMemoizedFn(() => {
@@ -259,18 +263,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         setSelected([])
         update(1, undefined, true)
     })
-    /** @description 清空录屏数据 */
-    const onClear = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("DeleteScreenRecorders", {})
-            .then((e) => {
-                yakitNotify("success", "清空成功")
-                onRefresh()
-            })
-            .catch((err) => {
-                yakitNotify("error", "清空失败：" + err)
-            })
-    })
     const onUpdateScreenList = useMemoizedFn((updateItem: ScreenRecorder) => {
         const index = data.findIndex((l) => l.Id === updateItem.Id)
         if (index === -1) return
@@ -352,6 +344,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 ...v,
                                 DisableMouse: !v.DisableMouse
                             }
+                            console.log("newValue", newValue)
                             if (screenRecorderInfo.isRecording) {
                                 ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                             } else {
