@@ -39,6 +39,7 @@ import {useStore} from "@/store"
 import noPictures from "@/assets/noPictures.png"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 export interface ScreenRecorderListProp {
     refreshTrigger?: boolean
@@ -77,6 +78,7 @@ const batchMenuDataEnterprise: YakitMenuItemProps[] = [
 interface QueryScreenRecordersProps {
     Keywords: string
 }
+export const Screen_Recorder_Framerate = "Screen_Recorder_Framerate"
 export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const [params, setParams] = useState<QueryScreenRecordersProps>({
         Keywords: ""
@@ -92,7 +94,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const [isShowScreenRecording, setIsShowScreenRecording] = useState<boolean>(false)
 
     const [delShow, setDelShow] = useState<boolean>(false)
-
+    const [form] = Form.useForm()
     const selectedId = useCreation(() => {
         return data.map((i) => i.Id)
     }, [data])
@@ -149,6 +151,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
 
     useEffect(() => {
         onRefresh()
+        onSetFramerate()
     }, [props.refreshTrigger, isShowScreenRecording])
     useUpdateEffect(() => {
         if (!screenRecorderInfo.isRecording) {
@@ -159,8 +162,17 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                     onRefresh()
                 }, 1000)
             }
+        } else {
+            onSetFramerate()
         }
     }, [screenRecorderInfo.isRecording])
+    const onSetFramerate = useMemoizedFn(() => {
+        getRemoteValue(Screen_Recorder_Framerate).then((val) => {
+            form.setFieldsValue({
+                Framerate: val || "7"
+            })
+        })
+    })
     const onShowScreenRecording = useMemoizedFn(() => {
         ipcRenderer
             .invoke("QueryScreenRecorders", {
@@ -334,6 +346,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                     <Form
                         layout='inline'
                         size='small'
+                        form={form}
                         initialValues={{
                             DisableMouse: true, // 鼠标捕捉
                             Framerate: "7" // 帧率
@@ -343,6 +356,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 ...v,
                                 DisableMouse: !v.DisableMouse
                             }
+                            setRemoteValue(Screen_Recorder_Framerate, v.Framerate)
                             if (screenRecorderInfo.isRecording) {
                                 ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                             } else {

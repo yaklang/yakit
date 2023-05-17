@@ -2,6 +2,7 @@ import {InformationCircleIcon, PlayIcon, RemoveIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {randomString} from "@/utils/randomUtil"
 import {useMemoizedFn} from "ahooks"
 import {Form} from "antd"
@@ -9,6 +10,7 @@ import classNames from "classnames"
 import React, {CSSProperties, useEffect, useState} from "react"
 import {ReactNode} from "react-markdown/lib/ast-to-react"
 import styles from "./ScrecorderModal.module.scss"
+import {Screen_Recorder_Framerate} from "./ScreenRecorderList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -71,13 +73,22 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
         Framerate: "7", // 帧率
         ResolutionSize: "" // 分辨率
     })
+    const [form] = Form.useForm()
+    useEffect(() => {
+        getRemoteValue(Screen_Recorder_Framerate).then((val) => {
+            form.setFieldsValue({
+                Framerate: val || "7"
+            })
+        })
+    }, [])
 
     const onStart = useMemoizedFn((v) => {
         const newValue = {
-            ...v,
             ...params,
+            ...v,
             DisableMouse: !v.DisableMouse
         }
+        setRemoteValue(Screen_Recorder_Framerate, newValue.Framerate)
         ipcRenderer.invoke("StartScrecorder", newValue, token).then(() => {
             onStartCallback()
         })
@@ -94,6 +105,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                 onFinish={(v) => {
                     onStart(v)
                 }}
+                form={form}
             >
                 <Form.Item
                     label='帧率'
