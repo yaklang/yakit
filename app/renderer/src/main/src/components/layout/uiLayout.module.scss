@@ -739,7 +739,7 @@
 .stop-screen-recorder {
     display: flex;
     align-items: center;
-   
+
     .stop-icon {
         display: flex;
         align-items: center;
@@ -752,8 +752,21 @@
         animation: icon-breath 1s linear infinite;
     }
 
-    .stop-text{
+    .stop-text {
         animation: text-breath 1s linear infinite;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .stop-screen-recorder {
+        padding-left: 8px;
+        padding-right: 8px;
+        .stop-icon {
+            margin-right: 0;
+        }
+        .stop-text {
+            display: none;
+        }
     }
 }
 

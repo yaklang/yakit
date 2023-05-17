@@ -174,6 +174,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         })
     })
     const onShowScreenRecording = useMemoizedFn(() => {
+        setLoading(true)
         ipcRenderer
             .invoke("QueryScreenRecorders", {
                 Pagination: {
@@ -187,6 +188,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             .catch((e) => {
                 yakitNotify("error", "获取列表数据失败：" + e)
             })
+            .finally(() => setTimeout(() => setLoading(false), 200))
     })
     /**@description 列表加载更多 */
     const loadMoreData = useMemoizedFn(() => {
@@ -326,9 +328,13 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 开始录屏
                             </YakitButton>
                         )}
-                        <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
-                            刷新
-                        </YakitButton>
+                        {loading ? (
+                            <YakitButton type='text' style={{marginTop: 12}}><LoadingOutlined /></YakitButton>
+                        ) : (
+                            <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
+                                刷新
+                            </YakitButton>
+                        )}
                     </div>
                 }
             />
