@@ -5,7 +5,7 @@ import {
     HTTP_PACKET_EDITOR_Line_Breaks,
     IMonacoEditor,
     NewHTTPPacketEditor,
-    HTTP_PACKET_EDITOR_Response_Info,
+    HTTP_PACKET_EDITOR_Response_Info
 } from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -73,7 +73,7 @@ import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
-import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -195,6 +195,8 @@ const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 const WEB_FUZZ_Advanced_Config_Switch_Checked = "WEB_FUZZ_Advanced_Config_Switch_Checked"
+const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
+const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
 
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -230,16 +232,6 @@ interface FuzzResponseFilter {
     Regexps: string[]
     Keywords: string[]
     StatusCode: string[]
-
-    // /**@name 前端显示的响应大小最小值 */
-    // minBodySizeInit?: number
-    // /**@name 前端显示的响应大小最大值 */
-    // maxBodySizeInit?: number
-
-    // /**@name 响应大小最小值单位 */
-    // minBodySizeUnit?: "B" | "K" | "M"
-    // /**@name 响应大小最大值单位 */
-    // maxBodySizeUnit?: "B" | "K" | "M"
 }
 
 function removeEmptyFiledFromFuzzResponseFilter(i: FuzzResponseFilter): FuzzResponseFilter {
@@ -395,12 +387,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [noWordwrapFirstEditor, setNoWordwrapFirstEditor] = useState(false)
     const [fontSizeFirstEditor, setFontSizeFirstEditor] = useState<number>()
     const [showLineBreaksFirstEditor, setShowLineBreaksFirstEditor] = useState<boolean>(true)
-    const [urlType, setUrlType] = useState<string>("")
 
     // editor Second Editor
     const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
     const [fontSizeSecondEditor, setFontSizeSecondEditor] = useState<number>()
-    const [showLineBreaksSecondEditor, setShowLineBreaksSecondEditor] = useState<boolean>(true)
     const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
     // second Node
@@ -411,7 +401,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
-
+    const fuzzerRef = useRef<any>()
+    const [inViewport] = useInViewport(fuzzerRef)
     useEffect(() => {
         setSubscribeClose(Route.HTTPFuzzer, {
             title: "关闭提示",
@@ -423,7 +414,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return () => {
             removeSubscribeClose(Route.HTTPFuzzer)
         }
-    }, [])
+    }, [inViewport])
 
     const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
@@ -524,6 +515,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
             }
         })
+        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
+            if (!e) {
+                return
+            }
+            try {
+                setDNSServers(JSON.parse(e))
+            } catch (error) {}
+        })
+        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
+            if (!e) {
+                return
+            }
+            try {
+                setETCHosts(JSON.parse(e))
+            } catch (error) {}
+        })
     }, [])
 
     useEffect(() => {
@@ -601,6 +608,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
+
+        setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(params.DNSServers))
+        setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(params.EtcHosts))
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
@@ -828,8 +838,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
         return {
             overlayWidgetv: {
-                menu: [{key: "is-show-add-overlay-widgetv", label: showResponseInfoSecondEditor?"隐藏响应信息":'显示响应信息'}],
+                menu: [
+                    {
+                        key: "is-show-add-overlay-widgetv",
+                        label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
+                    }
+                ],
                 onRun: () => {
+                    setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
                     setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
                 }
             }
@@ -1193,7 +1209,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         default:
                             break
                     }
-                },
+                }
             },
             copyURL: {
                 menu: [{key: "copy-as-url", label: "复制为 URL"}],
@@ -1205,7 +1221,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     return (
-        <div className={styles["http-fuzzer-body"]}>
+        <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
                 defAdvancedConfigValue={{
                     // 请求包配置
@@ -1481,14 +1497,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         构造请求
                                     </YakitButton>
                                 </YakitPopover>
-                                {/* <EditorsSetting
-                                    noWordwrap={noWordwrapFirstEditor}
-                                    setNoWordwrap={setNoWordwrapFirstEditor}
-                                    fontSize={fontSizeFirstEditor}
-                                    setFontSize={setFontSizeFirstEditor}
-                                    showLineBreaks={showLineBreaksFirstEditor}
-                                    setShowLineBreaks={setShowLineBreaksFirstEditor}
-                                /> */}
                             </div>
                         )
                     }}
@@ -1536,19 +1544,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     query={query}
                                     setQuery={(q) => setQuery({...q})}
                                 />
-                                {/* {onlyOneResponse && (
-                                    <EditorsSetting
-                                        fontSize={fontSizeSecondEditor}
-                                        setFontSize={setFontSizeSecondEditor}
-                                        noWordwrap={noWordwrapSecondEditor}
-                                        setNoWordwrap={setNoWordwrapSecondEditor}
-                                        showLineBreaks={showLineBreaksSecondEditor}
-                                        setShowLineBreaks={setShowLineBreaksSecondEditor}
-                                        isResponse={true}
-                                        showResponseInfo={showResponseInfoSecondEditor}
-                                        setShowResponseInfo={setShowResponseInfoSecondEditor}
-                                    />
-                                )} */}
                             </div>
                         )
                     }}
@@ -2681,155 +2676,6 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
     )
 })
 
-interface EditorsSettingProps {
-    /**@name 是否换行 */
-    noWordwrap: boolean
-    setNoWordwrap: (b: boolean) => void
-    /**@name 字体大小 */
-    fontSize?: number
-    setFontSize: (n: number) => void
-    /**@name 是否显示换行符 */
-    showLineBreaks: boolean
-    setShowLineBreaks: (b: boolean) => void
-
-    /**@name 是否显示响应信息 */
-    showResponseInfo?: boolean
-    setShowResponseInfo?: (b: boolean) => void
-    isResponse?: boolean
-}
-
-/**
- * @description 编辑器配置
- */
-const EditorsSetting: React.FC<EditorsSettingProps> = React.memo((props) => {
-    const {
-        noWordwrap,
-        setNoWordwrap,
-        fontSize,
-        setFontSize,
-        showLineBreaks,
-        setShowLineBreaks,
-        isResponse,
-        showResponseInfo,
-        setShowResponseInfo
-    } = props
-    useEffect(() => {
-        // 无落如何都会设置，最小为 12
-        getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
-            .then((data: string) => {
-                try {
-                    const size = parseInt(data)
-                    if (size > 0) {
-                        setFontSize(size)
-                    } else {
-                        setFontSize(12)
-                    }
-                } catch (e) {
-                    setFontSize(12)
-                }
-            })
-            .catch(() => {
-                setFontSize(12)
-            })
-        getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
-            .then((data) => {
-                setShowLineBreaks(data === "true")
-            })
-            .catch(() => {
-                setShowLineBreaks(true)
-            })
-    }, [])
-    return (
-        <>
-            <Tooltip title={"不自动换行"}>
-                <YakitButton
-                    size={"small"}
-                    type={noWordwrap ? "outline2" : "primary"}
-                    icon={<WrapIcon />}
-                    onClick={() => {
-                        setNoWordwrap(!noWordwrap)
-                    }}
-                    className={classNames(styles["editor-cog-icon"], {
-                        [styles["editor-wrap-icon"]]: !noWordwrap
-                    })}
-                />
-            </Tooltip>
-            <YakitPopover
-                title={"配置编辑器"}
-                content={
-                    <>
-                        <Form
-                            onSubmitCapture={(e) => {
-                                e.preventDefault()
-                            }}
-                            size={"small"}
-                            layout={"horizontal"}
-                            wrapperCol={{span: 14}}
-                            labelCol={{span: 10}}
-                        >
-                            {(fontSize || 0) > 0 && (
-                                <Form.Item label='字号'>
-                                    <YakitRadioButtons
-                                        value={fontSize}
-                                        onChange={(e) => {
-                                            const size = e.target.value
-                                            setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
-                                            setFontSize(size)
-                                        }}
-                                        buttonStyle='solid'
-                                        options={[
-                                            {
-                                                value: 12,
-                                                label: "小"
-                                            },
-                                            {
-                                                value: 16,
-                                                label: "中"
-                                            },
-                                            {
-                                                value: 20,
-                                                label: "大"
-                                            }
-                                        ]}
-                                    />
-                                </Form.Item>
-                            )}
-                            {isResponse ? (
-                                <Form.Item label='是否显示响应信息'>
-                                    <YakitSwitch
-                                        checked={showResponseInfo}
-                                        onChange={(checked) => {
-                                            if (setShowResponseInfo) {
-                                                setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${checked}`)
-                                                setShowResponseInfo(checked)
-                                            }
-                                        }}
-                                    />
-                                </Form.Item>
-                            ) : (
-                                <Form.Item label='是否显示换行符'>
-                                    <YakitSwitch
-                                        checked={showLineBreaks}
-                                        onChange={(checked) => {
-                                            setRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks, `${checked}`)
-                                            setShowLineBreaks(checked)
-                                        }}
-                                    />
-                                </Form.Item>
-                            )}
-                        </Form>
-                    </>
-                }
-                overlayInnerStyle={{width: 300}}
-                overlayClassName={styles["editor-cog-popover"]}
-                placement='bottomRight'
-            >
-                <YakitButton icon={<CogIcon />} type='outline2' className={styles["editor-cog-icon"]} />
-            </YakitPopover>
-        </>
-    )
-})
-
 export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
     editor.removeOverlayWidget({
         getId() {
@@ -2871,3 +2717,4 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
         </div>
     )
 })
+
