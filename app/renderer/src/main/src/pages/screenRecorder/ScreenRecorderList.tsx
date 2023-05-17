@@ -214,7 +214,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 Ids: selected
             }
         }
-        console.log("paramsUpload", paramsUpload)
         ipcRenderer
             .invoke("UploadScreenRecorders", paramsUpload)
             .then(() => {
@@ -344,7 +343,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 ...v,
                                 DisableMouse: !v.DisableMouse
                             }
-                            console.log("newValue", newValue)
                             if (screenRecorderInfo.isRecording) {
                                 ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                             } else {
