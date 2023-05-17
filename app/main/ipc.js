@@ -20,6 +20,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_FILES, {
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
 const {ypb} = protoDescriptor
 
+// 获取所有的 service
 // for (let serviceName in ypb) {
 //     // Check if this object is a service
 //     if (serviceName].service) {
