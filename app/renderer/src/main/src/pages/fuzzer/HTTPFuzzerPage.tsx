@@ -195,6 +195,8 @@ const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 const WEB_FUZZ_Advanced_Config_Switch_Checked = "WEB_FUZZ_Advanced_Config_Switch_Checked"
+const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
+const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
 
 export interface HistoryHTTPFuzzerTask {
     Request: string
@@ -525,6 +527,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
             }
         })
+        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
+            if (!e) {
+                return
+            }
+            try {
+                setDNSServers(JSON.parse(e))
+            } catch (error) {}
+        })
+        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
+            if (!e) {
+                return
+            }
+            try {
+                setETCHosts(JSON.parse(e))
+            } catch (error) {}
+        })
     }, [])
 
     useEffect(() => {
@@ -602,6 +620,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = params.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
+
+        setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(params.DNSServers))
+        setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(params.EtcHosts))
         ipcRenderer.invoke("HTTPFuzzer", params, fuzzToken)
     })
 
