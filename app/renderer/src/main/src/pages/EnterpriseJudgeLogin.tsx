@@ -12,7 +12,7 @@ export interface EnterpriseJudgeLoginProps {
     setJudgeLogin: (v: boolean) => void
 }
 const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
-    const {setJudgeLicense,setJudgeLogin} = props
+    const {setJudgeLicense, setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
     const [activateLicense, setActivateLicense] = useState<boolean>(false)
@@ -31,8 +31,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                     aboutLoginUpload(e?.token)
                     setJudgeLogin(true)
                     setJudgeLicense(false)
-                }
-                else{
+                } else {
                     setJudgeLogin(false)
                 }
             })
@@ -68,7 +67,6 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                 if (isCache) {
                     judgeLogin()
                 }
-
             })
             .catch((e) => {
                 info("请重新激活License")
@@ -90,17 +88,17 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                 </div>
             ) : (
                 <>
-                    {/* {activateLicense ? ( */}
+                    {activateLicense ? (
                         <div style={{width: 480, margin: "0 auto", paddingTop: 200,height:"100%"}}>
                             <ConfigPrivateDomain enterpriseLogin={true} onSuccee={() => setJudgeLicense(false)} skipShow={true}/>
                         </div>
-                    {/* ) : (
+                    ) : (
                         <LicensePage
                             judgeLicense={judgeLicense}
                             licensePageLoading={licensePageLoading}
                             setLicensePageLoading={setLicensePageLoading}
                         />
-                    )} */}
+                    )}
                 </>
             )}
         </>
