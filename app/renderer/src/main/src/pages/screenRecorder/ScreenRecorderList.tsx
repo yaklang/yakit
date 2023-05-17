@@ -692,7 +692,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     <div className={styles["list-item-duration"]}>
                         <ClockIcon style={{marginRight: 4}} /> {item.Duration || "0s"}
                     </div>
+                    <Divider type='vertical' style={{margin: "0 16px", top: 2}} />
                     <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
+                    <Divider type='vertical' style={{margin: "0 16px", top: 2}} />
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
                         <span
                             className={classNames("content-ellipsis")}

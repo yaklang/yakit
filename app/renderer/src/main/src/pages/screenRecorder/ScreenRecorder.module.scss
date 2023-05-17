@@ -76,7 +76,7 @@
                     margin-left: 16px;
                     margin-right: 8px;
                 }
-                .button-batch-remove{
+                .button-batch-remove {
                     margin: 0 8px;
                 }
             }
@@ -171,16 +171,14 @@
                         font-size: 12px;
                         margin-top: 8px;
                         overflow: hidden;
-                        // height: 16px;
+                        line-height: 16px;
                         .list-item-duration {
                             display: flex;
                             align-items: center;
-                            min-width: 75px;
-                            max-width: 75px;
+                            white-space: nowrap;
                         }
                         .list-item-created-at {
-                            min-width: 120px;
-                            max-width: 120px;
+                            white-space: nowrap;
                         }
                         .list-item-filename {
                             color: var(--yakit-primary-5);
