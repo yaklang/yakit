@@ -46,7 +46,6 @@ function newClient(apiName) {
     const md = new grpc.Metadata()
     md.set("authorization", `bearer ${global.password}`)
     let Api = ypb[apiName];  // Assuming the APIs are global
-    console.log("new service ",apiName)
     if (global.caPem !== "") {
         const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
             return callback(null, md)
@@ -172,7 +171,6 @@ module.exports = {
                 // 清空老数据
                 for (let apiName in _clients) {
                     if (_clients[apiName]) {
-                        console.log("close ", apiName)
                         _clients[apiName].close();
                     }
                 }
