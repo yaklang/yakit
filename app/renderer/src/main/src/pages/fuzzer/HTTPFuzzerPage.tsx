@@ -906,7 +906,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onAddOverlayWidget={(editor, isShow) => {
                     onAddOverlayWidget(editor, rsp, isShow)
                 }}
-                showLineBreaksState={showLineBreaksSecondEditor}
                 isAddOverlayWidget={showResponseInfoSecondEditor}
                 contextMenu={responseEditorRightMenu}
             />
