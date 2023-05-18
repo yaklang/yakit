@@ -24,21 +24,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {Text} = Typography
 
-export const showExtractFuzzerResponseOperator = (resp: FuzzerResponse[]) => {
-    if (resp.length == 0) {
-        showYakitModal({title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null})
-        return
-    }
-
-    const m = showYakitModal({
-        title: `提取响应数据包中内容`,
-        width: "80%",
-        maskClosable: false,
-        footer: null,
-        content: <WebFuzzerResponseExtractor responses={resp} />
-    })
-}
-
 export interface WebFuzzerResponseExtractorProp {
     responses: FuzzerResponse[]
 }

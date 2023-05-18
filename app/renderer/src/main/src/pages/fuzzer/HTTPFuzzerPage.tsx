@@ -27,7 +27,7 @@ import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "./InsertFileFuzzTag
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareData} from "./components/ShareData"
-import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
+// import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
     ChevronDownIcon,
     ChevronLeftIcon,
@@ -74,6 +74,8 @@ import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -1665,6 +1667,8 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         // bodyLengthUnit: "B"
     })
 
+    const [responseExtractorVisible, setResponseExtractorVisible] = useState<boolean>(false)
+
     const bodyLengthRef = useRef<any>()
 
     useEffect(() => {
@@ -1864,7 +1868,11 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                     type='outline2'
                     size='small'
                     onClick={() => {
-                        showExtractFuzzerResponseOperator(successFuzzer)
+                        if (successFuzzer.length === 0) {
+                            showYakitModal({title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null})
+                            return
+                        }
+                        setResponseExtractorVisible(true)
                     }}
                 >
                     提取响应数据
@@ -1901,6 +1909,17 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         导出数据
                     </YakitButton>
                 </YakitPopover>
+                <YakitModal
+                    title='提取响应数据包中内容'
+                    onCancel={() => setResponseExtractorVisible(false)}
+                    visible={responseExtractorVisible}
+                    width='80%'
+                    maskClosable={false}
+                    footer={null}
+                    closable={true}
+                >
+                    <WebFuzzerResponseExtractor responses={successFuzzer} />
+                </YakitModal>
             </>
         )
     }
@@ -2719,4 +2738,3 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
         </div>
     )
 })
-
