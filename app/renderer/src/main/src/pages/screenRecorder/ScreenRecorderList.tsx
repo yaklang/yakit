@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {useCreation, useMemoizedFn, useSelections, useUpdateEffect} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
-import {Divider, Form} from "antd"
+import {Divider, Form, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -290,6 +290,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         if (index === -1) return
         data.splice(index, 1)
         setData(data)
+        setTotal(total - 1)
         setTimeout(() => {
             setRecalculation(!recalculation)
         }, 100)
@@ -329,7 +330,9 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             </YakitButton>
                         )}
                         {loading ? (
-                            <YakitButton type='text' style={{marginTop: 12}}><LoadingOutlined /></YakitButton>
+                            <YakitButton type='text' style={{marginTop: 12}}>
+                                <LoadingOutlined />
+                            </YakitButton>
                         ) : (
                             <YakitButton type='text' style={{marginTop: 12}} onClick={() => onShowScreenRecording()}>
                                 刷新
@@ -707,23 +710,25 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     <div className={styles["list-item-created-at"]}>{formatTimestamp(item.CreatedAt)}</div>
                     <Divider type='vertical' style={{margin: "0 16px", top: 2}} />
                     <div className={classNames("content-ellipsis", styles["list-item-filename"])}>
-                        <span
-                            className={classNames("content-ellipsis")}
-                            onClick={() => {
-                                ipcRenderer
-                                    .invoke("is-file-exists", item.Filename)
-                                    .then((flag: boolean) => {
-                                        if (flag) {
-                                            openABSFileLocated(item.Filename)
-                                        } else {
-                                            failed("目标文件已不存在!")
-                                        }
-                                    })
-                                    .catch(() => {})
-                            }}
-                        >
-                            {item.Filename}
-                        </span>
+                        <Tooltip title='点击打开视频所在目录'>
+                            <span
+                                className={classNames("content-ellipsis")}
+                                onClick={() => {
+                                    ipcRenderer
+                                        .invoke("is-file-exists", item.Filename)
+                                        .then((flag: boolean) => {
+                                            if (flag) {
+                                                openABSFileLocated(item.Filename)
+                                            } else {
+                                                failed("目标文件已不存在!")
+                                            }
+                                        })
+                                        .catch(() => {})
+                                }}
+                            >
+                                {item.Filename}
+                            </span>
+                        </Tooltip>
                         <CopyComponents copyText={item.Filename} />
                     </div>
                 </div>

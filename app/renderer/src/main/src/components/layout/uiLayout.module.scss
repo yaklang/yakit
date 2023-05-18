@@ -759,8 +759,12 @@
 
 @media screen and (max-width: 1200px) {
     .stop-screen-recorder {
-        padding-left: 8px;
-        padding-right: 8px;
+        :global{
+            .ant-btn{
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+        }
         .stop-icon {
             margin-right: 0;
         }
