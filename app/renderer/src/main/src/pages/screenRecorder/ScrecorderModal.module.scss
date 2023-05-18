@@ -1,0 +1,29 @@
+.screcorder-modal-content {
+    :global {
+        .ant-btn > .anticon + span,
+        .ant-btn > span + .anticon {
+            margin-left: 4px;
+        }
+    }
+    .tip {
+        padding: 8px 24px;
+        background: rgba(86, 201, 145, 0.1);
+        height: 48px;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-success-5);
+    }
+    .disable-mouse {
+        display: flex;
+        align-items: center;
+        color: var(--yakit-header-color);
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+    .footer-btns {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}

@@ -1,0 +1,123 @@
+.player-wrapper {
+    position: relative;
+    border-radius: 4px;
+    :global {
+        .video-react {
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .video-react .video-react-control:before,
+        .video-react .video-react-big-play-button:before {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .video-react .video-react-time-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .video-react .video-react-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+        .video-react .video-react-control:before {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-react .video-react-slider {
+            background-color: transparent;
+        }
+        .video-react .video-react-load-progress {
+            background: none;
+        }
+        .video-react .video-react-load-progress div {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .video-react .video-react-control:focus:before,
+        .video-react .video-react-control:hover:before,
+        .video-react .video-react-control:focus {
+            text-shadow: none;
+        }
+        .video-react-menu .video-react-menu-content {
+            margin-bottom: 1em;
+            height: auto;
+            overflow: hidden;
+            font-family: inherit;
+        }
+        .video-react-menu li.video-react-selected,
+        .video-react-menu li.video-react-selected:focus,
+        .video-react-menu li.video-react-selected:hover {
+            background-color: transparent;
+            color: var(--yakit-primary-5);
+        }
+        .video-react .video-react-slider:focus{
+            box-shadow: none;
+        }
+    }
+    &:hover {
+        .player-title {
+            visibility: visible;
+            opacity: 1;
+        }
+    }
+    .player-title {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        color: #fff;
+        z-index: 2;
+        height: 6em;
+        padding: 4px 12px;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 1s, opacity 1s;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.3) 100%);
+    }
+    .player-video {
+        height: 520px;
+        width: 100%;
+        border-radius: 4px;
+        .player-video-tip {
+            position: absolute;
+            top: 0;
+            line-height: 1.5em;
+            height: 1.5em;
+            font-size: 3em;
+            top: 50%;
+            left: 50%;
+            margin-top: -0.75em;
+            margin-left: -4.5em;
+            z-index: 2;
+            background: #000;
+        }
+    }
+    .player-control-bar {
+        display: flex;
+        align-items: center;
+        padding-left: 12px;
+        height: 7em;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
+        .bar-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+            cursor: pointer;
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    }
+    .not-allowed-icon {
+        color: rgba(255,255,255,0.5);
+        cursor: not-allowed !important;
+    }
+}

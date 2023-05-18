@@ -1092,7 +1092,6 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                             {text: "布尔值 / false", value: "false"}
                         ]}
                         setValue={(value) => {
-                            console.log("value", value, params.TypeVerbose)
                             setParams({...params, DefaultValue: value})
                         }}
                         value={params.DefaultValue}

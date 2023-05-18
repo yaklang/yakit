@@ -1437,7 +1437,6 @@ const Stop = () => (
 export const StopIcon = (props: Partial<IconProps>) => {
     return <Icon component={Stop} {...props} />
 }
-
 const Exclamation = () => (
     <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -1472,4 +1471,112 @@ const ShieldCheck = () => (
  */
 export const ShieldCheckIcon = (props: Partial<IconProps>) => {
     return <Icon component={ShieldCheck} {...props} />
+}
+
+const Camera = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M2.5 7.49998C2.5 6.57951 3.24619 5.83331 4.16667 5.83331H4.94136C5.49862 5.83331 6.019 5.55481 6.32811 5.09115L7.00522 4.07548C7.31433 3.61181 7.83472 3.33331 8.39197 3.33331H11.608C12.1653 3.33331 12.6857 3.61181 12.9948 4.07548L13.6719 5.09115C13.981 5.55481 14.5014 5.83331 15.0586 5.83331H15.8333C16.7538 5.83331 17.5 6.57951 17.5 7.49998V15C17.5 15.9205 16.7538 16.6666 15.8333 16.6666H4.16667C3.24619 16.6666 2.5 15.9205 2.5 15V7.49998Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M12.5 10.8333C12.5 12.214 11.3807 13.3333 10 13.3333C8.61929 13.3333 7.5 12.214 7.5 10.8333C7.5 9.4526 8.61929 8.33331 10 8.33331C11.3807 8.33331 12.5 9.4526 12.5 10.8333Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  camera 相机
+ */
+export const CameraIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Camera} {...props} />
+}
+
+const CloudUpload = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4.66667 10.6666C3.19391 10.6666 2 9.47274 2 7.99998C2 6.72861 2.88971 5.66505 4.08047 5.39795C4.02779 5.16261 4 4.91787 4 4.66665C4 2.8257 5.49238 1.33331 7.33333 1.33331C8.9462 1.33331 10.2915 2.47881 10.6001 4.00063C10.6223 4.0002 10.6444 3.99998 10.6667 3.99998C12.5076 3.99998 14 5.49236 14 7.33331C14 8.94595 12.8548 10.2911 11.3333 10.6M10 8.66665L8 6.66665M8 6.66665L6 8.66665M8 6.66665L8 14.6666'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  cloud-upload 云 上传
+ */
+export const CloudUploadIcon = (props: Partial<IconProps>) => {
+    return <Icon component={CloudUpload} {...props} />
+}
+
+const FastForward = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4.5547 5.16795C4.24784 4.96338 3.8533 4.94431 3.52814 5.11833C3.20298 5.29235 3 5.63121 3 6V14C3 14.3688 3.20298 14.7077 3.52814 14.8817C3.8533 15.0557 4.24784 15.0366 4.5547 14.8321L10 11.2019V14C10 14.3688 10.203 14.7077 10.5281 14.8817C10.8533 15.0557 11.2478 15.0366 11.5547 14.8321L17.5547 10.8321C17.8329 10.6466 18 10.3344 18 10C18 9.66565 17.8329 9.35342 17.5547 9.16795L11.5547 5.16795C11.2478 4.96338 10.8533 4.94431 10.5281 5.11833C10.203 5.29235 10 5.63121 10 6V8.79815L4.5547 5.16795Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:  fast-forward 前进
+ */
+export const FastForwardIcon = (props: Partial<IconProps>) => {
+    return <Icon component={FastForward} {...props} />
+}
+
+const Rewind = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.44518 14.8321C8.75203 15.0367 9.14658 15.0557 9.47174 14.8817C9.79689 14.7077 9.99988 14.3688 9.99988 14L9.99988 11.2019L15.4452 14.8321C15.752 15.0367 16.1466 15.0557 16.4717 14.8817C16.7969 14.7077 16.9999 14.3688 16.9999 14V6.00005C16.9999 5.63125 16.7969 5.29239 16.4717 5.11837C16.1466 4.94435 15.752 4.96343 15.4452 5.168L9.99988 8.7982V6.00005C9.99988 5.63125 9.79689 5.29239 9.47174 5.11837C9.14658 4.94435 8.75203 4.96343 8.44518 5.168L2.44518 9.168C2.16698 9.35346 1.99988 9.66569 1.99988 10C1.99988 10.3344 2.16698 10.6466 2.44518 10.8321L8.44518 14.8321Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description:  rewind 后退
+ */
+export const RewindIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Rewind} {...props} />
+}
+
+const CheckCircleOutline = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  CheckCircle x 圈 边框
+ */
+export const CheckCircleOutlineIcon = (props: Partial<IconProps>) => {
+    return <Icon component={CheckCircleOutline} {...props} />
+}
+
+const ExclamationOutline = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  CheckCircle 警告 三角
+ */
+export const ExclamationOutlineIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ExclamationOutline} {...props} />
 }

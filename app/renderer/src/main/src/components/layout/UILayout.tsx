@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Form, Input, Modal, Progress, Select, Spin, Tooltip} from "antd"
+import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks"
+import {Form, Input, Progress, Select, Spin, Tooltip} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -9,8 +9,6 @@ import {
     MacUIOpCloseSvgIcon,
     WinUIOpCloseSvgIcon,
     YakitCopySvgIcon,
-    // YakitStoreGraySvgIcon,
-    // YakitStoreThemeSvgIcon,
     YakitThemeSvgIcon,
     YaklangInstallHintSvgIcon
 } from "./icons"
@@ -42,7 +40,7 @@ import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
-import {HomeSvgIcon} from "@/assets/newIcon"
+import {HomeSvgIcon, StopIcon} from "@/assets/newIcon"
 import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin"
 import {
     ExportProjectProps,
@@ -57,6 +55,7 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
+import {useScreenRecorder} from "@/store/screenRecorder"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -843,6 +842,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
+    const {screenRecorderInfo} = useScreenRecorder()
+    const stopScreen = useCreation(() => {
+        return (
+            <>
+                {screenRecorderInfo.isRecording && (
+                    <YakitButton
+                        onClick={() => {
+                            ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
+                        }}
+                        type='primary'
+                        className='button-primary-danger'
+                        themeClass={styles["stop-screen-recorder"]}
+                        size='large'
+                    >
+                        <div className={styles["stop-icon"]}>
+                            <StopIcon />
+                        </div>
+                        <span className={styles["stop-text"]}>录屏中</span>
+                    </YakitButton>
+                )}
+            </>
+        )
+    }, [screenRecorderInfo])
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <div className={styles["ui-layout-container"]}>
@@ -919,6 +941,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     onDoubleClick={maxScreen}
                                 />
                                 <div className={styles["header-right"]}>
+                                    {stopScreen}
                                     <div
                                         className={styles["ui-op-btn-wrapper"]}
                                         onClick={() =>
@@ -1031,6 +1054,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             </div>
                                         </div>
                                     </YakitPopover>
+                                    {stopScreen}
                                 </div>
 
                                 <div

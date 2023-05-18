@@ -736,3 +736,67 @@
         }
     }
 }
+.stop-screen-recorder {
+    display: flex;
+    align-items: center;
+
+    .stop-icon {
+        display: flex;
+        align-items: center;
+        margin-right: 8px;
+        position: relative;
+        width: 24px;
+        height: 24px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        animation: icon-breath 1s linear infinite;
+    }
+
+    .stop-text {
+        animation: text-breath 1s linear infinite;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .stop-screen-recorder {
+        :global{
+            .ant-btn{
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+        }
+        .stop-icon {
+            margin-right: 0;
+        }
+        .stop-text {
+            display: none;
+        }
+    }
+}
+
+@keyframes icon-breath {
+    0% {
+        transform: scale(0.8);
+        border-color: rgba(255, 255, 255, 0);
+    }
+    50% {
+        transform: scale(0.9);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+    100% {
+        transform: scale(0.8);
+        border-color: rgba(255, 255, 255, 0);
+    }
+}
+
+@keyframes text-breath {
+    0% {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    50% {
+        color: rgba(255, 255, 255, 1);
+    }
+    100% {
+        color: rgba(255, 255, 255, 0.7);
+    }
+}
