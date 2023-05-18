@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState, useMemo} from "react"
 import {YakScript} from "../../invoker/schema"
 import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip, Pagination} from "antd"
 import {LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
@@ -13,18 +13,20 @@ import {XTerm} from "xterm-for-react"
 import {formatDate} from "../../../utils/timeUtil"
 import {xtermFit} from "../../../utils/xtermUtils"
 import {CaretDownOutlined, CaretUpOutlined, SearchOutlined} from "@ant-design/icons"
-import {failed, yakitNotify} from "../../../utils/notification"
+import {failed, yakitFailed, yakitNotify} from "../../../utils/notification"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
-import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottle} from "ahooks"
-import "./base.scss"
+import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useThrottleEffect} from "ahooks"
 import {Risk} from "@/pages/risks/schema"
 import {RisksViewer} from "@/pages/risks/RisksViewer"
 import {RiskDetails} from "@/pages/risks/RiskTable"
 import {RiskStatsTag} from "@/utils/RiskStatsTag"
 import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 import {CVXterm} from "@/components/CVXterm"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -193,7 +195,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         })
         .filter((i) => i.feature !== "")
 
-    const finalFeatures = features.length > 0 ? features.filter((data, i) => features.indexOf(data) === i) : []
+    const finalFeatures = useMemo(() => {
+        return features.length > 0 ? features.filter((data, i) => features.indexOf(data) === i) : []
+    }, [features.length])
 
     const timelineItemProps = (results || [])
         .filter((i) => {
@@ -260,7 +264,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <div style={{marginTop: 4, marginBottom: 8}}>{progressBars.map((i) => i.node)}</div>
             )}
             <Tabs
-                style={{flex: 1}}
+                style={{flex: 1, overflow: "hidden"}}
                 className={"main-content-tabs no-theme-tabs"}
                 size={"small"}
                 activeKey={active}
@@ -421,204 +425,217 @@ export const compareDesc = (value1: object, value2: object, text: string) => {
     } catch (error) {}
 }
 
-export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = (props) => {
-    const [params, setParams] = useState<any>({}) // 设置表头 排序
-    const [query, setQuery] = useState<any>({}) // 设置表头查询条件
-    const [loading, setLoading] = useState<boolean>(false)
-    const tableData = useRef<any>([])
-    const tableDataOriginal = useRef<any>([])
-    const tableDataPreProps = useRef<any>([])
-    useDebounceEffect(
-        () => {
-            if (tableDataPreProps.current.length === props.execResultsLog.length) return
-            tableDataPreProps.current = props.execResultsLog
-            tableData.current = (props.execResultsLog || [])
-                .filter((i) => i.level === "feature-table-data")
-                .map((i) => {
-                    try {
-                        const originData = JSON.parse(i.data)
-                        return {...originData.data, table_name: originData?.table_name}
-                    } catch (e) {
-                        return {} as any
-                    }
-                })
-                .filter((i) => {
-                    try {
-                        if ((i?.table_name || "") === (props.params?.table_name || "")) {
-                            return true
+export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
+    (props) => {
+        const [params, setParams] = useState<any>({}) // 设置表头能否排序
+        const [sorterTable, setSorterTable] = useState<SortProps>()
+
+        const [query, setQuery] = useState<any>({}) // 设置表头查询条件
+        const [loading, setLoading] = useState<boolean>(false)
+
+        const tableData = useRef<any>([])
+        const tableDataOriginal = useRef<any>([])
+        const tableDataPreProps = useRef<any>([])
+        useDebounceEffect(
+            () => {
+                if (tableDataPreProps.current.length === props.execResultsLog.length) return
+                tableDataPreProps.current = props.execResultsLog
+                const tableDataList = (props.execResultsLog || [])
+                    .filter((i) => i.level === "feature-table-data")
+                    .map((i) => {
+                        try {
+                            const originData = JSON.parse(i.data)
+                            return {...originData.data, table_name: originData?.table_name}
+                        } catch (e) {
+                            return {} as any
                         }
-                    } catch (e) {
+                    })
+                    .filter((i) => {
+                        try {
+                            if ((i?.table_name || "") === (props.params?.table_name || "")) {
+                                return true
+                            }
+                        } catch (e) {
+                            return false
+                        }
                         return false
-                    }
-                    return false
-                })
-            tableDataOriginal.current = tableData.current
-        },
-        [props.execResultsLog],
-        {wait: 300, leading: true, trailing: true}
-    )
-
-    useEffect(() => {
-        setTimeout(() => {
-            const item = tableData.current[0] || {}
-            const obj = {}
-            const objQuery = {}
-            ;(props.params["columns"] || []).forEach((ele) => {
-                obj[ele] = {
-                    isFilter: !isNaN(Number(item[ele])) // 只有数字类型才排序
-                }
-                objQuery[ele] = ""
-            })
-            setParams(obj)
-            setQuery(objQuery)
-        }, 400)
-    }, [])
-
-    const getData = useMemoizedFn(() => {
-        return new Promise((resolve) => {
-            const header = props.params["columns"]
-            const exportData = formatJson(header, tableData.current)
-            const params = {
-                header,
-                exportData,
-                response: {
-                    Pagination: {
-                        Page: 1
-                    },
-                    Data: props.execResultsLog,
-                    Total: props.execResultsLog.length
-                }
-            }
-            resolve(params)
-        })
-    })
-
-    // 排序
-    const confirmFilter = useMemoizedFn((text: string) => {
-        if (!params[text]?.isFilter) {
-            failed("该类型不支持排序")
-            return
-        }
-        setLoading(true)
-        const value = params[text].sort === "up" ? "down" : "up"
-        const newParams = {
-            ...params[text],
-            sort: value
-        }
-        if (value === "up") {
-            tableData.current.sort((a, b) => compareAsc(a, b, text))
-        } else {
-            tableData.current.sort((a, b) => compareDesc(a, b, text))
-        }
-        setParams({...params, [text]: {...newParams}})
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
-    // 搜索
-    const confirm = useMemoizedFn(() => {
-        setLoading(true)
-        const list: any = []
-        const length = tableDataOriginal.current.length
-        const queryHaveValue = {}
-        // 找出有查询条件
-        for (const key in query) {
-            const objItem = query[key]
-            if (objItem) {
-                queryHaveValue[key] = query[key]
-            }
-        }
-        // 所有查询条件为空时，返回原始数据
-        if (Object.getOwnPropertyNames(queryHaveValue).length == 0) {
-            tableData.current = tableDataOriginal.current
-            setTimeout(() => {
-                setLoading(false)
-            }, 200)
-            return
-        }
-        // 搜索
-        for (let index = 0; index < length; index++) {
-            const elementArrayItem = tableDataOriginal.current[index]
-            let isAdd: boolean[] = []
-            for (const key in queryHaveValue) {
-                const objItem = queryHaveValue[key]
-                const isHave = `${elementArrayItem[key]}`.includes(objItem)
-                isAdd.push(isHave)
-            }
-            // 所有条件都满足
-            if (!isAdd.includes(false)) {
-                list.push(elementArrayItem)
-            }
-            isAdd = []
-        }
-
-        tableData.current = list
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
-
-    const columns = (props.params["columns"] || []).map((i) => ({
-        name: i,
-        title: (
-            <div className='columns-title'>
-                <div className='title'>{i}</div>
-                <div className='icon'>
-                    <Popover
-                        content={
-                            <TableFilterDropdownForm
-                                label={`搜索${i}`}
-                                params={query}
-                                setParams={setQuery}
-                                filterName={i}
-                                pureString={true}
-                                confirm={() => confirm()}
-                                restSearch={() => confirm()}
-                            />
-                        }
-                        trigger={["click"]}
-                    >
-                        <SearchOutlined style={{color: query[i] ? "#1890ff" : undefined, marginRight: 6}} />
-                    </Popover>
-                    {params[i]?.isFilter && (
-                        <Tooltip title={<span>{params[i]?.sort === "up" ? "点击降序" : "点击升序"}</span>}>
-                            <div className='filter' onClick={() => confirmFilter(i)}>
-                                <CaretUpOutlined
-                                    style={{color: (params[i]?.sort === "up" && "#1890ff") || undefined}}
-                                />
-                                <CaretDownOutlined
-                                    style={{color: (params[i]?.sort === "down" && "#1890ff") || undefined}}
-                                />
-                            </div>
-                        </Tooltip>
-                    )}
-                </div>
-            </div>
+                    })
+                tableDataOriginal.current = tableDataList
+                queryData()
+            },
+            [props.execResultsLog],
+            {wait: 300, leading: true, trailing: true}
         )
-    }))
-    switch (props.feature) {
-        case "website-trees":
-            return (
-                <div style={{height: "100%"}}>
-                    <WebsiteTreeViewer {...props.params} />
-                </div>
-            )
-        case "fixed-table":
-            return (
-                <div style={{height: "100%", display: "flex", flexFlow: "column", overflowY: "auto"}}>
-                    <div className='btn-body'>
-                        <ExportExcel
-                            getData={getData}
-                            btnProps={{size: "small"}}
-                            fileName={props.excelName || "输出表"}
+
+        useEffect(() => {
+            setTimeout(() => {
+                const item = tableData.current[0] || {}
+                const obj = {}
+                const objQuery = {}
+                ;(props.params["columns"] || []).forEach((ele) => {
+                    obj[ele] = {
+                        isFilter: !isNaN(Number(item[ele])) // 只有数字类型才排序
+                    }
+                    objQuery[ele] = ""
+                })
+                setParams(obj)
+                setQuery(objQuery)
+            }, 400)
+        }, [])
+
+        const getData = useMemoizedFn(() => {
+            return new Promise((resolve) => {
+                const header = props.params["columns"]
+                const exportData = formatJson(header, tableData.current)
+                const params = {
+                    header,
+                    exportData,
+                    response: {
+                        Pagination: {
+                            Page: 1
+                        },
+                        Data: props.execResultsLog,
+                        Total: props.execResultsLog.length
+                    }
+                }
+                resolve(params)
+            })
+        })
+
+        useUpdateEffect(() => {
+            update()
+        }, [query, sorterTable])
+        const update = useDebounceFn(
+            () => {
+                setLoading(true)
+                new Promise((resolve, reject) => {
+                    try {
+                        queryData()
+                        resolve(true)
+                    } catch (error) {
+                        reject(error)
+                    }
+                })
+                    .catch((e) => {
+                        yakitFailed("搜索失败:" + e)
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            setLoading(false)
+                        }, 200)
+                    })
+            },
+            {
+                wait: 200
+            }
+        ).run
+
+        // 搜索
+        const queryData = useMemoizedFn(() => {
+            try {
+                let list: any = []
+                const length = tableDataOriginal.current.length
+                const queryHaveValue = {}
+                // 找出有查询条件
+                for (const key in query) {
+                    const objItem = query[key]
+                    if (objItem) {
+                        queryHaveValue[key] = query[key]
+                    }
+                }
+                // 所有查询条件为空时，返回原始数据
+                if (Object.getOwnPropertyNames(queryHaveValue).length === 0) {
+                    list = [...tableDataOriginal.current]
+                } else {
+                    // 搜索
+                    for (let index = 0; index < length; index++) {
+                        const elementArrayItem = tableDataOriginal.current[index]
+                        let isAdd: boolean[] = []
+                        for (const key in queryHaveValue) {
+                            const objItem = queryHaveValue[key]
+                            const isHave = `${elementArrayItem[key]}`.includes(objItem)
+                            isAdd.push(isHave)
+                        }
+                        // 所有条件都满足
+                        if (!isAdd.includes(false)) {
+                            list.push(elementArrayItem)
+                        }
+                        isAdd = []
+                    }
+                }
+                const newDataTable = sorterTable?.order === "none" ? list : sorterFunction(list, sorterTable, "") || []
+                tableData.current = newDataTable
+            } catch (error) {
+                yakitFailed("搜索失败:" + error)
+            }
+        })
+
+        const onTableChange = useMemoizedFn(
+            (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
+                setQuery(filters)
+                setSorterTable(sorter)
+            }
+        )
+
+        const columns = (props.params["columns"] || []).map((i) => ({
+            title: i,
+            dataKey: i,
+            sorterProps: {
+                sorter: params[i]?.isFilter
+            },
+            filterProps: {
+                filtersType: "input"
+            }
+        }))
+        switch (props.feature) {
+            case "website-trees":
+                return (
+                    <div style={{height: "100%"}}>
+                        <WebsiteTreeViewer {...props.params} />
+                    </div>
+                )
+            case "fixed-table":
+                return (
+                    <div className='base-table'>
+                        <TableVirtualResize<any>
+                            containerClassName='base-table-container'
+                            query={query}
+                            titleHeight={48}
+                            renderTitle={
+                                <div className='btn-body'>
+                                    <ExportExcel
+                                        getData={getData}
+                                        btnProps={{size: "small"}}
+                                        fileName={props.excelName || "输出表"}
+                                    />
+                                </div>
+                            }
+                            isRefresh={loading}
+                            renderKey='uuid'
+                            data={tableData.current.map((i, n) => ({...i, index: n}))}
+                            loading={loading}
+                            enableDrag={true}
+                            columns={[{title: "index", dataKey: "index"}, ...columns]}
+                            pagination={{
+                                page: 1,
+                                limit: 1,
+                                total: tableData.current.length,
+                                onChange: () => {}
+                            }}
+                            onChange={onTableChange}
                         />
                     </div>
-                    <BasicTable columns={columns} data={tableData.current} loading={loading} />
-                </div>
-            )
+                )
+        }
+        return <div>Other</div>
+    },
+    (preProps, nextProps) => {
+        if (JSON.stringify(preProps) !== JSON.stringify(nextProps)) {
+            return false
+        }
+        return true
     }
-    return <div>Other</div>
-}
+)
 
 interface SimpleCardBoxProps {
     statusCards: StatusCardInfoProps[]

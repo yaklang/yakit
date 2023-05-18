@@ -62,12 +62,12 @@ export interface HTTPFuzzerPageTableQuery {
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
-const sorterFunction = (list, sorterTable) => {
+export const sorterFunction = (list, sorterTable,defSorter='Count') => {
     // ------------  排序 开始  ------------
     let newList = list
     // 重置
     if (sorterTable?.order === "none") {
-        newList = list.sort((a, b) => compareAsc(a, b, "Count"))
+        newList = list.sort((a, b) => compareAsc(a, b, defSorter))
     }
     // 升序
     if (sorterTable?.order === "asc") {
