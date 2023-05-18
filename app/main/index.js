@@ -1,6 +1,7 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
+const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
 const {
@@ -114,6 +115,11 @@ const createWindow = () => {
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
     })
+
+    // 录屏
+    globalShortcut.register("Control+Shift+X", (e) => {
+        win.webContents.send("open-screenCap-modal")
+    })
 }
 
 app.whenReady().then(() => {
@@ -160,6 +166,12 @@ app.whenReady().then(() => {
             globalShortcut.unregister("esc")
         })
     }
+
+    // 协议
+    protocol.registerFileProtocol("atom", (request, callback) => {
+        const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
+        callback(filePath)
+    })
 
     createWindow()
 

@@ -12,7 +12,7 @@ export interface EnterpriseJudgeLoginProps {
     setJudgeLogin: (v: boolean) => void
 }
 const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
-    const {setJudgeLicense,setJudgeLogin} = props
+    const {setJudgeLicense, setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
     const [activateLicense, setActivateLicense] = useState<boolean>(false)
@@ -31,8 +31,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                     aboutLoginUpload(e?.token)
                     setJudgeLogin(true)
                     setJudgeLicense(false)
-                }
-                else{
+                } else {
                     setJudgeLogin(false)
                 }
             })
@@ -68,7 +67,6 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                 if (isCache) {
                     judgeLogin()
                 }
-
             })
             .catch((e) => {
                 info("请重新激活License")

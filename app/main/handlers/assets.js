@@ -229,7 +229,7 @@ module.exports = (win, getClient) => {
         return await asyncSetRiskInfoRead(params)
     })
 
-    const asyncUploadRiskToOnline= (params) => {
+    const asyncUploadRiskToOnline = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UploadRiskToOnline(params, (err, data) => {
                 if (err) {
@@ -301,7 +301,7 @@ module.exports = (win, getClient) => {
                 if (err) return reject(err)
                 fs.writeFile(src2, data, (err) => {
                     if (err) return reject(err)
-                    resolve('复制文件成功')
+                    resolve("复制文件成功")
                 })
             })
         })
@@ -422,7 +422,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    
+
     ipcMain.handle("QueryChaosMakerRules", async (e, params) => {
         return await asyncQueryChaosMakerRule(params)
     })
@@ -463,17 +463,77 @@ module.exports = (win, getClient) => {
         return await asyncImportChaosMakerRules(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
+    const handlerHelper = require("./handleStreamWithContext")
 
-    const streamExecuteChaosMakerRuleMap = new Map();
-    ipcMain.handle("cancel-ExecuteChaosMakerRule", handlerHelper.cancelHandler(streamExecuteChaosMakerRuleMap));
+    const streamExecuteChaosMakerRuleMap = new Map()
+    ipcMain.handle("cancel-ExecuteChaosMakerRule", handlerHelper.cancelHandler(streamExecuteChaosMakerRuleMap))
     ipcMain.handle("ExecuteChaosMakerRule", (e, params, token) => {
-        let stream = getClient().ExecuteChaosMakerRule(params);
+        let stream = getClient().ExecuteChaosMakerRule(params)
         handlerHelper.registerHandler(win, stream, streamExecuteChaosMakerRuleMap, token)
     })
 
     ipcMain.handle("QueryScreenRecorders", async (e, params) => {
         return await asyncQueryScreenRecorders(params)
+    })
+
+    const asyncUploadScreenRecorders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UploadScreenRecorders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UploadScreenRecorders", async (e, params) => {
+        return await asyncUploadScreenRecorders(params)
+    })
+
+    const asyncGetOneScreenRecorders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetOneScreenRecorders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetOneScreenRecorders", async (e, params) => {
+        return await asyncGetOneScreenRecorders(params)
+    })
+
+    const asyncUpdateScreenRecorders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateScreenRecorders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateScreenRecorders", async (e, params) => {
+        return await asyncUpdateScreenRecorders(params)
+    })
+
+    const asyncDeleteScreenRecorders = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteScreenRecorders(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteScreenRecorders", async (e, params) => {
+        return await asyncDeleteScreenRecorders(params)
     })
 
     const streamInstallScrecorderMap = new Map()

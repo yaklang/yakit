@@ -67,7 +67,6 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
     }, [size])
 
     const tooltipStr = ellipsis && ellipsisTags.join("，")
-    // console.log("ggg", dataSource, ellipsisTags)
     return (
         <div className={styles["base-tags-list"]}>
             {/* 隐藏DOM元素 用于实时计算 */}
@@ -251,14 +250,6 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
         }
     }
 
-    // ps：在Select控件中失效
-    // useHotkeys("right",()=>{
-    //     console.log("right")
-    // })
-    // useHotkeys("left",()=>{
-    //     console.log("left")
-    // })
-
     useEffect(() => {
         document.addEventListener("keydown", (e) => goAnchor(e))
         return () => {
@@ -267,7 +258,6 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     }, [])
 
     const handleChange = (value: string[]) => {
-        // console.log(`selected ${value}`)
         setCheckItem("")
         setCheckedList([])
         setCheckAll(false)
@@ -327,7 +317,6 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     const tagRender = (p) => {
         const {label, value, closable} = p
         const onPreventMouseDown = (event: React.MouseEvent<HTMLSpanElement>) => {
-            // console.log("onPreventMouseDown", event)
             event.preventDefault()
             event.stopPropagation()
             setCheckItem(value)
@@ -338,7 +327,6 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
             }
         }
         const onClose = () => {
-            // console.log("checkItem",checkItem,value)
             let newArr = checkedList.filter((item) => item !== value)
             // 删除选中项
             if (checkItem === value) {

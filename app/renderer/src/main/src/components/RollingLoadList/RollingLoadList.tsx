@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef, ReactNode, useMemo } from "react"
+import React, {useEffect, useState, useRef, ReactNode, useMemo} from "react"
 import ReactResizeDetector from "react-resize-detector"
-import { useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect } from "ahooks"
-import { LoadingOutlined } from "@ant-design/icons"
+import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect} from "ahooks"
+import {LoadingOutlined} from "@ant-design/icons"
 import "./RollingLoadList.scss"
 
 interface RollingLoadListProps<T> {
@@ -112,7 +112,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             }
         },
         [wrapperRef.current?.clientHeight, isRef],
-        { wait: 200 }
+        {wait: 200}
     )
     useEffect(() => {
         resetPre()
@@ -135,7 +135,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         }
     })
 
-    const { width } = useSize(document.querySelector("body")) || { width: 0, height: 0 }
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     useDebounceEffect(
         () => {
             resetPre()
@@ -146,7 +146,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             }
         },
         [isGridLayout, width],
-        { wait: 200, leading: true }
+        {wait: 200, leading: true}
     )
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
@@ -177,7 +177,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 }
             }
         },
-        { wait: 200, leading: false }
+        {wait: 200, leading: false}
     )
     return (
         <>
@@ -194,8 +194,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 refreshRate={50}
             />
             <div
-                className={`container ${classNameList || ''}`}
-                style={{ height: vlistHeigth }}
+                className={`container ${classNameList || ""}`}
+                style={{height: vlistHeigth}}
                 ref={containerRef}
                 onScroll={() => onScrollCapture.run()}
             >
@@ -203,20 +203,39 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                     {((isGridLayout && col && col > 1) || (!isGridLayout && col === 1)) &&
                         list.map((i, index) => {
                             const itemArr = i.data as any
+                            if (isGridLayout && col && col > 1) {
+                                return (
+                                    <div
+                                        className='display-flex'
+                                        key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-") + "-" + index}
+                                    >
+                                        {itemArr.map((ele, number) => (
+                                            <div
+                                                className={`${(col && classNameWidth[col]) || ""} ${
+                                                    classNameRow || ""
+                                                }`}
+                                                key={ele[rowKey || "Id"] + "--" + index}
+                                            >
+                                                {renderRow(
+                                                    ele,
+                                                    indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            }
                             return (
-                                <div
-                                    className={`${(isGridLayout && col && col > 1 && "display-flex") || "" || ""}`}
-                                    key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-") + "-" + index}
-                                >
+                                <>
                                     {itemArr.map((ele, number) => (
                                         <div
                                             className={`${(col && classNameWidth[col]) || ""} ${classNameRow || ""}`}
-                                            key={ele[rowKey || "Id"]+ "--" + index}
+                                            key={ele[rowKey || "Id"] + "--" + index}
                                         >
                                             {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
                                         </div>
                                     ))}
-                                </div>
+                                </>
                             )
                         })}
                     {loading && hasMore && (

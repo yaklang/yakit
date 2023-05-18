@@ -131,6 +131,7 @@
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 6px 4px 8px 4px;
+                padding-bottom: 0;
             }
         }
     }
@@ -587,4 +588,27 @@
 }
 .version-content-wrapper {
     padding: 16px 24px;
+}
+
+.screen-and-screenshot-menu-item {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    .shortcut-keys {
+        font-size: 12px;
+        color: var(--yakit-disable-text-color);
+    }
+    &:hover {
+        color: #ffffff;
+        .shortcut-keys {
+            color: #ffffff;
+        }
+    }
+}
+
+.stop-screen-menu-item {
+    color: var(--yakit-danger-5);
+    &:hover {
+        color: #ffffff;
+    }
 }
