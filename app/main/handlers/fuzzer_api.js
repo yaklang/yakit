@@ -1,8 +1,4 @@
 const {ipcMain} = require("electron")
-const {htmlTemplateDir} = require("../filePath")
-const compressing = require("compressing")
-const fs = require("fs")
-const path = require("path")
 const handlerHelper = require("./handleStreamWithContext");
 
 
@@ -293,8 +289,4 @@ module.exports = (win, getClient) => {
         return await asyncStringFuzzer(params)
     })
 
-    // 提取数据发送表中展示
-    ipcMain.handle("send-extracted-to-table", async (e, params) => {
-        win.webContents.send("fetch-extracted-to-table", params)
-    })
 }

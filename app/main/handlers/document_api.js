@@ -1,10 +1,5 @@
 
 const {ipcMain, dialog} = require("electron")
-const {htmlTemplateDir} = require("../filePath")
-const compressing = require("compressing")
-const fs = require("fs")
-const path = require("path")
-const handlerHelper = require("./handleStreamWithContext");
 
 
 module.exports = (win, getClient) => {
@@ -54,23 +49,6 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("DeleteMarkdownDocument", async (e, params) => {
         return await asyncDeleteMarkdownDocument(params)
-    })
-
-    ipcMain.handle("openDialog", async (e, params) => {
-        return await new Promise((resolve, reject) => {
-            dialog.showOpenDialog({
-                ...params
-            }).then((res)=>{
-                if(res){
-                    let result = {...res}
-                    resolve(result)
-                }
-                else{
-                    reject("获取文件失败")
-                }
-            })
-        })
-
     })
 
 }

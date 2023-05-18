@@ -46,7 +46,7 @@ function newClient(apiName) {
     const md = new grpc.Metadata()
     md.set("authorization", `bearer ${global.password}`)
     let Api = ypb[apiName];  // Assuming the APIs are global
-
+    console.log("new service ",apiName)
     if (global.caPem !== "") {
         const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
             return callback(null, md)
@@ -172,6 +172,7 @@ module.exports = {
                 // 清空老数据
                 for (let apiName in _clients) {
                     if (_clients[apiName]) {
+                        console.log("close ", apiName)
                         _clients[apiName].close();
                     }
                 }
@@ -186,29 +187,34 @@ module.exports = {
             () => newClient(serviceName.YakApi),
         )
 
+        require("./handlers/misc_handles")(win)
+        require("./handlers/file_operation")(win)
+
         require("./handlers/exec_yak_script_api")(win, () => getClient(serviceName.ExecYakScriptApi))
 
+        require("./handlers/open_port_api")(win, () => getClient(serviceName.YakApi))
+
         require("./handlers/mitm_api")(win,
-            () =>  getClient(serviceName.MITMApi),
+            () => getClient(serviceName.MITMApi),
             () => getClient(serviceName.MITMReplacerApi),
-            () =>  getClient(serviceName.MITMExtractedDataApi),
-            () =>  getClient(serviceName.MITMFilterApi)
+            () => getClient(serviceName.MITMExtractedDataApi),
+            () => getClient(serviceName.MITMFilterApi)
         )
         require("./handlers/http_flow_api")(win, () => getClient(serviceName.HTTPFlowApi))
-        require("./handlers/fuzzer_api")(win,() =>  getClient(serviceName.FuzzerApi))
-        require("./handlers/analyzer_api")(win,() =>  getClient(serviceName.AnalyzerApi))
-        require("./handlers/codec_api")(win,() =>  getClient(serviceName.CodecApi))
+        require("./handlers/fuzzer_api")(win, () => getClient(serviceName.FuzzerApi))
+        require("./handlers/analyzer_api")(win, () => getClient(serviceName.AnalyzerApi))
+        require("./handlers/codec_api")(win, () => getClient(serviceName.CodecApi))
         require("./handlers/yakLocal").register()
         require("./handlers/openWebsiteByChrome")()
         require("./handlers/yak_script_api")(win, () => getClient(serviceName.YakScriptApi))
-        require("./handlers/payloads_api")(win,() =>  getClient(serviceName.PayloadsApi))
+        require("./handlers/payloads_api")(win, () => getClient(serviceName.PayloadsApi))
         require("./handlers/completion_api")(win, () => getClient(serviceName.CompletionApi))
         try {
             require("./handlers/port_scan_api")(win, () => getClient(serviceName.PortScanApi))
-        }catch (e) {
+        } catch (e) {
             console.log(e)
         }
-        require("./handlers/brute_api")(win,() =>  getClient(serviceName.BruteApi))
+        require("./handlers/brute_api")(win, () => getClient(serviceName.BruteApi))
         // start chrome manager
         try {
             require("./handlers/chromelauncher")()
@@ -218,7 +224,7 @@ module.exports = {
         }
 
         //assets
-        require("./handlers/assets_api")(win,() =>  getClient(serviceName.AssetsApi))
+        require("./handlers/assets_api")(win, () => getClient(serviceName.AssetsApi))
 
         // 加载更多的 menu
         require("./handlers/menu_api")(win, () => getClient(serviceName.MenuApi))
@@ -287,9 +293,9 @@ module.exports = {
         require("./handlers/export_api")(win, () => getClient(serviceName.ExportApi))
 
         // facades server
-        require("./handlers/facades_api")(win,() =>  getClient(serviceName.FacadesApi))
+        require("./handlers/facades_api")(win, () => getClient(serviceName.FacadesApi))
         // 小工具插件
-        require("./handlers/online_api")(win,() =>  getClient(serviceName.OnlineApi))
+        require("./handlers/online_api")(win, () => getClient(serviceName.OnlineApi))
 
         // terminal
         require("./handlers/terminal")(win)
@@ -298,8 +304,8 @@ module.exports = {
         require("./handlers/communication")(win)
 
         // reverse logger
-        require("./handlers/tunnel_api")(win,() =>  getClient(serviceName.TunnelApi))
-        require("./handlers/tunnel_register_api").register(win,() =>  getClient(serviceName.TunnelApi))
+        require("./handlers/tunnel_api")(win, () => getClient(serviceName.TunnelApi))
+        require("./handlers/tunnel_register_api").register(win, () => getClient(serviceName.TunnelApi))
 
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))

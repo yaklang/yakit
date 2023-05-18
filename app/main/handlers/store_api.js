@@ -81,9 +81,4 @@ module.exports = (win, getClient) => {
         return await asyncSetProcessEnvKey(params)
     })
 
-
-    // 参数携带
-    ipcMain.on("yakit-store-params", (event, arg) => {
-        win.webContents.send("get-yakit-store-params", arg)
-    })
 }
