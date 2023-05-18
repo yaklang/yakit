@@ -1011,6 +1011,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                             >
                                                 <div style={{width: "100%", height: "100%"}}>
                                                     <CVXterm
+                                                        maxHeight={0}
                                                         ref={xtermRef}
                                                         options={{
                                                             convertEol: true,

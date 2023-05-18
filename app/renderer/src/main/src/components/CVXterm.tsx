@@ -45,7 +45,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
     }
 
     return (
-        <div style={{width: "100%", height: "100%", maxHeight: maxHeight, overflow: "auto"}}>
+        <div style={{width: "100%", height: "100%", maxHeight: maxHeight > 0 ? maxHeight : "none", overflow: "auto"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -60,16 +60,16 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
             />
             <XTerm
                 ref={xtermRef}
-                onKey={e => {
+                onKey={(e) => {
                     if (!loading) {
                         const {key} = e
                         const {keyCode} = e.domEvent
                         if (keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current) {
                             //Backspace
                             if (isWrite) {
-                                xtermRef.current.terminal.write('\x1b[D \x1b[D');
+                                xtermRef.current.terminal.write("\x1b[D \x1b[D")
                             } else {
-                                xtermRef.current.terminal.write(' \x1b[D');
+                                xtermRef.current.terminal.write(" \x1b[D")
                             }
                         }
                         rewrite ? rewrite(key) : write(key)
@@ -93,7 +93,7 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
                     }
                     if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
                         const str = xtermRef.current.terminal.getSelection()
-                        if(!str) return true
+                        if (!str) return true
                         setLoading(true)
 
                         if (timer.current) {
