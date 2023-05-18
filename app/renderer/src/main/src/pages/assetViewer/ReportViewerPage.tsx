@@ -219,7 +219,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                 pagination={{
                     size: "small",
                     pageSize: pagination?.Limit || 10,
-                    current:response.Pagination.Page,
+                    current:typeof response.Pagination.Page === "number"? response.Pagination.Page:parseInt(response.Pagination.Page) ,
                     simple: true,
                     total,
                     showTotal: (i) => <Tag>共{i}条历史记录</Tag>,

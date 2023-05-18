@@ -5,9 +5,9 @@ export interface WebsiteTreeViewerProp {
 }
 
 export interface WebsiteForest {
-    size: number
-    trees: WebsiteNode[]
-    uuid: string
+    Size: number
+    Trees: WebsiteNode[]
+    Uuid: string
 }
 
 export interface WebsiteNode {
@@ -46,7 +46,7 @@ export const ConvertWebsiteForestToTreeData = (forest: WebsiteForest) => {
         return antDTreeData
     };
 
-    const nodes = (forest.trees || []).map(viewTree)
+    const nodes = (forest.Trees || []).map(viewTree)
     nodes.sort((a, b) => a.title.localeCompare(b.title))
     const shrinkNode = (node: AntDTreeData) => {
         node.children.map(shrinkNode);
