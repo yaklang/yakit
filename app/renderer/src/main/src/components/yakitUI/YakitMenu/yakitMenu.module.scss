@@ -20,6 +20,10 @@
     --menu-background: var(--yakit-primary-1);
     --menu-color: var(--yakit-primary-5);
 }
+.yakit-menu-grey {
+    --menu-background: var(--yakit-background-color);
+    --menu-color: var(--yakit-header-color);
+}
 // 不同尺寸大小配置
 .yakit-menu-default-size {
     --menu-height: 28px;

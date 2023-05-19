@@ -25,7 +25,7 @@ export interface YakitMenuProp extends MenuProps {
     data?: YakitMenuItemType[]
     width?: number
     /** 有默认菜单样式(深底白字)和'secondary-浅底深字'样式 */
-    type?: "secondary" | "primary"
+    type?: "secondary" | "primary" | "grey"
     /** 是否鼠标悬浮展示文字内容弹窗 */
     isHint?: boolean
     popupClassName?: string
@@ -97,7 +97,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                     popupClassName: classNames(
                         {
                             [styles["yakit-menu-primary"]]: type === "primary",
-                            [styles["yakit-menu-secondary"]]: type === "secondary"
+                            [styles["yakit-menu-secondary"]]: type === "secondary",
+                            [styles["yakit-menu-grey"]]: type === "grey"
                         },
                         styles["yakit-menu-submenu"],
                         menuSizeClass,
@@ -157,7 +158,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 styles["yakit-menu-div-wrapper"],
                 {
                     [styles["yakit-menu-primary"]]: type === "primary",
-                    [styles["yakit-menu-secondary"]]: type === "secondary"
+                    [styles["yakit-menu-secondary"]]: type === "secondary",
+                    [styles["yakit-menu-grey"]]: type === "grey"
                 },
                 menuSizeClass
             )}

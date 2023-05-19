@@ -101,7 +101,7 @@ const singletonRoute: Route[] = [
     // 远程管理
     Route.ControlAdminPage,
     // Matcher n Extractor
-    Route.Beta_MatcherExtractorPage,
+    Route.Beta_MatcherExtractorPage
 ]
 /** 不需要首页组件安全边距的页面 */
 export const noPaddingPage = [
@@ -115,7 +115,8 @@ export const noPaddingPage = [
     Route.DNSLog,
     Route.NewHome,
     Route.DB_CVE,
-    Route.HTTPFuzzer
+    Route.HTTPFuzzer,
+    Route.DB_Ports
 ]
 
 export const defaultUserInfo: UserInfoProps = {

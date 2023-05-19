@@ -1,0 +1,99 @@
+.action-btn-group {
+    height: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3px;
+
+    .divider-style {
+        height: 100%;
+        border-left: 1px solid var(--yakit-border-color);
+    }
+    .icon-style {
+        color: var(--yakit-body-text-color);
+    }
+    .icon-style:hover {
+        color: var(--yakit-primary-5);
+    }
+}
+
+.portAsset-content {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+.portAsset {
+    padding: 12px 16px;
+    flex: 1;
+    overflow: hidden;
+    .portAsset-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--yakit-header-color);
+        font-size: 12px;
+
+        .head-title {
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+        }
+        .head-extra {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+    }
+    .portAsset-table {
+        .portAsset-table-list-container {
+            border-radius: 4px;
+        }
+        .table-head-extra {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .table-head-icon {
+            color: var(--yakit-body-text-color);
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}
+.table-head-send-popover {
+    :global {
+        .ant-popover-placement-bottom,
+        .ant-popover-placement-bottomLeft,
+        .ant-popover-placement-bottomRight {
+            padding-top: 5px;
+        }
+        .ant-popover-inner-content {
+            padding: 8px 4px;
+            padding-bottom: 4px;
+        }
+    }
+}
+.portAsset-query {
+    display: flex;
+    flex-direction: column;
+    min-width: 300px;
+    max-width: 300px;
+    border-left: 1px solid var(--yakit-border-color);
+    .query-head {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 12px 12px;
+        border-bottom: 1px solid var(--yakit-border-color);
+        height: 44px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-header-color);
+    }
+    .query-collapse {
+    }
+}

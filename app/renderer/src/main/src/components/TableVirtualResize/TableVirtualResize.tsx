@@ -829,14 +829,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 <div className={styles["virtual-table-heard-right-item"]}>
                                     <span className={styles["virtual-table-heard-right-text"]}>Total</span>
                                     <span className={styles["virtual-table-heard-right-number"]}>
-                                        {pagination?.total}
+                                        {pagination?.total || 0}
                                     </span>
                                 </div>
                                 <Divider type='vertical' />
                                 <div className={styles["virtual-table-heard-right-item"]}>
                                     <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
                                     <span className={styles["virtual-table-heard-right-number"]}>
-                                        {rowSelection?.selectedRowKeys?.length}
+                                        {rowSelection?.selectedRowKeys?.length || 0}
                                     </span>
                                 </div>
                             </div>
@@ -1411,7 +1411,7 @@ const CellRender = React.memo(
         if (preProps.item.data !== nextProps.item.data) {
             return false
         }
-        
+
         return true
     }
 )

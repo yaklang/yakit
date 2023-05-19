@@ -26,16 +26,16 @@ const { ipcRenderer } = window.require("electron")
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const { color, size, disable, className, enableCopy, iconColor } = props
+    const { color, size, disable, className, enableCopy, iconColor,copyText,...restProps } = props
     const onAfterCopy = useMemoizedFn((e) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
     return (
         <Tag
-            {...props}
+            {...restProps}
             closeIcon={
                 (enableCopy && (
-                    <CopyComponents copyText={props.copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
+                    <CopyComponents copyText={copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
                 )) ||
                 props.closeIcon || <RemoveIcon />
             }
@@ -63,7 +63,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 if (props.onClose) props.onClose(e)
             }}
         >
-            {(enableCopy && props.copyText) || props.children}
+            {(enableCopy && copyText) || props.children}
         </Tag>
     )
 }

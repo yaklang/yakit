@@ -581,3 +581,39 @@
     }
 }
 // ========================== antd input-group select - yakit end ==========================
+
+// ========================== ant-collapse yakit-start ==========================
+.yakit-collapse {
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+        padding: 8px 12px;
+        align-items: center;
+        line-height: 16px;
+    }
+    .ant-collapse-header-text {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-header-color);
+        margin-left: 8px;
+    }
+    .ant-collapse-content > .ant-collapse-content-box {
+        padding: 12px;
+    }
+    .ant-collapse-expand-icon {
+        width: 16px;
+        height: 16px;
+    }
+    .ant-collapse-ghost > .ant-collapse-item {
+        border-bottom: 1px solid var(--yakit-border-color);
+        &:last-child {
+            border-bottom: 0;
+        }
+    }
+    .ant-form-item {
+        margin-bottom: 12px;
+    }
+    .ant-select.ant-select-in-form-item {
+        height: auto;
+    }
+}
+// ========================== ant-collapse yakit-end ==========================
