@@ -231,6 +231,8 @@ export function RouteNameToVerboseName(r: string) {
             return "Web Fuzzer"
         case "simpleDetect":
             return "安全检测"
+        case "screen-recorder-page":
+            return "录屏管理"
         default:
             return r
     }

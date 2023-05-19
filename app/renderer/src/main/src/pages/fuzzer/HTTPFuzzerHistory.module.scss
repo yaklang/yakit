@@ -6,7 +6,9 @@
 
     .check-icon {
         color: var(--yakit-primary-5);
-
+        position: absolute;
+        right: -12px;
+        top: 4px;
         svg {
             width: 16px;
             height: 16px;

@@ -15,6 +15,8 @@ import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import style from "./MITMServerHijacking.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuitIcon} from "@/assets/newIcon"
+import classNames from "classnames"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -31,6 +33,7 @@ export interface MITMServerHijackingProp {
     setVisible: (b: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
+    tip: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -44,7 +47,7 @@ const MITMFiltersModal = React.lazy(() => import("../MITMServerStartForm/MITMFil
 const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStartForm/MITMCertificateDownloadModal"))
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus, setVisible, logs, statusCards} = props
+    const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip} = props
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -77,7 +80,20 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             <div className={style["mitm-server-heard"]}>
                 <div className={style["mitm-server-title"]}>
                     <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
-                    <div className={style["mitm-server-heard-addr"]}>{addr}</div>
+                    <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
+                        <span style={{marginRight: 8}}>{addr}</span>
+                        {tip
+                            .split("|")
+                            .map(
+                                (item, index) =>
+                                    item &&
+                                    (index > 0 ? (
+                                        <YakitTag color='success'>{item}</YakitTag>
+                                    ) : (
+                                        <YakitTag>{item}</YakitTag>
+                                    ))
+                            )}
+                    </div>
                 </div>
                 <div className={style["mitm-server-extra"]}>
                     <div className={style["mitm-server-links"]}>

@@ -14,14 +14,14 @@ import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {QueryYakScriptsResponse} from "./invoker/schema"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
 import {ItemSelects} from "../components/baseTemplate/FormItemUtil"
 import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
 import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
-import {MainTabs} from "./MainTabs"
+import {addToTab, MainTabs} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
 import {UserInfoProps, useStore} from "@/store"
@@ -42,6 +42,7 @@ import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscribe"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {RemoveIcon} from "@/assets/newIcon"
+import {useScreenRecorder} from "@/store/screenRecorder"
 
 const {ipcRenderer} = window.require("electron")
 const {Content} = Layout
@@ -1141,6 +1142,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
         }
     )
+    const {screenRecorderInfo} = useScreenRecorder()
+    useUpdateEffect(() => {
+        if (!screenRecorderInfo.isRecording) {
+            addToTab("**screen-recorder")
+        }
+    }, [screenRecorderInfo.isRecording])
 
     useEffect(() => {
         // 写成HOC是否好点呢，现在一个页面启动就是一个函数
@@ -1172,6 +1179,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     removePage(Route.AddYakitScript)
                     setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
                 }
+            }
+            if (type === Route.DB_Risk) {
+                addTabPage(Route.DB_Risk)
             }
             console.info("send to tab: ", type)
         })

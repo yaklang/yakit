@@ -3,8 +3,8 @@ import {Badge, Modal, Tooltip, Form, Input, Button} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
-    RocketSvgIcon,
     ScreensHotSvgIcon,
+    RocketSvgIcon,
     UISettingSvgIcon,
     UnLoginSvgIcon,
     UpdateSvgIcon,
@@ -13,7 +13,7 @@ import {
     YaklangSvgIcon
 } from "./icons"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {showDrawer, showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success, yakitFailed} from "@/utils/notification"
@@ -51,7 +51,7 @@ import {CodeGV, LocalGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
-import {GithubSvgIcon, PencilAltIcon} from "@/assets/newIcon"
+import {GithubSvgIcon, PencilAltIcon, TerminalIcon, CameraIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {NetWorkApi} from "@/services/fetch"
@@ -65,6 +65,9 @@ import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {MacKeyborad, WinKeyborad} from "../yakitUI/YakitEditor/editorUtils"
+import {ScrecorderModal} from "@/pages/screenRecorder/ScrecorderModal"
+import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog";
 import {Popconfirm} from "antd"
@@ -110,9 +113,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 上传数据弹框 */
     const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
-
-    /** 截图功能的loading */
-    const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
 
     useEffect(() => {
         const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} setStoreUserInfo={setStoreUserInfo} />
@@ -189,32 +189,74 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         ipcRenderer.invoke("open-user-manage", type)
     }
 
+    const {screenRecorderInfo, setRecording} = useScreenRecorder()
+    useEffect(() => {
+        ipcRenderer.on(`${screenRecorderInfo.token}-data`, async (e, data) => {})
+        ipcRenderer.on(`${screenRecorderInfo.token}-error`, (e, error) => {
+            setRecording(false)
+        })
+        ipcRenderer.on(`${screenRecorderInfo.token}-end`, (e, data) => {
+            setRecording(false)
+        })
+        return () => {
+            setRecording(false)
+            ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
+            ipcRenderer.removeAllListeners(`${screenRecorderInfo.token}-data`)
+            ipcRenderer.removeAllListeners(`${screenRecorderInfo.token}-error`)
+            ipcRenderer.removeAllListeners(`${screenRecorderInfo.token}-end`)
+        }
+    }, [screenRecorderInfo.token])
+    useEffect(() => {
+        ipcRenderer.on("open-screenCap-modal", async (e) => {
+            openScreenRecorder()
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("open-screenCap-modal")
+        }
+    }, [])
+
+    const openScreenRecorder = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("IsScrecorderReady", {})
+            .then((data: {Ok: boolean; Reason: string}) => {
+                if (data.Ok) {
+                    const m = showYakitModal({
+                        title: "录屏须知",
+                        footer: null,
+                        type: "white",
+                        width: 520,
+                        content: (
+                            <ScrecorderModal
+                                onClose={() => {
+                                    m.destroy()
+                                }}
+                                token={screenRecorderInfo.token}
+                                onStartCallback={() => {
+                                    setRecording(true)
+                                    m.destroy()
+                                }}
+                            />
+                        )
+                    })
+                } else {
+                    addToTab("**screen-recorder")
+                }
+            })
+            .catch((err) => {
+                yakitFailed("IsScrecorderReady失败:" + err)
+            })
+    })
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
                 {showDevTool() && <UIDevTool />}
 
-                {(system === "Darwin" || system === "Windows_NT") && (
-                    <div
-                        className={styles["ui-op-btn-wrapper"]}
-                        onClick={() => {
-                            setScreenshotLoading(true)
-                            ipcRenderer.invoke("activate-screenshot")
-                            setTimeout(() => {
-                                setScreenshotLoading(false)
-                            }, 1000)
-                        }}
-                    >
-                        <div className={styles["op-btn-body"]}>
-                            <ScreensHotSvgIcon className={styles["icon-style"]} />
-                        </div>
-                        {screenshotLoading && (
-                            <div className={styles["icon-loading-wrapper"]} onClick={(e) => e.stopPropagation()}>
-                                <LoadingOutlined className={styles["icon-hover-style"]} />
-                            </div>
-                        )}
-                    </div>
-                )}
+                <ScreenAndScreenshot
+                    system={system}
+                    token={screenRecorderInfo.token}
+                    isRecording={screenRecorderInfo.isRecording}
+                />
 
                 {!showProjectManage && (
                     <div
@@ -229,7 +271,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     >
                         <div className={styles["op-btn-body"]}>
                             <Tooltip placement='bottom' title='引擎Console'>
-                                <RocketSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
+                                <TerminalIcon className={classNames(styles["icon-style"], styles["size-style"])} />
                             </Tooltip>
                         </div>
                     </div>
@@ -291,7 +333,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 const key = Route.PlugInAdminPage
                                                 openMenu(key)
                                             }
-                                            if(key === "hole-collect"){
+                                            if (key === "hole-collect") {
                                                 const key = Route.HoleCollectPage
                                                 openMenu(key)
                                             }
@@ -486,10 +528,10 @@ const GetUIOpSettingMenu = () => {
             key: "explab",
             label: "试验性功能",
             children: [
-                {
-                    key: "screen-recorder",
-                    label: "录屏管理器"
-                },
+                // {
+                //     key: "screen-recorder",
+                //     label: "录屏管理器"
+                // },
                 {
                     key: "bas-chaosmaker",
                     label: "BAS实验室"
@@ -1659,15 +1701,16 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     })
     /** 查看全部 */
     const viewAll = useMemoizedFn(() => {
-        showDrawer({
-            title: "Vulnerabilities && Risks",
-            width: "70%",
-            content: (
-                <>
-                    <RiskTable />
-                </>
-            )
-        })
+        // showDrawer({
+        //     title: "Vulnerabilities && Risks",
+        //     width: "70%",
+        //     content: (
+        //         <>
+        //             <RiskTable />
+        //         </>
+        //     )
+        // })
+        addToTab(Route.DB_Risk)
     })
 
     const notice = useMemo(() => {
@@ -1742,5 +1785,154 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 </div>
             </div>
         </YakitPopover>
+    )
+})
+
+interface ScreenAndScreenshotProps {
+    system: YakitSystem
+    isRecording: boolean
+    token: string
+}
+const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((props) => {
+    const {system, isRecording, token} = props
+    const [show, setShow] = useState<boolean>(false)
+    /** 截图功能的loading */
+    const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
+    /** 录屏功能的loading */
+    const [screenCapLoading, setScreenCapLoading] = useState<boolean>(false)
+
+    const yakitMenuData = useCreation(() => {
+        if (system === "Darwin" || system === "Windows_NT") {
+            return [
+                {
+                    label: isRecording ? (
+                        <div
+                            className={styles["stop-screen-menu-item"]}
+                            onClick={() => {
+                                ipcRenderer.invoke("cancel-StartScrecorder", token)
+                            }}
+                        >
+                            停止录屏
+                        </div>
+                    ) : (
+                        <div className={styles["screen-and-screenshot-menu-item"]}>
+                            <span>录屏</span>
+                            <span className={styles["shortcut-keys"]}>
+                                {system === "Darwin"
+                                    ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
+                                    : `${WinKeyborad[17]} ${WinKeyborad[16]} X`}
+                            </span>
+                        </div>
+                    ),
+                    key: "screenCap"
+                },
+                {
+                    label: (
+                        <div className={styles["screen-and-screenshot-menu-item"]}>
+                            <span>截屏</span>
+                            {screenshotLoading ? (
+                                <div className={styles["icon-loading-wrapper"]} onClick={(e) => e.stopPropagation()}>
+                                    <LoadingOutlined className={styles["icon-hover-style"]} />
+                                </div>
+                            ) : (
+                                <span className={styles["shortcut-keys"]}>
+                                    {system === "Darwin"
+                                        ? `${MacKeyborad[17]} ${MacKeyborad[16]} B`
+                                        : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
+                                </span>
+                            )}
+                        </div>
+                    ),
+                    key: "screenshot"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    label: "录屏管理",
+                    key: "screen-recorder"
+                }
+            ]
+        }
+        return [
+            {
+                label: isRecording ? (
+                    <div
+                        className={styles["stop-screen-menu-item"]}
+                        onClick={() => {
+                            ipcRenderer.invoke("cancel-StartScrecorder", token)
+                        }}
+                    >
+                        停止录屏
+                    </div>
+                ) : (
+                    <div className={styles["screen-and-screenshot-menu-item"]}>
+                        <span>录屏</span>
+                        <span className={styles["shortcut-keys"]}>{`${WinKeyborad[17]} ${WinKeyborad[16]} X`}</span>
+                    </div>
+                ),
+                key: "screenCap"
+            },
+            {
+                type: "divider"
+            },
+            {
+                label: <span>录屏管理</span>,
+                key: "screen-recorder"
+            }
+        ]
+    }, [system, screenshotLoading, isRecording])
+    const menuSelect = useMemoizedFn((type: string) => {
+        setShow(false)
+        switch (type) {
+            case "screenCap":
+                if (isRecording) {
+                    ipcRenderer.invoke("cancel-StartScrecorder", token)
+                } else {
+                    ipcRenderer.invoke("send-open-screenCap-modal")
+                }
+
+                break
+            case "screenshot":
+                if (screenshotLoading) return
+                setScreenshotLoading(true)
+                ipcRenderer.invoke("activate-screenshot")
+                setTimeout(() => {
+                    setScreenshotLoading(false)
+                }, 1000)
+                break
+            case "screen-recorder":
+                addToTab("**screen-recorder")
+                break
+            default:
+                break
+        }
+    })
+
+    const menu = (
+        <YakitMenu
+            width={142}
+            selectedKeys={[]}
+            data={yakitMenuData as YakitMenuItemProps[]}
+            onClick={({key}) => menuSelect(key)}
+        />
+    )
+    return (
+        <>
+            <YakitPopover
+                overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
+                overlayStyle={{paddingBottom: 0}}
+                placement={"bottom"}
+                content={menu}
+                visible={show}
+                onVisibleChange={(visible) => setShow(visible)}
+            >
+                <div className={styles["ui-op-btn-wrapper"]}>
+                    <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                        <CameraIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                    </div>
+                </div>
+            </YakitPopover>
+        </>
     )
 })

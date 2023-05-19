@@ -795,6 +795,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
 
     return (
         <Descriptions
+        className="risk-details-descriptions-box"
             title={
                 <div className='container-title-body'>
                     <div className='title-icon'>

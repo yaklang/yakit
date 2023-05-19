@@ -4,14 +4,17 @@ import {ResizeBox} from "@/components/ResizeBox"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTPPacketEditor, IMonacoEditor} from "@/utils/editors"
+import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useThrottleEffect} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
@@ -79,13 +82,18 @@ const sorterFunction = (list, sorterTable) => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd} = props
+    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd,} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
 
     const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
     const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
+
+    const [isHaveData, setIsHaveData] = useState<boolean>(false) // 查询提取数据不为空
+
+    const [editor, setEditor] = useState<IMonacoEditor>()
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
     const bodyLengthRef = useRef<any>()
     const tableRef = useRef<any>(null)
@@ -190,6 +198,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "提取数据",
                       dataKey: "extracted",
                       width: 300,
+                      beforeIconExtra: (
+                          <div className={classNames(styles["extracted-checkbox"])}>
+                              <YakitCheckbox checked={isHaveData} onChange={(e) => setIsHaveData(e.target.checked)} />
+                              <span className={styles["tip"]}>不为空</span>
+                          </div>
+                      ),
                       render: (_, record) => extractedMap.get(record["UUID"]) || "-"
                   },
                   {
@@ -292,7 +306,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   }
               ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData])
 
     useThrottleEffect(
         () => {
@@ -312,10 +326,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     useEffect(() => {
         update()
     }, [isRefresh])
-    useEffect(() => {
-        if (!query) return
+    useUpdateEffect(() => {
         update()
-    }, [query])
+    }, [query, isHaveData])
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
     const onDetails = useMemoizedFn((record, index: number) => {
         if (props.onSendToWebFuzzer) {
             analyzeFuzzerResponse(record, props.onSendToWebFuzzer, index, data)
@@ -366,7 +388,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 query?.keyWord ||
                 (query?.StatusCode && query?.StatusCode?.length > 0) ||
                 query?.afterBodyLength ||
-                query?.beforeBodyLength
+                query?.beforeBodyLength ||
+                isHaveData
             ) {
                 const newDataTable = sorterFunction(data, sorterTable) || []
                 const l = newDataTable.length
@@ -378,6 +401,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     let statusCodeIsPush = true
                     let bodyLengthMinIsPush = true
                     let bodyLengthMaxIsPush = true
+                    let isHaveDataIsPush = true
                     // 搜索满足条件 交集
                     // 关键字搜索
                     if (query?.keyWord) {
@@ -408,8 +432,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         // 最大
                         bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
                     }
+                    // 是否有提取数据
+                    if (isHaveData) {
+                        isHaveDataIsPush = !!extractedMap.get(record["UUID"])
+                    }
                     // 搜索同时为true时，push新数组
-                    if (keyWordIsPush && statusCodeIsPush && bodyLengthMinIsPush && bodyLengthMaxIsPush) {
+                    if (
+                        keyWordIsPush &&
+                        statusCodeIsPush &&
+                        bodyLengthMinIsPush &&
+                        bodyLengthMaxIsPush &&
+                        isHaveDataIsPush
+                    ) {
                         searchList.push(record)
                     }
                 }
@@ -440,11 +474,27 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }
         return p
     }, [firstFull])
-    const [editor, setEditor] = useState<IMonacoEditor>()
+
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            overlayWidgetv: {
+                menu: [
+                    {
+                        key: "is-show-add-overlay-widgetv",
+                        label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
+                    }
+                ],
+                onRun: () => {
+                    setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
+                    setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+                }
+            }
+        }
+    }, [showResponseInfoSecondEditor])
     useEffect(() => {
         if (!editor || !currentSelectItem) return
-        onAddOverlayWidget(editor, currentSelectItem)
-    }, [currentSelectItem])
+        onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
+    }, [currentSelectItem, showResponseInfoSecondEditor])
     return (
         <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
             <ResizeBox
@@ -472,7 +522,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     />
                 }
                 secondNode={
-                    <HTTPPacketEditor
+                    <NewHTTPPacketEditor
+                        isResponse={true}
                         readOnly={true}
                         hideSearch={true}
                         noHex={true}
@@ -481,6 +532,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         onAddOverlayWidget={(editor) => {
                             setEditor(editor)
                         }}
+                        isAddOverlayWidget={showResponseInfoSecondEditor}
+                        contextMenu={responseEditorRightMenu}
                     />
                 }
                 {...ResizeBoxProps}

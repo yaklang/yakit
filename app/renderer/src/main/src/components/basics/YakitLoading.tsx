@@ -40,7 +40,7 @@ const LoadingTitle: string[] = [
     "Yakit，为您提供渗透问题的完美解决方案 ——酒零",
     "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
     "别让无聊占据你的时间，来探索新世界吧！——Chelth",
-    "<script>alert(‘Hello Yakit!’)</script> ——红炉点火",
+    "<script>alert(‘Hello Yakit!’)</script> ——红炉点雪",
     "你的鼠标，掌控世界！——Chelth"
 ]
 

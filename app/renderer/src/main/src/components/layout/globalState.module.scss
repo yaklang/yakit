@@ -183,4 +183,21 @@
             border-top: 1px solid var(--yakit-border-color);
         }
     }
+
+    .body-setting {
+        box-sizing: border-box;
+        height: 44px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        background: var(--yakit-card-background-color);
+        border-radius: 0px 0px 4px 4px;
+        border-width: 1px 0px 0px 0px;
+        border-style: solid;
+        border-color: var(--yakit-border-color);
+        .yakit-input-number {
+            background-color: var(--yakit-neutral10-color);
+        }
+    }
 }

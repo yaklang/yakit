@@ -145,7 +145,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         return () => {
             // 组价销毁时进行本地缓存 用于后续页面进入默认选项
             const localSaveData = Array.from(new Set(cacheTmp))
-            // console.log("本地缓存",localSaveData)
             setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(localSaveData))
             ipcRenderer.removeAllListeners("client-mitm-hooks")
             ipcRenderer.removeAllListeners("client-mitm-loading")

@@ -1,7 +1,7 @@
 import {notification} from "antd"
 import {ArgsProps} from "antd/lib/notification"
-import React from "react"
-import {CloseCircleIcon} from "@/assets/newIcon"
+import React, {ReactNode} from "react"
+import {CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon} from "@/assets/newIcon"
 
 export const warn = (msg: React.ReactNode) => {
     notification["warning"]({message: msg, placement: "bottomRight"})
@@ -41,7 +41,27 @@ export const yakitFailed = (props: ArgsProps | string | React.ReactNode) => {
     })
 }
 
-export const yakitNotify = (notifyType: "error" | "success" | "warning" | "info", props: ArgsProps | string | React.ReactNode) => {
+/**
+ * @param type
+ * @returns {React.ReactNode} 图标
+ */
+const getIcon = (type) => {
+    switch (type) {
+        case "error":
+            return <CloseCircleIcon className='yakit-notify-icon yakit-notify-error-icon' />
+        case "success":
+            return <CheckCircleOutlineIcon className='yakit-notify-icon yakit-notify-success-icon' />
+        case "warning":
+            return <ExclamationOutlineIcon className='yakit-notify-icon yakit-notify-warning-icon' />
+        default:
+            return <></>
+    }
+}
+
+export const yakitNotify = (
+    notifyType: "error" | "success" | "warning" | "info",
+    props: ArgsProps | string | React.ReactNode
+) => {
     let newProps: ArgsProps = {
         message: ""
     }
@@ -52,8 +72,10 @@ export const yakitNotify = (notifyType: "error" | "success" | "warning" | "info"
     } else {
         newProps.message = props
     }
+
     notification[notifyType]({
         ...newProps,
+        icon: getIcon(notifyType),
         placement: "bottomRight",
         className: "yakit-notification-" + notifyType
     })

@@ -201,7 +201,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     useEffect(() => {
         if (getParams().Id > 0) {
             onCloseTab()
-            removeSubscribeClose(Route.HTTPFuzzer)
+            removeSubscribeClose(Route.AddYakitScript)
             return
         }
         setSubscribeClose(Route.AddYakitScript, {
@@ -217,7 +217,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             }
         })
         return () => {
-            removeSubscribeClose(Route.HTTPFuzzer)
+            removeSubscribeClose(Route.AddYakitScript)
         }
     }, [getParams().Id])
 
@@ -1092,7 +1092,6 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
                             {text: "布尔值 / false", value: "false"}
                         ]}
                         setValue={(value) => {
-                            console.log("value", value, params.TypeVerbose)
                             setParams({...params, DefaultValue: value})
                         }}
                         value={params.DefaultValue}
