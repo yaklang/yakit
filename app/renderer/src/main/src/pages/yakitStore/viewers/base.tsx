@@ -438,6 +438,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
         const tableDataPreProps = useRef<any>([])
         useDebounceEffect(
             () => {
+                if (tableDataOriginal.current.length >= 1000) return
                 if (tableDataPreProps.current.length === props.execResultsLog.length) return
                 tableDataPreProps.current = props.execResultsLog
                 const tableDataList = (props.execResultsLog || [])
@@ -612,10 +613,10 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                             }
                             isRefresh={loading}
                             renderKey='uuid'
-                            data={tableData.current.map((i, n) => ({...i, index: n}))}
+                            data={tableData.current}
                             loading={loading}
                             enableDrag={true}
-                            columns={[{title: "index", dataKey: "index"}, ...columns]}
+                            columns={columns}
                             pagination={{
                                 page: 1,
                                 limit: 1,
