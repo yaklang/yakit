@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useState, useMemo} from "react"
 import {
     Button,
     Card,
@@ -17,7 +17,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {HTTPPacketEditor} from "../utils/editors"
+import {HTTPPacketEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -32,9 +32,10 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
 import {useMemoizedFn} from "ahooks"
-import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable";
-import {showResponseViaResponseRaw} from "@/components/ShowInBrowser";
-import { ChromeSvgIcon } from "@/assets/newIcon"
+import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
+import {ChromeSvgIcon} from "@/assets/newIcon"
+import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -107,7 +108,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     }
 
     if (loading) {
-        return <Spin tip={"正在分析详细参数"}/>
+        return <Spin tip={"正在分析详细参数"} />
     }
 
     return (
@@ -211,7 +212,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isFront}
-                                                icon={<LeftOutlined/>}
+                                                icon={<LeftOutlined />}
                                                 onClick={() => {
                                                     props?.fetchRequest!(1)
                                                 }}
@@ -221,7 +222,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Button
                                                 type='link'
                                                 disabled={!!props.isBehind}
-                                                icon={<RightOutlined/>}
+                                                icon={<RightOutlined />}
                                                 onClick={() => {
                                                     props?.fetchRequest!(2)
                                                 }}
@@ -466,35 +467,41 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .then((i: HTTPFlow) => {
                 setFlow(i)
                 const existedExtraInfos: HTTPFlowInfoType[] = []
-                ipcRenderer.invoke("QueryMITMRuleExtractedData", {
-                    Pagination: {
-                        Order: "asc",
-                        OrderBy: "created_at",
-                        Page: 1, Limit: 1
-                    }, HTTPFlowHash: i.Hash
-                }).then((rsp: { Total: number }) => {
-                    if (rsp.Total > 0) {
-                        existedExtraInfos.push("rules")
-                    }
-                }).catch(e => {
-                    failed("获取规则提取数据失败")
-                }).finally(() => {
-                    if ((i.Domains || []).length > 0 || (i.RootDomains || []).length > 0) {
-                        existedExtraInfos.push("domains")
-                    }
+                ipcRenderer
+                    .invoke("QueryMITMRuleExtractedData", {
+                        Pagination: {
+                            Order: "asc",
+                            OrderBy: "created_at",
+                            Page: 1,
+                            Limit: 1
+                        },
+                        HTTPFlowHash: i.Hash
+                    })
+                    .then((rsp: {Total: number}) => {
+                        if (rsp.Total > 0) {
+                            existedExtraInfos.push("rules")
+                        }
+                    })
+                    .catch((e) => {
+                        failed("获取规则提取数据失败")
+                    })
+                    .finally(() => {
+                        if ((i.Domains || []).length > 0 || (i.RootDomains || []).length > 0) {
+                            existedExtraInfos.push("domains")
+                        }
 
-                    if ((i.JsonObjects || []).length > 0) {
-                        existedExtraInfos.push("json")
-                    }
+                        if ((i.JsonObjects || []).length > 0) {
+                            existedExtraInfos.push("json")
+                        }
 
-                    if (existedExtraInfos.length > 0) {
-                        setInfoType(existedExtraInfos[0])
-                        setExistedInfoType([...existedExtraInfos])
-                    } else {
-                        setInfoType(undefined)
-                        setExistedInfoType([])
-                    }
-                })
+                        if (existedExtraInfos.length > 0) {
+                            setInfoType(existedExtraInfos[0])
+                            setExistedInfoType([...existedExtraInfos])
+                        } else {
+                            setInfoType(undefined)
+                            setExistedInfoType([])
+                        }
+                    })
             })
             .catch((e: any) => {
                 failed(`Query HTTPFlow failed: ${e}`)
@@ -517,20 +524,50 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     const spinning = !flow || loading
 
+    const requestEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            copyRequestBase64Body: {
+                menu: [
+                    {
+                        key: "copy-request-base64-body",
+                        label: "复制请求Body (Base64)"
+                    }
+                ],
+                onRun: () => {
+                    callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
+                }
+            }
+        }
+    }, [])
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            copyResponseBase64Body: {
+                menu: [
+                    {
+                        key: "copy-response-base64-body",
+                        label: "复制响应Body (Base64)"
+                    }
+                ],
+                onRun: () => {
+                    callCopyToClipboard(flow?.RawResponseBodyBase64 || "")
+                }
+            }
+        }
+    }, [])
     return (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
-            <Row className={styles['http-history-detail-wrapper']} gutter={8}>
+            <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
                 <Col span={existedInfoType.length > 0 ? 19 : 24}>
                     <ResizeBox
                         firstNode={() => {
                             if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录请求"}/>
+                                return <Empty description={"选择想要查看的 HTTP 记录请求"} />
                             }
                             if (flow?.IsWebsocket) {
-                                return <HTTPFlowForWebsocketViewer flow={flow}/>
+                                return <HTTPFlowForWebsocketViewer flow={flow} />
                             }
                             return (
-                                <HTTPPacketEditor
+                                <NewHTTPPacketEditor
                                     originValue={flow?.Request || new Uint8Array()}
                                     readOnly={true}
                                     noLineNumber={true}
@@ -541,20 +578,21 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     hideSearch={true}
                                     noHex={true}
                                     noMinimap={true}
-                                    actions={
-                                        flow?.RawRequestBodyBase64
-                                            ? [
-                                                {
-                                                    contextMenuGroupId: "auto-suggestion",
-                                                    label: "复制请求Body (Base64)",
-                                                    id: "copy-request-base64-body",
-                                                    run: () => {
-                                                        callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
-                                                    }
-                                                }
-                                            ]
-                                            : undefined
-                                    }
+                                    contextMenu={flow?.RawRequestBodyBase64 ? requestEditorRightMenu : undefined}
+                                    // actions={
+                                    //     flow?.RawRequestBodyBase64
+                                    //         ? [
+                                    //               {
+                                    //                   contextMenuGroupId: "auto-suggestion",
+                                    //                   label: "复制请求Body (Base64)",
+                                    //                   id: "copy-request-base64-body",
+                                    //                   run: () => {
+                                    //                       callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
+                                    //                   }
+                                    //               }
+                                    //           ]
+                                    //         : undefined
+                                    // }
                                     // 这个为了解决不可见字符的问题
                                     defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                                     extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
@@ -565,33 +603,35 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         firstMinSize={300}
                         secondNode={() => {
                             if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录响应"}/>
+                                return <Empty description={"选择想要查看的 HTTP 记录响应"} />
                             }
                             if (flow?.IsWebsocket) {
-                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""}/>
+                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
                             }
                             return (
-                                <HTTPPacketEditor
-                                    actions={
-                                        flow?.RawResponseBodyBody64
-                                            ? [
-                                                  {
-                                                      contextMenuGroupId: "auto-suggestion",
-                                                      label: "复制响应Body (Base64)",
-                                                      id: "copy-response-base64-body",
-                                                      run: () => {
-                                                          callCopyToClipboard(flow?.RawResponseBodyBody64 || "")
-                                                      }
-                                                  }
-                                              ]
-                                            : undefined
-                                    }
+                                <NewHTTPPacketEditor
+                                    // actions={
+                                    //     flow?.RawResponseBodyBody64
+                                    //         ? [
+                                    //               {
+                                    //                   contextMenuGroupId: "auto-suggestion",
+                                    //                   label: "复制响应Body (Base64)",
+                                    //                   id: "copy-response-base64-body",
+                                    //                   run: () => {
+                                    //                       callCopyToClipboard(flow?.RawResponseBodyBody64 || "")
+                                    //                   }
+                                    //               }
+                                    //           ]
+                                    //         : undefined
+                                    // }
+                                    contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
                                     extra={[
                                         <Button
-                                            className={styles['extra-chrome-btn']}
+                                            className={styles["extra-chrome-btn"]}
                                             type={"text"}
-                                            size={"small"} icon={<ChromeSvgIcon />}
-                                            onClick={()=>{
+                                            size={"small"}
+                                            icon={<ChromeSvgIcon />}
+                                            onClick={() => {
                                                 showResponseViaResponseRaw(flow?.Response)
                                             }}
                                         />
@@ -612,9 +652,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         secondMinSize={300}
                     />
                 </Col>
-                {infoType !== 'rules' && existedInfoType.filter(i => i !== "rules").length > 0 && (
+                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && (
                     <Col span={5}>
-                        <HTTPPacketEditor
+                        <NewHTTPPacketEditor
                             title={
                                 <Button.Group size={"small"}>
                                     {existedInfoType.map((i) => {
@@ -641,8 +681,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             originValue={(() => {
                                 switch (infoType) {
                                     case "domains":
-                                        return StringToUint8Array("# 根域 (Root-Domains)\r\n" + ((flow?.RootDomains || []).join("\r\n")) +
-                                            "\r\n\r\n# 域名 (Domain) \r\n" + (flow?.Domains || []).join("\r\n"))
+                                        return StringToUint8Array(
+                                            "# 根域 (Root-Domains)\r\n" +
+                                                (flow?.RootDomains || []).join("\r\n") +
+                                                "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                (flow?.Domains || []).join("\r\n")
+                                        )
                                     case "json":
                                         return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
                                     default:
@@ -652,22 +696,27 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     </Col>
                 )}
-                {infoType === 'rules' && existedInfoType.filter(i => i === 'rules').length > 0 && (
+                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
                     <Col span={5}>
-                        <HTTPFlowExtractedDataTable httpFlowHash={flow?.Hash || ""} title={<Button.Group size={"small"}>
-                            {existedInfoType.map((i) => {
-                                return (
-                                    <Button
-                                        type={infoType === i ? "primary" : "default"}
-                                        onClick={() => {
-                                            setInfoType(i)
-                                        }}
-                                    >
-                                        {infoTypeVerbose(i)}
-                                    </Button>
-                                )
-                            })}
-                        </Button.Group>}/>
+                        <HTTPFlowExtractedDataTable
+                            httpFlowHash={flow?.Hash || ""}
+                            title={
+                                <Button.Group size={"small"}>
+                                    {existedInfoType.map((i) => {
+                                        return (
+                                            <Button
+                                                type={infoType === i ? "primary" : "default"}
+                                                onClick={() => {
+                                                    setInfoType(i)
+                                                }}
+                                            >
+                                                {infoTypeVerbose(i)}
+                                            </Button>
+                                        )
+                                    })}
+                                </Button.Group>
+                            }
+                        />
                     </Col>
                 )}
             </Row>

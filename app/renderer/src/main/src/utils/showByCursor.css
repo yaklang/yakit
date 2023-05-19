@@ -20,8 +20,8 @@
 }
 
 .popup {
-    animation-name: fadeIn;
-    animation-duration: 0.4s;
+    /* animation-name: fadeIn; */
+    /* animation-duration: 0.4s; */
     background-clip: padding-box;
     background-color: #fff;
     border-radius: 4px;
