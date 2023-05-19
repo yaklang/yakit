@@ -191,12 +191,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     }, [defaultHttps, system, originValue, contextMenu, readOnly])
 
     return (
-        <YakitEditor
+         <YakitEditor
             menuType={["code", "decode", ...rightMenuType]}
             readOnly={readOnly}
             contextMenu={{...rightContextMenu}}
             {...restProps}
             {...extraEditorProps}
-        ></YakitEditor>
-    )
+        />)
 })

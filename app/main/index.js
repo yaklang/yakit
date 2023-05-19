@@ -8,7 +8,7 @@ const {
     initExtraLocalCache,
     getExtraLocalCacheValue,
     initLocalCache,
-    setExtraLocalCache,
+    setCloeseExtraLocalCache,
 } = require("./localCache")
 const { engineLog } = require("./filePath")
 const fs = require("fs")
@@ -85,8 +85,8 @@ const createWindow = () => {
                     checkboxChecked: false,
                     noLink: true
                 })
-                .then((res) => {
-                    setExtraLocalCache(UICloseFlag, !res.checkboxChecked)
+                .then(async(res) => {
+                    await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
                     if (res.response === 0) {
                         e.preventDefault()
                         win.minimize()

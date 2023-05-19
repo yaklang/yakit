@@ -1059,6 +1059,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     showLineBreaksState?: boolean
     /**@name 是否增加OverlayWidget */
     isAddOverlayWidget?: boolean
+    /**@name 外部控制是否记录操作(拥有此项可记录字体大小及换行符) */
+    editorOperationRecord?: string
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
@@ -1436,6 +1438,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
                             }}
+                            editorOperationRecord={props.editorOperationRecord}
                             {...props.extraEditorProps}
                         />
                     )}

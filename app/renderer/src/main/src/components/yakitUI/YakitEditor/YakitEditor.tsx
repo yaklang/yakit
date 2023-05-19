@@ -14,7 +14,10 @@ import {
     YakitITextModel,
     YakitEditorKeyCode,
     KeyboardToFuncProps,
-    YakitIModelDecoration
+    YakitIModelDecoration,
+    OperationRecord,
+    OperationRecordRes,
+    OtherMenuListProps
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -24,6 +27,7 @@ import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuI
 import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
 import {convertKeyboard, keySortHandle} from "./editorUtils"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
@@ -38,8 +42,8 @@ const keyToFontSize: Record<string, number> = {
     "font-size-large": 20
 }
 
-/** 编辑器右键默认菜单 */
-const DefaultMenu: EditorMenuItemType[] = [
+/** 编辑器右键默认菜单 - 顶部 */
+const DefaultMenuTop: EditorMenuItemType[] = [
     {
         key: "font-size",
         label: "字体大小",
@@ -49,6 +53,10 @@ const DefaultMenu: EditorMenuItemType[] = [
             {key: "font-size-large", label: "大"}
         ]
     },
+]
+
+/** 编辑器右键默认菜单 - 底部 */
+const DefaultMenuBottom: EditorMenuItemType[] = [
     {key: "cut", label: "剪切"},
     {key: "copy", label: "复制"},
     {key: "paste", label: "粘贴"}
@@ -73,9 +81,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         noLineNumber = false,
         lineNumbersMinChars = 5,
         fontSize = 12,
-        showLineBreaks = false
+        showLineBreaks = false,
+        editorOperationRecord
     } = props
-
+    
     const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
@@ -85,7 +94,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const preHeightRef = useRef<number>(0)
 
     /** @name 记录右键菜单组信息 */
-    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenu])
+    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop,...DefaultMenuBottom])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
     const keyBindingRef = useRef<KeyboardToFuncProps>({})
     /** @name 记录右键菜单关系[菜单组key值-菜单组内菜单项key值数组] */
@@ -94,6 +103,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [fontsize, setFontsize] = useState<number>(fontSize)
 
+    // 读取上次选择的字体大小/换行符 
+    useEffect(()=>{
+        if(editorOperationRecord){
+            getRemoteValue(editorOperationRecord).then((data) => {
+                if (!data) return
+                let obj:OperationRecordRes = JSON.parse(data)
+                if(obj?.fontSize){
+                    setFontsize(obj?.fontSize)
+                }
+                if(typeof obj?.showBreak === "boolean"){
+                    setShowBreak(obj?.showBreak)
+                }
+            })
+        }
+    },[])
+
     /**
      * 整理右键菜单的对应关系
      * 菜单组的key值对应的组内菜单项的key值数组
@@ -101,7 +126,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useEffect(() => {
         const keyToRun: Record<string, string[]> = {}
         const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
-
+        
         for (let key in allMenu) {
             const keys: string[] = []
             for (let item of allMenu[key].menu) {
@@ -151,6 +176,25 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }),
         {wait: 300}
     )
+    /** 操作记录存储 */
+    const onOperationRecord = (type:"fontSize"|"showBreak",value:number|boolean) => {
+        if(editorOperationRecord){
+            getRemoteValue(editorOperationRecord).then((data) => {
+                if (!data) {
+                    let obj:OperationRecord = {
+                        [type]:value
+                    }
+                    setRemoteValue(editorOperationRecord,JSON.stringify(obj))
+                }
+                else{
+                    let obj:OperationRecord = JSON.parse(data)
+                    obj[type] = value
+                    setRemoteValue(editorOperationRecord,JSON.stringify(obj))
+                }
+            })
+        }
+    }
+
     /** 右键菜单功能点击回调事件 */
     const onRightContextMenu = useMemoizedFn((key: string) => {
         /** 获取 ITextModel 实例 */
@@ -162,10 +206,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             case "font-size-large":
                 if (editor?.updateOptions) {
                     setFontsize(keyToFontSize[key] || 12)
+                    onOperationRecord("fontSize",keyToFontSize[key] || 12)
                 }
                 return
             case "http-show-break":
                 setShowBreak(!getShowBreak())
+                onOperationRecord("showBreak",getShowBreak())
                 return
             case "yak-formatter":
                 if (!model) return
@@ -261,6 +307,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         return menus
     })
 
+    const sortMenuFun = useMemoizedFn((dataSource,sortData) => {
+        const result = sortData.reduce((acc, item) => {
+            if(item.order>=0){
+                acc.splice(item.order, 0, ...item.menu)
+            }
+            else{
+                acc.push(...item.menu)
+            }
+            return acc;
+        }, [...dataSource]);   
+        return result
+    })
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
     useEffect(() => {
         /**
@@ -271,7 +329,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
             systemRef.current = systemType
 
-            rightContextMenu.current = [...DefaultMenu]
+            rightContextMenu.current = [...DefaultMenuTop]
             keyBindingRef.current = {}
 
             if (type === "http") {
@@ -294,11 +352,27 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     ])
             }
 
+            // 缓存需要排序的自定义菜单
+            let sortContextMenu:OtherMenuListProps[] = []
             for (let menus in contextMenu) {
-                /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
-                rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
+                /* 需要排序项 */
+                if(typeof contextMenu[menus].order === "number"){
+                    sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]))
+                }
+                else{
+                    /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */  
+                    rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
+                }
             }
 
+            // 底部默认菜单
+            rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottom])
+
+            // 当存在order项则需要排序
+            if(sortContextMenu.length>0){
+                rightContextMenu.current = sortMenuFun(rightContextMenu.current,sortContextMenu)
+            }
+            
             rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
 
             if (!forceRenderMenu) isInitRef.current = true

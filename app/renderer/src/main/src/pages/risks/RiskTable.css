@@ -212,7 +212,7 @@
 }
 
 .container-title-body .title-header .header-subtitle .subtitle-font {
-    color: #999EA8;
+    color: #999ea8;
     margin-left: 8px;
 }
 
@@ -225,4 +225,8 @@
 .container-title-body .title-header .header-subtitle div.ant-typography,
 .ant-typography p {
     margin-bottom: 0;
+}
+
+.risk-details-descriptions-box.ant-descriptions-bordered .ant-descriptions-view > table {
+    table-layout: fixed;
 }

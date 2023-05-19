@@ -866,6 +866,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 isResponse={true}
                 noHex={true}
                 noHeader={true}
+                editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE"
                 emptyOr={
                     !rsp?.Ok && (
                         <Result
@@ -1173,11 +1174,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return {
             insertLabelTag: {
                 menu: [
+                    {type: "divider"},
                     {
                         key: "insert-label-tag",
                         label: "插入标签/字典",
                         children: [
-                            {type: "divider"},
                             {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
                             {key: "insert-temporary-file-tag", label: "插入临时字典"},
                             {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
@@ -1564,6 +1565,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             noWordWrapState={noWordwrapFirstEditor}
                             fontSizeState={fontSizeFirstEditor}
                             showLineBreaksState={showLineBreaksFirstEditor}
+                            editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF"
                         />
                     }
                     secondNode={

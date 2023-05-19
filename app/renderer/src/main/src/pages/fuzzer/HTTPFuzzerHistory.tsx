@@ -214,19 +214,37 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                     bordered={false}
                                 >
                                     <div className={styles["history-item"]}>
-                                        <Space size={4} style={{display: "flex", flexDirection: "row"}}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "row",
+                                                width: "100%",
+                                                gap: 4,
+                                                position: "relative"
+                                            }}
+                                        >
                                             <div>{`ID:${i.Id}`}</div>
-                                            <YakitTag color='info'>
-                                                {!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}
-                                            </YakitTag>
+                                            <div style={{overflow: "hidden"}}>
+                                                <YakitTag
+                                                    color='info'
+                                                    style={{
+                                                        whiteSpace: "normal",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        display: "block",
+                                                        lineHeight: "14px"
+                                                    }}
+                                                >
+                                                    {!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}
+                                                </YakitTag>
+                                            </div>
+
                                             <YakitTag>共{i.HTTPFlowTotal}个</YakitTag>
                                             {i.HTTPFlowSuccessCount != i.HTTPFlowTotal && (
-                                                <div style={{flex: 1, alignItems: "right", textAlign: "right"}}>
-                                                    <YakitTag>成功:{i.HTTPFlowSuccessCount}个</YakitTag>
-                                                </div>
+                                                <YakitTag>成功:{i.HTTPFlowSuccessCount}个</YakitTag>
                                             )}
-                                        </Space>
-                                        {currentSelectId == i.Id && <CheckIcon className={styles["check-icon"]} />}
+                                            {currentSelectId == i.Id && <CheckIcon className={styles["check-icon"]} />}
+                                        </div>
                                     </div>
                                 </Card>
                             </YakitPopover>
