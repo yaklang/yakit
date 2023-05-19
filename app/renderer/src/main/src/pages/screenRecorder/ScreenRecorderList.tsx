@@ -477,7 +477,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                             onSelect={({key}) => onMenuSelect(key)}
                                         />
                                     }
-                                    trigger='hover'
+                                    trigger="click"
                                     overlayClassName={classNames(styles["popover-remove"])}
                                 >
                                     <YakitButton
