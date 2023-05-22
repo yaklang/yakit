@@ -693,6 +693,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return (
             <div className={styles["input-search"]}>
                 <YakitInput
+                    allowClear={true}
                     {...columnsItem.filterProps?.filterInputProps}
                     value={filters[filterKey]}
                     onChange={(e) => {
@@ -1398,7 +1399,7 @@ const CellRender = React.memo(
     (preProps, nextProps) => {
         // return true; 	不渲染
         // return false;	渲染
-        
+
         if (preProps.isSelect !== nextProps.isSelect) {
             return false
         }

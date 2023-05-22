@@ -45,6 +45,7 @@ import {
     ChromeFrameSvgIcon,
     ExportIcon,
     PaperAirplaneIcon,
+    SearchIcon,
     TrashIcon
 } from "@/assets/newIcon"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
@@ -55,6 +56,8 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import classNames from "classnames"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {log} from "console"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -192,27 +195,54 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         return [
             {
                 title: "网络地址",
-                dataKey: "Host"
+                dataKey: "Host",
+                filterProps: {
+                    filterIcon: <SearchIcon />,
+                    filtersType: "input"
+                }
             },
             {
                 title: "端口",
                 dataKey: "Port",
                 width: 100,
+                filterProps: {
+                    filterIcon: <SearchIcon />,
+                    filtersType: "input"
+                },
                 render: (text) => <YakitTag color='blue'>{text}</YakitTag>
             },
             {
                 title: "协议",
                 dataKey: "Proto",
                 width: 100,
+                filterProps: {
+                    filterIcon: <SearchIcon />,
+                    filtersType: "input"
+                },
                 render: (text) => <YakitTag color='success'>{text}</YakitTag>
             },
             {
                 title: "服务指纹",
-                dataKey: "ServiceType"
+                dataKey: "ServiceType",
+                filterProps: {
+                    filterKey: "Service",
+                    filterIcon: <SearchIcon />,
+                    filtersType: "input"
+                }
             },
             {
                 title: "Title",
-                dataKey: "HtmlTitle"
+                dataKey: "HtmlTitle",
+                beforeIconExtra: (
+                    <div className={styles["htmlTitle-extra"]}>
+                        <YakitCheckbox /> <span className={styles["valid-data"]}>有效数据</span>
+                    </div>
+                ),
+                filterProps: {
+                    filterKey: "Title",
+                    filterIcon: <SearchIcon />,
+                    filtersType: "input"
+                }
             },
             {
                 title: "最近更新时间",
@@ -327,6 +357,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setTimeout(() => {
             getAllData()
         }, 10)
+    })
+    const onTableChange = useMemoizedFn((page: number, limit: number, _, filter: any) => {
+        console.log("filter", filter)
     })
     return (
         // <Table<PortAsset>
@@ -560,6 +593,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         // currentSelectItem={currentItem}
                         // onRowClick={onSetCurrentRow}
                         enableDrag={true}
+                        onChange={onTableChange}
                     />
                 </div>
             </div>

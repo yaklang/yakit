@@ -65,6 +65,16 @@
             }
         }
     }
+    .htmlTitle-extra {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-right: 20px;
+        word-break: keep-all;
+        .valid-data {
+            margin-bottom: 1px;
+        }
+    }
 }
 .table-head-send-popover {
     :global {
