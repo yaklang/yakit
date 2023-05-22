@@ -51,6 +51,8 @@
     }
     .portAsset-table {
         flex: 1;
+        height: 100%;
+        overflow: hidden;
         .portAsset-table-list-container {
             border-radius: 4px;
         }

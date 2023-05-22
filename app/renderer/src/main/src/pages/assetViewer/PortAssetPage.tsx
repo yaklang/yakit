@@ -169,20 +169,33 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             .finally(() => {})
     }
 
-    const update = (current?: number, pageSize?: number, order?: string, orderBy?: string) => {
+    const update = (current: number, pageSize?: number, order?: string, orderBy?: string) => {
         setLoading(true)
+        console.log("current", current)
         ipcRenderer
             .invoke("QueryPorts", {
                 ...getParams(),
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
+                    // Limit: 100,
                     Page: current || response.Pagination.Page,
                     Order: order || "desc",
                     OrderBy: orderBy || "updated_at"
                 }
             })
-            .then((data) => {
-                setResponse(data)
+            .then((rsp: QueryGeneralResponse<PortAsset>) => {
+                if (Number(current) === 1) {
+                    unSelectAll()
+                    setIsRefresh(!isRefresh)
+                }
+                const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
+                setResponse({
+                    Total: rsp.Total,
+                    Pagination: {
+                        ...rsp.Pagination
+                    },
+                    Data: d
+                })
             })
             .catch((e: any) => {
                 failed("QueryPorts failed: " + `${e}`)
@@ -191,7 +204,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     }
 
     useEffect(() => {
-        update()
+        update(1)
     }, [])
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -350,7 +363,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         })
 
         setTimeout(() => {
-            update()
+            update(1)
         }, 10)
         setTimeout(() => {
             getAllData()
@@ -500,6 +513,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         <YakitInput.Search
                             placeholder='请输入端口、网络地址、服务指纹、title 等关键词搜索'
                             style={{width: 320}}
+                            onSearch={() => update(1)}
+                            onPressEnter={() => update(1)}
                         />
                         {!advancedConfig && (
                             <>
@@ -586,7 +601,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             total: response.Total,
                             limit: response.Pagination.Limit,
                             page: response.Pagination.Page,
-                            onChange: update
+                            onChange: (page, limit) => update(page, limit)
                         }}
                         loading={loading}
                         columns={columns}
