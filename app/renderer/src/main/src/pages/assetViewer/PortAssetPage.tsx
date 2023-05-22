@@ -60,6 +60,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {log} from "console"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -113,10 +114,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         }
     })
     const [loading, setLoading] = useState(false)
-    const [outputByNetwork, setOutputByNetwork] = useState("")
     const [checkedURL, setCheckedURL] = useState<string[]>([])
-    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const [checkedAll, setCheckedAll] = useState<boolean>(false)
+
+    const [sendPopoverVisible, setSendPopoverVisible] = useState<boolean>(false)
+
     const [allResponse, setAllResponse] = useState<QueryGeneralResponse<PortAsset>>({
         Data: [],
         Pagination: {
@@ -145,11 +146,16 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         partiallySelected
     } = useSelections<string>(selectedId)
     useEffect(() => {
-        if (checkedAll) {
-            setSelectedRowKeys(allResponse.Data.map((item) => item.Id.toString()))
+        if (allSelected) {
             setCheckedURL(allResponse.Data.map((item) => `${item.Host}:${item.Port}`))
         }
-    }, [checkedAll])
+    }, [allSelected])
+
+    useEffect(() => {
+        setCheckedURL(
+            allResponse.Data.filter((e) => selected.includes(`${e.Id}`)).map((item) => `${item.Host}:${item.Port}`)
+        )
+    }, [selected])
 
     useEffect(() => {
         getAllData()
@@ -333,7 +339,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     })
     const onRemove = useMemoizedFn(() => {
         const transferParams = {
-            selectedRowKeys: checkedAll ? [] : selectedRowKeys,
+            selectedRowKeys: allSelected ? [] : selected,
             params,
             interfaceName: "DeletePorts"
         }
@@ -341,9 +347,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         onRemoveToolFC(transferParams)
             .then(() => {
                 refList()
-                setSelectedRowKeys([])
                 setCheckedURL([])
-                setCheckedAll(false)
+                unSelectAll()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -360,7 +365,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 Order: "updated_at"
             }
         })
-
         setTimeout(() => {
             update(1)
         }, 10)
@@ -405,9 +409,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         isShowTotal={true}
                         extra={
                             <div className={styles["table-head-extra"]}>
-                                <YakitButton type='outline2' icon={<TrashIcon className={styles["table-head-icon"]} />}>
-                                    批量删除
-                                </YakitButton>
                                 <ExportExcel
                                     newUI={true}
                                     newBtnProps={{
@@ -416,32 +417,59 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     }}
                                     getData={getData}
                                 />
+                                <YakitPopconfirm
+                                    title={"确定删除吗？"}
+                                    onConfirm={() => {
+                                        onRemove()
+                                    }}
+                                    placement='bottomRight'
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        icon={<TrashIcon className={styles["table-head-icon"]} />}
+                                    >
+                                      {checkedURL.length?'删除':'清空'}  
+                                    </YakitButton>
+                                </YakitPopconfirm>
+
                                 <YakitPopover
                                     content={
                                         <YakitMenu
                                             type='grey'
                                             data={[
-                                                {label: "发送到漏洞检测", key: "bug-test"},
-                                                {label: "发送到端口扫描", key: "scan-port"},
+                                                {
+                                                    label: "发送到漏洞检测",
+                                                    key: "bug-test"
+                                                },
+                                                {
+                                                    label: "发送到端口扫描",
+                                                    key: "scan-port"
+                                                },
                                                 {label: "发送到爆破", key: "brute"}
                                             ]}
                                             onClick={({key}) => {
-                                                ipcRenderer.invoke("send-to-tab", {
-                                                    type: key,
-                                                    data: {URL: JSON.stringify(checkedURL)}
-                                                })
+                                                ipcRenderer
+                                                    .invoke("send-to-tab", {
+                                                        type: key,
+                                                        data: {URL: JSON.stringify(checkedURL)}
+                                                    })
+                                                    .then(() => {
+                                                        setSendPopoverVisible(false)
+                                                    })
                                             }}
                                         />
                                     }
                                     trigger='click'
                                     placement='bottomRight'
                                     overlayClassName={styles["table-head-send-popover"]}
+                                    visible={sendPopoverVisible}
+                                    onVisibleChange={(v) => setSendPopoverVisible(v)}
                                 >
                                     <YakitButton
                                         onClick={() => {}}
                                         icon={<PaperAirplaneIcon style={{height: 16}} />}
                                         type={"primary"}
-                                        // disabled={checkedURL.length === 0}
+                                        disabled={checkedURL.length === 0}
                                     >
                                         发送到...
                                     </YakitButton>

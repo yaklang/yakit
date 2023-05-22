@@ -1,8 +1,8 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Alert, Avatar, Button, Layout, Modal, Space, Tabs, Upload} from "antd"
+import {Alert, Avatar, Button, Form, Layout, Modal, Space, Tabs, Upload} from "antd"
 import {ContentByRoute, NoScrollRoutes, Route, RouteNameToVerboseName} from "../routes/routeSpec"
 import {CameraOutlined, CloseOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
-import {failed, info, success} from "../utils/notification"
+import {failed, info, success, yakitNotify} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {
     CompletionTotal,
@@ -46,6 +46,9 @@ import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscrib
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {RemoveIcon} from "@/assets/newIcon"
 import {useScreenRecorder} from "@/store/screenRecorder"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 const {Content} = Layout
@@ -1529,54 +1532,90 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </Content>
                 </div>
             </AutoSpin>
-            <Modal
+            <YakitModal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
-                footer={[
-                    <Button key='link' onClick={() => setBugTestShow(false)}>
-                        取消
-                    </Button>,
-                    <Button
-                        key='back'
-                        type='primary'
-                        onClick={() => {
-                            if ((bugTestValue || []).length === 0) return failed("请选择类型后再次提交")
-                            addBugTest(2)
-                            setBugTestShow(false)
-                        }}
-                    >
-                        确定
-                    </Button>
-                ]}
+                onOk={() => {
+                    if ((bugTestValue || []).length === 0) return yakitNotify("error", "请选择类型后再次提交")
+                    addBugTest(2)
+                    setBugTestShow(false)
+                }}
+                type='white'
+                title={<></>}
+                closable={true}
+                // footer={[
+                //     <YakitButton key='link' onClick={() => setBugTestShow(false)}>
+                //         取消
+                //     </YakitButton>,
+                //     <YakitButton
+                //         key='back'
+                //         type='primary'
+                //         onClick={() => {
+                //             if ((bugTestValue || []).length === 0) return yakitNotify('error',"请选择类型后再次提交")
+                //             addBugTest(2)
+                //             setBugTestShow(false)
+                //         }}
+                //     >
+                //         确定
+                //     </YakitButton>
+                // ]}
             >
-                <ItemSelects
-                    item={{
-                        label: "专项漏洞类型",
-                        style: {marginTop: 20}
-                    }}
-                    select={{
-                        allowClear: true,
-                        data: BugList.concat(bugList) || [],
-                        optText: "title",
-                        optValue: "key",
-                        value: (bugTestValue || [])[0]?.key,
-                        onChange: (value, option: any) => {
-                            const {record} = option
-                            setBugTestValue(
-                                value
-                                    ? [
-                                          {
-                                              filter: record?.filter,
-                                              key: record?.key,
-                                              title: record?.title
-                                          }
-                                      ]
-                                    : []
-                            )
-                        }
-                    }}
-                />
-            </Modal>
+                <div style={{padding: "0 24px"}}>
+                    <Form.Item label='专项漏洞类型'>
+                        <YakitSelect
+                            allowClear={true}
+                            onChange={(value, option: any) => {
+                                const {record} = option
+                                setBugTestValue(
+                                    value
+                                        ? [
+                                              {
+                                                  filter: record?.filter,
+                                                  key: record?.key,
+                                                  title: record?.title
+                                              }
+                                          ]
+                                        : []
+                                )
+                            }}
+                            value={(bugTestValue || [])[0]?.key}
+                        >
+                            {(BugList.concat(bugList) || []).map((item) => (
+                                <YakitSelect.Option key={item.key} value={item.key}>
+                                    {item.title}
+                                </YakitSelect.Option>
+                            ))}
+                        </YakitSelect>
+                    </Form.Item>
+                    {/* <ItemSelects
+                        item={{
+                            label: "专项漏洞类型",
+                            style: {marginTop: 20}
+                        }}
+                        select={{
+                            allowClear: true,
+                            data: BugList.concat(bugList) || [],
+                            optText: "title",
+                            optValue: "key",
+                            value: (bugTestValue || [])[0]?.key,
+                            onChange: (value, option: any) => {
+                                const {record} = option
+                                setBugTestValue(
+                                    value
+                                        ? [
+                                              {
+                                                  filter: record?.filter,
+                                                  key: record?.key,
+                                                  title: record?.title
+                                              }
+                                          ]
+                                        : []
+                                )
+                            }
+                        }}
+                    /> */}
+                </div>
+            </YakitModal>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
             <Modal
                 visible={passwordShow}
