@@ -520,12 +520,14 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 <YakitButton type='outline2' icon={<TrashIcon className={styles["table-head-icon"]} />}>
                                     批量删除
                                 </YakitButton>
-                                <YakitButton
-                                    type='outline2'
-                                    icon={<ExportIcon className={styles["table-head-icon"]} />}
-                                >
-                                    导出 Excel
-                                </YakitButton>
+                                <ExportExcel
+                                    newUI={true}
+                                    newBtnProps={{
+                                        type: "outline2",
+                                        icon: <ExportIcon className={styles["table-head-icon"]} />
+                                    }}
+                                    getData={getData}
+                                />
                                 <YakitPopover
                                     content={
                                         <YakitMenu
