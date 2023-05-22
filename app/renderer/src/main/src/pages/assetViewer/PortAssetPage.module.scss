@@ -1,16 +1,19 @@
 .action-btn-group {
     height: 16px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 3px;
 
     .divider-style {
         height: 100%;
         border-left: 1px solid var(--yakit-border-color);
+        margin: 0 12px;
     }
     .icon-style {
         color: var(--yakit-body-text-color);
+        svg {
+            width: 20px;
+            height: 20px;
+        }
     }
     .icon-style:hover {
         color: var(--yakit-primary-5);
@@ -95,6 +98,7 @@
     min-width: 300px;
     max-width: 300px;
     border-left: 1px solid var(--yakit-border-color);
+
     .query-head {
         display: flex;
         flex-direction: row;
@@ -108,5 +112,32 @@
         color: var(--yakit-header-color);
     }
     .query-collapse {
+        :global {
+            .ant-collapse-content-box {
+                padding: 0 4px 12px !important;
+            }
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 6px 8px;
+            &:hover {
+                background-color: var(--yakit-background-color);
+            }
+            .list-item-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                overflow: hidden;
+                margin-right: 12px;
+                text-transform: capitalize;
+            }
+        }
+        .list-item-active {
+            color: var(--yakit-primary-5);
+        }
     }
 }

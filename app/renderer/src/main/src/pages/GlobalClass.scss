@@ -599,6 +599,9 @@
     .ant-collapse-content > .ant-collapse-content-box {
         padding: 12px;
     }
+    .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+        padding-top: 0;
+    }
     .ant-collapse-expand-icon {
         width: 16px;
         height: 16px;

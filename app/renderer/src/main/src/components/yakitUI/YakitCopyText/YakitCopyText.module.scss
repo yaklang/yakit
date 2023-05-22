@@ -1,0 +1,10 @@
+.yakit-copy-text {
+    display: inline-flex;
+    align-items: center;
+    color: var(--yakit-header-color);
+    line-height: 16px;
+    svg{
+        width: 12px;
+        height: 12px;
+    }
+}

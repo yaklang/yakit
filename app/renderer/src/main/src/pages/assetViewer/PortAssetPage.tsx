@@ -37,7 +37,7 @@ import {onRemoveToolFC} from "../../utils/deleteTool"
 import {isCommunityEdition} from "@/utils/envfile"
 import styles from "./PortAssetPage.module.scss"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {
     ArrowCircleRightSvgIcon,
     ChevronDownIcon,
@@ -58,6 +58,8 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {log} from "console"
+import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -252,21 +254,15 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             {
                 title: "操作",
                 dataKey: "Action",
-                width: 100,
+                width: 90,
                 render: (_, i: PortAsset) => {
                     return (
                         <div className={styles["action-btn-group"]}>
                             <ChromeFrameSvgIcon
                                 className={styles["icon-style"]}
-                                onClick={() => {
-                                    // ipcRenderer
-                                    //     .invoke("GetHTTPFlowById", {Id: rowData?.Id})
-                                    //     .then((i: HTTPFlow) => {
-                                    //         showResponseViaResponseRaw(i?.Response)
-                                    //     })
-                                    //     .catch((e: any) => {
-                                    //         failed(`Query HTTPFlow failed: ${e}`)
-                                    //     })
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    openExternalWebsite(`http://${i.Host}:${i.Port}`)
                                 }}
                             />
                             <div className={styles["divider-style"]}></div>
@@ -274,10 +270,12 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             <ArrowCircleRightSvgIcon
                                 className={styles["icon-style"]}
                                 onClick={(e) => {
-                                    // let m = showDrawer({
-                                    //     width: "80%",
-                                    //     content: onExpandHTTPFlow(rowData, () => m.destroy())
-                                    // })
+                                    e.stopPropagation()
+                                    let m = showYakitDrawer({
+                                        width: "60%",
+                                        title: "详情",
+                                        content: <PortAssetDescription port={i} />
+                                    })
                                 }}
                             />
                         </div>
@@ -597,7 +595,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     />
                 </div>
             </div>
-            <PortAssetQuery visible={advancedConfig} setVisible={setAdvancedConfig} />
+            <PortAssetQuery visible={advancedConfig} setVisible={setAdvancedConfig} setQueryList={() => {}} />
         </div>
     )
 }
@@ -605,10 +603,103 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 interface PortAssetQueryProps {
     visible: boolean
     setVisible: (b: boolean) => void
+    setQueryList: (s: string[]) => void
 }
+/**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
-    const {visible, setVisible} = props
-    const [activeKey, setActiveKey] = useState<string[]>(["database", "web-server"]) // Collapse打开的key
+    const {visible, setVisible, setQueryList} = props
+    const [activeKey, setActiveKey] = useState<string[]>(["数据库", "Web 服务器", "其他指纹信息"]) // Collapse打开的key
+    const [selectList, setSelectList] = useState({})
+    const [list, setList] = useState([
+        {
+            Name: "数据库",
+            List: [
+                {
+                    Label: "mysql",
+                    Value: "mysql",
+                    Total: "56"
+                },
+                {
+                    Label: "mangodb",
+                    Value: "mangodb",
+                    Total: "56"
+                },
+                {
+                    Label: "sql serer",
+                    Value: "sql serer",
+                    Total: "56"
+                },
+                {
+                    Label: "Oracle",
+                    Value: "Oracle",
+                    Total: "56"
+                }
+            ]
+        },
+        {
+            Name: "Web 服务器",
+            List: [
+                {
+                    Label: "Nginx",
+                    Value: "Nginx",
+                    Total: "56"
+                },
+                {
+                    Label: "Tomcat",
+                    Value: "Tomcat",
+                    Total: "56"
+                },
+                {
+                    Label: "Apache",
+                    Value: "Apache",
+                    Total: "56"
+                },
+                {
+                    Label: "WebLogic",
+                    Value: "WebLogic",
+                    Total: "56"
+                }
+            ]
+        },
+        {
+            Name: "其他指纹信息",
+            List: [
+                {
+                    Label: "Windows",
+                    Value: "Windows",
+                    Total: "56"
+                },
+                {
+                    Label: "Linux",
+                    Value: "Linux",
+                    Total: "56"
+                }
+            ]
+        }
+    ])
+    useEffect(() => {
+        /** 扁平化=>string[] 丢出去*/
+        let list: string[] = []
+        Object.keys(selectList).forEach((key) => {
+            list = list.concat(selectList[key])
+        })
+        setQueryList(list)
+    }, [selectList])
+    const onSelect = useMemoizedFn((GroupName: string, value: string, checked: boolean) => {
+        if (checked) {
+            selectList[GroupName] = [...(selectList[GroupName] || []), value]
+            setSelectList({...selectList})
+        } else {
+            const oldSelectLists = selectList[GroupName] || []
+            const index = oldSelectLists.findIndex((ele) => ele === value)
+            if (index === -1) return
+            const newSelectList = {
+                ...selectList,
+                [selectList[GroupName]]: oldSelectLists.splice(index, 1)
+            }
+            setSelectList({...newSelectList})
+        }
+    })
     return (
         <div
             className={classNames("yakit-collapse", styles["portAsset-query"])}
@@ -625,40 +716,45 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                 expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                 className={styles["query-collapse"]}
             >
-                <Panel
-                    header='数据库'
-                    key='database'
-                    extra={
-                        <YakitButton
-                            type='text'
-                            className='button-text-danger'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                            }}
-                        >
-                            清空
-                        </YakitButton>
-                    }
-                >
-                    数据库
-                </Panel>
-                <Panel
-                    header='Web 服务器'
-                    key='web-server'
-                    extra={
-                        <YakitButton
-                            type='text'
-                            className='button-text-danger'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                            }}
-                        >
-                            清空
-                        </YakitButton>
-                    }
-                >
-                    Web 服务器
-                </Panel>
+                {list.map((item) => (
+                    <Panel
+                        header={item.Name}
+                        key={item.Name}
+                        extra={
+                            <YakitButton
+                                type='text'
+                                className='button-text-danger'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    selectList[item.Name] = []
+                                    setSelectList({...selectList})
+                                }}
+                            >
+                                清空
+                            </YakitButton>
+                        }
+                    >
+                        {item.List.map((listItem) => {
+                            const checked = (selectList[item.Name] || []).includes(listItem.Value)
+                            return (
+                                <label
+                                    className={classNames(styles["list-item"], {
+                                        [styles["list-item-active"]]: checked
+                                    })}
+                                >
+                                    <div className={styles["list-item-left"]}>
+                                        <YakitCheckbox
+                                            checked={checked}
+                                            onChange={(e) => onSelect(item.Name, listItem.Value, e.target.checked)}
+                                        />
+                                        <span className='content-ellipsis'>{listItem.Label}</span>
+                                    </div>
+                                    <span>{listItem.Total}</span>
+                                </label>
+                            )
+                        })}
+                    </Panel>
+                ))}
             </Collapse>
         </div>
     )
@@ -677,35 +773,35 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
             title={""}
             style={{marginLeft: 20}}
         >
-            <Descriptions.Item label={<Tag>状态</Tag>}>
-                <CopyableField text={`${port.State}`} />
+            <Descriptions.Item label='状态'>
+                <YakitCopyText showText={port.State} />
             </Descriptions.Item>
             {port.HtmlTitle && (
-                <Descriptions.Item label={<Tag>Title</Tag>}>
-                    <CopyableField text={`${port.HtmlTitle}`} />
+                <Descriptions.Item label='Title'>
+                    <YakitCopyText showText={port.HtmlTitle} />
                 </Descriptions.Item>
             )}
             {port.ServiceType && (
-                <Descriptions.Item span={2} label={<Tag>应用</Tag>}>
-                    <CopyableField text={`${port.ServiceType}`} />
+                <Descriptions.Item span={2} label='应用'>
+                    <YakitCopyText showText={port.ServiceType} />
                 </Descriptions.Item>
             )}
             {port.Reason && (
-                <Descriptions.Item span={2} label={<Tag>失败原因</Tag>}>
-                    <CopyableField text={`${port.Reason}`} />
+                <Descriptions.Item span={2} label='失败原因'>
+                    <YakitCopyText showText={port.Reason} />
                 </Descriptions.Item>
             )}
             {port.CPE.join("|") !== "" ? (
-                <Descriptions.Item span={2} label={<Tag>CPE</Tag>}>
+                <Descriptions.Item span={2} label='CPE'>
                     <Space direction={"vertical"}>
                         {port.CPE.map((e) => {
-                            return <CopyableField text={`${e}`} />
+                            return <YakitCopyText showText={e} />
                         })}
                     </Space>
                 </Descriptions.Item>
             ) : undefined}
             {port.Fingerprint && (
-                <Descriptions.Item span={2} label={<Tag>指纹信息</Tag>}>
+                <Descriptions.Item span={2} label='指纹信息'>
                     <div style={{height: 200}}>
                         <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} />
                     </div>
