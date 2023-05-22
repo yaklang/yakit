@@ -26,6 +26,8 @@
     padding: 12px 16px;
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-flow: column;
     .portAsset-head {
         display: flex;
         justify-content: space-between;
@@ -45,6 +47,7 @@
         }
     }
     .portAsset-table {
+        flex: 1;
         .portAsset-table-list-container {
             border-radius: 4px;
         }
