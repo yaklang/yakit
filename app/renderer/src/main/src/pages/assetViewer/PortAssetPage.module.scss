@@ -55,6 +55,7 @@
         overflow: hidden;
         .portAsset-table-list-container {
             border-radius: 4px;
+            overflow-x: auto !important;
         }
         .table-head-extra {
             display: flex;

@@ -2,6 +2,7 @@ import React, {ReactNode, useEffect, useImperativeHandle, useRef, useState} from
 import {
     useClickAway,
     useCreation,
+    useDebounceEffect,
     useDebounceFn,
     useDeepCompareEffect,
     useGetState,
@@ -170,6 +171,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useEffect(() => {
         scrollTo(0)
     }, [isRefresh])
+
     useUpdateEffect(() => {
         setTimeout(() => {
             if (containerRef.current) {
@@ -177,6 +179,21 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
         }, 100)
     }, [containerRef.current, height])
+    useDebounceEffect(
+        () => {
+            //为了出现滚动条以便于滚动加载
+            if (!containerRef || !wrapperRef) return
+            // containerRef 中的数据没有铺满 tableRef,那么就要请求更多的数据
+            const containerHeight = containerRef.current?.clientHeight
+            const tableHeight = tableRef.current?.clientHeight
+            if (pagination && pagination.onChange && containerHeight && containerHeight <= tableHeight) {
+                const hasMore = pagination.total == data.length
+                if (!hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+            }
+        },
+        [tableRef.current?.clientHeight, isRefresh],
+        {wait: 200}
+    )
     useEffect(() => {
         if (!currentIndex) return
         scrollTo(currentIndex)

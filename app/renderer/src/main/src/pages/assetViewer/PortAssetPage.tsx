@@ -100,7 +100,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         } as PaginationSchema,
         Total: 0
     })
-    const [params, setParams, getParams] = useGetState<QueryPortsRequest>({
+    const [params, setParams] = useGetState<QueryPortsRequest>({
         Hosts: "",
         Ports: "",
         Service: "",
@@ -171,26 +171,25 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 
     const update = (current: number, pageSize?: number, order?: string, orderBy?: string) => {
         setLoading(true)
-        console.log("current", current)
         ipcRenderer
             .invoke("QueryPorts", {
-                ...getParams(),
+                ...params,
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
-                    // Limit: 100,
                     Page: current || response.Pagination.Page,
                     Order: order || "desc",
                     OrderBy: orderBy || "updated_at"
                 }
             })
             .then((rsp: QueryGeneralResponse<PortAsset>) => {
+                console.log("rsp", rsp, params)
                 if (Number(current) === 1) {
                     unSelectAll()
                     setIsRefresh(!isRefresh)
                 }
                 const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
                 setResponse({
-                    Total: rsp.Total,
+                    Total: current === 1 ? rsp.Total : response.Total,
                     Pagination: {
                         ...rsp.Pagination
                     },
@@ -370,141 +369,15 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         }, 10)
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, _, filter: any) => {
-        console.log("filter", filter)
+        setParams({
+            ...params,
+            ...filter
+        })
+        setTimeout(() => {
+            update(1)
+        }, 100)
     })
     return (
-        // <Table<PortAsset>
-        //     title={() => {
-        //         return (
-        //             <>
-        //                 <Row>
-        //                     <Col span={12}>
-        //                         <Space>
-        //                             端口资产列表
-        //                             <Tooltip title='刷新会重置所有查询条件'>
-        //                                 <Button
-        //                                     icon={<ReloadOutlined/>}
-        //                                     size={"small"}
-        //                                     type={"link"}
-        //                                     onClick={() => {
-        //                                         refList()
-        //                                     }}
-        //                                 />
-        //                             </Tooltip>
-        //                         </Space>
-        //                     </Col>
-        //                     <Col span={12}></Col>
-        //                 </Row>
-        //                 <Row>
-        //                     <Col span={12} style={{display: "flex", alignItems: "center"}}>
-        //                         <Checkbox
-        //                             checked={checkedAll}
-        //                             onChange={(e) => {
-        //                                 if (!e.target.checked) {
-        //                                     setSelectedRowKeys([])
-        //                                     setCheckedURL([])
-        //                                 }
-        //                                 setCheckedAll(e.target.checked)
-        //                             }}
-        //                             disabled={allResponse.Data.length === 0}
-        //                         >
-        //                             全选
-        //                         </Checkbox>
-        //                         {selectedRowKeys.length > 0 && (
-        //                             <Tag color='blue'>
-        //                                 已选{checkedAll ? allResponse.Total : selectedRowKeys?.length}条
-        //                             </Tag>
-        //                         )}
-        //                     </Col>
-        //                     <Col span={12} style={{textAlign: "right"}}>
-        //                         <Space>
-        //                             <ExportExcel getData={getData} btnProps={{size: "small"}}/>
-        //                             <Popconfirm
-        //                                 title={
-        //                                     checkedAll
-        //                                         ? "确定删除所有端口资产吗? 不可恢复"
-        //                                         : "确定删除选择的端口资产吗？不可恢复"
-        //                                 }
-        //                                 onConfirm={onRemove}
-        //                                 disabled={selectedRowKeys.length === 0}
-        //                             >
-        //                                 <Button size='small' danger={true} disabled={selectedRowKeys.length === 0}>
-        //                                     删除端口
-        //                                 </Button>
-        //                             </Popconfirm>
-        //                             {isCommunityEdition() && <DropdownMenu
-        //                                 menu={{
-        //                                     data: [
-        //                                         {key: "bug-test", title: "发送到漏洞检测"},
-        //                                         {key: "scan-port", title: "发送到端口扫描"},
-        //                                         {key: "brute", title: "发送到爆破"}
-        //                                     ]
-        //                                 }}
-        //                                 dropdown={{placement: "bottomRight"}}
-        //                                 onClick={(key) => {
-        //                                     if (checkedURL.length === 0) {
-        //                                         failed("请最少选择一个选项再进行操作")
-        //                                         return
-        //                                     }
-        //                                     ipcRenderer.invoke("send-to-tab", {
-        //                                         type: key,
-        //                                         data: {URL: JSON.stringify(checkedURL)}
-        //                                     })
-        //                                 }}
-        //                             >
-        //                                 <Button type='link' icon={<LineMenunIcon/>}></Button>
-        //                             </DropdownMenu>}
-        //                         </Space>
-        //                     </Col>
-        //                 </Row>
-        //             </>
-        //         )
-        //     }}
-        //     scroll={{x: "auto"}}
-        //     size={"small"}
-        //     bordered={true}
-        //     rowKey={(row) => row.Id}
-        //     onRow={(r) => {
-        //         return {
-        //             onClick: (e) => {
-        //                 // props.onClicked && props.onClicked(r)
-        //             }
-        //         }
-        //     }}
-        //     expandable={{
-        //         expandedRowRender: (record) => <PortAssetDescription port={record}/>
-        //     }}
-        //     loading={loading}
-        //     columns={columns || []}
-        //     dataSource={response.Data}
-        //     pagination={{
-        //         size: "small",
-        //         pageSize: response.Pagination?.Limit || 10,
-        //         total: response.Total,
-        //         showTotal: (i) => <Tag>共{i}条记录</Tag>,
-        //         showSizeChanger: true,
-        //         showLessItems: true
-        //     }}
-        //     // @ts-ignore*/
-        //     onChange={(paging: any, _: any, sorter: SorterResult<HTTPFlow>) => {
-        //         if (sorter.order && sorter.columnKey) {
-        //             update(paging.current, paging.pageSize, sorter.order, `${sorter.columnKey}`)
-        //         } else {
-        //             update(paging.current, paging.pageSize)
-        //         }
-        //     }}
-        //     rowSelection={{
-        //         onChange: (selectedRowKeys, selectedRows) => {
-        //             if (selectedRowKeys.length === allResponse.Data.length) setCheckedAll(true)
-        //             else {
-        //                 setCheckedAll(false)
-        //             }
-        //             setSelectedRowKeys(selectedRowKeys as string[])
-        //             setCheckedURL(selectedRows.map((item) => `${item.Host}:${item.Port}`))
-        //         },
-        //         selectedRowKeys
-        //     }}
-        // ></Table>
         <div className={styles["portAsset-content"]}>
             <div className={styles["portAsset"]}>
                 <div className={styles["portAsset-head"]}>
@@ -589,7 +462,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 }
                             },
                             onChangeCheckboxSingle: (c: boolean, keys: string) => {
-                                console.log("keys", keys, c)
                                 if (c) {
                                     select(keys)
                                 } else {
