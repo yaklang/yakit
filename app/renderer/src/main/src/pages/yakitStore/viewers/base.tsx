@@ -433,14 +433,13 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
         const [query, setQuery] = useState<any>({}) // 设置表头查询条件
         const [loading, setLoading] = useState<boolean>(false)
 
-        const tableData = useRef<any>([])
-        const tableDataOriginal = useRef<any>([])
+        const tableData = useRef<any>([]) // 表格中显示的数据
+        const tableDataOriginal = useRef<any>([]) // 原始数据用来做搜索和排序
         const tableDataPreProps = useRef<any>([])
+        const tableDataExport = useRef<any>([]) // 导出表格数
         useDebounceEffect(
             () => {
-                if (tableDataOriginal.current.length >= 1000) return
                 if (tableDataPreProps.current.length === props.execResultsLog.length) return
-                tableDataPreProps.current = props.execResultsLog
                 const tableDataList = (props.execResultsLog || [])
                     .filter((i) => i.level === "feature-table-data")
                     .map((i) => {
@@ -461,6 +460,9 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                         }
                         return false
                     })
+                tableDataExport.current = tableDataList
+                tableDataPreProps.current = props.execResultsLog
+                if (tableDataOriginal.current.length >= 1000) return
                 tableDataOriginal.current = tableDataList
                 queryData()
             },
@@ -487,7 +489,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
         const getData = useMemoizedFn(() => {
             return new Promise((resolve) => {
                 const header = props.params["columns"]
-                const exportData = formatJson(header, tableData.current)
+                const exportData = formatJson(header, tableDataExport.current)
                 const params = {
                     header,
                     exportData,
