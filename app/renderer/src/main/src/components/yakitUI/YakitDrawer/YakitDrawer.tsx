@@ -40,11 +40,12 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
 
 
 const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
+    const {onVisibleSetter,...resProps}=props
     const [visible, setVisible] = useState<boolean>(true)
 
     useEffect(() => {
-        if (visible && props.onVisibleSetter) {
-            props.onVisibleSetter(setVisible)
+        if (visible && onVisibleSetter) {
+            onVisibleSetter(setVisible)
         }
     }, [visible])
 
@@ -57,7 +58,7 @@ const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
             visible={visible}
             closable={true}
             destroyOnClose={true}
-            {...props}
+            {...resProps}
         />
     )
 }
@@ -76,13 +77,13 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
                         onVisibleSetter={(r) => {
                             setter = r
                         }}
-                        afterClose={() => {
-                            if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
-                        }}
+                        // afterClose={() => {
+                        //     if (props.modalAfterClose) props.modalAfterClose()
+                        //     const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                        //     if (unmountResult && div.parentNode) {
+                        //         div.parentNode.removeChild(div)
+                        //     }
+                        // }}
                     >
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {

@@ -711,7 +711,7 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                 <Descriptions.Item span={2} label='CPE'>
                     <Space direction={"vertical"}>
                         {port.CPE.map((e) => {
-                            return <YakitCopyText showText={e} />
+                            return <YakitCopyText key={e} showText={e} />
                         })}
                     </Space>
                 </Descriptions.Item>
