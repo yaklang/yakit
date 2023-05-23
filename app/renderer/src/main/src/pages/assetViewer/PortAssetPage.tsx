@@ -57,7 +57,6 @@ import classNames from "classnames"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {log} from "console"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -188,7 +187,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }
             })
             .then((rsp: QueryGeneralResponse<PortAsset>) => {
-                console.log("rsp", rsp, params)
                 if (Number(current) === 1) {
                     unSelectAll()
                     setIsRefresh(!isRefresh)
@@ -428,7 +426,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         type='outline2'
                                         icon={<TrashIcon className={styles["table-head-icon"]} />}
                                     >
-                                      {checkedURL.length?'删除':'清空'}  
+                                        {checkedURL.length ? "删除" : "清空"}
                                     </YakitButton>
                                 </YakitPopconfirm>
 
@@ -658,6 +656,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                                     className={classNames(styles["list-item"], {
                                         [styles["list-item-active"]]: checked
                                     })}
+                                    key={listItem.Value}
                                 >
                                     <div className={styles["list-item-left"]}>
                                         <YakitCheckbox

@@ -1581,7 +1581,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             value={(bugTestValue || [])[0]?.key}
                         >
                             {(BugList.concat(bugList) || []).map((item) => (
-                                <YakitSelect.Option key={item.key} value={item.key}>
+                                <YakitSelect.Option key={item.key} value={item.key} record={item}>
                                     {item.title}
                                 </YakitSelect.Option>
                             ))}
