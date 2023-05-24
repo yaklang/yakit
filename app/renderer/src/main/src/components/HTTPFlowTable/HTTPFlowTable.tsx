@@ -1778,7 +1778,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ]
         }
     ]
-    const onRowContextMenu = (rowData: HTTPFlow, event: React.MouseEvent) => {
+    const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
             setSelected(rowData)
         }

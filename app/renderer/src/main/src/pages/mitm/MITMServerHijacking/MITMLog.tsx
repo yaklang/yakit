@@ -463,7 +463,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 break
         }
     })
-    const onRowContextMenu = (rowData: HTTPFlow, event: React.MouseEvent) => {
+    const onRowContextMenu = (rowData: HTTPFlow,_, event: React.MouseEvent) => {
         if (rowData) {
             setSelected(rowData)
         }

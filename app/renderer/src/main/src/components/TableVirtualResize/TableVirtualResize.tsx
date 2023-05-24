@@ -128,7 +128,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return 28
     }, [size])
     const [currentRow, setCurrentRow] = useState<T>()
-    const [selectedRows, setSelectedRows] = useState<T[]>()
+    const [selectedRows, setSelectedRows] = useState<T[]>([])
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
@@ -619,12 +619,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const startKeyIndex = data.findIndex((s) => s[renderKey] === startKey)
             const endKeyIndex = data.findIndex((s) => s[renderKey] === endKey)
             if (startKeyIndex === -1 || endKeyIndex === -1) return
-            const selectList = data.filter((_, index) => index >= startKeyIndex && index <= endKeyIndex)
+            const max = Math.max(startKeyIndex, endKeyIndex)
+            const min = Math.min(startKeyIndex, endKeyIndex)
+            const selectList = data.filter((_, index) => index >= min && index <= max)
             setSelectedRows(selectList)
             setCurrentRow(undefined)
             preSelectRef.current = undefined
         } else {
-            setSelectedRows(undefined)
+            setSelectedRows([])
             setCurrentRow(record)
             if (props.onRowClick) {
                 props.onRowClick(record)
@@ -641,9 +643,20 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
     })
     const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
-        setCurrentRow(record)
-        // onChangeCheckboxSingle(true, record[renderKey], record)
-        if (props.onRowContextMenu) props.onRowContextMenu(record, e)
+        if ((selectedRows?.length || 0) > 0) {
+            const index = selectedRows.findIndex((ele) => ele[renderKey] === record[renderKey])
+            // 右键点击范围是否在多选的区域内，不在则清空多选区域，选中右键点击的item
+            if (index === -1) {
+                setSelectedRows([])
+                setCurrentRow(record)
+                if (props.onRowContextMenu) props.onRowContextMenu(record, [], e)
+                return
+            }
+        } else {
+            setCurrentRow(record)
+        }
+
+        if (props.onRowContextMenu) props.onRowContextMenu(record, selectedRows, e)
     })
     const [filters, setFilters] = useState<any>(query || {})
     const [opensPopover, setOpensPopover] = useState<any>({})

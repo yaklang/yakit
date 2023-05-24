@@ -60,6 +60,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -379,7 +380,51 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             update(1)
         }, 100)
     })
-    
+    const menuData = useMemo(() => {
+        return [
+            {
+                label: "发送到漏洞检测",
+                key: "bug-test"
+            },
+            {
+                label: "发送到端口扫描",
+                key: "scan-port"
+            },
+            {label: "发送到爆破", key: "brute"}
+        ]
+    }, [])
+    const onRowContextMenu = useMemoizedFn((rowData: PortAsset, selectedRows: PortAsset[], event: React.MouseEvent) => {
+        if (!rowData) return
+        showByRightContext(
+            {
+                width: 180,
+                data: menuData.map((ele) => {
+                    return {
+                        label: ele.label,
+                        key: ele.key
+                    }
+                }),
+                onClick: ({key, keyPath}) => {
+                    let urls: string[] = []
+                    if ((selectedRows?.length||0) > 0) {
+                        urls = selectedRows?.map((item) => `${item.Host}:${item.Port}`)||[]
+                    } else {
+                        urls = [`${rowData.Host}:${rowData.Port}`]
+                    }
+                    ipcRenderer
+                        .invoke("send-to-tab", {
+                            type: key,
+                            data: {URL: JSON.stringify(urls)}
+                        })
+                        .then(() => {
+                            setSendPopoverVisible(false)
+                        })
+                }
+            },
+            event.clientX,
+            event.clientY
+        )
+    })
     return (
         <div className={styles["portAsset-content"]}>
             <div className={styles["portAsset"]}>
@@ -436,17 +481,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     content={
                                         <YakitMenu
                                             type='grey'
-                                            data={[
-                                                {
-                                                    label: "发送到漏洞检测",
-                                                    key: "bug-test"
-                                                },
-                                                {
-                                                    label: "发送到端口扫描",
-                                                    key: "scan-port"
-                                                },
-                                                {label: "发送到爆破", key: "brute"}
-                                            ]}
+                                            data={menuData}
                                             onClick={({key}) => {
                                                 ipcRenderer
                                                     .invoke("send-to-tab", {
@@ -507,7 +542,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         columns={columns}
                         // currentSelectItem={currentItem}
                         // onRowClick={onSetCurrentRow}
-                        // onRowContextMenu={onRowContextMenu}
+                        onRowContextMenu={onRowContextMenu}
                         enableDrag={true}
                         onChange={onTableChange}
                     />

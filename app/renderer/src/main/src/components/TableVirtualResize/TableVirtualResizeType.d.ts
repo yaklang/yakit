@@ -54,7 +54,7 @@ export interface TableVirtualResizeProps<T> {
     rowSelection?: RowSelectionProps<T>
     enableDrag?: boolean
     onRowClick?: (record: T) => void
-    onRowContextMenu?: (record: T, e: React.MouseEvent) => void
+    onRowContextMenu?: (record: T,recordList:T[], e: React.MouseEvent) => void
     pagination?: PaginationProps
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
     loading?: boolean
@@ -71,8 +71,8 @@ export interface TableVirtualResizeProps<T> {
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
     useUpAndDown?: boolean
-    containerClassName?:string
-    isRightClickBatchOperate?:boolean
+    containerClassName?: string
+    isRightClickBatchOperate?: boolean
 }
 
 export interface SortProps {
