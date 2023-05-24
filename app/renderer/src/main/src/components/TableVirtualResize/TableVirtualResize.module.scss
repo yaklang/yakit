@@ -374,6 +374,18 @@
                     background-color: var(--yakit-primary-1) !important;
                 }
 
+                .virtual-table-batch-active-row {
+                    background-color: var(--yakit-primary-1);
+                    position: relative;
+                }
+                .virtual-table-batch-active-row:not(.virtual-table-batch-active-row ~ .virtual-table-batch-active-row) {
+                    border-top: 1px solid var(--yakit-primary-3) !important;
+                }
+                .virtual-table-batch-active-row:not(
+                        .virtual-table-row-content :has(+ .virtual-table-batch-active-row)
+                    ) {
+                    border-bottom: 1px solid var(--yakit-primary-3) !important;
+                }
                 .virtual-table-hover-row {
                     background-color: var(--yakit-card-background-color);
                 }

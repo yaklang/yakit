@@ -120,13 +120,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         enableDragSort,
         onMoveRowEnd,
         useUpAndDown,
-        containerClassName
+        containerClassName,
+        isRightClickBatchOperate
     } = props
     const defItemHeight = useCreation(() => {
         if (size === "middle") return 32
         return 28
     }, [size])
     const [currentRow, setCurrentRow] = useState<T>()
+    const [selectedRows, setSelectedRows] = useState<T[]>()
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
@@ -325,6 +327,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         },
         {wait: 100}
     ).run
+    useEffect(() => {
+        if (isRightClickBatchOperate) document.addEventListener("mousedown", handleShiftMousedown)
+        return () => {
+            document.removeEventListener("mousedown", handleShiftMousedown)
+        }
+    }, [isRightClickBatchOperate])
     useEffect(() => {
         if (pagination.page == 1) {
             scrollTo(0)
@@ -602,14 +610,36 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             wait: 200
         }
     ).run
-
+    const preSelectRef = useRef<T>() //用来存Shift+Click的第一个目标item
     const onRowClick = useMemoizedFn((record: T) => {
-        setCurrentRow(record)
-        if (props.onRowClick) {
-            props.onRowClick(record)
+        if (preSelectRef.current) {
+            // 多选 批量选中
+            const startKey = preSelectRef.current[renderKey]
+            const endKey = record[renderKey]
+            const startKeyIndex = data.findIndex((s) => s[renderKey] === startKey)
+            const endKeyIndex = data.findIndex((s) => s[renderKey] === endKey)
+            if (startKeyIndex === -1 || endKeyIndex === -1) return
+            const selectList = data.filter((_, index) => index >= startKeyIndex && index <= endKeyIndex)
+            setSelectedRows(selectList)
+            setCurrentRow(undefined)
+            preSelectRef.current = undefined
+        } else {
+            setSelectedRows(undefined)
+            setCurrentRow(record)
+            if (props.onRowClick) {
+                props.onRowClick(record)
+            }
         }
     })
 
+    /**多选触发 Shift+Click Shift + 鼠标左键同时点击*/
+    const handleShiftMousedown = useMemoizedFn((event) => {
+        if (event.shiftKey && event.button === 0) {
+            preSelectRef.current = currentRow
+            //去除文字选中
+            window?.getSelection()?.removeAllRanges()
+        }
+    })
     const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
         setCurrentRow(record)
         // onChangeCheckboxSingle(true, record[renderKey], record)
@@ -934,6 +964,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         <ColRender
                                             colIndex={index}
                                             currentRow={currentRow}
+                                            selectedRows={selectedRows}
                                             key={`${columnsItem.dataKey}-${index}` || index}
                                             columnsItem={columnsItem}
                                             list={list}
@@ -1201,6 +1232,7 @@ interface ColRenderProps {
     onRowClick: (r: any) => void
     onRowContextMenu: (r: any, e: any) => void
     currentRow: any
+    selectedRows?: any[]
     rowSelection: RowSelectionProps<any>
     onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
     scroll: ScrollProps
@@ -1223,6 +1255,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
         onRowClick,
         onRowContextMenu,
         currentRow,
+        selectedRows,
         colIndex,
         rowSelection,
         onChangeCheckboxSingle,
@@ -1259,54 +1292,59 @@ const ColRender = React.memo((props: ColRenderProps) => {
                 })
             }}
         >
-            {list.map(
-                (item, number) =>
-                    (colIndex === 0 && (
-                        <CellRenderDrop
-                            colIndex={colIndex}
-                            key={`${item.data[renderKey]}-${colIndex}` || number}
-                            item={item}
-                            columnsItem={columnsItem}
-                            number={item.index}
-                            isLastItem={isLastItem}
-                            onRowClick={() => onRowClick(item.data)}
-                            onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
-                            currentRow={currentRow}
-                            isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
-                            renderKey={renderKey}
-                            rowSelection={rowSelection}
-                            onChangeCheckboxSingle={onChangeCheckboxSingle}
-                            setMouseEnter={setMouseEnter}
-                            setMouseLeave={setMouseLeave}
-                            mouseCellId={mouseCellId}
-                            moveRow={moveRow}
-                            width={width}
-                            enableDragSort={enableDragSort}
-                            moveRowEnd={moveRowEnd}
-                            size={size}
-                        />
-                    )) || (
-                        <CellRender
-                            colIndex={colIndex}
-                            key={`${item.data[renderKey]}-${colIndex}` || number}
-                            item={item}
-                            columnsItem={columnsItem}
-                            number={item.index}
-                            isLastItem={isLastItem}
-                            onRowClick={() => onRowClick(item.data)}
-                            onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
-                            currentRow={currentRow}
-                            isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
-                            renderKey={renderKey}
-                            rowSelection={rowSelection}
-                            onChangeCheckboxSingle={onChangeCheckboxSingle}
-                            setMouseEnter={setMouseEnter}
-                            setMouseLeave={setMouseLeave}
-                            mouseCellId={mouseCellId}
-                            size={size}
-                        />
-                    )
-            )}
+            {list.map((item, number) => {
+                return (
+                    <>
+                        {(colIndex === 0 && (
+                            <CellRenderDrop
+                                colIndex={colIndex}
+                                key={`${item.data[renderKey]}-${colIndex}` || number}
+                                item={item}
+                                columnsItem={columnsItem}
+                                number={item.index}
+                                isLastItem={isLastItem}
+                                onRowClick={() => onRowClick(item.data)}
+                                onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                                currentRow={currentRow}
+                                selectedRows={selectedRows}
+                                // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                                renderKey={renderKey}
+                                rowSelection={rowSelection}
+                                onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                setMouseEnter={setMouseEnter}
+                                setMouseLeave={setMouseLeave}
+                                mouseCellId={mouseCellId}
+                                moveRow={moveRow}
+                                width={width}
+                                enableDragSort={enableDragSort}
+                                moveRowEnd={moveRowEnd}
+                                size={size}
+                            />
+                        )) || (
+                            <CellRender
+                                colIndex={colIndex}
+                                key={`${item.data[renderKey]}-${colIndex}` || number}
+                                item={item}
+                                columnsItem={columnsItem}
+                                number={item.index}
+                                isLastItem={isLastItem}
+                                onRowClick={() => onRowClick(item.data)}
+                                onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                                currentRow={currentRow}
+                                selectedRows={selectedRows}
+                                // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                                renderKey={renderKey}
+                                rowSelection={rowSelection}
+                                onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                setMouseEnter={setMouseEnter}
+                                setMouseLeave={setMouseLeave}
+                                mouseCellId={mouseCellId}
+                                size={size}
+                            />
+                        )}
+                    </>
+                )
+            })}
         </div>
     )
 })
@@ -1320,7 +1358,8 @@ interface CellRenderProps {
     onRowClick: () => void
     onRowContextMenu: (e: any) => void
     currentRow: any
-    isSelect: boolean
+    selectedRows?: any[]
+    // isSelect: boolean
     renderKey: string
     rowSelection: RowSelectionProps<any>
     onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
@@ -1342,7 +1381,7 @@ const CellRender = React.memo(
             isLastItem,
             onRowClick,
             onRowContextMenu,
-            isSelect,
+            // isSelect,
             colIndex,
             renderKey,
             rowSelection,
@@ -1350,17 +1389,29 @@ const CellRender = React.memo(
             setMouseEnter,
             setMouseLeave,
             mouseCellId,
-            size
+            size,
+            currentRow,
+            selectedRows
         } = props
+        const isSelect = useCreation(() => {
+            return currentRow && currentRow[renderKey] === item.data[renderKey]
+        }, [currentRow])
+        const batchActive = useCreation(() => {
+            if ((selectedRows?.length || 0) > 0) {
+                return selectedRows?.findIndex((i) => i[renderKey] === item.data[renderKey]) !== -1
+            }
+            return false
+        }, [selectedRows])
         return (
             <div
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-active-row"]]: isSelect,
+                    [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
-                    [styles["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
-                    [styles["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
+                    [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
+                    [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
                     [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
                 })}
                 onClick={(e) => {
@@ -1417,7 +1468,10 @@ const CellRender = React.memo(
         // return true; 	不渲染
         // return false;	渲染
 
-        if (preProps.isSelect !== nextProps.isSelect) {
+        // if (preProps.isSelect !== nextProps.isSelect) {
+        //     return false
+        // }
+        if (preProps.currentRow !== nextProps.currentRow || preProps.selectedRows !== nextProps.selectedRows) {
             return false
         }
         if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
@@ -1442,7 +1496,7 @@ const CellRenderDrop = React.memo(
             isLastItem,
             onRowClick,
             onRowContextMenu,
-            isSelect,
+            // isSelect,
             colIndex,
             renderKey,
             rowSelection,
@@ -1454,7 +1508,9 @@ const CellRenderDrop = React.memo(
             width,
             enableDragSort,
             moveRowEnd,
-            size
+            size,
+            currentRow,
+            selectedRows
         } = props
         const dragRef = useRef<any>()
 
@@ -1529,16 +1585,26 @@ const CellRenderDrop = React.memo(
                     width
                 }) ||
             {}
+        const isSelect = useCreation(() => {
+            return currentRow && currentRow[renderKey] === item.data[renderKey]
+        }, [currentRow])
+        const batchActive = useCreation(() => {
+            if ((selectedRows?.length || 0) > 0) {
+                return selectedRows?.findIndex((i) => i[renderKey] === item.data[renderKey]) !== -1
+            }
+            return false
+        }, [selectedRows])
         return (
             <div
                 data-handler-id={handlerId}
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-active-row"]]: isSelect,
+                    [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
-                    [styles["virtual-table-row-cell-border-right-1"]]: isSelect && isLastItem,
-                    [styles["virtual-table-row-cell-border-left-1"]]: isSelect && colIndex === 0,
+                    [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
+                    [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
                     [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"],
                     [styles["virtual-table-row-cell-move"]]: enableDragSort && colIndex === 0
                 })}
@@ -1614,7 +1680,10 @@ const CellRenderDrop = React.memo(
     (preProps, nextProps) => {
         // return true; 	不渲染
         // return false;	渲染
-        if (preProps.isSelect !== nextProps.isSelect) {
+        // if (preProps.isSelect !== nextProps.isSelect) {
+        //     return false
+        // }
+        if (preProps.currentRow !== nextProps.currentRow || preProps.selectedRows !== nextProps.selectedRows) {
             return false
         }
         if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
@@ -1653,6 +1722,7 @@ const CellRenderDrop = React.memo(
  * @isRefresh：boolean 刷新表格 滚动至0
  * @disableSorting：boolean 禁用排序
  * @query：查询条件
+ * @property {boolean}  isRightClickBatchOperate 右键菜单批量操作，支持Shift + 鼠标左键同时点击
  * @return {*}
  */
 export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) as <T>(

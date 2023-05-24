@@ -379,6 +379,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             update(1)
         }, 100)
     })
+    
     return (
         <div className={styles["portAsset-content"]}>
             <div className={styles["portAsset"]}>
@@ -405,6 +406,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         containerClassName={styles["portAsset-table-list-container"]}
                         isRefresh={isRefresh}
                         isShowTotal={true}
+                        isRightClickBatchOperate={true}
                         extra={
                             <div className={styles["table-head-extra"]}>
                                 <ExportExcel
@@ -505,6 +507,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         columns={columns}
                         // currentSelectItem={currentItem}
                         // onRowClick={onSetCurrentRow}
+                        // onRowContextMenu={onRowContextMenu}
                         enableDrag={true}
                         onChange={onTableChange}
                     />

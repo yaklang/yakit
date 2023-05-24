@@ -35,6 +35,7 @@ import { YakitInputProps } from "../yakitUI/YakitInput/YakitInputType"
  * @event   onMoveRowEnd 拖拽结束
  * @property {boolean}  useUpAndDown 是否启用上下建
  * @property {string}  containerClassName 容器得类样式
+ * @property {boolean}  isRightClickBatchOperate 右键菜单批量操作，支持Shift + 鼠标左键同时点击
  */
 export interface TableVirtualResizeProps<T> {
     size?: "small" | "middle" | "large"
@@ -71,6 +72,7 @@ export interface TableVirtualResizeProps<T> {
     onMoveRowEnd?: () => void
     useUpAndDown?: boolean
     containerClassName?:string
+    isRightClickBatchOperate?:boolean
 }
 
 export interface SortProps {
