@@ -369,7 +369,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             tablePosition.current = tableRef.current.getBoundingClientRect()
         }
     }, [tableRef.current, width])
-
+    useClickAway(() => {
+        setSelectedRows([])
+        preSelectRef.current = undefined
+    }, [wrapperRef])
     // 计算左右宽度以及固定列
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
         const newColumns: ColumnsTypeProps[] = []
