@@ -121,7 +121,7 @@ export interface HTTPFlow {
     InvalidForUTF8Request?: boolean
     InvalidForUTF8Response?: boolean
     RawRequestBodyBase64?: string
-    RawResponseBodyBody64?: string
+    RawResponseBodyBase64?: string
     SafeHTTPRequest?: string
 
     /*
