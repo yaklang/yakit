@@ -220,17 +220,14 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
      * @description 发送到【热加载】中调试代码
      */
     const onSendToPatch = useMemoizedFn((s: YakScript) => {
-        console.log("s", s)
         setScript(s)
         setMode("hot-patch")
     })
     /**@description 保存热加载代码到本地插件 */
     const onSaveHotCode = useMemoizedFn(() => {
-        console.log("script", script)
         ipcRenderer
             .invoke("SaveYakScript", script)
             .then((data: YakScript) => {
-                console.log("data", data)
                 yakitNotify("success", `保存本地插件成功`)
             })
             .catch((e: any) => {
