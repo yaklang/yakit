@@ -40,7 +40,6 @@ import {queryYakScriptList} from "@/pages/yakitStore/network"
 
 const {ipcRenderer} = window.require("electron")
 
-export const MITM_HOTPATCH_CODE = `MITM_HOTPATCH_CODE`
 export interface MITMPluginListProp {
     proxy?: string
     downloadCertNode?: () => React.ReactNode
@@ -64,13 +63,13 @@ interface MITMPluginLocalListProps {
     setIsSelectAll: (b: boolean) => void
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
-    height: string | number
+    // height: string | number
     renderTitle?: ReactNode
     total: number
     setTotal: (n: number) => void
     hooks: Map<string, boolean>
     onSelectAll: (b: boolean) => void
-    onSendToPatch?: (b: string) => void
+    onSendToPatch?: (s: YakScript) => void
     includedScriptNames: string[]
     setIncludedScriptNames: (s: string[]) => void
 }
@@ -91,7 +90,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         triggerSearch,
         selectGroup,
         setSelectGroup,
-        height,
+        // height,
         total,
         setTotal,
         hooks,
@@ -182,7 +181,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         }
     })
     return (
-        <div className={style["mitm-plugin-local"]} style={{height}} ref={listRef}>
+        <div className={style["mitm-plugin-local"]} ref={listRef}>
             <div>
                 <ReactResizeDetector
                     onResize={(width, height) => {
@@ -206,7 +205,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
 
             <div
                 className={style["mitm-plugin-list"]}
-                style={{height: `calc(100% - ${tags.length || selectGroup.length > 0 ? vlistHeigth + 8 : 0}px)`}}
+                // style={{height: `calc(100% - ${tags.length || selectGroup.length > 0 ? vlistHeigth + 8 : 0}px)`}}
             >
                 <YakModuleList
                     emptyNode={onRenderEmptyNode()}
@@ -227,7 +226,6 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                         return (
                             <MITMYakScriptLoader
                                 status={status}
-                                key={i.Id}
                                 script={i}
                                 maxWidth={maxWidth}
                                 // 劫持启动后
@@ -707,6 +705,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                         if (visibleRemove) return
                         onSelect(item)
                     }}
+                    key={item.name}
                 >
                     <div className={classNames(style["plugin-group-item-name"], "content-ellipsis")} title={item.name}>
                         {item.name}

@@ -52,6 +52,10 @@
         height: 100%;
         padding-right: 10px;
         padding-top: 2px;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
 
         .mitm-plugin-empty {
             margin-top: 48px;
@@ -66,6 +70,8 @@
 
     .mitm-plugin-list {
         height: 100%;
+        flex: 1;
+        overflow: hidden;
         :global {
             .ant-spin-nested-loading {
                 height: 100%;

@@ -72,7 +72,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 UUID: ""
             })
             if (isSendToPatch) {
-                p.onSendToPatch && p.onSendToPatch(res.Content)
+                p.onSendToPatch && p.onSendToPatch(res)
             }
         })
     })
@@ -104,7 +104,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                             getScriptInfo(i, true)
                             return
                         }
-                        p.onSendToPatch && p.onSendToPatch(i.Content)
+                        p.onSendToPatch && p.onSendToPatch(i)
                     }}
                 >
                     <LightningBoltIcon className={style["lightning-bolt-icon"]} />
@@ -135,7 +135,7 @@ export interface MITMYakScriptLoaderProps {
     script: YakScript
     hooks: Map<string, boolean>
     maxWidth?: number
-    onSendToPatch?: (code: string) => any
+    onSendToPatch?: (s:YakScript) => any
     onSubmitYakScriptId?: (id: number, params: YakExecutorParam[]) => any
     onRemoveHook?: (name: string) => void
     /**

@@ -548,7 +548,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             </YakitButton>
                         </div>
                         <MITMPluginLocalList
-                            height='calc(100% - 100px)'
                             onSubmitYakScriptId={onSubmitYakScriptId}
                             status={status}
                             checkList={checkList}

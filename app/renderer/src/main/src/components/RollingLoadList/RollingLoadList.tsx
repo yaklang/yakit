@@ -225,18 +225,15 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                                     </div>
                                 )
                             }
-                            return (
-                                <>
-                                    {itemArr.map((ele, number) => (
-                                        <div
-                                            className={`${(col && classNameWidth[col]) || ""} ${classNameRow || ""}`}
-                                            key={ele[rowKey || "Id"] + "--" + index}
-                                        >
-                                            {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
-                                        </div>
-                                    ))}
-                                </>
-                            )
+                            return itemArr.map((ele, number) => (
+                                <div
+                                    className={`${(col && classNameWidth[col]) || ""} ${classNameRow || ""}`}
+                                    key={ele[rowKey || "Id"] + "--" + index}
+                                    id='123'
+                                >
+                                    {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
+                                </div>
+                            ))
                         })}
                     {loading && hasMore && (
                         <div className='grid-block text-center'>
