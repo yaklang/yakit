@@ -132,6 +132,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                             if (props.onCancel) props.onCancel(e)
                             setVisible(false)
                         }}
+                        {...props.cancelButtonProps}
                     >
                         {props.onCancelText || "取消"}
                     </YakitButton>
@@ -145,6 +146,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                             }
                         }}
                         loading={loading}
+                        {...props.okButtonProps}
                     >
                         {props.onOkText || "确定"}
                     </YakitButton>

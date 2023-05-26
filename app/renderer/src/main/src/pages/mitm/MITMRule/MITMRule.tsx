@@ -49,42 +49,42 @@ const {ipcRenderer} = window.require("electron")
 
 const HitColor = {
     red: {
-        title: "Red",
+        title: "红色",
         value: "red",
         className: "bg-color-red-opacity"
     },
     green: {
-        title: "Green",
+        title: "绿色",
         value: "green",
         className: "bg-color-green-opacity"
     },
     blue: {
-        title: "Blue",
+        title: "蓝色",
         value: "blue",
         className: "bg-color-blue-opacity"
     },
     yellow: {
-        title: "Yellow",
+        title: "黄色",
         value: "yellow",
         className: "bg-color-yellow-opacity"
     },
     orange: {
-        title: "Orange",
+        title: "橙色",
         value: "orange",
         className: "bg-color-orange-opacity"
     },
     purple: {
-        title: "Purple",
+        title: "紫色",
         value: "purple",
         className: "bg-color-purple-opacity"
     },
     cyan: {
-        title: "Cyan",
+        title: "天蓝色",
         value: "cyan",
         className: "bg-color-cyan-opacity"
     },
     grey: {
-        title: "Grey",
+        title: "灰色",
         value: "grey",
         className: "bg-color-grey-opacity"
     }

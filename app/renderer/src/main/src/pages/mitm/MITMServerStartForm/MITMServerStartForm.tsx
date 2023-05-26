@@ -14,10 +14,8 @@ import {RuleExportAndImportButton} from "../MITMRule/MITMRule"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
-import {WEB_FUZZ_PROXY} from "@/pages/fuzzer/HTTPFuzzerPage"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -64,6 +62,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const ruleButtonRef = useRef<any>()
     const advancedFormRef = useRef<any>()
+    const downstreamProxyRef = useRef<any>(null)
 
     const [form] = Form.useForm()
     const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
@@ -94,9 +93,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }
                 })
             }
-        })
-        getRemoteValue(MITMConsts.MITMDefaultDownstreamProxy).then((e) => {
-            form.setFieldsValue({downstreamProxy: e})
         })
     }, [props.status])
     useUpdateEffect(() => {
@@ -146,10 +142,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
             setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
         }
-        setRemoteValue(
-            MITMConsts.MITMDefaultDownstreamProxy,
-            params.downstreamProxy ? params.downstreamProxy : undefined
-        )
+        // setRemoteValue(
+        //     MITMConsts.MITMDefaultDownstreamProxy,
+        //     params.downstreamProxy ? params.downstreamProxy : undefined
+        // )
+        downstreamProxyRef.current?.onSetRemoteValues(params.downstreamProxy || "")
         setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
@@ -199,7 +196,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"
                     }
                 >
-                    <YakitInput placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                    <YakitAutoComplete
+                        ref={downstreamProxyRef}
+                        cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxy}
+                        placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
+                    />
                 </Item>
                 <Item
                     label={"HTTP/2.0 支持"}

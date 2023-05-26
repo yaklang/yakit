@@ -10,7 +10,7 @@ import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {info, yakitFailed} from "@/utils/notification"
+import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useMap, useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import React, {useEffect, useMemo, useRef, useState} from "react"
@@ -18,7 +18,6 @@ import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
     MITMPluginLocalList,
-    MITM_HOTPATCH_CODE,
     PluginGroup,
     PluginSearch,
     YakFilterRemoteObj,
@@ -52,6 +51,24 @@ interface MITMPluginHijackContentProps {
     setTags: (s: string[]) => void
     setSearchKeyword: (s: string) => void
 }
+const HotLoadDefaultData: YakScript = {
+    Id: 0,
+    Content: MITMPluginTemplateShort,
+    Type: "",
+    Params: [],
+    CreatedAt: 0,
+    ScriptName: "",
+    Help: "",
+    Level: "",
+    Author: "",
+    Tags: "",
+    IsHistory: false,
+    OnlineId: 0,
+    OnlineScriptName: "",
+    OnlineContributors: "",
+    UserId: 0,
+    UUID: ""
+}
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (props) => {
     const {
         onSubmitYakScriptId,
@@ -82,7 +99,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
      */
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
 
-    const [script, setScript] = useState(MITMPluginTemplateShort)
+    const [script, setScript] = useState<YakScript>(HotLoadDefaultData)
 
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
     const [loading, setLoading] = useState(false)
@@ -202,9 +219,20 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
     /**
      * @description 发送到【热加载】中调试代码
      */
-    const onSendToPatch = useMemoizedFn((code: string) => {
-        setScript(code)
+    const onSendToPatch = useMemoizedFn((s: YakScript) => {
+        setScript(s)
         setMode("hot-patch")
+    })
+    /**@description 保存热加载代码到本地插件 */
+    const onSaveHotCode = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("SaveYakScript", script)
+            .then((data: YakScript) => {
+                yakitNotify("success", `保存本地插件成功`)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `保存插件失败:` + e)
+            })
     })
 
     const onRenderHeardExtra = useMemoizedFn(() => {
@@ -215,7 +243,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         <YakitPopconfirm
                             title={"确认重置热加载代码？"}
                             onConfirm={() => {
-                                setScript(MITMPluginTemplateShort)
+                                setScript(HotLoadDefaultData)
                                 onRefresh()
                             }}
                             placement='top'
@@ -227,9 +255,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         <YakitButton
                             type='outline1'
                             onClick={() => {
-                                if (!!script) {
-                                    setRemoteValue(MITM_HOTPATCH_CODE, script)
-                                }
                                 ipcRenderer
                                     .invoke("mitm-exec-script-content", script)
                                     .then(() => {
@@ -363,20 +388,38 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 return (
                     <div className={styles["hot-patch-code"]}>
                         {/* 用户热加载代码 */}
-                        <YakCodeEditor
-                            refreshTrigger={refreshCode}
-                            noHeader={true}
-                            noPacketModifier={true}
-                            originValue={Buffer.from(script, "utf8")}
-                            onChange={(e) => setScript(e.toString("utf8"))}
-                            language={"yak"}
-                            extraEditorProps={
-                                {
-                                    noMiniMap: true,
-                                    noWordWrap: true
-                                } as EditorProps
-                            }
-                        />
+                        {script.Id ? (
+                            <div className={styles["hot-patch-heard"]}>
+                                <span>插件名称：{script.ScriptName}</span>
+                                <YakitButton type='primary' onClick={() => onSaveHotCode()}>
+                                    保存源码
+                                </YakitButton>
+                            </div>
+                        ) : (
+                            <></>
+                        )}
+                        <div className={styles["hot-patch-code-editor"]}>
+                            <YakCodeEditor
+                                bordered={false}
+                                refreshTrigger={refreshCode}
+                                noHeader={true}
+                                noPacketModifier={true}
+                                originValue={Buffer.from(script.Content, "utf8")}
+                                onChange={(e) =>
+                                    setScript({
+                                        ...script,
+                                        Content: e.toString("utf8")
+                                    })
+                                }
+                                language={"yak"}
+                                extraEditorProps={
+                                    {
+                                        noMiniMap: true,
+                                        noWordWrap: true
+                                    } as EditorProps
+                                }
+                            />
+                        </div>
                     </div>
                 )
             case "loaded":
@@ -446,7 +489,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         />
                         <YakitSpin spinning={loading}>
                             <MITMPluginLocalList
-                                height='calc(100% - 96px)'
+                                // height='calc(100% - 96px)'
                                 onSubmitYakScriptId={onSubmitYakScriptId}
                                 status={status}
                                 checkList={checkList}
