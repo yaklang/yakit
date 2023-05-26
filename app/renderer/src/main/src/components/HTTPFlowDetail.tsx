@@ -36,6 +36,7 @@ import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTabl
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon} from "@/assets/newIcon"
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
+import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -554,7 +555,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             }
         }
     }, [])
-    return (
+    return flow ? (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
             <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
                 <Col span={existedInfoType.length > 0 ? 19 : 24}>
@@ -664,6 +665,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 onClick={() => {
                                                     setInfoType(i)
                                                 }}
+                                                key={i}
                                             >
                                                 {infoTypeVerbose(i)}
                                             </Button>
@@ -709,6 +711,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 onClick={() => {
                                                     setInfoType(i)
                                                 }}
+                                                key={i}
                                             >
                                                 {infoTypeVerbose(i)}
                                             </Button>
@@ -721,6 +724,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 )}
             </Row>
         </AutoSpin>
+    ) : (
+        <YakitEmpty style={{paddingTop: 48}} title='未选中 HTTP History 数据' />
     )
 }
 
