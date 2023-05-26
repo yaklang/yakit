@@ -17,9 +17,17 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {useDebounceEffect, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useRafInterval} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useRafInterval
+} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
-import {yakitFailed} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {callCopyToClipboard} from "@/utils/basic"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaHTTPFlowID, showResponseViaResponseRaw} from "@/components/ShowInBrowser"
@@ -29,6 +37,9 @@ import {showDrawer} from "@/utils/showModal"
 import {showByCustom} from "@/components/functionTemplate/showByContext"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
+import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {ResizeBox} from "@/components/ResizeBox"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -55,7 +66,10 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
 
     const [compareState, setCompareState] = useState<number>(0)
-    const [total, setTotal] = useState<number>(0)
+
+    const [flow, setFlow] = useState<HTTPFlow>()
+    const [detailLoading, setDetailLoading] = useState(false)
+    const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
 
     const logRef = useRef(null)
     const [inViewport] = useInViewport(logRef)
@@ -74,46 +88,11 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 title: "方法",
                 dataKey: "Method",
                 width: 80
-                // filterProps: {
-                //     filterKey: "Methods",
-                //     filtersType: "select",
-                //     filtersSelectAll: {
-                //         isAll: true
-                //     },
-                //     filters: [
-                //         {
-                //             label: "GET",
-                //             value: "GET"
-                //         },
-                //         {
-                //             label: "POST",
-                //             value: "POST"
-                //         },
-                //         {
-                //             label: "HEAD",
-                //             value: "HEAD"
-                //         }
-                //     ]
-                // }
             },
             {
                 title: "状态码",
                 dataKey: "StatusCode",
                 width: 100,
-                // filterProps: {
-                //     filtersType: "select",
-                //     filterMultiple: true,
-                //     filterSearchInputProps: {
-                //         size: "small"
-                //     },
-                //     filterOptionRender: (item: FiltersItemProps) => (
-                //         <div>
-                //             <span>{item.value}</span>
-                //             <span>{item.total}</span>
-                //         </div>
-                //     ),
-                //     filters: statusCode
-                // },
                 render: (text) => <div className={styles["status-code"]}>{text}</div>
             },
             {
@@ -216,7 +195,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                     .concat(data || [])
                     .filter((_, index) => index < 30)
                 setData(newData)
-                setTotal(res.Total)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -242,7 +220,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     }, [shieldData])
     useEffect(() => {
         setData([])
-        setTotal(0)
     }, [inViewport])
     useRafInterval(
         () => {
@@ -254,10 +231,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     useEffect(() => {
         getHTTPFlowsFieldGroup(true)
     }, [])
-    // useEffect(() => {
-    //     // 刷新
-    //     getHTTPFlowsFieldGroup(true)
-    // }, [total])
     // 向主页发送对比数据
     useEffect(() => {
         if (compareLeft.content) {
@@ -292,10 +265,30 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (!rowDate.Hash) return
         if (rowDate.Hash !== selected?.Hash) {
             setSelected(rowDate)
+            getHTTPFlowById(rowDate.Id)
         } else {
             // setSelected(undefined)
         }
     })
+
+    const getHTTPFlowById = useDebounceFn(
+        (id: number) => {
+            setDetailLoading(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: id})
+                .then((i: HTTPFlow) => {
+                    setFlow(i)
+                    setFirstFull(false)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                    setTimeout(() => setDetailLoading(false), 300)
+                })
+        },
+        {wait: 200}
+    ).run
 
     const menuData = [
         {
@@ -513,27 +506,58 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         },
         {wait: 200}
     ).run
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (firstFull) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [firstFull])
     return (
         <div className={styles["mitm-log"]} ref={logRef}>
-            <TableVirtualResize<HTTPFlow>
-                query={params}
-                titleHeight={0.1}
-                renderTitle={<></>}
-                renderKey='Id'
-                data={data}
-                loading={loading}
-                enableDrag={true}
-                columns={columns}
-                onRowClick={onRowClick}
-                onRowContextMenu={onRowContextMenu}
-                onChange={onTableChange}
-                onSetCurrentRow={onSetCurrentRow}
-                pagination={{
-                    total: data.length,
-                    page: 1,
-                    limit: 50,
-                    onChange: () => {}
-                }}
+            <ResizeBox
+                isVer={true}
+                lineStyle={{display: firstFull ? "none" : ""}}
+                firstNodeStyle={{padding: firstFull ? 0 : undefined}}
+                firstNode={
+                    <TableVirtualResize<HTTPFlow>
+                        query={params}
+                        titleHeight={0.1}
+                        renderTitle={<></>}
+                        renderKey='Id'
+                        data={data}
+                        loading={loading}
+                        enableDrag={true}
+                        columns={columns}
+                        onRowClick={onRowClick}
+                        onRowContextMenu={onRowContextMenu}
+                        onChange={onTableChange}
+                        onSetCurrentRow={onSetCurrentRow}
+                        pagination={{
+                            total: data.length,
+                            page: 1,
+                            limit: 50,
+                            onChange: () => {}
+                        }}
+                    />
+                }
+                secondNode={
+                    flow ? (
+                        <HTTPFlowDetailRequestAndResponse
+                            id={0}
+                            noHeader={true}
+                            loading={detailLoading}
+                            sendToWebFuzzer={true}
+                            defaultHttps={selected?.IsHTTPS}
+                            flow={flow}
+                        />
+                    ) : null
+                }
+                {...ResizeBoxProps}
             />
         </div>
     )
