@@ -45,15 +45,25 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     )
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
-        if (!cacheHistoryDataKey) return
+        if (!cacheHistoryDataKey || !newValue) return
         const index = cacheHistoryData.options.findIndex((l) => l.value === newValue)
-        if (index !== -1) return
-        const newHistoryList = [{value: newValue, label: newValue}, ...cacheHistoryData.options].filter(
-            (_, index) => index < cacheHistoryListLength
-        )
-        const cacheHistory: CacheDataHistoryProps = {
-            options: newHistoryList,
-            defaultValue: newValue
+        let cacheHistory: CacheDataHistoryProps = {
+            options: [],
+            defaultValue: ""
+        }
+        if (index === -1) {
+            const newHistoryList = [{value: newValue, label: newValue}, ...cacheHistoryData.options].filter(
+                (_, index) => index < cacheHistoryListLength
+            )
+            cacheHistory = {
+                options: newHistoryList,
+                defaultValue: newValue
+            }
+        } else {
+            cacheHistory = {
+                options: cacheHistoryData.options,
+                defaultValue: newValue
+            }
         }
         setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))
             .then(() => {
@@ -77,7 +87,12 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                         defaultValue: ""
                     }
                     if (Object.prototype.toString.call(newData) === "[object Object]") {
-                        cacheData = newData
+                        cacheData = newData.options
+                            ? newData
+                            : {
+                                  options: [],
+                                  defaultValue: ""
+                              }
                     } else {
                         // 兼容以前 key 保存的数据
                         cacheData.defaultValue = newData
