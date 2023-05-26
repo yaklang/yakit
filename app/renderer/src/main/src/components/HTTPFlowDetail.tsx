@@ -528,7 +528,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     return flow ? (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
             <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
-                <Col span={existedInfoType.length > 0 ? 19 : 24}>
+                <Col span={existedInfoType.length > 0 ? 19 : 24} style={{height: "100%"}}>
                     <HTTPFlowDetailRequestAndResponse loading={loading} flow={flow} {...props} />
                 </Col>
                 {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && (
