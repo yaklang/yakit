@@ -45,16 +45,18 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     )
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
-        if (!cacheHistoryDataKey || !newValue) return
+        if (!cacheHistoryDataKey) return
         const index = cacheHistoryData.options.findIndex((l) => l.value === newValue)
         let cacheHistory: CacheDataHistoryProps = {
             options: [],
             defaultValue: ""
         }
         if (index === -1) {
-            const newHistoryList = [{value: newValue, label: newValue}, ...cacheHistoryData.options].filter(
-                (_, index) => index < cacheHistoryListLength
-            )
+            const newHistoryList = newValue
+                ? [{value: newValue, label: newValue}, ...cacheHistoryData.options].filter(
+                      (_, index) => index < cacheHistoryListLength
+                  )
+                : cacheHistoryData.options
             cacheHistory = {
                 options: newHistoryList,
                 defaultValue: newValue
