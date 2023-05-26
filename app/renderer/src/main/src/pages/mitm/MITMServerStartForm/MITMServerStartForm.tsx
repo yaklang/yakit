@@ -121,7 +121,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             ...advancedFormValue,
             ...advancedValue
         }
-
         props.onStartMITMServer(
             params.host,
             params.port,

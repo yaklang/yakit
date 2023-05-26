@@ -38,6 +38,7 @@ import {
 } from "./MITMServerHijacking/MITMPluginLocalList"
 import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
 import classNames from "classnames"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const {Text} = Typography
 const {Item} = Form
@@ -162,10 +163,15 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 info("MITM 劫持服务器已关闭")
             } else {
                 failed("MITM 劫持服务器异常或被关闭")
-                Modal.error({
-                    mask: true,
+                const m = showYakitModal({
                     title: "启动 MITM 服务器 ERROR!",
-                    content: <>{msg}</>
+                    type: "white",
+                    cancelButtonProps: {style: {display: "none"}},
+                    content: <div style={{padding: "12px 24px"}}>{msg}</div>,
+                    onOkText: "OK",
+                    onOk: () => {
+                        m.destroy()
+                    }
                 })
             }
             ipcRenderer.invoke("mitm-stop-call")
