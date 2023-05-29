@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, screen} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const url = require("url")
@@ -14,6 +14,7 @@ const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
 const { engineLog } = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
+const windowStateKeeper = require("electron-window-state")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -34,13 +35,15 @@ const createWindow = () => {
     initLocalCache()
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
     initExtraLocalCache(() => {
-        const cacheFlag = getExtraLocalCacheValue(UICloseFlag);
-        closeFlag = cacheFlag === undefined ? true : cacheFlag;
+        const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
+        closeFlag = cacheFlag === undefined ? true : cacheFlag
     })
-
+    let mainWindowState = getBrowserWindow()
     win = new BrowserWindow({
-        width: 1600,
-        height: 1000,
+        x: mainWindowState.x,
+        y: mainWindowState.y,
+        width: mainWindowState.width,
+        height: mainWindowState.height,
         minWidth: 900,
         minHeight: 500,
         autoHideMenuBar: true,
@@ -53,7 +56,10 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
-
+    // 设置高度和宽度，因为默认设置的宽度和高度在不同分辨率的双屏上有bug
+    win.setSize(mainWindowState.width,mainWindowState.height)
+    // 将窗口的位置和大小保存到文件中
+    mainWindowState.manage(win)
     if (isDev) {
         win.loadURL("http://127.0.0.1:3000")
     } else {
@@ -64,7 +70,7 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: "detach"})
     }
-
+   
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
@@ -85,6 +91,9 @@ const createWindow = () => {
         e.preventDefault()
     })
 
+    win.on("will-resize", (e, newBounds) => {
+        console.log("newBounds_will-resize", newBounds)
+    })
     // 录屏
     globalShortcut.register("Control+Shift+X", (e) => {
         win.webContents.send("open-screenCap-modal")
@@ -185,8 +194,7 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
-    } catch (e) {
-    }
+    } catch (e) {}
 
     //
     // // autoUpdater.autoDownload = false
@@ -206,3 +214,24 @@ app.on("window-all-closed", function () {
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
 })
+/**@description 获取缓存的屏幕参数，位置以及宽高 */
+function getBrowserWindow() {
+    // 使用 electron-window-state 模块来获取窗口状态
+    let windowState = windowStateKeeper({
+        defaultWidth: 1600,
+        defaultHeight: 1000
+    })
+    // 获取所有可用的屏幕
+    let displays = screen.getAllDisplays()
+    // 获取第二个屏幕的大小和位置
+    let externalDisplay = displays.find((display) => {
+        return display.bounds.x !== 0 || display.bounds.y !== 0
+    })
+    // 如果找到了第二个屏幕，则将窗口放置在第二个屏幕上
+    if (externalDisplay) {
+        // 将窗口的位置设置为第二个屏幕
+        windowState.x = externalDisplay.bounds.x
+        windowState.y = externalDisplay.bounds.y
+    }
+    return windowState
+}
