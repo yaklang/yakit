@@ -406,8 +406,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }),
                 onClick: ({key, keyPath}) => {
                     let urls: string[] = []
-                    if ((selectedRows?.length||0) > 0) {
-                        urls = selectedRows?.map((item) => `${item.Host}:${item.Port}`)||[]
+                    if ((selectedRows?.length || 0) > 0) {
+                        urls = selectedRows?.map((item) => `${item.Host}:${item.Port}`) || []
                     } else {
                         urls = [`${rowData.Host}:${rowData.Port}`]
                     }
@@ -480,7 +480,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 <YakitPopover
                                     content={
                                         <YakitMenu
-                                            type='grey'
                                             data={menuData}
                                             onClick={({key}) => {
                                                 ipcRenderer
