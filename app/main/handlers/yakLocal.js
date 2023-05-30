@@ -118,7 +118,7 @@ const fetchGeneralYakProcess = () => {
                 let ls = data
                     .filter((i) => {
                         try {
-                            return i.cmd.includes("yak grpc ")
+                            return i.cmd.includes("yak grpc --port")
                         } catch (e) {
                             return false
                         }
