@@ -88,6 +88,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
 export interface yakProcess {
     port: number
     pid: number
+    ppid?:number
     cmd: string
     origin: any
 }

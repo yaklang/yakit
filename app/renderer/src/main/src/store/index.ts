@@ -1,3 +1,4 @@
+import { ResultObjProps } from "@/pages/dynamicControl/DynamicControl"
 import {API} from "@/services/swagger/resposeType"
 import create from "zustand"
 
@@ -79,3 +80,34 @@ export let simpleDetectParams:simpleDetectParamsProps = {
     /**导航栏currentKey传递*/
     tabId:"",
 }
+
+
+export interface DynamicStatusProps extends ResultObjProps{
+    /**是否远程控制中*/
+    isDynamicStatus:boolean
+    /**是否被远程控制中*/
+    isDynamicSelfStatus:boolean
+    /**私有域地址*/
+    baseUrl:string
+}
+
+interface YakitDynamicStatusProps{
+    /**@name 远程控制状态参数 */
+    dynamicStatus: DynamicStatusProps
+    setDynamicStatus: (info: DynamicStatusProps) => void
+}
+
+export const yakitDynamicStatus = create<YakitDynamicStatusProps>((set, get) => ({
+    dynamicStatus: {
+        isDynamicStatus:false,
+        isDynamicSelfStatus:false,
+        baseUrl:"",
+        id: "",
+        host:"",
+        port:0,
+        note:"",
+        pubpem:"",
+        secret:"",
+    },
+    setDynamicStatus: (info) => set({dynamicStatus: info})
+}))

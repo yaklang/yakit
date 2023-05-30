@@ -64,7 +64,7 @@ module.exports = (win, getClient) => {
         win.webContents.send("download-update-wait-callback", type)
     })
     /** 连接引擎的指令 */
-    ipcMain.handle("engine-ready-link", () => {
-        win.webContents.send("engine-ready-link-callback")
+    ipcMain.handle("engine-ready-link", (e, isDynamicControl) => {
+        win.webContents.send("engine-ready-link-callback",isDynamicControl)
     })
 }

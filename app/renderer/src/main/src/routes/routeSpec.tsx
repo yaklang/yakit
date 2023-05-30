@@ -803,6 +803,13 @@ export const HiddenMenuData: MenuDataProps[] = [
         label: "首页",
         disabled: true,
         hidden: true
+    },
+    {
+        id: "Route.ControlAdminPage",
+        key: Route.ControlAdminPage,
+        label: "远程管理",
+        disabled: true,
+        hidden: true
     }
 ]
 /**

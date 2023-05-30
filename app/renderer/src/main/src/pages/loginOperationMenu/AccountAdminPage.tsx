@@ -29,6 +29,9 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {ResizeBox} from "@/components/ResizeBox"
 import {PlusOutlined, EditOutlined, DeleteOutlined,RightOutlined} from "@ant-design/icons"
 import {DefaultOptionType} from "antd/lib/cascader"
+import {useStore} from "@/store"
+import { unReadable } from "../dynamicControl/DynamicControl"
+const {ipcRenderer} = window.require("electron")
 const {Option} = Select
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
@@ -1035,6 +1038,7 @@ interface SelectTitleProps {
     firstTitle: string
     secondTitle?: string
 }
+
 const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [userInfoForm, setUserInfoForm] = useState<boolean>(false)
@@ -1059,7 +1063,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [treeCount, setTreeCount] = useState<TreeCountProps>()
     // 根据数据动态处理计算Count条数
     const [treeReduceCount, setTreeReduceCount] = useState<TreeReduceCountProps>({reduce: true, obj: {}})
-
+    const {userInfo, setStoreUserInfo} = useStore()
     const update = (page?: number, limit?: number, addDepartmentId?: number) => {
         setLoading(true)
         const paginationProps = {
@@ -1207,6 +1211,41 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
         )
     }
 
+    const copySecretKey = (note:string) => {
+        
+        NetWorkApi<any, API.RemoteOperationResponse>({
+            url: "remote/operation",
+            method: "get",
+            params: {
+                note
+            }
+        }).then((res) => {
+            const {data} = res
+            if (Array.isArray(data) && data.length > 0) {
+                const {auth, id, note, port, host} = data[0]
+                const {pubpem, secret} = JSON.parse(auth)
+                let resultObj = {
+                    id,
+                    note,
+                    port,
+                    host,
+                    pubpem,
+                    secret
+                }
+                const showData = unReadable(resultObj)
+                ipcRenderer.invoke("set-copy-clipboard", showData)
+                success("复制远程连接成功")
+            } else {
+                failed(`暂无最新连接信息，请该用户发起远程连接后再操作`)
+            }
+        })
+        .catch((err) => {
+            setLoading(false)
+                failed(`复制远程连接失败:${err}`)
+        })
+        .finally(() => {})
+    }
+
     const columns: ColumnsType<API.UrmUserList> = [
         {
             title: "用户名",
@@ -1258,6 +1297,13 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                             重置密码
                         </Button>
                     </Popconfirm>
+                    <Button
+                        size='small'
+                        type="link"
+                        onClick={() => copySecretKey(i.user_name)}
+                    >
+                        复制远程连接
+                    </Button>
                     <Popconfirm
                         title={"确定删除该用户吗？"}
                         onConfirm={() => {

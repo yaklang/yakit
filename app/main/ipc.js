@@ -165,6 +165,8 @@ module.exports = {
             getClient,
             newClient,
         )
+        /** 远程控制 */
+        require("./handlers/dynamicControl")(win, getClient)
 
         require("./handlers/execYak")(win, getClient)
         require("./handlers/listenPort")(win, getClient)

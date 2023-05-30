@@ -47,7 +47,7 @@ interface UserInfoProps {
 }
 
 /** @name 当前yakit使用状态 */
-export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | "break" | ""
+export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | "break" | "control-remote" | ""
 
 /** @name funcDomain组件-全局setting功能的点击回调事件类型 */
 export type YakitSettingCallbackType =

@@ -1,4 +1,4 @@
-import {UserInfoProps} from "@/store"
+import {UserInfoProps, DynamicStatusProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {getRemoteValue,setRemoteValue} from "./kv"
@@ -6,7 +6,7 @@ import {GetReleaseEdition, isCommunityEdition, globalUserLogout,isEnpriTraceAgen
 import {RemoteGV} from "@/yakitGV";
 const {ipcRenderer} = window.require("electron")
 
-export const loginOut = async(userInfo: UserInfoProps) => {
+export const loginOut = async(userInfo: UserInfoProps ) => {
     if (!userInfo.isLogin) return
     // 此处会导致退出接口异常时间调用
     // await aboutLoginUpload(userInfo.token)

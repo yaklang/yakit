@@ -4,6 +4,10 @@ import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layo
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import { useStore, yakitDynamicStatus } from "@/store"
+import { remoteOperation } from "@/pages/dynamicControl/DynamicControl"
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -29,15 +33,18 @@ export interface YaklangEngineWatchDogProps {
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
     onAdminPort?: () => any
+    setRunRemote:(v:boolean)=>void
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
     (props: YaklangEngineWatchDogProps) => {
+        const {setRunRemote} = props
         const [autoStartProgress, setAutoStartProgress] = useState(false)
         const [__startingUp, setIsStartingUp, getIsStartingUp] = useGetState(false)
-
+        const {dynamicStatus,setDynamicStatus} = yakitDynamicStatus()
+        const {userInfo} = useStore()
         /** 引擎信息认证 */
-        const engineTest = useMemoizedFn(() => {
+        const engineTest = useMemoizedFn((isDynamicControl?:boolean) => {
             // 重置状态
             setAutoStartProgress(false)
             const mode = props.credential.Mode
@@ -59,10 +66,21 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 .invoke("connect-yaklang-engine", props.credential)
                 .then(() => {
                     outputToWelcomeConsole(`连接核心引擎成功！`)
-
+                    setRunRemote(false)
                     if (props.onKeepaliveShouldChange) {
                         props.onKeepaliveShouldChange(true)
                     }
+                    // 如果为远程控制 则修改私有域为
+                    if(isDynamicControl){
+                        // ipcRenderer.send("edit-baseUrl", {baseUrl: "http://192.168.3.100:8080"})
+                        // 远程控制生效
+                        setDynamicStatus({...dynamicStatus,isDynamicStatus:true})
+                        remoteOperation(true,dynamicStatus,userInfo)
+                        if(dynamicStatus.baseUrl&&dynamicStatus.baseUrl.length>0){
+                            setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({BaseUrl:dynamicStatus.baseUrl})) 
+                        }
+                    }
+                    
                 })
                 .catch((e) => {
                     outputToWelcomeConsole("未连接到引擎，尝试启动引擎进程")
@@ -88,8 +106,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /** 接受连接引擎的指令 */
         useEffect(() => {
-            ipcRenderer.on("engine-ready-link-callback", async () => {
-                engineTest()
+            ipcRenderer.on("engine-ready-link-callback", async (e, isDynamicControl) => {
+                engineTest(isDynamicControl)
             })
 
             return () => {

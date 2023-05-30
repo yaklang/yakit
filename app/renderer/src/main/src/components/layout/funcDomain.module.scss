@@ -34,9 +34,18 @@
                 padding: 3px;
                 display: flex;
             }
+            .user-info-dynamic {
+                width: 74px;
+                height: 30px;
+                padding: 3px;
+                display: flex;
+            }
         }
         .user-wrapper:hover {
             background-color: var(--yakit-background-color);
+        }
+        .user-wrapper-dynamic {
+            padding: 3px 4px;
         }
     }
 
@@ -599,8 +608,16 @@
             padding: 0;
             .ant-dropdown-menu-item {
                 padding: 0;
-                &:hover{
-                    background-color: transparent;
+                .ant-dropdown-menu-title-content:not(:has(div)) {
+                    padding: 6px 24px;
+                    color: #31343f;
+                    font-size: 12px;
+                    margin: 0 4px;
+                    border-radius: 4px;
+                    &:hover {
+                        color: #fff;
+                        background-color: var(--yakit-primary-5);
+                    }
                 }
             }
         }
@@ -616,14 +633,41 @@
     font-size: 12px;
     line-height: 24px;
 }
-.login-text-item {
-    padding: 6px 24px;
-    color: #31343f;
-    font-size: 12px;
-    margin: 0 4px;
-    border-radius: 4px;
-    &:hover {
-        color: #fff;
-        background-color: var(--yakit-primary-color);
+
+.judge-avatar {
+    display: flex;
+    flex-direction: row;
+    // border: 1px solid var(--yakit-primary-5);
+    // border-radius: 14px;
+    cursor: pointer;
+    &-avatar {
+        background-color: var(--yakit-primary-5);
+        color: #ffffff;
+        position: relative;
+        top: -2px;
+        left: 2px;
+    }
+    &-text {
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 20px;
+        // color: #FFFFFF;
+        color: var(--yakit-primary-5);
+        margin-left: 4px;
+        padding-right: 6px;
+    }
+}
+.judge-avatar-connect{
+        border: 1px solid var(--yakit-primary-5);
+    border-radius: 14px;
+}
+.judge-avatar-active {
+    background-color: var(--yakit-primary-5);
+    &-avatar {
+        background-color: #ffffff;
+        color: var(--yakit-primary-5);
+    }
+    &-text {
+        color: #ffffff;
     }
 }

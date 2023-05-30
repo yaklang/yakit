@@ -12,6 +12,7 @@ import {useMemoizedFn, useGetState} from "ahooks"
 import {Button, Modal, Radio, Space, Form, Input} from "antd"
 import React, {ReactNode, useRef, useState} from "react"
 import { Route } from "@/routes/routeSpec"
+import { isEnterpriseEdition } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -171,16 +172,19 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
 
-    const upOnlinePlugin = useMemoizedFn((url: string, type: number) => {
-        const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+    const upOnlinePlugin = useMemoizedFn((type: number) => {
+        const onlineParams: API.NewYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
         if (params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }
+        if(isEnterpriseEdition()&&params.OnlineGroup){
+            onlineParams.group = params.OnlineGroup
+        }
         setLoading(true)
         if (uploadLoading) uploadLoading(true)
-        NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
+        NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
             method: "post",
-            url,
+            url:"yakit/plugin",
             data: onlineParams
         })
             .then((res) => {
@@ -200,22 +204,22 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                                 setParams(newSrcipt)
                                 success("同步成功")
                                 setVisibleSyncSelect(false)
-                                ipcRenderer
-                                    .invoke("delete-yak-script", params.Id)
-                                    .then(() => {})
-                                    .catch((err) => {
-                                        failed("删除本地失败:" + err)
-                                    })
-                                    .finally(() => {
-                                        if (isCreate) {
+                                if (isCreate) {
+                                    ipcRenderer
+                                        .invoke("delete-yak-script", params.Id)
+                                        .then(() => {})
+                                        .catch((err) => {
+                                            failed("删除本地失败:" + err)
+                                        })
+                                        .finally(() => {
                                             ipcRenderer
                                                 .invoke("send-close-tab", {
                                                     router: Route.AddYakitScript,
                                                     singleNode: true
                                                 })
                                                 .finally(() => ipcRenderer.invoke("send-local-script-list"))
-                                        }
-                                    })
+                                        })
+                                }
                             })
                             .catch((e) => {
                                 failed(`查询本地插件错误:${e}`)
@@ -262,9 +266,9 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
         }
         if ((params.OnlineId as number) > 0) {
             if (params.OnlineIsPrivate) {
-                upOnlinePlugin("yakit/plugin", 1)
+                upOnlinePlugin(1)
             } else {
-                upOnlinePlugin("yakit/plugin", 2)
+                upOnlinePlugin(2)
             }
         } else {
             setVisibleSyncSelect(true)
@@ -273,9 +277,9 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
     const onSyncSelect = useMemoizedFn((type) => {
         // 1 私密：个人账号 2公开：审核后同步云端
         if (type === 1) {
-            upOnlinePlugin("yakit/plugin", 1)
+            upOnlinePlugin(1)
         } else {
-            upOnlinePlugin("yakit/plugin", 2)
+            upOnlinePlugin(2)
         }
     })
     return (
@@ -288,12 +292,14 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
             >
                 {children}
             </div>
-            <ModalSyncSelect
+            <div onClick={(e)=>{e.stopPropagation()}}>
+              <ModalSyncSelect
                 visible={visibleSyncSelect}
                 handleOk={onSyncSelect}
                 handleCancel={() => setVisibleSyncSelect(false)}
                 loading={loading}
-            />
+            />  
+            </div>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
         </>
     )

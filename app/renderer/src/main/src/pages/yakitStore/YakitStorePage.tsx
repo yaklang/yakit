@@ -865,9 +865,9 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
                                         plugSource === "local"
                                             ? yakScriptTagsAndType || {}
                                             : statisticsDataOnlineOrUser || {}
-                                    ).map((item) => {
+                                    ).map((item) => {                           
                                         const queryName = item[0]
-                                        if (isCommunityEdition() && queryName === "group") {
+                                        if (!isEnpriTraceAgent() && queryName === "group") {
                                             return <></>
                                         }
 
@@ -1002,8 +1002,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
-    const [selectedUploadRowKeysRecordLocal, setSelectedUploadRowKeysRecordLocal, getSelectedUploadRowKeysRecordLocal] =
-        useGetState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState<boolean>(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
@@ -1200,7 +1198,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                         UserId
                     } as QueryYakScriptLocalAndUserRequest)
                     .then((newSrcipt: {Data: YakScript[]}) => {
-                        setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
+                        SelectedUploadRowKeysRecordLocal.current = newSrcipt.Data
                         JudgeIsShowVisible(newSrcipt.Data)
                     })
                     .catch((e) => {
@@ -1210,7 +1208,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     .finally(() => {})
             })
         } else {
-            setSelectedUploadRowKeysRecordLocal(selectedRowKeysRecordLocal)
+            SelectedUploadRowKeysRecordLocal.current = selectedRowKeysRecordLocal
             JudgeIsShowVisible(selectedRowKeysRecordLocal)
         }
     })
@@ -1245,7 +1243,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         for (let index = 0; index < length; index++) {
             if (!StopUpload.current) {
                 const element = realSelectedRowKeysRecordLocal[index]
-                const res = await upOnline(element, "yakit/plugin", type)
+                const res = await upOnline(element, type)
                 if (res) {
                     errList.push(res)
                 }
@@ -1269,18 +1267,21 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }, 200)
     })
 
-    const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
-        const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+    const upOnline = useMemoizedFn(async (params: YakScript, type: number) => {
+        const onlineParams: API.NewYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
         if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
+        }
+        if(isEnterpriseEdition()&&params.OnlineGroup){
+            onlineParams.group = params.OnlineGroup
         }
         if (isCommunityEdition() && params.OnlineId) {
             onlineParams.id = parseInt(`${params.OnlineId}`)
         }
         return new Promise((resolve) => {
-            NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
+            NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
                 method: "post",
-                url,
+                url:"yakit/plugin",
                 data: onlineParams
             })
                 .then((res) => {
@@ -1292,12 +1293,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                             UUID: res.uuid
                         } as DownloadOnlinePluginProps)
                         .then((res) => {
-                            ipcRenderer
-                                .invoke("delete-yak-script", params.Id)
-                                .then(() => {})
-                                .catch((err) => {
-                                    failed("删除本地【" + params.ScriptName + "】失败:" + err)
-                                })
+                            // ipcRenderer
+                            //     .invoke("delete-yak-script", params.Id)
+                            //     .then(() => {})
+                            //     .catch((err) => {
+                            //         failed("删除本地【" + params.ScriptName + "】失败:" + err)
+                            //     })
                         })
                 })
                 .catch((err) => {
@@ -4560,18 +4561,21 @@ const PluginFilter: React.FC<PluginFilterProps> = (props) => {
     )
 }
 
-const adminUpOnline = async (params: YakScript, url: string, type: number, baseUrl: string, userInfo) => {
-    const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+const adminUpOnline = async (params: YakScript, type: number, baseUrl: string, userInfo) => {
+    const onlineParams: API.NewYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
     if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
         onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    if(isEnterpriseEdition()&&params.OnlineGroup){
+        onlineParams.group = params.OnlineGroup
     }
     if (isCommunityEdition() && params.OnlineId) {
         onlineParams.id = parseInt(`${params.OnlineId}`)
     }
     return new Promise((resolve) => {
-        NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
+        NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
             method: "post",
-            url,
+            url:"yakit/plugin",
             data: onlineParams
         })
             .then((res) => {
@@ -4642,7 +4646,7 @@ export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => 
             for (let index = 0; index < length; index++) {
                 setNowPligin(realSelectedRowKeysRecordLocal[index].ScriptName)
                 const element = realSelectedRowKeysRecordLocal[index]
-                const res = await adminUpOnline(element, "yakit/plugin", 2, baseUrl, userInfo)
+                const res = await adminUpOnline(element, 2, baseUrl, userInfo)
                 if (res) {
                     errList.push(res)
                     const p = Math.floor((index / length) * 100)
