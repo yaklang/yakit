@@ -72,7 +72,8 @@ import {setTimeout} from "timers"
 import {
     ModalSyncSelect,
     onLocalScriptToOnlinePlugin,
-    SyncCloudButton
+    SyncCloudButton,
+    SyncCloudProgress
 } from "@/components/SyncCloudButton/SyncCloudButton"
 import {isCommunityEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {fullscreen} from "@uiw/react-md-editor"
@@ -1007,6 +1008,8 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const [upLoading, setUpLoading] = useState<boolean>(false)
+    const [_,setProgress,getProgress] = useGetState<number>(0)
+    const [nowPligin,setNowPligin] = useState<string>("")
     const [baseUrl, setBaseUrl] = useState<string>("")
     const [userInfoLocal, setUserInfoLocal] = useState<PluginUserInfoLocalProps>({
         UserId: 0,
@@ -1203,7 +1206,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                     })
                     .catch((e) => {
                         failed(`查询所有插件错误:${e}`)
-                        setUpLoading(false)
                     })
                     .finally(() => {})
             })
@@ -1221,7 +1223,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             upOnlineBatch(2)
             return
         }
-        setUpLoading(false)
         setVisibleSyncSelect(true)
     }
 
@@ -1235,7 +1236,10 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
     })
 
     const upOnlineBatch = useMemoizedFn(async (type: number) => {
+        setVisibleSyncSelect(false)
         setUpLoading(true)
+        setProgress(0)
+        setNowPligin("")
         StopUpload.current = false
         const realSelectedRowKeysRecordLocal = [...SelectedUploadRowKeysRecordLocal.current]
         const length = realSelectedRowKeysRecordLocal.length
@@ -1247,6 +1251,12 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 if (res) {
                     errList.push(res)
                 }
+                let progress = Math.floor((index+1)/length*100) 
+                setProgress(progress)
+                setNowPligin(element.ScriptName)
+            }
+            else{
+                setProgress(100)
             }
         }
 
@@ -1261,7 +1271,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
             StopUpload.current ? success("取消上传成功") : success("批量上传成功")
         }
         setUpLoading(false)
-        setVisibleSyncSelect(false)
         setTimeout(() => {
             onResetList()
         }, 200)
@@ -1527,17 +1536,15 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
                 visible={visibleSyncSelect}
                 handleOk={onSyncSelect}
                 handleCancel={() => {
-                    if (upLoading) {
-                        StopUpload.current = true
-                        //     warn("请等待插件上传完成后再关闭该modal框")
-                        //     return
-                    } else {
-                        setVisibleSyncSelect(false)
-                        onResetList()
-                    }
+                    setVisibleSyncSelect(false)
+                    onResetList()
                 }}
-                loading={upLoading}
             />
+
+            <SyncCloudProgress visible={upLoading} 
+            onCancle={()=>{StopUpload.current = true}} 
+            progress={getProgress()} 
+            nowPligin={nowPligin}/>
 
             <div className='list-height'>
                 <YakModuleList
