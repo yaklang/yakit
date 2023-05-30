@@ -1,6 +1,6 @@
-import {UserInfoProps, useStore} from "@/store"
+import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {setRemoteValue} from "@/utils/kv"
-import {loginOut, loginOutLocal} from "@/utils/login"
+import {loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
 import {globalUserLogout} from "@/utils/envfile"
@@ -71,6 +71,8 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 // token过期，退出
 const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
+    // 异常过期 无法通过接口更新连接状态 故只作退出远程处理
+    ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:false})
     globalUserLogout()
     failed("401,登录过期/未登录，请重新登录")
 }

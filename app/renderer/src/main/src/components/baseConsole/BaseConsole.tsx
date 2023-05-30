@@ -344,7 +344,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const {setConsoleInfo, setIsFirst} = useStore()
     const draggleRef = useRef<HTMLDivElement>(null)
     const size = useSize(draggleRef)
-    const [disabled, setDisabled] = useState(false)
+    const [disabled, setDisabled] = useState<boolean>(true)
     const [bounds, setBounds, getBounds] = useGetState({left: 0, top: 0, bottom: 0, right: 0})
 
     const [system, setSystem] = useState<YakitSystem>()

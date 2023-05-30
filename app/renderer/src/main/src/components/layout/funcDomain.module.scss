@@ -34,9 +34,18 @@
                 padding: 3px;
                 display: flex;
             }
+            .user-info-dynamic {
+                width: 74px;
+                height: 30px;
+                padding: 3px;
+                display: flex;
+            }
         }
         .user-wrapper:hover {
             background-color: var(--yakit-background-color);
+        }
+        .user-wrapper-dynamic {
+            padding: 3px 4px;
         }
     }
 
@@ -590,25 +599,75 @@
     padding: 16px 24px;
 }
 
-.screen-and-screenshot-menu-item {
-    display: flex;
-    justify-content: space-between;
-    flex: 1;
-    .shortcut-keys {
-        font-size: 12px;
-        color: var(--yakit-disable-text-color);
-    }
-    &:hover {
-        color: #ffffff;
-        .shortcut-keys {
-            color: #ffffff;
+:global {
+    .user-dropdown-menu-box {
+        border: 1px solid #eaecf3;
+        box-shadow: 0px 2px 4px rgb(133 137 158 / 20%);
+        border-radius: 4px;
+        .ant-dropdown-menu {
+            padding: 0;
+            .ant-dropdown-menu-item {
+                padding: 0;
+                .ant-dropdown-menu-title-content:not(:has(div)) {
+                    padding: 6px 24px;
+                    color: #31343f;
+                    font-size: 12px;
+                    margin: 0 4px;
+                    border-radius: 4px;
+                    &:hover {
+                        color: #fff;
+                        background-color: var(--yakit-primary-5);
+                    }
+                }
+            }
         }
     }
 }
 
-.stop-screen-menu-item {
-    color: var(--yakit-danger-5);
-    &:hover {
+.login-out-component {
+    height: 28px;
+    background: #f8f8f8;
+    text-align: center;
+    border: 1px solid #eaecf3;
+    color: #f7544a;
+    font-size: 12px;
+    line-height: 24px;
+}
+
+.judge-avatar {
+    display: flex;
+    flex-direction: row;
+    // border: 1px solid var(--yakit-primary-5);
+    // border-radius: 14px;
+    cursor: pointer;
+    &-avatar {
+        background-color: var(--yakit-primary-5);
+        color: #ffffff;
+        position: relative;
+        top: -2px;
+        left: 2px;
+    }
+    &-text {
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 20px;
+        // color: #FFFFFF;
+        color: var(--yakit-primary-5);
+        margin-left: 4px;
+        padding-right: 6px;
+    }
+}
+.judge-avatar-connect{
+        border: 1px solid var(--yakit-primary-5);
+    border-radius: 14px;
+}
+.judge-avatar-active {
+    background-color: var(--yakit-primary-5);
+    &-avatar {
+        background-color: #ffffff;
+        color: var(--yakit-primary-5);
+    }
+    &-text {
         color: #ffffff;
     }
 }

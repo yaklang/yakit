@@ -10,6 +10,7 @@ const {
     initLocalCache,
     setCloeseExtraLocalCache,
 } = require("./localCache")
+const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
 const { engineLog } = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
@@ -68,42 +69,10 @@ const createWindow = () => {
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
 
-    win.on("close", (e) => {
+    win.on("close", async(e) => {
         e.preventDefault()
-
-        if (closeFlag) {
-            dialog
-                .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
-                    type: "none",
-                    title: "提示",
-                    defaultId: 0,
-                    cancelId: 3,
-                    message: "确定要关闭吗？",
-                    buttons: ["最小化", "直接退出"],
-                    checkboxLabel: "不再展示关闭二次确认？",
-                    checkboxChecked: false,
-                    noLink: true
-                })
-                .then(async(res) => {
-                    await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
-                    if (res.response === 0) {
-                        e.preventDefault()
-                        win.minimize()
-                    } else if (res.response === 1) {
-                        win = null
-                        clearing()
-                        app.exit()
-                    } else {
-                        e.preventDefault()
-                        return
-                    }
-                })
-        } else {
-            win = null
-            clearing()
-            app.exit()
-        }
+        // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
+        win.webContents.send("close-windows-renderer")
     })
     win.on("minimize", (e) => {
         win.webContents.send("refresh-token")
@@ -140,6 +109,45 @@ app.whenReady().then(() => {
                 screenshots.endCapture()
                 globalShortcut.unregister("esc")
             })
+        })
+
+        ipcMain.handle("app-exit", async (e, params) => {
+            if (closeFlag) {
+            dialog
+                .showMessageBox(win, {
+                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
+                    type: "none",
+                    title: "提示",
+                    defaultId: 0,
+                    cancelId: 3,
+                    message: "确定要关闭吗？",
+                    buttons: ["最小化", "直接退出"],
+                    checkboxLabel: "不再展示关闭二次确认？",
+                    checkboxChecked: false,
+                    noLink: true
+                })
+                .then(async(res) => {
+                    await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
+                    await asyncKillDynamicControl()
+                    if (res.response === 0) {
+                        e.preventDefault()
+                        win.minimize()
+                    } else if (res.response === 1) {
+                        win = null
+                        clearing()
+                        app.exit()
+                    } else {
+                        e.preventDefault()
+                        return
+                    }
+                })
+        } else {
+            // close时关掉远程控制
+            await asyncKillDynamicControl()
+            win = null
+            clearing()
+            app.exit()
+        }
         })
 
         globalShortcut.register("Control+Shift+b", () => {

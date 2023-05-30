@@ -49,6 +49,7 @@
     "form-data": "^4.0.0",
     "fs-extra": "11.1.1",
     "google-protobuf": "^3.17.3",
+    "js-base64": "^3.7.5",
     "node-stream-zip": "^1.15.0",
     "node-xlsx": "^0.21.0",
     "numeral": "^2.0.6",

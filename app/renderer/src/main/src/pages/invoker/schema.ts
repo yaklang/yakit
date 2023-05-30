@@ -120,6 +120,7 @@ export interface YakScript {
     OnlineBaseUrl?: string
     BaseOnlineId?: number
     OnlineOfficial?: boolean
+    OnlineGroup?: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>

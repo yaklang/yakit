@@ -2417,6 +2417,7 @@ message YakScript {
   string OnlineBaseUrl = 26;
   int64  BaseOnlineId = 27;
   bool OnlineOfficial = 28;
+  string OnlineGroup = 29;
 }
 
 message GetYakScriptTagsAndTypeResponse {

@@ -6,7 +6,7 @@ import {} from "@ant-design/icons"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {loginOut, refreshToken} from "@/utils/login"
-import {UserInfoProps} from "@/store"
+import {UserInfoProps, yakitDynamicStatus} from "@/store"
 const {ipcRenderer} = window.require("electron")
 
 export interface SetPasswordProps {
@@ -25,6 +25,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
     const {userInfo,onCancel} = props
     const {getFieldValue} = form;
     const [loading, setLoading] = useState<boolean>(false)
+    const {dynamicStatus} = yakitDynamicStatus()
     const onFinish = useMemoizedFn((values:API.UpUserInfoRequest) => {
         console.log("values",values)
         const {old_pwd,pwd,confirm_pwd} = values
@@ -45,7 +46,12 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                     if(result.ok){
                         success("密码修改成功")
                         onCancel()
-                        loginOut(userInfo)
+                        if(dynamicStatus.isDynamicStatus){
+                            ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:true})
+                        }
+                        else{
+                          loginOut(userInfo)  
+                        }
                     }
                 })
                 .catch((err) => {
