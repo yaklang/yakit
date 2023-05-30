@@ -942,18 +942,28 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 />
                                 <div className={styles["header-right"]}>
                                     {stopScreen}
-                                    <div
-                                        className={styles["ui-op-btn-wrapper"]}
-                                        onClick={() =>
-                                            ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
-                                        }
+                                    <YakitPopover
+                                        overlayClassName={classNames(
+                                            styles["ui-op-dropdown"],
+                                            styles["ui-op-setting-dropdown"]
+                                        )}
+                                        placement={"bottom"}
+                                        content={menu}
+                                        onVisibleChange={(visible) => setShow(visible)}
                                     >
-                                        <div className={styles["op-btn-body"]}>
-                                            <Tooltip placement='bottom' title='官方网站'>
-                                                <HelpSvgIcon style={{fontSize: 20}} className={styles["icon-style"]} />
-                                            </Tooltip>
+                                        <div className={styles["ui-op-btn-wrapper"]}>
+                                            <div
+                                                className={classNames(styles["op-btn-body"], {
+                                                    [styles["op-btn-body-hover"]]: show
+                                                })}
+                                            >
+                                                <HelpSvgIcon
+                                                    style={{fontSize: 20}}
+                                                    className={show ? styles["icon-hover-style"] : styles["icon-style"]}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
+                                    </YakitPopover>
 
                                     {engineLink && (
                                         <>
