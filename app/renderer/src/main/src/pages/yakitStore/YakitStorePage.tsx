@@ -3128,6 +3128,8 @@ export interface DownloadOnlinePluginByTokenRequest {
     UserName?: string
     UserId?: number
     TimeSearch?: string
+    Group?: string
+    Tags?: string
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
@@ -3180,7 +3182,9 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     IsPrivate: query?.is_private,
                     UserId: query?.user_id,
                     UserName: query?.user_name,
-                    TimeSearch: query?.time_search
+                    TimeSearch: query?.time_search,
+                    Group: query?.group,
+                    Tags: query?.tags
                 }
             }
 
