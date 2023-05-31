@@ -414,7 +414,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             else{
                                                 setStoreUserInfo(defaultUserInfo)
                                                 loginOut(userInfo)
-                                                setTimeout(() => success("已成功退出账号"), 500)  
+                                                setTimeout(() => success("已成功退出账号"), 500)
                                             }
                                         }
                                         if (key === "trust-list") {

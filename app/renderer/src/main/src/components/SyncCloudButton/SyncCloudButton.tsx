@@ -396,15 +396,14 @@ export const SyncCloudProgress: React.FC<SyncCloudProgressProps> = (props) => {
             title="上传进度"
         >
             <div className={styles['sync-cloud-progress']}>
-                
-            <Progress size='small' percent={progress} />
+                <Progress size='small' percent={progress} />
+                <div className='yakit-single-line-ellipsis'>{nowPligin}</div>
                 <div className={styles['btn-box']}>
                     <Button type='primary' onClick={() => onCancle()}>
                         取消上传
                     </Button>
                 </div>
             </div>
-            <div className='yakit-single-line-ellipsis'>{nowPligin}</div>
         </Modal>
     )
 }

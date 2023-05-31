@@ -309,7 +309,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             size='large'
                             type='primary'
                             htmlType='submit'
-                            style={{width: 165, display: "flex", justifyContent: "center"}}
+                            style={{width: 165, display: "flex", justifyContent: "center",marginLeft:skipShow?0:43}}
                             loading={loading}
                         >
                             登录

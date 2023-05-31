@@ -1247,7 +1247,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         for (let index = 0; index < length; index++) {
             if (!StopUpload.current) {
                 const element = realSelectedRowKeysRecordLocal[index]
-                const res = await upOnline(element, type)
+                const res = await adminUpOnline(element, type, baseUrl, userInfo)
                 if (res) {
                     errList.push(res)
                 }
@@ -1276,49 +1276,6 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         }, 200)
     })
 
-    const upOnline = useMemoizedFn(async (params: YakScript, type: number) => {
-        const onlineParams: API.NewYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
-        if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
-            onlineParams.id = parseInt(`${params.OnlineId}`)
-        }
-        if(isEnterpriseEdition()&&params.OnlineGroup){
-            onlineParams.group = params.OnlineGroup
-        }
-        if (isCommunityEdition() && params.OnlineId) {
-            onlineParams.id = parseInt(`${params.OnlineId}`)
-        }
-        return new Promise((resolve) => {
-            NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
-                method: "post",
-                url:"yakit/plugin",
-                data: onlineParams
-            })
-                .then((res) => {
-                    resolve(false)
-                    // 上传后，先下载最新的然后删除本地旧的
-                    ipcRenderer
-                        .invoke("DownloadOnlinePluginById", {
-                            OnlineID: res.id,
-                            UUID: res.uuid
-                        } as DownloadOnlinePluginProps)
-                        .then((res) => {
-                            // ipcRenderer
-                            //     .invoke("delete-yak-script", params.Id)
-                            //     .then(() => {})
-                            //     .catch((err) => {
-                            //         failed("删除本地【" + params.ScriptName + "】失败:" + err)
-                            //     })
-                        })
-                })
-                .catch((err) => {
-                    const errObj = {
-                        script_name: params.ScriptName,
-                        err
-                    }
-                    resolve(errObj)
-                })
-        })
-    })
     const onSetUser = useMemoizedFn((item: PluginUserInfoLocalProps) => {
         setStatisticsQueryLocal({
             ...queryLocal,
@@ -4592,19 +4549,19 @@ const adminUpOnline = async (params: YakScript, type: number, baseUrl: string, u
             .then((res) => {
                 resolve(false)
                 // 上传后，先下载最新的然后删除本地旧的
-                ipcRenderer
-                    .invoke("DownloadOnlinePluginById", {
-                        OnlineID: res.id,
-                        UUID: res.uuid
-                    } as DownloadOnlinePluginProps)
-                    .then((res) => {
-                        ipcRenderer
-                            .invoke("delete-yak-script", params.Id)
-                            .then(() => {})
-                            .catch((err) => {
-                                failed("删除本地【" + params.ScriptName + "】失败:" + err)
-                            })
-                    })
+                // ipcRenderer
+                //     .invoke("DownloadOnlinePluginById", {
+                //         OnlineID: res.id,
+                //         UUID: res.uuid
+                //     } as DownloadOnlinePluginProps)
+                //     .then((res) => {
+                //         ipcRenderer
+                //             .invoke("delete-yak-script", params.Id)
+                //             .then(() => {})
+                //             .catch((err) => {
+                //                 failed("删除本地【" + params.ScriptName + "】失败:" + err)
+                //             })
+                //     })
             })
             .catch((err) => {
                 const errObj = {
@@ -4660,9 +4617,11 @@ export const AdminUpOnlineBatch: React.FC<AdminUpOnlineBatchProps> = (props) => 
                 const res = await adminUpOnline(element, 2, baseUrl, userInfo)
                 if (res) {
                     errList.push(res)
-                    const p = Math.floor((index / length) * 100)
-                    setPercent(p)
                 }
+
+                const p = Math.floor(((index+1) / length) * 100)
+                console.log("index000",index+1,length,p);
+                setPercent(p)
             }
 
             // if (errList.length > 0) {
