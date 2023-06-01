@@ -1608,3 +1608,15 @@ const SideBarOpen = () => (
 export const SideBarOpenIcon = (props: Partial<IconProps>) => {
     return <Icon component={SideBarOpen} {...props} />
 }
+const Resizer = () => (
+    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M0.646484 8.64941L1.00004 9.00297L9.00004 1.00297L8.64648 0.649414L0.646484 8.64941ZM5.00004 9.00297L9.00004 5.00297L8.64648 4.64941L4.64648 8.64941L5.00004 9.00297Z" fill="currentColor"/>
+    </svg>
+    
+)
+/**
+ * @description: Resizer 拖拽
+ */
+export const ResizerIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Resizer} {...props} />
+}

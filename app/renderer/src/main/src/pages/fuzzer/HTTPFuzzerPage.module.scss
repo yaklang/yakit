@@ -269,6 +269,95 @@
         padding: 8px 12px 0;
         border-bottom: 1px solid var(--yakit-border-color);
     }
+    .variable-plus-icon {
+        height: 12px;
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+    .variable-list {
+        color: var(--yakit-helper-text-color);
+        :global{
+            .ant-collapse-header{
+                height:24px;
+                padding: 0 12px;
+            }
+            .ant-collapse-header-text{
+                color: var(--yakit-body-text-color);
+            }
+            .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box{
+                padding-top: 4px;
+            }
+        }
+        .variable-list-panel{
+            border-bottom:0;
+            &:hover{
+                .variable-list-remove{
+                    display:flex;
+                }
+            }
+            .variable-list-remove{
+                display:none;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+                color:var(--yakit-helper-text-color);
+                border-radius: 4px;
+                &:hover{
+                    background: var(--yakit-card-background-color);
+                    color:var(--yakit-danger-5);
+                }
+            }
+        }
+        
+        .variable-item {
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            padding: 8px;
+            &:hover {
+                border-color: var(--yakit-primary-4);
+            }
+            &:focus-within {
+                border-color: var(--yakit-primary-5);
+                box-shadow: 0 0 2px 2px var(--yakit-primary-2);
+            }
+            input[type="text"]::placeholder,
+            textarea::placeholder {
+                color: var(--yakit-disable-text-color);
+                font-size: 12px;
+            }
+            textarea::-webkit-resizer {
+                background-color: transparent;
+            }
+            .variable-item-input {
+                border: 0;
+                border-bottom: 1px solid var(--yakit-border-color);
+                width: 100%;
+                outline: none;
+                outline: 0;
+            }
+            .variable-item-textarea-body{
+                position: relative;
+                .variable-item-textarea {
+                    border: 0;
+                    width: 100%;
+                    outline: none;
+                    outline: 0;
+                }
+                .resizer-icon{
+                    position: absolute;
+                    bottom: 6px;
+                    right: 0;
+                    color:var(--yakit-disable-text-color);
+                    z-index: 0;
+                    pointer-events: none;
+                }
+            }
+           
+        }
+    }
 }
 
 .http-fuzzer-hotPatch {
@@ -365,4 +454,11 @@
         content: ";";
         margin-right: 4px;
     }
+}
+
+.chevron-down-icon{
+    color:var(--yakit-body-text-color)
+}
+.chevron-right-icon{
+    color:var(--yakit-body-text-color)
 }

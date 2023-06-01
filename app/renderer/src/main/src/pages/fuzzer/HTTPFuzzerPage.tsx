@@ -1,5 +1,17 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider, Collapse, Tag} from "antd"
+import {
+    Form,
+    Modal,
+    notification,
+    Result,
+    Space,
+    Popover,
+    Tooltip,
+    Divider,
+    Collapse,
+    Tag,
+    FormListFieldData
+} from "antd"
 import {
     HTTP_PACKET_EDITOR_FONT_SIZE,
     HTTP_PACKET_EDITOR_Line_Breaks,
@@ -12,7 +24,7 @@ import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {failed, info, yakitFailed} from "../../utils/notification"
+import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
 import {useGetState, useInViewport, useMap, useMemoizedFn, useSize} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
@@ -38,11 +50,12 @@ import {
     FilterIcon,
     InformationCircleIcon,
     PaperAirplaneIcon,
+    PlusIcon,
     PlusSmIcon,
     SearchIcon,
     StopIcon,
     TrashIcon,
-    WrapIcon
+    ResizerIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
@@ -881,7 +894,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 isResponse={true}
                 noHex={true}
                 noHeader={true}
-                editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE"
+                editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE'
                 emptyOr={
                     !rsp?.Ok && (
                         <Result
@@ -1291,7 +1304,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
                     /** dnsConfig */
                     dnsServers: dnsServers,
-                    etcHosts: etcHosts
+                    etcHosts: etcHosts,
+                    // 设置变量
+                    params: [
+                        {
+                            Key: "",
+                            Value: ""
+                        }
+                    ]
                 }}
                 isHttps={isHttps}
                 isGmTLS={isGmTLS}
@@ -1592,7 +1612,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             noWordWrapState={noWordwrapFirstEditor}
                             fontSizeState={fontSizeFirstEditor}
                             showLineBreaksState={showLineBreaksFirstEditor}
-                            editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF"
+                            editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                         />
                     }
                     secondNode={
@@ -2071,7 +2091,14 @@ interface AdvancedConfigValueProps {
 
     // dns config
     dnsServers: string[]
-    etcHosts: { Key: string; Value: string }[]
+    etcHosts: {Key: string; Value: string}[]
+    // 设置变量
+    params: FuzzerParamItem[]
+}
+
+interface FuzzerParamItem {
+    Key: string
+    Value: string
 }
 
 interface HttpQueryAdvancedConfigProps {
@@ -2106,6 +2133,9 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
 
     const [proxyList, setProxyList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
+
+    const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
+    const [variableList, setVariableList] = useState<FuzzerParamItem[]>([])
 
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
@@ -2186,13 +2216,16 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         form.setFieldsValue({
             ...defAdvancedConfigValue
         })
+        setVariableList(defAdvancedConfigValue.params)
+
         ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
     }, [defAdvancedConfigValue])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
 
         onValuesChange({
-            ...newValue
+            ...newValue,
+            params: variableList
         })
     })
     /**
@@ -2438,7 +2471,12 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         <Form.Item label='重试次数' name='maxRetryTimes'>
                             <YakitInputNumber type='horizontal' size='small' min={0}/>
                         </Form.Item>
-                        <Collapse ghost activeKey={retryActive} onChange={(e) => setRetryActive(e as string[])}>
+                        <Collapse
+                            ghost
+                            activeKey={retryActive}
+                            onChange={(e) => setRetryActive(e as string[])}
+                            expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                        >
                             <Panel
                                 header={
                                     <Form.Item name='retrying' noStyle valuePropName='checked'>
@@ -2573,7 +2611,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                         {/*    </Panel>*/}
                         {/*</Collapse>*/}
                     </Panel>
-                    <Panel
+                    {/* <Panel
                         header='过滤配置(丢包)'
                         key='过滤配置'
                         extra={
@@ -2642,7 +2680,6 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             <YakitInput placeholder='Login,登录成功' size='small'/>
                         </Form.Item>
                         <Form.Item label='响应大小'>
-                            {/* className='yakit-input-group' */}
                             <Form.Item
                                 name='minBodySize'
                                 noStyle
@@ -2663,7 +2700,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 <YakitInput prefix='Max' size='small'/>
                             </Form.Item>
                         </Form.Item>
-                    </Panel>
+                    </Panel> */}
                     <Panel
                         header={"DNS配置"}
                         key={"DNS配置"}
@@ -2737,6 +2774,105 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                             </Space>
                         </Form.Item>
                     </Panel>
+                    <Panel
+                        header='设置变量'
+                        key='设置变量'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    className='button-text-danger'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const restValue = {
+                                            params: [
+                                                {
+                                                    Key: "",
+                                                    Value: ""
+                                                }
+                                            ]
+                                        }
+                                        const v = form.getFieldsValue()
+                                        onSetValue({
+                                            ...v,
+                                            ...restValue
+                                        })
+                                    }}
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton type='text'>预览</YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const index = variableList.findIndex((ele) => !ele.Key && !ele.Value)
+                                        if (index === -1) {
+                                            setVariableList([
+                                                ...variableList,
+                                                {
+                                                    Key: "",
+                                                    Value: ""
+                                                }
+                                            ])
+                                            setVariableActiveKey([
+                                                ...(variableActiveKey || []),
+                                                `${variableActiveKey.length}`
+                                            ])
+                                        } else {
+                                            yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
+                                        }
+                                    }}
+                                >
+                                    添加
+                                    <PlusIcon className={styles["variable-plus-icon"]} />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <Collapse
+                            ghost
+                            activeKey={variableActiveKey}
+                            onChange={(key) => setVariableActiveKey(key as string[])}
+                            expandIcon={(e) =>
+                                e.isActive ? (
+                                    <ChevronDownIcon className={styles["chevron-down-icon"]} />
+                                ) : (
+                                    <ChevronRightIcon className={styles["chevron-right-icon"]} />
+                                )
+                            }
+                            className={styles["variable-list"]}
+                        >
+                            {variableList.map((item, index) => (
+                                <Panel
+                                    key={`${index}`}
+                                    header={`变量${index}`}
+                                    className={styles["variable-list-panel"]}
+                                    extra={
+                                        <TrashIcon
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                variableList.splice(index, 1)
+                                                setVariableList([...variableList])
+                                            }}
+                                            className={styles["variable-list-remove"]}
+                                        />
+                                    }
+                                >
+                                    <SetVariableItem
+                                        index={index}
+                                        item={item}
+                                        onSetValue={(val, number) => {
+                                            variableList[number] = val
+                                            setVariableList([...variableList])
+                                        }}
+                                    />
+                                </Panel>
+                            ))}
+                        </Collapse>
+                    </Panel>
                 </Collapse>
             </Form>
         </div>
@@ -2783,6 +2919,52 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
             {Number(rsp.FirstByteDurationMs) > 0 ? <span>响应时间:{rsp.FirstByteDurationMs}ms</span> : ""}
             {Number(rsp.TotalDurationMs) > 0 ? <span>总耗时:{rsp.TotalDurationMs}ms</span> : ""}
             {rsp.Url && <span>URL:{rsp.Url.length > 30 ? rsp.Url.substring(0, 30) + "..." : rsp.Url}</span>}
+        </div>
+    )
+})
+
+interface SetVariableItemProps {
+    index: number
+    item: FuzzerParamItem
+    onSetValue: (f: FuzzerParamItem, i: number) => void
+}
+const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
+    const {index, item, onSetValue} = props
+    return (
+        <div className={styles["variable-item"]}>
+            <input
+                value={item.Key}
+                onChange={(e) => {
+                    onSetValue(
+                        {
+                            ...item,
+                            Key: e.target.value
+                        },
+                        index
+                    )
+                }}
+                type='text'
+                placeholder='变量名'
+                className={styles["variable-item-input"]}
+            />
+            <div className={styles["variable-item-textarea-body"]}>
+                <textarea
+                    value={item.Value}
+                    onChange={(e) => {
+                        onSetValue(
+                            {
+                                ...item,
+                                Value: e.target.value
+                            },
+                            index
+                        )
+                    }}
+                    rows={3}
+                    placeholder='变量值'
+                    className={styles["variable-item-textarea"]}
+                />
+                <ResizerIcon className={styles["resizer-icon"]} />
+            </div>
         </div>
     )
 })
