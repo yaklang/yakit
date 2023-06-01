@@ -2542,6 +2542,7 @@ message HTTPResponseMatcher {
 message RenderVariablesRequest {
   repeated KVPair Params = 1;
   bool IsHTTPS = 2;
+  bool IsGmTLS = 3;
   bytes HTTPRequest = 5;
   bytes HTTPResponse = 4;
 }
@@ -2603,6 +2604,7 @@ message FuzzerRequest {
   repeated FuzzerParamItem Params = 2;
   int64 Concurrent = 3;
   bool IsHTTPS = 4;
+  bool IsGmTLS = 35;
   bool ForceFuzz = 5;
   string Proxy = 6;
   double PerRequestTimeoutSeconds = 7;
