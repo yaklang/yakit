@@ -46,6 +46,7 @@ import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
 import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage";
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
+import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect";
 import {
@@ -196,6 +197,7 @@ export enum Route {
     LicenseAdminPage = "license-admin-page", // license管理
     TrustListPage = "trust-list-admin-page", // 信任用户管理
     PlugInAdminPage = "plug-in-admin-page", // 插件权限管理
+    ControlAdminPage = "control-admin-page", // 远程管理
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output",
 
@@ -456,7 +458,9 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         case Route.TrustListPage:
             return <TrustListPage/>
         case Route.PlugInAdminPage:
-            return <PlugInAdminPage/>
+            return <PlugInAdminPage />
+        case Route.ControlAdminPage:
+            return <ControlAdminPage />
         case Route.AttachEngineCombinedOutput:
             return <EngineConsole/>
         case Route.DB_ChaosMaker:
@@ -797,6 +801,13 @@ export const HiddenMenuData: MenuDataProps[] = [
         id: "Route.NewHome",
         key: Route.NewHome,
         label: "首页",
+        disabled: true,
+        hidden: true
+    },
+    {
+        id: "Route.ControlAdminPage",
+        key: Route.ControlAdminPage,
+        label: "远程管理",
         disabled: true,
         hidden: true
     }

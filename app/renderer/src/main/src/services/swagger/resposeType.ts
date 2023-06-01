@@ -295,6 +295,49 @@ export declare namespace API {
     risk_created_at: number;
     hash: string;
   }
+  export interface RemoteTunnelResponse {
+    server: string;
+    secret: string;
+    gen_tls_crt: string;
+  }
+  export interface RemoteStatusResponse {
+    status: boolean;
+    /**
+     * 控制端人员
+     */
+    user_name: string;
+  }
+  export interface RemoteResponse extends Paging {
+    data: RemoteLists[];
+  }
+  export interface RemoteOperationResponseData {
+    port: number;
+    note: string;
+    id: string;
+    auth: string;
+    host: string;
+  }
+  export interface RemoteOperationResponse {
+    data: RemoteOperationResponseData[];
+  }
+  export interface RemoteOperationRequest {
+    tunnel: string;
+    addr: string;
+    auth: string;
+    note: string;
+    /**
+     * true 连接, false 断开连接
+     */
+    status: boolean;
+  }
+  export interface RemoteLists extends GormBaseModel, RemoteList {}
+  export interface RemoteList {
+    hash: string;
+    addr: string;
+    status: boolean;
+    user_name: string;
+    head_img: string;
+  }
   export interface Principle {
     user: string;
     role: string;
@@ -457,6 +500,7 @@ export declare namespace API {
      * 复制插件id
      */
     base_plugin_id?: number;
+    group?: string;
   }
   export interface NewUrmResponse {
     user_name: string;
@@ -521,6 +565,12 @@ export declare namespace API {
     waiting_verified?: boolean;
     severity?: string;
     user_name?: string;
+  }
+  export interface GetRemoteWhere {
+    user_name?: string;
+    start_time?: number;
+    end_time?: number;
+    status?: string;
   }
   export interface GetPluginWhere {
     keywords?: string;

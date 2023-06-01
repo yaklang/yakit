@@ -80,7 +80,19 @@
 }
 
 .dropdown-menu-user-info {
+    padding: 16px;
     display: flex;
+    &::after{
+        content: "";
+        height: 1px;
+        width: calc(100% - 32px);
+        background-color: #eaecf3;
+        position: absolute;
+        bottom: 0px;
+    }
+    &:hover{
+        background-color: #f5f5f5;
+    }
     .author-upload-dragger {
         border: transparent;
         background-color: transparent;
@@ -119,10 +131,25 @@
     }
     .content-box {
         min-width: 80px;
-        margin-left: 12px;
+        margin-left: 8px;
+        .user-name {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 20px;
+            color: #31343f;
+            margin-bottom: 2px;
+        }
+        .user-admin-icon{
+            position: relative;
+            top: 2px;
+        }
         .permission-show {
+            font-weight: 400;
+            line-height: 16px;
             font-size: 12px;
-            color: gray;
+            color: #85899e;
+            display: inline-block;
+            padding-right: 4px;
         }
     }
 }

@@ -281,7 +281,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                         try {
                             const risk = JSON.parse(info.data) as Risk;
                             if (!!risk.RiskType) {
-                                const cacheJsonRisks = [risk,...getJsonRisks()].slice(0,10)
+                                const cacheJsonRisks = [risk,...getJsonRisks()]
                                 setJsonRisks(cacheJsonRisks)
                             }
                         } catch (e) {
@@ -370,7 +370,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
                                 setTableContentHeight(height - 4)
                             }}
                             handleWidth={true} handleHeight={true} refreshMode={"debounce"} refreshRate={50}/>
-                        <RisksViewer risks={jsonRisks} tableContentHeight={tableContentHeight}/>
+                        <RisksViewer risks={jsonRisks.slice(0,10)} tableContentHeight={tableContentHeight}/>
                     </div>
                 </Tabs.TabPane>
             </Tabs>

@@ -24,7 +24,7 @@ import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
 import {addToTab, MainTabs} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
-import {UserInfoProps, useStore} from "@/store"
+import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import "./main.scss"
@@ -36,8 +36,11 @@ import {API} from "@/services/swagger/resposeType"
 import {globalUserLogin, isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {LocalGV} from "@/yakitGV"
+import {EnterpriseLoginInfoIcon} from "@/assets/icons"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
+import { ControlOperation } from "@/pages/dynamicControl/DynamicControl";
+import {YakitHintModal} from "@/components/yakitUI/YakitHint/YakitHintModal"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscribe"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -95,6 +98,8 @@ const singletonRoute: Route[] = [
 
     // 录屏
     Route.ScreenRecorderPage,
+    // 远程管理
+    Route.ControlAdminPage,
     // Matcher n Extractor
     Route.Beta_MatcherExtractorPage,
 ]
@@ -202,20 +207,23 @@ export interface MenuItemType {
     disabled?: boolean
 }
 
-export interface SetUserInfoProp {
-    userInfo: UserInfoProps
-    setStoreUserInfo: (info: any) => void
-}
 
-export const judgeAvatar = (userInfo) => {
+export const judgeAvatar = (userInfo,size:number,avatarColor:string) => {
     const {companyHeadImg, companyName} = userInfo
+
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={24} style={{cursor: "pointer"}} src={companyHeadImg} />
+        <Avatar size={size} style={{cursor: "pointer"}} src={companyHeadImg}/>
     ) : (
-        <Avatar size={24} style={{backgroundColor: "rgb(245, 106, 0)", cursor: "pointer"}}>
+        <Avatar size={size} style={{backgroundColor: avatarColor, cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
         </Avatar>
     )
+}
+
+export interface SetUserInfoProp {
+    userInfo: UserInfoProps
+    setStoreUserInfo: (info: any) => void
+    avatarColor: string
 }
 
 // 可上传文件类型
@@ -223,7 +231,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const {userInfo, setStoreUserInfo} = props
+    const {userInfo, setStoreUserInfo,avatarColor} = props
 
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
@@ -299,8 +307,8 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 }}
             >
                 <div className='img-box'>
-                    <div className='img-box-mask'>{judgeAvatar(userInfo)}</div>
-                    <CameraOutlined className='hover-icon' />
+                    <div className='img-box-mask'>{judgeAvatar(userInfo,40,avatarColor)}</div>
+                    <CameraOutlined className='hover-icon'/>
                 </div>
             </Upload.Dragger>
 
@@ -313,7 +321,9 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 }
             >
                 <div className='user-name'>{userInfo.companyName}</div>
-                {userInfo.role === "admin" && <div className='permission-show'>管理员</div>}
+                {userInfo.role === "admin" && <><div className='permission-show'>管理员
+                
+                </div><span className='user-admin-icon'><EnterpriseLoginInfoIcon/></span></>}
             </div>
         </div>
     )
@@ -370,10 +380,59 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // 系统类型
     const [system, setSystem] = useState<string>("")
 
+    // 远程控制浮层
+    const [controlShow,setControlShow] = useState<boolean>(false)
+    const [controlName,setControlName] = useState<string>("")
+    const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
+
     // 是否展示console
     const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
+    // 定时器监听是否连接/断开
+    useEffect(()=>{
+        const id = setInterval(()=>{
+            // 当服务启动时 请求接口
+            ipcRenderer.invoke("alive-dynamic-control-status").then((is:boolean) => {
+                if(is){
+                    getRemoteValue("REMOTE_OPERATION_ID").then((tunnel) => {
+                        if(!!tunnel){
+                            NetWorkApi<any, API.RemoteStatusResponse>({
+                                method: "get",
+                                url: "remote/status",
+                                params: {
+                                    tunnel
+                                }
+                            })
+                            .then((res) => {
+                                if(res.status){
+                                    setDynamicStatus({...dynamicStatus,isDynamicSelfStatus:true})
+                                    setControlShow(true)
+                                    setControlName(res.user_name||"")
+                                }
+                                else{
+                                    setDynamicStatus({...dynamicStatus,isDynamicSelfStatus:false})
+                                    setControlShow(false)
+                                }
+                            })
+                        }
+                    })
+                }
+                else{
+                    setControlShow(false)
+                }
+            })
+        },15000)
+        // 退出远程控制中页面
+        ipcRenderer.on("lougin-out-dynamic-control-page-callback", async () => {
+            setControlShow(false)
+        })
+
+        return () => {
+            clearInterval(id)
+            ipcRenderer.removeAllListeners("lougin-out-dynamic-control-page-callback")
+        }
+    },[])
 
     useEffect(() => {
         if (isEnpriTraceAgent()) {
@@ -777,6 +836,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 removePage(Route.AccountAdminPage)
                 removePage(Route.RoleAdminPage)
                 removePage(Route.HoleCollectPage)
+                removePage(Route.ControlAdminPage)
             } else {
                 removePage(Route.LicenseAdminPage)
                 removePage(Route.TrustListPage)
@@ -1303,7 +1363,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         menuAddPage(key as Route)
     })
     return (
-        <Layout className='yakit-main-layout'>
+        <>
+        <Layout className='yakit-main-layout' style={controlShow?{display:"none"}:{}}>
             <AutoSpin spinning={loading}>
                 {isShowCustomizeMenu && (
                     <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
@@ -1527,6 +1588,22 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
             </Modal>
         </Layout>
+        {controlShow&&<ControlOperation controlName={controlName}/>}
+        <YakitHintModal
+                visible={false}
+                title='收到远程连接请求'
+                content={
+                    <div>
+                        用户 <span style={{color: "#F28B44"}}>Alex-null</span>{" "}
+                        正在向你发起远程连接请求，是否同意对方连接？
+                    </div>
+                }
+                cancelButtonText='拒绝'
+                okButtonText='同意'
+                onOk={()=>{}}
+                onCancel={()=>{}}
+            />
+        </>
     )
 })
 

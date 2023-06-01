@@ -24,10 +24,10 @@ import {
     YakitSystem,
     YaklangEngineMode
 } from "@/yakitGVDefine"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success,warn} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
-import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
+import {EngineModeVerbose, YakitLoading,YakitControlLoading} from "../basics/YakitLoading"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
@@ -56,6 +56,9 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 import {useScreenRecorder} from "@/store/screenRecorder"
+import { ResultObjProps, remoteOperation } from "@/pages/dynamicControl/DynamicControl"
+
+import {useStore, yakitDynamicStatus} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -94,6 +97,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [localPort, setLocalPort] = useState<number>(0)
     const [adminPort, setAdminPort] = useState<number>(0)
     const [keepalive, setKeepalive] = useState<boolean>(false)
+
+    /** 自动远程模式 */
+    const [runRemote,setRunRemote] = useState<boolean>(false)
 
     /** 内置引擎版本 */
     const [buildInEngineVersion, setBuildInEngineVersion] = useState("")
@@ -428,6 +434,60 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
+    const {dynamicStatus,setDynamicStatus} = yakitDynamicStatus()
+    const {userInfo} = useStore()
+
+    useEffect(()=>{
+        // 监听退出远程控制
+        ipcRenderer.on("login-out-dynamic-control-callback", async (params) => {
+            if(dynamicStatus.isDynamicStatus){
+                changeEngineMode("local")
+                setDynamicStatus({...dynamicStatus,isDynamicStatus:false})
+                await remoteOperation(false,dynamicStatus,userInfo)
+                // 是否退出登录
+                if(params?.loginOut){
+                    ipcRenderer.send("ipc-sign-out")
+                }
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("login-out-dynamic-control-callback")
+        }
+    },[dynamicStatus.isDynamicStatus])
+    /** yaklang远程控制-自动远程模式连接 */
+    const runControlRemote = useMemoizedFn((v:string,baseUrl:string)=>{
+        try {
+            const resultObj: ResultObjProps = JSON.parse(v)
+            console.log("runControlRemote",resultObj,baseUrl)
+        
+        // 缓存远程控制参数
+        setDynamicStatus({...dynamicStatus,baseUrl,...resultObj})
+        ipcRenderer
+        .invoke("Codec", {Type: "base64-decode", Text: resultObj.pubpem, Params: [], ScriptName: ""})
+        .then((res) => {
+            setYakitStatus("control-remote")
+            cacheYakitStatus.current = "control-remote"
+            setRunRemote(true)
+            setKeepalive(false)
+            setEngineLink(false)
+
+            setCredential({
+                Host: resultObj.host,
+                IsTLS: true,
+                Password: resultObj.secret,
+                PemBytes: StringToUint8Array(res?.Result || ""),
+                Port: resultObj.port,
+                Mode: "remote"
+            })
+        })
+        .catch((err) => {
+            warn(`Base64 解码失败:${err}`)
+        })
+        } catch (error) {
+            warn(`解析失败:${error}`)
+        }
+    })
+
     const [remoteConnectLoading, setRemoteConnectLoading] = useState(false)
     /** 连接远程模式引擎的内容 */
     const connectRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
@@ -458,6 +518,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
         setRemoteConnectLoading(true)
         ipcRenderer.invoke("engine-ready-link")
+        setTimeout(() => {
+            setRemoteConnectLoading(false)
+        }, 300)
+    })
+
+    /** yaklang远程控制 - 自动连接远程模式引擎的内容 */
+    const connectControlRemoteEngine = useMemoizedFn(() => {
+        setRemoteConnectLoading(true)
+        ipcRenderer.invoke("engine-ready-link",true)
         setTimeout(() => {
             setRemoteConnectLoading(false)
         }, 300)
@@ -757,11 +826,23 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (cacheYakitStatus.current === "link") {
                     setYakitStatus("error")
                 }
+                // 远程控制异常退出
+                if(dynamicStatus.isDynamicStatus){
+                    setDynamicStatus({...dynamicStatus,isDynamicStatus:false})
+                    changeEngineMode("local")
+                    remoteOperation(false,dynamicStatus,userInfo)
+                }
             }
         } else {
             setEngineLink(false)
             if (cacheYakitStatus.current === "link") {
                 setYakitStatus("error")
+            }
+            // 远程控制异常退出
+            if(dynamicStatus.isDynamicStatus){
+                setDynamicStatus({...dynamicStatus,isDynamicStatus:false})
+                changeEngineMode("local")
+                remoteOperation(false,dynamicStatus,userInfo)
             }
         }
     })
@@ -878,6 +959,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         onReady={onReady}
                         onFailed={onFailed}
                         onAdminPort={onAdminPort}
+                        // 远程控制加载页面是否显示
+                        setRunRemote={setRunRemote}
                     />
                     <div id='yakit-header' className={styles["ui-layout-header"]}>
                         {system === "Darwin" ? (
@@ -888,7 +971,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
+                                    Yakit-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
                                 </div>
 
                                 <div className={styles["header-left"]}>
@@ -962,6 +1045,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 engineMode={engineMode || "remote"}
                                                 isRemoteMode={engineMode === "remote"}
                                                 onEngineModeChange={changeEngineMode}
+                                                runDynamicControlRemote={runControlRemote}
                                                 typeCallback={typeCallback}
                                                 showProjectManage={linkDatabase}
                                                 system={system}
@@ -984,7 +1068,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    Yakit-{`${EngineModeVerbose(engineMode || "local")}`}
+                                    Yakit-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
                                 </div>
 
                                 <div className={styles["header-left"]}>
@@ -1024,6 +1108,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     engineMode={engineMode || "remote"}
                                                     isRemoteMode={engineMode === "remote"}
                                                     onEngineModeChange={changeEngineMode}
+                                                    runDynamicControlRemote={runControlRemote}
                                                     typeCallback={typeCallback}
                                                     showProjectManage={linkDatabase}
                                                     system={system}
@@ -1119,9 +1204,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 onEngineModeChange={changeEngineMode}
                                 showEngineLog={showEngineLog}
                                 setShowEngineLog={setShowEngineLog}
+                                connectControl={connectControlRemoteEngine}
+                                setRunRemote={setRunRemote}
                             />
                         )}
-                        {!engineLink && isRemoteEngine && (
+
+                        {/* {runRemote&&<YakitControlLoading localPort={localPort} 
+                        onSubmit={connectControlRemoteEngine}
+                        onEngineModeChange={(mode)=>{
+                            setRunRemote(false)
+                            changeEngineMode(mode)
+                        }}/>} */}
+
+                        {!engineLink && isRemoteEngine && !runRemote && (
                             <RemoteYaklangEngine
                                 loading={remoteConnectLoading}
                                 onSubmit={connectRemoteEngine}
@@ -1231,7 +1326,7 @@ interface RemoteYaklangEngineProps {
 }
 
 /** @name 远程连接配置参数 */
-interface RemoteLinkInfo {
+export interface RemoteLinkInfo {
     /** 是否保存为历史连接 */
     allowSave: boolean
     /** 历史连接名称 */

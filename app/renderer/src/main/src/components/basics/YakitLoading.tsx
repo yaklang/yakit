@@ -17,6 +17,8 @@ import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
 import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
 import {isCommunityEdition} from "@/utils/envfile"
+import { RemoteLinkInfo } from "../layout/UILayout"
+import { DynamicStatusProps } from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -44,7 +46,10 @@ const LoadingTitle: string[] = [
     "你的鼠标，掌控世界！——Chelth"
 ]
 
-export const EngineModeVerbose = (m: YaklangEngineMode) => {
+export const EngineModeVerbose = (m: YaklangEngineMode,n?:DynamicStatusProps) => {
+    if(n&&n.isDynamicStatus){
+        return "控制模式"
+    }
     switch (m) {
         // case "admin":
         //     return "管理权限"
@@ -79,6 +84,9 @@ export interface YakitLoadingProp {
     onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
     showEngineLog: boolean
     setShowEngineLog: (flag: boolean) => any
+
+    connectControl: () => any
+    setRunRemote:(v:boolean) => void
 }
 
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
@@ -95,7 +103,9 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         setLatestYaklang,
         showEngineLog,
         setShowEngineLog,
-        onEngineModeChange
+        onEngineModeChange,
+        connectControl,
+        setRunRemote
     } = props
 
     const [restartLoading, setRestartLoading] = useState<boolean>(false)
@@ -317,6 +327,37 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         )
     }, [engineMode])
 
+    const [isRefresh,setRefresh] = useState<boolean>(false)
+    useEffect(()=>{
+        // 自动远程连接
+        if(yakitStatus === "control-remote"){
+           connectControl() 
+        }
+    },[isRefresh])
+
+    const refresh = () => {
+        setRefresh(!isRefresh)
+    }
+
+    const goBack = () => {
+        ipcRenderer
+        .invoke("start-local-yaklang-engine", {
+            port: props.localPort,
+            sudo: false
+        })
+        .then(() => {
+            outputToWelcomeConsole("手动引擎启动成功！")
+            if (onEngineModeChange) {
+                onEngineModeChange("local", true)
+                setRunRemote(false)
+            }
+        })
+        .catch((e) => {
+            outputToWelcomeConsole("手动引擎启动失败！")
+            outputToWelcomeConsole(`失败原因:${e}`)
+        })
+    }
+
     const hintTitle = useMemo(() => {
         if (loading) {
             return <div className={styles["time-wait-title"]}>软件加载中 ...</div>
@@ -359,6 +400,16 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }, [yakitStatus, loading, __engineReady, readyTime.current, __showLog, logTime.current])
 
     const btns = useMemo(() => {
+        if(yakitStatus === "control-remote"){
+            return <>
+                <YakitButton className={styles["btn-style"]} size='max' onClick={refresh}>
+                    刷新
+                </YakitButton>
+                <YakitButton className={styles["btn-style"]} type='outline2' size='max' onClick={goBack}>
+                    返回
+                </YakitButton>
+            </>
+        }
         if (yakitStatus === "ready") {
             if (__engineReady > 0) {
                 return (
@@ -510,13 +561,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
     /** 加载页随机宣传语 */
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
-
+    /** Title */
+    const Title = useMemo(() => yakitStatus==="control-remote"?"远程控制中 ...":"欢迎使用 Yakit", [])
+    
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
                 <div className={styles["body-content"]}>
                     <div className={styles["yakit-loading-title"]}>
-                        <div className={styles["title-style"]}>欢迎使用 Yakit</div>
+                        <div className={styles["title-style"]}>{Title}</div>
                         {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
                     </div>
 
@@ -567,6 +620,74 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     )
 }
 
+interface YakitControlLoadingProp{
+    localPort: number
+    onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
+    onSubmit: () => any
+}
+
+export const YakitControlLoading: React.FC<YakitControlLoadingProp> = (props) => {
+    const {localPort,onEngineModeChange,onSubmit} = props
+    const [isRefresh,setRefresh] = useState<boolean>(false)
+    useEffect(()=>{
+        // 自动远程连接
+        onSubmit()
+    },[isRefresh])
+
+    const refresh = () => {
+        setRefresh(!isRefresh)
+    }
+
+    const goBack = () => {
+        ipcRenderer
+        .invoke("start-local-yaklang-engine", {
+            port: localPort,
+            sudo: false
+        })
+        .then(() => {
+            outputToWelcomeConsole("手动引擎启动成功！")
+            if (onEngineModeChange) {
+                onEngineModeChange("local", true)
+            }
+        })
+        .catch((e) => {
+            outputToWelcomeConsole("手动引擎启动失败！")
+            outputToWelcomeConsole(`失败原因:${e}`)
+        })
+    }
+    return <div className={styles["yakit-loading-wrapper"]}>
+    <div className={styles["yakit-loading-body"]}>
+        <div className={styles["body-content"]}>
+            <div className={styles["yakit-loading-title"]}>
+                <div className={styles["title-style"]}>远程控制中 ...</div>
+            </div>
+
+            <div className={styles["yakit-loading-icon-wrapper"]}>
+                <div className={styles["theme-icon-wrapper"]}>
+                    <div className={styles["theme-icon"]}>
+                        <YakitThemeLoadingSvgIcon />
+                    </div>
+                </div>
+                <div className={styles["white-icon"]}>
+                    <YakitLoadingSvgIcon />
+                </div>
+            </div>
+
+            <div className={styles["yakit-loading-content"]}>
+                {/* <div className={styles["time-wait-title"]}>远程控制中 ...</div> */}
+                <div className={styles["engine-log-btn"]}>
+                        <YakitButton className={styles["btn-style"]} size='max' onClick={refresh}>
+                            刷新
+                        </YakitButton>
+                        <YakitButton className={styles["btn-style"]} type='outline2' size='max' onClick={goBack}>
+                            返回
+                        </YakitButton>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+}
 interface DownloadYaklangProps {
     system: YakitSystem
     visible: boolean
