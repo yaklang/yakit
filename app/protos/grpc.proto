@@ -1928,7 +1928,8 @@ message QueryPortsGroupResponse {
 
 message PortsGroup {
   string ServiceType = 1;
-  int32 Total = 2;
+  string ShowServiceType = 2;
+  int32 Total = 3;
 }
 
 message Host {
