@@ -2246,6 +2246,7 @@ message QueryPortsRequest {
   string Keywords = 8;
   bool  TitleEffective = 9;
   string ComplexSelect = 10;
+  string Proto = 11;
 }
 
 message QueryPortsResponse {
