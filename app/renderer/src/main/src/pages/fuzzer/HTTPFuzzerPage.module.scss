@@ -323,7 +323,7 @@
                 border-color: var(--yakit-primary-5);
                 box-shadow: 0 0 2px 2px var(--yakit-primary-2);
             }
-            input[type="text"]::placeholder,
+            input::placeholder,
             textarea::placeholder {
                 color: var(--yakit-disable-text-color);
                 font-size: 12px;
