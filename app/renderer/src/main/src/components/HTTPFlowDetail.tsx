@@ -36,6 +36,7 @@ import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTabl
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon} from "@/assets/newIcon"
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
+import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -524,133 +525,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     const spinning = !flow || loading
 
-    const requestEditorRightMenu: OtherMenuListProps = useMemo(() => {
-        return {
-            copyRequestBase64Body: {
-                menu: [
-                    {
-                        key: "copy-request-base64-body",
-                        label: "复制请求Body (Base64)"
-                    }
-                ],
-                onRun: () => {
-                    callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
-                }
-            }
-        }
-    }, [])
-    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
-        return {
-            copyResponseBase64Body: {
-                menu: [
-                    {
-                        key: "copy-response-base64-body",
-                        label: "复制响应Body (Base64)"
-                    }
-                ],
-                onRun: () => {
-                    callCopyToClipboard(flow?.RawResponseBodyBase64 || "")
-                }
-            }
-        }
-    }, [])
-    return (
+    return flow ? (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
             <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
-                <Col span={existedInfoType.length > 0 ? 19 : 24}>
-                    <ResizeBox
-                        firstNode={() => {
-                            if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录请求"} />
-                            }
-                            if (flow?.IsWebsocket) {
-                                return <HTTPFlowForWebsocketViewer flow={flow} />
-                            }
-                            return (
-                                <NewHTTPPacketEditor
-                                    originValue={flow?.Request || new Uint8Array()}
-                                    readOnly={true}
-                                    noLineNumber={true}
-                                    sendToWebFuzzer={props.sendToWebFuzzer}
-                                    defaultHeight={props.defaultHeight}
-                                    loading={loading}
-                                    defaultHttps={props.defaultHttps}
-                                    hideSearch={true}
-                                    noHex={true}
-                                    noMinimap={true}
-                                    contextMenu={flow?.RawRequestBodyBase64 ? requestEditorRightMenu : undefined}
-                                    // actions={
-                                    //     flow?.RawRequestBodyBase64
-                                    //         ? [
-                                    //               {
-                                    //                   contextMenuGroupId: "auto-suggestion",
-                                    //                   label: "复制请求Body (Base64)",
-                                    //                   id: "copy-request-base64-body",
-                                    //                   run: () => {
-                                    //                       callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
-                                    //                   }
-                                    //               }
-                                    //           ]
-                                    //         : undefined
-                                    // }
-                                    // 这个为了解决不可见字符的问题
-                                    defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
-                                    extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
-                                    defaultSearchKeyword={props.search}
-                                />
-                            )
-                        }}
-                        firstMinSize={300}
-                        secondNode={() => {
-                            if (flow === undefined) {
-                                return <Empty description={"选择想要查看的 HTTP 记录响应"} />
-                            }
-                            if (flow?.IsWebsocket) {
-                                return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
-                            }
-                            return (
-                                <NewHTTPPacketEditor
-                                    // actions={
-                                    //     flow?.RawResponseBodyBody64
-                                    //         ? [
-                                    //               {
-                                    //                   contextMenuGroupId: "auto-suggestion",
-                                    //                   label: "复制响应Body (Base64)",
-                                    //                   id: "copy-response-base64-body",
-                                    //                   run: () => {
-                                    //                       callCopyToClipboard(flow?.RawResponseBodyBody64 || "")
-                                    //                   }
-                                    //               }
-                                    //           ]
-                                    //         : undefined
-                                    // }
-                                    contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
-                                    extra={[
-                                        <Button
-                                            className={styles["extra-chrome-btn"]}
-                                            type={"text"}
-                                            size={"small"}
-                                            icon={<ChromeSvgIcon />}
-                                            onClick={() => {
-                                                showResponseViaResponseRaw(flow?.Response)
-                                            }}
-                                        />
-                                    ]}
-                                    isResponse={true}
-                                    noHex={true}
-                                    noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
-                                    loading={loading}
-                                    originValue={flow?.Response || new Uint8Array()}
-                                    readOnly={true}
-                                    defaultHeight={props.defaultHeight}
-                                    hideSearch={true}
-                                    defaultSearchKeyword={props.search}
-                                    defaultHttps={props.defaultHttps}
-                                />
-                            )
-                        }}
-                        secondMinSize={300}
-                    />
+                <Col span={existedInfoType.length > 0 ? 19 : 24} style={{height: "100%"}}>
+                    <HTTPFlowDetailRequestAndResponse loading={loading} flow={flow} {...props} />
                 </Col>
                 {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && (
                     <Col span={5}>
@@ -664,6 +543,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 onClick={() => {
                                                     setInfoType(i)
                                                 }}
+                                                key={i}
                                             >
                                                 {infoTypeVerbose(i)}
                                             </Button>
@@ -709,6 +589,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 onClick={() => {
                                                     setInfoType(i)
                                                 }}
+                                                key={i}
                                             >
                                                 {infoTypeVerbose(i)}
                                             </Button>
@@ -721,8 +602,115 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 )}
             </Row>
         </AutoSpin>
+    ) : (
+        <YakitEmpty style={{paddingTop: 48}} title='未选中 HTTP History 数据' />
     )
 }
+
+interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
+    flow?: HTTPFlow
+    loading: boolean
+}
+export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
+    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading} = props
+    const requestEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            copyRequestBase64Body: {
+                menu: [
+                    {
+                        key: "copy-request-base64-body",
+                        label: "复制请求Body (Base64)"
+                    }
+                ],
+                onRun: () => {
+                    callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
+                }
+            }
+        }
+    }, [])
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            copyResponseBase64Body: {
+                menu: [
+                    {
+                        key: "copy-response-base64-body",
+                        label: "复制响应Body (Base64)"
+                    }
+                ],
+                onRun: () => {
+                    callCopyToClipboard(flow?.RawResponseBodyBase64 || "")
+                }
+            }
+        }
+    }, [])
+    return (
+        <ResizeBox
+            firstNode={() => {
+                if (flow === undefined) {
+                    return <Empty description={"选择想要查看的 HTTP 记录请求"} />
+                }
+                if (flow?.IsWebsocket) {
+                    return <HTTPFlowForWebsocketViewer flow={flow} />
+                }
+                return (
+                    <NewHTTPPacketEditor
+                        originValue={flow?.Request || new Uint8Array()}
+                        readOnly={true}
+                        noLineNumber={true}
+                        sendToWebFuzzer={sendToWebFuzzer}
+                        defaultHeight={defaultHeight}
+                        loading={loading}
+                        defaultHttps={defaultHttps}
+                        hideSearch={true}
+                        noHex={true}
+                        noMinimap={true}
+                        contextMenu={flow?.RawRequestBodyBase64 ? requestEditorRightMenu : undefined}
+                        // 这个为了解决不可见字符的问题
+                        defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
+                        extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
+                        defaultSearchKeyword={search}
+                    />
+                )
+            }}
+            firstMinSize={300}
+            secondNode={() => {
+                if (flow === undefined) {
+                    return <Empty description={"选择想要查看的 HTTP 记录响应"} />
+                }
+                if (flow?.IsWebsocket) {
+                    return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
+                }
+                return (
+                    <NewHTTPPacketEditor
+                        contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
+                        extra={[
+                            <Button
+                                className={styles["extra-chrome-btn"]}
+                                type={"text"}
+                                size={"small"}
+                                icon={<ChromeSvgIcon />}
+                                onClick={() => {
+                                    showResponseViaResponseRaw(flow?.Response)
+                                }}
+                            />
+                        ]}
+                        isResponse={true}
+                        noHex={true}
+                        noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
+                        loading={loading}
+                        originValue={flow?.Response || new Uint8Array()}
+                        readOnly={true}
+                        defaultHeight={props.defaultHeight}
+                        hideSearch={true}
+                        defaultSearchKeyword={props.search}
+                        defaultHttps={props.defaultHttps}
+                    />
+                )
+            }}
+            secondMinSize={300}
+        />
+    )
+})
 
 function infoTypeVerbose(i: HTTPFlowInfoType) {
     switch (i) {

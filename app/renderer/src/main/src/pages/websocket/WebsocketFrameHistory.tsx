@@ -75,7 +75,6 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
             bordered={false}
             dataSource={data}
             rowKey={i => i.FrameIndex}
-            scroll={{x: "auto"}}
             pagination={{
                 pageSize: 30,
                 showSizeChanger: true,
