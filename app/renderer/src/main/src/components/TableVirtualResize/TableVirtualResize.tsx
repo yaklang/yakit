@@ -1178,6 +1178,9 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                     <div
                                         className={styles["popover-content"]}
                                         onMouseLeave={(e) => {
+                                            // INPUT 中文输入时 会触发 onMouseLeave
+                                            // @ts-ignore
+                                            if (e.target.nodeName === "INPUT") return
                                             setOpensPopover({
                                                 ...opensPopover,
                                                 [filterKey]: false

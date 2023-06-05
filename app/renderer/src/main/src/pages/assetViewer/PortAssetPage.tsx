@@ -32,7 +32,7 @@ import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
-import {useCreation, useGetState, useMemoizedFn, useSelections} from "ahooks"
+import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useSelections} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {isCommunityEdition} from "@/utils/envfile"
 import styles from "./PortAssetPage.module.scss"
@@ -61,6 +61,7 @@ import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -74,6 +75,24 @@ export interface QueryPortsRequest extends QueryGeneralRequest {
     Ports: string
     State: "open" | "closed" | "unknown"
     Service: string
+    Title: string
+    TitleEffective: boolean
+    Keywords: string
+    ComplexSelect: string
+}
+
+interface GroupList {
+    ServiceType: string
+    ShowServiceType: string
+    Total: number
+}
+
+interface PortsGroup {
+    GroupName: string
+    GroupLists: GroupList[]
+}
+interface QueryPortsGroupResponse {
+    PortsGroupList: PortsGroup[]
 }
 
 const formatJson = (filterVal, jsonData) => {
@@ -101,11 +120,15 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         } as PaginationSchema,
         Total: 0
     })
-    const [params, setParams] = useGetState<QueryPortsRequest>({
+    const [params, setParams] = useState<QueryPortsRequest>({
         Hosts: "",
         Ports: "",
         Service: "",
         State: props.closed ? "closed" : "open",
+        Title: "",
+        Keywords: "",
+        ComplexSelect: "",
+        TitleEffective: false,
         Pagination: {
             Limit: 15,
             Page: 1,
@@ -131,6 +154,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [advancedConfig, setAdvancedConfig] = useState(true)
+    const [advancedQueryLoading, setAdvancedQueryLoading] = useState(false)
+    const [portsGroup, setPortsGroup] = useState<PortsGroup[]>([])
+
     const selectedId = useCreation<string[]>(() => {
         return allResponse.Data.map((i) => `${i.Id}`)
     }, [allResponse.Data])
@@ -158,8 +184,26 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     }, [selected])
 
     useEffect(() => {
+        // params.ComplexSelect 此条件搜索点击频繁
+        update(1)
+    }, [params.ComplexSelect,advancedConfig])
+    useEffect(() => {
         getAllData()
+        update(1)
+        getPortsGroup()
     }, [])
+    const getPortsGroup = useMemoizedFn(() => {
+        setAdvancedQueryLoading(true)
+        ipcRenderer
+            .invoke("QueryPortsGroup", {})
+            .then((data: QueryPortsGroupResponse) => {
+                setPortsGroup(data.PortsGroupList)
+            })
+            .catch((e: any) => {
+                failed("getPortsGroup failed: " + e)
+            })
+            .finally(() => setTimeout(() => setAdvancedQueryLoading(false), 200))
+    })
     const getAllData = () => {
         ipcRenderer
             .invoke("QueryPorts", {
@@ -175,47 +219,50 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             .finally(() => {})
     }
 
-    const update = (current: number, pageSize?: number, order?: string, orderBy?: string) => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("QueryPorts", {
+    const update = useDebounceFn(
+        (current: number, pageSize?: number, order?: string, orderBy?: string) => {
+            setLoading(true)
+            const query={
                 ...params,
+                ComplexSelect: advancedConfig ? params.ComplexSelect : '',
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
                     Page: current || response.Pagination.Page,
                     Order: order || "desc",
                     OrderBy: orderBy || "updated_at"
                 }
-            })
-            .then((rsp: QueryGeneralResponse<PortAsset>) => {
-                if (Number(current) === 1) {
-                    unSelectAll()
-                    setIsRefresh(!isRefresh)
-                }
-                const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
-                setResponse({
-                    Total: current === 1 ? rsp.Total : response.Total,
-                    Pagination: {
-                        ...rsp.Pagination
-                    },
-                    Data: d
+            }
+            ipcRenderer
+                .invoke("QueryPorts",query)
+                .then((rsp: QueryGeneralResponse<PortAsset>) => {
+                    if (Number(current) === 1) {
+                        unSelectAll()
+                        setIsRefresh(!isRefresh)
+                    }
+                    const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
+                    setResponse({
+                        Total: current === 1 ? rsp.Total : response.Total,
+                        Pagination: {
+                            ...rsp.Pagination
+                        },
+                        Data: d
+                    })
                 })
-            })
-            .catch((e: any) => {
-                failed("QueryPorts failed: " + `${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    }
+                .catch((e: any) => {
+                    failed("QueryPorts failed: " + `${e}`)
+                })
+                .finally(() => setTimeout(() => setLoading(false), 300))
+        },
+        {wait: 200}
+    ).run
 
-    useEffect(() => {
-        update(1)
-    }, [])
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
                 title: "网络地址",
                 dataKey: "Host",
                 filterProps: {
+                    filterKey: "Hosts",
                     filterIcon: <SearchIcon />,
                     filtersType: "input"
                 }
@@ -225,6 +272,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 dataKey: "Port",
                 width: 100,
                 filterProps: {
+                    filterKey: "Ports",
                     filterIcon: <SearchIcon />,
                     filtersType: "input"
                 },
@@ -235,6 +283,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 dataKey: "Proto",
                 width: 100,
                 filterProps: {
+                    filterKey: "Proto",
                     filterIcon: <SearchIcon />,
                     filtersType: "input"
                 },
@@ -254,7 +303,16 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 dataKey: "HtmlTitle",
                 beforeIconExtra: (
                     <div className={styles["htmlTitle-extra"]}>
-                        <YakitCheckbox /> <span className={styles["valid-data"]}>有效数据</span>
+                        <YakitCheckbox
+                            checked={params.TitleEffective}
+                            onChange={(e) => {
+                                setParams({...params, TitleEffective: e.target.checked})
+                                setTimeout(() => {
+                                    update(1)
+                                }, 200)
+                            }}
+                        />
+                        <span className={styles["valid-data"]}>有效数据</span>
                     </div>
                 ),
                 filterProps: {
@@ -301,7 +359,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 fixed: "right"
             }
         ]
-    }, [])
+    }, [params])
 
     const getData = useMemoizedFn((query) => {
         return new Promise((resolve) => {
@@ -357,6 +415,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             Ports: "",
             Service: "",
             State: props.closed ? "closed" : "open",
+            Title: "",
+            Keywords: "",
+            ComplexSelect: "",
+            TitleEffective: false,
             Pagination: {
                 Limit: 15,
                 Page: 1,
@@ -366,10 +428,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         })
         setTimeout(() => {
             update(1)
-        }, 10)
-        setTimeout(() => {
             getAllData()
-        }, 10)
+        }, 100)
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, _, filter: any) => {
         setParams({
@@ -425,6 +485,16 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             event.clientY
         )
     })
+    const onSearch = useMemoizedFn((val: string) => {
+        setParams({
+            ...params,
+            Keywords: val
+        })
+        setTimeout(() => {
+            update(1)
+        }, 100)
+    })
+  
     return (
         <div className={styles["portAsset-content"]}>
             <div className={styles["portAsset"]}>
@@ -432,10 +502,18 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     <div className={styles["head-title"]}>端口资产列表</div>
                     <div className={styles["head-extra"]}>
                         <YakitInput.Search
-                            placeholder='请输入端口、网络地址、服务指纹、title 等关键词搜索'
+                            placeholder='请输入网络地址、端口、服务指纹、title关键词搜索'
                             style={{width: 320}}
-                            onSearch={() => update(1)}
+                            onSearch={onSearch}
                             onPressEnter={() => update(1)}
+                            value={params.Keywords}
+                            onChange={(e) => {
+                                const {value} = e.target
+                                setParams({
+                                    ...params,
+                                    Keywords: value
+                                })
+                            }}
                         />
                         {!advancedConfig && (
                             <>
@@ -547,90 +625,36 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     />
                 </div>
             </div>
-            <PortAssetQuery visible={advancedConfig} setVisible={setAdvancedConfig} setQueryList={() => {}} />
+            <PortAssetQuery
+                loading={advancedQueryLoading}
+                portsGroupList={portsGroup}
+                visible={advancedConfig}
+                setVisible={setAdvancedConfig}
+                setQueryList={(val) =>
+                    setParams({
+                        ...params,
+                        ComplexSelect: val.join(",")
+                    })
+                }
+            />
         </div>
     )
 }
 
 interface PortAssetQueryProps {
+    loading: boolean
+    portsGroupList: PortsGroup[]
     visible: boolean
     setVisible: (b: boolean) => void
     setQueryList: (s: string[]) => void
 }
 /**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
-    const {visible, setVisible, setQueryList} = props
-    const [activeKey, setActiveKey] = useState<string[]>(["数据库", "Web 服务器", "其他指纹信息"]) // Collapse打开的key
+    const {loading, portsGroupList, visible, setVisible, setQueryList} = props
+    const [activeKey, setActiveKey] = useState<string[]>(["数据库", "Web服务器"]) // Collapse打开的key
     const [selectList, setSelectList] = useState({})
-    const [list, setList] = useState([
-        {
-            Name: "数据库",
-            List: [
-                {
-                    Label: "mysql",
-                    Value: "mysql",
-                    Total: "56"
-                },
-                {
-                    Label: "mangodb",
-                    Value: "mangodb",
-                    Total: "56"
-                },
-                {
-                    Label: "sql serer",
-                    Value: "sql serer",
-                    Total: "56"
-                },
-                {
-                    Label: "Oracle",
-                    Value: "Oracle",
-                    Total: "56"
-                }
-            ]
-        },
-        {
-            Name: "Web 服务器",
-            List: [
-                {
-                    Label: "Nginx",
-                    Value: "Nginx",
-                    Total: "56"
-                },
-                {
-                    Label: "Tomcat",
-                    Value: "Tomcat",
-                    Total: "56"
-                },
-                {
-                    Label: "Apache",
-                    Value: "Apache",
-                    Total: "56"
-                },
-                {
-                    Label: "WebLogic",
-                    Value: "WebLogic",
-                    Total: "56"
-                }
-            ]
-        },
-        {
-            Name: "其他指纹信息",
-            List: [
-                {
-                    Label: "Windows",
-                    Value: "Windows",
-                    Total: "56"
-                },
-                {
-                    Label: "Linux",
-                    Value: "Linux",
-                    Total: "56"
-                }
-            ]
-        }
-    ])
     useEffect(() => {
-        /** 扁平化=>string[] 丢出去*/
+        /** 扁平化=>string[] 抛出去*/
         let list: string[] = []
         Object.keys(selectList).forEach((key) => {
             list = list.concat(selectList[key])
@@ -643,11 +667,14 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
             setSelectList({...selectList})
         } else {
             const oldSelectLists = selectList[GroupName] || []
+
             const index = oldSelectLists.findIndex((ele) => ele === value)
+
             if (index === -1) return
+            oldSelectLists.splice(index, 1)
             const newSelectList = {
                 ...selectList,
-                [selectList[GroupName]]: oldSelectLists.splice(index, 1)
+                [GroupName]: oldSelectLists
             }
             setSelectList({...newSelectList})
         }
@@ -661,54 +688,58 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                 <span>高级筛选</span>
                 <YakitSwitch checked={visible} onChange={setVisible} />
             </div>
-            <Collapse
-                activeKey={activeKey}
-                onChange={(key) => setActiveKey(key as string[])}
-                ghost
-                expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
-                className={styles["query-collapse"]}
-            >
-                {list.map((item) => (
-                    <Panel
-                        header={item.Name}
-                        key={item.Name}
-                        extra={
-                            <YakitButton
-                                type='text'
-                                className='button-text-danger'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    selectList[item.Name] = []
-                                    setSelectList({...selectList})
-                                }}
-                            >
-                                清空
-                            </YakitButton>
-                        }
-                    >
-                        {item.List.map((listItem) => {
-                            const checked = (selectList[item.Name] || []).includes(listItem.Value)
-                            return (
-                                <label
-                                    className={classNames(styles["list-item"], {
-                                        [styles["list-item-active"]]: checked
-                                    })}
-                                    key={listItem.Value}
+            <YakitSpin spinning={loading}>
+                <Collapse
+                    activeKey={activeKey}
+                    onChange={(key) => setActiveKey(key as string[])}
+                    ghost
+                    expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                    className={styles["query-collapse"]}
+                >
+                    {portsGroupList.map((item) => (
+                        <Panel
+                            header={item.GroupName}
+                            key={item.GroupName}
+                            extra={
+                                <YakitButton
+                                    type='text'
+                                    className='button-text-danger'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        selectList[item.GroupName] = []
+                                        setSelectList({...selectList})
+                                    }}
                                 >
-                                    <div className={styles["list-item-left"]}>
-                                        <YakitCheckbox
-                                            checked={checked}
-                                            onChange={(e) => onSelect(item.Name, listItem.Value, e.target.checked)}
-                                        />
-                                        <span className='content-ellipsis'>{listItem.Label}</span>
-                                    </div>
-                                    <span>{listItem.Total}</span>
-                                </label>
-                            )
-                        })}
-                    </Panel>
-                ))}
-            </Collapse>
+                                    清空
+                                </YakitButton>
+                            }
+                        >
+                            {item.GroupLists.map((listItem) => {
+                                const checked = (selectList[item.GroupName] || []).includes(listItem.ServiceType)
+                                return (
+                                    <label
+                                        className={classNames(styles["list-item"], {
+                                            [styles["list-item-active"]]: checked
+                                        })}
+                                        key={listItem.ServiceType}
+                                    >
+                                        <div className={styles["list-item-left"]}>
+                                            <YakitCheckbox
+                                                checked={checked}
+                                                onChange={(e) =>
+                                                    onSelect(item.GroupName, listItem.ServiceType, e.target.checked)
+                                                }
+                                            />
+                                            <span className='content-ellipsis'>{listItem.ShowServiceType}</span>
+                                        </div>
+                                        <span>{listItem.Total}</span>
+                                    </label>
+                                )
+                            })}
+                        </Panel>
+                    ))}
+                </Collapse>
+            </YakitSpin>
         </div>
     )
 })

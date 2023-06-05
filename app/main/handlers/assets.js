@@ -85,6 +85,22 @@ module.exports = (win, getClient) => {
         return await asyncDeleteDomains(params)
     })
 
+    // asyncQueryDomains wrapper
+    const asyncQueryPortsGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryPortsGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryPortsGroup", async (e, params) => {
+        return await asyncQueryPortsGroup(params)
+    })
+
     // asyncQueryRisks wrapper
     const asyncQueryRisks = (params) => {
         return new Promise((resolve, reject) => {
