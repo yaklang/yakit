@@ -197,6 +197,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ipcRenderer
             .invoke("QueryPortsGroup", {})
             .then((data: QueryPortsGroupResponse) => {
+                console.log('data',data)
                 setPortsGroup(data.PortsGroupList)
             })
             .catch((e: any) => {
@@ -696,10 +697,10 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                     expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                     className={styles["query-collapse"]}
                 >
-                    {portsGroupList.map((item) => (
+                    {portsGroupList.map((item,i) => (
                         <Panel
                             header={item.GroupName}
-                            key={item.GroupName}
+                            key={`${item.GroupName}+${i}`}
                             extra={
                                 <YakitButton
                                     type='text'
