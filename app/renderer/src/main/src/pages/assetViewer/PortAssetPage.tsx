@@ -62,6 +62,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -186,7 +187,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     useEffect(() => {
         // params.ComplexSelect 此条件搜索点击频繁
         update(1)
-    }, [params.ComplexSelect,advancedConfig])
+    }, [params.ComplexSelect, advancedConfig])
     useEffect(() => {
         getAllData()
         update(1)
@@ -197,7 +198,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ipcRenderer
             .invoke("QueryPortsGroup", {})
             .then((data: QueryPortsGroupResponse) => {
-                console.log('data',data)
+                console.log("data", data)
                 setPortsGroup(data.PortsGroupList)
             })
             .catch((e: any) => {
@@ -223,9 +224,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const update = useDebounceFn(
         (current: number, pageSize?: number, order?: string, orderBy?: string) => {
             setLoading(true)
-            const query={
+            const query = {
                 ...params,
-                ComplexSelect: advancedConfig ? params.ComplexSelect : '',
+                ComplexSelect: advancedConfig ? params.ComplexSelect : "",
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
                     Page: current || response.Pagination.Page,
@@ -234,7 +235,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }
             }
             ipcRenderer
-                .invoke("QueryPorts",query)
+                .invoke("QueryPorts", query)
                 .then((rsp: QueryGeneralResponse<PortAsset>) => {
                     if (Number(current) === 1) {
                         unSelectAll()
@@ -495,7 +496,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             update(1)
         }, 100)
     })
-  
+
     return (
         <div className={styles["portAsset-content"]}>
             <div className={styles["portAsset"]}>
@@ -516,7 +517,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 })
                             }}
                         />
-                        {!advancedConfig && (
+                        {response.Total > 0 && !advancedConfig && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 16px"}} />
                                 <span style={{marginRight: 4}}>高级筛选</span>
@@ -629,7 +630,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             <PortAssetQuery
                 loading={advancedQueryLoading}
                 portsGroupList={portsGroup}
-                visible={advancedConfig}
+                visible={response.Total > 0 && advancedConfig}
                 setVisible={setAdvancedConfig}
                 setQueryList={(val) =>
                     setParams({
@@ -652,7 +653,7 @@ interface PortAssetQueryProps {
 /**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
     const {loading, portsGroupList, visible, setVisible, setQueryList} = props
-    const [activeKey, setActiveKey] = useState<string[]>(["数据库", "Web服务器"]) // Collapse打开的key
+    const [activeKey, setActiveKey] = useState<string[]>([]) // Collapse打开的key
     const [selectList, setSelectList] = useState({})
     useEffect(() => {
         /** 扁平化=>string[] 抛出去*/
@@ -662,6 +663,10 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
         })
         setQueryList(list)
     }, [selectList])
+    useEffect(() => {
+        const keys = portsGroupList.map((l) => l.GroupName)
+        setActiveKey(keys)
+    }, [portsGroupList])
     const onSelect = useMemoizedFn((GroupName: string, value: string, checked: boolean) => {
         if (checked) {
             selectList[GroupName] = [...(selectList[GroupName] || []), value]
@@ -697,10 +702,10 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                     expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                     className={styles["query-collapse"]}
                 >
-                    {portsGroupList.map((item,i) => (
+                    {portsGroupList.map((item, i) => (
                         <Panel
                             header={item.GroupName}
-                            key={`${item.GroupName}+${i}`}
+                            key={item.GroupName}
                             extra={
                                 <YakitButton
                                     type='text'
@@ -740,6 +745,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                         </Panel>
                     ))}
                 </Collapse>
+                {portsGroupList.length === 0 && <YakitEmpty style={{paddingTop: 48}} title='暂无指纹信息' />}
             </YakitSpin>
         </div>
     )
