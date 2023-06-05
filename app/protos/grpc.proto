@@ -1922,11 +1922,15 @@ message Domain {
 }
 
 message QueryPortsGroupResponse {
-  repeated PortsGroup DatabaseGroup = 1;
-  repeated PortsGroup WebServer = 2;
+  repeated PortsGroup PortsGroupList = 1;
 }
 
 message PortsGroup {
+  string GroupName = 1;
+  repeated GroupList GroupLists = 2;
+}
+
+message GroupList {
   string ServiceType = 1;
   string ShowServiceType = 2;
   int32 Total = 3;
