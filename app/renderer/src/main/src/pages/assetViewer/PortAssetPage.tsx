@@ -220,7 +220,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ipcRenderer
             .invoke("QueryPorts", {
                 All: true,
-                State: props.closed ? "closed" : "open"
+                ...onGetQueryProcessing(),
             })
             .then((data: QueryGeneralResponse<PortAsset>) => {
                 setAllResponse(data)
@@ -235,20 +235,13 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         (current: number, pageSize?: number, order?: string, orderBy?: string) => {
             setLoading(true)
             const query = {
-                ...params,
+                ...onGetQueryProcessing(),
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
                     Page: current || response.Pagination.Page,
                     Order: order || "desc",
                     OrderBy: orderBy || "updated_at"
                 }
-            }
-            if (advancedConfig && queryList) {
-                let list: string[] = []
-                Object.keys(queryList).forEach((key) => {
-                    list = list.concat(queryList[key])
-                })
-                query.ComplexSelect = list.join(",")
             }
             ipcRenderer
                 .invoke("QueryPorts", query)
@@ -272,6 +265,20 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         },
         {wait: 200}
     ).run
+
+    const onGetQueryProcessing = useMemoizedFn(() => {
+        const query = {
+            ...params
+        }
+        if (advancedConfig && queryList) {
+            let list: string[] = []
+            Object.keys(queryList).forEach((key) => {
+                list = list.concat(queryList[key])
+            })
+            query.ComplexSelect = list.join(",")
+        }
+        return query
+    })
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -332,7 +339,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             onChange={(e) => {
                                 setParams({...params, TitleEffective: e.target.checked})
                                 setTimeout(() => {
-                                   update(1)
+                                    update(1)
                                 }, 200)
                             }}
                         />
@@ -389,7 +396,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         return new Promise((resolve) => {
             ipcRenderer
                 .invoke("QueryPorts", {
-                    ...params,
+                    ...onGetQueryProcessing(),
                     Pagination: {
                         ...query
                     }
@@ -427,7 +434,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                onNoResetRefresh()
+                update(1)
                 setCheckedURL([])
                 unSelectAll()
             })
@@ -453,12 +460,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setQueryList(undefined)
         setTimeout(() => {
             update(1)
-            getAllData()
         }, 100)
-    })
-    const onNoResetRefresh = useMemoizedFn(() => {
-        update(1)
-        getAllData()
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, _, filter: any) => {
         setParams({
@@ -552,7 +554,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                onNoResetRefresh()
+                update(1)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -602,7 +604,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 onClick: ({key}) => {
                                     switch (key) {
                                         case "noResetRefresh":
-                                            onNoResetRefresh()
+                                            update(1)
                                             break
                                         case "resetRefresh":
                                             onResetRefresh()
@@ -618,7 +620,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             }}
                         >
                             <div className={styles["refresh-button"]}>
-                                <RefreshIcon className={styles["refresh-icon"]} onClick={() => onResetRefresh()} />
+                                <RefreshIcon className={styles["refresh-icon"]} />
                             </div>
                         </YakitDropdownMenu>
 

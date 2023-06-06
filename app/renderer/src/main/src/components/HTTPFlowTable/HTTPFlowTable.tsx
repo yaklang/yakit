@@ -1915,6 +1915,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     })
+    /**@description 重置查询条件并刷新 */
+    const onResetRefresh = useMemoizedFn(() => {
+        sortRef.current = defSort
+        const newParams: YakQueryHTTPFlowRequest = {
+            ...(props.params || {SourceType: "mitm"}),
+            SourceType: props.params?.SourceType || "mitm",
+            ExcludeId: params.ExcludeId,
+            ExcludeInUrl: params.ExcludeInUrl
+        }
+        setParams(newParams)
+        setIsReset(!isReset)
+        setTagsQuery([])
+        setContentTypeQuery('')
+        setColor([])
+        setCheckBodyLength(false)
+        setTimeout(() => {
+            update(1)
+        }, 100)
+    })
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -2021,7 +2040,47 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             </YakitButton>
                                         </YakitDropdownMenu>
                                     </div>
-                                    <Badge
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: [
+                                                {
+                                                    key: "noResetRefresh",
+                                                    label: "仅刷新"
+                                                },
+                                                {
+                                                    key: "resetRefresh",
+                                                    label: "重置查询条件并刷新"
+                                                }
+                                            ],
+                                            onClick: ({key}) => {
+                                                switch (key) {
+                                                    case "noResetRefresh":
+                                                        update(1)
+                                                        break
+                                                    case "resetRefresh":
+                                                        onResetRefresh()
+                                                        break
+                                                    default:
+                                                        break
+                                                }
+                                            }
+                                        }}
+                                        dropdown={{
+                                            trigger: ["hover"],
+                                            placement: "bottom"
+                                        }}
+                                    >
+                                        <Badge
+                                            dot={offsetData.length > 0}
+                                            offset={[1, 2]}
+                                            className={style["http-history-table-badge"]}
+                                        >
+                                            <div className={style["refresh-button"]}>
+                                                <RefreshIcon className={style["refresh-icon"]} />
+                                            </div>
+                                        </Badge>
+                                    </YakitDropdownMenu>
+                                    {/* <Badge
                                         dot={offsetData.length > 0}
                                         offset={[1, 2]}
                                         className={style["http-history-table-badge"]}
@@ -2044,7 +2103,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         >
                                             <RefreshIcon className={style["refresh-icon"]} />
                                         </div>
-                                    </Badge>
+                                    </Badge> */}
                                 </div>
                             </div>
                             <div className={style["http-history-table-line"]} />
