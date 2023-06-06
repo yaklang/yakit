@@ -249,7 +249,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 })
                 query.ComplexSelect = list.join(",")
             }
-            console.log("query", query)
             ipcRenderer
                 .invoke("QueryPorts", query)
                 .then((rsp: QueryGeneralResponse<PortAsset>) => {
