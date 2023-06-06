@@ -19,7 +19,7 @@ export interface YakitMenuItemProps {
 export interface YakitMenuItemDividerProps {
     type: "divider"
 }
-type YakitMenuItemType = YakitMenuItemProps | YakitMenuItemDividerProps
+export type YakitMenuItemType = YakitMenuItemProps | YakitMenuItemDividerProps
 
 export interface YakitMenuProp extends MenuProps {
     data?: YakitMenuItemType[]

@@ -11,8 +11,8 @@
     .icon-style {
         color: var(--yakit-body-text-color);
         svg {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
         }
     }
     .icon-style:hover {
@@ -47,6 +47,13 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
+            .refresh-icon {
+                color: var(--yakit-body-text-color);
+                cursor: pointer;
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
         }
     }
     .portAsset-table {
@@ -69,6 +76,12 @@
                 width: 16px;
                 height: 16px;
             }
+        }
+        .table-host {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
         }
     }
     .htmlTitle-extra {
@@ -140,9 +153,30 @@
                 margin-right: 12px;
                 text-transform: capitalize;
             }
+            .list-item-extra {
+                color: var(--yakit-helper-text-color);
+            }
         }
         .list-item-active {
             color: var(--yakit-primary-5);
+            .list-item-extra {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+}
+
+.context-menu-remove {
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    .number {
+        color: var(--yakit-helper-text-color);
+    }
+    &:hover {
+        .number {
+            color: #fff;
         }
     }
 }

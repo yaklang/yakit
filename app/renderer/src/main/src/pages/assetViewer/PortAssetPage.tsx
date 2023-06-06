@@ -45,6 +45,7 @@ import {
     ChromeFrameSvgIcon,
     ExportIcon,
     PaperAirplaneIcon,
+    RefreshIcon,
     SearchIcon,
     TrashIcon
 } from "@/assets/newIcon"
@@ -55,7 +56,12 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import classNames from "classnames"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {
+    YakitMenu,
+    YakitMenuItemDividerProps,
+    YakitMenuItemProps,
+    YakitMenuItemType
+} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
@@ -94,6 +100,10 @@ interface PortsGroup {
 }
 interface QueryPortsGroupResponse {
     PortsGroupList: PortsGroup[]
+}
+
+interface QueryListProps {
+    [key: string]: string[]
 }
 
 const formatJson = (filterVal, jsonData) => {
@@ -157,7 +167,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [advancedConfig, setAdvancedConfig] = useState(true)
     const [advancedQueryLoading, setAdvancedQueryLoading] = useState(false)
     const [portsGroup, setPortsGroup] = useState<PortsGroup[]>([])
-
+    const [queryList, setQueryList] = useState<QueryListProps>()
     const selectedId = useCreation<string[]>(() => {
         return allResponse.Data.map((i) => `${i.Id}`)
     }, [allResponse.Data])
@@ -187,7 +197,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     useEffect(() => {
         // params.ComplexSelect 此条件搜索点击频繁
         update(1)
-    }, [params.ComplexSelect, advancedConfig])
+    }, [queryList, advancedConfig])
     useEffect(() => {
         getAllData()
         update(1)
@@ -198,7 +208,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ipcRenderer
             .invoke("QueryPortsGroup", {})
             .then((data: QueryPortsGroupResponse) => {
-                console.log("data", data)
                 setPortsGroup(data.PortsGroupList)
             })
             .catch((e: any) => {
@@ -226,7 +235,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             setLoading(true)
             const query = {
                 ...params,
-                ComplexSelect: advancedConfig ? params.ComplexSelect : "",
                 Pagination: {
                     Limit: pageSize || response.Pagination.Limit,
                     Page: current || response.Pagination.Page,
@@ -234,11 +242,18 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     OrderBy: orderBy || "updated_at"
                 }
             }
+            if (advancedConfig&&queryList) {
+                let list: string[] = []
+                Object.keys(queryList).forEach((key) => {
+                    list = list.concat(queryList[key])
+                })
+                query.ComplexSelect = list.join(",")
+            }
+            console.log("query", query)
             ipcRenderer
                 .invoke("QueryPorts", query)
                 .then((rsp: QueryGeneralResponse<PortAsset>) => {
                     if (Number(current) === 1) {
-                        unSelectAll()
                         setIsRefresh(!isRefresh)
                     }
                     const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
@@ -267,7 +282,14 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     filterKey: "Hosts",
                     filterIcon: <SearchIcon />,
                     filtersType: "input"
-                }
+                },
+                render: (text) => (
+                    <div className={styles["table-host"]}>
+                        <span className='content-ellipsis'>{text}</span>
+                        <CopyComponents copyText={text} />
+                    </div>
+                ),
+                fixed: "left"
             },
             {
                 title: "端口",
@@ -405,7 +427,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                refList()
+                update(1)
+                getAllData()
                 setCheckedURL([])
                 unSelectAll()
             })
@@ -428,6 +451,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 Order: "updated_at"
             }
         })
+        setQueryList(undefined)
         setTimeout(() => {
             update(1)
             getAllData()
@@ -442,7 +466,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             update(1)
         }, 100)
     })
-    const menuData = useMemo(() => {
+    const menuData: YakitMenuItemType[] = useMemo(() => {
         return [
             {
                 label: "发送到漏洞检测",
@@ -452,7 +476,12 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 label: "发送到端口扫描",
                 key: "scan-port"
             },
-            {label: "发送到爆破", key: "brute"}
+            {label: "发送到爆破", key: "brute"},
+            {type: "divider"},
+            {
+                label: "删除框选内",
+                key: "remove"
+            }
         ]
     }, [])
     const onRowContextMenu = useMemoizedFn((rowData: PortAsset, selectedRows: PortAsset[], event: React.MouseEvent) => {
@@ -461,31 +490,69 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             {
                 width: 180,
                 data: menuData.map((ele) => {
-                    return {
-                        label: ele.label,
-                        key: ele.key
+                    if (typeof (ele as any as YakitMenuItemDividerProps)["type"] !== "undefined") {
+                        return ele
+                    } else {
+                        const info: YakitMenuItemProps = {...(ele as any)}
+                        if (info.key === "remove") {
+                            return {
+                                label:
+                                    selectedRows.length > 0 ? (
+                                        <div className={styles["context-menu-remove"]}>
+                                            <span>删除框选内</span>
+                                            <span className={styles["number"]}>{selectedRows.length}条</span>
+                                        </div>
+                                    ) : (
+                                        "删除"
+                                    ),
+                                key: info.key
+                            }
+                        }
+                        return info
                     }
                 }),
                 onClick: ({key, keyPath}) => {
-                    let urls: string[] = []
-                    if ((selectedRows?.length || 0) > 0) {
-                        urls = selectedRows?.map((item) => `${item.Host}:${item.Port}`) || []
-                    } else {
-                        urls = [`${rowData.Host}:${rowData.Port}`]
+                    switch (key) {
+                        case "remove":
+                            onDeleteBoxSelection(selectedRows)
+                            break
+                        default:
+                            let urls: string[] = []
+                            if ((selectedRows?.length || 0) > 0) {
+                                urls = selectedRows?.map((item) => `${item.Host}:${item.Port}`) || []
+                            } else {
+                                urls = [`${rowData.Host}:${rowData.Port}`]
+                            }
+                            ipcRenderer
+                                .invoke("send-to-tab", {
+                                    type: key,
+                                    data: {URL: JSON.stringify(urls)}
+                                })
+                                .then(() => {
+                                    unSelectAll()
+                                    setSendPopoverVisible(false)
+                                })
+                            break
                     }
-                    ipcRenderer
-                        .invoke("send-to-tab", {
-                            type: key,
-                            data: {URL: JSON.stringify(urls)}
-                        })
-                        .then(() => {
-                            setSendPopoverVisible(false)
-                        })
                 }
             },
             event.clientX,
             event.clientY
         )
+    })
+    const onDeleteBoxSelection = useMemoizedFn((s: PortAsset[]) => {
+        const transferParams = {
+            selectedRowKeys: s.map((ele) => ele.Id),
+            params: {},
+            interfaceName: "DeletePorts"
+        }
+        setLoading(true)
+        onRemoveToolFC(transferParams)
+            .then(() => {
+                update(1)
+                getAllData()
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
     })
     const onSearch = useMemoizedFn((val: string) => {
         setParams({
@@ -517,7 +584,11 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 })
                             }}
                         />
-                        {response.Total > 0 && !advancedConfig && (
+                        <Divider type='vertical' style={{margin: "0 16px"}} />
+                        <Tooltip title='重置所有查询条件并刷新'>
+                            <RefreshIcon className={styles["refresh-icon"]} onClick={() => refList()} />
+                        </Tooltip>
+                        {allResponse.Total > 0 && !advancedConfig && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 16px"}} />
                                 <span style={{marginRight: 4}}>高级筛选</span>
@@ -529,6 +600,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 <div className={styles["portAsset-table"]}>
                     <TableVirtualResize<PortAsset>
                         containerClassName={styles["portAsset-table-list-container"]}
+                        query={params}
                         isRefresh={isRefresh}
                         isShowTotal={true}
                         isRightClickBatchOperate={true}
@@ -543,7 +615,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     getData={getData}
                                 />
                                 <YakitPopconfirm
-                                    title={"确定删除吗？"}
+                                    title={selected.length > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
                                     onConfirm={() => {
                                         onRemove()
                                     }}
@@ -553,7 +625,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         type='outline2'
                                         icon={<TrashIcon className={styles["table-head-icon"]} />}
                                     >
-                                        {checkedURL.length ? "删除" : "清空"}
+                                        {selected.length > 0 ? "删除" : "清空"}
                                     </YakitButton>
                                 </YakitPopconfirm>
 
@@ -619,8 +691,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         }}
                         loading={loading}
                         columns={columns}
-                        // currentSelectItem={currentItem}
-                        // onRowClick={onSetCurrentRow}
                         onRowContextMenu={onRowContextMenu}
                         enableDrag={true}
                         onChange={onTableChange}
@@ -630,14 +700,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             <PortAssetQuery
                 loading={advancedQueryLoading}
                 portsGroupList={portsGroup}
-                visible={response.Total > 0 && advancedConfig}
+                visible={allResponse.Total > 0 && advancedConfig}
                 setVisible={setAdvancedConfig}
-                setQueryList={(val) =>
-                    setParams({
-                        ...params,
-                        ComplexSelect: val.join(",")
-                    })
-                }
+                queryList={queryList||{}}
+                setQueryList={(val) => setQueryList(val)}
             />
         </div>
     )
@@ -648,41 +714,35 @@ interface PortAssetQueryProps {
     portsGroupList: PortsGroup[]
     visible: boolean
     setVisible: (b: boolean) => void
-    setQueryList: (s: string[]) => void
+    queryList: QueryListProps
+    setQueryList: (s: QueryListProps) => void
 }
+
 /**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
-    const {loading, portsGroupList, visible, setVisible, setQueryList} = props
+    const {loading, portsGroupList, visible, setVisible, queryList, setQueryList} = props
     const [activeKey, setActiveKey] = useState<string[]>([]) // Collapse打开的key
-    const [selectList, setSelectList] = useState({})
-    useEffect(() => {
-        /** 扁平化=>string[] 抛出去*/
-        let list: string[] = []
-        Object.keys(selectList).forEach((key) => {
-            list = list.concat(selectList[key])
-        })
-        setQueryList(list)
-    }, [selectList])
+
     useEffect(() => {
         const keys = portsGroupList.map((l) => l.GroupName)
         setActiveKey(keys)
     }, [portsGroupList])
     const onSelect = useMemoizedFn((GroupName: string, value: string, checked: boolean) => {
         if (checked) {
-            selectList[GroupName] = [...(selectList[GroupName] || []), value]
-            setSelectList({...selectList})
+            queryList[GroupName] = [...(queryList[GroupName] || []), value]
+            setQueryList({...queryList})
         } else {
-            const oldSelectLists = selectList[GroupName] || []
+            const oldSelectLists = queryList[GroupName] || []
 
             const index = oldSelectLists.findIndex((ele) => ele === value)
 
             if (index === -1) return
             oldSelectLists.splice(index, 1)
             const newSelectList = {
-                ...selectList,
+                ...queryList,
                 [GroupName]: oldSelectLists
             }
-            setSelectList({...newSelectList})
+            setQueryList({...newSelectList})
         }
     })
     return (
@@ -712,8 +772,8 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                                     className='button-text-danger'
                                     onClick={(e) => {
                                         e.stopPropagation()
-                                        selectList[item.GroupName] = []
-                                        setSelectList({...selectList})
+                                        queryList[item.GroupName] = []
+                                        setQueryList({...queryList})
                                     }}
                                 >
                                     清空
@@ -721,7 +781,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                             }
                         >
                             {item.GroupLists.map((listItem) => {
-                                const checked = (selectList[item.GroupName] || []).includes(listItem.ServiceType)
+                                const checked = (queryList[item.GroupName] || []).includes(listItem.ServiceType)
                                 return (
                                     <label
                                         className={classNames(styles["list-item"], {
@@ -738,7 +798,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                                             />
                                             <span className='content-ellipsis'>{listItem.ShowServiceType}</span>
                                         </div>
-                                        <span>{listItem.Total}</span>
+                                        <span className={styles["list-item-extra"]}>{listItem.Total}</span>
                                     </label>
                                 )
                             })}
