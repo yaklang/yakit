@@ -479,7 +479,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             {label: "发送到爆破", key: "brute"},
             {type: "divider"},
             {
-                label: "删除框选内",
+                label: "删除框选数据",
                 key: "remove"
             }
         ]
