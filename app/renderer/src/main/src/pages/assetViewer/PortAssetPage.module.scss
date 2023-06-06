@@ -2,6 +2,7 @@
     height: 16px;
     display: flex;
     align-items: center;
+    justify-content: center;
 
     .divider-style {
         height: 100%;
@@ -31,6 +32,7 @@
     overflow: hidden;
     display: flex;
     flex-flow: column;
+    height: 100%;
     .portAsset-head {
         display: flex;
         justify-content: space-between;
@@ -198,4 +200,12 @@
             color: #fff;
         }
     }
+}
+
+.port-description {
+    // margin: 12px 16px;
+    border: 1px solid var(--yakit-border-color);
+    border-radius: 4px;
+    overflow-y: overlay;
+    height: 100%;
 }

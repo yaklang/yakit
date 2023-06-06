@@ -70,6 +70,7 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -169,6 +170,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [advancedQueryLoading, setAdvancedQueryLoading] = useState(false)
     const [portsGroup, setPortsGroup] = useState<PortsGroup[]>([])
     const [queryList, setQueryList] = useState<QueryListProps>()
+    const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
+
     const selectedId = useCreation<string[]>(() => {
         return allResponse.Data.map((i) => `${i.Id}`)
     }, [allResponse.Data])
@@ -220,7 +223,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ipcRenderer
             .invoke("QueryPorts", {
                 All: true,
-                ...onGetQueryProcessing(),
+                ...onGetQueryProcessing()
             })
             .then((data: QueryGeneralResponse<PortAsset>) => {
                 setAllResponse(data)
@@ -360,7 +363,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             {
                 title: "操作",
                 dataKey: "Action",
-                width: 90,
+                width: 60,
                 render: (_, i: PortAsset) => {
                     return (
                         <div className={styles["action-btn-group"]}>
@@ -369,19 +372,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     openExternalWebsite(`http://${i.Host}:${i.Port}`)
-                                }}
-                            />
-                            <div className={styles["divider-style"]}></div>
-
-                            <ArrowCircleRightSvgIcon
-                                className={styles["icon-style"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    let m = showYakitDrawer({
-                                        width: "60%",
-                                        title: "详情",
-                                        content: <PortAssetDescription port={i} />
-                                    })
                                 }}
                             />
                         </div>
@@ -554,6 +544,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
+                unSelectAll()
                 update(1)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
@@ -568,170 +559,223 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         }, 100)
     })
 
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            secondRatio: "0%",
+            firstRatio: "100%"
+        }
+        if (currentSelectItem) {
+            p.firstRatio = "60%"
+            p.secondRatio = "40%"
+        }
+        return p
+    }, [currentSelectItem])
     return (
         <div className={styles["portAsset-content"]}>
-            <div className={styles["portAsset"]}>
-                <div className={styles["portAsset-head"]}>
-                    <div className={styles["head-title"]}>端口资产列表</div>
-                    <div className={styles["head-extra"]}>
-                        <YakitInput.Search
-                            placeholder='请输入网络地址、端口、服务指纹、title关键词搜索'
-                            style={{width: 320}}
-                            onSearch={onSearch}
-                            onPressEnter={() => update(1)}
-                            value={params.Keywords}
-                            onChange={(e) => {
-                                const {value} = e.target
-                                setParams({
-                                    ...params,
-                                    Keywords: value
-                                })
-                            }}
-                        />
-                        <YakitDropdownMenu
-                            menu={{
-                                data: [
-                                    {
-                                        key: "noResetRefresh",
-                                        label: "仅刷新"
-                                    },
-                                    {
-                                        key: "resetRefresh",
-                                        label: "重置查询条件刷新"
-                                    }
-                                ],
-                                onClick: ({key}) => {
-                                    switch (key) {
-                                        case "noResetRefresh":
-                                            update(1)
-                                            break
-                                        case "resetRefresh":
-                                            onResetRefresh()
-                                            break
-                                        default:
-                                            break
-                                    }
-                                }
-                            }}
-                            dropdown={{
-                                trigger: ["hover"],
-                                placement: "bottom"
-                            }}
-                        >
-                            <div className={styles["refresh-button"]}>
-                                <RefreshIcon className={styles["refresh-icon"]} />
-                            </div>
-                        </YakitDropdownMenu>
-
-                        {allResponse.Total > 0 && !advancedConfig && (
-                            <>
-                                <Divider type='vertical' style={{margin: "0 8px",marginRight:12}} />
-                                <span style={{marginRight: 4}}>高级筛选</span>
-                                <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
-                            </>
-                        )}
-                    </div>
-                </div>
-                <div className={styles["portAsset-table"]}>
-                    <TableVirtualResize<PortAsset>
-                        containerClassName={styles["portAsset-table-list-container"]}
-                        query={params}
-                        isRefresh={isRefresh}
-                        isShowTotal={true}
-                        isRightClickBatchOperate={true}
-                        extra={
-                            <div className={styles["table-head-extra"]}>
-                                <ExportExcel
-                                    newUI={true}
-                                    newBtnProps={{
-                                        type: "outline2",
-                                        icon: <ExportIcon className={styles["table-head-icon"]} />
+            <YakitResizeBox
+                isVer={true}
+                firstMinSize={400}
+                secondMinSize={300}
+                firstNode={
+                    <div className={styles["portAsset"]}>
+                        <div className={styles["portAsset-head"]}>
+                            <div className={styles["head-title"]}>端口资产列表</div>
+                            <div className={styles["head-extra"]}>
+                                <YakitInput.Search
+                                    placeholder='请输入网络地址、端口、服务指纹、title关键词搜索'
+                                    style={{width: 320}}
+                                    onSearch={onSearch}
+                                    onPressEnter={() => update(1)}
+                                    value={params.Keywords}
+                                    onChange={(e) => {
+                                        const {value} = e.target
+                                        setParams({
+                                            ...params,
+                                            Keywords: value
+                                        })
                                     }}
-                                    getData={getData}
                                 />
-                                <YakitPopconfirm
-                                    title={selected.length > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
-                                    onConfirm={() => {
-                                        onRemove()
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: [
+                                            {
+                                                key: "noResetRefresh",
+                                                label: "仅刷新"
+                                            },
+                                            {
+                                                key: "resetRefresh",
+                                                label: "重置查询条件刷新"
+                                            }
+                                        ],
+                                        onClick: ({key}) => {
+                                            switch (key) {
+                                                case "noResetRefresh":
+                                                    update(1)
+                                                    break
+                                                case "resetRefresh":
+                                                    onResetRefresh()
+                                                    break
+                                                default:
+                                                    break
+                                            }
+                                        }
                                     }}
-                                    placement='bottomRight'
+                                    dropdown={{
+                                        trigger: ["hover"],
+                                        placement: "bottom"
+                                    }}
                                 >
-                                    <YakitButton
-                                        type='outline2'
-                                        icon={<TrashIcon className={styles["table-head-icon"]} />}
-                                    >
-                                        {selected.length > 0 ? "删除" : "清空"}
-                                    </YakitButton>
-                                </YakitPopconfirm>
+                                    <div className={styles["refresh-button"]}>
+                                        <RefreshIcon className={styles["refresh-icon"]} />
+                                    </div>
+                                </YakitDropdownMenu>
 
-                                <YakitPopover
-                                    content={
-                                        <YakitMenu
-                                            data={menuData}
-                                            onClick={({key}) => {
-                                                ipcRenderer
-                                                    .invoke("send-to-tab", {
-                                                        type: key,
-                                                        data: {URL: JSON.stringify(checkedURL)}
-                                                    })
-                                                    .then(() => {
-                                                        setSendPopoverVisible(false)
-                                                    })
-                                            }}
-                                        />
-                                    }
-                                    trigger='click'
-                                    placement='bottomRight'
-                                    overlayClassName={styles["table-head-send-popover"]}
-                                    visible={sendPopoverVisible}
-                                    onVisibleChange={(v) => setSendPopoverVisible(v)}
-                                >
-                                    <YakitButton
-                                        onClick={() => {}}
-                                        icon={<PaperAirplaneIcon style={{height: 16}} />}
-                                        type={"primary"}
-                                        disabled={checkedURL.length === 0}
-                                    >
-                                        发送到...
-                                    </YakitButton>
-                                </YakitPopover>
+                                {allResponse.Total > 0 && !advancedConfig && (
+                                    <>
+                                        <Divider type='vertical' style={{margin: "0 8px", marginRight: 12}} />
+                                        <span style={{marginRight: 4}}>高级筛选</span>
+                                        <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
+                                    </>
+                                )}
                             </div>
-                        }
-                        renderKey='Id'
-                        data={response.Data}
-                        rowSelection={{
-                            isAll: allSelected,
-                            type: "checkbox",
-                            selectedRowKeys: selected,
-                            onSelectAll: (newSelectedRowKeys: string[], selected: PortAsset[], checked: boolean) => {
-                                if (checked) {
-                                    selectAll()
-                                } else {
-                                    unSelectAll()
+                        </div>
+                        <div className={styles["portAsset-table"]}>
+                            <TableVirtualResize<PortAsset>
+                                containerClassName={styles["portAsset-table-list-container"]}
+                                query={params}
+                                isRefresh={isRefresh}
+                                isShowTotal={true}
+                                isRightClickBatchOperate={true}
+                                extra={
+                                    <div className={styles["table-head-extra"]}>
+                                        <ExportExcel
+                                            newUI={true}
+                                            newBtnProps={{
+                                                type: "outline2",
+                                                icon: <ExportIcon className={styles["table-head-icon"]} />
+                                            }}
+                                            getData={getData}
+                                        />
+                                        <YakitPopconfirm
+                                            title={selected.length > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                                            onConfirm={() => {
+                                                onRemove()
+                                            }}
+                                            placement='bottomRight'
+                                        >
+                                            <YakitButton
+                                                type='outline2'
+                                                icon={<TrashIcon className={styles["table-head-icon"]} />}
+                                            >
+                                                {selected.length > 0 ? "删除" : "清空"}
+                                            </YakitButton>
+                                        </YakitPopconfirm>
+
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: [
+                                                    {
+                                                        label: "发送到漏洞检测",
+                                                        key: "bug-test"
+                                                    },
+                                                    {
+                                                        label: "发送到端口扫描",
+                                                        key: "scan-port"
+                                                    },
+                                                    {label: "发送到爆破", key: "brute"}
+                                                ],
+                                                onClick: ({key}) => {
+                                                    ipcRenderer
+                                                        .invoke("send-to-tab", {
+                                                            type: key,
+                                                            data: {URL: JSON.stringify(checkedURL)}
+                                                        })
+                                                        .then(() => {
+                                                            setSendPopoverVisible(false)
+                                                        })
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["click"],
+                                                placement: "bottom",
+                                                // overlayClassName: styles["table-head-send-popover"],
+                                                visible: sendPopoverVisible,
+                                                onVisibleChange: (v) => setSendPopoverVisible(v),
+                                                disabled: selected.length === 0
+                                            }}
+                                        >
+                                            <YakitButton
+                                                onClick={() => {}}
+                                                icon={<PaperAirplaneIcon style={{height: 16}} />}
+                                                type={"primary"}
+                                                disabled={selected.length === 0}
+                                            >
+                                                发送到...
+                                            </YakitButton>
+                                        </YakitDropdownMenu>
+                                    </div>
                                 }
-                            },
-                            onChangeCheckboxSingle: (c: boolean, keys: string) => {
-                                if (c) {
-                                    select(keys)
-                                } else {
-                                    unSelect(keys)
-                                }
-                            }
-                        }}
-                        pagination={{
-                            total: response.Total,
-                            limit: response.Pagination.Limit,
-                            page: response.Pagination.Page,
-                            onChange: (page, limit) => update(page, limit)
-                        }}
-                        loading={loading}
-                        columns={columns}
-                        onRowContextMenu={onRowContextMenu}
-                        enableDrag={true}
-                        onChange={onTableChange}
-                    />
-                </div>
-            </div>
+                                renderKey='Id'
+                                data={response.Data}
+                                rowSelection={{
+                                    isAll: allSelected,
+                                    type: "checkbox",
+                                    selectedRowKeys: selected,
+                                    onSelectAll: (
+                                        newSelectedRowKeys: string[],
+                                        selected: PortAsset[],
+                                        checked: boolean
+                                    ) => {
+                                        if (checked) {
+                                            selectAll()
+                                        } else {
+                                            unSelectAll()
+                                        }
+                                    },
+                                    onChangeCheckboxSingle: (c: boolean, keys: string) => {
+                                        if (c) {
+                                            select(keys)
+                                        } else {
+                                            unSelect(keys)
+                                        }
+                                    }
+                                }}
+                                pagination={{
+                                    total: response.Total,
+                                    limit: response.Pagination.Limit,
+                                    page: response.Pagination.Page,
+                                    onChange: (page, limit) => update(page, limit)
+                                }}
+                                loading={loading}
+                                columns={columns}
+                                onRowContextMenu={onRowContextMenu}
+                                // onRowClick={onRowClick}
+                                onSetCurrentRow={setCurrentSelectItem}
+                                enableDrag={true}
+                                onChange={onTableChange}
+                            />
+                        </div>
+                    </div>
+                }
+                secondNode={
+                    <>
+                        {currentSelectItem ? (
+                            <div className={classNames("yakit-descriptions", styles["port-description"])}>
+                                <PortAssetDescription port={currentSelectItem} />
+                            </div>
+                        ) : (
+                            <></>
+                        )}
+                    </>
+                }
+                secondNodeStyle={{
+                    padding: currentSelectItem ? "12px 16px" : 0,
+                    display: currentSelectItem ? "" : "none",
+                    color: "red"
+                }}
+                lineStyle={{display: currentSelectItem?.Id ? "" : "none"}}
+                {...ResizeBoxProps}
+            ></YakitResizeBox>
             <PortAssetQuery
                 loading={advancedQueryLoading}
                 portsGroupList={portsGroup}
@@ -852,47 +896,44 @@ export interface PortAssetDescriptionProp {
 export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
     const {port} = props
     return (
-        <Descriptions
-            size={"small"}
-            bordered={true}
-            column={!port.ServiceType ? 1 : 2}
-            title={""}
-            style={{marginLeft: 20}}
-        >
-            <Descriptions.Item label='状态'>
-                <YakitCopyText showText={port.State} />
-            </Descriptions.Item>
-            {port.HtmlTitle && (
-                <Descriptions.Item label='Title'>
-                    <YakitCopyText showText={port.HtmlTitle} />
+        <>
+            <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={"端口资产详情"}>
+                <Descriptions.Item label='状态'>
+                    <YakitCopyText showText={port.State} />
                 </Descriptions.Item>
-            )}
-            {port.ServiceType && (
-                <Descriptions.Item span={2} label='应用'>
-                    <YakitCopyText showText={port.ServiceType} />
-                </Descriptions.Item>
-            )}
-            {port.Reason && (
-                <Descriptions.Item span={2} label='失败原因'>
-                    <YakitCopyText showText={port.Reason} />
-                </Descriptions.Item>
-            )}
-            {port.CPE.join("|") !== "" ? (
-                <Descriptions.Item span={2} label='CPE'>
-                    <Space direction={"vertical"}>
-                        {port.CPE.map((e) => {
-                            return <YakitCopyText key={e} showText={e} />
-                        })}
-                    </Space>
-                </Descriptions.Item>
-            ) : undefined}
-            {port.Fingerprint && (
-                <Descriptions.Item span={2} label='指纹信息'>
-                    <div style={{height: 200}}>
-                        <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} />
-                    </div>
-                </Descriptions.Item>
-            )}
-        </Descriptions>
+                {port.HtmlTitle && (
+                    <Descriptions.Item label='Title'>
+                        <YakitCopyText showText={port.HtmlTitle} />
+                    </Descriptions.Item>
+                )}
+                {port.ServiceType && (
+                    <Descriptions.Item span={2} label='应用'>
+                        <YakitCopyText showText={port.ServiceType} />
+                    </Descriptions.Item>
+                )}
+                {port.Reason && (
+                    <Descriptions.Item span={2} label='失败原因'>
+                        <YakitCopyText showText={port.Reason} />
+                    </Descriptions.Item>
+                )}
+                {port.CPE.join("|") !== "" ? (
+                    <Descriptions.Item span={2} label='CPE'>
+                        <Space direction={"vertical"}>
+                            {port.CPE.map((e) => {
+                                return <YakitCopyText key={e} showText={e} />
+                            })}
+                        </Space>
+                    </Descriptions.Item>
+                ) : undefined}
+                {port.Fingerprint && (
+                    <Descriptions.Item span={2} label='指纹信息'>
+                        <div style={{height: 200}}>
+                            <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} />
+                        </div>
+                    </Descriptions.Item>
+                )}
+            </Descriptions>
+            <div className='descriptions-no-more'>暂无更多</div>
+        </>
     )
 }

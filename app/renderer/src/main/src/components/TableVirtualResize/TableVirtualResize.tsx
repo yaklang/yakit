@@ -627,10 +627,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const selectList = data.filter((_, index) => index >= min && index <= max)
             setSelectedRows(selectList)
             setCurrentRow(undefined)
+            if (onSetCurrentRow) onSetCurrentRow(undefined)
             preSelectRef.current = undefined
         } else {
             setSelectedRows([])
             setCurrentRow(record)
+            if (onSetCurrentRow) onSetCurrentRow(record)
             if (props.onRowClick) {
                 props.onRowClick(record)
             }

@@ -66,7 +66,7 @@ export interface TableVirtualResizeProps<T> {
     disableSorting?: boolean //禁用排序
     query?: object
     currentSelectItem?: T
-    onSetCurrentRow?: (record: T) => void
+    onSetCurrentRow?: (record?: T) => void
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
