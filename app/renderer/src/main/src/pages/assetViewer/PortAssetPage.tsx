@@ -504,7 +504,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 label:
                                     selectedRows.length > 0 ? (
                                         <div className={styles["context-menu-remove"]}>
-                                            <span>删除框选内</span>
+                                            <span>删除框选数据</span>
                                             <span className={styles["number"]}>{selectedRows.length}条</span>
                                         </div>
                                     ) : (
@@ -588,7 +588,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 })
                             }}
                         />
-                        <Divider type='vertical' style={{margin: "0 16px"}} />
                         <YakitDropdownMenu
                             menu={{
                                 data: [
@@ -598,7 +597,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     },
                                     {
                                         key: "resetRefresh",
-                                        label: "重置查询条件并刷新"
+                                        label: "重置查询条件刷新"
                                     }
                                 ],
                                 onClick: ({key}) => {
@@ -626,7 +625,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 
                         {allResponse.Total > 0 && !advancedConfig && (
                             <>
-                                <Divider type='vertical' style={{margin: "0 16px"}} />
+                                <Divider type='vertical' style={{margin: "0 8px",marginRight:12}} />
                                 <span style={{marginRight: 4}}>高级筛选</span>
                                 <YakitSwitch checked={advancedConfig} onChange={setAdvancedConfig} />
                             </>

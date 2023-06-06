@@ -2049,7 +2049,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 },
                                                 {
                                                     key: "resetRefresh",
-                                                    label: "重置查询条件并刷新"
+                                                    label: "重置查询条件刷新"
                                                 }
                                             ],
                                             onClick: ({key}) => {

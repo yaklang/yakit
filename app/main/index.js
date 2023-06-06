@@ -39,6 +39,7 @@ const createWindow = () => {
         closeFlag = cacheFlag === undefined ? true : cacheFlag
     })
     let mainWindowState = getBrowserWindow()
+    console.log('mainWindowState',mainWindowState)
     win = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
@@ -89,10 +90,6 @@ const createWindow = () => {
     // 阻止内部react页面的链接点击跳转
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
-    })
-
-    win.on("will-resize", (e, newBounds) => {
-        console.log("newBounds_will-resize", newBounds)
     })
     // 录屏
     globalShortcut.register("Control+Shift+X", (e) => {
@@ -218,7 +215,7 @@ app.on("window-all-closed", function () {
 function getBrowserWindow() {
     // 使用 electron-window-state 模块来获取窗口状态
     let windowState = windowStateKeeper({
-        defaultWidth: 1600,
+        defaultWidth: 1200,
         defaultHeight: 1000
     })
     // 获取所有可用的屏幕

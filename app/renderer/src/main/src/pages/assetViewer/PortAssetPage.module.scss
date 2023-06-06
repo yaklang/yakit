@@ -55,6 +55,7 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                margin-left: 12px;
                 .refresh-icon {
                     color: var(--yakit-body-text-color);
                     svg {
@@ -187,8 +188,10 @@
     justify-content: space-between;
     align-items: center;
     flex: 1;
+    line-height: 16px;
     .number {
         color: var(--yakit-helper-text-color);
+        font-size: 12px;
     }
     &:hover {
         .number {
