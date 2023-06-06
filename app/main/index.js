@@ -4,14 +4,9 @@ const path = require("path")
 const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
-const {
-    initExtraLocalCache,
-    getExtraLocalCacheValue,
-    initLocalCache,
-    setCloeseExtraLocalCache,
-} = require("./localCache")
+const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const { engineLog } = require("./filePath")
+const {engineLog} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
@@ -39,7 +34,6 @@ const createWindow = () => {
         closeFlag = cacheFlag === undefined ? true : cacheFlag
     })
     let mainWindowState = getBrowserWindow()
-    console.log('mainWindowState',mainWindowState)
     win = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
@@ -57,8 +51,7 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
-    // 设置高度和宽度，因为默认设置的宽度和高度在不同分辨率的双屏上有bug
-    win.setSize(mainWindowState.width,mainWindowState.height)
+    win.setSize(mainWindowState.width, mainWindowState.height)
     // 将窗口的位置和大小保存到文件中
     mainWindowState.manage(win)
     if (isDev) {
@@ -71,12 +64,12 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: "detach"})
     }
-   
+
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
 
-    win.on("close", async(e) => {
+    win.on("close", async (e) => {
         e.preventDefault()
         // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
         win.webContents.send("close-windows-renderer")
@@ -119,41 +112,41 @@ app.whenReady().then(() => {
 
         ipcMain.handle("app-exit", async (e, params) => {
             if (closeFlag) {
-            dialog
-                .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
-                    type: "none",
-                    title: "提示",
-                    defaultId: 0,
-                    cancelId: 3,
-                    message: "确定要关闭吗？",
-                    buttons: ["最小化", "直接退出"],
-                    checkboxLabel: "不再展示关闭二次确认？",
-                    checkboxChecked: false,
-                    noLink: true
-                })
-                .then(async(res) => {
-                    await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
-                    await asyncKillDynamicControl()
-                    if (res.response === 0) {
-                        e.preventDefault()
-                        win.minimize()
-                    } else if (res.response === 1) {
-                        win = null
-                        clearing()
-                        app.exit()
-                    } else {
-                        e.preventDefault()
-                        return
-                    }
-                })
-        } else {
-            // close时关掉远程控制
-            await asyncKillDynamicControl()
-            win = null
-            clearing()
-            app.exit()
-        }
+                dialog
+                    .showMessageBox(win, {
+                        icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
+                        type: "none",
+                        title: "提示",
+                        defaultId: 0,
+                        cancelId: 3,
+                        message: "确定要关闭吗？",
+                        buttons: ["最小化", "直接退出"],
+                        checkboxLabel: "不再展示关闭二次确认？",
+                        checkboxChecked: false,
+                        noLink: true
+                    })
+                    .then(async (res) => {
+                        await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
+                        await asyncKillDynamicControl()
+                        if (res.response === 0) {
+                            e.preventDefault()
+                            win.minimize()
+                        } else if (res.response === 1) {
+                            win = null
+                            clearing()
+                            app.exit()
+                        } else {
+                            e.preventDefault()
+                            return
+                        }
+                    })
+            } else {
+                // close时关掉远程控制
+                await asyncKillDynamicControl()
+                win = null
+                clearing()
+                app.exit()
+            }
         })
 
         globalShortcut.register("Control+Shift+b", () => {
@@ -215,8 +208,8 @@ app.on("window-all-closed", function () {
 function getBrowserWindow() {
     // 使用 electron-window-state 模块来获取窗口状态
     let windowState = windowStateKeeper({
-        defaultWidth: 1200,
-        defaultHeight: 1000
+        defaultWidth: 1200 * screen.getPrimaryDisplay().scaleFactor,
+        defaultHeight: 1000 * screen.getPrimaryDisplay().scaleFactor
     })
     // 获取所有可用的屏幕
     let displays = screen.getAllDisplays()
