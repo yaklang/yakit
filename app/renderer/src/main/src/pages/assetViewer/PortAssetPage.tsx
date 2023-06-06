@@ -69,6 +69,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -242,7 +243,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     OrderBy: orderBy || "updated_at"
                 }
             }
-            if (advancedConfig&&queryList) {
+            if (advancedConfig && queryList) {
                 let list: string[] = []
                 Object.keys(queryList).forEach((key) => {
                     list = list.concat(queryList[key])
@@ -331,7 +332,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             onChange={(e) => {
                                 setParams({...params, TitleEffective: e.target.checked})
                                 setTimeout(() => {
-                                    update(1)
+                                   update(1)
                                 }, 200)
                             }}
                         />
@@ -426,14 +427,13 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                update(1)
-                getAllData()
+                onNoResetRefresh()
                 setCheckedURL([])
                 unSelectAll()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
-    const refList = useMemoizedFn(() => {
+    const onResetRefresh = useMemoizedFn(() => {
         setParams({
             Hosts: "",
             Ports: "",
@@ -455,6 +455,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             update(1)
             getAllData()
         }, 100)
+    })
+    const onNoResetRefresh = useMemoizedFn(() => {
+        update(1)
+        getAllData()
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, _, filter: any) => {
         setParams({
@@ -548,8 +552,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                update(1)
-                getAllData()
+                onNoResetRefresh()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -584,9 +587,41 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             }}
                         />
                         <Divider type='vertical' style={{margin: "0 16px"}} />
-                        <Tooltip title='重置所有查询条件并刷新'>
-                            <RefreshIcon className={styles["refresh-icon"]} onClick={() => refList()} />
-                        </Tooltip>
+                        <YakitDropdownMenu
+                            menu={{
+                                data: [
+                                    {
+                                        key: "noResetRefresh",
+                                        label: "仅刷新"
+                                    },
+                                    {
+                                        key: "resetRefresh",
+                                        label: "重置查询条件并刷新"
+                                    }
+                                ],
+                                onClick: ({key}) => {
+                                    switch (key) {
+                                        case "noResetRefresh":
+                                            onNoResetRefresh()
+                                            break
+                                        case "resetRefresh":
+                                            onResetRefresh()
+                                            break
+                                        default:
+                                            break
+                                    }
+                                }
+                            }}
+                            dropdown={{
+                                trigger: ["hover"],
+                                placement: "bottom"
+                            }}
+                        >
+                            <div className={styles["refresh-button"]}>
+                                <RefreshIcon className={styles["refresh-icon"]} onClick={() => onResetRefresh()} />
+                            </div>
+                        </YakitDropdownMenu>
+
                         {allResponse.Total > 0 && !advancedConfig && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 16px"}} />
@@ -701,7 +736,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 portsGroupList={portsGroup}
                 visible={allResponse.Total > 0 && advancedConfig}
                 setVisible={setAdvancedConfig}
-                queryList={queryList||{}}
+                queryList={queryList || {}}
                 setQueryList={(val) => setQueryList(val)}
             />
         </div>

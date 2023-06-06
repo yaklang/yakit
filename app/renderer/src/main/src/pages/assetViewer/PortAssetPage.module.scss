@@ -47,11 +47,26 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            .refresh-icon {
-                color: var(--yakit-body-text-color);
+            .refresh-button {
                 cursor: pointer;
+                border-radius: 4px;
+                width: 32px;
+                height: 24px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                .refresh-icon {
+                    color: var(--yakit-body-text-color);
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    background-color: var(--yakit-background-color);
+                    .refresh-icon {
+                        color: var(--yakit-primary-5);
+                    }
                 }
             }
         }
