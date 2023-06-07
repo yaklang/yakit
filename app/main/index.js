@@ -10,6 +10,7 @@ const {engineLog} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
+const {windowStatePatch} = require("./filePath")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -51,8 +52,7 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
-    // 将窗口的位置和大小保存到文件中
-    mainWindowState.manage(win)
+  
     if (isDev) {
         win.loadURL("http://127.0.0.1:3000")
     } else {
@@ -63,13 +63,14 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: "detach"})
     }
-
+    mainWindowState.manage(win)
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
 
     win.on("close", async (e) => {
         e.preventDefault()
+        mainWindowState.saveState(win)
         // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
         win.webContents.send("close-windows-renderer")
     })
@@ -208,8 +209,11 @@ function getBrowserWindow() {
     // 使用 electron-window-state 模块来获取窗口状态
     let windowState = windowStateKeeper({
         defaultWidth: 1200 * screen.getPrimaryDisplay().scaleFactor,
-        defaultHeight: 1000 * screen.getPrimaryDisplay().scaleFactor
+        defaultHeight: 1000 * screen.getPrimaryDisplay().scaleFactor,
+        path: windowStatePatch,
+        file: "yakit-window-state.json"
     })
+
     // 获取所有可用的屏幕
     let displays = screen.getAllDisplays()
     // 获取第二个屏幕的大小和位置

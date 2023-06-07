@@ -56,6 +56,10 @@ const remoteLinkFile = path.join(remoteLinkDir, "yakit-remote.json")
 // const yakitDir = path.join(os.homedir(), "AppData","Local","Programs","yakit")
 // const htmlTemplateDir = path.join(yakitDir, "report")
 const htmlTemplateDir = loadExtraFilePath(path.join("report"))
+
+/** 窗口缓存文件路径 */
+const windowStatePatch = path.join(basicDir)
+
 module.exports = {
     yaklangEngineDir,
     getLocalYaklangEngine,
@@ -64,5 +68,6 @@ module.exports = {
     engineLog,
     remoteLinkDir,
     remoteLinkFile,
-    htmlTemplateDir
+    htmlTemplateDir,
+    windowStatePatch
 }

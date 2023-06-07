@@ -776,9 +776,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     </>
                 }
                 secondNodeStyle={{
-                    padding: currentSelectItem ? "12px 16px" : 0,
+                    padding: currentSelectItem ? "8px 16px 16px 12px" : 0,
                     display: currentSelectItem ? "" : "none",
-                    color: "red"
                 }}
                 lineStyle={{display: currentSelectItem?.Id ? "" : "none"}}
                 {...ResizeBoxProps}
