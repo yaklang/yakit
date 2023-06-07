@@ -171,6 +171,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [portsGroup, setPortsGroup] = useState<PortsGroup[]>([])
     const [queryList, setQueryList] = useState<QueryListProps>()
     const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
+    const [scrollToIndex, setScrollToIndex] = useState<number>()
 
     const selectedId = useCreation<string[]>(() => {
         return allResponse.Data.map((i) => `${i.Id}`)
@@ -641,6 +642,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         </div>
                         <div className={styles["portAsset-table"]}>
                             <TableVirtualResize<PortAsset>
+                                currentIndex={scrollToIndex}
                                 containerClassName={styles["portAsset-table-list-container"]}
                                 query={params}
                                 isRefresh={isRefresh}
@@ -749,8 +751,13 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                 loading={loading}
                                 columns={columns}
                                 onRowContextMenu={onRowContextMenu}
-                                // onRowClick={onRowClick}
-                                onSetCurrentRow={setCurrentSelectItem}
+                                onSetCurrentRow={(val) => {
+                                    if (!currentSelectItem) {
+                                        const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
+                                        setScrollToIndex(index)
+                                    }
+                                    setCurrentSelectItem(val)
+                                }}
                                 enableDrag={true}
                                 onChange={onTableChange}
                             />
