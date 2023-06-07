@@ -1,0 +1,141 @@
+@mixin flex-space-between-and-center {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+}
+.matching-extraction-resize-box {
+    height: 100%;
+    min-height: 300px;
+    .matching-extraction-editor {
+        padding-top: 16px;
+        background-color: #f0f2f5;
+        height: 100%;
+        :global {
+            .monaco-editor .scroll-decoration {
+                box-shadow: none;
+            }
+        }
+    }
+}
+
+.matching-extraction {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    .matching-extraction-heard {
+        @include flex-space-between-and-center;
+        height: 40px;
+        padding: 8px 16px 8px 12px;
+        background: var(--yakit-card-background-color);
+        border-bottom: 1px solid var(--yakit-border-color);
+        .matching-extraction-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .matching-extraction-title-tip {
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 16px;
+            color: var(--yakit-helper-text-color);
+            .primary-number {
+                color: var(--yakit-primary-5);
+            }
+        }
+        .matching-extraction-extra {
+            @include flex-space-between-and-center;
+            gap: 8px;
+        }
+    }
+    .matching-extraction-content {
+        padding: 12px;
+        :global {
+            .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+                padding: 2px 8px;
+                height: 28px;
+                background: var(--yakit-card-background-color);
+                border-radius: 4px 4px 0px 0px;
+                border-bottom: 1px solid transparent;
+            }
+            .ant-collapse-item-active .ant-collapse-header {
+                border-bottom-color: var(--yakit-border-color) !important;
+            }
+            .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+                padding: 0;
+            }
+        }
+        .matching-extraction-condition {
+            @include flex-space-between-and-center;
+            margin-bottom: 8px;
+            .condition-mode {
+                @include flex-space-between-and-center;
+                .condition-mode-text {
+                    font-weight: 400;
+                    font-size: 12px;
+                    line-height: 16px;
+                    margin-right: 4px;
+                    color: var(--yakit-header-color);
+                }
+            }
+        }
+        .matcher-extraction-collapse {
+            border-radius: 4px;
+            border: 1px solid var(--yakit-border-color);
+            .collapse-panel-header {
+                @include flex-center;
+                gap: 4px;
+                .header-id {
+                    color: var(--yakit-helper-text-color);
+                }
+                .header-number {
+                    width: 18px;
+                    height: 16px;
+                    padding: 2px 6px;
+                    background: var(--yakit-background-color);
+                    border-radius: 8px;
+                    font-weight: 400;
+                    font-size: 10px;
+                    line-height: 12px;
+                    color: var(--yakit-body-text-color);
+                }
+            }
+            .collapse-panel-condition {
+                background-color: var(--yakit-card-background-color);
+                padding: 12px 8px;
+            }
+            .matching-extraction-list-value{
+
+            }
+        }
+    }
+
+    .remove-icon {
+        margin-left: 8px;
+        color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.label-node {
+    @include flex-center;
+    font-size: 12px;
+    color: var(--yakit-header-color);
+    .label {
+        width: 104px;
+        text-align: right;
+        margin-right: 4px;
+    }
+}
+
+.label-node + .label-node {
+    margin-top: 8px;
+}
