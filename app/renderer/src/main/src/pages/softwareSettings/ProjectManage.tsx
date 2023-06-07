@@ -979,7 +979,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         {latestProject?.ProjectName || "[default]"}
                                     </div>
                                     <div className={styles["subtitle-style"]}>{`最近操作时间：${
-                                        latestProject ? formatTimestamp(latestProject?.CreatedAt) : "- -"
+                                        latestProject ? formatTimestamp(latestProject?.UpdateAt) : "- -"
                                     }`}</div>
                                 </div>
                             </div>
