@@ -145,7 +145,7 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                     </Checkbox.Group>
                 </Card>
             </div>
-            <div style={{flex: 1}}>
+            <div style={{flex: 1,width:'100%'}}>
                 <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
                     <Row style={{marginBottom: 30, marginTop: 35}}>
                     <Col span={3}/>
