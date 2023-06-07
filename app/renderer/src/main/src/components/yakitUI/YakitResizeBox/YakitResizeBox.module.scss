@@ -11,6 +11,9 @@
         .resize-split-line-in {
             background-color: var(--yakit-background-color);
         }
+        .resize-split-line-in-hide{
+            background-color: transparent;
+        }
         .resize-split-line-in-ver {
             width: 100%;
             height: 1px;
@@ -21,7 +24,7 @@
         }
     }
     .resize-split-line:hover {
-        .resize-split-line-in {
+        .resize-split-line-in, .resize-split-line-in-hide {
             background-color: var(--yakit-primary-4);
         }
         .resize-split-line-in-ver{
