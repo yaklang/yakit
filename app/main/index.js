@@ -51,7 +51,6 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
-    win.setSize(mainWindowState.width, mainWindowState.height)
     // 将窗口的位置和大小保存到文件中
     mainWindowState.manage(win)
     if (isDev) {

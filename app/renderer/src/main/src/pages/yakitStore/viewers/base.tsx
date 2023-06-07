@@ -601,7 +601,6 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                 return (
                     <div className='base-table'>
                         <TableVirtualResize<any>
-                            containerClassName='base-table-container'
                             query={query}
                             titleHeight={48}
                             renderTitle={
