@@ -11,6 +11,7 @@ import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {Route} from "@/routes/routeSpec"
 
 const layout = {
     labelCol: {span: 5},
@@ -28,6 +29,7 @@ interface ShareImportProps {
 
 interface pwdRequestProps {
     share_id: string
+    token: string
 }
 
 export function onImportShare() {
@@ -74,12 +76,14 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
      */
     const onExtractPwd = useMemoizedFn((value) => {
         setLoading(true)
+        const pwdRequest: pwdRequestProps = {
+            share_id: value.share_id,
+            token: userInfo.token
+        }
         NetWorkApi<pwdRequestProps, boolean>({
             url: "module/extract/pwd",
             method: "get",
-            params: {
-                share_id: value.share_id
-            }
+            params: {...pwdRequest}
         })
             .then((pwd) => {
                 if (pwd) {
@@ -112,24 +116,16 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             data: value
         })
             .then((res) => {
-                console.log("module/extract", res)
-                const shareContent = JSON.parse(res.extract_content)
-                ipcRenderer
-                    .invoke("send-to-tab", {
-                        type: res.module,
-                        data: {
-                            isHttps: shareContent.isHttps,
-                            isGmTLS: shareContent.isGmTLS,
-                            request: shareContent.request,
-                            shareContent: res.extract_content
-                        }
-                    })
-                    .then(() => {
-                        onClose()
-                    })
-                    .catch((err) => {
-                        yakitNotify("error", "打开web fuzzer失败:" + err)
-                    })
+                switch (res.module) {
+                    case "fuzzer":
+                        handleWebFuzzerShare(res)
+                        break
+                    case Route.HTTPHacker:
+                        handleHttpHistoryShare(res)
+                        break
+                    default:
+                        break
+                }
             })
             .catch((err) => {
                 yakitNotify("error", "获取分享数据失败：" + err)
@@ -138,6 +134,45 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
+            })
+    })
+    const handleWebFuzzerShare = useMemoizedFn((res: API.ExtractResponse) => {
+        const shareContent = JSON.parse(res.extract_content)
+        ipcRenderer
+            .invoke("send-to-tab", {
+                type: res.module,
+                data: {
+                    isHttps: shareContent.isHttps,
+                    isGmTLS: shareContent.isGmTLS,
+                    request: shareContent.request,
+                    shareContent: res.extract_content
+                }
+            })
+            .then(() => {
+                onClose()
+            })
+            .catch((err) => {
+                yakitNotify("error", "打开web fuzzer失败:" + err)
+            })
+    })
+    const handleHttpHistoryShare = useMemoizedFn((res: API.ExtractResponse) => {
+        ipcRenderer
+            .invoke("HTTPFlowsExtract", {
+                ShareExtractContent: res.extract_content
+            })
+            .then(() => {
+                ipcRenderer
+                    .invoke("send-to-tab", {
+                        type: res.module
+                    })
+                    .then(() => {
+                        ipcRenderer.invoke("send-positioning-http-history", {
+                            activeTab: "history"
+                        })
+                    })
+            })
+            .catch((err) => {
+                yakitNotify("error", "储存HttpHistory分享数据失败" + err)
             })
     })
     return (

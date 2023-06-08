@@ -20,6 +20,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFlowsShareRequest, HTTPFlowsShareResponse, ShareDataProps} from "./shareDataType"
+import { Route } from "@/routes/routeSpec"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -148,12 +149,10 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
             if (shareResData.share_id) {
                 shareHttpHistoryParams.ShareId = shareResData.share_id
             }
-            console.log("shareHttpHistoryParams", shareHttpHistoryParams)
             setShareLoading(true)
             ipcRenderer
                 .invoke("HTTPFlowsShare", shareHttpHistoryParams)
                 .then((res: HTTPFlowsShareResponse) => {
-                    console.log("HTTPFlowsShare", res)
                     setShareResData({
                         share_id: res.ShareId,
                         extract_code: res.ExtractCode
@@ -173,7 +172,7 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
     })
     const onShare = useMemoizedFn(() => {
         switch (module) {
-            case "http_history":
+            case Route.HTTPHacker:
                 onShareHttpHistory()
                 break
             default:

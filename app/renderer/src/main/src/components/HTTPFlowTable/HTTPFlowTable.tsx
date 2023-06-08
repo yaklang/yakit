@@ -66,6 +66,7 @@ import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
 import { ShareModal } from "@/pages/fuzzer/components/ShareData"
+import { Route } from "@/routes/routeSpec"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1953,7 +1954,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onShareData=useMemoizedFn((ids:string[])=>{
         const m = showYakitModal({
             title: "导入分享数据",
-            content: <ShareModal module='http_history' shareContent={JSON.stringify(ids)} />,
+            content: <ShareModal module={Route.HTTPHacker} shareContent={JSON.stringify(ids)} />,
             footer: null
         })
     })
