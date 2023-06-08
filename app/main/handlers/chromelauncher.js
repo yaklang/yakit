@@ -43,7 +43,6 @@ module.exports = (win, getClient) => {
         try {
             return getChromePath()
         } catch (e) {
-            console.log(e)
             return null
         }
     })
