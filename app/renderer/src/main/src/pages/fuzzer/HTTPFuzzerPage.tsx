@@ -2791,16 +2791,20 @@ const mountContentWidget = (editor: IMonacoEditor, isShow?: boolean) => {
     editor.onDidBlurEditorWidget(() => {
         editor.removeContentWidget(instance)
     })
-    editor.onMouseUp((event)=>{
-        editor.removeContentWidget(instance)
-        editor.addContentWidget(instance)
-    })
     editor.onMouseMove(event => {
         try {
             const pos = event.target.position;
-            if ((pos?.lineNumber||0)-(editor.getPosition()?.lineNumber||0) > 3) {
-                instance.setColor("red")
-                editor.layoutContentWidget(instance)
+            console.info("mouse move: ", pos?.lineNumber, "cursor:" , editor.getPosition()?.lineNumber);
+
+            const lineOffset = (pos?.lineNumber||0)-(editor.getPosition()?.lineNumber||0);
+            if (lineOffset > 3 || lineOffset < -3) {
+                editor.removeContentWidget(instance)
+                instance.color = "red"
+                editor.addContentWidget(instance)
+            }else{
+                editor.removeContentWidget(instance)
+                instance.color = "green"
+                editor.addContentWidget(instance)
             }
         }catch (e) {
             console.log(e)
