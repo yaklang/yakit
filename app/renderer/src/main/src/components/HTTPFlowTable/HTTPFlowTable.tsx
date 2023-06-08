@@ -48,7 +48,9 @@ import {
     ChevronDownIcon,
     ArrowCircleRightSvgIcon,
     ChromeFrameSvgIcon,
-    CheckIcon
+    CheckIcon,
+    TrashIcon,
+    SaveIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
@@ -64,9 +66,10 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
-import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
-import { ShareModal } from "@/pages/fuzzer/components/ShareData"
-import { Route } from "@/routes/routeSpec"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {ShareModal} from "@/pages/fuzzer/components/ShareData"
+import {Route} from "@/routes/routeSpec"
+import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -756,6 +759,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [isReset, setIsReset] = useState<boolean>(false)
 
     const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
+
+    const [batchVisible, setBatchVisible] = useState<boolean>(false)
 
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
@@ -1786,10 +1791,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 50,
             onClickSingle: (v) => onShareData([v.Id]),
             onClickBatch: (list, n) => {
-                const ids:string[]=list.map(ele=>ele.Id)
+                const ids: string[] = list.map((ele) => ele.Id)
                 onShareData(ids)
             }
-        },
+        }
     ]
     const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
@@ -1951,7 +1956,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
      * @description 分享数据包
      * @param ids 分享数据得ids
      */
-    const onShareData=useMemoizedFn((ids:string[])=>{
+    const onShareData = useMemoizedFn((ids: string[]) => {
         const m = showYakitModal({
             title: "导入分享数据",
             content: <ShareModal module={Route.HTTPHacker} shareContent={JSON.stringify(ids)} />,
@@ -2028,6 +2033,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         }}
                                     />
                                     <Divider type='vertical' />
+                                    <YakitButton
+                                        type='outline2'
+                                        icon={<SaveIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />}
+                                        onClick={() => onImportShare()}
+                                    >
+                                        导入分享数据
+                                    </YakitButton>
                                     <div className={style["empty-button"]}>
                                         <YakitDropdownMenu
                                             menu={{
@@ -2059,7 +2071,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 placement: "bottom"
                                             }}
                                         >
-                                            <YakitButton type='outline2' className='button-text-danger'>
+                                            <YakitButton
+                                                type='outline2'
+                                                className='button-text-danger'
+                                                icon={<TrashIcon style={{height: 16}} />}
+                                            >
                                                 清空
                                             </YakitButton>
                                         </YakitDropdownMenu>
@@ -2360,11 +2376,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                     )
                                                                 break
                                                         }
+                                                        setBatchVisible(false)
                                                     }}
                                                 />
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
+                                            onVisibleChange={setBatchVisible}
+                                            visible={batchVisible}
                                         >
                                             <YakitButton
                                                 type='outline2'
@@ -2858,5 +2877,3 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             setData(newData)
         })
 }
-
-

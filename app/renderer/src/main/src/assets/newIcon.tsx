@@ -1580,3 +1580,4 @@ const ExclamationOutline = () => (
 export const ExclamationOutlineIcon = (props: Partial<IconProps>) => {
     return <Icon component={ExclamationOutline} {...props} />
 }
+
