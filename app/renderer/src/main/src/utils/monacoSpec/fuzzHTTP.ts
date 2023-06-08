@@ -1,5 +1,5 @@
 import {monaco} from "react-monaco-editor";
-import {editor, languages, Position} from "monaco-editor";
+import {editor, IMarkdownString, IRange, languages, Position} from "monaco-editor";
 import {CancellationToken} from "typescript";
 
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
@@ -9,7 +9,7 @@ monaco.languages.registerCompletionItemProvider('http', {
     triggerCharacters: ["{"],
     // @ts-ignore
     provideCompletionItems: (model, position) => {
-        var suggestions = [
+        let suggestions = [
             {
                 kind: languages.CompletionItemKind.Snippet,
                 label: "Authorization: Basic ... 快速添加基础认证",

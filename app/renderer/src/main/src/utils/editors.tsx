@@ -37,8 +37,8 @@ import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
-import { OtherMenuListProps, YakitEditorProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import { HTTPPacketYakitEditor } from "@/components/yakitUI/YakitEditor/extraYakitEditor"
+import {OtherMenuListProps, YakitEditorProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -249,7 +249,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("YaklangCompileAndFormat", {Code: allContent})
-                .then((e: {Errors: YakStaticAnalyzeErrorResult[]; Code: string}) => {
+                .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
                     console.info(e)
                     if (e.Code !== "") {
                         model.setValue(e.Code)
@@ -284,7 +284,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
                     if (e && e.Result.length > 0) {
                         const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                         // console.info(markers)
@@ -581,6 +581,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 
     useEffect(() => {
         if (monacoEditor) {
+            // 固定浮动在编辑框上方的内容
             props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor, props.isAddOverlayWidget)
         }
     }, [monacoEditor, props.isAddOverlayWidget])
@@ -715,7 +716,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <Button
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled />}
+                                    icon={<ThunderboltFilled/>}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -736,7 +737,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <Button
                                     size={"small"}
                                     type={noWordwrap ? "link" : "primary"}
-                                    icon={<EnterOutlined />}
+                                    icon={<EnterOutlined/>}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -776,7 +777,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     <Button
                                                         size={"small"}
                                                         type={"link"}
-                                                        icon={<FullscreenOutlined />}
+                                                        icon={<FullscreenOutlined/>}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -821,7 +822,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
-                                    <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
+                                    <Button icon={<SettingOutlined/>} type={"link"} size={"small"}/>
                                 </Popover>
                             )}
                         </Space>
@@ -857,7 +858,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                                monaco.KeyCode.KEY_R
+                                            monaco.KeyCode.KEY_R
                                         ],
                                         id: "new-web-fuzzer-tab",
                                         run: (e) => {
@@ -913,7 +914,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 if (props.readOnly && props.originValue) {
                                                     ipcRenderer
                                                         .invoke("GetHTTPPacketBody", {PacketRaw: props.originValue})
-                                                        .then((bytes: {Raw: Uint8Array}) => {
+                                                        .then((bytes: { Raw: Uint8Array }) => {
                                                             saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                         })
                                                         .catch((e) => {
@@ -932,7 +933,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 }
                                                 ipcRenderer
                                                     .invoke("GetHTTPPacketBody", {Packet: text})
-                                                    .then((bytes: {Raw: Uint8Array}) => {
+                                                    .then((bytes: { Raw: Uint8Array }) => {
                                                         saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                     })
                                             } catch (e) {
@@ -1017,9 +1018,9 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     noLineNumber?: boolean
     lineNumbersMinChars?: number
     noMinimap?: boolean
-    onAddOverlayWidget?: (editor: IMonacoEditor,isShow?:boolean) => any
+    onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
     extraEditorProps?: YakitEditorProps | any
-    
+
     /** 扩展属性 */
     originValue: Uint8Array
     defaultStringValue?: string
@@ -1300,7 +1301,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 <Button
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled />}
+                                    icon={<ThunderboltFilled/>}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -1321,7 +1322,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 <Button
                                     size={"small"}
                                     type={noWordwrap ? "link" : "primary"}
-                                    icon={<EnterOutlined />}
+                                    icon={<EnterOutlined/>}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -1361,7 +1362,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                     <Button
                                                         size={"small"}
                                                         type={"link"}
-                                                        icon={<FullscreenOutlined />}
+                                                        icon={<FullscreenOutlined/>}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -1406,7 +1407,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
-                                    <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
+                                    <Button icon={<SettingOutlined/>} type={"link"} size={"small"}/>
                                 </Popover>
                             )}
                         </Space>

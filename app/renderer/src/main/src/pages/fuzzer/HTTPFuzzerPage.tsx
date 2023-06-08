@@ -71,7 +71,7 @@ import {useWatch} from "antd/lib/form/Form"
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
-import {monaco} from "react-monaco-editor"
+import MonacoEditor, {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -1073,13 +1073,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     useEffect(() => {
+        if (!reqEditor) {
+            return
+        }
+
         try {
-            if (!reqEditor) {
-                return
-            }
             reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
         } catch (e) {
             failed("初始化 EOL CRLF 失败")
+        }
+
+        try {
+            mountContentWidget(reqEditor, true)
+        }catch (e) {
+            console.info(e)
         }
     }, [reqEditor])
     /**@description 插入 yak.fuzz 语法 */
@@ -2738,3 +2745,65 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
         </div>
     )
 })
+
+const mountContentWidget = (editor: IMonacoEditor, isShow?: boolean) => {
+    const instance = {
+        color: "grey",
+        setColor: (c)=>{
+            if (this === undefined) {
+                return
+            }
+            // @ts-ignore
+            this.color = c
+        },
+        getId: function () {
+            return "monaco.contentwidget.webfuzzer-copilot";
+        },
+        getDomNode: function () {
+            if (!this) {
+                return "" as any
+            }
+
+            let domNode = document.createElement("div");
+            domNode.innerHTML = "My content widget";
+
+            // @ts-ignore
+            domNode.style.background = this.color;
+            return domNode;
+        },
+        getPosition: function () {
+            const currentPos = editor.getPosition();
+            return {
+                position: {
+                    lineNumber: currentPos?.lineNumber || 0,
+                    column: currentPos?.column || 0,
+                },
+                preference: [1,2],
+            };
+        },
+    };
+
+    if (!isShow) {
+        editor.removeContentWidget(instance)
+        return
+    }
+
+    editor.onDidBlurEditorWidget(() => {
+        editor.removeContentWidget(instance)
+    })
+    editor.onMouseUp((event)=>{
+        editor.removeContentWidget(instance)
+        editor.addContentWidget(instance)
+    })
+    editor.onMouseMove(event => {
+        try {
+            const pos = event.target.position;
+            if ((pos?.lineNumber||0)-(editor.getPosition()?.lineNumber||0) > 3) {
+                instance.setColor("red")
+                editor.layoutContentWidget(instance)
+            }
+        }catch (e) {
+            console.log(e)
+        }
+    })
+}
