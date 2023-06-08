@@ -64,6 +64,8 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
+import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
+import { ShareModal } from "@/pages/fuzzer/components/ShareData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1776,7 +1778,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 }
             ]
-        }
+        },
+        {
+            key: "分享数据包",
+            label: "分享数据包",
+            number: 50,
+            onClickSingle: (v) => onShareData([v.Id]),
+            onClickBatch: (list, n) => {
+                const ids:string[]=list.map(ele=>ele.Id)
+                onShareData(ids)
+            }
+        },
     ]
     const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
@@ -1933,6 +1945,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setTimeout(() => {
             update(1)
         }, 100)
+    })
+    /** 
+     * @description 分享数据包
+     * @param ids 分享数据得ids
+     */
+    const onShareData=useMemoizedFn((ids:string[])=>{
+        const m = showYakitModal({
+            title: "导入分享数据",
+            content: <ShareModal module='http_history' shareContent={JSON.stringify(ids)} />,
+            footer: null
+        })
     })
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
@@ -2834,3 +2857,5 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             setData(newData)
         })
 }
+
+

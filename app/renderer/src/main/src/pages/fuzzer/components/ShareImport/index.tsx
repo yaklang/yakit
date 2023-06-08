@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Form, Input, InputNumber} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {failed, info, warn} from "@/utils/notification"
+import {failed, info, warn, yakitNotify} from "@/utils/notification"
 import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
@@ -32,7 +32,7 @@ interface pwdRequestProps {
 
 export function onImportShare() {
     const m = showYakitModal({
-        title: "导入协作资源",
+        title: "导入分享数据",
         content: <ShareImport onClose={() => m.destroy()} />,
         footer: null
     })
@@ -43,7 +43,7 @@ export function onImportPlugin() {
         width: 800,
         footer: null,
         content: (
-            <div style={{width: 780,padding:24}}>
+            <div style={{width: 780, padding: 24}}>
                 <LoadYakitPluginForm
                     onlyId={true}
                     onFinished={() => {
@@ -69,7 +69,9 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             onExtractPwd(value)
         }
     })
-
+    /**
+     * @description 先进行密码验证
+     */
     const onExtractPwd = useMemoizedFn((value) => {
         setLoading(true)
         NetWorkApi<pwdRequestProps, boolean>({
@@ -88,7 +90,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 }
             })
             .catch((err) => {
-                failed(err)
+                yakitNotify("error", "密码验证失败：" + err)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -96,7 +98,9 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 }, 200)
             })
     })
-
+    /**
+     * @description 获取分享数据
+     */
     const onShareExtract = useMemoizedFn((value) => {
         if (userInfo.isLogin) {
             value.token = userInfo.token
@@ -108,6 +112,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             data: value
         })
             .then((res) => {
+                console.log("module/extract", res)
                 const shareContent = JSON.parse(res.extract_content)
                 ipcRenderer
                     .invoke("send-to-tab", {
@@ -123,11 +128,11 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                         onClose()
                     })
                     .catch((err) => {
-                        failed("打开web fuzzer失败:" + err)
+                        yakitNotify("error", "打开web fuzzer失败:" + err)
                     })
             })
             .catch((err) => {
-                failed("获取分享数据失败：" + err)
+                yakitNotify("error", "获取分享数据失败：" + err)
             })
             .finally(() => {
                 setTimeout(() => {
