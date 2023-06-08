@@ -4,17 +4,13 @@ const path = require("path")
 const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
-const {
-    initExtraLocalCache,
-    getExtraLocalCacheValue,
-    initLocalCache,
-    setCloeseExtraLocalCache,
-} = require("./localCache")
+const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const { engineLog } = require("./filePath")
+const {engineLog} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
+const {windowStatePatch} = require("./filePath")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -38,7 +34,12 @@ const createWindow = () => {
         const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
         closeFlag = cacheFlag === undefined ? true : cacheFlag
     })
-    let mainWindowState = getBrowserWindow()
+    let mainWindowState = windowStateKeeper({
+        defaultWidth: 900,
+        defaultHeight: 500,
+        path: windowStatePatch,
+        file: "yakit-window-state.json"
+    })
     win = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
@@ -56,9 +57,7 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
-    // 设置高度和宽度，因为默认设置的宽度和高度在不同分辨率的双屏上有bug
-    win.setSize(mainWindowState.width,mainWindowState.height)
-    // 将窗口的位置和大小保存到文件中
+    win.setSize(mainWindowState.width, mainWindowState.height)
     mainWindowState.manage(win)
     if (isDev) {
         win.loadURL("http://127.0.0.1:3000")
@@ -70,13 +69,13 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: "detach"})
     }
-   
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
 
-    win.on("close", async(e) => {
+    win.on("close", async (e) => {
         e.preventDefault()
+        mainWindowState.saveState(win)
         // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
         win.webContents.send("close-windows-renderer")
     })
@@ -89,10 +88,6 @@ const createWindow = () => {
     // 阻止内部react页面的链接点击跳转
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
-    })
-
-    win.on("will-resize", (e, newBounds) => {
-        console.log("newBounds_will-resize", newBounds)
     })
     // 录屏
     globalShortcut.register("Control+Shift+X", (e) => {
@@ -122,41 +117,41 @@ app.whenReady().then(() => {
 
         ipcMain.handle("app-exit", async (e, params) => {
             if (closeFlag) {
-            dialog
-                .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
-                    type: "none",
-                    title: "提示",
-                    defaultId: 0,
-                    cancelId: 3,
-                    message: "确定要关闭吗？",
-                    buttons: ["最小化", "直接退出"],
-                    checkboxLabel: "不再展示关闭二次确认？",
-                    checkboxChecked: false,
-                    noLink: true
-                })
-                .then(async(res) => {
-                    await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
-                    await asyncKillDynamicControl()
-                    if (res.response === 0) {
-                        e.preventDefault()
-                        win.minimize()
-                    } else if (res.response === 1) {
-                        win = null
-                        clearing()
-                        app.exit()
-                    } else {
-                        e.preventDefault()
-                        return
-                    }
-                })
-        } else {
-            // close时关掉远程控制
-            await asyncKillDynamicControl()
-            win = null
-            clearing()
-            app.exit()
-        }
+                dialog
+                    .showMessageBox(win, {
+                        icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
+                        type: "none",
+                        title: "提示",
+                        defaultId: 0,
+                        cancelId: 3,
+                        message: "确定要关闭吗？",
+                        buttons: ["最小化", "直接退出"],
+                        checkboxLabel: "不再展示关闭二次确认？",
+                        checkboxChecked: false,
+                        noLink: true
+                    })
+                    .then(async (res) => {
+                        await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
+                        await asyncKillDynamicControl()
+                        if (res.response === 0) {
+                            e.preventDefault()
+                            win.minimize()
+                        } else if (res.response === 1) {
+                            win = null
+                            clearing()
+                            app.exit()
+                        } else {
+                            e.preventDefault()
+                            return
+                        }
+                    })
+            } else {
+                // close时关掉远程控制
+                await asyncKillDynamicControl()
+                win = null
+                clearing()
+                app.exit()
+            }
         })
 
         globalShortcut.register("Control+Shift+b", () => {
@@ -214,24 +209,3 @@ app.on("window-all-closed", function () {
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
 })
-/**@description 获取缓存的屏幕参数，位置以及宽高 */
-function getBrowserWindow() {
-    // 使用 electron-window-state 模块来获取窗口状态
-    let windowState = windowStateKeeper({
-        defaultWidth: 1600,
-        defaultHeight: 1000
-    })
-    // 获取所有可用的屏幕
-    let displays = screen.getAllDisplays()
-    // 获取第二个屏幕的大小和位置
-    let externalDisplay = displays.find((display) => {
-        return display.bounds.x !== 0 || display.bounds.y !== 0
-    })
-    // 如果找到了第二个屏幕，则将窗口放置在第二个屏幕上
-    if (externalDisplay) {
-        // 将窗口的位置设置为第二个屏幕
-        windowState.x = externalDisplay.bounds.x
-        windowState.y = externalDisplay.bounds.y
-    }
-    return windowState
-}

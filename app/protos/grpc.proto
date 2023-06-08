@@ -248,6 +248,7 @@ service Yak {
   rpc DeleteHosts(DeleteHostsRequest) returns (Empty);
   rpc QueryDomains(QueryDomainsRequest) returns(QueryDomainsResponse);
   rpc DeleteDomains(DeleteDomainsRequest)returns(Empty);
+  rpc QueryPortsGroup(Empty)returns (QueryPortsGroupResponse);
 
   // Yakit Store
   rpc UpdateFromYakitResource(UpdateFromYakitResourceRequest) returns (Empty);
@@ -1920,6 +1921,21 @@ message Domain {
   string HTTPTitle = 4;
 }
 
+message QueryPortsGroupResponse {
+  repeated PortsGroup PortsGroupList = 1;
+}
+
+message PortsGroup {
+  string GroupName = 1;
+  repeated GroupList GroupLists = 2;
+}
+
+message GroupList {
+  string ServiceType = 1;
+  string ShowServiceType = 2;
+  int32 Total = 3;
+}
+
 message Host {
   int64 Id = 1;
   string IP = 2;
@@ -2231,6 +2247,10 @@ message QueryPortsRequest {
   string State = 5;
   string Title = 6;
   bool   All = 7;
+  string Keywords = 8;
+  bool  TitleEffective = 9;
+  string ComplexSelect = 10;
+  string Proto = 11;
 }
 
 message QueryPortsResponse {

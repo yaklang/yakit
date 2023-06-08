@@ -15,10 +15,17 @@
 .yakit-menu-primary {
     --menu-background: var(--yakit-primary-5);
     --menu-color: var(--yakit-neutral10-color);
+    --menu-select-color: var(--yakit-primary-5);
 }
 .yakit-menu-secondary {
     --menu-background: var(--yakit-primary-1);
     --menu-color: var(--yakit-primary-5);
+    --menu-select-color: var(--yakit-primary-5);
+}
+.yakit-menu-grey {
+    --menu-background: var(--yakit-background-color);
+    --menu-color: var(--yakit-header-color);
+    --menu-select-color: var(--yakit-header-color);
 }
 // 不同尺寸大小配置
 .yakit-menu-default-size {
@@ -55,7 +62,7 @@
         }
 
         .ant-menu-item-selected {
-            color: var(--menu-background);
+            color: var(--menu-select-color);
         }
 
         .ant-menu-submenu-active {
@@ -133,7 +140,7 @@
         }
 
         .ant-dropdown-menu-item-selected {
-            color: var(--menu-background);
+            color: var(--menu-select-color);
             background-color: var(--menu-color);
         }
 
@@ -196,7 +203,7 @@
 
             .ant-menu-item-selected {
                 background-color: unset;
-                color: var(--menu-background);
+                color: var(--menu-select-color);
             }
 
             .ant-menu-item-selected:hover {
@@ -279,7 +286,7 @@
 
             .ant-dropdown-menu-item-selected {
                 background-color: unset;
-                color: var(--menu-background);
+                color: var(--menu-select-color);
             }
 
             .ant-dropdown-menu-item-selected:hover {

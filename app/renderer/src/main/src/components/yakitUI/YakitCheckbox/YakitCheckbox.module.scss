@@ -17,6 +17,7 @@
     :global {
         .ant-checkbox-inner {
             border-radius: 4px;
+            border-color: var(--checkbox-border-color);
         }
 
         .ant-checkbox-checked::after {

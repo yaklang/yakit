@@ -3,7 +3,7 @@ import React, { useState } from "react"
 import { CopyComponentsProps, YakitTagProps } from "./YakitTagType"
 import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
-import { RemoveIcon } from "@/assets/newIcon"
+import { DocumentDuplicateSvgIcon, RemoveIcon } from "@/assets/newIcon"
 import { useMemoizedFn } from "ahooks"
 import { CheckOutlined, CopyOutlined, LoadingOutlined } from "@ant-design/icons"
 import { success } from "@/utils/notification"
@@ -26,16 +26,16 @@ const { ipcRenderer } = window.require("electron")
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const { color, size, disable, className, enableCopy, iconColor } = props
+    const { color, size, disable, className, enableCopy, iconColor,copyText,...restProps } = props
     const onAfterCopy = useMemoizedFn((e) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
     return (
         <Tag
-            {...props}
+            {...restProps}
             closeIcon={
                 (enableCopy && (
-                    <CopyComponents copyText={props.copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
+                    <CopyComponents copyText={copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
                 )) ||
                 props.closeIcon || <RemoveIcon />
             }
@@ -63,7 +63,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 if (props.onClose) props.onClose(e)
             }}
         >
-            {(enableCopy && props.copyText) || props.children}
+            {(enableCopy && copyText) || props.children}
         </Tag>
     )
 }
@@ -73,6 +73,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowSure, setIsShowSure] = useState<boolean>(false)
     const onCopy = useMemoizedFn((e) => {
+        e.stopPropagation()
         if (!props.copyText) return
         setLoading(true)
         ipcRenderer.invoke("set-copy-clipboard", props.copyText)
@@ -91,7 +92,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
             {(loading && <LoadingOutlined />) || (
                 <>
                     {(isShowSure && <CheckOutlined style={{ color: "var(--yakit-success-5)" }} />) || (
-                        <CopyOutlined style={{ color: iconColor || "var(--yakit-primary-5)" }} />
+                        <DocumentDuplicateSvgIcon style={{ color: iconColor || "var(--yakit-primary-5)" }} />
                     )}
                 </>
             )}

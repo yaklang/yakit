@@ -35,6 +35,7 @@ import { YakitInputProps } from "../yakitUI/YakitInput/YakitInputType"
  * @event   onMoveRowEnd 拖拽结束
  * @property {boolean}  useUpAndDown 是否启用上下建
  * @property {string}  containerClassName 容器得类样式
+ * @property {boolean}  isRightClickBatchOperate 右键菜单批量操作，支持Shift + 鼠标左键同时点击
  */
 export interface TableVirtualResizeProps<T> {
     size?: "small" | "middle" | "large"
@@ -53,7 +54,7 @@ export interface TableVirtualResizeProps<T> {
     rowSelection?: RowSelectionProps<T>
     enableDrag?: boolean
     onRowClick?: (record: T) => void
-    onRowContextMenu?: (record: T, e: React.MouseEvent) => void
+    onRowContextMenu?: (record: T,recordList:T[], e: React.MouseEvent) => void
     pagination?: PaginationProps
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
     loading?: boolean
@@ -65,12 +66,13 @@ export interface TableVirtualResizeProps<T> {
     disableSorting?: boolean //禁用排序
     query?: object
     currentSelectItem?: T
-    onSetCurrentRow?: (record: T) => void
+    onSetCurrentRow?: (record?: T) => void
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
     useUpAndDown?: boolean
-    containerClassName?:string
+    containerClassName?: string
+    isRightClickBatchOperate?: boolean
 }
 
 export interface SortProps {
