@@ -1,5 +1,5 @@
 const {ipcMain} = require("electron");
-const {launch, killAll,getChromePath} = require("chrome-launcher");
+const {launch, killAll, getChromePath} = require("chrome-launcher");
 module.exports = (win, getClient) => {
     let started = false;
     ipcMain.handle("IsChromeLaunched", async () => {
@@ -30,7 +30,7 @@ module.exports = (win, getClient) => {
                 `--force-webrtc-ip-handling-policy=default_public_interface_only`,
             ]
         }
-        if(chromePath){
+        if (chromePath) {
             launchOpt["chromePath"] = chromePath
         }
         return launch(launchOpt).then(value => {
@@ -40,7 +40,12 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("GetChromePath", async () => {
-        return getChromePath()
+        try {
+            return getChromePath()
+        } catch (e) {
+            console.log(e)
+            return null
+        }
     })
 
     ipcMain.handle("StopAllChrome", async (e) => {
