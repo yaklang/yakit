@@ -34,7 +34,12 @@ const createWindow = () => {
         const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
         closeFlag = cacheFlag === undefined ? true : cacheFlag
     })
-    let mainWindowState = getBrowserWindow()
+    let mainWindowState = windowStateKeeper({
+        defaultWidth: 900,
+        defaultHeight: 500,
+        path: windowStatePatch,
+        file: "yakit-window-state.json"
+    })
     win = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
@@ -70,6 +75,7 @@ const createWindow = () => {
 
     win.on("close", async (e) => {
         e.preventDefault()
+        mainWindowState.saveState(win)
         // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
         win.webContents.send("close-windows-renderer")
     })
@@ -203,26 +209,3 @@ app.on("window-all-closed", function () {
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
 })
-/**@description 获取缓存的屏幕参数，位置以及宽高 */
-function getBrowserWindow() {
-    // 使用 electron-window-state 模块来获取窗口状态  * screen.getPrimaryDisplay().scaleFactor
-    let windowState = windowStateKeeper({
-        defaultWidth: 900,
-        defaultHeight: 500,
-        path: windowStatePatch,
-        file: "yakit-window-state.json"
-    })
-    // 获取所有可用的屏幕
-    let displays = screen.getAllDisplays()
-    // 获取第二个屏幕的大小和位置
-    let externalDisplay = displays.find((display) => {
-        return display.bounds.x !== 0 || display.bounds.y !== 0
-    })
-    // 如果找到了第二个屏幕，则将窗口放置在第二个屏幕上
-    if (externalDisplay) {
-        // 将窗口的位置设置为第二个屏幕
-        windowState.x = externalDisplay.bounds.x
-        windowState.y = externalDisplay.bounds.y
-    }
-    return windowState
-}
