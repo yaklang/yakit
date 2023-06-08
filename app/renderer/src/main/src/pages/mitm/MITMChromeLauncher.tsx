@@ -8,6 +8,8 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
 import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -40,14 +42,18 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             wrapperCol={{span: 18}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
-                ipcRenderer
-                    .invoke("LaunchChromeWithParams", params)
-                    .then((e) => {
-                        props.callback(params.host, params.port)
-                    })
-                    .catch((e) => {
-                        failed(`Chrome 启动失败：${e}`)
-                    })
+                getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
+                    let newParams: {host: string; port: number; chromePath?: string} = {...params}
+                    if (setting) newParams.chromePath = JSON.parse(setting)
+                    ipcRenderer
+                        .invoke("LaunchChromeWithParams", newParams)
+                        .then((e) => {
+                            props.callback(params.host, params.port)
+                        })
+                        .catch((e) => {
+                            failed(`Chrome 启动失败：${e}`)
+                        })
+                })
             }}
             style={{padding: 24}}
         >
