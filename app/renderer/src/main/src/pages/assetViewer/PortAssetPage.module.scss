@@ -139,7 +139,7 @@
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: 16px 12px 12px;
+        padding: 16px 13px 12px 12px;
         border-bottom: 1px solid var(--yakit-border-color);
         height: 44px;
         font-size: 12px;
@@ -153,13 +153,16 @@
                 padding: 0 4px 12px !important;
             }
         }
+        .port-group-remove {
+            padding-right: 4px;
+        }
         .list-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-radius: 4px;
             cursor: pointer;
-            padding: 6px 8px;
+            padding: 6px 12px 8px 8px;
             &:hover {
                 background-color: var(--yakit-background-color);
             }

@@ -854,7 +854,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                             extra={
                                 <YakitButton
                                     type='text'
-                                    className='button-text-danger'
+                                    className={classNames('button-text-danger',styles['port-group-remove'])}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         queryList[item.GroupName] = []
