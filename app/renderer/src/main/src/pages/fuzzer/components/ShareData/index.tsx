@@ -20,7 +20,8 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFlowsShareRequest, HTTPFlowsShareResponse, ShareDataProps} from "./shareDataType"
-import { Route } from "@/routes/routeSpec"
+import {Route} from "@/routes/routeSpec"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,6 +135,10 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
     })
     const onShareHttpHistory = useMemoizedFn(() => {
         try {
+            if (!isCommunityEdition() && !userInfo.token) {
+                yakitNotify("error", "请登录后分享")
+                return
+            }
             const ids = JSON.parse(shareContent)
 
             const shareHttpHistoryParams: HTTPFlowsShareRequest = {
@@ -149,16 +154,19 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
             if (shareResData.share_id) {
                 shareHttpHistoryParams.ShareId = shareResData.share_id
             }
+            console.log('shareHttpHistoryParams',shareHttpHistoryParams)
             setShareLoading(true)
             ipcRenderer
                 .invoke("HTTPFlowsShare", shareHttpHistoryParams)
                 .then((res: HTTPFlowsShareResponse) => {
+                    console.log("res", res)
                     setShareResData({
                         share_id: res.ShareId,
                         extract_code: res.ExtractCode
                     })
                 })
                 .catch((err) => {
+                    console.log("err", err)
                     yakitNotify("error", "分享失败:" + err)
                 })
                 .finally(() => {
