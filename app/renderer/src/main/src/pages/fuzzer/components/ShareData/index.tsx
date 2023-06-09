@@ -154,19 +154,16 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
             if (shareResData.share_id) {
                 shareHttpHistoryParams.ShareId = shareResData.share_id
             }
-            console.log('shareHttpHistoryParams',shareHttpHistoryParams)
             setShareLoading(true)
             ipcRenderer
                 .invoke("HTTPFlowsShare", shareHttpHistoryParams)
                 .then((res: HTTPFlowsShareResponse) => {
-                    console.log("res", res)
                     setShareResData({
                         share_id: res.ShareId,
                         extract_code: res.ExtractCode
                     })
                 })
                 .catch((err) => {
-                    console.log("err", err)
                     yakitNotify("error", "分享失败:" + err)
                 })
                 .finally(() => {
