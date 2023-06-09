@@ -1941,7 +1941,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
      * @param ids 分享数据得ids
      */
     const onShareData = useMemoizedFn((ids: string[], number: number) => {
-        console.log("isAllSelect", isAllSelect)
         if (isAllSelect) {
             yakitNotify('warning', "该批量操作不支持全选")
             return
