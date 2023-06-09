@@ -581,3 +581,108 @@
     }
 }
 // ========================== antd input-group select - yakit end ==========================
+
+// ========================== ant-collapse yakit-start ==========================
+.yakit-collapse {
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+        padding: 8px 12px;
+        align-items: center;
+        line-height: 16px;
+    }
+    .ant-collapse-header-text {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-header-color);
+        margin-left: 8px;
+    }
+    .ant-collapse-content > .ant-collapse-content-box {
+        padding: 12px;
+    }
+    .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+        padding-top: 0;
+    }
+    .ant-collapse-expand-icon {
+        width: 16px;
+        height: 16px;
+    }
+    .ant-collapse-ghost > .ant-collapse-item {
+        border-bottom: 1px solid var(--yakit-border-color);
+        &:last-child {
+            border-bottom: 0;
+        }
+    }
+    .ant-form-item {
+        margin-bottom: 12px;
+    }
+    .ant-select.ant-select-in-form-item {
+        height: auto;
+    }
+}
+// ========================== ant-collapse yakit-end ==========================
+
+// ========================== ant descriptions yakit-start ==========================
+
+.yakit-descriptions {
+    .ant-descriptions-bordered .ant-descriptions-view {
+        border: 0;
+    }
+
+    .ant-descriptions-bordered .ant-descriptions-item-label,
+    .ant-descriptions-bordered .ant-descriptions-item-content {
+        border-right: 1px solid var(--yakit-border-color);
+    }
+
+    .ant-descriptions-item-label {
+        padding: 12px 16px 12px 12px;
+        color: var(--yakit-header-color);
+        height: 40px;
+        min-width: 96px;
+    }
+
+    .ant-descriptions-bordered .ant-descriptions-row {
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
+
+    .ant-descriptions-bordered .ant-descriptions-item-label {
+        background-color: var(--yakit-background-color);
+    }
+
+    .ant-descriptions-item-content {
+        height: 40px;
+        padding: 12px 16px 12px 12px;
+        background-color: var(--yakit-card-background-color);
+        color: var(--yakit-header-color);
+    }
+
+    .ant-descriptions-bordered .ant-descriptions-item-label:last-child,
+    .ant-descriptions-bordered .ant-descriptions-item-content:last-child {
+        border-right: none;
+    }
+    .ant-descriptions-header {
+        height: 32px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--yakit-border-color);
+        background-color: #ffffff;
+        margin-bottom: 0;
+        position: sticky;
+        top: 0;
+        z-index: 9;
+        .ant-descriptions-title {
+            font-weight: 500;
+            font-size: 12px;
+            color: var(--yakit-header-color);
+        }
+    }
+    .descriptions-no-more{
+        font-size: 12px;
+        color: var(--yakit-helper-text-color);
+        text-align: center;
+        padding: 12px;
+        width: 100%;
+    }
+}
+// ========================== ant descriptions yakit-end ==========================

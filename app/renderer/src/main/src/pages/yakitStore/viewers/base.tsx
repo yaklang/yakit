@@ -237,7 +237,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             paddingBottom: 4,
                                             paddingLeft: 12,
                                             paddingRight: 12,
-                                            height: 100,
+                                            height: 120,
                                             display: "flex",
                                             flexDirection: "column",
                                             justifyContent: "space-between"
@@ -601,7 +601,6 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                 return (
                     <div className='base-table'>
                         <TableVirtualResize<any>
-                            containerClassName='base-table-container'
                             query={query}
                             titleHeight={48}
                             renderTitle={

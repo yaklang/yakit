@@ -1,19 +1,16 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, screen} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
-const {
-    initExtraLocalCache,
-    getExtraLocalCacheValue,
-    initLocalCache,
-    setCloeseExtraLocalCache,
-} = require("./localCache")
+const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const { engineLog } = require("./filePath")
+const {engineLog} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
+const windowStateKeeper = require("electron-window-state")
+const {windowStatePatch} = require("./filePath")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -34,13 +31,20 @@ const createWindow = () => {
     initLocalCache()
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
     initExtraLocalCache(() => {
-        const cacheFlag = getExtraLocalCacheValue(UICloseFlag);
-        closeFlag = cacheFlag === undefined ? true : cacheFlag;
+        const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
+        closeFlag = cacheFlag === undefined ? true : cacheFlag
     })
-
+    let mainWindowState = windowStateKeeper({
+        defaultWidth: 900,
+        defaultHeight: 500,
+        path: windowStatePatch,
+        file: "yakit-window-state.json"
+    })
     win = new BrowserWindow({
-        width: 1600,
-        height: 1000,
+        x: mainWindowState.x,
+        y: mainWindowState.y,
+        width: mainWindowState.width,
+        height: mainWindowState.height,
         minWidth: 900,
         minHeight: 500,
         autoHideMenuBar: true,
@@ -53,7 +57,8 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
-
+    win.setSize(mainWindowState.width, mainWindowState.height)
+    mainWindowState.manage(win)
     if (isDev) {
         win.loadURL("http://127.0.0.1:3000")
     } else {
@@ -64,13 +69,13 @@ const createWindow = () => {
     if (isDev) {
         win.webContents.openDevTools({mode: "detach"})
     }
-
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
 
-    win.on("close", async(e) => {
+    win.on("close", async (e) => {
         e.preventDefault()
+        mainWindowState.saveState(win)
         // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
         win.webContents.send("close-windows-renderer")
     })
@@ -84,7 +89,6 @@ const createWindow = () => {
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
     })
-
     // 录屏
     globalShortcut.register("Control+Shift+X", (e) => {
         win.webContents.send("open-screenCap-modal")
@@ -113,41 +117,41 @@ app.whenReady().then(() => {
 
         ipcMain.handle("app-exit", async (e, params) => {
             if (closeFlag) {
-            dialog
-                .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
-                    type: "none",
-                    title: "提示",
-                    defaultId: 0,
-                    cancelId: 3,
-                    message: "确定要关闭吗？",
-                    buttons: ["最小化", "直接退出"],
-                    checkboxLabel: "不再展示关闭二次确认？",
-                    checkboxChecked: false,
-                    noLink: true
-                })
-                .then(async(res) => {
-                    await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
-                    await asyncKillDynamicControl()
-                    if (res.response === 0) {
-                        e.preventDefault()
-                        win.minimize()
-                    } else if (res.response === 1) {
-                        win = null
-                        clearing()
-                        app.exit()
-                    } else {
-                        e.preventDefault()
-                        return
-                    }
-                })
-        } else {
-            // close时关掉远程控制
-            await asyncKillDynamicControl()
-            win = null
-            clearing()
-            app.exit()
-        }
+                dialog
+                    .showMessageBox(win, {
+                        icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
+                        type: "none",
+                        title: "提示",
+                        defaultId: 0,
+                        cancelId: 3,
+                        message: "确定要关闭吗？",
+                        buttons: ["最小化", "直接退出"],
+                        checkboxLabel: "不再展示关闭二次确认？",
+                        checkboxChecked: false,
+                        noLink: true
+                    })
+                    .then(async (res) => {
+                        await setCloeseExtraLocalCache(UICloseFlag, !res.checkboxChecked)
+                        await asyncKillDynamicControl()
+                        if (res.response === 0) {
+                            e.preventDefault()
+                            win.minimize()
+                        } else if (res.response === 1) {
+                            win = null
+                            clearing()
+                            app.exit()
+                        } else {
+                            e.preventDefault()
+                            return
+                        }
+                    })
+            } else {
+                // close时关掉远程控制
+                await asyncKillDynamicControl()
+                win = null
+                clearing()
+                app.exit()
+            }
         })
 
         globalShortcut.register("Control+Shift+b", () => {
@@ -185,8 +189,7 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
-    } catch (e) {
-    }
+    } catch (e) {}
 
     //
     // // autoUpdater.autoDownload = false

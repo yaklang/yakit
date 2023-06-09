@@ -256,7 +256,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             type='outline1'
                             onClick={() => {
                                 ipcRenderer
-                                    .invoke("mitm-exec-script-content", script)
+                                    .invoke("mitm-exec-script-content", script.Content)
                                     .then(() => {
                                         info("加载成功")
                                     })

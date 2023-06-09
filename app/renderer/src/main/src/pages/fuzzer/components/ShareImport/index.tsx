@@ -114,6 +114,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                         type: res.module,
                         data: {
                             isHttps: shareContent.isHttps,
+                            isGmTLS: shareContent.isGmTLS,
                             request: shareContent.request,
                             shareContent: res.extract_content
                         }

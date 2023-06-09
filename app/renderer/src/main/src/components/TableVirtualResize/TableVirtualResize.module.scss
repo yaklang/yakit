@@ -23,7 +23,6 @@
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        padding-left: 8px;
 
         .virtual-table-heard-right-item {
             display: flex;
@@ -189,7 +188,7 @@
                 }
             }
 
-            .virtual-table-title+.virtual-table-title-fixed-right:nth-last-child(1) {
+            .virtual-table-title + .virtual-table-title-fixed-right:nth-last-child(1) {
                 border-left: 1px solid var(--yakit-border-color);
                 box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
             }
@@ -203,7 +202,7 @@
         .virtual-table-list-container {
             width: 100%;
             overflow-y: overlay;
-            overflow-x: overlay;
+            overflow-x: auto;
             overflow-anchor: none;
             position: relative;
             padding-bottom: 34px;
@@ -359,7 +358,7 @@
                     z-index: 1;
                 }
 
-                .virtual-table-row-content+.virtual-table-row-fixed-right:nth-last-child(1) {
+                .virtual-table-row-content + .virtual-table-row-fixed-right:nth-last-child(1) {
                     border-left: 1px solid var(--yakit-border-color);
                     box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
                 }
@@ -375,11 +374,23 @@
                     background-color: var(--yakit-primary-1) !important;
                 }
 
+                .virtual-table-batch-active-row {
+                    background-color: var(--yakit-primary-1);
+                    position: relative;
+                }
+                .virtual-table-batch-active-row:not(.virtual-table-batch-active-row ~ .virtual-table-batch-active-row) {
+                    border-top: 1px solid var(--yakit-primary-3) !important;
+                }
+                .virtual-table-batch-active-row:not(
+                        .virtual-table-row-content :has(+ .virtual-table-batch-active-row)
+                    ) {
+                    border-bottom: 1px solid var(--yakit-primary-3) !important;
+                }
                 .virtual-table-hover-row {
                     background-color: var(--yakit-card-background-color);
                 }
 
-                .virtual-table-active-row+.virtual-table-row-cell {
+                .virtual-table-active-row + .virtual-table-row-cell {
                     border-top: 0 !important;
                 }
             }
@@ -492,6 +503,7 @@
                 font-size: 16px;
                 line-height: 24px;
                 color: var(--yakit-header-color);
+                margin-right: 8px;
             }
         }
 

@@ -282,6 +282,7 @@ export const NoScrollRoutes: Route[] = [Route.HTTPHacker, Route.Mod_Brute, Route
 interface ComponentParams {
     // Route.HTTPFuzzer 参数
     isHttps?: boolean
+    isGmTLS?: boolean
     request?: string
     system?: string
     order?: string
@@ -365,6 +366,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return (
                 <HTTPFuzzerPage
                     isHttps={params?.isHttps}
+                    isGmTLS={params?.isGmTLS}
                     request={params?.request}
                     system={params?.system}
                     order={params?.order}

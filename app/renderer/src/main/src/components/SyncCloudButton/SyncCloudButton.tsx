@@ -9,10 +9,11 @@ import {failed, success, warn} from "@/utils/notification"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {showModal} from "@/utils/showModal"
 import {useMemoizedFn, useGetState} from "ahooks"
-import {Button, Modal, Radio, Space, Form, Input} from "antd"
+import {Button, Modal, Radio, Space, Form, Input,Progress} from "antd"
 import React, {ReactNode, useRef, useState} from "react"
 import { Route } from "@/routes/routeSpec"
 import { isEnterpriseEdition } from "@/utils/envfile"
+import styles from "./SyncCloudButton.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -309,11 +310,11 @@ interface ModalSyncSelect {
     visible: boolean
     handleOk: (type: number) => void
     handleCancel: () => void
-    loading: boolean
+    loading?: boolean
 }
 
 export const ModalSyncSelect: React.FC<ModalSyncSelect> = (props) => {
-    const {visible, handleOk, handleCancel, loading} = props
+    const {visible, handleOk, handleCancel, loading=false} = props
     const [type, setType] = useState<number>(1)
     const onChange = useMemoizedFn((e) => {
         setType(e.target.value)
@@ -375,5 +376,34 @@ export const CopyCloudForm: React.FC<CopyCloudFormProps> = (props) => {
                 </div>
             </Form>
         </div>
+    )
+}
+export interface SyncCloudProgressProps{
+    visible: boolean
+    onCancle:()=>void
+    nowPligin: string
+    progress: number
+}
+
+export const SyncCloudProgress: React.FC<SyncCloudProgressProps> = (props) => {
+    const {visible,onCancle,nowPligin,progress} = props
+    return (
+        <Modal
+            visible={visible}
+            destroyOnClose={true}
+            footer={null}
+            onCancel={() => onCancle()}
+            title="上传进度"
+        >
+            <div className={styles['sync-cloud-progress']}>
+                <Progress size='small' percent={progress} />
+                <div className='yakit-single-line-ellipsis'>{nowPligin}</div>
+                <div className={styles['btn-box']}>
+                    <Button type='primary' onClick={() => onCancle()}>
+                        取消上传
+                    </Button>
+                </div>
+            </div>
+        </Modal>
     )
 }
