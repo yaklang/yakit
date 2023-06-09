@@ -170,6 +170,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                             activeTab: "history"
                         })
                     })
+                onClose()
             })
             .catch((err) => {
                 yakitNotify("error", "储存HttpHistory分享数据失败" + err)
