@@ -943,7 +943,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             .invoke("is-dev")
             .then((flag) => {})
             .finally(() => {
-                fetchFuzzerList()
+                // fetchFuzzerList()
             })
         return () => {
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")

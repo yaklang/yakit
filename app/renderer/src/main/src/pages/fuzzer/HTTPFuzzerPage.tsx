@@ -1266,11 +1266,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             "<html>" +
             '<!doctype html>\n<html>\n<body>\n  <div id="result">%d</div>\n</body>\n</html>' +
             "</html>"
-            console.log('params',params,testCode)
         ipcRenderer
             .invoke("RenderVariables", {
                 Params: params,
-                HTTPResponse: testCode
+                HTTPResponse: StringToUint8Array(testCode)
             })
             .then((rsp: {Results: {Key: string; Value: string}[]}) => {
                 console.log("rsp.Results", rsp.Results)
@@ -1288,8 +1287,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </Space>
                     )
                 })
-            }).catch((err)=>{
-                yakitNotify('error','预览失败:'+err)
+            })
+            .catch((err) => {
+                yakitNotify("error", "预览失败:" + err)
             })
     })
     return (
@@ -2250,7 +2250,6 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
         form.setFieldsValue({
             ...defAdvancedConfigValue
         })
-
         ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
     }, [defAdvancedConfigValue])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
@@ -2692,6 +2691,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                 <YakitButton
                                     type='text'
                                     onClick={(e) => {
+                                        e.stopPropagation()
                                         const v = form.getFieldsValue()
                                         const variables = v.params || []
                                         const index = variables.findIndex((ele) => !ele || (!ele.Key && !ele.Value))
@@ -2711,6 +2711,7 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                             yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
                                         }
                                     }}
+                                    style={{paddingRight: 6}}
                                 >
                                     添加
                                     <PlusIcon className={styles["variable-plus-icon"]} />
@@ -2724,7 +2725,9 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                     <Collapse
                                         ghost
                                         activeKey={variableActiveKey}
-                                        onChange={(key) => setVariableActiveKey(key as string[])}
+                                        onChange={(key) => {
+                                            setVariableActiveKey(key as string[])
+                                        }}
                                         expandIcon={(e) =>
                                             e.isActive ? (
                                                 <ChevronDownIcon className={styles["chevron-down-icon"]} />
@@ -2734,33 +2737,55 @@ const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.me
                                         }
                                         className={styles["variable-list"]}
                                     >
-                                        {fields.map(({key, name, ...restField}) => (
+                                        {fields.map(({key, name}, i) => (
                                             <Panel
                                                 key={`${key}`}
-                                                header={`变量${key}`}
+                                                header={`变量${name}`}
                                                 className={styles["variable-list-panel"]}
                                                 extra={
-                                                    <TrashIcon
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            remove(name)
-                                                        }}
-                                                        className={styles["variable-list-remove"]}
-                                                    />
+                                                    <>
+                                                        <TrashIcon
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                const v = form.getFieldsValue()
+                                                                const variables = v.params || []
+                                                                variables.splice(i, 1)
+                                                                form.setFieldsValue({
+                                                                    params: [...variables]
+                                                                })
+                                                                onSetValue({
+                                                                    ...v,
+                                                                    params: [...variables]
+                                                                })
+                                                            }}
+                                                            className={styles["variable-list-remove"]}
+                                                        />
+                                                    </>
                                                 }
                                             >
                                                 <SetVariableItem name={name} />
                                             </Panel>
                                         ))}
-                                        {/* <Form.Item wrapperCol={{span: 24}}>
-                                            <YakitButton
-                                                type='outline2'
-                                                onClick={() => add({Key: "", Value: ""})}
-                                                icon={<PlusIcon className={styles["variable-plus-icon"]} />}
-                                            >
-                                                Add field
-                                            </YakitButton>
-                                        </Form.Item> */}
+                                        {fields.length === 0 && (
+                                            <Form.Item wrapperCol={{span: 24}}>
+                                                <YakitButton
+                                                    type='outline2'
+                                                    onClick={() => {
+                                                        add({Key: "", Value: ""})
+                                                        setVariableActiveKey([
+                                                            ...(variableActiveKey || []),
+                                                            `${variableActiveKey.length}`
+                                                        ])
+                                                    }}
+                                                    icon={<PlusIcon className={styles["variable-plus-icon"]} />}
+                                                    themeClass={styles["variable-plus-button"]}
+                                                    block
+                                                    style={{justifyContent: "center"}}
+                                                >
+                                                    添加
+                                                </YakitButton>
+                                            </Form.Item>
+                                        )}
                                     </Collapse>
                                 )
                             }}
