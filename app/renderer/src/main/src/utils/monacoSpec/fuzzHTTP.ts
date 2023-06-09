@@ -333,8 +333,6 @@ monaco.languages.setMonarchTokensProvider("http", {
         root: [
             // 基础 Fuzz 标签解析
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/{{(?!{)(([^{}])|([^{]{)|(}[^}]))+?(?<!})}}/g, "fuzz.tag.inner"],
-            [/{{(([^{}])|([^{]{)|(}[^}]))+?{{(?!{)(([^{}])|([^{]{)|(}[^}]))+?(?<!})}}(([^{}])|([^{]{)|(}[^}]))+?}}/g, 'fuzz.tag.outter'],
 
             // http method
             [/(GET|POST|OPTIONS|DELETE|PUT)/g, "http.method"],
@@ -351,17 +349,41 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/(Accept[^:]*?):/g, "http.header.info"],
             // [/[*]\/[*]/g, "http.header.mime"],
             // [/([A-Za-z][A-Za-z0-9\-]*?):\s*([^\r^\n]+)\n/g, "keyword"],
-            [/"/, "string", "@string_double"],
-            [/'/, "string", "@string_single"],
+            // [/"/, "string", "@string_double"],
+            // [/'/, "string", "@string_single"],
             [/(html|div|src|\<\/?title\>|<alert>)/i, "keyword"],
             [/(\<script\>|<alert>|<prompt>|<svg )/i, "keyword"],
+
+            [/[^\s; &=]+=[^\s; &=]+/, "bold-keyword"],
+
+            [/(secret)|(access)|(password)|(verify)|(login)/i, "bold-keyword"]
+
             // [/[^\s]+?\=[^\s]+?/i, "keyword"],
             // [/`/, "string", "@string_backtick"]
         ],
         fuzz_tag: [
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag_second"],
+            [/}}/, "fuzz.tag.inner", "@pop"],
+            [/[\w:]+}}/, "fuzz.tag.inner", "@pop"],
+            [/[\w:]+\(/, "fuzz.tag.inner", "@fuzz_tag_param"],
+        ],
+        fuzz_tag_second: [
+            [/{{/, "fuzz.tag.second", "@fuzz_tag"],
+            [/}}/, "fuzz.tag.second", "@pop"],
+            [/[\w:]+}}/, "fuzz.tag.second", "@pop"],
+            [/[\w:]+\(/, "fuzz.tag.second", "@fuzz_tag_param_second"],
+        ],
+        "fuzz_tag_param": [
+            [/\\\)/, "bold-keyword"],
+            [/\)/, "fuzz.tag.inner", "@pop"],
+            [/{{/, "fuzz.tag.second", "@fuzz_tag_second"],
+            [/./, "bold-keyword"]
+        ],
+        "fuzz_tag_param_second": [
+            [/\\\)/, "bold-keyword"],
+            [/\)/, "fuzz.tag.second", "@pop"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/(?<!})}}/, "fuzz.tag.inner", "@pop"],
-            [/(([^{}])|([^{]{)|(}[^}]))+?/, "fuzz.tag.inner"]
+            [/./, "bold-keyword"]
         ],
         get_query: [
             [/\s/, "delimiter", "@pop"],
