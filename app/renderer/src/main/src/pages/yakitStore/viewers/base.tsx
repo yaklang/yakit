@@ -17,7 +17,7 @@ import {failed, yakitFailed, yakitNotify} from "../../../utils/notification"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
-import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useThrottleEffect} from "ahooks"
+import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useThrottleEffect, useGetState} from "ahooks"
 import {Risk} from "@/pages/risks/schema"
 import {RisksViewer} from "@/pages/risks/RisksViewer"
 import {RiskDetails} from "@/pages/risks/RiskTable"
@@ -421,7 +421,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
         const [query, setQuery] = useState<any>({}) // 设置表头查询条件
         const [loading, setLoading] = useState<boolean>(false)
 
-        const tableData = useRef<any>([]) // 表格中显示的数据
+        const [_,setTableData,getTableData] = useGetState<any>([])
         const tableDataOriginal = useRef<any>([]) // 原始数据用来做搜索和排序
         const tableDataPreProps = useRef<any>([])
         const tableDataExport = useRef<any>([]) // 导出表格数
@@ -460,7 +460,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
 
         useEffect(() => {
             setTimeout(() => {
-                const item = tableData.current[0] || {}
+                const item = getTableData()[0] || {}
                 const obj = {}
                 const objQuery = {}
                 ;(props.params["columns"] || []).forEach((ele) => {
@@ -555,7 +555,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                     }
                 }
                 const newDataTable = sorterTable?.order === "none" ? list : sorterFunction(list, sorterTable, "") || []
-                tableData.current = newDataTable
+                setTableData(newDataTable)
             } catch (error) {
                 yakitFailed("搜索失败:" + error)
             }
@@ -602,16 +602,15 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                             }
                             isRefresh={loading}
                             renderKey='uuid'
-                            data={tableData.current}
+                            data={getTableData()}
                             loading={loading}
                             enableDrag={true}
                             columns={columns}
                             pagination={{
                                 page: 1,
                                 limit: 1,
-                                total: tableData.current.length,
-                                onChange: () => {
-                                }
+                                total: getTableData().length,
+                                onChange: () => {}
                             }}
                             onChange={onTableChange}
                         />
