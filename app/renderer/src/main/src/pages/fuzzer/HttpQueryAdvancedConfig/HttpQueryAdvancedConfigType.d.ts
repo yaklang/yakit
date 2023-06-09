@@ -74,7 +74,7 @@ export interface FuzzerParamItem {
 }
 
 export interface HttpQueryAdvancedConfigProps {
-    defAdvancedConfigValue: AdvancedConfigValueProps
+    advancedConfigValue: AdvancedConfigValueProps
     isHttps: boolean
     isGmTLS: boolean
     setIsHttps: (b: boolean) => void
@@ -85,5 +85,4 @@ export interface HttpQueryAdvancedConfigProps {
     onValuesChange: (v: AdvancedConfigValueProps) => void
     /**刷新设置代理的list */
     refreshProxy: boolean
-    onRenderVariables: () => void
 }

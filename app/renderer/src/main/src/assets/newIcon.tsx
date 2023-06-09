@@ -1217,7 +1217,7 @@ const LightningBolt = () => (
     </svg>
 )
 /**
- * @description:lightning-bolt 闪电
+ * @description:lightning-bolt 闪电 实心
  */
 export const LightningBoltIcon = (props: Partial<IconProps>) => {
     return <Icon component={LightningBolt} {...props} />
@@ -1609,14 +1609,35 @@ export const SideBarOpenIcon = (props: Partial<IconProps>) => {
     return <Icon component={SideBarOpen} {...props} />
 }
 const Resizer = () => (
-    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fillRule="evenodd" clipRule="evenodd" d="M0.646484 8.64941L1.00004 9.00297L9.00004 1.00297L8.64648 0.649414L0.646484 8.64941ZM5.00004 9.00297L9.00004 5.00297L8.64648 4.64941L4.64648 8.64941L5.00004 9.00297Z" fill="currentColor"/>
+    <svg width='9' height='10' viewBox='0 0 9 10' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M0.646484 8.64941L1.00004 9.00297L9.00004 1.00297L8.64648 0.649414L0.646484 8.64941ZM5.00004 9.00297L9.00004 5.00297L8.64648 4.64941L4.64648 8.64941L5.00004 9.00297Z'
+            fill='currentColor'
+        />
     </svg>
-    
 )
 /**
  * @description: Resizer 拖拽
  */
 export const ResizerIcon = (props: Partial<IconProps>) => {
     return <Icon component={Resizer} {...props} />
+}
+
+const HollowLightningBolt = () => (
+    <svg width='13' height='13' viewBox='0 0 13 13' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M7 5.00293V1.50293L2.5 7.00293H6L6 10.5029L10.5 5.00293L7 5.00293Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:lightning-bolt 闪电 空心
+ */
+export const HollowLightningBoltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={HollowLightningBolt} {...props} />
 }

@@ -5,7 +5,8 @@ import {
     PlusSmIcon,
     PlusIcon,
     TrashIcon,
-    ResizerIcon
+    ResizerIcon,
+    HollowLightningBoltIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -23,7 +24,10 @@ import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {StringToUint8Array} from "@/utils/str"
 
+const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
 export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
@@ -31,7 +35,7 @@ export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_Acti
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
     const {
-        defAdvancedConfigValue,
+        advancedConfigValue,
         isHttps,
         isGmTLS,
         setIsHttps,
@@ -40,8 +44,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         setVisible,
         onInsertYakFuzzer,
         onValuesChange,
-        refreshProxy,
-        onRenderVariables
+        refreshProxy
     } = props
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
@@ -60,6 +63,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const noRetrying = useWatch("noRetrying", form)
     const etcHosts = useWatch("etcHosts", form) || []
     const gmTLS = useWatch("isGmTLS", form)
+    const matchersList = useWatch("Matchers", form) || []
+
     useEffect(() => {
         if (gmTLS) {
             form.setFieldsValue({isHttps: true})
@@ -128,10 +133,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }, [isGmTLS])
     useEffect(() => {
         form.setFieldsValue({
-            ...defAdvancedConfigValue
+            ...advancedConfigValue
         })
-        ruleContentRef?.current?.onSetValue(defAdvancedConfigValue.regexps)
-    }, [defAdvancedConfigValue])
+        ruleContentRef?.current?.onSetValue(advancedConfigValue.regexps)
+    }, [advancedConfigValue])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
         onValuesChange({
@@ -145,7 +150,52 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         setActiveKey(key)
         setRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey, JSON.stringify(key))
     })
-
+    /**
+     * @description 变量预览
+     */
+    const onRenderVariables = useMemoizedFn(() => {
+        const testCode =
+            "HTTP/1.1 200 OK\r\n" +
+            "Date: Mon, 23 May 2005 22:38:34 GMT\r\n" +
+            "Content-Type: text/html; charset=UTF-8\r\n" +
+            "Content-Encoding: UTF-8\r\n" +
+            "\r\n" +
+            "<html>" +
+            '<!doctype html>\n<html>\n<body>\n  <div id="result">%d</div>\n</body>\n</html>' +
+            "</html>"
+        ipcRenderer
+            .invoke("RenderVariables", {
+                Params: form.getFieldValue("params") || [],
+                HTTPResponse: StringToUint8Array(testCode)
+            })
+            .then((rsp: {Results: {Key: string; Value: string}[]}) => {
+                console.log("rsp.Results", rsp.Results)
+                showYakitModal({
+                    title: "渲染后变量内容",
+                    content: (
+                        <Space direction={"vertical"} style={{margin: 20}}>
+                            {rsp.Results.map((data) => {
+                                return (
+                                    <div>
+                                        {data.Key}: {data.Value}
+                                    </div>
+                                )
+                            })}
+                        </Space>
+                    )
+                })
+            })
+            .catch((err) => {
+                yakitNotify("error", "预览失败:" + err)
+            })
+    })
+    const onReset = useMemoizedFn((restValue) => {
+        const v = form.getFieldsValue()
+        onSetValue({
+            ...v,
+            ...restValue
+        })
+    })
     return (
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>
@@ -161,7 +211,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 wrapperCol={{span: 14}}
                 style={{overflowY: "auto"}}
                 initialValues={{
-                    ...defAdvancedConfigValue
+                    ...advancedConfigValue
                 }}
             >
                 <div className={styles["advanced-config-extra-formItem"]}>
@@ -223,15 +273,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         actualHost: "",
                                         timeout: 30
                                     }
-                                    form.setFieldsValue({
-                                        ...restValue
-                                    })
-                                    const v = form.getFieldsValue()
-                                    onSetValue({
-                                        ...v,
-                                        ...restValue
-                                    })
+                                    onReset(restValue)
                                 }}
+                                size='small'
                             >
                                 重置
                             </YakitButton>
@@ -287,15 +331,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         maxDelaySeconds: undefined,
                                         repeatTimes: 0
                                     }
-                                    form.setFieldsValue({
-                                        ...restValue
-                                    })
-                                    const v = form.getFieldsValue()
-                                    onSetValue({
-                                        ...v,
-                                        ...restValue
-                                    })
+                                    onReset(restValue)
                                 }}
+                                size='small'
                             >
                                 重置
                             </YakitButton>
@@ -363,15 +401,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             keyWord: undefined
                                         }
                                     }
-                                    form.setFieldsValue({
-                                        ...restValue
-                                    })
-                                    const v = form.getFieldsValue()
-                                    onSetValue({
-                                        ...v,
-                                        ...restValue
-                                    })
+                                    onReset(restValue)
                                 }}
+                                size='small'
                             >
                                 重置
                             </YakitButton>
@@ -438,15 +470,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             keyWord: undefined
                                         }
                                     }
-                                    form.setFieldsValue({
-                                        ...restValue
-                                    })
-                                    const v = form.getFieldsValue()
-                                    onSetValue({
-                                        ...v,
-                                        ...restValue
-                                    })
+                                    onReset(restValue)
                                 }}
+                                size='small'
                             >
                                 重置
                             </YakitButton>
@@ -475,16 +501,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         dnsServers: [],
                                         etcHosts: []
                                     }
-                                    form.setFieldsValue({
-                                        ...restValue
-                                    })
                                     ruleContentRef?.current?.onSetValue("")
-                                    const v = form.getFieldsValue()
-                                    onSetValue({
-                                        ...v,
-                                        ...restValue
-                                    })
+                                    onReset(restValue)
                                 }}
+                                size='small'
                             >
                                 重置
                             </YakitButton>
@@ -548,12 +568,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         const restValue = {
                                             params: [{Key: "", Value: ""}]
                                         }
-                                        const v = form.getFieldsValue()
-                                        onSetValue({
-                                            ...v,
-                                            ...restValue
-                                        })
+                                        onReset(restValue)
                                     }}
+                                    size='small'
                                 >
                                     重置
                                 </YakitButton>
@@ -564,6 +581,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         e.stopPropagation()
                                         onRenderVariables()
                                     }}
+                                    size='small'
                                 >
                                     预览
                                 </YakitButton>
@@ -590,11 +608,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         } else {
                                             yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
                                         }
+                                        if (activeKey?.findIndex((ele) => ele === "设置变量") === -1) {
+                                            onSwitchCollapse([...activeKey, "设置变量"])
+                                        }
                                     }}
                                     style={{paddingRight: 6}}
+                                    size='small'
                                 >
                                     添加
-                                    <PlusIcon className={styles["variable-plus-icon"]} />
+                                    <PlusIcon className={styles["plus-sm-icon"]} />
                                 </YakitButton>
                             </>
                         }
@@ -657,8 +679,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                             `${variableActiveKey.length}`
                                                         ])
                                                     }}
-                                                    icon={<PlusIcon className={styles["variable-plus-icon"]} />}
-                                                    themeClass={styles["variable-plus-button"]}
+                                                    icon={<PlusIcon className={styles["plus-sm-icon"]} />}
+                                                    themeClass={styles["plus-button-bolck"]}
                                                     block
                                                     style={{justifyContent: "center"}}
                                                 >
@@ -672,40 +694,47 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </Form.List>
                     </Panel>
                     <Panel
-                        header={<div>匹配器</div>}
+                        header={
+                            <div className={styles["matchers-panel"]}>
+                                匹配器<div className={styles["matchers-number"]}>{matchersList.length}</div>
+                            </div>
+                        }
                         key='匹配器'
                         extra={
-                            <YakitButton
-                                type='text'
-                                className='button-text-danger'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const restValue = {
-                                        redirectCount: 3,
-                                        redirectConfiguration: {
-                                            statusCode: undefined,
-                                            keyWord: undefined
-                                        },
-                                        noRedirectConfiguration: {
-                                            statusCode: undefined,
-                                            keyWord: undefined
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    className='button-text-danger'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const restValue = {
+                                            Matchers: []
                                         }
-                                    }
-                                    form.setFieldsValue({
-                                        ...restValue
-                                    })
-                                    const v = form.getFieldsValue()
-                                    onSetValue({
-                                        ...v,
-                                        ...restValue
-                                    })
-                                }}
-                            >
-                                重置
-                            </YakitButton>
+                                        onReset(restValue)
+                                    }}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    size='small'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
+                                            onSwitchCollapse([...activeKey, "匹配器"])
+                                        }
+                                    }}
+                                    style={{paddingRight: 6}}
+                                >
+                                    添加/调试
+                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
+                                </YakitButton>
+                            </>
                         }
                     >
-                        <MatchersList matchersList={form.getFieldValue("Matchers") || []} />
+                        <MatchersList matchersList={matchersList} />
                     </Panel>
                 </Collapse>
             </Form>
@@ -751,8 +780,8 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                     <YakitButton
                         type='outline2'
                         onClick={() => {}}
-                        icon={<PlusIcon className={styles["variable-plus-icon"]} />}
-                        themeClass={styles["variable-plus-button"]}
+                        icon={<PlusIcon className={styles["plus-sm-icon"]} />}
+                        themeClass={styles["plus-button-bolck"]}
                         block
                         style={{justifyContent: "center"}}
                     >

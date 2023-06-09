@@ -8,13 +8,8 @@ import {
     Popover,
     Tooltip,
     Divider,
-    Collapse,
-    Tag,
-    FormListFieldData
 } from "antd"
 import {
-    HTTP_PACKET_EDITOR_FONT_SIZE,
-    HTTP_PACKET_EDITOR_Line_Breaks,
     IMonacoEditor,
     NewHTTPPacketEditor,
     HTTP_PACKET_EDITOR_Response_Info
@@ -41,17 +36,12 @@ import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareData} from "./components/ShareData"
 // import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
-    ChevronDownIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
     ChromeSvgIcon,
     ClockIcon,
-    CogIcon,
     FilterIcon,
-    InformationCircleIcon,
     PaperAirplaneIcon,
-    PlusIcon,
-    PlusSmIcon,
     SearchIcon,
     StopIcon,
     TrashIcon,
@@ -68,11 +58,8 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {RuleContent} from "../mitm/MITMRule/MITMRuleFromModal"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {Size} from "re-resizable"
 import {
@@ -81,8 +68,6 @@ import {
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {useWatch} from "antd/lib/form/Form"
-import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
-import {Route} from "@/routes/routeSpec"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
@@ -91,10 +76,10 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import { HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 import { FuzzerParamItem, AdvancedConfigValueProps } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { Route } from "@/routes/routeSpec"
 
 const {ipcRenderer} = window.require("electron")
-
-
 interface ShareValueProps {
     isHttps: boolean
     isGmTLS: boolean
@@ -587,7 +572,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 清楚历史任务的标记
         setHistoryTask(undefined)
 
-        // 更新默认搜索
+        // // 更新默认搜索
         setDefaultResponseSearch(affixSearch)
 
         setLoading(true)
@@ -1255,49 +1240,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
         }
     }, [])
-    /**
-     * @description 变量预览
-     */
-    const onRenderVariables = useMemoizedFn(() => {
-        const testCode =
-            "HTTP/1.1 200 OK\r\n" +
-            "Date: Mon, 23 May 2005 22:38:34 GMT\r\n" +
-            "Content-Type: text/html; charset=UTF-8\r\n" +
-            "Content-Encoding: UTF-8\r\n" +
-            "\r\n" +
-            "<html>" +
-            '<!doctype html>\n<html>\n<body>\n  <div id="result">%d</div>\n</body>\n</html>' +
-            "</html>"
-        ipcRenderer
-            .invoke("RenderVariables", {
-                Params: params,
-                HTTPResponse: StringToUint8Array(testCode)
-            })
-            .then((rsp: {Results: {Key: string; Value: string}[]}) => {
-                console.log("rsp.Results", rsp.Results)
-                showYakitModal({
-                    title: "渲染后变量内容",
-                    content: (
-                        <Space direction={"vertical"} style={{margin: 20}}>
-                            {rsp.Results.map((data) => {
-                                return (
-                                    <div>
-                                        {data.Key}: {data.Value}
-                                    </div>
-                                )
-                            })}
-                        </Space>
-                    )
-                })
-            })
-            .catch((err) => {
-                yakitNotify("error", "预览失败:" + err)
-            })
-    })
+  
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
-                defAdvancedConfigValue={{
+                advancedConfigValue={{
                     // 请求包配置
                     forceFuzz,
                     isHttps,
@@ -1359,7 +1306,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onInsertYakFuzzer={onInsertYakFuzzer}
                 onValuesChange={(v) => onGetFormValue(v)}
                 refreshProxy={refreshProxy}
-                onRenderVariables={onRenderVariables}
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
