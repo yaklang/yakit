@@ -148,6 +148,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         return data
     }, [PrivateAllMenus])
 
+    // 获取数据库里菜单的所有数据
     useEffect(() => {
         if (isCommunityEdition()) {
             getMenuData(CodeGV.PublicMenuModeValue, defaultPluginMenu)

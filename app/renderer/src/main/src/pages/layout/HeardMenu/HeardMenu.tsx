@@ -168,6 +168,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     }, [])
 
+    // 社区版本才会获取新的 menu
+    // 这个地方的逻辑后面将变成只有企业版才会获取新的menu
     useEffect(() => {
         // 除简易版本外 更新菜单
         if (!isEnpriTraceAgent()) {

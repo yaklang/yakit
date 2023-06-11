@@ -1253,7 +1253,6 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         ]
     }
 ]
-
 // 要全部删除，但是里面的内容还没确定好
 export enum Route {
     WebsocketHistory = "websocket-history",
