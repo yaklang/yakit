@@ -1,13 +1,15 @@
 import React, {memo, useEffect, useRef, useState, ReactNode, useLayoutEffect} from "react"
 import {Input, Popover, Space, Tabs} from "antd"
-import {multipleNodeInfo, noPaddingPage} from "./MainOperator"
+import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
 import {isEnpriTraceAgent} from "@/utils/envfile"
-import "./MainTabs.scss"
 import {simpleDetectParams} from "@/store"
 import {useGetState} from "ahooks"
+import {NoPaddingRoute, YakitRoute} from "@/routes/newRoute"
+
+import "./MainTabs.scss"
 
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
@@ -16,7 +18,6 @@ interface InitTabIdProp {
     children: ReactNode
     id: string
 }
-
 const InitTabId: React.FC<InitTabIdProp> = (props) => {
     useLayoutEffect(() => {
         if (isEnpriTraceAgent()) {
@@ -32,11 +33,11 @@ export interface MainTabsProp {
     pages: multipleNodeInfo[]
     currentKey: string
     isShowAdd?: boolean
-    setCurrentKey: (key: string, type: string) => void
-    removePage: (key: string, type: string) => void
-    removeOtherPage: (key: string, type: string) => void
+    setCurrentKey: (key: string) => void
+    removePage: (key: string) => void
+    removeOtherPage: (key: string) => void
     onAddTab?: () => any
-    updateCacheVerbose: (key: string, tabType: string, value: string) => void
+    updateCacheVerbose: (key: string, value: string) => void
 }
 
 interface SimpleDetectTabsProps {
@@ -54,13 +55,13 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
         setCurrentKey,
         removePage,
         removeOtherPage,
-        onAddTab = () => {
-        },
+        onAddTab = () => {},
         updateCacheVerbose
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const tabsRef = useRef(null)
     const [_, setSimpleDetectTabsStatus, getSimpleDetectTabsStatus] = useGetState<SimpleDetectTabsProps[]>([])
+    // 渲染展示时聚焦
     useEffect(() => {
         setTimeout(() => {
             if (!tabsRef || !tabsRef.current) return
@@ -68,6 +69,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
             ref.focus()
         }, 100)
     }, [currentKey])
+    // 切换一级页面时聚焦
     useEffect(() => {
         if (currentTabKey === tabType) {
             setTimeout(() => {
@@ -83,7 +85,6 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
             <TabBarDefault
                 {...props}
                 children={(barNode: React.ReactElement) => {
-                    const route = ((barNode.key as string) || "httpHacker").split("-[").shift()
                     if (pages.length === 1) return barNode
                     return (
                         <DropdownMenu
@@ -94,7 +95,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                             onClick={(key) => {
                                 switch (key) {
                                     case "other":
-                                        removeOtherPage(barNode.key as unknown as string, tabType)
+                                        removeOtherPage(barNode.key as unknown as string)
                                         break
                                     default:
                                         break
@@ -119,20 +120,19 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                 switch (status) {
                     case "run":
                         color = "blue"
-                        break;
+                        break
                     case "stop":
                         color = "red"
-                        break;
+                        break
                     case "success":
                         color = "green"
-                        break;
+                        break
                 }
                 return <div style={{color}}>{verbose}</div>
             }
             return verbose
         }
         return verbose
-
     }
 
     useEffect(() => {
@@ -142,10 +142,10 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
             if (isFind) {
                 cacheData = cacheData.map((item) => {
                     if (item.tabId === data.tabId && item.status !== data.status) {
-                        return ({
+                        return {
                             tabId: data.tabId,
                             status: data.status
-                        })
+                        }
                     }
                     return item
                 })
@@ -166,18 +166,20 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                 className='secondary-menu-tabs'
                 tabIndex={0}
                 onKeyDown={(e) => {
+                    // 快捷键关闭
                     if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
                         e.preventDefault()
                         e.stopPropagation()
                         if (pages.length === 0) return
 
                         setLoading(true)
-                        removePage(currentKey, tabType)
+                        removePage(currentKey)
                         setTimeout(() => {
                             setLoading(false)
                         }, 300)
                         return
                     }
+                    // 快捷键新增
                     if (e.code === "KeyT" && (e.ctrlKey || e.metaKey)) {
                         e.preventDefault()
                         e.stopPropagation()
@@ -193,9 +195,8 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                     type='editable-card'
                     hideAdd={!isShowAdd}
                     activeKey={currentKey}
-                    onChange={(key) => setCurrentKey(key, tabType)}
+                    onChange={(key) => setCurrentKey(key)}
                     onEdit={(targetKey, action) => {
-                        // if (action === "remove") removePage(targetKey as unknown as string, tabType)
                         if (action === "add") onAddTab()
                     }}
                     renderTabBar={(props, TabBarDefault) => {
@@ -218,23 +219,21 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                                                     <Input
                                                         size={"small"}
                                                         defaultValue={item.verbose}
-                                                        onBlur={(e) =>
-                                                            updateCacheVerbose(`${item.id}`, tabType, e.target.value)
-                                                        }
+                                                        onBlur={(e) => updateCacheVerbose(`${item.id}`, e.target.value)}
                                                     />
                                                 </>
                                             }
                                         >
-                                            <EditOutlined className='main-container-cion'/>
+                                            <EditOutlined className='main-container-cion' />
                                         </Popover>
                                         <CloseOutlined
                                             className='main-container-cion'
-                                            onClick={() => removePage(`${item.id}`, tabType)}
+                                            onClick={() => removePage(`${item.id}`)}
                                         />
                                     </Space>
                                 }
                                 style={{
-                                    padding: noPaddingPage.includes(tabType as any) ? 0 : "8px 16px 13px 16px"
+                                    padding: NoPaddingRoute.includes(tabType as YakitRoute) ? 0 : "8px 16px 13px 16px"
                                 }}
                             >
                                 <div
@@ -244,7 +243,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                                         maxHeight: "100%"
                                     }}
                                 >
-                                    <InitTabId children={item.node} id={item.id}/>
+                                    <InitTabId children={item.node} id={item.id} />
                                 </div>
                             </TabPane>
                         )
@@ -254,7 +253,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
         </AutoSpin>
     )
 })
-
+// 通过IPC通信-远程打开一个页面
 export const addToTab = (type: string, data?: any) => {
     ipcRenderer.invoke("send-to-tab", {type, data})
 }

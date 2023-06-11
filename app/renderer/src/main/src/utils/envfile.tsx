@@ -95,10 +95,6 @@ ipcRenderer.invoke("set-release-edition-raw", fetchEnv() || "").then(() => {
     if (isEnpriTraceAgent()) {
         info("设置 EnpriTraceAgent 发行版成功")
     }
-
-    if (isEnpriTraceAgent()) {
-        info("设置 EnpriTraceAgent 发行版成功")
-    }
 })
 
 /** 是否展示开发者工具 */

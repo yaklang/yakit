@@ -1,14 +1,14 @@
-import { InputNumber, Tag } from "antd"
-import React, { useState } from "react"
-import { CopyComponentsProps, YakitTagProps } from "./YakitTagType"
+import {Tag} from "antd"
+import React, {useState} from "react"
+import {CopyComponentsProps, YakitTagProps} from "./YakitTagType"
 import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
-import { DocumentDuplicateSvgIcon, RemoveIcon } from "@/assets/newIcon"
-import { useMemoizedFn } from "ahooks"
-import { CheckOutlined, CopyOutlined, LoadingOutlined } from "@ant-design/icons"
-import { success } from "@/utils/notification"
+import {DocumentDuplicateSvgIcon, RemoveIcon} from "@/assets/newIcon"
+import {useMemoizedFn} from "ahooks"
+import {CheckOutlined, LoadingOutlined} from "@ant-design/icons"
+import {success} from "@/utils/notification"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 /**
  * 更新说明
@@ -26,7 +26,7 @@ const { ipcRenderer } = window.require("electron")
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const { color, size, disable, className, enableCopy, iconColor,copyText,...restProps } = props
+    const {color, size, disable, className, enableCopy, iconColor, copyText, ...restProps} = props
     const onAfterCopy = useMemoizedFn((e) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
@@ -69,7 +69,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
 }
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
-    const { iconColor } = props
+    const {className, iconColor} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowSure, setIsShowSure] = useState<boolean>(false)
     const onCopy = useMemoizedFn((e) => {
@@ -88,11 +88,11 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
     return (
-        <div className={styles["yakit-copy"]} onClick={onCopy}>
+        <div className={classNames(styles["yakit-copy"], className || "")} onClick={onCopy}>
             {(loading && <LoadingOutlined />) || (
                 <>
-                    {(isShowSure && <CheckOutlined style={{ color: "var(--yakit-success-5)" }} />) || (
-                        <DocumentDuplicateSvgIcon style={{ color: iconColor || "var(--yakit-primary-5)" }} />
+                    {(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || (
+                        <DocumentDuplicateSvgIcon style={{color: iconColor || "var(--yakit-primary-5)"}} />
                     )}
                 </>
             )}

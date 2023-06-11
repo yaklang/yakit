@@ -1,0 +1,24 @@
+.extra-menu-wrapper {
+    display: flex;
+    gap: 8px;
+    justify-content: right;
+
+    .extra-menu-gray {
+        svg {
+            color: #85899e;
+        }
+    }
+}
+
+.import-resource-popover {
+    :global {
+        .ant-popover-inner {
+            border: 1px solid var(--yakit-border-color);
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+            .ant-popover-inner-content {
+                padding: 6px 4px 4px 4px;
+            }
+        }
+    }
+}

@@ -82,6 +82,7 @@ import {
     defaultMatcherItem
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -453,7 +454,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<any>()
     const [inViewport] = useInViewport(fuzzerRef)
     useEffect(() => {
-        setSubscribeClose(Route.HTTPFuzzer, {
+        setSubscribeClose(YakitRoute.HTTPFuzzer, {
             title: "关闭提示",
             content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
             onOkText: "确定",
@@ -461,14 +462,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             onOk: (m) => onCloseTab(m)
         })
         return () => {
-            removeSubscribeClose(Route.HTTPFuzzer)
+            removeSubscribeClose(YakitRoute.HTTPFuzzer)
         }
     }, [inViewport])
 
     const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
             .invoke("send-close-tab", {
-                router: Route.HTTPFuzzer
+                router: YakitRoute.HTTPFuzzer
             })
             .then(() => {
                 m.destroy()

@@ -1,5 +1,5 @@
-import {MenuDataProps} from "@/routes/routeSpec"
 import {YakScript} from "../invoker/schema"
+import {EnhancedPrivateRouteMenuProps} from "../layout/HeardMenu/HeardMenuType"
 
 export interface CustomizeMenuProps {
     visible: boolean
@@ -8,160 +8,160 @@ export interface CustomizeMenuProps {
 
 /**
  * @description: 一级菜单项
- * @property {MenuDataProps}  menuData 菜单数据
- * @property {(s: MenuDataProps) => void} setMenuData
- * @property {MenuDataProps} currentFirstMenu
- * @property {(s: MenuDataProps) => void}  onSelect
- * @property {(s: MenuDataProps) => void}  onRemove 删除该项
+ * @property menuData 菜单数据
+ * @property setMenuData
+ * @property currentFirstMenu
+ * @property onSelect
+ * @property onRemove 删除该项
  */
 export interface FirstMenuProps {
-    menuData: MenuDataProps[]
-    setMenuData: (s: MenuDataProps[]) => void
-    currentFirstMenu?: MenuDataProps
-    onSelect: (s: MenuDataProps) => void
-    onRemove: (s: MenuDataProps) => void
+    menuData: EnhancedPrivateRouteMenuProps[]
+    setMenuData: (s: EnhancedPrivateRouteMenuProps[]) => void
+    currentFirstMenu?: EnhancedPrivateRouteMenuProps
+    onSelect: (s: EnhancedPrivateRouteMenuProps) => void
+    onRemove: (s: EnhancedPrivateRouteMenuProps) => void
 }
 /**
  * @description: 一级菜单项
- * @property {MenuDataProps}  menuItem 菜单项
- * @property {MenuDataProps}  currentMenuItem 当前选中
- * @property {boolean} isDragging 拖拽中
- * @property {(s: MenuDataProps) => void} onSelect 选中
- * @property {string}  destinationDrag 拖拽的目的地
- * @property {(s: MenuDataProps) => void}  onRemove 删除该项
+ * @property menuItem 菜单项
+ * @property currentMenuItem 当前选中
+ * @property isDragging 拖拽中
+ * @property onSelect 选中
+ * @property destinationDrag 拖拽的目的地
+ * @property onRemove 删除该项
  */
 export interface FirstMenuItemProps {
-    menuItem: MenuDataProps
-    currentMenuItem?: MenuDataProps
+    menuItem: EnhancedPrivateRouteMenuProps
+    currentMenuItem?: EnhancedPrivateRouteMenuProps
     isDragging: boolean
-    onSelect: (s: MenuDataProps) => void
+    onSelect: (s: EnhancedPrivateRouteMenuProps) => void
     destinationDrag: string
-    onRemove: (s: MenuDataProps) => void
+    onRemove: (s: EnhancedPrivateRouteMenuProps) => void
 }
 
 /**
  * @description: 一级菜单项
- * @property {MenuDataProps}  currentFirstMenu 父级菜单
- * @property {(s: MenuDataProps) => void}  setCurrentFirstMenu 修改父级菜单
- * @property {MenuDataProps}  subMenuData 当前二级菜单
- * @property {() => void}  onRemoveFirstMenu 删除一级菜单
- * @property {(m: MenuDataProps) => void}  onRemoveSecondMenu 删除二级菜单
- * @property {(m: MenuDataProps) => void}  onEdit 编辑二级菜单
+ * @property currentFirstMenu 父级菜单
+ * @property setCurrentFirstMenu 修改父级菜单
+ * @property subMenuData 当前二级菜单
+ * @property onRemoveFirstMenu 删除一级菜单
+ * @property onRemoveSecondMenu 删除二级菜单
+ * @property onEdit 编辑二级菜单
  */
 export interface SecondMenuProps {
-    currentFirstMenu?: MenuDataProps
+    currentFirstMenu?: EnhancedPrivateRouteMenuProps
     editCurrentFirstMenu: (s: string) => void
-    subMenuData: MenuDataProps[]
+    subMenuData: EnhancedPrivateRouteMenuProps[]
     onRemoveFirstMenu: () => void
-    onRemoveSecondMenu: (m: MenuDataProps) => void
-    onEdit: (m: MenuDataProps) => void
+    onRemoveSecondMenu: (m: EnhancedPrivateRouteMenuProps) => void
+    onEdit: (m: EnhancedPrivateRouteMenuProps) => void
 }
 /**
  * @description: 二级菜单项
- * @property {MenuDataProps}  menuItem 菜单项
- * @property {boolean} isDragging 拖拽中
- * @property {(m: MenuDataProps) => void}  onRemoveSecondMenu 删除二级菜单
- * @property {(m: MenuDataProps) => void}  onEdit 编辑二级菜单
+ * @property menuItem 菜单项
+ * @property 拖拽中
+ * @property onRemoveSecondMenu 删除二级菜单
+ * @property onEdit 编辑二级菜单
  */
 export interface SecondMenuItemProps {
-    menuItem: MenuDataProps
+    menuItem: EnhancedPrivateRouteMenuProps
     isDragging: boolean
-    onRemoveSecondMenu: (m: MenuDataProps) => void
-    onEdit: (m: MenuDataProps) => void
+    onRemoveSecondMenu: (m: EnhancedPrivateRouteMenuProps) => void
+    onEdit: (m: EnhancedPrivateRouteMenuProps) => void
 }
 
 /**
  * @description: 右边的系统功能和插件模块
- * @property {string} destinationDrag 当前的拖拽目的地
- * @property {(s: YakScript[]) => void} setPluginList 当前最新的本地插件list
- * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
- * @property { MenuDataProps[]} subMenuData 二级菜单
- * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
- * @property {MenuDataProps[]} SystemRouteMenuData 系统所有二级菜单
+ * @property destinationDrag 当前的拖拽目的地
+ * @property setPluginList 当前最新的本地插件list
+ * @property onAddMenuData 添加二级菜单
+ * @property subMenuData 二级菜单
+ * @property onRemoveMenu 删除二级菜单
+ * @property SystemRouteMenuData 系统所有二级菜单
  */
 export interface FeaturesAndPluginProps {
     destinationDrag: string
     setPluginList: (s: YakScript[]) => void
-    onAddMenuData: (m: MenuDataProps) => void
-    subMenuData: MenuDataProps[]
-    onRemoveMenu: (m: MenuDataProps) => void
-    SystemRouteMenuData: MenuDataProps[]
+    onAddMenuData: (m: EnhancedPrivateRouteMenuProps) => void
+    subMenuData: EnhancedPrivateRouteMenuProps[]
+    onRemoveMenu: (m: EnhancedPrivateRouteMenuProps) => void
+    SystemRouteMenuData: EnhancedPrivateRouteMenuProps[]
 }
 
 /**
  * @description: 系统功能模块列表
- * @property {string} keywords 搜索关键词
- * @property {boolean} isSearch 搜索
- * @property {string} destinationDrag 当前的拖拽目的地
- * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
- * @property { MenuDataProps[]} subMenuData 二级菜单
- * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
- * @property {MenuDataProps[]} SystemRouteMenuData 系统所有二级菜单
+ * @property keywords 搜索关键词
+ * @property isSearch 搜索
+ * @property destinationDrag 当前的拖拽目的地
+ * @property onAddMenuData 添加二级菜单
+ * @property subMenuData 二级菜单
+ * @property onRemoveMenu 删除二级菜单
+ * @property SystemRouteMenuData 系统所有二级菜单
  */
 export interface SystemFunctionListProps {
     keywords: string
     isSearch: boolean
     destinationDrag: string
-    onAddMenuData: (m: MenuDataProps) => void
-    subMenuData: MenuDataProps[]
-    onRemoveMenu: (m: MenuDataProps) => void
-    SystemRouteMenuData: MenuDataProps[]
+    onAddMenuData: (m: EnhancedPrivateRouteMenuProps) => void
+    subMenuData: EnhancedPrivateRouteMenuProps[]
+    onRemoveMenu: (m: EnhancedPrivateRouteMenuProps) => void
+    SystemRouteMenuData: EnhancedPrivateRouteMenuProps[]
 }
 
 /**
  * @description: 系统功能小组件
- * @property {MenuDataProps} item 当前菜单数据
- * @property {boolean} isDragging 是否拖拽中
- * @property {string} destinationDrag 当前的拖拽目的地
- * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
- * @property {boolean} isDragDisabled 是否可以被拖拽
- * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
+ * @property item 当前菜单数据
+ * @property isDragging 是否拖拽中
+ * @property destinationDrag 当前的拖拽目的地
+ * @property onAddMenuData 添加二级菜单
+ * @property isDragDisabled 是否可以被拖拽
+ * @property onRemoveMenu 删除二级菜单
  */
 export interface SystemRouteMenuDataItemProps {
-    item: MenuDataProps
+    item: EnhancedPrivateRouteMenuProps
     isDragging: boolean
     destinationDrag: string
-    onAddMenuData: (m: MenuDataProps) => void
+    onAddMenuData: (m: EnhancedPrivateRouteMenuProps) => void
     isDragDisabled: boolean
-    onRemoveMenu: (m: MenuDataProps) => void
+    onRemoveMenu: (m: EnhancedPrivateRouteMenuProps) => void
 }
 
 /**
  * @description: 插件本地功能模块列表
- * @property {string} keywords 搜索关键词
- * @property {boolean} isSearch 搜索
- * @property {string} destinationDrag 当前的拖拽目的地
- * @property {(s: YakScript[]) => void} setPluginList 当前最新的本地插件list
- * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
- * @property { MenuDataProps[]} subMenuData 二级菜单
- * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
+ * @property keywords 搜索关键词
+ * @property isSearch 搜索
+ * @property destinationDrag 当前的拖拽目的地
+ * @property setPluginList 当前最新的本地插件list
+ * @property onAddMenuData 添加二级菜单
+ * @property subMenuData 二级菜单
+ * @property onRemoveMenu 删除二级菜单
  */
 export interface PluginLocalListProps {
     keywords: string
     isSearch: boolean
     destinationDrag: string
     setPluginList: (s: YakScript[]) => void
-    onAddMenuData: (m: MenuDataProps) => void
-    subMenuData: MenuDataProps[]
-    onRemoveMenu: (m: MenuDataProps) => void
+    onAddMenuData: (m: EnhancedPrivateRouteMenuProps) => void
+    subMenuData: EnhancedPrivateRouteMenuProps[]
+    onRemoveMenu: (m: EnhancedPrivateRouteMenuProps) => void
 }
 
 /**
  * @description: 本地插件功能小组件
- * @property {YakScript} plugin 当前插件
- * @property {boolean} isDragging 是否拖拽中
- * @property {string} destinationDrag 当前的拖拽目的地
- * @property {(m: MenuDataProps) => void} onAddMenuData 添加二级菜单
- * @property {boolean} isDragDisabled 是否可以被拖拽
- * @property {(m: MenuDataProps) => void} onRemoveMenu 删除二级菜单
+ * @property plugin 当前插件
+ * @property isDragging 是否拖拽中
+ * @property destinationDrag 当前的拖拽目的地
+ * @property onAddMenuData 添加二级菜单
+ * @property isDragDisabled 是否可以被拖拽
+ * @property onRemoveMenu 删除二级菜单
  */
 export interface PluginLocalItemProps {
     plugin: YakScript
     isDragging: boolean
     destinationDrag: string
-    onAddMenuData: (m: MenuDataProps) => void
+    onAddMenuData: (m: EnhancedPrivateRouteMenuProps) => void
     isDragDisabled: boolean
-    onRemoveMenu: (m: MenuDataProps) => void
+    onRemoveMenu: (m: EnhancedPrivateRouteMenuProps) => void
 }
 
 export interface PluginLocalInfoProps {

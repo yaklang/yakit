@@ -32,19 +32,30 @@ module.exports = (win, getClient) => {
         return isDev
     })
 
-    // 关闭tab
+    /**
+     * @name ipc通信-远程关闭一级页面
+     * @param {object} params
+     * @param {YakitRoute} params.router 页面路由
+     * @param {string} params.name 选填-router是YakitRoute.Plugin_OP时必须传入插件名称
+     */
     ipcMain.handle("send-close-tab", async (e, params) => {
         win.webContents.send("fetch-close-tab", params)
+    })
+    /**
+     * @name 远程通信打开一个页面
+     * @param {object} params 打开页面的信息
+     *
+     * @param {YakitRoute} params.route 页面的路由
+     * @param {number} pluginId 插件id(本地)
+     * @param {string} pluginName 插件名称
+     */
+    ipcMain.handle("open-route-page", (e, params) => {
+        win.webContents.send("open-route-page-callback", params)
     })
 
     // tab 新建插件后，刷新插件仓库的本地插件列表
     ipcMain.handle("send-local-script-list", async (e, params) => {
         win.webContents.send("ref-local-script-list", params)
-    })
-
-    /** 账户菜单页面的打开通信 */
-    ipcMain.handle("open-user-manage", (e, params) => {
-        win.webContents.send("callback-open-user-manage", params)
     })
 
     /** 缩放日志的打开通信 */
@@ -66,7 +77,7 @@ module.exports = (win, getClient) => {
     })
     /** 风车切换引擎 */
     ipcMain.handle("switch-conn-refresh", (e, params) => {
-        if(!params){
+        if (!params) {
             // 关闭所有菜单
             win.webContents.send("fetch-close-all-tab")
         }

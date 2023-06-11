@@ -8,7 +8,6 @@ import {CopyableField} from "@/utils/inputUtil";
 import {showDrawer} from "@/utils/showModal";
 import {ChaosMakerRuleImport} from "@/pages/chaosmaker/ChaosMakerRuleImport";
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin";
-import {getMenuListToLocal} from "@/pages/customizeMenu/CustomizeMenu";
 
 export interface ChaosMakerPageProp {
 

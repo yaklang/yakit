@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     CustomizeMenuProps,
     FeaturesAndPluginProps,
@@ -14,7 +14,6 @@ import {
 } from "./CustomizeMenuType"
 import style from "./CustomizeMenu.module.scss"
 import {
-    ChevronLeftIcon,
     BanIcon,
     RemoveIcon,
     DragSortIcon,
@@ -28,47 +27,62 @@ import {
     TerminalIcon,
     PencilAltIcon,
     ShieldExclamationIcon,
-    DocumentDownloadIcon,
     CloudPluginIcon
 } from "@/assets/newIcon"
-import { MenuDataProps, DefaultRouteMenuData, Route } from "@/routes/routeSpec"
+import {MenuDataProps, DefaultRouteMenuData, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
-import { Button, Input, Modal, Popconfirm, Radio, Tooltip } from "antd"
-import { useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn } from "ahooks"
-import { randomString } from "@/utils/randomUtil"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { MenuDefaultPluginIcon } from "./icon/menuIcon"
-import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
-import { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from "../invoker/schema"
-import { yakitFailed } from "@/utils/notification"
-import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
-import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
-import { YakEditor } from "@/utils/editors"
-import { getScriptHoverIcon, getScriptIcon } from "../layout/HeardMenu/HeardMenu"
-import { ExclamationCircleOutlined } from "@ant-design/icons"
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
-import { getRemoteValue } from "@/utils/kv"
-import { saveABSFileToOpen } from "@/utils/openWebsite"
-import { MenuItem, MenuItemGroup } from "../MainOperator"
-import { MenuByGroupProps } from "../layout/HeardMenu/HeardMenuType"
+import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {Input, Modal, Tooltip} from "antd"
+import {useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
+import {randomString} from "@/utils/randomUtil"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {MenuDefaultPluginIcon} from "./icon/menuIcon"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {QueryYakScriptsResponse, YakScript} from "../invoker/schema"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakEditor} from "@/utils/editors"
+import {getScriptHoverIcon, getScriptIcon} from "../layout/HeardMenu/HeardMenu"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {getRemoteValue} from "@/utils/kv"
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {MenuItem, MenuItemGroup} from "../MainOperator"
+import {
+    CacheMenuItemProps,
+    EnhancedPrivateRouteMenuProps,
+    exchangeMenuProp,
+    unionMenus
+} from "../layout/HeardMenu/HeardMenuType"
+import {
+    InvalidFirstMenuItem,
+    InvalidPageMenuItem,
+    PrivateAllMenus,
+    PrivateExpertRouteMenu,
+    PrivateRouteMenuProps,
+    PrivateScanRouteMenu,
+    YakitRoute
+} from "@/routes/newRoute"
+import {RemoteGV} from "@/yakitGV"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
-const reorder = (list: MenuDataProps[], startIndex: number, endIndex: number) => {
+// 替换指定位置的功能
+const reorder = (list: EnhancedPrivateRouteMenuProps[], startIndex: number, endIndex: number) => {
     const result = Array.from(list)
     const [removed] = result.splice(startIndex, 1)
     result.splice(endIndex, 0, removed)
     return result
 }
-
-export const getMenuListBySort = (menuData: MenuDataProps[], menuMode: string) => {
+// 全局暂无使用
+export const getMenuListBySort = (menuData: PrivateRouteMenuProps[], menuMode: string) => {
     const menuLists: MenuItemGroup[] = []
     menuData.forEach((item, index) => {
         let subMenuData: MenuItem[] = []
-        if (item.subMenuData && item.subMenuData.length > 0) {
-            item.subMenuData.forEach((subItem, subIndex) => {
+        if (item.children && item.children.length > 0) {
+            item.children.forEach((subItem, subIndex) => {
                 subMenuData.push({
                     Group: item.label,
                     YakScriptId: subItem.yakScriptId || 0,
@@ -94,7 +108,7 @@ export const getMenuListBySort = (menuData: MenuDataProps[], menuMode: string) =
     })
     return menuLists
 }
-
+// 全局暂无使用
 export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
     let allSystemRouteMenuData: MenuDataProps[] = []
     DefaultRouteMenuData.forEach((ele) => {
@@ -144,115 +158,150 @@ export const getMenuListToLocal = (menuData: MenuItemGroup[]) => {
     return menuLists
 }
 
-const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
-    const { visible, onClose } = props
-    const [menuData, setMenuData] = useState<MenuDataProps[]>([])
-    const [currentFirstMenu, setCurrentFirstMenu] = useState<MenuDataProps>()
-    const [subMenuData, setSubMenuData] = useState<MenuDataProps[]>([])
-    const [currentSubMenuData, setCurrentSubMenuData] = useState<MenuDataProps>()
-    const [visibleSubMenu, setVisibleSubMenu] = useState<boolean>(false)
-    const [emptyMenuLength, setEmptyMenuLength] = useState<number>(0)
+// 将菜单数据中的label提取出来
+const convertMenuLabel = (menus: EnhancedPrivateRouteMenuProps[]) => {
+    const newMenus: string[] = []
+    try {
+        for (let item of menus) {
+            newMenus.push(item.label)
+            if (item.children && item.children.length > 0) {
+                for (let subItem of item.children) newMenus.push(subItem.label)
+            }
+        }
+        return newMenus
+    } catch (error) {
+        return newMenus
+    }
+}
 
+const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
+    const {visible, onClose} = props
+
+    // 专家模式菜单数据
+    const ExpertMenus = useMemo(() => {
+        return exchangeMenuProp(PrivateExpertRouteMenu)
+    }, [])
+    // 扫描模式菜单数据
+    const ScanMenus = useMemo(() => {
+        return exchangeMenuProp(PrivateScanRouteMenu)
+    }, [])
+
+    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+    const [menuData, setMenuData] = useState<EnhancedPrivateRouteMenuProps[]>([])
+    const [currentFirstMenu, setCurrentFirstMenu] = useState<EnhancedPrivateRouteMenuProps>()
+    const [subMenuData, setSubMenuData] = useState<EnhancedPrivateRouteMenuProps[]>([])
+    // 编辑二级菜单项展示名称时使用
+    const [currentSubMenuData, setCurrentSubMenuData] = useState<EnhancedPrivateRouteMenuProps>()
+    // 编辑的二级菜单项展示名称
     const [subMenuName, setSubMenuName] = useState<string>("")
+    // 编辑二级菜单项展示名称的弹框
+    const [visibleSubMenu, setVisibleSubMenu] = useState<boolean>(false)
+
+    const [emptyMenuLength, setEmptyMenuLength] = useState<number>(0)
 
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable2") // 右边得系统功能和插件拖拽后得目的地
     const [tip, setTip] = useState<string>("保存")
-    const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
+
     const [addLoading, setAddLoading] = useState<boolean>(false)
 
-    const systemRouteMenuDataRef = useRef<MenuDataProps[]>([]) // 系统功能列表数据
+    const systemRouteMenuDataRef = useRef<EnhancedPrivateRouteMenuProps[]>([]) // 系统功能列表数据
     const pluginLocalDataRef = useRef<YakScript[]>([]) // 本地插件列表数据
-    const defaultRouteMenuDataRef = useRef<MenuDataProps[]>(DefaultRouteMenuData)
+    const defaultRouteMenuDataRef = useRef<EnhancedPrivateRouteMenuProps[]>([])
 
     // 获取 系统功能菜单列表 所有 一维
     const SystemRouteMenuData = useCreation(() => {
-        let data: MenuDataProps[] = []
-        DefaultRouteMenuData.forEach((ele) => {
-            data = [...data, ...(ele.subMenuData?.filter((ele) => ele.key) || [])]
-        })
+        let data: EnhancedPrivateRouteMenuProps[] = exchangeMenuProp(Object.values(PrivateAllMenus))
         systemRouteMenuDataRef.current = data
         return data
-    }, [DefaultRouteMenuData])
+    }, [PrivateAllMenus])
 
+    // 获取数据库里菜单的所有数据
     useEffect(() => {
-        getRemoteValue("PatternMenu").then((patternMenu) => {
+        getRemoteValue(RemoteGV.PatternMenu).then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setPatternMenu(menuMode)
-            getMenuData(menuMode)
+            defaultRouteMenuDataRef.current = menuMode === "new" ? ScanMenus : ExpertMenus
+            getMenuData(menuMode, menuMode === "new" ? ScanMenus : ExpertMenus)
         })
     }, [])
-    /**
-     * @description: 获取菜单
-     */
-    const getMenuData = useMemoizedFn((menuMode: string) => {
+    /** @description: 获取数据库菜单数据 */
+    const getMenuData = useMemoizedFn((menuMode: string, localMenus: EnhancedPrivateRouteMenuProps[]) => {
         ipcRenderer
-            .invoke("QueryAllMenuItem", { Mode: menuMode })
-            .then((rsp: MenuByGroupProps) => {
-                const list: MenuDataProps[] = getMenuListToLocal(rsp.Groups)
-                defaultRouteMenuDataRef.current = list
-                setMenuData([...list])
+            .invoke("QueryAllMenuItem", {Mode: menuMode})
+            .then((rsp: {Groups: CacheMenuItemProps[]}) => {
+                const caches: CacheMenuItemProps[] = []
+                for (let item of rsp.Groups) {
+                    // 过滤代码中无效的一级菜单项
+                    if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
+
+                    const menus: CacheMenuItemProps = {...item}
+                    if (item.children && item.children.length > 0) {
+                        menus.children = item.children.filter(
+                            // 过滤代码中无效的二级菜单项
+                            (item) => InvalidPageMenuItem.indexOf(item.menuName) === -1
+                        )
+                    }
+                    caches.push(menus)
+                }
+                const {menus} = unionMenus(localMenus, caches)
+                console.log('menus',rsp,menus);
+                
+                defaultRouteMenuDataRef.current = menus
+                setMenuData([...menus])
                 //默认选中第一个一级菜单
-                if (list.length > 0) {
-                    onSelect(list[0])
+                if (menus.length > 0) {
+                    onSelect(menus[0])
                 }
             })
             .catch((err) => {
                 yakitFailed("获取菜单失败：" + err)
             })
     })
-    const onSelect = useMemoizedFn((item: MenuDataProps) => {
+    /** @description 选中一级菜单项并展示该菜单项下的所有二级菜单 */
+    const onSelect = useMemoizedFn((item: EnhancedPrivateRouteMenuProps) => {
         setCurrentFirstMenu(item)
-        setSubMenuData([...(item.subMenuData || [])])
+        setSubMenuData([...(item.children || [])])
     })
-    /**
-     * @description: 新增一级菜单
-     */
+    /** @description: 新增一级菜单 */
     const onAddFirstMenu = useMemoizedFn((value?: string) => {
         if (menuData.length >= 50) {
-            yakitFailed("最多只能设置50个")
+            yakitNotify("error", "最多只能设置50个")
             return
         }
         const length = menuData.filter((ele) => ele.label.includes("未命名")).length
-        const id = randomString(4)
-        const menu: MenuDataProps = {
-            id,
-            label: value || `未命名${length + 1}`
+        const menu: EnhancedPrivateRouteMenuProps = {
+            page: undefined,
+            label: value || `未命名${length + 1}`,
+            menuName: value || `未命名${length + 1}`
         }
-        setCurrentFirstMenu({ ...menu })
+        setCurrentFirstMenu({...menu})
         setMenuData([...menuData, menu])
         setSubMenuData([])
     })
-    /**
-     * @description: 删除一级菜单
-     */
-    const onRemoveFirstMenu = useMemoizedFn((currentFirstMenu?: MenuDataProps) => {
-        if (!currentFirstMenu) return
-        const index = menuData.findIndex((ele) => ele.id === currentFirstMenu?.id)
+    /** @description: 删除一级菜单项 */
+    const onRemoveFirstMenu = useMemoizedFn((firstMenu: EnhancedPrivateRouteMenuProps) => {
+        if (!firstMenu.label) return
+        const index = menuData.findIndex((ele) => ele.label === firstMenu?.label)
         if (index === -1) return
         menuData.splice(index, 1)
         setCurrentFirstMenu(undefined)
         setMenuData([...menuData])
         setSubMenuData([])
     })
-
-    /**
-     * @description: 修改一级菜单以及当前选中的菜单项
-     */
+    /** @description: 修改一级菜单项的展示名称,同时在不存在时的修改变更为新增一级菜单项操作 */
     const editCurrentFirstMenu = useMemoizedFn((value: string) => {
         // 如果一级菜单不存在，默认给用户创建一个一级菜单
         if (!currentFirstMenu) {
             onAddFirstMenu(value)
+            return
         }
-        if (!currentFirstMenu) return
-        const index = menuData.findIndex((ele) => ele.id === currentFirstMenu?.id)
+        const index = menuData.findIndex((ele) => ele.label === currentFirstMenu?.label)
         if (index === -1) return
         menuData[index].label = value
-        setCurrentFirstMenu({ ...currentFirstMenu, label: value })
+        setCurrentFirstMenu({...currentFirstMenu, label: value})
         setMenuData([...menuData])
     })
-    /**
-     * @description: 拖拽结束后的计算
-     */
+    /** @description 中间和右侧菜单-拖拽结束后的计算 */
     const onDragEnd = useMemoizedFn((result) => {
         if (!result.destination) {
             return
@@ -261,17 +310,17 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         if (!currentFirstMenu) {
             onAddFirstMenu()
         }
-        // if (!currentFirstMenu?.id) {
-        //     yakitFailed("请先选择左边一级菜单")
-        //     return
-        // }
+
         if (result.source.droppableId === "droppable2" && result.destination.droppableId === "droppable2") {
-            const subMenuList: MenuDataProps[] = reorder(subMenuData, result.source.index, result.destination.index)
-            // setSubMenuData(subMenuList)
+            const subMenuList: EnhancedPrivateRouteMenuProps[] = reorder(
+                subMenuData,
+                result.source.index,
+                result.destination.index
+            )
             updateData(subMenuList)
         }
         if (subMenuData.length > 50) {
-            yakitFailed("最多只能设置50个")
+            yakitNotify("error", "最多只能设置50个")
             return
         }
         if (result.source.droppableId === "droppable3" && result.destination.droppableId === "droppable2") {
@@ -284,14 +333,14 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         if (result.source.droppableId === "droppable4" && result.destination.droppableId === "droppable2") {
             // 插件拖拽到此处
             const currentPluginMenuItem = pluginLocalDataRef.current[result.source.index]
-            const menuItem: MenuDataProps = {
-                id: `${currentPluginMenuItem.Id}`,
-                key: `plugin:${currentPluginMenuItem.Id}` as Route,
+            const menuItem: EnhancedPrivateRouteMenuProps = {
+                page: YakitRoute.Plugin_OP,
                 label: currentPluginMenuItem.ScriptName,
+                menuName: currentPluginMenuItem.ScriptName,
                 icon: getScriptIcon(currentPluginMenuItem.ScriptName),
-                describe: currentPluginMenuItem.Help,
-                yakScripName: currentPluginMenuItem.ScriptName
-                // yakScriptId: currentPluginMenuItem.Id
+                yakScriptId: +currentPluginMenuItem.Id || 0,
+                yakScripName: currentPluginMenuItem.ScriptName,
+                describe: currentPluginMenuItem.Help
             }
             const destinationIndex = result.destination.index
             subMenuData.splice(destinationIndex, 0, menuItem)
@@ -299,27 +348,26 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         }
     })
     /**
-     * @description: 根据变化的二级菜单，修改菜单数据、一级菜单数据
-     * @param {*} subMenuList 当前得二级菜单
+     * @description 根据二级菜单栏时，同步更新当前选中的一级菜单项和整体菜单数据
+     * @param subMenuList 当前得二级菜单
      */
-    const updateData = useMemoizedFn((subMenuList: MenuDataProps[]) => {
-        if (!currentFirstMenu?.id) return
-        const index = menuData.findIndex((item) => item.id === currentFirstMenu.id)
+    const updateData = useMemoizedFn((subMenuList: EnhancedPrivateRouteMenuProps[]) => {
+        if (!currentFirstMenu?.label) return
+        const index = menuData.findIndex((item) => item.label === currentFirstMenu.label)
+        if (index === -1) return
         menuData[index] = {
             ...menuData[index],
-            subMenuData: subMenuList
+            children: subMenuList
         }
-        const newCurrentFirstMenu: MenuDataProps = {
+        const newCurrentFirstMenu: EnhancedPrivateRouteMenuProps = {
             ...currentFirstMenu,
-            subMenuData: subMenuList
+            children: subMenuList
         }
         setSubMenuData([...subMenuList])
         setMenuData([...menuData])
         setCurrentFirstMenu(newCurrentFirstMenu)
     })
-    /**
-     * @description: 计算移动的范围是否在目标范围类
-     */
+    /** @description 中间和右侧菜单-计算移动的范围是否在目标范围类 */
     const onDragUpdate = useThrottleFn(
         (result) => {
             if (!result.destination) {
@@ -328,15 +376,16 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             }
             if (result.destination.droppableId !== destinationDrag) setDestinationDrag(result.destination.droppableId)
         },
-        { wait: 200 }
+        {wait: 200}
     ).run
-    const onAddMenuData = useMemoizedFn((item: MenuDataProps) => {
-        if (!currentFirstMenu?.id) {
-            yakitFailed("请先选择左边一级菜单")
+    /** @description 添加二级菜单项(按钮的添加功能) */
+    const onAddMenuData = useMemoizedFn((item: EnhancedPrivateRouteMenuProps) => {
+        if (!currentFirstMenu?.label) {
+            yakitNotify("error", "请先选择左边一级菜单")
             return
         }
         if (subMenuData.length > 50) {
-            yakitFailed("最多只能设置50个")
+            yakitNotify("error", "最多只能设置50个")
             return
         }
 
@@ -344,38 +393,42 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         setSubMenuData([...subMenuData])
         updateData(subMenuData)
     })
-    const onRemoveSecondMenu = useMemoizedFn((item: MenuDataProps) => {
-        const index = subMenuData.findIndex((i) => i.id === item.id)
+    /** @description 删除二级菜单项 */
+    const onRemoveSecondMenu = useMemoizedFn((item: EnhancedPrivateRouteMenuProps) => {
+        let index = -1
+        if (item.page === YakitRoute.Plugin_OP) {
+            index = subMenuData.findIndex((i) => i.yakScripName === item.yakScripName)
+        } else {
+            index = subMenuData.findIndex((i) => i.menuName === item.menuName)
+        }
         if (index === -1) return
         subMenuData.splice(index, 1)
         setSubMenuData([...subMenuData])
         updateData(subMenuData)
     })
-    /**
-     * @description: 完成
-     */
-    const onSave = useMemoizedFn(() => {
+    // (导出 JSON/完成)按钮
+    const onSave = useMemoizedFn((type?: string) => {
         let length = 0
+
         menuData.forEach((item) => {
-            if (!item.subMenuData || item.subMenuData.length === 0) {
+            // 查找每个一级菜单下的二级菜单组是否有为空的情况
+            if (!item.children || item.children.length === 0) {
                 length += 1
             }
         })
         if (length === 0) {
-            // 保存
-            onSaveLocal()
+            type === "export" ? onImportJSON() : onSaveLocal()
         } else {
-            setTip("保存")
+            setTip(type === "export" ? "导出" : "保存")
             setEmptyMenuLength(length)
         }
     })
-    /**
-     * @description: 保存至引擎
-     */
+    // 保存到数据库和更新前端渲染的菜单数据
+    // 这里存储需要转换，逻辑为修改
     const onSaveLocal = useMemoizedFn(() => {
         let firstStageMenu = menuData.map((ele) => ele.label).sort()
         if (firstStageMenu.filter((ele) => !ele).length > 0) {
-            yakitFailed(`一级菜单名称不能为空`)
+            yakitNotify("error", `一级菜单名称不能为空`)
             return
         }
         let repeatMenu = ""
@@ -386,36 +439,47 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             }
         }
         if (repeatMenu) {
-            yakitFailed(`【${repeatMenu}】名称重复，请修改`)
+            yakitNotify("error", `【${repeatMenu}】名称重复，请修改`)
             return
         }
         setAddLoading(true)
-        const menuLists = getMenuListBySort(menuData, patternMenu)
 
-        ipcRenderer
-            .invoke("DeleteAllMenu", { Mode: patternMenu })
-            .then(() => {
-                ipcRenderer
-                    .invoke("AddMenus", { Data: menuLists })
-                    .then(() => {
-                        onClose()
-                        ipcRenderer.invoke("change-main-menu")
-                    })
-                    .catch((err) => {
-                        yakitFailed("保存菜单失败：" + err)
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            setAddLoading(false)
-                        }, 300)
-                    })
-            })
-            .catch((e: any) => {
-                yakitFailed(`删除菜单失败:${e}`)
-            })
+        // const menuLists = getMenuListBySort(menuData, patternMenu)
+
+        // ipcRenderer
+        //     .invoke("DeleteAllMenu", { Mode: patternMenu })
+        //     .then(() => {
+        //         ipcRenderer
+        //             .invoke("AddMenus", { Data: menuLists })
+        //             .then(() => {
+        //                 onClose()
+        //                 ipcRenderer.invoke("change-main-menu")
+        //             })
+        //             .catch((err) => {
+        //                 yakitFailed("保存菜单失败：" + err)
+        //             })
+        //             .finally(() => {
+        //                 setTimeout(() => {
+        //                     setAddLoading(false)
+        //                 }, 300)
+        //             })
+        //     })
+        //     .catch((e: any) => {
+        //         yakitFailed(`删除菜单失败:${e}`)
+        //     })
     })
+    // 导出菜单数据为JSON文件
+    // 这里存储需要转换，逻辑为修改
+    const onImportJSON = useMemoizedFn(() => {
+        const newMenu: CacheMenuItemProps[] = []
+        const menuString = JSON.stringify(newMenu)
+        saveABSFileToOpen(`menuData-${randomString(10)}.json`, menuString)
+    })
+    // 取消按钮
     const onTip = useMemoizedFn(() => {
-        if (JSON.stringify(defaultRouteMenuDataRef.current) === JSON.stringify(menuData)) {
+        const defaultMenus = convertMenuLabel(defaultRouteMenuDataRef.current).join("|")
+        const newMenus = convertMenuLabel(menuData).join("|")
+        if (defaultMenus === newMenus) {
             onClose()
         } else {
             Modal.confirm({
@@ -431,30 +495,28 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                             e.stopPropagation()
                             Modal.destroyAll()
                         }}
-                        className="modal-remove-icon"
+                        className='modal-remove-icon'
                     >
                         <RemoveIcon />
                     </div>
                 ),
-                onOk: () => {
-                    onSave()
-                },
-                onCancel: () => {
-                    onClose()
-                },
-                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
-                okButtonProps: { size: "small", className: "modal-ok-button" }
+                onOk: () => onSave(),
+                onCancel: () => onClose(),
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
             })
         }
     })
-    const onEditSecondMenu = useMemoizedFn((item: MenuDataProps) => {
+    // 编辑二级菜单项展示名称
+    const onEditSecondMenu = useMemoizedFn((item: EnhancedPrivateRouteMenuProps) => {
         setVisibleSubMenu(true)
         setCurrentSubMenuData(item)
         setSubMenuName(item.label)
     })
+    // 编辑二级菜单项展示名称-完成的回调
     const onEditSubMenuName = useMemoizedFn(() => {
-        if (!currentSubMenuData?.id) return
-        const index = subMenuData.findIndex((item) => item.id === currentSubMenuData?.id)
+        if (!currentSubMenuData?.label) return
+        const index = subMenuData.findIndex((item) => item.label === currentSubMenuData?.label)
         if (index === -1) return
         subMenuData[index] = {
             ...subMenuData[index],
@@ -462,24 +524,6 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         }
         updateData(subMenuData)
         setVisibleSubMenu(false)
-    })
-
-    const onImportJSON = useMemoizedFn(() => {
-        let length = 0
-        menuData.forEach((item) => {
-            if (!item.subMenuData || item.subMenuData.length === 0) {
-                length += 1
-            }
-        })
-        if (length === 0) {
-            // 导出 JSON
-            const newMenu: MenuItemGroup[] = getMenuListBySort(menuData, "")
-            const menuString = JSON.stringify(newMenu)
-            saveABSFileToOpen(`menuData-${randomString(10)}.json`, menuString)
-        } else {
-            setTip("导出")
-            setEmptyMenuLength(length)
-        }
     })
 
     return (
@@ -498,14 +542,6 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         <div className={style["left-number"]}>{menuData.length}/50</div>
                     </div>
                     <div>
-                        {/* <Popconfirm
-                            title='确定清空菜单吗？'
-                            onConfirm={() => onRemoveAll()}
-                            okText='Yes'
-                            cancelText='No'
-                        >
-                            <TrashIcon className={style["remove-icon"]} />
-                        </Popconfirm> */}
                         <PlusIcon className={style["content-icon"]} onClick={() => onAddFirstMenu()} />
                     </div>
                 </div>
@@ -523,7 +559,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         取消
                     </YakitButton>
                     <div>
-                        <YakitButton type='outline1' onClick={() => onImportJSON()}>
+                        <YakitButton type='outline1' onClick={() => onSave("export")}>
                             导出 JSON
                         </YakitButton>
                         <YakitButton type='primary' onClick={() => onSave()} loading={addLoading}>
@@ -538,7 +574,9 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         currentFirstMenu={currentFirstMenu}
                         editCurrentFirstMenu={editCurrentFirstMenu}
                         subMenuData={subMenuData}
-                        onRemoveFirstMenu={() => onRemoveFirstMenu(currentFirstMenu)}
+                        onRemoveFirstMenu={() => {
+                            if (currentFirstMenu && currentFirstMenu.label) onRemoveFirstMenu(currentFirstMenu)
+                        }}
                         onRemoveSecondMenu={onRemoveSecondMenu}
                         onEdit={onEditSecondMenu}
                     />
@@ -569,7 +607,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                     </div>
                     <div className={style["subMenu-edit-modal-body"]}>
                         <YakitInput.TextArea
-                            autoSize={{ minRows: 3, maxRows: 3 }}
+                            autoSize={{minRows: 3, maxRows: 3}}
                             showCount
                             value={subMenuName}
                             maxLength={50}
@@ -614,7 +652,14 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                         >
                             取消
                         </YakitButton>
-                        <YakitButton type='primary' size='large' onClick={() => onSaveLocal()}>
+                        <YakitButton
+                            type='primary'
+                            size='large'
+                            onClick={() => {
+                                if (tip === "导出") onImportJSON()
+                                else onSaveLocal()
+                            }}
+                        >
                             {tip}
                         </YakitButton>
                     </div>
@@ -626,6 +671,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
 
 export default CustomizeMenu
 
+// 拖拽功能所需
 const getItemStyle = (isDragging, draggableStyle) => ({
     ...draggableStyle
 })
@@ -634,9 +680,9 @@ const getItemStyleSecond = (isDragging, draggableStyle) => ({
     background: isDragging ? "red" : "",
     ...draggableStyle
 })
-
+/** @name 左侧一级菜单栏 */
 const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
-    const { menuData, setMenuData, currentFirstMenu, onSelect, onRemove } = props
+    const {menuData, setMenuData, currentFirstMenu, onSelect, onRemove} = props
 
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable1")
 
@@ -648,7 +694,11 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
             return
         }
         if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
-            const menuList: MenuDataProps[] = reorder(menuData, result.source.index, result.destination.index)
+            const menuList: EnhancedPrivateRouteMenuProps[] = reorder(
+                menuData,
+                result.source.index,
+                result.destination.index
+            )
             setMenuData(menuList)
         }
     })
@@ -663,7 +713,7 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
             }
             if (result.destination.droppableId !== destinationDrag) setDestinationDrag(result.destination.droppableId)
         },
-        { wait: 200 }
+        {wait: 200}
     ).run
     return (
         <div className={style["first-menu-list"]}>
@@ -672,7 +722,7 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
                     {(provided, snapshot) => (
                         <div {...provided.droppableProps} ref={provided.innerRef}>
                             {menuData.map((item, index) => (
-                                <Draggable key={item.id} draggableId={item.id} index={index}>
+                                <Draggable key={item.menuName} draggableId={item.menuName} index={index}>
                                     {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -681,7 +731,7 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
                                             style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                                         >
                                             <FirstMenuItem
-                                                key={item.id}
+                                                key={item.menuName}
                                                 menuItem={item}
                                                 currentMenuItem={currentFirstMenu}
                                                 isDragging={snapshot.isDragging}
@@ -701,13 +751,13 @@ const FirstMenu: React.FC<FirstMenuProps> = React.memo((props) => {
         </div>
     )
 })
-
+/** @name 左侧一级菜单项 */
 const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
-    const { menuItem, currentMenuItem, isDragging, onSelect, destinationDrag, onRemove } = props
+    const {menuItem, currentMenuItem, isDragging, onSelect, destinationDrag, onRemove} = props
     return (
         <div
             className={classNames(style["first-menu-item"], {
-                [style["first-menu-item-select"]]: menuItem.id === currentMenuItem?.id,
+                [style["first-menu-item-select"]]: menuItem.label === currentMenuItem?.label,
                 [style["menu-item-drag"]]: isDragging
             })}
             onClick={() => onSelect(menuItem)}
@@ -722,7 +772,7 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
                     {menuItem.label}
                 </div>
             </div>
-            <div className={style["first-sub-menu-number"]}>{menuItem.subMenuData?.length || 0}</div>
+            <div className={style["first-sub-menu-number"]}>{menuItem.children?.length || 0}</div>
             <TrashIcon
                 className={style["trash-icon"]}
                 onClick={(e) => {
@@ -738,9 +788,9 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
         </div>
     )
 })
-
+/** @name 中间二级菜单栏 */
 const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
-    const { currentFirstMenu, subMenuData, editCurrentFirstMenu, onRemoveFirstMenu, onRemoveSecondMenu, onEdit } = props
+    const {currentFirstMenu, subMenuData, editCurrentFirstMenu, onRemoveFirstMenu, onRemoveSecondMenu, onEdit} = props
     return (
         <div className={style["second-menu"]}>
             <div className={style["second-menu-heard"]}>
@@ -770,10 +820,10 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
                                 className={style["second-menu-drop"]}
-                                style={{ marginBottom: 70 }}
+                                style={{marginBottom: 70}}
                             >
                                 {subMenuData.map((item, index) => (
-                                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                                    <Draggable key={item.label} draggableId={item.label} index={index}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -782,7 +832,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                                                 style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                                             >
                                                 <SecondMenuItem
-                                                    key={item.id}
+                                                    key={item.label}
                                                     menuItem={item}
                                                     isDragging={snapshot.isDragging}
                                                     onRemoveSecondMenu={onRemoveSecondMenu}
@@ -819,17 +869,13 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
         </div>
     )
 })
-
+/** @name 中间二级菜单项 */
 const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
-    const { menuItem, isDragging, onRemoveSecondMenu, onEdit } = props
+    const {menuItem, isDragging, onRemoveSecondMenu, onEdit} = props
     const isShowRemove = useCreation<boolean>(() => {
-        const subMenuList: MenuDataProps[] =
-            DefaultRouteMenuData.find((ele) => ele.label === menuItem.Group)?.subMenuData || []
-        const index = subMenuList.findIndex(
-            (ele) => menuItem.label === ele.label && ele.key && !ele.key.includes("plugin")
-        )
-        return index === -1
-    }, [menuItem.label])
+        return menuItem.page === YakitRoute.Plugin_OP
+    }, [menuItem.page])
+
     return (
         <div className={style["second-menu-item-content"]}>
             <div
@@ -846,7 +892,7 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
                 <div className={style["second-menu-label-body"]}>
                     <div className={style["second-menu-label-content"]}>
                         <span className={style["second-menu-label"]}>{menuItem.label}</span>
-                        {menuItem.key?.includes("plugin") && (
+                        {isShowRemove && (
                             <PencilAltIcon
                                 className={style["second-menu-edit-icon"]}
                                 onClick={() => onEdit(menuItem)}
@@ -866,7 +912,7 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
         </div>
     )
 })
-
+/** @name 右侧全部菜单(系统菜单|插件商店) */
 const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) => {
     const [type, setType] = useState<"system" | "plugin">("system")
     const [keywords, setKeyWords] = useState<string>("")
@@ -896,7 +942,7 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
                     placeholder='请输入关键词搜索'
                     value={keywords}
                     onChange={(e) => setKeyWords(e.target.value)}
-                    style={{ maxWidth: 200 }}
+                    style={{maxWidth: 200}}
                     onSearch={() => setIsSearch(!isSearch)}
                     onPressEnter={() => setIsSearch(!isSearch)}
                 />
@@ -927,9 +973,9 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
         </>
     )
 })
-
+/** @name 右侧系统菜单栏 */
 const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props) => {
-    const { SystemRouteMenuData } = props
+    const {SystemRouteMenuData} = props
     const [keyword, setKeyword] = useState<string>("")
     const [systemRouteMenuData, setSystemRouteMenuData] = useState(SystemRouteMenuData)
     useDebounceEffect(
@@ -941,6 +987,7 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
             wait: 200
         }
     )
+    // 搜索功能
     useEffect(() => {
         const newList = SystemRouteMenuData.filter((item) => item.label.includes(keyword))
         setSystemRouteMenuData(newList)
@@ -952,11 +999,11 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
                     <div {...provided.droppableProps} ref={provided.innerRef} className={style["system-function-list"]}>
                         {systemRouteMenuData.map((item, index) => {
                             const isDragDisabled =
-                                props.subMenuData.findIndex((i) => (i.yakScripName || i.label) === item.label) !== -1
+                                props.subMenuData.findIndex((i) => i.menuName === item.menuName) !== -1
                             return (
                                 <Draggable
-                                    key={item.id}
-                                    draggableId={`${item.id}-system`}
+                                    key={item.label}
+                                    draggableId={`${item.label}-system`}
                                     index={index}
                                     isDragDisabled={isDragDisabled}
                                 >
@@ -987,9 +1034,9 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
         </Droppable>
     )
 })
-
+/** @name 右侧系统菜单项 */
 const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.memo((props) => {
-    const { item, isDragging, destinationDrag, onAddMenuData, isDragDisabled, onRemoveMenu } = props
+    const {item, isDragging, destinationDrag, onAddMenuData, isDragDisabled, onRemoveMenu} = props
     const systemRef = useRef(null)
     const isHovering = useHover(systemRef)
     return (
@@ -1000,15 +1047,20 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
             ref={systemRef}
         >
             <div className={style["display-flex"]}>
-                <span className={classNames(style["menu-icon"], { [style["menu-item-isDragDisabled"]]: isDragDisabled })}>
+                <span className={classNames(style["menu-icon"], {[style["menu-item-isDragDisabled"]]: isDragDisabled})}>
                     {item.icon}
                 </span>
                 <span
-                    className={classNames(style["menu-label"], { [style["menu-item-isDragDisabled"]]: isDragDisabled })}
+                    className={classNames(style["menu-label"], {[style["menu-item-isDragDisabled"]]: isDragDisabled})}
                 >
                     {item.label}
                 </span>
-                <Tooltip title={item.describe} placement='topRight' overlayClassName={style["question-tooltip"]}>
+
+                <Tooltip
+                    title={item.describe || "No Description about it."}
+                    placement='topRight'
+                    overlayClassName={style["question-tooltip"]}
+                >
                     <QuestionMarkCircleIcon className={style["menu-question-icon"]} />
                 </Tooltip>
             </div>
@@ -1023,15 +1075,15 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
                     )}
                 </>
             )) || (
-                    <YakitButton
-                        type='text'
-                        onClick={() => {
-                            onAddMenuData(item)
-                        }}
-                    >
-                        添加
-                    </YakitButton>
-                )}
+                <YakitButton
+                    type='text'
+                    onClick={() => {
+                        onAddMenuData(item)
+                    }}
+                >
+                    添加
+                </YakitButton>
+            )}
             {destinationDrag === "droppable3" && isDragging && (
                 <div className={style["first-drag-state"]}>
                     <BanIcon />
@@ -1040,7 +1092,7 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
         </div>
     )
 })
-
+/** @name 右侧插件商店栏 */
 const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     const [response, setResponse] = useState<QueryYakScriptsResponse>({
         Data: [],
@@ -1072,7 +1124,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
         const newParams = {
             // Tag: [],
             // Type: "yak,mitm,codec,packet-hack,port-scan,nuclei", //不传查所有
-            Pagination: { Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at" },
+            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
             Keyword: keyword
         }
         if (page) newParams.Pagination.Page = page
@@ -1094,7 +1146,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
                 }
             })
             .catch((e: any) => {
-                yakitFailed("Query Local Yak Script yakitFailed: " + `${e}`)
+                yakitNotify("error", "Query Local Yak Script yakitFailed: " + `${e}`)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -1158,32 +1210,32 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
         </Droppable>
     )
 })
-
+/** @name 右侧插件商店项 */
 const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
-    const { plugin, isDragging, destinationDrag, onAddMenuData, isDragDisabled, onRemoveMenu } = props
+    const {plugin, isDragging, destinationDrag, onAddMenuData, isDragDisabled, onRemoveMenu} = props
     const pluginRef = useRef(null)
     const isHovering = useHover(pluginRef)
     const onAdd = useMemoizedFn(() => {
-        const menuItem: MenuDataProps = {
-            id: `${plugin.Id}`,
-            key: `plugin:${plugin.Id}` as Route,
+        const menuItem: EnhancedPrivateRouteMenuProps = {
+            page: YakitRoute.Plugin_OP,
             label: plugin.ScriptName,
+            menuName: plugin.ScriptName,
             icon: getScriptIcon(plugin.ScriptName),
-            describe: plugin.Help,
-            yakScripName: plugin.ScriptName
-            // yakScriptId: plugin.Id
+            yakScriptId: +plugin.Id || 0,
+            yakScripName: plugin.ScriptName,
+            describe: plugin.Help
         }
         onAddMenuData(menuItem)
     })
     const onRemove = useMemoizedFn(() => {
-        const menuItem: MenuDataProps = {
-            id: `${plugin.Id}`,
-            key: `plugin:${plugin.Id}` as Route,
+        const menuItem: EnhancedPrivateRouteMenuProps = {
+            page: YakitRoute.Plugin_OP,
             label: plugin.ScriptName,
+            menuName: plugin.ScriptName,
             icon: getScriptIcon(plugin.ScriptName),
-            describe: plugin.Help,
-            yakScripName: plugin.ScriptName
-            // yakScriptId: plugin.Id
+            yakScriptId: +plugin.Id || 0,
+            yakScripName: plugin.ScriptName,
+            describe: plugin.Help
         }
         onRemoveMenu(menuItem)
     })
@@ -1223,10 +1275,10 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
                     )}
                 </>
             )) || (
-                    <YakitButton type='text' onClick={() => onAdd()}>
-                        添加
-                    </YakitButton>
-                )}
+                <YakitButton type='text' onClick={() => onAdd()}>
+                    添加
+                </YakitButton>
+            )}
 
             {destinationDrag === "droppable4" && isDragging && (
                 <div className={style["first-drag-state"]}>
@@ -1236,9 +1288,9 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
         </div>
     )
 })
-
+/** @name 右侧插件商店项标识icon */
 export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((props) => {
-    const { plugin, getScriptInfo } = props
+    const {plugin, getScriptInfo} = props
     const renderIcon = useMemoizedFn(() => {
         if (plugin.OnlineOfficial) {
             return (
@@ -1248,16 +1300,22 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
             )
         }
         if (plugin.OnlineIsPrivate) {
-            return <Tooltip title='私有插件'><PrivatePluginIcon className={style["plugin-local-icon"]} /></Tooltip>
+            return (
+                <Tooltip title='私有插件'>
+                    <PrivatePluginIcon className={style["plugin-local-icon"]} />
+                </Tooltip>
+            )
         }
         if (plugin.UUID) {
-            return <Tooltip title='云端插件'><CloudPluginIcon className={style["plugin-local-icon"]} /></Tooltip>
+            return (
+                <Tooltip title='云端插件'>
+                    <CloudPluginIcon className={style["plugin-local-icon"]} />
+                </Tooltip>
+            )
         }
     })
     return (
         <>
-            {/* {plugin.OnlineIsPrivate && <PrivatePluginIcon className={style["plugin-local-icon"]} />}
-            {plugin.OnlineOfficial && <OfficialPluginIcon className={style["plugin-local-icon"]} />} */}
             {renderIcon()}
             <Tooltip
                 title={plugin.Help || "No Description about it."}

@@ -5,7 +5,7 @@
 
 .plugin-store-operator {
     flex: 1;
-    width: calc(100% - 470px)
+    width: calc(100% - 470px);
 }
 
 .plugin-statistics {
@@ -72,8 +72,17 @@
     display: flex;
     align-items: center;
 
-    .ant-input-search>.ant-input-group>.ant-input-group-addon:last-child {
+    .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child {
         top: -0.5px;
+    }
+
+    .header-title {
+        padding: 0 6px;
+        height: 18px;
+        line-height: 16px;
+        font-weight: 500;
+        font-size: 16px;
+        color: var(--yakit-header-color);
     }
 }
 
@@ -135,9 +144,6 @@
         border-bottom: 0px;
     }
 }
-
-
-
 
 .pop-confirm {
     .ant-popover-buttons {
@@ -245,7 +251,6 @@
     background-color: rgba(79, 188, 255, 0.26);
 }
 
-
 .plugin-item {
     height: 154px;
     // width: 100%;
@@ -265,12 +270,10 @@
         align-items: center;
         padding: 0 12px;
         font-size: 14px;
-        border-bottom: 1px solid rgba(0, 0, 0, .06);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         height: 38px;
         line-height: 38px;
         background-color: #fafafa;
-
-
 
         .plugin-item-left {
             display: flex;
@@ -353,7 +356,6 @@
         .icon-select-active {
             color: #1890ff;
         }
-
     }
 
     .plugin-item-content {
@@ -426,7 +428,6 @@
                 height: 1.5em;
             }
         }
-
     }
 }
 
@@ -463,32 +464,32 @@
 
 .plugin-yak {
     background-color: rgba(116, 129, 255, 0.08);
-    color: #7481FF;
+    color: #7481ff;
 }
 
 .plugin-mitm {
     background-color: rgba(112, 161, 255, 0.08);
-    color: #70A1FF;
+    color: #70a1ff;
 }
 
 .plugin-packet-hack {
     background-color: rgba(250, 175, 43, 0.08);
-    color: #FAAF2B;
+    color: #faaf2b;
 }
 
 .plugin-port-scan {
     background-color: rgba(66, 215, 173, 0.08);
-    color: #42D7AD;
+    color: #42d7ad;
 }
 
 .plugin-codec {
     background-color: rgba(154, 107, 255, 0.08);
-    color: #9A6BFF;
+    color: #9a6bff;
 }
 
 .plugin-nuclei {
     background-color: rgba(255, 135, 135, 0.08);
-    color: #FF8787;
+    color: #ff8787;
 }
 
 .plugin-headImg {

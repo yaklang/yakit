@@ -1632,6 +1632,7 @@ const SideBarOpen = () => (
 export const SideBarOpenIcon = (props: Partial<IconProps>) => {
     return <Icon component={SideBarOpen} {...props} />
 }
+
 const Resizer = () => (
     <svg width='9' height='10' viewBox='0 0 9 10' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -1676,7 +1677,6 @@ const SolidChevronRight = () => (
         />
     </svg>
 )
-
 /**
  * @description:向右 right Solid
  */
@@ -1694,7 +1694,6 @@ const SolidChevronDown = () => (
         />
     </svg>
 )
-
 /**
  * @description:向下 down Solid
  */
@@ -1718,10 +1717,43 @@ const Eye = () => (
         />
     </svg>
 )
-
 /**
  * @description:eye 眼睛
  */
 export const EyeIcon = (props: Partial<IconProps>) => {
     return <Icon component={Eye} {...props} />
+}
+
+const SwitchHorizontal = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M5.33325 4.66667L13.3333 4.66667M13.3333 4.66667L10.6666 2M13.3333 4.66667L10.6666 7.33333M10.6666 11.3333L2.66659 11.3333M2.66659 11.3333L5.33325 14M2.66659 11.3333L5.33325 8.66667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  盾牌-勾
+ */
+export const SwitchHorizontalIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SwitchHorizontal} {...props} />
+}
+
+const ArrowNarrowRight = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M11.3333 5.3335L14 8.00016M14 8.00016L11.3333 10.6668M14 8.00016L2 8.00016'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  右箭头
+ */
+export const ArrowNarrowRightIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ArrowNarrowRight} {...props} />
 }

@@ -1,6 +1,6 @@
-import { TagProps } from "antd"
-import { CheckableTagProps } from "antd/lib/tag"
-import type { YakitSizeType } from "../YakitInputNumber/YakitInputNumberType"
+import {TagProps} from "antd"
+import {CheckableTagProps} from "antd/lib/tag"
+import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
  * @description YakitTagProps 的属性
@@ -25,11 +25,13 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
 }
 /**
  * @description: 复制文字
+ * @param {string} className 包装器修饰类
  * @param {(e:MouseEvent) => void} onAfterCopy 复制文字后得事件
  * @param {string} copyText 复制文字
  * @param {string} iconColor 复制Icon文字
  */
 export interface CopyComponentsProps {
+    className?: string
     onAfterCopy?: (e: MouseEvent) => void
     copyText: string
     iconColor?: string

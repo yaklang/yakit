@@ -1,14 +1,10 @@
 import React, {Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
-import {AuditOutlined, CodeOutlined} from "@ant-design/icons"
-// import {HTTPHacker} from "../pages/hacker/httpHacker";
-// import {CodecPage} from "../pages/codec/CodecPage";
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
 import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {YakitStorePage} from "../pages/yakitStore/YakitStorePage"
-
 import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
 import {BrutePage} from "../pages/brute/BrutePage"
@@ -24,9 +20,6 @@ import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
 import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx"
-// import {ReverseServerPage} from "../pages/reverse/ReverseServerPage"
-// import {PayloadGeneraterPage} from "../pages/payloadGenerater/PayloadGeneraterPage"
-// import {PayloadGenerater_New} from "../pages/payloadGenerater/JavaPayloadPage"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 
 import {
@@ -415,10 +408,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <DomainAssetPage />
         // case Route.DB_ExecResults:
         //     return <YakScriptExecResultTable/>
-        // case Route.ReverseServer:
-        //     return <ReverseServerPage />
-        // case Route.PayloadGenerater:
-        //     return <PayloadGeneraterPage />
         case Route.PayloadGenerater_New:
             return <JavaPayloadPage />
         case Route.ReverseServer_New:
@@ -525,13 +514,6 @@ export const DefaultRouteMenuData: MenuDataProps[] = [
                 icon: <MenuWebsocketFuzzerIcon />,
                 hoverIcon: <MenuSolidWebsocketFuzzerIcon />
             }
-            // {
-            //     id: "1-4",
-            //     key: Route.PayloadGenerater_New,
-            //     label: "Yso-Java Hack",
-            //     icon: <MenuYsoJavaHackIcon />,
-            //     describe: "配置序列化 Payload 或恶意类"
-            // }
         ]
     },
     {

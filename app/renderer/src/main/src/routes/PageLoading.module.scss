@@ -1,0 +1,25 @@
+.page-loading-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .page-loading-body {
+        width: 380px;
+        height: 240px;
+
+        .spin-body {
+            width: 100%;
+            height: 200px;
+        }
+        .spin-title-body {
+            width: 100%;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 16px;
+            color: var(--yakit-header-color);
+        }
+    }
+}
