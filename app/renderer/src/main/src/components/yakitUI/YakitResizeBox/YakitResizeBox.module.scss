@@ -23,6 +23,19 @@
             height: 100%;
         }
     }
+    .resize-split-line-top{
+        align-items:flex-start;
+    }
+    .resize-split-line-bottom{
+        align-items:flex-end;
+    }
+    .resize-split-line-left{
+        justify-content: flex-start;
+    }
+    .resize-split-line-right{
+        justify-content: flex-end;
+    }
+
     .resize-split-line:hover {
         .resize-split-line-in, .resize-split-line-in-hide {
             background-color: var(--yakit-primary-4);

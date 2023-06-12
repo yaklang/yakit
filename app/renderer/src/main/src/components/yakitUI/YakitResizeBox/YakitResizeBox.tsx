@@ -177,6 +177,8 @@ export interface YakitResizeBoxProps {
     freeze?: boolean
     /** 是否默认展示浅色线条样式 */
     isShowDefaultLineStyle?:boolean
+    /** 线条占据空间的方向 */
+    lineDirection?: "top"|"bottom"|"left"|"right"
     /** 第一块所占比例 支持 百分比/像素 */
     firstRatio?: string
     /** 第一块最小大小 */
@@ -209,6 +211,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         dragResize = false,
         freeze = true,
         isShowDefaultLineStyle = true,
+        lineDirection,
         firstRatio = "50%",
         firstMinSize = "100px",
         firstNode,
@@ -374,7 +377,12 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                         height: `${isVer ? "8px" : "100%"}`,
                         cursor: `${isVer ? "row-resize" : "col-resize"}`
                     }}
-                    className={styles['resize-split-line']}
+                    className={classNames(styles["resize-split-line"],{
+                    [styles["resize-split-line-top"]]: lineDirection==="top"&&isVer,
+                    [styles["resize-split-line-bottom"]]: lineDirection==="bottom"&&isVer,
+                    [styles["resize-split-line-left"]]: lineDirection==="left"&&!isVer,
+                    [styles["resize-split-line-right"]]: lineDirection==="right"&&!isVer,
+                    }) }
                 >
                     <div
                         className={classNames({
