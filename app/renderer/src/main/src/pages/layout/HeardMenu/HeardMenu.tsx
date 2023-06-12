@@ -162,8 +162,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        // 社区版本才会获取新的 menu
-        if (isCommunityEdition()) {
+        // 除简易版本外 更新菜单
+        if (!isEnpriTraceAgent()) {
             ipcRenderer.on("fetch-new-main-menu", (e) => {
                 init(getPatternMenu(), true)
             })
