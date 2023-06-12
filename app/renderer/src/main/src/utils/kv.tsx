@@ -20,3 +20,12 @@ export const setRemoteValue = (k: string, v: string) => {
 export const setRemoteValueTTL = (k: string, v: string, ttl: number) => {
     return ipcRenderer.invoke("SetKey", {Key: k, Value: v, TTL: parseInt(`${ttl}`)})
 }
+
+// 根据不同项目区分从引擎内获取存储
+export const getRemoteProjectValue = (k: string) => {
+    return ipcRenderer.invoke("GetProjectKey", {Key: k})
+}
+
+export const setRemoteProjectValue = (k: string, v: string) => {
+    return ipcRenderer.invoke("SetProjectKey", {Key: k, Value: v})
+}

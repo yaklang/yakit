@@ -30,7 +30,7 @@ import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "./invoker/ba
 import "./main.scss"
 import "./GlobalClass.scss"
 import {refreshToken} from "@/utils/login"
-import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteProjectValue, getRemoteValue, setLocalValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {globalUserLogin, isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
@@ -880,13 +880,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
-        setRemoteValue(FuzzerCache, JSON.stringify(filters))
+        setRemoteProjectValue(FuzzerCache, JSON.stringify(filters))
     }, 500)
     const fetchFuzzerList = useMemoizedFn(() => {
         setLoading(true)
         fuzzerList.current.clear()
 
-        getRemoteValue(FuzzerCache)
+        getRemoteProjectValue(FuzzerCache)
             .then((res: any) => {
                 const cache = JSON.parse(res || "[]")
                 for (let item of cache) {
