@@ -164,6 +164,21 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
     )
 }
 
+
+export const debugYakitModal = (y: any) => {
+    const m = showYakitModal({
+        title: "调试信息",
+        width: "50%",
+        content: (
+            <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>
+                {JSON.stringify(y)}
+            </div>
+        ),
+        onOk: ()=>{
+            m.destroy()
+        }
+    })
+}
 export const showYakitModal = (props: ShowModalProps) => {
     const div = document.createElement("div")
     document.body.appendChild(div)

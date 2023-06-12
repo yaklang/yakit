@@ -23,6 +23,8 @@ export interface SimplePluginListProp {
     bordered?: boolean
     disabled?: boolean
     sourceType?: string
+    singleSelectMode?: boolean
+    onPluginClick?: (script: YakScript) => any
 }
 
 export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props: SimplePluginListProp) => {
@@ -98,6 +100,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
 
     return (
         <PluginList
+            singleSelectMode={props.singleSelectMode}
             readOnly={props.readOnly}
             bordered={props.bordered}
             loading={pluginLoading}
@@ -111,6 +114,7 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
             allSelectScript={allSelectYakScript}
             manySelectScript={manySelectYakScript}
             selectScript={selectYakScript}
+            onClickScript={props.onPluginClick}
             unSelectScript={unselectYakScript}
             search={search}
             title={props?.verbose || "插件"}

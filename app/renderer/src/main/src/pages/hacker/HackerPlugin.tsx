@@ -19,7 +19,7 @@ import {failed} from "../../utils/notification"
 import {InputInteger, InputItem} from "../../utils/inputUtil"
 import ReactResizeDetector from "react-resize-detector"
 
-import "./HackerPlugin.css"
+import "./HackerPlugin.scss"
 import {showModal} from "../../utils/showModal"
 import {xtermClear} from "../../utils/xtermUtils"
 

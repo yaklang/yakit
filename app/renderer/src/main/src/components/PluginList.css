@@ -6,6 +6,11 @@
     line-height: 40px;
     display: flex;
     border: 1px solid #f0f0f0;
+    transition: background-color 0.3s;
     margin-bottom: 5px;
     padding: 0 5px;
+}
+
+.plugin-list-body .list-opt:hover {
+    background-color: #f0f0f0;
 }
