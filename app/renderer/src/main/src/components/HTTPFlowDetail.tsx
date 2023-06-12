@@ -34,9 +34,10 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {useMemoizedFn} from "ahooks"
 import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import {ChromeSvgIcon} from "@/assets/newIcon"
+import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -454,13 +455,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
-
+    const [isFold, setFold] = useState<boolean>(false)
     useEffect(() => {
         if (!props.id) {
             setFlow(undefined)
             return
         }
-
+        setFold(false)
         setFlow(undefined)
         setLoading(true)
         ipcRenderer
@@ -525,82 +526,120 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     const spinning = !flow || loading
 
+    const mainCol: number = useMemo(() => {
+        let col: number = existedInfoType.length > 0 ? 19 : 24
+        if (isFold) {
+            col = 24
+        }
+        return col
+    }, [existedInfoType.length, isFold])
+
     return flow ? (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
-            <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
-                <Col span={existedInfoType.length > 0 ? 19 : 24} style={{height: "100%"}}>
-                    <HTTPFlowDetailRequestAndResponse loading={loading} flow={flow} {...props} />
-                </Col>
-                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && (
-                    <Col span={5}>
-                        <NewHTTPPacketEditor
-                            title={
-                                <Button.Group size={"small"}>
-                                    {existedInfoType.map((i) => {
-                                        return (
-                                            <Button
-                                                type={infoType === i ? "primary" : "default"}
-                                                onClick={() => {
-                                                    setInfoType(i)
-                                                }}
-                                                key={i}
-                                            >
-                                                {infoTypeVerbose(i)}
-                                            </Button>
-                                        )
-                                    })}
-                                </Button.Group>
-                            }
-                            readOnly={true}
-                            noLineNumber={true}
-                            noMinimap={true}
-                            noHex={true}
-                            hideSearch={true}
-                            refreshTrigger={infoType}
-                            loading={infoTypeLoading}
-                            originValue={(() => {
-                                switch (infoType) {
-                                    case "domains":
-                                        return StringToUint8Array(
-                                            "# 根域 (Root-Domains)\r\n" +
-                                                (flow?.RootDomains || []).join("\r\n") +
-                                                "\r\n\r\n# 域名 (Domain) \r\n" +
-                                                (flow?.Domains || []).join("\r\n")
-                                        )
-                                    case "json":
-                                        return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
-                                    default:
-                                        return new Uint8Array()
+            <div className={styles["http-history-box"]}>
+                <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
+                    <Col span={mainCol} style={{height: "100%"}}>
+                        <HTTPFlowDetailRequestAndResponse loading={loading} flow={flow} {...props} />
+                    </Col>
+                    {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
+                        <Col span={5}>
+                            <NewHTTPPacketEditor
+                                title={
+                                    <Button.Group size={"small"}>
+                                        {existedInfoType.map((i) => {
+                                            return (
+                                                <Button
+                                                    type={infoType === i ? "primary" : "default"}
+                                                    onClick={() => {
+                                                        setInfoType(i)
+                                                    }}
+                                                    key={i}
+                                                >
+                                                    {infoTypeVerbose(i)}
+                                                </Button>
+                                            )
+                                        })}
+                                    </Button.Group>
                                 }
-                            })()}
-                        />
-                    </Col>
+                                readOnly={true}
+                                noLineNumber={true}
+                                noMinimap={true}
+                                noHex={true}
+                                hideSearch={true}
+                                refreshTrigger={infoType}
+                                loading={infoTypeLoading}
+                                extraEnd={
+                                    <div className={classNames(styles["http-history-fold-box"])}>
+                                        <div className={styles["http-history-icon-box"]}>
+                                            <Tooltip placement='top' title='向右收起'>
+                                                <SideBarOpenIcon
+                                                    className={styles["fold-icon"]}
+                                                    onClick={() => setFold(true)}
+                                                />
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                }
+                                originValue={(() => {
+                                    switch (infoType) {
+                                        case "domains":
+                                            return StringToUint8Array(
+                                                "# 根域 (Root-Domains)\r\n" +
+                                                    (flow?.RootDomains || []).join("\r\n") +
+                                                    "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                    (flow?.Domains || []).join("\r\n")
+                                            )
+                                        case "json":
+                                            return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                        default:
+                                            return new Uint8Array()
+                                    }
+                                })()}
+                            />
+                        </Col>
+                    )}
+                    {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
+                        <Col span={5}>
+                            <HTTPFlowExtractedDataTable
+                                httpFlowHash={flow?.Hash || ""}
+                                title={
+                                    <Button.Group size={"small"}>
+                                        {existedInfoType.map((i) => {
+                                            return (
+                                                <Button
+                                                    type={infoType === i ? "primary" : "default"}
+                                                    onClick={() => {
+                                                        setInfoType(i)
+                                                    }}
+                                                    key={i}
+                                                >
+                                                    {infoTypeVerbose(i)}
+                                                </Button>
+                                            )
+                                        })}
+                                    </Button.Group>
+                                }
+                            />
+                        </Col>
+                    )}
+                </Row>
+                {isFold && (
+                    <div
+                        className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}
+                    >
+                        <div
+                            className={classNames(
+                                styles["http-history-icon-box"],
+                                styles["http-history-icon-paading-box"]
+                            )}
+                        >
+                            <Tooltip placement='top' title='向左展开'>
+                                <SideBarCloseIcon className={styles["fold-icon"]} onClick={() => setFold(false)} />
+                            </Tooltip>
+                        </div>
+                    </div>
                 )}
-                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
-                    <Col span={5}>
-                        <HTTPFlowExtractedDataTable
-                            httpFlowHash={flow?.Hash || ""}
-                            title={
-                                <Button.Group size={"small"}>
-                                    {existedInfoType.map((i) => {
-                                        return (
-                                            <Button
-                                                type={infoType === i ? "primary" : "default"}
-                                                onClick={() => {
-                                                    setInfoType(i)
-                                                }}
-                                                key={i}
-                                            >
-                                                {infoTypeVerbose(i)}
-                                            </Button>
-                                        )
-                                    })}
-                                </Button.Group>
-                            }
-                        />
-                    </Col>
-                )}
-            </Row>
+            </div>
         </AutoSpin>
     ) : (
         <YakitEmpty style={{paddingTop: 48}} title='未选中 HTTP History 数据' />

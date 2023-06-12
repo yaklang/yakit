@@ -1030,6 +1030,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     onEditor?: (editor: IMonacoEditor) => any
     hideSearch?: boolean
     extra?: React.ReactNode
+    extraEnd?: React.ReactNode
     emptyOr?: React.ReactNode
 
     refreshTrigger?: boolean | any
@@ -1409,6 +1410,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
                                 </Popover>
                             )}
+                            {props.extraEnd}
                         </Space>
                     )
                 }
