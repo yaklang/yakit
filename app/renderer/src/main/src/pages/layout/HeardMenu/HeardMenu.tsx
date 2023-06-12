@@ -740,7 +740,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {isCommunityEdition() && <>
+                    {!isEnpriTraceAgent() && <>
                         <YakitPopover
                             overlayClassName={style['import-resource-menu-popover']}
                             overlayStyle={{paddingTop: 4}}

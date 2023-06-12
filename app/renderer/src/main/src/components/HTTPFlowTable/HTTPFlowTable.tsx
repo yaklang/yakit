@@ -1956,6 +1956,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const m = showYakitModal({
             title: "导入分享数据",
             content: <ShareModal module={Route.HTTPHacker} shareContent={JSON.stringify(ids)} />,
+            onCancel:()=>{
+                m.destroy()
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            },
             footer: null
         })
     })
@@ -2298,6 +2303,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             content={
                                                 <YakitMenu
                                                     width={150}
+                                                    selectedKeys={[]}
                                                     data={menuData
                                                         .filter((f) => f.onClickBatch)
                                                         .map((m) => {

@@ -4,7 +4,9 @@ import {RemoteGV} from "@/yakitGV";
 
 enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
+    /**@name 企业版 */
     EnpriTrace = 1,
+    /**@name 便携版/简易版 */
     EnpriTraceAgent = 2,
     BreachTrace = 3,
 }
