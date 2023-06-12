@@ -41,7 +41,7 @@ import {randomString} from "@/utils/randomUtil"
 import {findDOMNode} from "react-dom"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {setTimeout} from "timers"
-import {isCommunityEdition, isEnterpriseEdition} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 import {OnlineCloudIcon, SelectIcon, RecycleIcon, OfficialYakitLogoIcon} from "@/assets/icons"
@@ -562,7 +562,7 @@ export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        if (isCommunityEdition() && queryName === "group") {
+                                        if (!isEnpriTraceAgent() && queryName === "group") {
                                             return null
                                         }
 
@@ -1166,6 +1166,8 @@ interface DownloadOnlinePluginByTokenRequest {
     UserName?: string
     UserId?: number
     TimeSearch?: string
+    Group?: string
+    Tags?: string
 }
 
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
@@ -1218,7 +1220,9 @@ const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
                     IsPrivate: query?.is_private,
                     UserId: query?.user_id,
                     UserName: query?.user_name,
-                    TimeSearch: query?.time_search
+                    TimeSearch: query?.time_search,
+                    Group: query?.group,
+                    Tags: query?.tags
                 }
             }
 

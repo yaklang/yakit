@@ -50,9 +50,10 @@ import {setTimeout} from "timers"
 import {
     ModalSyncSelect,
     onLocalScriptToOnlinePlugin,
-    SyncCloudButton
+    SyncCloudButton,
+    SyncCloudProgress
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import {isCommunityEdition, isEnterpriseEdition} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 import {ChevronDownIcon, ShareIcon} from "@/assets/newIcon"
@@ -530,7 +531,7 @@ export const PluginLocal: React.FC<PluginLocalProp> = (props) => {
                                             : statisticsDataOnlineOrUser || {}
                                     ).map((item) => {
                                         const queryName = item[0]
-                                        if (isCommunityEdition() && queryName === "group") {
+                                        if (!isEnpriTraceAgent() && queryName === "group") {
                                             return <></>
                                         }
 
@@ -659,13 +660,13 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
     const [refresh, setRefresh] = useState(false)
     const [isSelectAllLocal, setIsSelectAllLocal] = useState<boolean>(false)
     const [selectedRowKeysRecordLocal, setSelectedRowKeysRecordLocal] = useState<YakScript[]>([])
-    const [selectedUploadRowKeysRecordLocal, setSelectedUploadRowKeysRecordLocal, getSelectedUploadRowKeysRecordLocal] =
-        useGetState<YakScript[]>([])
     const [visibleQuery, setVisibleQuery] = useState<boolean>(false)
     const [isFilter, setIsFilter] = useState<boolean>(false)
     const [isShowYAMLPOC, setIsShowYAMLPOC] = useState<boolean>(false)
     const [visibleSyncSelect, setVisibleSyncSelect] = useState<boolean>(false)
     const [upLoading, setUpLoading] = useState<boolean>(false)
+    const [_, setProgress, getProgress] = useGetState<number>(0)
+    const [nowPligin, setNowPligin] = useState<string>("")
     const [baseUrl, setBaseUrl] = useState<string>("")
     const [userInfoLocal, setUserInfoLocal] = useState<PluginUserInfoLocalProps>({
         UserId: 0,
@@ -857,17 +858,16 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                         UserId
                     } as QueryYakScriptLocalAndUserRequest)
                     .then((newSrcipt: {Data: YakScript[]}) => {
-                        setSelectedUploadRowKeysRecordLocal(newSrcipt.Data)
+                        SelectedUploadRowKeysRecordLocal.current = newSrcipt.Data
                         JudgeIsShowVisible(newSrcipt.Data)
                     })
                     .catch((e) => {
                         yakitNotify("error", `查询所有插件错误:${e}`)
-                        setUpLoading(false)
                     })
                     .finally(() => {})
             })
         } else {
-            setSelectedUploadRowKeysRecordLocal(selectedRowKeysRecordLocal)
+            SelectedUploadRowKeysRecordLocal.current = selectedRowKeysRecordLocal
             JudgeIsShowVisible(selectedRowKeysRecordLocal)
         }
     })
@@ -894,7 +894,10 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
     })
 
     const upOnlineBatch = useMemoizedFn(async (type: number) => {
+        setVisibleSyncSelect(false)
         setUpLoading(true)
+        setProgress(0)
+        setNowPligin("")
         StopUpload.current = false
         const realSelectedRowKeysRecordLocal = [...SelectedUploadRowKeysRecordLocal.current]
         const length = realSelectedRowKeysRecordLocal.length
@@ -902,10 +905,15 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
         for (let index = 0; index < length; index++) {
             if (!StopUpload.current) {
                 const element = realSelectedRowKeysRecordLocal[index]
-                const res = await upOnline(element, "yakit/plugin", type)
+                const res = await adminUpOnline(element, type, baseUrl, userInfo)
                 if (res) {
                     errList.push(res)
                 }
+                let progress = Math.floor(((index + 1) / length) * 100)
+                setProgress(progress)
+                setNowPligin(element.ScriptName)
+            } else {
+                setProgress(100)
             }
         }
 
@@ -920,52 +928,11 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
             StopUpload.current ? yakitNotify("success", "取消上传成功") : yakitNotify("success", "批量上传成功")
         }
         setUpLoading(false)
-        setVisibleSyncSelect(false)
         setTimeout(() => {
             onResetList()
         }, 200)
     })
 
-    const upOnline = useMemoizedFn(async (params: YakScript, url: string, type: number) => {
-        const onlineParams: API.SaveYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
-        if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
-            onlineParams.id = parseInt(`${params.OnlineId}`)
-        }
-        if (isCommunityEdition() && params.OnlineId) {
-            onlineParams.id = parseInt(`${params.OnlineId}`)
-        }
-        return new Promise((resolve) => {
-            NetWorkApi<API.SaveYakitPlugin, API.YakitPluginResponse>({
-                method: "post",
-                url,
-                data: onlineParams
-            })
-                .then((res) => {
-                    resolve(false)
-                    // 上传后，先下载最新的然后删除本地旧的
-                    ipcRenderer
-                        .invoke("DownloadOnlinePluginById", {
-                            OnlineID: res.id,
-                            UUID: res.uuid
-                        } as DownloadOnlinePluginProps)
-                        .then((res) => {
-                            ipcRenderer
-                                .invoke("delete-yak-script", params.Id)
-                                .then(() => {})
-                                .catch((err) => {
-                                    yakitNotify("error", "删除本地【" + params.ScriptName + "】失败:" + err)
-                                })
-                        })
-                })
-                .catch((err) => {
-                    const errObj = {
-                        script_name: params.ScriptName,
-                        err
-                    }
-                    resolve(errObj)
-                })
-        })
-    })
     const onSetUser = useMemoizedFn((item: PluginUserInfoLocalProps) => {
         setStatisticsQueryLocal({
             ...queryLocal,
@@ -1179,16 +1146,17 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
                 visible={visibleSyncSelect}
                 handleOk={onSyncSelect}
                 handleCancel={() => {
-                    if (upLoading) {
-                        StopUpload.current = true
-                        //     yakitNotify("warning","请等待插件上传完成后再关闭该modal框")
-                        //     return
-                    } else {
-                        setVisibleSyncSelect(false)
-                        onResetList()
-                    }
+                    setVisibleSyncSelect(false)
+                    onResetList()
                 }}
-                loading={upLoading}
+            />
+            <SyncCloudProgress
+                visible={upLoading}
+                onCancle={() => {
+                    StopUpload.current = true
+                }}
+                progress={getProgress()}
+                nowPligin={nowPligin}
             />
 
             <div className='list-height'>
@@ -2571,4 +2539,48 @@ const PluginFilter: React.FC<PluginFilterProps> = (props) => {
             )}
         </Popconfirm>
     )
+}
+
+const adminUpOnline = async (params: YakScript, type: number, baseUrl: string, userInfo) => {
+    const onlineParams: API.NewYakitPlugin = onLocalScriptToOnlinePlugin(params, type)
+    if (isEnterpriseEdition() && userInfo.role === "admin" && params.OnlineBaseUrl === baseUrl) {
+        onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    if (isEnterpriseEdition() && params.OnlineGroup) {
+        onlineParams.group = params.OnlineGroup
+    }
+    if (isCommunityEdition() && params.OnlineId) {
+        onlineParams.id = parseInt(`${params.OnlineId}`)
+    }
+    return new Promise((resolve) => {
+        NetWorkApi<API.NewYakitPlugin, API.YakitPluginResponse>({
+            method: "post",
+            url: "yakit/plugin",
+            data: onlineParams
+        })
+            .then((res) => {
+                resolve(false)
+                // 上传后，先下载最新的然后删除本地旧的
+                // ipcRenderer
+                //     .invoke("DownloadOnlinePluginById", {
+                //         OnlineID: res.id,
+                //         UUID: res.uuid
+                //     } as DownloadOnlinePluginProps)
+                //     .then((res) => {
+                //         ipcRenderer
+                //             .invoke("delete-yak-script", params.Id)
+                //             .then(() => {})
+                //             .catch((err) => {
+                //                 failed("删除本地【" + params.ScriptName + "】失败:" + err)
+                //             })
+                //     })
+            })
+            .catch((err) => {
+                const errObj = {
+                    script_name: params.ScriptName,
+                    err
+                }
+                resolve(errObj)
+            })
+    })
 }
