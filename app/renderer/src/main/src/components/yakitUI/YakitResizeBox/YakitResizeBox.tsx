@@ -142,6 +142,9 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
         resize.addEventListener("mousedown", mouseDown)
         body.addEventListener("mousemove", mouseMove)
         body.addEventListener("mouseup", mouseUp)
+        // 解决有些时候,在鼠标松开的时候,元素仍然可以拖动;
+        body.addEventListener("dragstart", (e) => e.preventDefault())
+        body.addEventListener("dragend", (e) => e.preventDefault())
         return () => {
             if (resize) {
                 resize.removeEventListener("click", mouseDown)
@@ -160,6 +163,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
                 [styles["resize-line-ver"]]: isVer,
                 [styles["resize-line-hor"]]: !isVer
             })}
+            draggable
         ></div>
     )
 }
@@ -171,6 +175,10 @@ export interface YakitResizeBoxProps {
     dragResize?: boolean
     /** 是否允许拖拽 默认可拖拽 */
     freeze?: boolean
+    /** 是否默认展示浅色线条样式 */
+    isShowDefaultLineStyle?:boolean
+    /** 线条占据空间的方向 */
+    lineDirection?: "top"|"bottom"|"left"|"right"
     /** 第一块所占比例 支持 百分比/像素 */
     firstRatio?: string
     /** 第一块最小大小 */
@@ -202,6 +210,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         isVer = false,
         dragResize = false,
         freeze = true,
+        isShowDefaultLineStyle = true,
+        lineDirection,
         firstRatio = "50%",
         firstMinSize = "100px",
         firstNode,
@@ -367,12 +377,17 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                         height: `${isVer ? "8px" : "100%"}`,
                         cursor: `${isVer ? "row-resize" : "col-resize"}`
                     }}
-                    className={classNames({
-                        [styles["resize-split-line"]]: freeze
-                    })}
+                    className={classNames(styles["resize-split-line"],{
+                    [styles["resize-split-line-top"]]: lineDirection==="top"&&isVer,
+                    [styles["resize-split-line-bottom"]]: lineDirection==="bottom"&&isVer,
+                    [styles["resize-split-line-left"]]: lineDirection==="left"&&!isVer,
+                    [styles["resize-split-line-right"]]: lineDirection==="right"&&!isVer,
+                    }) }
                 >
                     <div
-                        className={classNames(styles["resize-split-line-in"], {
+                        className={classNames({
+                            [styles["resize-split-line-in"]]:isShowDefaultLineStyle,
+                            [styles["resize-split-line-in-hide"]]:!isShowDefaultLineStyle,
                             [styles["resize-split-line-in-ver"]]: isVer,
                             [styles["resize-split-line-in-nover"]]: !isVer
                         })}
