@@ -38,6 +38,13 @@ monaco.languages.registerCompletionItemProvider('http', {
                 insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: "XFF 快捷设置",
             } as languages.CompletionItem,
+            {
+                kind: languages.CompletionItemKind.Snippet,
+                label: "Range 设置 Bytes 构造 206 响应",
+                insertText: "Range: bytes=0-${1:1023}",
+                insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "构造206响应：Range 设置 Bytes",
+            } as languages.CompletionItem,
             ...[
                 "Accept",
                 "Accept-Charset",
