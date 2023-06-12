@@ -1,19 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {
-    Form,
-    Modal,
-    notification,
-    Result,
-    Space,
-    Popover,
-    Tooltip,
-    Divider,
-} from "antd"
-import {
-    IMonacoEditor,
-    NewHTTPPacketEditor,
-    HTTP_PACKET_EDITOR_Response_Info
-} from "../../utils/editors"
+import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider} from "antd"
+import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {StringFuzzer} from "./StringFuzzer"
@@ -74,10 +61,10 @@ import ReactDOM from "react-dom"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
-import { HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
-import { FuzzerParamItem, AdvancedConfigValueProps } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { Route } from "@/routes/routeSpec"
+import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
+import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {Route} from "@/routes/routeSpec"
 
 const {ipcRenderer} = window.require("electron")
 interface ShareValueProps {
@@ -116,7 +103,7 @@ interface AdvancedConfigurationProps {
     maxDelaySeconds: number
     repeatTimes: number
     _filterMode: "drop" | "match"
-    getFilter: FuzzResponseFilter
+    getFilter?: FuzzResponseFilter
 }
 
 export const analyzeFuzzerResponse = (
@@ -197,7 +184,6 @@ export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 
-
 const WEB_FUZZ_Advanced_Config_Switch_Checked = "WEB_FUZZ_Advanced_Config_Switch_Checked"
 const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
 const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
@@ -214,6 +200,63 @@ export interface HistoryHTTPFuzzerTask {
     Verbose?: string
 }
 
+export interface FuzzerRequestProps {
+    // Request: string
+    Params: FuzzerParamItem[]
+    Concurrent: number
+    IsHTTPS: boolean
+    ForceFuzz: boolean
+    Proxy: string
+    PerRequestTimeoutSeconds: number
+    ActualAddr: string
+    NoFollowRedirect: boolean
+    // NoFollowMetaRedirect: boolean
+    FollowJSRedirect: boolean
+    HistoryWebFuzzerId?: number
+    NoFixContentLength: boolean
+    HotPatchCode: string
+    // Filter: FuzzerResponseFilter;
+    RequestRaw: Uint8Array
+    DelayMinSeconds: number
+    DelayMaxSeconds: number
+    HotPatchCodeWithParamGetter: string
+    MaxRetryTimes: number
+    RetryInStatusCode: string
+    RetryNotInStatusCode: string
+    // ResponseCharset: string
+    RetryWaitSeconds: number
+    RetryMaxWaitSeconds: number
+    RedirectTimes: number
+    DNSServers: string[]
+    EtcHosts: KVPair[]
+    NoSystemProxy: boolean
+    RepeatTimes: number
+    Extractors: HTTPResponseExtractor[]
+    Matchers: HTTPResponseMatcher[]
+    MatchersCondition: string
+    IsGmTLS: boolean
+}
+
+export interface HTTPResponseExtractor {
+    Name: string
+    Type: string
+    Scope: string
+    Groups: string[]
+    RegexpMatchGroup: string[]
+    XPathAttribute: string
+}
+
+export interface HTTPResponseMatcher {
+    SubMatchers: HTTPResponseMatcher[]
+    SubMatcherCondition: string
+    MatcherType: string
+    Scope: string
+    Condition: string
+    Group: string[]
+    GroupEncoding: string
+    Negative: boolean
+    ExprType: string
+}
 export const showDictsAndSelect = (res: (i: string) => any) => {
     const m = showModal({
         title: "选择想要插入的字典",
@@ -309,26 +352,86 @@ export interface SelectOptionProps {
 }
 
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
+    const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>({
+        // 请求包配置
+        forceFuzz: props.fuzzerParams?.forceFuzz || true,
+        isHttps: props.fuzzerParams?.isHttps || props.isHttps || false,
+        isGmTLS: props.fuzzerParams?.isGmTLS || props.isGmTLS || false,
+        noFixContentLength: false,
+        noSystemProxy: false,
+        actualHost: props.fuzzerParams?.actualHost || "",
+        timeout: props.fuzzerParams?.timeout || 30.0,
+        // 发包配置
+        concurrent: props.fuzzerParams?.concurrent || 20,
+        proxy: props.fuzzerParams?.proxy?.split(",") || [],
+        minDelaySeconds: 0,
+        maxDelaySeconds: 0,
+        repeatTimes: 0,
+        // 重试配置
+        maxRetryTimes: 0,
+        retry: true,
+        noRetry: false,
+        retryConfiguration: {
+            statusCode: "",
+            keyWord: ""
+        },
+        noRetryConfiguration: {
+            statusCode: "",
+            keyWord: ""
+        },
+        retryWaitSeconds: 0,
+        retryMaxWaitSeconds: 0,
+        // 重定向配置
+        redirectCount: 3,
+        noFollowRedirect: true,
+        followJSRedirect: false,
+        redirectConfiguration: {
+            statusCode: "",
+            keyWord: ""
+        },
+        noRedirectConfiguration: {
+            statusCode: "",
+            keyWord: ""
+        },
+        // 过滤配置
+        // filterMode: "drop",
+        // statusCode: "",
+        // regexps: "",
+        // keyWord: "",
+        // minBodySize: 0,
+        // maxBodySize: 0,
+        // dns config
+        dnsServers: [],
+        etcHosts: [],
+        // 设置变量
+        params: [{Key: "", Value: ""}],
+        // 匹配器
+        filterMode: "drop",
+        Matchers:[],
+        MatchersCondition:'',
+        // 提取器
+        Extractors:[],
+    })
     // params
-    const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
-        props.fuzzerParams?.isHttps || props.isHttps || false
-    )
-    const [isGmTLS, setIsGmTLS] = useGetState<boolean>(props.fuzzerParams?.isGmTLS || props.isGmTLS || false)
-    const [noFixContentLength, setNoFixContentLength] = useState(false)
-    const [noSystemProxy, setNoSystemProxy] = useState(false)
+    // const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
+    //     props.fuzzerParams?.isHttps || props.isHttps || false
+    // )
+    // const [isGmTLS, setIsGmTLS] = useGetState<boolean>(props.fuzzerParams?.isGmTLS || props.isGmTLS || false)
+    // const [noFixContentLength, setNoFixContentLength] = useState(false)
+    // const [noSystemProxy, setNoSystemProxy] = useState(false)
     const [request, setRequest, getRequest] = useGetState(
         props.fuzzerParams?.request || props.request || defaultPostTemplate
     )
 
     // params
-    const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
-    const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
-    const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
-    const [minDelaySeconds, setMinDelaySeconds] = useState<number>(0)
-    const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
-    const [repeatTimes, setRepeatTimes] = useState<number>(0)
-    const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
-    const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
+    // const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
+    // const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
+    // const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
+    // const [minDelaySeconds, setMinDelaySeconds] = useState<number>(0)
+    // const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
+    // const [repeatTimes, setRepeatTimes] = useState<number>(0)
+    // const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
+    // const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
@@ -337,36 +440,36 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
     // 重试
-    const [retryMaxTimes, setRetryMaxTimes] = useState(0)
-    const [retry, setRetry] = useState<boolean>(true)
-    const [noRetry, setNoRetry] = useState<boolean>(false)
-    const [retryInStatusCode, setRetryInStatusCode] = useState("")
-    const [retryNotInStatusCode, setRetryNotInStatusCode] = useState("")
-    const [retryWaitSeconds, setRetryWaitSeconds] = useState(0) // float
-    const [retryMaxWaitSeconds, setRetryMaxWaitSeconds] = useState(0)
+    // const [retryMaxTimes, setRetryMaxTimes] = useState(0)
+    // const [retry, setRetry] = useState<boolean>(true)
+    // const [noRetry, setNoRetry] = useState<boolean>(false)
+    // const [retryInStatusCode, setRetryInStatusCode] = useState("")
+    // const [retryNotInStatusCode, setRetryNotInStatusCode] = useState("")
+    // const [retryWaitSeconds, setRetryWaitSeconds] = useState(0) // float
+    // const [retryMaxWaitSeconds, setRetryMaxWaitSeconds] = useState(0)
     // 重定向配置
-    const [redirectMaxTimes, setRedirectMaxTimes] = useState(3)
-    const [noFollowRedirect, setNoFollowRedirect] = useState(true)
-    const [followJSRedirect, setFollowJSRedirect] = useState(false)
+    // const [redirectMaxTimes, setRedirectMaxTimessetRedirectMaxTimes] = useState(3)
+    // const [noFollowRedirect, setNoFollowRedirect] = useState(true)
+    // const [followJSRedirect, setFollowJSRedirect] = useState(false)
     // dnsConfig
-    const [dnsServers, setDNSServers] = useState<string[]>([])
-    const [etcHosts, setETCHosts] = useState<{Key: string; Value: string}[]>([])
+    // const [dnsServers, setDNSServers] = useState<string[]>([])
+    // const [etcHosts, setETCHosts] = useState<{Key: string; Value: string}[]>([])
 
     // 设置变量
-    const [params, setParams] = useState<FuzzerParamItem[]>([{Key: "", Value: ""}])
+    // const [params, setParams] = useState<FuzzerParamItem[]>([{Key: "", Value: ""}])
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
     /**@name 是否刷新高级配置中的代理列表 */
     const [refreshProxy, setRefreshProxy] = useState<boolean>(false)
     // filter
-    const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
-        Keywords: [],
-        MaxBodySize: 0,
-        MinBodySize: 0,
-        Regexps: [],
-        StatusCode: []
-    })
-    const [_filterMode, setFilterMode, getFilterMode] = useGetState<"drop" | "match">("drop")
+    // const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
+    //     Keywords: [],
+    //     MaxBodySize: 0,
+    //     MinBodySize: 0,
+    //     Regexps: [],
+    //     StatusCode: []
+    // })
+    // const [_filterMode, setFilterMode, getFilterMode] = useGetState<"drop" | "match">("drop")
     const [droppedCount, setDroppedCount] = useState(0)
 
     // state
@@ -484,16 +587,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
         ipcRenderer.invoke("send-to-tab", {
             type: "fuzzer",
-            data: {isHttps: isHttps, isGmTLS: isGmTLS, request: request}
+            data: {isHttps: isHttps, isGmTLS: advancedConfigValue.isGmTLS, request: request}
         })
     })
-    const sendToPlugin = useMemoizedFn((request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => {
-        let m = showDrawer({
-            width: "80%",
-            content: <HackerPlugin request={request} isHTTPS={isHTTPS} response={response}></HackerPlugin>
-        })
-    })
-
     // 从历史记录中恢复
     useEffect(() => {
         if (!historyTask) {
@@ -504,9 +600,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             setRequest(historyTask.Request)
         }
-        setIsHttps(historyTask.IsHTTPS)
-        setIsGmTLS(historyTask.IsGmTLS)
-        setProxy(historyTask.Proxy)
+        // setIsHttps(historyTask.IsHTTPS)
+        // setIsGmTLS(historyTask.IsGmTLS)
+        // setProxy(historyTask.Proxy)
+        setAdvancedConfigValue({
+            ...advancedConfigValue,
+            isHttps: historyTask.IsHTTPS,
+            isGmTLS: historyTask.IsGmTLS
+        })
         refreshRequest()
     }, [historyTask])
 
@@ -516,13 +617,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (e) {
                 setLocalValue(WEB_FUZZ_PROXY, "")
                 setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
-                setProxy(`${e}`)
+                // setProxy(`${e}`)
+                setAdvancedConfigValue({
+                    ...advancedConfigValue,
+                    proxy: e.split(",") || []
+                })
             } else {
                 getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
                     if (!e) {
                         return
                     }
-                    setProxy(`${e}`)
+                    // setProxy(`${e}`)
+                    setAdvancedConfigValue({
+                        ...advancedConfigValue,
+                        proxy: e.split(",") || []
+                    })
                 })
             }
         })
@@ -531,7 +640,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             try {
-                setDNSServers(JSON.parse(e))
+                // setDNSServers(JSON.parse(e))
+                setAdvancedConfigValue({
+                    ...advancedConfigValue,
+                    dnsServers: JSON.parse(e)
+                })
             } catch (error) {}
         })
         getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
@@ -539,14 +652,23 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             try {
-                setETCHosts(JSON.parse(e))
+                // setETCHosts(JSON.parse(e))
+                setAdvancedConfigValue({
+                    ...advancedConfigValue,
+                    etcHosts: JSON.parse(e)
+                })
             } catch (error) {}
         })
     }, [])
 
     useEffect(() => {
-        setIsHttps(!!props.isHttps)
-        setIsGmTLS(!!props.isGmTLS)
+        // setIsHttps(!!props.isHttps)
+        // setIsGmTLS(!!props.isGmTLS)
+        setAdvancedConfigValue({
+            ...advancedConfigValue,
+            isHttps: !!props.isHttps,
+            isGmTLS: !!props.isGmTLS
+        })
         if (props.request) {
             setRequest(props.request)
             resetResponse()
@@ -570,63 +692,75 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         // 清楚历史任务的标记
-        setHistoryTask(undefined)
+        // setHistoryTask(undefined)
 
-        // // 更新默认搜索
-        setDefaultResponseSearch(affixSearch)
+        // // // 更新默认搜索
+        // setDefaultResponseSearch(affixSearch)
 
-        setLoading(true)
-        setDroppedCount(0)
-        const httpParams = {
+        // setLoading(true)
+        // setDroppedCount(0)
+
+        // FuzzerRequestProps
+        const httpParams:FuzzerRequestProps = {
             // Request: request,
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
-            ForceFuzz: forceFuzz,
-            IsHTTPS: isHttps,
-            IsGmTLS: isGmTLS,
-            Concurrent: concurrent,
-            PerRequestTimeoutSeconds: timeout,
-            NoFixContentLength: noFixContentLength,
-            NoSystemProxy: noSystemProxy,
-            Proxy: proxy,
-            ActualAddr: actualHost,
+            ForceFuzz: !!advancedConfigValue.forceFuzz,
+            IsHTTPS: advancedConfigValue.isHttps,
+            IsGmTLS: advancedConfigValue.isGmTLS,
+            Concurrent: advancedConfigValue.concurrent,
+            PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+            NoFixContentLength: advancedConfigValue.noFixContentLength,
+            NoSystemProxy: advancedConfigValue.noSystemProxy,
+            Proxy: advancedConfigValue.proxy ? advancedConfigValue.proxy.join() : '',
+            ActualAddr: advancedConfigValue.actualHost,
             HotPatchCode: hotPatchCode,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
-            Filter: {
-                ...getFilter(),
-                StatusCode: getFilter().StatusCode.filter((i) => !!i),
-                Keywords: getFilter().Keywords.filter((i) => !!i),
-                Regexps: getFilter().Regexps.filter((i) => !!i)
-            },
-            DelayMinSeconds: minDelaySeconds,
-            DelayMaxSeconds: maxDelaySeconds,
-            RepeatTimes: repeatTimes,
+            // Filter: {
+            //     // ...advancedConfigValue.getFilter(),
+            //     MinBodySize:advancedConfigValue.MinBodySize,
+            //     MaxBodySize:advancedConfigValue.MaxBodySize,
+            //     StatusCode: advancedConfigValue.statusCode.split(','),
+            //     Keywords: advancedConfigValue.keyWord.split(','),
+            //     Regexps: advancedConfigValue.regexps.split(',')
+            // },
+            DelayMinSeconds: advancedConfigValue.minDelaySeconds,
+            DelayMaxSeconds: advancedConfigValue.maxDelaySeconds,
+            RepeatTimes: advancedConfigValue.repeatTimes,
 
             // retry config
-            MaxRetryTimes: retryMaxTimes,
-            RetryInStatusCode: retry ? retryInStatusCode : "",
-            RetryNotInStatusCode: noRetry ? retryNotInStatusCode : "",
-            RetryWaitSeconds: retryWaitSeconds,
-            RetryMaxWaitSeconds: retryMaxWaitSeconds,
+            MaxRetryTimes: advancedConfigValue.maxRetryTimes,
+            RetryInStatusCode: advancedConfigValue.retry ? advancedConfigValue?.retryConfiguration?.statusCode||'' : "",
+            RetryNotInStatusCode: advancedConfigValue.noRetry
+                ? advancedConfigValue?.noRetryConfiguration?.statusCode||''
+                : "",
+            RetryWaitSeconds: advancedConfigValue.retryWaitSeconds,
+            RetryMaxWaitSeconds: advancedConfigValue.retryMaxWaitSeconds,
 
             // redirect config
-            NoFollowRedirect: noFollowRedirect,
-            FollowJSRedirect: followJSRedirect,
-            RedirectTimes: redirectMaxTimes,
+            NoFollowRedirect: advancedConfigValue.noFollowRedirect,
+            FollowJSRedirect: advancedConfigValue.followJSRedirect,
+            RedirectTimes: advancedConfigValue.redirectCount,
 
             // dnsConfig
-            DNSServers: dnsServers,
-            EtcHosts: etcHosts,
+            DNSServers: advancedConfigValue.dnsServers,
+            EtcHosts: advancedConfigValue.etcHosts,
             // 设置变量
-            params
+            Params: advancedConfigValue.params,
+            //匹配器
+            Matchers:[],
+            MatchersCondition:'',
+            //提取器
+            Extractors:[],
         }
-        if (httpParams.Proxy) {
-            const proxyToArr = httpParams.Proxy.split(",").map((ele) => ({label: ele, value: ele}))
+        if (advancedConfigValue.proxy) {
+            const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
 
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
+        console.log("httpParams", httpParams)
+        // ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -727,20 +861,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             } else {
                 failedCount++
             }
-
-            if (!filterIsEmpty(getFilter())) {
-                // 设置了 Filter
-                const hit = data["MatchedByFilter"] === true
-                // 丢包的条件：
-                //   1. 命中过滤器，同时过滤模式设置为丢弃
-                //   2. 未命中过滤器，过滤模式设置为保留
-                if ((hit && getFilterMode() === "drop") || (!hit && getFilterMode() === "match")) {
-                    // 丢弃不匹配的内容
-                    droppedCount++
-                    setDroppedCount(droppedCount)
-                    return
-                }
-            }
+            // 过滤配置(丢包) date:0612  ---start
+            // if (!filterIsEmpty(getFilter())) {
+            //     // 设置了 Filter
+            //     const hit = data["MatchedByFilter"] === true
+            //     // 丢包的条件：
+            //     //   1. 命中过滤器，同时过滤模式设置为丢弃
+            //     //   2. 未命中过滤器，过滤模式设置为保留
+            //     if ((hit && getFilterMode() === "drop") || (!hit && getFilterMode() === "match")) {
+            //         // 丢弃不匹配的内容
+            //         droppedCount++
+            //         setDroppedCount(droppedCount)
+            //         return
+            //     }
+            // }
+            // 过滤配置(丢包) date:0612  ---end
             const r = {
                 StatusCode: data.StatusCode,
                 Ok: data.Ok,
@@ -822,12 +957,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
         const info: fuzzerInfoProp = {
             time: new Date().getTime().toString(),
-            isHttps: isHttps,
-            forceFuzz: forceFuzz,
-            concurrent: concurrent,
-            proxy: proxy,
-            actualHost: actualHost,
-            timeout: timeout,
+            isHttps: advancedConfigValue.isHttps,
+            forceFuzz: advancedConfigValue.forceFuzz,
+            concurrent: advancedConfigValue.concurrent,
+            proxy: advancedConfigValue.proxy.join(","),
+            actualHost: advancedConfigValue.actualHost,
+            timeout: advancedConfigValue.timeout,
             request: request
         }
         if (sendTimer.current) {
@@ -840,7 +975,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     useEffect(() => {
         sendFuzzerSettingInfo()
-    }, [isHttps, forceFuzz, concurrent, proxy, actualHost, timeout, request])
+    }, [
+        advancedConfigValue.isHttps,
+        advancedConfigValue.forceFuzz,
+        advancedConfigValue.concurrent,
+        advancedConfigValue.proxy,
+        advancedConfigValue.actualHost,
+        advancedConfigValue.timeout,
+        request
+    ])
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
             .then((data) => {
@@ -957,81 +1100,81 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
     })
     const getShareContent = useMemoizedFn((callback) => {
-        const params: ShareValueProps = {
-            isHttps,
-            isGmTLS,
-            advancedConfig: advancedConfig,
-            request: getRequest(),
-            advancedConfiguration: {
-                forceFuzz,
-                concurrent,
-                isHttps,
-                noFixContentLength,
-                noSystemProxy,
-                proxy,
-                actualHost,
-                timeout,
-                minDelaySeconds,
-                maxDelaySeconds,
-                repeatTimes,
-                _filterMode: getFilterMode(),
-                getFilter: getFilter()
-            },
-            // retry config
-            retry,
-            noRetry,
-            retryMaxTimes,
-            retryInStatusCode,
-            retryNotInStatusCode,
-            retryWaitSeconds,
-            retryMaxWaitSeconds,
-            // redirect config
-            noFollowRedirect,
-            followJSRedirect,
-            redirectMaxTimes,
-
-            // dns config
-            dnsServers,
-            etcHosts
-        }
-        callback(params)
+        // const params: ShareValueProps = {
+        // isHttps:advancedConfigValue.isHttps,
+        // isGmTLS:advancedConfigValue.isGmTLS,
+        // advancedConfig: advancedConfig,
+        // request: getRequest(),
+        // advancedConfiguration: {
+        //     forceFuzz:!!advancedConfigValue.forceFuzz,
+        //     concurrent:advancedConfigValue.concurrent,
+        //     isHttps:advancedConfigValue.isHttps,
+        //     noFixContentLength:advancedConfigValue.noFixContentLength,
+        //     noSystemProxy:advancedConfigValue.noSystemProxy,
+        //     proxy:advancedConfigValue.proxy.join(),
+        //     actualHost:advancedConfigValue.actualHost,
+        //     timeout:advancedConfigValue.timeout,
+        //     minDelaySeconds:advancedConfigValue.minDelaySeconds,
+        //     maxDelaySeconds:advancedConfigValue.maxDelaySeconds,
+        //     repeatTimes:advancedConfigValue.repeatTimes,
+        //     _filterMode: advancedConfigValue.filterMode,
+        //     // getFilter: getFilter() 过滤配置(丢包) 不要了 0612
+        // },
+        // // retry config
+        // retry,
+        // noRetry,
+        // retryMaxTimes,
+        // retryInStatusCode,
+        // retryNotInStatusCode,
+        // retryWaitSeconds,
+        // retryMaxWaitSeconds,
+        // // redirect config
+        // noFollowRedirect,
+        // followJSRedirect,
+        // redirectMaxTimes,
+        // // dns config
+        // dnsServers,
+        // etcHosts
+        // }
+        // callback(params)
     })
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
-        setIsHttps(shareContent.isHttps)
-        setIsGmTLS(shareContent.isGmTLS)
-        setAdvancedConfig(shareContent.advancedConfig)
-        setRequest(shareContent.request || defaultPostTemplate)
-        setForceFuzz(shareContent.advancedConfiguration.forceFuzz)
-        setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
-        setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
-        setNoSystemProxy(shareContent.advancedConfiguration.noSystemProxy)
-        setProxy(shareContent.advancedConfiguration.proxy)
-        setActualHost(shareContent.advancedConfiguration.actualHost)
-        setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
-        setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
-        setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
-        setRepeatTimes(shareContent.advancedConfiguration.repeatTimes)
-        setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
-        setFilter(shareContent.advancedConfiguration.getFilter)
-        // 重试配置
-        if (shareContent.retryMaxTimes > 0) {
-            setRetryMaxTimes(shareContent.retryMaxTimes)
-        } else {
-            setRetryMaxTimes(0)
-        }
-        setRetry(shareContent.retry)
-        setNoRetry(shareContent.noRetry)
-        setRetryInStatusCode(shareContent.retryInStatusCode || "")
-        setRetryNotInStatusCode(shareContent.retryNotInStatusCode || "")
-        setRetryWaitSeconds(shareContent.retryWaitSeconds || 0)
-        setRetryMaxWaitSeconds(shareContent.retryMaxWaitSeconds || 0)
-        // 重定向配置
-        setRedirectMaxTimes(shareContent.redirectMaxTimes || 0)
-        setNoFollowRedirect(shareContent.noFollowRedirect)
-        setFollowJSRedirect(shareContent.followJSRedirect)
-        // config
-        setETCHosts(shareContent.etcHosts)
-        setDNSServers(shareContent.dnsServers)
+        // setAdvancedConfigValue({...shareContent})
+        // setIsHttps(shareContent.isHttps)
+        // setIsGmTLS(shareContent.isGmTLS)
+        // setAdvancedConfig(shareContent.advancedConfig)
+        // setRequest(shareContent.request || defaultPostTemplate)
+        // setForceFuzz(shareContent.advancedConfiguration.forceFuzz)
+        // setConcurrent(shareContent.advancedConfiguration.concurrent || 20)
+        // setNoFixContentLength(shareContent.advancedConfiguration.noFixContentLength)
+        // setNoSystemProxy(shareContent.advancedConfiguration.noSystemProxy)
+        // setProxy(shareContent.advancedConfiguration.proxy)
+        // setActualHost(shareContent.advancedConfiguration.actualHost)
+        // setParamTimeout(shareContent.advancedConfiguration.timeout || 30.0)
+        // setMinDelaySeconds(shareContent.advancedConfiguration.minDelaySeconds)
+        // setMaxDelaySeconds(shareContent.advancedConfiguration.maxDelaySeconds)
+        // setRepeatTimes(shareContent.advancedConfiguration.repeatTimes)
+        // setFilterMode(shareContent.advancedConfiguration._filterMode || "drop")
+        // setFilter(shareContent.advancedConfiguration.getFilter)
+        // // 重试配置
+        // if (shareContent.retryMaxTimes > 0) {
+        //     setRetryMaxTimes(shareContent.retryMaxTimes)
+        // } else {
+        //     setRetryMaxTimes(0)
+        // }
+        // setRetry(shareContent.retry)
+        // setNoRetry(shareContent.noRetry)
+        // setRetryInStatusCode(shareContent.retryInStatusCode || "")
+        // setRetryNotInStatusCode(shareContent.retryNotInStatusCode || "")
+        // setRetryWaitSeconds(shareContent.retryWaitSeconds || 0)
+        // setRetryMaxWaitSeconds(shareContent.retryMaxWaitSeconds || 0)
+        // // 重定向配置
+        // setRedirectMaxTimes(shareContent.redirectMaxTimes || 0)
+        // setNoFollowRedirect(shareContent.noFollowRedirect)
+        // setFollowJSRedirect(shareContent.followJSRedirect)
+        // // config
+        // setETCHosts(shareContent.etcHosts)
+        // setDNSServers(shareContent.dnsServers)
     })
 
     const cachedTotal = successFuzzer.length + failedFuzzer.length
@@ -1137,53 +1280,60 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * @@description 获取高级配置中的Form values
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
-        // 请求包配置
-        setForceFuzz(val.forceFuzz === undefined ? true : val.forceFuzz)
-        setIsHttps(val.isHttps)
-        setIsGmTLS(val.isGmTLS)
-        setNoFixContentLength(val.noFixContentLength)
-        setNoSystemProxy(val.noSystemProxy)
-        setActualHost(val.actualHost)
-        setParamTimeout(val.timeout)
-        // 发包配置
-        setConcurrent(val.concurrent)
-        setProxy(val.proxy ? val.proxy?.join(",") : "")
-        setMinDelaySeconds(val.minDelaySeconds ? Number(val.minDelaySeconds) : 0)
-        setMaxDelaySeconds(val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0)
-        setRepeatTimes(val.repeatTimes ? Number(val.repeatTimes) : 0)
-        // 重试配置
-        if (val.maxRetryTimes > 0) {
-            setRetryMaxTimes(val.maxRetryTimes)
-        } else {
-            setRetryMaxTimes(0)
-        }
-        setRetry(val.retrying || false)
-        setNoRetry(val.noRetrying || false)
-        setRetryInStatusCode(val.retryConfiguration?.statusCode || "")
-        setRetryNotInStatusCode(val.noRetryConfiguration?.statusCode || "")
-        setRetryWaitSeconds(val.retryConfiguration?.waitTime || 0)
-        setRetryMaxWaitSeconds(val.retryConfiguration?.maxWaitTime || 0)
-
-        // 重定向配置
-        setRedirectMaxTimes(val.redirectCount || 0)
-        setNoFollowRedirect(val.noFollowRedirect)
-        setFollowJSRedirect(val.followJSRedirect)
-
-        // dns
-        setDNSServers(val.dnsServers)
-        setETCHosts(val.etcHosts)
-
-        // 过滤配置
-        setFilterMode(val.filterMode)
-        setFilter({
-            Keywords: val.keyWord?.split(",") || [],
-            MaxBodySize: Number(val.maxBodySize) || 0,
-            MinBodySize: Number(val.minBodySize) || 0,
-            Regexps: val.regexps?.split(",") || [],
-            StatusCode: val.statusCode?.split(",") || []
+        setAdvancedConfigValue({
+            ...val,
+            forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,
+            minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
+            maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
+            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
         })
-        // 设置变量
-        setParams(val.params)
+        // // 请求包配置
+        // setForceFuzz(val.forceFuzz === undefined ? true : val.forceFuzz)
+        // setIsHttps(val.isHttps)
+        // setIsGmTLS(val.isGmTLS)
+        // setNoFixContentLength(val.noFixContentLength)
+        // setNoSystemProxy(val.noSystemProxy)
+        // setActualHost(val.actualHost)
+        // setParamTimeout(val.timeout)
+        // // 发包配置
+        // setConcurrent(val.concurrent)
+        // setProxy(val.proxy ? val.proxy?.join(",") : "")
+        // setMinDelaySeconds(val.minDelaySeconds ? Number(val.minDelaySeconds) : 0)
+        // setMaxDelaySeconds(val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0)
+        // setRepeatTimes(val.repeatTimes ? Number(val.repeatTimes) : 0)
+        // // 重试配置
+        // if (val.maxRetryTimes > 0) {
+        //     setRetryMaxTimes(val.maxRetryTimes)
+        // } else {
+        //     setRetryMaxTimes(0)
+        // }
+        // setRetry(val.retrying || false)
+        // setNoRetry(val.noRetrying || false)
+        // setRetryInStatusCode(val.retryConfiguration?.statusCode || "")
+        // setRetryNotInStatusCode(val.noRetryConfiguration?.statusCode || "")
+        // setRetryWaitSeconds(val.retryConfiguration?.waitTime || 0)
+        // setRetryMaxWaitSeconds(val.retryConfiguration?.maxWaitTime || 0)
+
+        // // 重定向配置
+        // setRedirectMaxTimes(val.redirectCount || 0)
+        // setNoFollowRedirect(val.noFollowRedirect)
+        // setFollowJSRedirect(val.followJSRedirect)
+
+        // // dns
+        // setDNSServers(val.dnsServers)
+        // setETCHosts(val.etcHosts)
+
+        // // 过滤配置
+        // setFilterMode(val.filterMode)
+        // setFilter({
+        //     Keywords: val.keyWord?.split(",") || [],
+        //     MaxBodySize: Number(val.maxBodySize) || 0,
+        //     MinBodySize: Number(val.minBodySize) || 0,
+        //     Regexps: val.regexps?.split(",") || [],
+        //     StatusCode: val.statusCode?.split(",") || []
+        // })
+        // // 设置变量
+        // setParams(val.params)
     })
     const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
         setAdvancedConfig(c)
@@ -1235,72 +1385,73 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             copyURL: {
                 menu: [{key: "copy-as-url", label: "复制为 URL"}],
                 onRun: (editor, key) => {
-                    copyAsUrl({Request: getRequest(), IsHTTPS: getIsHttps()})
+                    copyAsUrl({Request: getRequest(), IsHTTPS: advancedConfigValue.isHttps})
                 }
             }
         }
     }, [])
-  
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
                 advancedConfigValue={{
-                    // 请求包配置
-                    forceFuzz,
-                    isHttps,
-                    isGmTLS,
-                    noFixContentLength,
-                    noSystemProxy,
-                    actualHost,
-                    timeout,
-                    // 发包配置
-                    concurrent,
-                    proxy: proxy ? proxy?.split(",") : [],
-                    minDelaySeconds,
-                    maxDelaySeconds,
-                    repeatTimes,
-                    // 重试配置
-                    maxRetryTimes: retryMaxTimes,
-                    retrying: retry,
-                    noRetrying: noRetry,
-                    retryConfiguration: {
-                        statusCode: retryInStatusCode,
-                        keyWord: ""
-                    },
-                    noRetryConfiguration: {
-                        statusCode: retryNotInStatusCode,
-                        keyWord: ""
-                    },
-                    // 重定向配置
-                    redirectCount: redirectMaxTimes,
-                    noFollowRedirect: noFollowRedirect,
-                    followJSRedirect: followJSRedirect,
-                    redirectConfiguration: {
-                        statusCode: "",
-                        keyWord: ""
-                    },
-                    noRedirectConfiguration: {
-                        statusCode: "",
-                        keyWord: ""
-                    },
-                    // 过滤配置
-                    filterMode: _filterMode || "drop",
-                    statusCode: getFilter().StatusCode.join(",") || "",
-                    regexps: getFilter().Regexps.join(","),
-                    keyWord: getFilter().Keywords?.join(",") || "",
-                    minBodySize: getFilter().MinBodySize,
-                    maxBodySize: getFilter().MaxBodySize,
+                    ...advancedConfigValue
+                    // // 请求包配置
+                    // forceFuzz,
+                    // isHttps,
+                    // isGmTLS,
+                    // noFixContentLength,
+                    // noSystemProxy,
+                    // actualHost,
+                    // timeout,
+                    // // 发包配置
+                    // concurrent,
+                    // proxy: proxy ? proxy?.split(",") : [],
+                    // minDelaySeconds,
+                    // maxDelaySeconds,
+                    // repeatTimes,
+                    // // 重试配置
+                    // maxRetryTimes: retryMaxTimes,
+                    // retrying: retry,
+                    // noRetrying: noRetry,
+                    // retryConfiguration: {
+                    //     statusCode: retryInStatusCode,
+                    //     keyWord: ""
+                    // },
+                    // noRetryConfiguration: {
+                    //     statusCode: retryNotInStatusCode,
+                    //     keyWord: ""
+                    // },
+                    // // 重定向配置
+                    // redirectCount: redirectMaxTimes,
+                    // noFollowRedirect: noFollowRedirect,
+                    // followJSRedirect: followJSRedirect,
+                    // redirectConfiguration: {
+                    //     statusCode: "",
+                    //     keyWord: ""
+                    // },
+                    // noRedirectConfiguration: {
+                    //     statusCode: "",
+                    //     keyWord: ""
+                    // },
+                    // // 过滤配置
+                    // filterMode: _filterMode || "drop",
+                    // statusCode: getFilter().StatusCode.join(",") || "",
+                    // regexps: getFilter().Regexps.join(","),
+                    // keyWord: getFilter().Keywords?.join(",") || "",
+                    // minBodySize: getFilter().MinBodySize,
+                    // maxBodySize: getFilter().MaxBodySize,
 
-                    /** dnsConfig */
-                    dnsServers: dnsServers,
-                    etcHosts: etcHosts,
-                    // 设置变量
-                    params
+                    // /** dnsConfig */
+                    // dnsServers: dnsServers,
+                    // etcHosts: etcHosts,
+                    // // 设置变量
+                    // params
                 }}
-                isHttps={isHttps}
-                isGmTLS={isGmTLS}
-                setIsHttps={setIsHttps}
-                setIsGM={setIsGmTLS}
+                // isHttps={isHttps}
+                // isGmTLS={isGmTLS}
+                // setIsHttps={setIsHttps}
+                // setIsGM={setIsGmTLS}
                 visible={advancedConfig}
                 setVisible={onSetAdvancedConfig}
                 onInsertYakFuzzer={onInsertYakFuzzer}
@@ -1327,7 +1478,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onClick={() => {
                                 resetResponse()
 
-                                setRemoteValue(WEB_FUZZ_PROXY, `${proxy}`)
+                                setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
                                 setRedirectedResponse(undefined)
                                 sendFuzzerSettingInfo()
                                 submitToHTTPFuzzer()
@@ -1348,11 +1499,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     )}
                     <div className={styles["fuzzer-heard-force"]}>
                         <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
-                        <YakitCheckbox checked={isHttps} onChange={(e) => setIsHttps(e.target.checked)} />
+                        <YakitCheckbox
+                            checked={advancedConfigValue.isHttps}
+                            onChange={(e) =>
+                                setAdvancedConfigValue({...advancedConfigValue, isHttps: e.target.checked})
+                            }
+                        />
                     </div>
                     <div className={styles["fuzzer-heard-force"]}>
                         <span className={styles["fuzzer-heard-https"]}>国密TLS</span>
-                        <YakitCheckbox checked={isGmTLS} onChange={(e) => setIsGmTLS(e.target.checked)} />
+                        <YakitCheckbox
+                            checked={advancedConfigValue.isGmTLS}
+                            onChange={(e) =>
+                                setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})
+                            }
+                        />
                     </div>
                     <Divider type='vertical' style={{margin: 0, top: 1}} />
                     <div className={styles["display-flex"]}>
@@ -1398,12 +1559,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     .invoke("RedirectRequest", {
                                         Request: request,
                                         Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
-                                        IsHttps: isHttps,
-                                        IsGmTLS: isGmTLS,
-                                        PerRequestTimeoutSeconds: timeout,
-                                        NoFixContentLength: noFixContentLength,
-                                        NoSystemProxy: noSystemProxy,
-                                        Proxy: proxy
+                                        IsHttps: advancedConfigValue.isHttps,
+                                        IsGmTLS: advancedConfigValue.isGmTLS,
+                                        PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+                                        NoFixContentLength: advancedConfigValue.noFixContentLength,
+                                        NoSystemProxy: advancedConfigValue.noSystemProxy,
+                                        Proxy: advancedConfigValue.proxy.join(",")
                                     })
                                     .then((rsp: FuzzerResponse) => {
                                         setRedirectedResponse(rsp)
@@ -1422,19 +1583,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     )}
                     <div className={styles["display-flex"]}>
                         {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
-                        {proxy && (
-                            <Tooltip title={proxy}>
+                        {advancedConfigValue.proxy && (
+                            <Tooltip title={advancedConfigValue.proxy}>
                                 <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
-                                    代理：{proxy}
+                                    代理：{advancedConfigValue.proxy}
                                 </YakitTag>
                             </Tooltip>
                         )}
-                        {actualHost && (
+                        {advancedConfigValue.actualHost && (
                             <YakitTag
                                 color='danger'
                                 className={classNames(styles["actualHost-text"], "content-ellipsis")}
                             >
-                                请求 Host:{actualHost}
+                                请求 Host:{advancedConfigValue.actualHost}
                             </YakitTag>
                         )}
                     </div>
@@ -1464,7 +1625,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                                 <PacketScanButton
                                     packetGetter={() => {
-                                        return {httpRequest: StringToUint8Array(request), https: isHttps}
+                                        return {
+                                            httpRequest: StringToUint8Array(request),
+                                            https: advancedConfigValue.isHttps
+                                        }
                                     }}
                                 />
                                 <YakitButton

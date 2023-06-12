@@ -34,18 +34,7 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const {
-        advancedConfigValue,
-        isHttps,
-        isGmTLS,
-        setIsHttps,
-        setIsGM,
-        visible,
-        setVisible,
-        onInsertYakFuzzer,
-        onValuesChange,
-        refreshProxy
-    } = props
+    const {advancedConfigValue, visible, setVisible, onInsertYakFuzzer, onValuesChange, refreshProxy} = props
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
 
@@ -54,39 +43,44 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
-    const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
     const queryRef = useRef(null)
     const [inViewport] = useInViewport(queryRef)
 
-    const retrying = useWatch("retrying", form)
-    const noRetrying = useWatch("noRetrying", form)
+    const retry = useWatch("retry", form)
+    const noRetry = useWatch("noRetry", form)
     const etcHosts = useWatch("etcHosts", form) || []
     const gmTLS = useWatch("isGmTLS", form)
     const matchersList = useWatch("Matchers", form) || []
 
     useEffect(() => {
         if (gmTLS) {
-            form.setFieldsValue({isHttps: true})
-            setIsHttps(true)
-            setIsGM(true)
-            form.setFieldsValue({isGmTLS: true})
+            onSetValue({
+                ...form.getFieldsValue(),
+                isHttps: true,
+                isGmTLS: true
+            })
         }
     }, [gmTLS])
     useEffect(() => {
+        form.setFieldsValue({
+            ...advancedConfigValue
+        })
+    }, [advancedConfigValue])
+    useEffect(() => {
         let newRetryActive = retryActive
-        if (retrying) {
+        if (retry) {
             newRetryActive = [...newRetryActive, "重试条件"]
         } else {
             newRetryActive = newRetryActive.filter((ele) => ele !== "重试条件")
         }
-        if (noRetrying) {
+        if (noRetry) {
             newRetryActive = [...newRetryActive, "不重试条件"]
         } else {
             newRetryActive = newRetryActive.filter((ele) => ele !== "不重试条件")
         }
         setRetryActive(newRetryActive)
-    }, [retrying, noRetrying])
+    }, [retry, noRetry])
 
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
@@ -125,18 +119,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
         })
     }, [inViewport, refreshProxy])
-    useEffect(() => {
-        form.setFieldsValue({isHttps: isHttps})
-    }, [isHttps])
-    useEffect(() => {
-        form.setFieldsValue({isGmTLS: isGmTLS})
-    }, [isGmTLS])
-    useEffect(() => {
-        form.setFieldsValue({
-            ...advancedConfigValue
-        })
-        ruleContentRef?.current?.onSetValue(advancedConfigValue.regexps)
-    }, [advancedConfigValue])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
         onValuesChange({
@@ -216,7 +198,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             >
                 <div className={styles["advanced-config-extra-formItem"]}>
                     <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
-                        <YakitSwitch onChange={setIsHttps} />
+                        <YakitSwitch />
                     </Form.Item>
                     <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
                         <YakitSwitch />
@@ -420,7 +402,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         >
                             <Panel
                                 header={
-                                    <Form.Item name='retrying' noStyle valuePropName='checked'>
+                                    <Form.Item name='retry' noStyle valuePropName='checked'>
                                         <YakitCheckbox>
                                             <span style={{marginLeft: 6, cursor: "pointer"}}>重试条件</span>
                                         </YakitCheckbox>
@@ -430,12 +412,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 className={styles["advanced-config-collapse-secondary-item"]}
                             >
                                 <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retrying} />
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retry} />
                                 </Form.Item>
                             </Panel>
                             <Panel
                                 header={
-                                    <Form.Item name='noRetrying' noStyle valuePropName='checked'>
+                                    <Form.Item name='noRetry' noStyle valuePropName='checked'>
                                         <YakitCheckbox>
                                             <span style={{marginLeft: 6, cursor: "pointer"}}>不重试条件</span>
                                         </YakitCheckbox>
@@ -445,7 +427,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 className={styles["advanced-config-collapse-secondary-item"]}
                             >
                                 <Form.Item label='状态码' name={["noRetryConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRetrying} />
+                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRetry} />
                                 </Form.Item>
                             </Panel>
                         </Collapse>
@@ -501,7 +483,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         dnsServers: [],
                                         etcHosts: []
                                     }
-                                    ruleContentRef?.current?.onSetValue("")
                                     onReset(restValue)
                                 }}
                                 size='small'
