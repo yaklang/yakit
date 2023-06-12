@@ -151,7 +151,7 @@ module.exports = (win, getClient) => {
         })
     })
 
-    ipcMain.on("user-sign-out", (event) => {
+    ipcMain.on("user-sign-out", (event,arg) => {
         USER_INFO.isLogin = false
         USER_INFO.platform = null
         USER_INFO.githubName = null
@@ -167,6 +167,10 @@ module.exports = (win, getClient) => {
         USER_INFO.companyName = null
         USER_INFO.companyHeadImg = null
         win.webContents.send("login-out")
+        // 企业版为强制登录 - 退出登录则需重新回到登录页
+        if(arg?.isEnpriTrace){
+            win.webContents.send("again-judge-license-login")
+        }
     })
 
     ipcMain.on("sync-update-user", (event, user) => {

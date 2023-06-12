@@ -2,7 +2,7 @@ import {UserInfoProps, DynamicStatusProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {getRemoteValue,setRemoteValue} from "./kv"
-import {GetReleaseEdition, isCommunityEdition, globalUserLogout,isEnpriTraceAgent} from "@/utils/envfile"
+import {GetReleaseEdition, isCommunityEdition, globalUserLogout,isEnpriTraceAgent, isEnpriTrace} from "@/utils/envfile"
 import {RemoteGV} from "@/yakitGV";
 const {ipcRenderer} = window.require("electron")
 
@@ -33,7 +33,7 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
             OnlineBaseUrl
         })
         .finally(() => {
-            ipcRenderer.send("user-sign-out")
+            ipcRenderer.send("user-sign-out",{isEnpriTrace:isEnpriTrace()})
         })
     })
     
