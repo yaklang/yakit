@@ -160,7 +160,6 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             })
     })
     const handleHttpHistoryShare = useMemoizedFn((res: API.ExtractResponse) => {
-        console.log("loading", loading)
         ipcRenderer
             .invoke("HTTPFlowsExtract", {
                 ShareExtractContent: res.extract_content
@@ -171,9 +170,11 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                         type: res.module
                     })
                     .then(() => {
-                        ipcRenderer.invoke("send-positioning-http-history", {
-                            activeTab: "history"
-                        })
+                        setTimeout(() => {
+                            ipcRenderer.invoke("send-positioning-http-history", {
+                                activeTab: "history"
+                            })
+                        }, 200)
                     })
                 onClose()
             })
@@ -181,7 +182,6 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 yakitNotify("error", "储存HttpHistory分享数据失败" + err)
             })
             .finally(() => {
-                console.log("loading+++", loading)
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
