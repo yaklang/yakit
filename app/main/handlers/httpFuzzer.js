@@ -388,4 +388,27 @@ module.exports = (win, getClient) => {
     ipcMain.handle("RenderVariables", async (e, params) => {
         return await asyncRenderVariables(params)
     })
+
+    // asyncHTTPRequestBuilder wrapper
+    const asyncHTTPRequestBuilder = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPRequestBuilder(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPRequestBuilder", async (e, params) => {
+        return await asyncHTTPRequestBuilder(params)
+    })
+
+    const streamDebugPluginMap = new Map();
+    ipcMain.handle("cancel-DebugPlugin", handlerHelper.cancelHandler(streamDebugPluginMap));
+    ipcMain.handle("DebugPlugin", (e, params, token) => {
+        let stream = getClient().DebugPlugin(params);
+        handlerHelper.registerHandler(win, stream, streamDebugPluginMap, token)
+    })
 }

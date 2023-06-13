@@ -103,4 +103,9 @@ module.exports = (win, getClient) => {
     ipcMain.handle("send-open-screenCap-modal", async (e, params) => {
         win.webContents.send("open-screenCap-modal")
     })
+
+     // 定位HTTP History
+     ipcMain.handle("send-positioning-http-history", (e, params) => {
+        win.webContents.send("fetch-positioning-http-history", params)
+    })
 }

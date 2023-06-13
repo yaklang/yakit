@@ -208,4 +208,33 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryMITMRuleExtractedData", async (e, params) => {
         return await asyncQueryMITMRuleExtractedData(params)
     })
+
+    const asyncHTTPFlowsShare = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPFlowsShare(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPFlowsShare", async (e, params) => {
+        return await asyncHTTPFlowsShare(params)
+    })
+    const asyncHTTPFlowsExtract = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPFlowsExtract(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPFlowsExtract", async (e, params) => {
+        return await asyncHTTPFlowsExtract(params)
+    })
 }

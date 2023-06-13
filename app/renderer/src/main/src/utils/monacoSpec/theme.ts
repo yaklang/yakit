@@ -10,8 +10,8 @@ monaco.editor.defineTheme("kurior", {
             "token": "fuzz.tag.inner", fontStyle: "bold underline",
         },
         {
-            "foreground": "#ce00ff", "background": "#cc7c22",
-            "token": "fuzz.tag.outter", fontStyle: "bold underline",
+            "foreground": "#002aff", "background": "#cc7c22",
+            "token": "fuzz.tag.second", fontStyle: "bold underline",
         },
         {
             "background": "#F0F2F5",
@@ -35,6 +35,7 @@ monaco.editor.defineTheme("kurior", {
             "token": "http.header.info", fontStyle: "bold",
         },
         {"token": "http.method", fontStyle: "bold", foreground: "#00099a"},
+        {"token": "bold-keyword", fontStyle: "bold", foreground: "#8f18ff"},
         {"token": "http.path", fontStyle: "bold", foreground: "#01949a"},
         {"token": "http.get.query.params", fontStyle: "bold", foreground: "#930d97"},
         {

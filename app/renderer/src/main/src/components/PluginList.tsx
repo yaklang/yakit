@@ -22,12 +22,14 @@ export interface PluginListProp extends AutoCardProps {
     allSelectScript: (flag: boolean) => any
     manySelectScript: (v: string[]) => void
     selectScript: (info: YakScript) => any
+    onClickScript?: (info: YakScript) => any
     unSelectScript: (info: YakScript) => any
     search: (params: {limit: number; keyword: string}, tag: string[]) => any
     extra?: React.ReactNode
     disabled?: boolean
     readOnly?: boolean
     sourceType?: string
+    singleSelectMode?: boolean
 }
 
 interface YakScriptCheckboxProp {
@@ -36,6 +38,7 @@ interface YakScriptCheckboxProp {
     selected: string[]
     selectScript: (i: YakScript) => any
     unSelectScript: (i: YakScript) => any
+    onClickScript?: (i: YakScript) => any
     disabled?: boolean
     readOnly?: boolean
 }
@@ -44,7 +47,11 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
     const {info, selected, vlistWidth, selectScript, unSelectScript} = props
 
     return (
-        <div key={info.ScriptName} className='list-opt'>
+        <div key={info.ScriptName} className='list-opt' onClick={()=>{
+            if (props.onClickScript) {
+                props.onClickScript(props.info)
+            }
+        }}>
             {props.readOnly ? (
                 <OneLine width={vlistWidth} overflow={"hidden"}>
                     <div>{info.ScriptName}</div>
@@ -125,6 +132,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
         manySelectScript,
         selectScript,
         unSelectScript,
+        onClickScript,
         disabled,
         search,
         extra,
@@ -236,7 +244,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                             }}
                             settingRender={settingRender}
                             // 加载动态tags公共列表
-                            commonTagsSelectRender={true} 
+                            commonTagsSelectRender={true}
                         />:<Space>
                                 <Input.Search
                                     onSearch={(value) => {
@@ -307,10 +315,11 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                         {list.map((i) => (
                             <YakScriptCheckbox
                                 key={i.data.ScriptName}
-                                readOnly={props.readOnly}
+                                readOnly={props.readOnly || props.singleSelectMode}
                                 info={i.data}
                                 selectScript={selectScript}
                                 unSelectScript={unSelectScript}
+                                onClickScript={props.onClickScript}
                                 vlistWidth={vlistWidth}
                                 selected={selected}
                                 disabled={disabled}

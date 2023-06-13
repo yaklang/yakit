@@ -27,6 +27,8 @@ import {CVXterm} from "@/components/CVXterm"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {EngineLog} from "@/components/layout/EngineLog";
+import {EngineConsole} from "@/components/baseConsole/BaseConsole";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -117,7 +119,7 @@ const renderCard = (infoList, type) => {
                     {infoList.length > 0 && (
                         <Tooltip
                             color='#fff'
-                            title={<TooltipTitle list={infoList} />}
+                            title={<TooltipTitle list={infoList}/>}
                             overlayClassName='status-cards-info'
                             placement='topLeft'
                         >
@@ -165,26 +167,26 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         if (props.onXtermRef) props.onXtermRef(xtermRef)
     }, [xtermRef])
 
-    let progressBars: {id: string; node: React.ReactNode}[] = []
+    let progressBars: { id: string; node: React.ReactNode }[] = []
     progress.forEach((v) => {
         progressBars.push({
             id: v.id,
             node: (
                 <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
-                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active' />
+                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active'/>
                 </Card>
             )
         })
     })
     // progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
 
-    const features: {feature: string; params: any; key: string}[] = featureType
+    const features: { feature: string; params: any; key: string }[] = featureType
         .filter((i) => {
             return i.level === "json-feature"
         })
         .map((i) => {
             try {
-                let res = JSON.parse(i.data) as {feature: string; params: any; key: string}
+                let res = JSON.parse(i.data) as { feature: string; params: any; key: string }
                 if (!res.key) {
                     res.key = randomString(50)
                 }
@@ -332,7 +334,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <AutoCard bodyStyle={{overflowY: "auto"}}>
                             <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                 {props.risks.slice(0, 10).map((i) => {
-                                    return <RiskDetails info={i} shrink={true} />
+                                    return <RiskDetails info={i} shrink={true}/>
                                 })}
                                 {/* {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
                                 return <RiskDetails info={i} shrink={true}/>
@@ -344,34 +346,18 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </AutoCard>
                     </Tabs.TabPane>
                 )}
-                {!props.debugMode && props.onXtermRef && (
+                {!props.debugMode && props.onXtermRef ? (
                     <Tabs.TabPane tab={"Console"} key={"console"}>
                         <div style={{width: "100%", height: "100%"}}>
-                            <CVXterm ref={xtermRef} options={{convertEol: true}} />
-                            {/* <XTerm ref={xtermRef} options={{convertEol: true, rows: 8}}
-                        onResize={(r) => {
-                            xtermFit(xtermRef, 50, 18)
-                        }}
-                        customKeyEventHandler={(e) => {
-                            if (e.keyCode === 67 && (e.ctrlKey || e.metaKey)) {
-                                const str = xtermRef?.current ? (xtermRef.current as any).terminal.getSelection() : ""
-
-                                if (timer.current) {
-                                    clearTimeout(timer.current)
-                                    timer.current = null
-                                }
-                                timer.current = setTimeout(() => {
-                                    ipcRenderer.invoke("copy-clipboard", str).finally(() => {
-                                        timer.current = null
-                                    })
-                                }, 300)
-                            }
-                            return true
-                        }}
-                    /> */}
+                            <CVXterm ref={xtermRef} options={{convertEol: true}}/>
                         </div>
                     </Tabs.TabPane>
-                )}
+                ) : <Tabs.TabPane tab={"Console"} key={"console"}>
+                    <div style={{width: "100%", height: "100%"}}>
+                        <EngineConsole isMini={true}/>
+                    </div>
+                </Tabs.TabPane>}
+
             </Tabs>
             {/* </div> */}
         </div>
@@ -409,7 +395,8 @@ export const compareAsc = (value1: object, value2: object, text: string) => {
         } else {
             return 0
         }
-    } catch (error) {}
+    } catch (error) {
+    }
 }
 
 // 降序
@@ -422,7 +409,8 @@ export const compareDesc = (value1: object, value2: object, text: string) => {
         } else {
             return 0
         }
-    } catch (error) {}
+    } catch (error) {
+    }
 }
 
 export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
@@ -622,7 +610,8 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                                 page: 1,
                                 limit: 1,
                                 total: tableData.current.length,
-                                onChange: () => {}
+                                onChange: () => {
+                                }
                             }}
                             onChange={onTableChange}
                         />
@@ -642,6 +631,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
 interface SimpleCardBoxProps {
     statusCards: StatusCardInfoProps[]
 }
+
 export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
     const {statusCards} = props
     return (

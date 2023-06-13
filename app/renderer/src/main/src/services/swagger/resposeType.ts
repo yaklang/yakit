@@ -202,6 +202,7 @@ export declare namespace API {
     pwd: boolean;
     share_id?: string;
     limit_num?: number;
+    token?: string;
   }
   export interface SaveYakitPlugin {
     id?: number;
@@ -267,6 +268,7 @@ export declare namespace API {
   }
   export interface RiskLists extends GormBaseModel, RiskList {}
   export interface RiskList {
+    hash: string;
     user_name: string;
     rish_hash: string;
     ip: string;
@@ -293,7 +295,6 @@ export declare namespace API {
     description: string;
     solution: string;
     risk_created_at: number;
-    hash: string;
   }
   export interface RemoteTunnelResponse {
     server: string;

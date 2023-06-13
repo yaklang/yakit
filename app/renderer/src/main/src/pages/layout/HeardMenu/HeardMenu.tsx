@@ -162,8 +162,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        // 社区版本才会获取新的 menu
-        if (isCommunityEdition()) {
+        // 除简易版本外 更新菜单
+        if (!isEnpriTraceAgent()) {
             ipcRenderer.on("fetch-new-main-menu", (e) => {
                 init(getPatternMenu(), true)
             })
@@ -652,7 +652,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 onImportPlugin()
                 setImportMenuShow(false)
                 return
-            case "import-fuzzer":
+            case "import-share":
                 onImportShare()
                 setImportMenuShow(false)
                 return
@@ -672,8 +672,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         label: "导入插件"
                     },
                     {
-                        key: "import-fuzzer",
-                        label: "导入 WebFuzzer"
+                        key: "import-share",
+                        label: "导入分享数据"
                     },
                 ]}
                 onClick={({key}) => importMenuSelect(key)}
@@ -740,7 +740,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {isCommunityEdition() && <>
+                    {!isEnpriTraceAgent() && <>
                         <YakitPopover
                             overlayClassName={style['import-resource-menu-popover']}
                             overlayStyle={{paddingTop: 4}}

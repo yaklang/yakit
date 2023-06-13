@@ -1,27 +1,11 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {
-    Button,
-    Checkbox,
-    Divider,
-    Empty,
-    Form,
-    Input,
-    Popover,
-    Select,
-    Space,
-    Tooltip,
-    Badge,
-    Menu,
-    InputNumber,
-    Dropdown
-} from "antd"
+import {Button, Divider, Empty, Form, Input, Popover, Select, Space, Tooltip, Badge} from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
-import {showByCursorMenu} from "../../utils/showByCursor"
 import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {failed, info, warn} from "../../utils/notification"
+import {yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -48,7 +32,9 @@ import {
     ChevronDownIcon,
     ArrowCircleRightSvgIcon,
     ChromeFrameSvgIcon,
-    CheckIcon
+    CheckIcon,
+    TrashIcon,
+    SaveIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
@@ -64,6 +50,10 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {ShareModal} from "@/pages/fuzzer/components/ShareData"
+import {Route} from "@/routes/routeSpec"
+import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -754,6 +744,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
 
+    const [batchVisible, setBatchVisible] = useState<boolean>(false)
+
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -836,7 +828,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     })
                 } catch (e) {
                     update(1)
-                    failed(`加载屏蔽参数失败: ${e}`)
+                    yakitNotify("error", `加载屏蔽参数失败: ${e}`)
                 }
             })
             .finally(() => {
@@ -926,7 +918,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setData(d)
                 })
                 .catch((e: any) => {
-                    failed(`query HTTP Flow failed: ${e}`)
+                    yakitNotify("error", `query HTTP Flow failed: ${e}`)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 100))
         }
@@ -962,7 +954,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setTotal(rsp.Total)
             })
             .catch((e: any) => {
-                failed(`query HTTP Flow failed: ${e}`)
+                yakitNotify("error", `query HTTP Flow failed: ${e}`)
             })
     })
     // 获取tags等分组
@@ -978,7 +970,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 // setStatusCode([...statusCode])
             })
             .catch((e: any) => {
-                failed(`query HTTP Flows Field Group failed: ${e}`)
+                yakitNotify("error", `query HTTP Flows Field Group failed: ${e}`)
             })
     })
 
@@ -1030,7 +1022,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setOffsetData(newOffsetData)
             })
             .catch((e: any) => {
-                failed(`query HTTP Flow failed: ${e}`)
+                yakitNotify('error',`query HTTP Flow failed: ${e}`)
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
@@ -1399,7 +1391,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             showResponseViaResponseRaw(i?.Response)
                                         })
                                         .catch((e: any) => {
-                                            failed(`Query HTTPFlow failed: ${e}`)
+                                            yakitNotify('error',`Query HTTPFlow failed: ${e}`)
                                         })
                                 }}
                             />
@@ -1424,11 +1416,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 标注颜色批量
     const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
         if (flowList.length === 0) {
-            warn("请选择数据")
+            yakitNotify("warning", "请选择数据")
             return
         }
         if (flowList.length > number) {
-            warn(`最多同时只能操作${number}条数据`)
+            yakitNotify("warning", `最多同时只能操作${number}条数据`)
             return
         }
         const newList = flowList.map((flow) => {
@@ -1462,11 +1454,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 移除颜色  批量
     const onRemoveCalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number) => {
         if (flowList.length === 0) {
-            warn("请选择数据")
+            yakitNotify("warning", "请选择数据")
             return
         }
         if (flowList.length > number) {
-            warn(`最多同时只能操作${number}条数据`)
+            yakitNotify("warning", `最多同时只能操作${number}条数据`)
             return
         }
         const newList = flowList.map((flow) => {
@@ -1510,7 +1502,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ...query
             })
             .then(() => {
-                info("删除成功")
+                yakitNotify("info", "删除成功")
                 update()
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
@@ -1524,7 +1516,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 update(1)
             })
             .catch((e: any) => {
-                failed(`历史记录删除失败: ${e}`)
+                yakitNotify('error', `历史记录删除失败: ${e}`)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 500)
@@ -1559,13 +1551,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 update(1)
             })
             .catch((e: any) => {
-                failed(`历史记录删除失败: ${e}`)
+                yakitNotify('error', `历史记录删除失败: ${e}`)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
         setLoading(true)
-        info("正在删除...如自动刷新失败请手动刷新")
+        yakitNotify("info", "正在删除...如自动刷新失败请手动刷新")
         setCompareLeft({content: "", language: "http"})
         setCompareRight({content: "", language: "http"})
         setCompareState(0)
@@ -1576,15 +1568,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
         const length = selectedRows.length
         if (length <= 0) {
-            warn(`请选择数据`)
+            yakitNotify("warning", `请选择数据`)
             return
         }
         if (isAllSelect && !all) {
-            warn("该批量操作不支持全选")
+            yakitNotify("warning", "该批量操作不支持全选")
             return
         }
         if (number < length) {
-            warn(`最多同时只能发送${number}条数据`)
+            yakitNotify("warning", `最多同时只能发送${number}条数据`)
             return
         }
         for (let i = 0; i < length; i++) {
@@ -1622,7 +1614,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
-                    warn("请选择数据")
+                    yakitNotify("warning", "请选择数据")
                     return
                 }
                 if (v.length < number) {
@@ -1630,7 +1622,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setSelectedRowKeys([])
                     setSelectedRows([])
                 } else {
-                    warn(`最多同时只能复制${number}条数据`)
+                    yakitNotify("warning", `最多同时只能复制${number}条数据`)
                 }
             }
         },
@@ -1776,6 +1768,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 }
             ]
+        },
+        {
+            key: "分享数据包",
+            label: "分享数据包",
+            number: 30,
+            onClickSingle: (v) => onShareData([v.Id], 50),
+            onClickBatch: (list, n) => {
+                const ids: string[] = list.map((ele) => ele.Id)
+                onShareData(ids, n)
+            }
         }
     ]
     const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
@@ -1934,6 +1936,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             update(1)
         }, 100)
     })
+    /** 
+     * @description 分享数据包
+     * @param ids 分享数据得ids
+     */
+    const onShareData = useMemoizedFn((ids: string[], number: number) => {
+        if (isAllSelect) {
+            yakitNotify('warning', "该批量操作不支持全选")
+            return
+        }
+        if (ids.length === 0) {
+            yakitNotify("warning", "请选择数据")
+            return
+        }
+        if (ids.length > number) {
+            yakitNotify("warning", `最多同时只能操作${number}条数据`)
+            return
+        }
+        const m = showYakitModal({
+            title: "导入分享数据",
+            content: <ShareModal module={Route.HTTPHacker} shareContent={JSON.stringify(ids)} />,
+            onCancel:()=>{
+                m.destroy()
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            },
+            footer: null
+        })
+    })
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -2004,6 +2034,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         }}
                                     />
                                     <Divider type='vertical' />
+                                    <YakitButton
+                                        type='outline2'
+                                        icon={<SaveIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />}
+                                        onClick={() => onImportShare()}
+                                    >
+                                        导入分享数据
+                                    </YakitButton>
                                     <div className={style["empty-button"]}>
                                         <YakitDropdownMenu
                                             menu={{
@@ -2035,7 +2072,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 placement: "bottom"
                                             }}
                                         >
-                                            <YakitButton type='outline2' className='button-text-danger'>
+                                            <YakitButton
+                                                type='outline2'
+                                                className='button-text-danger'
+                                                icon={<TrashIcon style={{height: 16}} />}
+                                            >
                                                 清空
                                             </YakitButton>
                                         </YakitDropdownMenu>
@@ -2262,6 +2303,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             content={
                                                 <YakitMenu
                                                     width={150}
+                                                    selectedKeys={[]}
                                                     data={menuData
                                                         .filter((f) => f.onClickBatch)
                                                         .map((m) => {
@@ -2336,11 +2378,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                     )
                                                                 break
                                                         }
+                                                        setBatchVisible(false)
                                                     }}
                                                 />
                                             }
                                             trigger='click'
                                             placement='bottomLeft'
+                                            onVisibleChange={setBatchVisible}
+                                            visible={batchVisible}
                                         >
                                             <YakitButton
                                                 type='outline2'
@@ -2794,7 +2839,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            info(`设置 HTTPFlow 颜色成功`)
+            yakitNotify('success', `设置 HTTPFlow 颜色成功`)
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
@@ -2820,7 +2865,7 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            info(`清除 HTTPFlow 颜色成功`)
+            yakitNotify("success", `清除 HTTPFlow 颜色成功`)
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
