@@ -115,6 +115,7 @@ import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
 import {YakScriptExecResultTable} from "@/components/YakScriptExecResultTable";
 import {MatcherExtractorPage} from "@/pages/matcherextractor/MatcherExtractorPage";
+import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -206,6 +207,9 @@ export enum Route {
 
     // 匹配提取功能
     Beta_MatcherExtractorPage = "beta-matcher-extractor-page",
+
+    // 调试插件的功能
+    Beta_DebugPlugin = "beta-debug-plugin",
 
     // 首页
     NewHome = "new-home",
@@ -474,6 +478,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <CVEViewer/>
         case Route.Beta_MatcherExtractorPage:
             return <MatcherExtractorPage/>
+        case Route.Beta_DebugPlugin:
+            return <PluginDebuggerPage />
         default:
             return <div/>
     }

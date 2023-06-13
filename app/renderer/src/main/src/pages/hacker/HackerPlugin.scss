@@ -17,6 +17,10 @@
     border: 1px solid #f0f0f0;
     margin-bottom: 5px;
     padding: 0 5px;
+
+    &:hover {
+        background-color: #f0f0f0;
+    }
 }
 
 .mitm-exec-plugin .right-body {
