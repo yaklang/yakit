@@ -37,6 +37,9 @@
             height: auto;
         }
     }
+    .btn-padding-right-0{
+        padding-right: 0;
+    }
     .chevron-down-icon {
         color: var(--yakit-body-text-color);
     }
@@ -192,6 +195,20 @@
     .matchers-panel {
         display: flex;
         align-items: center;
+    }
+    .plus-button-bolck{
+        width: 100%;
+    }
+    .matchers-heard {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        :global {
+            .ant-radio-button-wrapper {
+                padding: 3px 10px;
+            }
+        }
     }
     .matchers-number {
         width: 18px;
