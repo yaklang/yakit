@@ -15,8 +15,9 @@ import {YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage";
 import {PluginList} from "@/components/PluginList";
 import {SimplePluginList} from "@/components/SimplePluginList";
 import {YakScript} from "@/pages/invoker/schema";
-import {failed} from "@/utils/notification";
+import {failed, info} from "@/utils/notification";
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
+import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec";
 
 export interface PluginDebuggerPageProp {
 
@@ -31,6 +32,9 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
     const [originCode, setOriginCode] = useState("");
     const [pluginType, setPluginType] = useState<"port-scan" | "mitm" | "nuclei">("port-scan");
     const [currentPluginName, setCurrentPluginName] = useState("");
+
+    const [operator, setOperator] = useState<{start: ()=>any, cancel: ()=>any}>();
+    const [pluginExecuting, setPluginExecuting] = useState(false);
 
     return <div style={{width: "100%", height: "100%"}}>
         <AutoCard
@@ -47,9 +51,18 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                                 debugYakitModal(rsp)
                             })
                         }} type={"outline1"}>查看发送请求</YakitButton>
-                        <YakitButton onClick={() => {
-
-                        }}>执行插件</YakitButton>
+                        {!pluginExecuting && <YakitButton onClick={() => {
+                            if (operator?.start) {
+                                operator.start()
+                            }else{
+                                failed("初始化调试失败")
+                            }
+                        }}>执行插件</YakitButton>}
+                        {pluginExecuting && <YakitButton onClick={() => {
+                            if (operator?.cancel) {
+                                operator.cancel()
+                            }
+                        }} danger={true} type={"danger"}>停止执行</YakitButton>}
                     </Space>}
                 >
                     <Space direction={"vertical"} style={{width: "100%"}}>
@@ -119,13 +132,21 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                         isVer={true}
                         firstNode={<div style={{height: "100%"}}>
                             <YakEditor
-                                noMiniMap={true} type={pluginType === "nuclei" ? "text" : "yak"}
+                                noMiniMap={true} type={pluginType === "nuclei" ? "yaml" : "yak"}
                                 value={code} setValue={setCode}
                             />
                         </div>}
-                        secondNode={<div>
-                            插件执行流量和日志结果
-                        </div>}
+                        secondNode={<PluginDebuggerExec
+                            pluginType={pluginType}
+                            builder={builder} code={code} targets={targets}
+                            onOperator={(obj) => {
+                                info("初始化插件调试成功")
+                                setOperator(obj)
+                            }}
+                            onExecuting={result => {
+                                setPluginExecuting(result)
+                            }}
+                        />}
                     />
                 </AutoCard>}
             />

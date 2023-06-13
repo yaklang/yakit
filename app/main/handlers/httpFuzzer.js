@@ -404,4 +404,11 @@ module.exports = (win, getClient) => {
     ipcMain.handle("HTTPRequestBuilder", async (e, params) => {
         return await asyncHTTPRequestBuilder(params)
     })
+
+    const streamDebugPluginMap = new Map();
+    ipcMain.handle("cancel-DebugPlugin", handlerHelper.cancelHandler(streamDebugPluginMap));
+    ipcMain.handle("DebugPlugin", (e, params, token) => {
+        let stream = getClient().DebugPlugin(params);
+        handlerHelper.registerHandler(win, stream, streamDebugPluginMap, token)
+    })
 }
