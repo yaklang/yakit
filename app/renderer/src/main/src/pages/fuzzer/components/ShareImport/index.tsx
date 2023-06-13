@@ -89,17 +89,18 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 if (pwd) {
                     setIsShowPassword(true)
                     warn("该分享需要输入密码!")
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
                 } else {
                     onShareExtract(value)
                 }
             })
             .catch((err) => {
-                yakitNotify("error", "密码验证失败：" + err)
-            })
-            .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
+                yakitNotify("error", "密码验证失败：" + err)
             })
     })
     /**
@@ -129,8 +130,6 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             })
             .catch((err) => {
                 yakitNotify("error", "获取分享数据失败：" + err)
-            })
-            .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
@@ -154,8 +153,14 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             .catch((err) => {
                 yakitNotify("error", "打开web fuzzer失败:" + err)
             })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
     })
     const handleHttpHistoryShare = useMemoizedFn((res: API.ExtractResponse) => {
+        console.log("loading", loading)
         ipcRenderer
             .invoke("HTTPFlowsExtract", {
                 ShareExtractContent: res.extract_content
@@ -174,6 +179,12 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             })
             .catch((err) => {
                 yakitNotify("error", "储存HttpHistory分享数据失败" + err)
+            })
+            .finally(() => {
+                console.log("loading+++", loading)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
             })
     })
     return (
