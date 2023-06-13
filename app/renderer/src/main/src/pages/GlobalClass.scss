@@ -589,12 +589,15 @@
         align-items: center;
         line-height: 16px;
     }
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow svg {
+        color: var(--yakit-body-text-color);
+    }
     .ant-collapse-header-text {
         font-weight: 500;
         font-size: 12px;
         line-height: 16px;
         color: var(--yakit-header-color);
-        margin-left: 8px;
+        margin-left: 4px;
     }
     .ant-collapse-content > .ant-collapse-content-box {
         padding: 12px;
@@ -677,7 +680,7 @@
             color: var(--yakit-header-color);
         }
     }
-    .descriptions-no-more{
+    .descriptions-no-more {
         font-size: 12px;
         color: var(--yakit-helper-text-color);
         text-align: center;

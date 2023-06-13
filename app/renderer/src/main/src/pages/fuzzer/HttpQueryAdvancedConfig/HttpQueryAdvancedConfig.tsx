@@ -9,6 +9,7 @@ import {
     HollowLightningBoltIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
@@ -16,16 +17,27 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Tag, Divider} from "antd"
 import {useWatch} from "antd/lib/form/Form"
-import React, {useState, useRef, useEffect} from "react"
+import React, {useState, useRef, useEffect, useMemo} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array} from "@/utils/str"
+import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {
+    MatcherAndExtractionCard,
+    defMatcherAndExtractionCode,
+    defaultMatcherItem,
+    filterModeOptions,
+    matchersConditionOptions
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {Route} from "@/routes/routeSpec"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -42,6 +54,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
+    const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
 
     const [form] = Form.useForm()
     const queryRef = useRef(null)
@@ -52,6 +65,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const etcHosts = useWatch("etcHosts", form) || []
     const gmTLS = useWatch("isGmTLS", form)
     const matchersList = useWatch("Matchers", form) || []
+    const extractorList = useWatch("Extractors", form) || []
+    const matchersCondition = useWatch("MatchersCondition", form) || []
+
+    const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${Route.HTTPFuzzer}`)) || {
+        width: 0,
+        height: 0
+    }
+
+    const heightDrawer = useMemo(() => {
+        return size.height - 18
+    }, [size.height])
+
+    useEffect(() => {
+        if (!inViewport) setVisibleDrawer(false)
+    }, [inViewport])
 
     useEffect(() => {
         if (gmTLS) {
@@ -119,6 +147,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
         })
     }, [inViewport, refreshProxy])
+
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
         onValuesChange({
@@ -136,19 +165,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
      * @description 变量预览
      */
     const onRenderVariables = useMemoizedFn(() => {
-        const testCode =
-            "HTTP/1.1 200 OK\r\n" +
-            "Date: Mon, 23 May 2005 22:38:34 GMT\r\n" +
-            "Content-Type: text/html; charset=UTF-8\r\n" +
-            "Content-Encoding: UTF-8\r\n" +
-            "\r\n" +
-            "<html>" +
-            '<!doctype html>\n<html>\n<body>\n  <div id="result">%d</div>\n</body>\n</html>' +
-            "</html>"
         ipcRenderer
             .invoke("RenderVariables", {
                 Params: form.getFieldValue("params") || [],
-                HTTPResponse: StringToUint8Array(testCode)
+                HTTPResponse: StringToUint8Array(defMatcherAndExtractionCode)
             })
             .then((rsp: {Results: {Key: string; Value: string}[]}) => {
                 console.log("rsp.Results", rsp.Results)
@@ -178,11 +198,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             ...restValue
         })
     })
+
+    const onAddMatchingAndExtractionCard = useMemoizedFn(() => {
+        if (matchersList.length === 0) {
+            form.setFieldsValue({
+                Matchers: [defaultMatcherItem]
+            })
+        }
+        setVisibleDrawer(true)
+    })
+
     return (
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>
                 <span>高级配置</span>
-                <YakitSwitch checked={visible} onChange={setVisible} />
+                <YakitSwitch wrapperClassName={styles["btn-padding-right-0"]} checked={visible} onChange={setVisible} />
             </div>
             <Form
                 form={form}
@@ -195,6 +225,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 initialValues={{
                     ...advancedConfigValue
                 }}
+                className="yakit-collapse"
             >
                 <div className={styles["advanced-config-extra-formItem"]}>
                     <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
@@ -245,7 +276,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className='button-text-danger'
+                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -302,7 +333,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className='button-text-danger'
+                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -367,7 +398,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className='button-text-danger'
+                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -438,7 +469,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className='button-text-danger'
+                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -476,7 +507,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className='button-text-danger'
+                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -593,7 +624,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             onSwitchCollapse([...activeKey, "设置变量"])
                                         }
                                     }}
-                                    style={{paddingRight: 6}}
+                                    className={styles["btn-padding-right-0"]}
                                     size='small'
                                 >
                                     添加
@@ -706,8 +737,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
                                             onSwitchCollapse([...activeKey, "匹配器"])
                                         }
+                                        onAddMatchingAndExtractionCard()
                                     }}
-                                    style={{paddingRight: 6}}
+                                    className={styles["btn-padding-right-0"]}
                                 >
                                     添加/调试
                                     <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
@@ -715,10 +747,38 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </>
                         }
                     >
-                        <MatchersList matchersList={matchersList} />
+                        <div className={styles["matchers-heard"]}>
+                            <Form.Item name='filterMode' noStyle>
+                                <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
+                            </Form.Item>
+                            <Form.Item name='MatchersCondition' noStyle>
+                                <YakitRadioButtons
+                                    buttonStyle='solid'
+                                    options={matchersConditionOptions}
+                                    size='small'
+                                />
+                            </Form.Item>
+                        </div>
+                        <MatchersList matchersList={matchersList} onAdd={() => onAddMatchingAndExtractionCard()} />
                     </Panel>
                 </Collapse>
             </Form>
+            <YakitDrawer
+                mask={false}
+                visible={visibleDrawer}
+                width='100vh'
+                headerStyle={{display: "none"}}
+                style={{height: visibleDrawer ? heightDrawer : 0}}
+                contentWrapperStyle={{height: heightDrawer, boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
+                bodyStyle={{padding: 0}}
+                placement='bottom'
+            >
+                <MatcherAndExtractionCard
+                    matcherValue={{filterMode: "drop", matchersList: matchersList, matchersCondition}}
+                    extractorValue={{extractorList}}
+                    onClose={() => setVisibleDrawer(false)}
+                />
+            </YakitDrawer>
         </div>
     )
 })
@@ -746,9 +806,10 @@ const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
 
 interface MatchersListProps {
     matchersList: any[]
+    onAdd: () => void
 }
 const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
-    const {matchersList} = props
+    const {matchersList, onAdd} = props
     return (
         <>
             <Form.Item name='Matchers' noStyle>
@@ -760,7 +821,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                 <Form.Item wrapperCol={{span: 24}}>
                     <YakitButton
                         type='outline2'
-                        onClick={() => {}}
+                        onClick={() => onAdd()}
                         icon={<PlusIcon className={styles["plus-sm-icon"]} />}
                         themeClass={styles["plus-button-bolck"]}
                         block

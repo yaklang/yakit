@@ -65,6 +65,7 @@ import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedC
 import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {Route} from "@/routes/routeSpec"
+import { HTTPResponseExtractor, HTTPResponseMatcher } from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
 const {ipcRenderer} = window.require("electron")
 interface ShareValueProps {
@@ -237,26 +238,6 @@ export interface FuzzerRequestProps {
     IsGmTLS: boolean
 }
 
-export interface HTTPResponseExtractor {
-    Name: string
-    Type: string
-    Scope: string
-    Groups: string[]
-    RegexpMatchGroup: string[]
-    XPathAttribute: string
-}
-
-export interface HTTPResponseMatcher {
-    SubMatchers: HTTPResponseMatcher[]
-    SubMatcherCondition: string
-    MatcherType: string
-    Scope: string
-    Condition: string
-    Group: string[]
-    GroupEncoding: string
-    Negative: boolean
-    ExprType: string
-}
 export const showDictsAndSelect = (res: (i: string) => any) => {
     const m = showModal({
         title: "选择想要插入的字典",
@@ -408,7 +389,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 匹配器
         filterMode: "drop",
         Matchers:[],
-        MatchersCondition:'',
+        MatchersCondition:'and',
         // 提取器
         Extractors:[],
     })

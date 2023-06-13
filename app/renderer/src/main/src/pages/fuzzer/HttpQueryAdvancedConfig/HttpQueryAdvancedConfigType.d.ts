@@ -59,9 +59,9 @@ export interface AdvancedConfigValueProps {
     // 设置变量
     params: FuzzerParamItem[]
     // 匹配器
-    filterMode: "drop" | "match"
+    filterMode: "drop" | "match" | 'onlyMatch'
     Matchers: HTTPResponseMatcher[]
-    MatchersCondition: string
+    MatchersCondition: 'and'|'or'
     //提取器
     Extractors: HTTPResponseExtractor[]
 }
