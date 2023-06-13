@@ -1247,6 +1247,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
                 }
             }
+            if (type === Route.HTTPHacker) {
+                addTabPage(Route.HTTPHacker)
+            }
             if (type === Route.DB_Risk) {
                 addTabPage(Route.DB_Risk)
             }

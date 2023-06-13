@@ -13,12 +13,6 @@ import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
 
 export interface HTTPHackerProp {}
 
-const defaultHTTPPacket = `GET / HTTP/1.1
-Host: www.example.com
-Uesr-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36
-
-`
-
 const {ipcRenderer} = window.require("electron")
 
 const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
@@ -38,7 +32,14 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             ipcRenderer.removeAllListeners("fetch-send-to-packet-hack")
         }
     }, [])
-
+    useEffect(() => {
+        ipcRenderer.on("fetch-positioning-http-history", (e, res) => {
+            if (res.activeTab) setActiveTag(res.activeTab)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-positioning-http-history")
+        }
+    }, [])
     return (
         <div style={{margin: 0, height: "100%"}}>
             <Tabs

@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Form, Input, InputNumber} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {failed, info, warn} from "@/utils/notification"
+import {failed, info, warn, yakitNotify} from "@/utils/notification"
 import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
@@ -11,6 +11,7 @@ import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {Route} from "@/routes/routeSpec"
 
 const layout = {
     labelCol: {span: 5},
@@ -28,11 +29,12 @@ interface ShareImportProps {
 
 interface pwdRequestProps {
     share_id: string
+    token: string
 }
 
 export function onImportShare() {
     const m = showYakitModal({
-        title: "导入协作资源",
+        title: "导入分享数据",
         content: <ShareImport onClose={() => m.destroy()} />,
         footer: null
     })
@@ -43,7 +45,7 @@ export function onImportPlugin() {
         width: 800,
         footer: null,
         content: (
-            <div style={{width: 780,padding:24}}>
+            <div style={{width: 780, padding: 24}}>
                 <LoadYakitPluginForm
                     onlyId={true}
                     onFinished={() => {
@@ -69,34 +71,41 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             onExtractPwd(value)
         }
     })
-
+    /**
+     * @description 先进行密码验证
+     */
     const onExtractPwd = useMemoizedFn((value) => {
         setLoading(true)
+        const pwdRequest: pwdRequestProps = {
+            share_id: value.share_id,
+            token: userInfo.token
+        }
         NetWorkApi<pwdRequestProps, boolean>({
             url: "module/extract/pwd",
             method: "get",
-            params: {
-                share_id: value.share_id
-            }
+            params: {...pwdRequest}
         })
             .then((pwd) => {
                 if (pwd) {
                     setIsShowPassword(true)
                     warn("该分享需要输入密码!")
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
                 } else {
                     onShareExtract(value)
                 }
             })
             .catch((err) => {
-                failed(err)
-            })
-            .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
+                yakitNotify("error", "密码验证失败：" + err)
             })
     })
-
+    /**
+     * @description 获取分享数据
+     */
     const onShareExtract = useMemoizedFn((value) => {
         if (userInfo.isLogin) {
             value.token = userInfo.token
@@ -108,26 +117,69 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             data: value
         })
             .then((res) => {
-                const shareContent = JSON.parse(res.extract_content)
-                ipcRenderer
-                    .invoke("send-to-tab", {
-                        type: res.module,
-                        data: {
-                            isHttps: shareContent.isHttps,
-                            isGmTLS: shareContent.isGmTLS,
-                            request: shareContent.request,
-                            shareContent: res.extract_content
-                        }
-                    })
-                    .then(() => {
-                        onClose()
-                    })
-                    .catch((err) => {
-                        failed("打开web fuzzer失败:" + err)
-                    })
+                switch (res.module) {
+                    case "fuzzer":
+                        handleWebFuzzerShare(res)
+                        break
+                    case Route.HTTPHacker:
+                        handleHttpHistoryShare(res)
+                        break
+                    default:
+                        break
+                }
             })
             .catch((err) => {
-                failed("获取分享数据失败：" + err)
+                yakitNotify("error", "获取分享数据失败：" + err)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+    })
+    const handleWebFuzzerShare = useMemoizedFn((res: API.ExtractResponse) => {
+        const shareContent = JSON.parse(res.extract_content)
+        ipcRenderer
+            .invoke("send-to-tab", {
+                type: res.module,
+                data: {
+                    isHttps: shareContent.isHttps,
+                    isGmTLS: shareContent.isGmTLS,
+                    request: shareContent.request,
+                    shareContent: res.extract_content
+                }
+            })
+            .then(() => {
+                onClose()
+            })
+            .catch((err) => {
+                yakitNotify("error", "打开web fuzzer失败:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+    })
+    const handleHttpHistoryShare = useMemoizedFn((res: API.ExtractResponse) => {
+        ipcRenderer
+            .invoke("HTTPFlowsExtract", {
+                ShareExtractContent: res.extract_content
+            })
+            .then(() => {
+                ipcRenderer
+                    .invoke("send-to-tab", {
+                        type: res.module
+                    })
+                    .then(() => {
+                        setTimeout(() => {
+                            ipcRenderer.invoke("send-positioning-http-history", {
+                                activeTab: "history"
+                            })
+                        }, 200)
+                    })
+                onClose()
+            })
+            .catch((err) => {
+                yakitNotify("error", "储存HttpHistory分享数据失败" + err)
             })
             .finally(() => {
                 setTimeout(() => {
