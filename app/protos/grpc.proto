@@ -168,6 +168,8 @@ service Yak {
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
   rpc QueryHTTPFlowsIds(QueryHTTPFlowsIdsRequest) returns (QueryHTTPFlowsIdsResponse);
   rpc HTTPFlowsFieldGroup(HTTPFlowsFieldGroupRequest) returns (HTTPFlowsFieldGroupResponse);
+  rpc HTTPFlowsShare(HTTPFlowsShareRequest) returns (HTTPFlowsShareResponse);
+  rpc HTTPFlowsExtract(HTTPFlowsExtractRequest) returns (Empty);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -478,6 +480,15 @@ service Yak {
   rpc HTTPRequestBuilder(HTTPRequestBuilderParams) returns (HTTPRequestBuilderResponse);
   // rpc QueryHTTPRequestBuilder(QueryHTTPRequestBuilderRequest) returns (QueryHTTPRequestBuilderResponse);
   // rpc DeleteHTTPRequestBuilder(DeleteHTTPRequestBuilderRequest) returns (Empty);
+  rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
+}
+
+message DebugPluginRequest {
+  string Code = 1;
+  string PluginType = 2;
+
+  string Input = 3;
+  HTTPRequestBuilderParams HTTPRequestTemplate = 4;
 }
 
 message HTTPRequestBuilderResult {
@@ -2989,6 +3000,25 @@ message HTTPFlowsFieldGroupRequest {
 message HTTPFlowsFieldGroupResponse {
   repeated TagsCode Tags = 1;
   repeated TagsCode StatusCode = 2;
+}
+
+message HTTPFlowsShareRequest {
+  repeated int64 Ids = 1;
+  int64 LimitNum = 2;
+  int64 ExpiredTime = 3;
+  bool Pwd = 4;
+  string ShareId = 5;
+  string Token = 6;
+  string Module = 7;
+}
+
+message HTTPFlowsShareResponse {
+  string ShareId = 1;
+  string ExtractCode = 2;
+}
+
+message HTTPFlowsExtractRequest {
+  string ShareExtractContent = 1;
 }
 
 message TagsCode {
