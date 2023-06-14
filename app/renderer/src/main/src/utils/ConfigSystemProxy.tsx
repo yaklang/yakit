@@ -140,10 +140,11 @@ export const showConfigSystemProxyForm = (addr?: string) => {
 
 interface ConfigChromePathProp {
     onClose: () => void
+    submitAlreadyChromePath: (v:boolean) => void
 }
 
 export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
-    const {onClose} = props
+    const {onClose,submitAlreadyChromePath} = props
     const [loading, setLoading] = useState<boolean>(true)
     const [chromePath,setChromePath] = useState<string>()
 
@@ -158,6 +159,12 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
 
     const onSetChromePath = useMemoizedFn(() => {
         setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(chromePath))
+        if(chromePath&&chromePath.length>0){
+            submitAlreadyChromePath(true)  
+        }
+        else{
+            submitAlreadyChromePath(false) 
+        }
         info("设置Chrome启动路径成功")
         onClose()
     })
@@ -198,7 +205,7 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
         </YakitSpin>
     )
 }
-export const showConfigChromePathForm = () => {
+export const showConfigChromePathForm = (fun) => {
     const m = showYakitModal({
         title: null,
         width: 450,
@@ -211,6 +218,7 @@ export const showConfigChromePathForm = () => {
                     onClose={() => {
                         m.destroy()
                     }}
+                    submitAlreadyChromePath={fun}
                 />
             </>
         )

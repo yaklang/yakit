@@ -341,6 +341,20 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         setPluginShow(true)
     })
 
+    // 是否已经设置过Chrome启动路径
+    const [isAlreadyChromePath,setAlreadyChromePath] = useState<boolean>(false)
+    const setAlreadyChromePathStatus = (is:boolean) => setAlreadyChromePath(is)
+    
+    useEffect(()=>{
+        getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
+            if (!setting) return
+            const values:string = JSON.parse(setting)
+            if(values.length>0){
+                setAlreadyChromePath(true)
+            }
+        })
+    },[])
+    
     const content = useMemo(() => {
         return (
             <div className={styles["global-state-content-wrapper"]}>
@@ -447,7 +461,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             {/* Chrome启动路径 */}
                             {showChromeWarn&&<div className={styles["body-info"]}>
                                     <div className={styles["info-left"]}>
-                                        <WarningIcon />
+                                        {isAlreadyChromePath?<SuccessIcon/>:<WarningIcon />}
                                         <div className={styles["left-body"]}>
                                             <div className={styles["title-style"]}>Chrome启动路径</div>
                                             <div className={styles["subtitle-style"]}>如无法启动Chrome，请配置Chrome启动路径</div>
@@ -459,10 +473,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                             className={styles["btn-style"]}
                                             onClick={() => {
                                                 setShow(false)
-                                                showConfigChromePathForm()
+                                                showConfigChromePathForm(setAlreadyChromePathStatus)
                                             }}
                                         >
-                                            去配置
+                                            {isAlreadyChromePath?"已配置":"去配置"}
                                         </YakitButton>
                                     </div>
                                 </div>}
@@ -549,7 +563,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 </div>
             </div>
         )
-    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy, timeInterval])
+    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy, timeInterval,isAlreadyChromePath])
 
     return (
         <>
