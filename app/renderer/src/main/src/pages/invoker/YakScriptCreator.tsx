@@ -537,7 +537,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     {!fullscreen && (
                         <div style={{height: 400}}>
                             <YakEditor
-                                type={"yak"}
+                                type={params.Type==="nuclei"?"yaml":"yak"}
                                 setValue={(Content) => setParams({...params, Content})}
                                 value={params.Content}
                             />
