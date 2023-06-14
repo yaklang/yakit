@@ -176,9 +176,9 @@ export interface YakitResizeBoxProps {
     /** 是否允许拖拽 默认可拖拽 */
     freeze?: boolean
     /** 是否默认展示浅色线条样式 */
-    isShowDefaultLineStyle?:boolean
+    isShowDefaultLineStyle?: boolean
     /** 线条占据空间的方向 */
-    lineDirection?: "top"|"bottom"|"left"|"right"
+    lineDirection?: "top" | "bottom" | "left" | "right"
     /** 第一块所占比例 支持 百分比/像素 */
     firstRatio?: string
     /** 第一块最小大小 */
@@ -287,14 +287,42 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         const bodySize = bodysize || (isVer ? body.clientHeight : body.clientWidth)
         const firstSize = isVer ? first.clientHeight : first.clientWidth
         const secondSize = isVer ? second.clientHeight : second.clientWidth
+
+        // 计算最小值 最小值存在px与number两种情况
+        const countMinSize = (val:string|number):number => {
+            if(typeof val === "string"){
+                let pixelNum = parseInt(val.replace("px",""));
+                return pixelNum
+            }
+            return val 
+        }
+
         if (bodySize) {
             // 重新计算时按照之前比例赋予新宽高
             if (isVer) {
-                first.style.height = `${(bodySize * firstSize) / (firstSize + secondSize)}px`
-                second.style.height = `${(bodySize * secondSize) / (firstSize + secondSize)}px`
+                const firstHeight = (bodySize * firstSize) / (firstSize + secondSize)
+                const secondHeight = (bodySize * secondSize) / (firstSize + secondSize)
+                first.style.height = `${firstHeight}px`
+                second.style.height = `${secondHeight}px`
+                // 当前高度小于最小高度时 采用最小值
+                if(firstHeight<countMinSize(firstMinSize)){
+                    first.style.height = `${countMinSize(firstMinSize)}px`
+                }
+                if(secondHeight<countMinSize(secondMinSize)){
+                    second.style.height = `${countMinSize(secondMinSize)}px`
+                }
             } else {
-                first.style.width = `${(bodySize * firstSize) / (firstSize + secondSize)}px`
-                second.style.width = `${(bodySize * secondSize) / (firstSize + secondSize)}px`
+                const firstWidth = (bodySize * firstSize) / (firstSize + secondSize)
+                const secondWidth = (bodySize * secondSize) / (firstSize + secondSize)
+                first.style.width = `${firstWidth}px`
+                second.style.width = `${secondWidth}px`
+                // 当前宽度小于最小宽度时 采用最小值
+                if(firstWidth<countMinSize(firstMinSize)){
+                    first.style.width = `${countMinSize(firstMinSize)}px`
+                }
+                if(secondWidth<countMinSize(secondMinSize)){
+                    second.style.width = `${countMinSize(secondMinSize)}px`
+                }
             }
         }
     }
@@ -325,6 +353,11 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         if (firstRenderRef.current) return
         bodyResize()
     }, [bodyWidth, bodyHeight])
+
+    useEffect(()=>{
+        // 判断使用最小值还是默认值
+        bodyResize()
+    },[firstRatio,secondRatio])
 
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className={styles["resize-box"]}>
@@ -377,17 +410,17 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                         height: `${isVer ? "8px" : "100%"}`,
                         cursor: `${isVer ? "row-resize" : "col-resize"}`
                     }}
-                    className={classNames(styles["resize-split-line"],{
-                    [styles["resize-split-line-top"]]: lineDirection==="top"&&isVer,
-                    [styles["resize-split-line-bottom"]]: lineDirection==="bottom"&&isVer,
-                    [styles["resize-split-line-left"]]: lineDirection==="left"&&!isVer,
-                    [styles["resize-split-line-right"]]: lineDirection==="right"&&!isVer,
-                    }) }
+                    className={classNames(styles["resize-split-line"], {
+                        [styles["resize-split-line-top"]]: lineDirection === "top" && isVer,
+                        [styles["resize-split-line-bottom"]]: lineDirection === "bottom" && isVer,
+                        [styles["resize-split-line-left"]]: lineDirection === "left" && !isVer,
+                        [styles["resize-split-line-right"]]: lineDirection === "right" && !isVer
+                    })}
                 >
                     <div
                         className={classNames({
-                            [styles["resize-split-line-in"]]:isShowDefaultLineStyle,
-                            [styles["resize-split-line-in-hide"]]:!isShowDefaultLineStyle,
+                            [styles["resize-split-line-in"]]: isShowDefaultLineStyle,
+                            [styles["resize-split-line-in-hide"]]: !isShowDefaultLineStyle,
                             [styles["resize-split-line-in-ver"]]: isVer,
                             [styles["resize-split-line-in-nover"]]: !isVer
                         })}
