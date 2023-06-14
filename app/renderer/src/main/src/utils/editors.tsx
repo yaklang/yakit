@@ -1441,6 +1441,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 setMonacoEditor(editor)
                             }}
                             editorOperationRecord={props.editorOperationRecord}
+                            defaultHttps={props.defaultHttps}
                             {...props.extraEditorProps}
                         />
                     )}

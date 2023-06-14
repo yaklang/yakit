@@ -317,6 +317,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             noHex={true}
                                             noHeader={true}
                                             originValue={new Buffer(flow.Request)}
+                                            defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
                                         />
                                     </div>
@@ -331,6 +332,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             noHex={true}
                                             noHeader={true}
                                             originValue={new Buffer(flow.Response)}
+                                            defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
                                         />
                                     </div>
