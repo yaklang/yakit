@@ -388,10 +388,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         params: [{Key: "", Value: ""}],
         // 匹配器
         filterMode: "drop",
-        Matchers:[],
-        MatchersCondition:'and',
+        matchers:[],
+        matchersCondition:'and',
         // 提取器
-        Extractors:[],
+        extractors:[],
     })
     // params
     // const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
@@ -728,10 +728,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // 设置变量
             Params: advancedConfigValue.params,
             //匹配器
-            Matchers:[],
-            MatchersCondition:'',
+            Matchers:advancedConfigValue.matchers,
+            MatchersCondition:advancedConfigValue.matchersCondition,
             //提取器
-            Extractors:[],
+            Extractors:advancedConfigValue.extractors,
         }
         if (advancedConfigValue.proxy) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
@@ -1261,6 +1261,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * @@description 获取高级配置中的Form values
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
+        console.log('val',val)
         setAdvancedConfigValue({
             ...val,
             forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,

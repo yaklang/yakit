@@ -60,10 +60,10 @@ export interface AdvancedConfigValueProps {
     params: FuzzerParamItem[]
     // 匹配器
     filterMode: "drop" | "match" | 'onlyMatch'
-    Matchers: HTTPResponseMatcher[]
-    MatchersCondition: 'and'|'or'
+    matchers: HTTPResponseMatcher[]
+    matchersCondition: 'and'|'or'
     //提取器
-    Extractors: HTTPResponseExtractor[]
+    extractors: HTTPResponseExtractor[]
 }
 
 export interface FuzzerParamItem {

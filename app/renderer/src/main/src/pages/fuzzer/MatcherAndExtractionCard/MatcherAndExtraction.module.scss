@@ -46,6 +46,7 @@
             color: var(--yakit-helper-text-color);
             .primary-number {
                 color: var(--yakit-primary-5);
+                margin: 0 4px;
             }
         }
         .matching-extraction-extra {
@@ -55,6 +56,7 @@
     }
     .matching-extraction-content {
         padding: 12px;
+        position: relative;
         :global {
             .ant-collapse > .ant-collapse-item > .ant-collapse-header {
                 padding: 2px 8px;
@@ -69,7 +71,18 @@
             .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
                 padding: 0;
             }
+            .ant-collapse-item {
+                border: 1px solid var(--yakit-border-color);
+                border-radius: 4px;
+            }
+            .ant-collapse-item + .ant-collapse-item {
+                margin-top: 8px;
+            }
+            .ant-collapse-ghost > .ant-collapse-item:last-child {
+                border-bottom: 1px solid var(--yakit-border-color);
+            }
         }
+
         .matching-extraction-condition {
             @include flex-space-between-and-center;
             margin-bottom: 8px;
@@ -85,8 +98,6 @@
             }
         }
         .matcher-extraction-collapse {
-            border-radius: 4px;
-            border: 1px solid var(--yakit-border-color);
             .collapse-panel-header {
                 @include flex-center;
                 gap: 4px;
@@ -94,7 +105,6 @@
                     color: var(--yakit-helper-text-color);
                 }
                 .header-number {
-                    width: 18px;
                     height: 16px;
                     padding: 2px 6px;
                     background: var(--yakit-background-color);
@@ -105,16 +115,8 @@
                     color: var(--yakit-body-text-color);
                 }
             }
-            .collapse-panel-condition {
-                background-color: var(--yakit-card-background-color);
-                padding: 12px 8px;
-            }
-            .matching-extraction-list-value{
-
-            }
         }
     }
-
     .remove-icon {
         margin-left: 8px;
         color: var(--yakit-helper-text-color);
@@ -123,16 +125,109 @@
             height: 16px;
         }
     }
+    .trash-icon {
+        color: var(--yakit-danger-5);
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        @include flex-center;
+        justify-content: center;
+        cursor: pointer;
+        &:hover {
+            background-color: var(--yakit-background-color);
+        }
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 }
 
+.collapse-panel-condition {
+    background-color: var(--yakit-card-background-color);
+    padding: 12px 8px;
+}
+.collapse-panel-condition-notEditable {
+    pointer-events: none;
+}
+.matching-extraction-list-value {
+    padding: 12px 8px;
+    .matcher-item-textarea-body {
+        position: relative;
+        display: flex;
+        flex: 1;
+        min-height: 24px;
+        &:hover,
+        &:active,
+        &:focus {
+            .matcher-item-textarea,
+            .resizer-icon {
+                background-color: var(--yakit-card-background-color);
+            }
+        }
+        textarea::placeholder {
+            color: var(--yakit-disable-text-color);
+            font-size: 12px;
+        }
+        textarea::-webkit-resizer {
+            background-color: transparent;
+        }
+        .matcher-item-textarea {
+            border: 0;
+            width: 100%;
+            outline: none;
+            outline: 0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            overflow-y: overlay;
+            min-height: 24px;
+            line-height: 16px;
+        }
+        .resizer-icon {
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            color: var(--yakit-body-text-color);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .matcher-item-text {
+            word-break: break-all;
+            line-height: 16px;
+            padding: 4px 8px;
+        }
+    }
+    .matcher-item-operate {
+        @include flex-center;
+        gap: 4px;
+        margin-left: 4px;
+    }
+    .add-matcher {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        .divider {
+            height: 1px;
+            width: 100%;
+            background-color: var(--yakit-border-color);
+            transform: scaleY(0.5);
+            transform-origin: 50% 100%;
+        }
+    }
+}
 .label-node {
-    @include flex-center;
+    display: flex;
+    align-items: self-start;
     font-size: 12px;
     color: var(--yakit-header-color);
+    min-height: 24px;
     .label {
         width: 104px;
         text-align: right;
         margin-right: 4px;
+        height: 24px;
+        @include flex-center;
+        justify-content: flex-end;
     }
 }
 

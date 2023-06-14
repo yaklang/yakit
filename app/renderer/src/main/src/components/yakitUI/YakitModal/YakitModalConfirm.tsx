@@ -159,6 +159,17 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
             visible={visible}
             closable={true}
             destroyOnClose={true}
+            closeIcon={
+                <div
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        setVisible(false)
+                    }}
+                    className='modal-remove-icon'
+                >
+                    <RemoveIcon />
+                </div>
+            }
             {...props}
         />
     )

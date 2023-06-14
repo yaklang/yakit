@@ -1,3 +1,15 @@
+@import "../MatcherAndExtractionCard/MatcherAndExtraction.module.scss";
+
+@mixin circle-number {
+    height: 16px;
+    padding: 2px 6px;
+    background: var(--yakit-background-color);
+    border-radius: 8px;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 12px;
+    color: var(--yakit-body-text-color);
+}
 .http-query-advanced-config {
     display: flex;
     flex-direction: column;
@@ -37,7 +49,7 @@
             height: auto;
         }
     }
-    .btn-padding-right-0{
+    .btn-padding-right-0 {
         padding-right: 0;
     }
     .chevron-down-icon {
@@ -180,7 +192,7 @@
                     position: absolute;
                     bottom: 6px;
                     right: 0;
-                    color: var(--yakit-disable-text-color);
+                    color: var(--yakit-body-text-color);
                     z-index: 0;
                     pointer-events: none;
                 }
@@ -192,12 +204,16 @@
             padding-right: 6px;
         }
     }
+    .plus-button-bolck {
+        width: 100%;
+    }
     .matchers-panel {
         display: flex;
         align-items: center;
-    }
-    .plus-button-bolck{
-        width: 100%;
+        .matchers-number {
+            @include circle-number;
+            margin: 0 4px;
+        }
     }
     .matchers-heard {
         display: flex;
@@ -210,16 +226,78 @@
             }
         }
     }
-    .matchers-number {
-        width: 18px;
-        height: 16px;
-        padding: 2px 6px;
-        background: var(--yakit-background-color);
-        border-radius: 8px;
-        font-weight: 400;
-        font-size: 10px;
-        line-height: 12px;
-        color: var(--yakit-body-text-color);
-        margin: 0 4px;
+    .matchersList-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2px 8px;
+        border: 1px solid var(--yakit-border-color);
+        border-radius: 4px;
+        background: #ffffff;
+        &:hover {
+            .matchersList-item-operate {
+                visibility: visible;
+            }
+        }
+        .matchersList-item-heard {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            .item-id {
+                color: var(--yakit-helper-text-color);
+            }
+            .item-number {
+                @include circle-number;
+            }
+        }
+        .matchersList-item-operate {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            visibility: hidden;
+
+            svg {
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+            .trash-icon {
+                color: var(--yakit-danger-5);
+                &:hover {
+                    color: var(--yakit-danger-4);
+                }
+                &:active,
+                &:focus {
+                    color: var(--yakit-danger-6);
+                }
+            }
+            .pencilAlit-icon,
+            .terminal-icon {
+                color: var(--yakit-body-text-color);
+            }
+        }
+        .matchersList-item-operate-hover{
+            visibility: visible;
+        }
+    }
+    .matchersList-item + .matchersList-item {
+        margin-top: 4px;
     }
 }
+
+.terminal-popover {
+    width: 600px;
+    padding: 12px 0;
+    :global {
+        .ant-popover-inner-content {
+            padding: 4px;
+            max-height: 400px;
+            overflow-y: overlay;
+        }
+    }
+}
+
+// .notEditable-mask{
+
+// }

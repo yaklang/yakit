@@ -6,7 +6,9 @@ import {
     PlusIcon,
     TrashIcon,
     ResizerIcon,
-    HollowLightningBoltIcon
+    HollowLightningBoltIcon,
+    PencilAltIcon,
+    TerminalIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -30,14 +32,19 @@ import {StringToUint8Array} from "@/utils/str"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {
     MatcherAndExtractionCard,
+    MatcherCollapse,
+    MatcherItem,
     defMatcherAndExtractionCode,
     defaultMatcherItem,
     filterModeOptions,
+    matcherTypeList,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {Route} from "@/routes/routeSpec"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
+import {HTTPResponseMatcher, MatcherValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -55,6 +62,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
+    const [defActiveKey, setDefActiveKey] = useState<string>("")
 
     const [form] = Form.useForm()
     const queryRef = useRef(null)
@@ -64,9 +72,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const noRetry = useWatch("noRetry", form)
     const etcHosts = useWatch("etcHosts", form) || []
     const gmTLS = useWatch("isGmTLS", form)
-    const matchersList = useWatch("Matchers", form) || []
-    const extractorList = useWatch("Extractors", form) || []
-    const matchersCondition = useWatch("MatchersCondition", form) || []
+    const matchersList = useWatch("matchers", form) || []
+    const extractorList = useWatch("extractors", form) || []
+    const matchersCondition = useWatch("matchersCondition", form)
+    const filterMode = useWatch("filterMode", form)
 
     const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${Route.HTTPFuzzer}`)) || {
         width: 0,
@@ -171,7 +180,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 HTTPResponse: StringToUint8Array(defMatcherAndExtractionCode)
             })
             .then((rsp: {Results: {Key: string; Value: string}[]}) => {
-                console.log("rsp.Results", rsp.Results)
                 showYakitModal({
                     title: "渲染后变量内容",
                     content: (
@@ -201,13 +209,25 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const onAddMatchingAndExtractionCard = useMemoizedFn(() => {
         if (matchersList.length === 0) {
-            form.setFieldsValue({
-                Matchers: [defaultMatcherItem]
+            const v = form.getFieldsValue()
+            onSetValue({
+                ...v,
+                matchers: [defaultMatcherItem]
             })
         }
         setVisibleDrawer(true)
     })
-
+    const onRemoveMatcher = useMemoizedFn((_, i) => {
+        const v = form.getFieldsValue()
+        onSetValue({
+            ...v,
+            matchers: matchersList.filter((m, n) => n !== i)
+        })
+    })
+    const onEditMatcher = useMemoizedFn((_, index) => {
+        setVisibleDrawer(true)
+        setDefActiveKey(`ID:${index}`)
+    })
     return (
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>
@@ -225,7 +245,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 initialValues={{
                     ...advancedConfigValue
                 }}
-                className="yakit-collapse"
+                className='yakit-collapse'
             >
                 <div className={styles["advanced-config-extra-formItem"]}>
                     <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
@@ -720,7 +740,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         const restValue = {
-                                            Matchers: []
+                                            matchers: []
                                         }
                                         onReset(restValue)
                                     }}
@@ -751,7 +771,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item name='filterMode' noStyle>
                                 <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
                             </Form.Item>
-                            <Form.Item name='MatchersCondition' noStyle>
+                            <Form.Item name='matchersCondition' noStyle>
                                 <YakitRadioButtons
                                     buttonStyle='solid'
                                     options={matchersConditionOptions}
@@ -759,7 +779,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 />
                             </Form.Item>
                         </div>
-                        <MatchersList matchersList={matchersList} onAdd={() => onAddMatchingAndExtractionCard()} />
+                        <MatchersList
+                            matcherValue={{filterMode, matchersList, matchersCondition}}
+                            onAdd={onAddMatchingAndExtractionCard}
+                            onRemove={onRemoveMatcher}
+                            onEdit={onEditMatcher}
+                        />
                     </Panel>
                 </Collapse>
             </Form>
@@ -774,9 +799,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 placement='bottom'
             >
                 <MatcherAndExtractionCard
-                    matcherValue={{filterMode: "drop", matchersList: matchersList, matchersCondition}}
+                    httpResponse=''
+                    defActiveKey={defActiveKey}
+                    matcherValue={{filterMode, matchersList, matchersCondition}}
                     extractorValue={{extractorList}}
                     onClose={() => setVisibleDrawer(false)}
+                    onSave={(matcher, extractor) => {
+                        const v = form.getFieldsValue()
+                        onSetValue({
+                            ...v,
+                            filterMode: matcher.filterMode,
+                            matchers: matcher.matchersList,
+                            matchersCondition: matcher.matchersCondition,
+                            extractors: extractor.extractorList
+                        })
+                    }}
                 />
             </YakitDrawer>
         </div>
@@ -805,16 +842,50 @@ const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
 })
 
 interface MatchersListProps {
-    matchersList: any[]
+    matcherValue: MatcherValueProps
     onAdd: () => void
+    onRemove: (m: HTTPResponseMatcher, index: number) => void
+    onEdit: (m: HTTPResponseMatcher, index: number) => void
 }
 const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
-    const {matchersList, onAdd} = props
+    const {matcherValue, onAdd, onRemove, onEdit} = props
+    const {matchersList} = matcherValue
+    const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
     return (
         <>
-            <Form.Item name='Matchers' noStyle>
-                {matchersList.map((item) => (
-                    <div>44</div>
+            <Form.Item name='matchers' noStyle>
+                {matchersList.map((matcherItem, index) => (
+                    <div className={styles["matchersList-item"]}>
+                        <div className={styles["matchersList-item-heard"]}>
+                            <span className={styles["item-id"]}>ID&nbsp;{index}</span>
+                            <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
+                            <span className={styles["item-number"]}>{matcherItem.Group.length}</span>
+                        </div>
+                        <div
+                            className={classNames(styles["matchersList-item-operate"], {
+                                [styles["matchersList-item-operate-hover"]]: visiblePopover
+                            })}
+                        >
+                            <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove(matcherItem, index)} />
+                            <PencilAltIcon
+                                className={styles["pencilAlit-icon"]}
+                                onClick={() => onEdit(matcherItem, index)}
+                            />
+                            <YakitPopover
+                                placement='topRight'
+                                overlayClassName={classNames(
+                                    "yakit-collapse",
+                                    styles["matching-extraction-content"],
+                                    styles["terminal-popover"]
+                                )}
+                                content={<MatcherItem matcherItem={matcherItem} onEdit={() => {}} notEditable={true} />}
+                                visible={visiblePopover}
+                                onVisibleChange={setVisiblePopover}
+                            >
+                                <TerminalIcon className={styles["terminal-icon"]} />
+                            </YakitPopover>
+                        </div>
+                    </div>
                 ))}
             </Form.Item>
             {matchersList.length === 0 && (
