@@ -17,7 +17,8 @@
     --input-number-hover-error-color: var(--yakit-danger-5);
 
     --input-number-background-disabled-color: var(--yakit-background-color);
-
+    
+    background-color: var(--yakit-background-color-color);
     :global {
         .ant-input-number {
             border-color: var(--input-number-border-color);

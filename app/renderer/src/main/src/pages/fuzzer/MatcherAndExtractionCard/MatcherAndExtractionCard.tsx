@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {ReactNode, useEffect, useState} from "react"
 import {
     ExtractorValueProps,
     HTTPResponseExtractor,
@@ -10,16 +10,21 @@ import {
     labelNodeItemProps,
     MatcherItemProps,
     MatchHTTPResponseParams,
-    ColorSelectProps
+    ColorSelectProps,
+    MatchingAndExtraction,
+    ExtractorCollapseProps,
+    ExtractorItemProps,
+    MatcherAndExtractionValueListProps
 } from "./MatcherAndExtractionCardType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {HTTPPacketEditor} from "@/utils/editors"
+import {HTTPPacketEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import styles from "./MatcherAndExtraction.module.scss"
 import {
     ChevronDownIcon,
     ChevronRightIcon,
     ColorSwatchIcon,
+    PencilAltIcon,
     PlusIcon,
     RemoveIcon,
     ResizerIcon,
@@ -29,16 +34,18 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Collapse} from "antd"
 import classNames from "classnames"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import _ from "lodash"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {randomString} from "@/utils/randomUtil"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -110,6 +117,14 @@ export const matcherTypeList = [
     {label: "表达式", value: "nuclei-dsl"}
 ]
 
+export const extractorTypeList = [
+    {label: "正则表达式", value: "regex"},
+    {label: "XPath", value: "xpath"},
+    {label: "键值对", value: "kval"},
+    {label: "JQ(*)", value: "json"},
+    {label: "表达式", value: "nuclei-dsl"}
+]
+
 export const defMatcherAndExtractionCode =
     "HTTP/1.1 200 OK\r\n" +
     "Date: Mon, 23 May 2005 22:38:34 GMT\r\n" +
@@ -131,7 +146,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
             <YakitResizeBox
                 firstNode={
                     <div className={styles["matching-extraction-editor"]}>
-                        <HTTPPacketEditor
+                        <NewHTTPPacketEditor
                             bordered={false}
                             noHeader={true}
                             originValue={StringToUint8Array(codeValue)}
@@ -149,11 +164,13 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
 })
 
 const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((props) => {
-    const {onClose, onSave, extractorValue, matcherValue, defActiveKey, httpResponse} = props
-    const [type, setType] = useState<"matchers" | "extractors">("matchers")
+    const {onClose, onSave, extractorValue, matcherValue, defActiveKey, httpResponse, defActiveType} = props
+    const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
     const [matcher, setMatcher] = useState<MatcherValueProps>(matcherValue)
     const [extractor, setExtractor] = useState<ExtractorValueProps>(extractorValue)
-
+    useEffect(() => {
+        setType(defActiveType)
+    }, [defActiveType])
     useEffect(() => {
         setMatcher(_.cloneDeepWith(matcherValue))
     }, [matcherValue])
@@ -184,7 +201,7 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
         }
         setMatcher({
             ...matcher,
-            matchersList: [...matcher.matchersList, _.cloneDeepWith({...defaultMatcherItem, Id: randomString(8)})]
+            matchersList: [...matcher.matchersList, _.cloneDeepWith(defaultMatcherItem)]
         })
     })
     const onAddExtractors = useMemoizedFn(() => {
@@ -194,7 +211,7 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
         }
         setExtractor({
             ...extractor,
-            extractorList: [...extractor.extractorList, _.cloneDeepWith({...defaultExtractorItem, Id: randomString(8)})]
+            extractorList: [...extractor.extractorList, _.cloneDeepWith(defaultExtractorItem)]
         })
     })
     const onExecute = useMemoizedFn(() => {
@@ -224,30 +241,34 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
         })
     })
     const onExecuteExtractors = useMemoizedFn(() => {
-        // ipcRenderer.invoke("ExtractHTTPResponse", {
-        //     Extractors: extractors,
-        //     HTTPResponse: data,
-        // }).then((obj: { Values: { Key: string, Value: string }[] }) => {
-        //     if (!obj) {
-        //         failed("匹配不到有效结果")
-        //         return
-        //     }
-        //     if ((obj?.Values || []).length <= 0) {
-        //         failed("匹配不到有效结果")
-        //         return
-        //     }
-        //     showYakitModal({
-        //         title: "提取结果",
-        //         width: "60%",
-        //         content: (
-        //             <Space style={{margin: 24}} direction={"vertical"}>
-        //                 {obj.Values.map(i => {
-        //                     return `${i.Key}: ${i.Value}`
-        //                 })}
-        //             </Space>
-        //         )
-        //     })
-        // })
+        ipcRenderer
+            .invoke("ExtractHTTPResponse", {
+                HTTPResponse: httpResponse,
+                Extractors: extractor.extractorList
+            })
+            .then((obj: {Values: {Key: string; Value: string}[]}) => {
+                console.log("obj", obj)
+                if (!obj) {
+                    yakitNotify("error", "匹配不到有效结果")
+                    return
+                }
+                if ((obj?.Values || []).length <= 0) {
+                    yakitNotify("error", "匹配不到有效结果")
+                    return
+                }
+                showYakitModal({
+                    title: "提取结果",
+                    width: "60%",
+                    footer: <></>,
+                    content: (
+                        <div style={{margin: 24}}>
+                            {obj.Values.map((i) => {
+                                return <p>{`${i.Key}: ${i.Value}`}</p>
+                            })}
+                        </div>
+                    )
+                })
+            })
     })
     const onApply = useMemoizedFn(() => {
         if (onIsEmpty()) {
@@ -276,10 +297,10 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
                 })
                 const newExtractorList: HTTPResponseExtractor[] = []
                 extractor.extractorList.forEach((item) => {
-                    if (item.Groups.filter((g) => _.isEqual(g, {Name: "", Rule: ""})).length > 0) {
+                    if (item.Groups.findIndex((g) => g === "") !== 0) {
                         newExtractorList.push({
                             ...item,
-                            Groups: item.Groups.filter((g) => !g)
+                            Groups: item.Groups.filter((g) => g !== "")
                         })
                     }
                 })
@@ -321,6 +342,7 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
             })
         }
     })
+
     return (
         <div className={styles["matching-extraction"]}>
             <div className={styles["matching-extraction-heard"]}>
@@ -328,7 +350,20 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
                     <YakitRadioButtons
                         value={type}
                         onChange={(e) => {
-                            setType(e.target.value)
+                            const {value} = e.target
+                            setType(value)
+                            if (value === "matchers" && matcher.matchersList.length === 0) {
+                                setMatcher({
+                                    ...matcher,
+                                    matchersList: [_.cloneDeepWith(defaultMatcherItem)]
+                                })
+                            }
+                            if (value === "extractors" && extractor.extractorList.length === 0) {
+                                setExtractor({
+                                    ...extractor,
+                                    extractorList: [_.cloneDeepWith(defaultExtractorItem)]
+                                })
+                            }
                         }}
                         buttonStyle='solid'
                         options={[
@@ -363,13 +398,19 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
                     <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()} />
                 </div>
             </div>
-            <MatcherCollapse matcher={matcher} setMatcher={setMatcher} defActiveKey={defActiveKey} />
+            <MatcherCollapse type={type} matcher={matcher} setMatcher={setMatcher} defActiveKey={defActiveKey} />
+            <ExtractorCollapse
+                type={type}
+                extractor={extractor}
+                setExtractor={setExtractor}
+                defActiveKey={defActiveKey}
+            />
         </div>
     )
 })
 
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props) => {
-    const {matcher, setMatcher, notEditable, defActiveKey} = props
+    const {type, matcher, setMatcher, notEditable, defActiveKey} = props
     const [activeKey, setActiveKey] = useState<string>("ID:0")
     useEffect(() => {
         setActiveKey(defActiveKey)
@@ -387,7 +428,11 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
         })
     })
     return (
-        <div className={classNames("yakit-collapse", styles["matching-extraction-content"])}>
+        <div
+            className={classNames("yakit-collapse", styles["matching-extraction-content"], {
+                [styles["matching-extraction-content-hidden"]]: type !== "matchers"
+            })}
+        >
             <div className={styles["matching-extraction-condition"]}>
                 <div className={styles["condition-mode"]}>
                     <span className={styles["condition-mode-text"]}>过滤器模式</span>
@@ -537,65 +582,283 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                     <YakitSwitch checked={matcherItem.Negative} onChange={(checked) => onEdit("Negative", checked)} />
                 </LabelNodeItem>
             </div>
-            <div className={styles["matching-extraction-list-value"]}>
-                {matcherItem.Group.map((groupItem, number) => (
-                    <LabelNodeItem label={`Data_${number}`} key={`Data_${number}`}>
-                        <div className={styles["matcher-item-textarea-body"]}>
-                            {notEditable ? (
-                                <div className={styles["matcher-item-text"]}>{groupItem}</div>
-                            ) : (
-                                <>
-                                    <textarea
-                                        value={groupItem}
-                                        onChange={(e) => {
-                                            const {value} = e.target
-                                            matcherItem.Group[number] = value
-                                            onEdit("Group", matcherItem.Group)
-                                        }}
-                                        rows={1}
-                                        placeholder='请输入...'
-                                        className={styles["matcher-item-textarea"]}
-                                    />
-                                    <ResizerIcon className={styles["resizer-icon"]} />
-                                </>
-                            )}
+            <MatcherAndExtractionValueList
+                group={matcherItem.Group}
+                notEditable={notEditable}
+                onEditGroup={(g) => {
+                    onEdit("Group", g)
+                }}
+                onAddGroup={() => {
+                    if (isMatcherItemEmpty(matcherItem)) {
+                        yakitNotify("error", "请将已添加条件配置完成后再新增")
+                        return
+                    } else {
+                        matcherItem.Group.push("")
+                        onEdit("Group", matcherItem.Group)
+                    }
+                }}
+            />
+        </>
+    )
+})
+
+const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps> = React.memo((props) => {
+    const {group, notEditable, onEditGroup, onAddGroup} = props
+    return (
+        <div className={styles["matching-extraction-list-value"]}>
+            {group.map((groupItem, number) => (
+                <LabelNodeItem label={`Data_${number}`} key={`Data_${number}`}>
+                    <div className={styles["matcher-item-textarea-body"]}>
+                        {notEditable ? (
+                            <div className={styles["matcher-item-text"]}>{groupItem}</div>
+                        ) : (
+                            <>
+                                <textarea
+                                    value={groupItem}
+                                    onChange={(e) => {
+                                        const {value} = e.target
+                                        group[number] = value
+                                        onEditGroup(group)
+                                    }}
+                                    rows={1}
+                                    placeholder='请输入...'
+                                    className={styles["matcher-item-textarea"]}
+                                />
+                                <ResizerIcon className={styles["resizer-icon"]} />
+                            </>
+                        )}
+                    </div>
+                    {!notEditable && (
+                        <div className={styles["matcher-item-operate"]}>
+                            <TrashIcon
+                                className={styles["trash-icon"]}
+                                onClick={() => {
+                                    group.splice(number, 1)
+                                    onEditGroup(group)
+                                }}
+                            />
                         </div>
-                        {!notEditable && (
-                            <div className={styles["matcher-item-operate"]}>
+                    )}
+                </LabelNodeItem>
+            ))}
+            {!notEditable && (
+                <LabelNodeItem label={""}>
+                    <div className={styles["add-matcher"]}>
+                        <div className={styles["divider"]} />
+                        <YakitButton type='text' icon={<PlusIcon style={{height: 16}} />} onClick={() => onAddGroup()}>
+                            添加匹配内容
+                        </YakitButton>
+                    </div>
+                </LabelNodeItem>
+            )}
+        </div>
+    )
+})
+
+export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((props) => {
+    const {type, extractor, setExtractor, defActiveKey, notEditable} = props
+    const [activeKey, setActiveKey] = useState<string>("ID:0")
+    const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
+
+    useEffect(() => {
+        setActiveKey(defActiveKey)
+    }, [defActiveKey])
+    useEffect(() => {
+        const length = extractor.extractorList.length
+        setActiveKey(`ID:${length - 1}`)
+    }, [extractor.extractorList.length])
+    const onEdit = useMemoizedFn((field: string, value, index: number) => {
+        if (notEditable) return
+        extractor.extractorList[index][field] = value
+        setExtractor({
+            ...extractor,
+            extractorList: [...extractor.extractorList]
+        })
+    })
+    return (
+        <div
+            className={classNames("yakit-collapse", styles["matching-extraction-content"], {
+                [styles["matching-extraction-content-hidden"]]: type !== "extractors"
+            })}
+        >
+            <Collapse
+                activeKey={activeKey}
+                onChange={(key) => setActiveKey(key as string)}
+                accordion
+                ghost
+                expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                className={styles["matcher-extraction-collapse"]}
+            >
+                {extractor.extractorList.map((extractorItem, index) => (
+                    <Panel
+                        header={
+                            <div className={styles["collapse-panel-header"]}>
+                                <span className={classNames(styles["header-id"])}>
+                                    <span>{extractorItem.Name || `ID ${index}`}</span>
+                                    <YakitPopover
+                                        overlayClassName={styles["edit-name-popover"]}
+                                        content={
+                                            <div
+                                                className={styles["edit-name-popover-content"]}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                }}
+                                            >
+                                                <div className={styles["edit-name-popover-content-title"]}>
+                                                    修改名称
+                                                </div>
+                                                <YakitInput
+                                                    value={extractorItem.Name || `ID ${index}`}
+                                                    onChange={(e) => {
+                                                        if (e.target.value.length > 20) {
+                                                            yakitNotify("error", "字符长度不超过20")
+                                                            return
+                                                        }
+                                                        onEdit("Name", e.target.value, index)
+                                                    }}
+                                                    maxLength={20}
+                                                />
+                                            </div>
+                                        }
+                                        placement='top'
+                                        trigger={["click"]}
+                                        visible={editNameVisible}
+                                        onVisibleChange={setEditNameVisible}
+                                    >
+                                        <PencilAltIcon
+                                            className={classNames({
+                                                [styles["icon-active"]]: editNameVisible
+                                            })}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        />
+                                    </YakitPopover>
+                                </span>
+                                <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
+                                {extractorItem.Groups.length > 0 ? (
+                                    <span className={classNames("content-ellipsis", styles["header-number"])}>
+                                        {extractorItem.Groups.length}
+                                    </span>
+                                ) : (
+                                    <YakitTag color='danger' size='small'>
+                                        暂未设置条件
+                                    </YakitTag>
+                                )}
+                            </div>
+                        }
+                        extra={
+                            !notEditable && (
                                 <TrashIcon
                                     className={styles["trash-icon"]}
-                                    onClick={() => {
-                                        matcherItem.Group.splice(number, 1)
-                                        onEdit("Group", matcherItem.Group)
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        extractor.extractorList.splice(index, 1)
+                                        setExtractor({
+                                            ...extractor,
+                                            extractorList: [...extractor.extractorList]
+                                        })
+                                        if (index === 0) {
+                                            setActiveKey(`ID:${index + 1}`)
+                                        } else {
+                                            setActiveKey(`ID:${index - 1}`)
+                                        }
                                     }}
                                 />
-                            </div>
-                        )}
-                    </LabelNodeItem>
+                            )
+                        }
+                        key={`ID:${index}`}
+                    >
+                        <ExtractorItem
+                            extractorItem={extractorItem}
+                            notEditable={notEditable}
+                            onEdit={(field, value) => onEdit(field, value, index)}
+                        />
+                    </Panel>
                 ))}
-                {!notEditable && (
-                    <LabelNodeItem label={""}>
-                        <div className={styles["add-matcher"]}>
-                            <div className={styles["divider"]} />
-                            <YakitButton
-                                type='text'
-                                icon={<PlusIcon style={{height: 16}} />}
-                                onClick={() => {
-                                    if (isMatcherItemEmpty(matcherItem)) {
-                                        yakitNotify("error", "请将已添加条件配置完成后再新增")
-                                        return
-                                    } else {
-                                        matcherItem.Group.push("")
-                                        onEdit("Group", matcherItem.Group)
-                                    }
-                                }}
-                            >
-                                添加匹配内容
-                            </YakitButton>
-                        </div>
+            </Collapse>
+        </div>
+    )
+})
+
+export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) => {
+    const {notEditable, extractorItem, onEdit} = props
+    const onRenderTypeExtra: ReactNode = useCreation(() => {
+        switch (extractorItem.Type) {
+            case "regex":
+                return (
+                    <LabelNodeItem label='匹配正则分组'>
+                        <YakitInputNumber
+                            value={extractorItem.RegexpMatchGroup[0] || 0}
+                            onChange={(value) => onEdit("RegexpMatchGroup", [value])}
+                            type='horizontal'
+                        />
                     </LabelNodeItem>
-                )}
-            </div>
+                )
+            case "xpath":
+                return (
+                    <LabelNodeItem label='XPath 参数'>
+                        <YakitInput
+                            value={extractorItem.XPathAttribute}
+                            onChange={(e) => onEdit("XPathAttribute", e.target.value)}
+                        />
+                    </LabelNodeItem>
+                )
+            default:
+                return <></>
+        }
+    }, [extractorItem.Type, extractorItem.RegexpMatchGroup, extractorItem.XPathAttribute])
+    return (
+        <>
+            <>
+                <div
+                    className={classNames(styles["collapse-panel-condition"], {
+                        [styles["collapse-panel-condition-notEditable"]]: notEditable
+                    })}
+                >
+                    <LabelNodeItem label='提取类型'>
+                        <YakitRadioButtons
+                            value={extractorItem.Type}
+                            onChange={(e) => {
+                                onEdit("Type", e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={extractorTypeList}
+                        />
+                    </LabelNodeItem>
+                    <LabelNodeItem label='提取范围'>
+                        <YakitRadioButtons
+                            value={extractorItem.Scope}
+                            onChange={(e) => {
+                                onEdit("Scope", e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {label: "响应头", value: "body"},
+                                {label: "响应体", value: "header"},
+                                {label: "Raw", value: "raw"}
+                            ]}
+                        />
+                    </LabelNodeItem>
+                    {onRenderTypeExtra}
+                </div>
+                <MatcherAndExtractionValueList
+                    group={extractorItem.Groups}
+                    notEditable={notEditable}
+                    onEditGroup={(g) => {
+                        onEdit("Group", g)
+                    }}
+                    onAddGroup={() => {
+                        if (isExtractorEmpty(extractorItem)) {
+                            yakitNotify("error", "请将已添加条件配置完成后再新增")
+                            return
+                        } else {
+                            extractorItem.Groups.push("")
+                            onEdit("Groups", extractorItem.Groups)
+                        }
+                    }}
+                />
+            </>
         </>
     )
 })

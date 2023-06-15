@@ -1,7 +1,9 @@
 import { ReactNode } from "react"
 
+export type MatchingAndExtraction = "matchers" | "extractors"
+
 export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps {
-    defActiveKey: string
+
 }
 
 export interface MatcherAndExtractionProps {
@@ -11,6 +13,7 @@ export interface MatcherAndExtractionProps {
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     defActiveKey: string
+    defActiveType: MatchingAndExtraction
 }
 
 export interface MatcherValueProps {
@@ -25,11 +28,20 @@ export interface ExtractorValueProps {
     extractorList: HTTPResponseExtractor[]
 }
 
-export interface MatcherCollapseProps {
-    /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
-    notEditable?: boolean
+export interface MatcherCollapseProps extends MatcherAndExtractorProps {
     matcher: MatcherValueProps
     setMatcher: (m: MatcherValueProps) => void
+}
+
+export interface ExtractorCollapseProps extends MatcherAndExtractorProps {
+    extractor: ExtractorValueProps
+    setExtractor: (e: ExtractorValueProps) => void
+}
+
+interface MatcherAndExtractorProps {
+    type: MatchingAndExtraction
+    /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
+    notEditable?: boolean
     defActiveKey: string
 }
 
@@ -59,10 +71,17 @@ export interface labelNodeItemProps {
     children: ReactNode
 }
 
-export interface MatcherItemProps {
+export interface MatcherItemProps extends MatcherItemAndExtractorItemProps {
+    matcherItem: HTTPResponseMatcher
+}
+
+export interface ExtractorItemProps extends MatcherItemAndExtractorItemProps {
+    extractorItem: HTTPResponseExtractor
+}
+
+interface MatcherItemAndExtractorItemProps {
     /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
     notEditable?: boolean
-    matcherItem: HTTPResponseMatcher
     onEdit: (f: string, v: any) => void
 }
 
@@ -78,4 +97,11 @@ export interface ColorSelectProps {
     size?: "small" | "large" | "max"
     value?: string
     onChange?: (value: string) => void;
+}
+
+export interface MatcherAndExtractionValueListProps {
+    group: string[]
+    notEditable?: boolean
+    onEditGroup: (group: string[]) => void
+    onAddGroup: () => void
 }

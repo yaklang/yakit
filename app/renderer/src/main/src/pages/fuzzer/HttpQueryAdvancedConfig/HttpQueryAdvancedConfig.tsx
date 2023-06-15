@@ -22,7 +22,7 @@ import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Tag, Divider} from "antd"
 import {useWatch} from "antd/lib/form/Form"
-import React, {useState, useRef, useEffect, useMemo} from "react"
+import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
@@ -32,11 +32,14 @@ import {StringToUint8Array} from "@/utils/str"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {
     ColorSelect,
+    ExtractorItem,
     MatcherAndExtractionCard,
     MatcherCollapse,
     MatcherItem,
     defMatcherAndExtractionCode,
+    defaultExtractorItem,
     defaultMatcherItem,
+    extractorTypeList,
     filterModeOptions,
     matcherTypeList,
     matchersConditionOptions
@@ -44,7 +47,12 @@ import {
 import {Route} from "@/routes/routeSpec"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
-import {HTTPResponseMatcher, MatcherValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    ExtractorValueProps,
+    HTTPResponseMatcher,
+    MatcherValueProps,
+    MatchingAndExtraction
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 const {ipcRenderer} = window.require("electron")
@@ -62,8 +70,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
+
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const [defActiveKey, setDefActiveKey] = useState<string>("")
+    const [type, setType] = useState<MatchingAndExtraction>("matchers")
 
     const [form] = Form.useForm()
     const queryRef = useRef(null)
@@ -209,27 +219,56 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         })
     })
 
-    const onAddMatchingAndExtractionCard = useMemoizedFn(() => {
-        if (matchersList.length === 0) {
-            const v = form.getFieldsValue()
-            onSetValue({
-                ...v,
-                matchers: [defaultMatcherItem]
-            })
+    const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
+        const v = form.getFieldsValue()
+        switch (type) {
+            case "matchers":
+                if (matchersList.length === 0) {
+                    onSetValue({
+                        ...v,
+                        matchers: [defaultMatcherItem]
+                    })
+                }
+                break
+            case "extractors":
+                if (extractorList.length === 0) {
+                    onSetValue({
+                        ...v,
+                        extractors: [defaultExtractorItem]
+                    })
+                }
+                break
+            default:
+                break
         }
+        setType(type)
         setVisibleDrawer(true)
     })
-    const onRemoveMatcher = useMemoizedFn((_, i) => {
+    const onRemoveMatcher = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
         onSetValue({
             ...v,
             matchers: matchersList.filter((m, n) => n !== i)
         })
     })
-    const onEditMatcher = useMemoizedFn((_, index) => {
+    const onEditMatcher = useMemoizedFn((index) => {
         setVisibleDrawer(true)
         setDefActiveKey(`ID:${index}`)
+        setType("matchers")
     })
+    const onRemoveExtractors = useMemoizedFn((i) => {
+        const v = form.getFieldsValue()
+        onSetValue({
+            ...v,
+            extractors: extractorList.filter((m, n) => n !== i)
+        })
+    })
+    const onEditExtractors = useMemoizedFn((index) => {
+        setVisibleDrawer(true)
+        setDefActiveKey(`ID:${index}`)
+        setType("extractors")
+    })
+
     return (
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>
@@ -759,7 +798,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
                                             onSwitchCollapse([...activeKey, "匹配器"])
                                         }
-                                        onAddMatchingAndExtractionCard()
+                                        onAddMatchingAndExtractionCard("matchers")
                                     }}
                                     className={styles["btn-padding-right-0"]}
                                 >
@@ -788,9 +827,58 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </div>
                         <MatchersList
                             matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
-                            onAdd={onAddMatchingAndExtractionCard}
+                            onAdd={() => onAddMatchingAndExtractionCard("matchers")}
                             onRemove={onRemoveMatcher}
                             onEdit={onEditMatcher}
+                        />
+                    </Panel>
+                    <Panel
+                        header={
+                            <div className={styles["matchers-panel"]}>
+                                数据提取器<div className={styles["matchers-number"]}>{matchersList.length}</div>
+                            </div>
+                        }
+                        key='数据提取器'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    className='button-text-danger'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const restValue = {
+                                            extractors: []
+                                        }
+                                        onReset(restValue)
+                                    }}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    size='small'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
+                                            onSwitchCollapse([...activeKey, "数据提取器"])
+                                        }
+                                        onAddMatchingAndExtractionCard("extractors")
+                                    }}
+                                    className={styles["btn-padding-right-0"]}
+                                >
+                                    添加/调试
+                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <ExtractorsList
+                            extractorValue={{extractorList}}
+                            onAdd={() => onAddMatchingAndExtractionCard("extractors")}
+                            onRemove={onRemoveExtractors}
+                            onEdit={onEditExtractors}
                         />
                     </Panel>
                 </Collapse>
@@ -806,6 +894,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 placement='bottom'
             >
                 <MatcherAndExtractionCard
+                    defActiveType={type}
                     httpResponse=''
                     defActiveKey={defActiveKey}
                     matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
@@ -851,13 +940,12 @@ const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
 interface MatchersListProps {
     matcherValue: MatcherValueProps
     onAdd: () => void
-    onRemove: (m: HTTPResponseMatcher, index: number) => void
-    onEdit: (m: HTTPResponseMatcher, index: number) => void
+    onRemove: (index: number) => void
+    onEdit: (index: number) => void
 }
 const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit} = props
     const {matchersList} = matcherValue
-    const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
     return (
         <>
             <Form.Item name='matchers' noStyle>
@@ -868,30 +956,13 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                             <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
                             <span className={styles["item-number"]}>{matcherItem.Group.length}</span>
                         </div>
-                        <div
-                            className={classNames(styles["matchersList-item-operate"], {
-                                [styles["matchersList-item-operate-hover"]]: visiblePopover
-                            })}
-                        >
-                            <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove(matcherItem, index)} />
-                            <PencilAltIcon
-                                className={styles["pencilAlit-icon"]}
-                                onClick={() => onEdit(matcherItem, index)}
-                            />
-                            <YakitPopover
-                                placement='topRight'
-                                overlayClassName={classNames(
-                                    "yakit-collapse",
-                                    styles["matching-extraction-content"],
-                                    styles["terminal-popover"]
-                                )}
-                                content={<MatcherItem matcherItem={matcherItem} onEdit={() => {}} notEditable={true} />}
-                                visible={visiblePopover}
-                                onVisibleChange={setVisiblePopover}
-                            >
-                                <TerminalIcon className={styles["terminal-icon"]} />
-                            </YakitPopover>
-                        </div>
+                        <MatchersAndExtractorsListItemOperate
+                            onRemove={() => onRemove(index)}
+                            onEdit={() => onEdit(index)}
+                            popoverContent={
+                                <MatcherItem matcherItem={matcherItem} onEdit={() => {}} notEditable={true} />
+                            }
+                        />
                     </div>
                 ))}
             </Form.Item>
@@ -912,3 +983,83 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
         </>
     )
 })
+interface ExtractorsListProps {
+    extractorValue: ExtractorValueProps
+    onAdd: () => void
+    onRemove: (index: number) => void
+    onEdit: (index: number) => void
+}
+const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
+    const {extractorValue, onAdd, onRemove, onEdit} = props
+    const {extractorList} = extractorValue
+    return (
+        <>
+            <Form.Item name='extractors' noStyle>
+                {extractorList.map((extractorItem, index) => (
+                    <div className={styles["matchersList-item"]}>
+                        <div className={styles["matchersList-item-heard"]}>
+                            <span className={styles["item-id"]}>{extractorItem.Name || `Id:${index}`}</span>
+                            <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
+                            <span className={styles["item-number"]}>{extractorItem.Groups.length}</span>
+                        </div>
+                        <MatchersAndExtractorsListItemOperate
+                            onRemove={() => onRemove(index)}
+                            onEdit={() => onEdit(index)}
+                            popoverContent={
+                                <ExtractorItem extractorItem={extractorItem} onEdit={() => {}} notEditable={true} />
+                            }
+                        />
+                    </div>
+                ))}
+            </Form.Item>
+            {extractorList.length === 0 && (
+                <Form.Item wrapperCol={{span: 24}}>
+                    <YakitButton
+                        type='outline2'
+                        onClick={() => onAdd()}
+                        icon={<PlusIcon className={styles["plus-sm-icon"]} />}
+                        themeClass={styles["plus-button-bolck"]}
+                        block
+                        style={{justifyContent: "center"}}
+                    >
+                        添加
+                    </YakitButton>
+                </Form.Item>
+            )}
+        </>
+    )
+})
+interface MatchersAndExtractorsListItemOperateProps {
+    onRemove: () => void
+    onEdit: () => void
+    popoverContent: ReactNode
+}
+const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListItemOperateProps> = React.memo(
+    (props) => {
+        const {onRemove, onEdit, popoverContent} = props
+        const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
+        return (
+            <div
+                className={classNames(styles["matchersList-item-operate"], {
+                    [styles["matchersList-item-operate-hover"]]: visiblePopover
+                })}
+            >
+                <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
+                <PencilAltIcon className={styles["pencilAlit-icon"]} onClick={() => onEdit()} />
+                <YakitPopover
+                    placement='topRight'
+                    overlayClassName={classNames(
+                        "yakit-collapse",
+                        styles["matching-extraction-content"],
+                        styles["terminal-popover"]
+                    )}
+                    content={popoverContent}
+                    visible={visiblePopover}
+                    onVisibleChange={setVisiblePopover}
+                >
+                    <TerminalIcon className={styles["terminal-icon"]} />
+                </YakitPopover>
+            </div>
+        )
+    }
+)

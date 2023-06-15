@@ -43,6 +43,9 @@ $keyColor: map-keys($colors);
     }
 }
 
+.icon-active {
+    color: var(--yakit-primary-5);
+}
 .matching-extraction-resize-box {
     height: 100%;
     min-height: 300px;
@@ -139,6 +142,9 @@ $keyColor: map-keys($colors);
                 gap: 4px;
                 .header-id {
                     color: var(--yakit-helper-text-color);
+                    @include flex-center;
+                    gap: 4px;
+                    margin-right: 8px;
                 }
                 .header-number {
                     height: 16px;
@@ -149,9 +155,13 @@ $keyColor: map-keys($colors);
                     font-size: 10px;
                     line-height: 12px;
                     color: var(--yakit-body-text-color);
+                    max-width: 100px;
                 }
             }
         }
+    }
+    .matching-extraction-content-hidden {
+        display: none;
     }
     .remove-icon {
         margin-left: 8px;
@@ -264,6 +274,7 @@ $keyColor: map-keys($colors);
         height: 24px;
         @include flex-center;
         justify-content: flex-end;
+        flex-shrink: 0;
     }
 }
 
@@ -341,4 +352,23 @@ $keyColor: map-keys($colors);
 .color-select-btn-active {
     color: var(--yakit-primary-5);
     border-color: var(--yakit-primary-5);
+}
+
+.edit-name-popover {
+    :global {
+        .ant-popover-inner-content {
+            padding: 12px;
+        }
+    }
+    .edit-name-popover-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        &-title {
+            color: var(--yakit-header-color);
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 16px;
+        }
+    }
 }
