@@ -118,7 +118,6 @@ module.exports = (win, getClient) => {
             }
             server = http
                 .createServer(async (req, res) => {
-                    console.log(req)
                     const {pathname} = urltt.parse(req.url, true)
                     if (pathname === "/callback") {
                         res.write(templateStr)
