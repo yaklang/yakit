@@ -1,8 +1,11 @@
 const {ipcMain, BrowserWindow, shell} = require("electron")
 const {httpApi} = require("../httpServer")
 const {USER_INFO, HttpSetting} = require("../state")
+const {templateStr} = require("./wechatWebTemplate/index")
 const urltt = require("url")
 const http = require("http")
+// http 服务
+let server = null
 module.exports = (win, getClient) => {
     const commonSignIn = (res) => {
         const info = res.data
@@ -109,97 +112,85 @@ module.exports = (win, getClient) => {
             })
         }
         if (type === "github") {
-            const server = http
-                .createServer((req, res) => {
+            if (server) {
+                // 关闭之前 HTTP 服务器
+                server.close()
+            }
+            server = http
+                .createServer(async (req, res) => {
                     console.log(req)
-                    const {pathname, query} = urltt.parse(req.url, true)
-
+                    const {pathname} = urltt.parse(req.url, true)
                     if (pathname === "/callback") {
+                        res.write(templateStr)
+                        res.end()
+                    } else if (pathname === "/judgeSignin") {
+                        const {query} = urltt.parse(req.url, true)
                         // 处理回调的逻辑
                         const ghCode = query.code
-                        console.log(ghCode)
-
-                        res.write(`<!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <title>Authorization Success</title>
-    <style>
-    body {
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: #f2f2f2;
-    }
-    
-    .container {
-    margin: 0 auto;
-    max-width: 800px;
-    padding: 50px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
-    
-    h1 {
-    font-size: 36px;
-    color: #444444;
-    margin-bottom: 20px;
-    }
-    
-    p {
-    font-size: 18px;
-    color: #777777;
-    line-height: 1.5;
-    margin-bottom: 30px;
-    }
-    
-    a {
-    color: #ffffff;
-    background-color: #3498db;
-    padding: 10px 20px;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 18px;
-    transition: all 0.3s ease;
-    }
-    
-    a:hover {
-    background-color: #2980b9;
-    }
-    </style>
-    </head>
-    <body>
-    <div class="container">
-    <h1>Authorization Successful!</h1>
-    <p>Thank you for authorizing our application. You can now use our features and services.</p>
-    <a href="myapp://openApp">Go to Dashboard</a>
-    </div>
-    </body>
-    </html>
-    `)
+                        if (!ghCode) {
+                            res.end(
+                                JSON.stringify({
+                                    login: false,
+                                    ghCode
+                                })
+                            )
+                            return
+                        }
+                        await new Promise((resolve, reject) => {
+                            httpApi("get", typeApi[type], {code: ghCode})
+                                .then((res) => {
+                                    if (res.code !== 200) {
+                                        win.webContents.send("fetch-signin-data", {
+                                            ok: false,
+                                            info: res.data.reason || "请求异常，请重新登录！"
+                                        })
+                                        res.end(
+                                            JSON.stringify({
+                                                login: false
+                                            })
+                                        )
+                                        resolve()
+                                        return
+                                    }
+                                    commonSignIn(res)
+                                    res.end(
+                                        JSON.stringify({
+                                            login: true
+                                        })
+                                    )
+                                    resolve()
+                                })
+                                .catch((err) => {
+                                    win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
+                                    res.end(
+                                        JSON.stringify({
+                                            login: false
+                                        })
+                                    )
+                                    resolve()
+                                })
+                        })
+                    } else if (pathname === "/goback") {
+                        // 方法1（效果未实现）
+                        // win.blur()
+                        // win.focus()
+                        // win.moveTop()
+                        // 方法2
+                        win.setAlwaysOnTop(true)
+                        setTimeout(() => {
+                            win.setAlwaysOnTop(false)
+                        }, 100)
+                        win.show()
+                        res.statusCode = 200
                         res.end()
-
                         // 关闭 HTTP 服务器
                         server.close()
-                        httpApi("get", typeApi[type], {code: ghCode})
-                            .then((res) => {
-                                if (res.code !== 200) {
-                                    win.webContents.send("fetch-signin-data", {
-                                        ok: false,
-                                        info: res.data.reason || "请求异常，请重新登录！"
-                                    })
-                                    return
-                                }
-                                commonSignIn(res)
-                            })
-                            .catch((err) => {
-                                win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
-                            })
                     }
 
                     res.end()
                 })
                 .listen(3001, () => {
-                    console.log("HTTP server is listening on port 3000")
+                    console.log("HTTP server is listening on port 3001")
                 })
             shell.openExternal(url)
         }
