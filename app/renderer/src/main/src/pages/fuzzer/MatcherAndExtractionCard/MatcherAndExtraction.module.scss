@@ -7,6 +7,42 @@
     display: flex;
     align-items: center;
 }
+
+$colors: (
+    red: (
+        backgroundColor: var(--yakit-tag-color-red)
+    ),
+    green: (
+        backgroundColor: var(--yakit-tag-color-green)
+    ),
+    blue: (
+        backgroundColor: var(--yakit-tag-color-blue)
+    ),
+    yellow: (
+        backgroundColor: var(--yakit-tag-color-yellow)
+    ),
+    orange: (
+        backgroundColor: var(--yakit-tag-color-orange)
+    ),
+    purple: (
+        backgroundColor: var(--yakit-tag-color-purple)
+    ),
+    cyan: (
+        backgroundColor: var(--yakit-tag-color-cyan)
+    ),
+    grey: (
+        backgroundColor: var(--yakit-helper-text-color)
+    )
+);
+$keyColor: map-keys($colors);
+@for $c from 1 through length($keyColor) {
+    $name: nth($keyColor, $c);
+    $currentColor: map-get($colors, $name);
+    .color-bg-#{"" + $name} {
+        background-color: map-get($currentColor, "backgroundColor");
+    }
+}
+
 .matching-extraction-resize-box {
     height: 100%;
     min-height: 300px;
@@ -233,4 +269,76 @@
 
 .label-node + .label-node {
     margin-top: 8px;
+}
+
+.color-select-popover {
+    padding-top: 4px;
+    width: 136px;
+    :global {
+        .ant-popover-inner-content {
+            padding: 0;
+        }
+    }
+    .color-select-content {
+        display: flex;
+        flex-direction: column;
+        color: var(--yakit-header-color);
+        .hit-color {
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 16px;
+            padding: 8px 12px 0;
+        }
+        .color-list {
+            padding: 4px;
+            .color-list-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                height: 28px;
+                padding: 6px 8px;
+                cursor: pointer;
+                border-radius: 4px;
+
+                &:hover {
+                    background-color: var(--yakit-background-color);
+                }
+                .color-chunk {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 4px;
+                }
+            }
+            .color-list-item-active {
+                background-color: var(--yakit-primary-1);
+            }
+        }
+    }
+}
+.color-select-btn {
+    margin-left: 8px;
+    width: 24px;
+    height: 24px;
+    @include flex-center;
+    justify-content: center;
+    border: 1px solid var(--yakit-border-color);
+    border-radius: 4px;
+    color: var(--yakit-body-text-color);
+    cursor: pointer;
+    &:hover {
+        color: var(--yakit-primary-5);
+        border-color: var(--yakit-primary-5);
+    }
+}
+.color-select-btn-small {
+    width: 20px;
+    height: 20px;
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+.color-select-btn-active {
+    color: var(--yakit-primary-5);
+    border-color: var(--yakit-primary-5);
 }

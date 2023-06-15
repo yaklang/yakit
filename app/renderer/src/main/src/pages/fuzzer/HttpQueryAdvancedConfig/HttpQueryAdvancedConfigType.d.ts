@@ -62,6 +62,7 @@ export interface AdvancedConfigValueProps {
     filterMode: "drop" | "match" | 'onlyMatch'
     matchers: HTTPResponseMatcher[]
     matchersCondition: 'and'|'or'
+    hitColor?:string
     //提取器
     extractors: HTTPResponseExtractor[]
 }

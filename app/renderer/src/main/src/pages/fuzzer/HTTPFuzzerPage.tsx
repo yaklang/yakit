@@ -236,6 +236,8 @@ export interface FuzzerRequestProps {
     Matchers: HTTPResponseMatcher[]
     MatchersCondition: string
     IsGmTLS: boolean
+
+    HitColor?: string
 }
 
 export const showDictsAndSelect = (res: (i: string) => any) => {
@@ -388,10 +390,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         params: [{Key: "", Value: ""}],
         // 匹配器
         filterMode: "drop",
-        matchers:[],
-        matchersCondition:'and',
+        matchers: [],
+        matchersCondition: "and",
+        hitColor:'',
         // 提取器
-        extractors:[],
+        extractors: []
     })
     // params
     // const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
@@ -675,14 +678,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 清楚历史任务的标记
         // setHistoryTask(undefined)
 
-        // // // 更新默认搜索
+        //  更新默认搜索
         // setDefaultResponseSearch(affixSearch)
 
         // setLoading(true)
         // setDroppedCount(0)
 
         // FuzzerRequestProps
-        const httpParams:FuzzerRequestProps = {
+        const httpParams: FuzzerRequestProps = {
             // Request: request,
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
             ForceFuzz: !!advancedConfigValue.forceFuzz,
@@ -692,7 +695,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             PerRequestTimeoutSeconds: advancedConfigValue.timeout,
             NoFixContentLength: advancedConfigValue.noFixContentLength,
             NoSystemProxy: advancedConfigValue.noSystemProxy,
-            Proxy: advancedConfigValue.proxy ? advancedConfigValue.proxy.join() : '',
+            Proxy: advancedConfigValue.proxy ? advancedConfigValue.proxy.join() : "",
             ActualAddr: advancedConfigValue.actualHost,
             HotPatchCode: hotPatchCode,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
@@ -710,9 +713,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             // retry config
             MaxRetryTimes: advancedConfigValue.maxRetryTimes,
-            RetryInStatusCode: advancedConfigValue.retry ? advancedConfigValue?.retryConfiguration?.statusCode||'' : "",
+            RetryInStatusCode: advancedConfigValue.retry
+                ? advancedConfigValue?.retryConfiguration?.statusCode || ""
+                : "",
             RetryNotInStatusCode: advancedConfigValue.noRetry
-                ? advancedConfigValue?.noRetryConfiguration?.statusCode||''
+                ? advancedConfigValue?.noRetryConfiguration?.statusCode || ""
                 : "",
             RetryWaitSeconds: advancedConfigValue.retryWaitSeconds,
             RetryMaxWaitSeconds: advancedConfigValue.retryMaxWaitSeconds,
@@ -728,10 +733,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // 设置变量
             Params: advancedConfigValue.params,
             //匹配器
-            Matchers:advancedConfigValue.matchers,
-            MatchersCondition:advancedConfigValue.matchersCondition,
+            Matchers: advancedConfigValue.matchers,
+            MatchersCondition: advancedConfigValue.matchersCondition,
+            HitColor:advancedConfigValue.hitColor,
             //提取器
-            Extractors:advancedConfigValue.extractors,
+            Extractors: advancedConfigValue.extractors
         }
         if (advancedConfigValue.proxy) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
@@ -1261,7 +1267,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * @@description 获取高级配置中的Form values
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
-        console.log('val',val)
+        console.log("val", val)
         setAdvancedConfigValue({
             ...val,
             forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,

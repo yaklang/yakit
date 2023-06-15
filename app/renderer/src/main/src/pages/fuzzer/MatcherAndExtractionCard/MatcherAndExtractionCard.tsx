@@ -9,13 +9,22 @@ import {
     MatcherCollapseProps,
     labelNodeItemProps,
     MatcherItemProps,
-    MatchHTTPResponseParams
+    MatchHTTPResponseParams,
+    ColorSelectProps
 } from "./MatcherAndExtractionCardType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {HTTPPacketEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import styles from "./MatcherAndExtraction.module.scss"
-import {ChevronDownIcon, ChevronRightIcon, PlusIcon, RemoveIcon, ResizerIcon, TrashIcon} from "@/assets/newIcon"
+import {
+    ChevronDownIcon,
+    ChevronRightIcon,
+    ColorSwatchIcon,
+    PlusIcon,
+    RemoveIcon,
+    ResizerIcon,
+    TrashIcon
+} from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Collapse} from "antd"
@@ -28,6 +37,8 @@ import _ from "lodash"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {randomString} from "@/utils/randomUtil"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -80,8 +91,7 @@ export const defaultExtractorItem: HTTPResponseExtractor = {
     // ---------
     Name: "",
     RegexpMatchGroup: [],
-    XPathAttribute: "",
-    RuleGroups: [{Name: "", Rule: ""}]
+    XPathAttribute: ""
 }
 
 const isMatcherItemEmpty = (i: HTTPResponseMatcher) => {
@@ -150,6 +160,11 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
     useEffect(() => {
         setExtractor(_.cloneDeepWith(extractorValue))
     }, [extractorValue])
+    const onIsEmpty = useMemoizedFn(() => {
+        const matcherEmptyList = matcher.matchersList.filter((item) => isMatcherItemEmpty(item))
+        const extractorEmptyList = extractor.extractorList.filter((item) => isExtractorEmpty(item))
+        return matcherEmptyList.length > 0 || extractorEmptyList.length > 0
+    })
     const onAddCondition = useMemoizedFn(() => {
         switch (type) {
             case "matchers":
@@ -235,64 +250,74 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
         // })
     })
     const onApply = useMemoizedFn(() => {
-        const matcherEmptyList = matcher.matchersList.filter((item) => isMatcherItemEmpty(item))
-        const extractorEmptyList = extractor.extractorList.filter((item) => isExtractorEmpty(item))
-        if (matcherEmptyList.length > 0 || extractorEmptyList.length > 0) {
-            let m = YakitModalConfirm({
-                width: 420,
-                type: "white",
-                onCancelText: "取消",
-                onOkText: "确定",
-                icon: <ExclamationCircleOutlined />,
-                onOk: () => {
-                    const newMatchersList: HTTPResponseMatcher[] = []
-                    matcher.matchersList.forEach((item) => {
-                        if (item.Group.findIndex((g) => g === "") !== 0) {
-                            newMatchersList.push({
-                                ...item,
-                                Group: item.Group.filter((g) => g !== "")
-                            })
-                        }
-                    })
-                    const newExtractorList: HTTPResponseExtractor[] = []
-                    extractor.extractorList.forEach((item) => {
-                        if (item.Groups.findIndex((g) => g === "") !== 0) {
-                            newExtractorList.push({
-                                ...item,
-                                Groups: item.Groups.filter((g) => !g)
-                            })
-                        }
-                    })
-                    onSave({...matcher, matchersList: newMatchersList}, {...extractor, extractorList: newExtractorList})
-                    onClose()
-                    m.destroy()
-                },
-                onCancel: () => {
-                    m.destroy()
-                },
-                content: "有条件未配置完成是否确定要应用？"
-            })
+        if (onIsEmpty()) {
+            onApplyConfirm()
         } else {
             onSave(matcher, extractor)
             onClose()
         }
     })
+    const onApplyConfirm = useMemoizedFn(() => {
+        let m = YakitModalConfirm({
+            width: 420,
+            type: "white",
+            onCancelText: "取消",
+            onOkText: "确定",
+            icon: <ExclamationCircleOutlined />,
+            onOk: () => {
+                const newMatchersList: HTTPResponseMatcher[] = []
+                matcher.matchersList.forEach((item) => {
+                    if (item.Group.findIndex((g) => g === "") !== 0) {
+                        newMatchersList.push({
+                            ...item,
+                            Group: item.Group.filter((g) => g !== "")
+                        })
+                    }
+                })
+                const newExtractorList: HTTPResponseExtractor[] = []
+                extractor.extractorList.forEach((item) => {
+                    if (item.Groups.filter((g) => _.isEqual(g, {Name: "", Rule: ""})).length > 0) {
+                        newExtractorList.push({
+                            ...item,
+                            Groups: item.Groups.filter((g) => !g)
+                        })
+                    }
+                })
+                onSave({...matcher, matchersList: newMatchersList}, {...extractor, extractorList: newExtractorList})
+                onClose()
+                m.destroy()
+            },
+            onCancel: () => {
+                m.destroy()
+            },
+            content: "有条件未配置完成是否确定要应用？"
+        })
+    })
     const onCheckClose = useMemoizedFn(() => {
+        // 关闭优先检测是否有空的条件
+        if (onIsEmpty()) {
+            onApplyConfirm()
+            return
+        }
+        // 没有空的条件，再检测两次的值是否一致,不一致需提示用户
         if (_.isEqual(matcherValue, matcher) && _.isEqual(extractorValue, extractor)) {
             onClose()
         } else {
             let m = YakitModalConfirm({
                 width: 420,
                 type: "white",
-                onCancelText: "不保存",
-                onOkText: "保存",
+                onCancelText: "不应用",
+                onOkText: "应用",
                 icon: <ExclamationCircleOutlined />,
-                onOk: () => onApply(),
+                onOk: () => {
+                    onApply()
+                    m.destroy()
+                },
                 onCancel: () => {
                     onClose()
                     m.destroy()
                 },
-                content: "是否保存修改的内容"
+                content: "是否应用修改的内容"
             })
         }
     })
@@ -377,6 +402,17 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
                         buttonStyle='solid'
                         options={filterModeOptions}
                     />
+                    {matcher.filterMode === "onlyMatch" && (
+                        <ColorSelect
+                            value={matcher.hitColor}
+                            onChange={(value) => {
+                                setMatcher({
+                                    ...matcher,
+                                    hitColor: value
+                                })
+                            }}
+                        />
+                    )}
                 </div>
                 <div className={styles["condition-mode"]}>
                     <span className={styles["condition-mode-text"]}>条件关系</span>
@@ -570,5 +606,86 @@ const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) => {
             <span className={styles["label"]}>{props.label}</span>
             {props.children}
         </div>
+    )
+})
+const colors = [
+    {
+        color: "red",
+        title: "红色"
+    },
+    {
+        color: "green",
+        title: "绿色"
+    },
+    {
+        color: "blue",
+        title: "蓝色"
+    },
+    {
+        color: "yellow",
+        title: "黄色"
+    },
+    {
+        color: "orange",
+        title: "橙色"
+    },
+    {
+        color: "purple",
+        title: "紫色"
+    },
+    {
+        color: "cyan",
+        title: "天蓝色"
+    },
+    {
+        color: "grey",
+        title: "灰色"
+    }
+]
+export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
+    const {value, onChange, size} = props
+    const [isShowColor, setIsShowColor] = useState<boolean>(false)
+
+    return (
+        <YakitPopover
+            overlayClassName={styles["color-select-popover"]}
+            content={
+                <div className={styles["color-select-content"]}>
+                    <span className={styles["hit-color"]}>命中颜色</span>
+                    <div className={styles["color-list"]}>
+                        {colors.map((colorItem) => (
+                            <div
+                                className={classNames(styles["color-list-item"], {
+                                    [styles["color-list-item-active"]]: value === colorItem.color
+                                })}
+                                key={colorItem.color}
+                                onClick={() => {
+                                    if (onChange) onChange(colorItem.color)
+                                    setIsShowColor(false)
+                                }}
+                            >
+                                <div
+                                    className={classNames(styles["color-chunk"], styles[`color-bg-${colorItem.color}`])}
+                                />
+                                <span>{colorItem.title}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            }
+            placement='bottomLeft'
+            visible={isShowColor}
+            onVisibleChange={setIsShowColor}
+        >
+            <div
+                className={classNames(styles["color-select-btn"], {
+                    [styles["color-select-btn-active"]]: isShowColor,
+                    [styles["color-select-btn-small"]]: size === "small",
+                    [styles[`color-bg-${value}`]]: !!value
+                })}
+            >
+                {!value && <ColorSwatchIcon />}
+            </div>
+        </YakitPopover>
     )
 })

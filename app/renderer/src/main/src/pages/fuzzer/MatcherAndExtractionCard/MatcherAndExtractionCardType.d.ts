@@ -5,7 +5,7 @@ export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps
 }
 
 export interface MatcherAndExtractionProps {
-    httpResponse:string
+    httpResponse: string
     onClose: () => void
     onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
     matcherValue: MatcherValueProps
@@ -15,6 +15,8 @@ export interface MatcherAndExtractionProps {
 
 export interface MatcherValueProps {
     filterMode: "drop" | 'retain' | 'onlyMatch'
+    /**@name filterMode为onlyMatch,才会设置该值*/
+    hitColor?: string
     matchersCondition: 'and' | 'or'
     matchersList: HTTPResponseMatcher[]
 }
@@ -47,17 +49,11 @@ export interface HTTPResponseExtractor {
     Name: string
     Type: string
     Scope: string
-    /**@deprecated  Groups wenFuzzer废弃改用RuleGroups*/
     Groups: string[]
     RegexpMatchGroup: string[]
     XPathAttribute: string
-    RuleGroups: ExtractorRule[]
 }
 
-export interface ExtractorRule {
-    Name: string
-    Rule: string
-}
 export interface labelNodeItemProps {
     label: string
     children: ReactNode
@@ -76,4 +72,10 @@ export interface MatchHTTPResponseParams {
     IsHTTPS?: boolean;
     HTTPResponse: string;
     HTTPRequest?: string;
+}
+
+export interface ColorSelectProps {
+    size?: "small" | "large" | "max"
+    value?: string
+    onChange?: (value: string) => void;
 }

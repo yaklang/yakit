@@ -31,6 +31,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array} from "@/utils/str"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {
+    ColorSelect,
     MatcherAndExtractionCard,
     MatcherCollapse,
     MatcherItem,
@@ -76,6 +77,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const extractorList = useWatch("extractors", form) || []
     const matchersCondition = useWatch("matchersCondition", form)
     const filterMode = useWatch("filterMode", form)
+    const hitColor = useWatch("hitColor", form)
 
     const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${Route.HTTPFuzzer}`)) || {
         width: 0,
@@ -768,9 +770,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         }
                     >
                         <div className={styles["matchers-heard"]}>
-                            <Form.Item name='filterMode' noStyle>
-                                <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
-                            </Form.Item>
+                            <div className={styles["matchers-heard-left"]}>
+                                <Form.Item name='filterMode' noStyle>
+                                    <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
+                                </Form.Item>
+                                <Form.Item name='hitColor' noStyle>
+                                    <ColorSelect size='small' />
+                                </Form.Item>
+                            </div>
                             <Form.Item name='matchersCondition' noStyle>
                                 <YakitRadioButtons
                                     buttonStyle='solid'
@@ -780,7 +787,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </Form.Item>
                         </div>
                         <MatchersList
-                            matcherValue={{filterMode, matchersList, matchersCondition}}
+                            matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
                             onAdd={onAddMatchingAndExtractionCard}
                             onRemove={onRemoveMatcher}
                             onEdit={onEditMatcher}
@@ -801,16 +808,16 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 <MatcherAndExtractionCard
                     httpResponse=''
                     defActiveKey={defActiveKey}
-                    matcherValue={{filterMode, matchersList, matchersCondition}}
+                    matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
                     extractorValue={{extractorList}}
                     onClose={() => setVisibleDrawer(false)}
                     onSave={(matcher, extractor) => {
                         const v = form.getFieldsValue()
                         onSetValue({
                             ...v,
-                            filterMode: matcher.filterMode,
+                            ...matcher,
+                            ...extractor,
                             matchers: matcher.matchersList,
-                            matchersCondition: matcher.matchersCondition,
                             extractors: extractor.extractorList
                         })
                     }}

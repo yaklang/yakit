@@ -225,6 +225,10 @@
                 padding: 3px 10px;
             }
         }
+        .matchers-heard-left {
+            display: flex;
+            align-items: center;
+        }
     }
     .matchersList-item {
         display: flex;
@@ -277,7 +281,7 @@
                 color: var(--yakit-body-text-color);
             }
         }
-        .matchersList-item-operate-hover{
+        .matchersList-item-operate-hover {
             visibility: visible;
         }
     }
