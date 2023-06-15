@@ -867,6 +867,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setLocalInfo(data)
         })
     }, [])
+    useEffect(() => {
+        // 用户退出 - 验证license=>展示企业登录
+        ipcRenderer.on("again-judge-license-login", () => {
+            setJudgeLicense(true)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("again-judge-license-login")
+        }
+    }, [])
     const menu = (
         <YakitMenu
             // selectedKeys={[]}

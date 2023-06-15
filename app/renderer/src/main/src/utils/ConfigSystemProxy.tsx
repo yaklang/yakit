@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react"
 import {showModal} from "./showModal"
-import {Alert, Button, Form, Input, Space, Spin, Tag} from "antd"
+import {Alert, Button, Form, Input, Space, Spin, Tag, Upload} from "antd"
 import {InputItem, SwitchItem} from "./inputUtil"
 import {useMemoizedFn} from "ahooks"
 import {info, yakitFailed} from "@/utils/notification"
@@ -15,6 +15,8 @@ import styles from "./ConfigSystemProxy.module.scss"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {InformationCircleIcon, RemoveIcon} from "@/assets/newIcon"
 import classNames from "classnames"
+import { getRemoteValue, setRemoteValue } from "./kv"
+import { RemoteGV } from "@/yakitGV"
 
 export interface ConfigSystemProxyProp {
     defaultProxy?: string
@@ -130,6 +132,93 @@ export const showConfigSystemProxyForm = (addr?: string) => {
                     onClose={() => {
                         m.destroy()
                     }}
+                />
+            </>
+        )
+    })
+}
+
+interface ConfigChromePathProp {
+    onClose: () => void
+    submitAlreadyChromePath: (v:boolean) => void
+}
+
+export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
+    const {onClose,submitAlreadyChromePath} = props
+    const [loading, setLoading] = useState<boolean>(true)
+    const [chromePath,setChromePath] = useState<string>()
+
+    useEffect(()=>{
+        getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
+            setLoading(false)
+            if (!setting) return
+            const values:string = JSON.parse(setting)
+            setChromePath(values)
+        })
+    },[])
+
+    const onSetChromePath = useMemoizedFn(() => {
+        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(chromePath))
+        if(chromePath&&chromePath.length>0){
+            submitAlreadyChromePath(true)  
+        }
+        else{
+            submitAlreadyChromePath(false) 
+        }
+        info("设置Chrome启动路径成功")
+        onClose()
+    })
+    return (
+        <YakitSpin spinning={loading}>
+            <div className={styles["config-system-proxy"]}>
+                <div className={styles["config-system-proxy-heard"]}>
+                    <div className={styles["config-system-proxy-title"]}>设置Chrome启动路径</div>
+                    <RemoveIcon className={styles["close-icon"]} onClick={() => onClose()} />
+                </div>
+                <div className={classNames(styles["config-system-proxy-status-success"])}>
+                    如无法启动Chrome，请配置Chrome启动路径
+                </div>
+                <Form layout='horizontal' style={{padding: "0 24px 24px"}}>
+                    <Form.Item label='启动路径'>
+                        <YakitInput value={chromePath} placeholder={"请选择启动路径"} size='large' onChange={(e)=>setChromePath(e.target.value)}/>
+                        <Upload accept={".exe"} multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f) => {
+                            // @ts-ignore
+                            const path:string = f?.path||""
+                            if(path.length>0){
+                               setChromePath(path) 
+                            }
+                            return false
+                        }}>
+                            <div className={styles["config-select-path"]}>选择路径</div>
+                        </Upload>
+                    </Form.Item>
+                    <div className={styles["config-system-proxy-btns"]}>
+                        <YakitButton type='outline2' size='large' onClick={() => onClose()}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type={"primary"} size='large' onClick={() => onSetChromePath()}>
+                            确定
+                        </YakitButton>
+                    </div>
+                </Form>
+            </div>
+        </YakitSpin>
+    )
+}
+export const showConfigChromePathForm = (fun) => {
+    const m = showYakitModal({
+        title: null,
+        width: 450,
+        footer: null,
+        closable: false,
+        centered: true,
+        content: (
+            <>
+                <ConfigChromePath
+                    onClose={() => {
+                        m.destroy()
+                    }}
+                    submitAlreadyChromePath={fun}
                 />
             </>
         )

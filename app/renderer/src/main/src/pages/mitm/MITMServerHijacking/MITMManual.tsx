@@ -1,15 +1,16 @@
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {HTTPPacketEditor} from "@/utils/editors"
+import {HTTPPacketEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {Divider} from "antd"
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {useEffect, useImperativeHandle, useRef, useState,useMemo} from "react"
 import {allowHijackedResponseByRequest, MITMStatus} from "./MITMHijackedContent"
 import styles from "./MITMServerHijacking.module.scss"
 import * as monaco from "monaco-editor"
 import classNames from "classnames"
 import {useResponsive} from "ahooks"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+import { OtherMenuListProps, YakitEditorKeyCode } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -193,8 +194,136 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
+
+
+    const mitmManualRightMenu: OtherMenuListProps  = useMemo(() => {
+        if(forResponse){
+            return {
+                forResponseMITMMenu:{
+                    menu: [
+                        {type: "divider"},
+                        {
+                            key:"trigger-auto-hijacked",
+                            label: "切换为自动劫持模式",
+                            keybindings: [
+                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_T
+                            ],
+                        },
+                        {
+                            key:"forward-response",
+                            label: "放行该 HTTP Response",
+                        },
+                        {
+                            key:"drop-response",
+                            label: "丢弃该 HTTP Response",
+                        },
+                    ],
+                    onRun: (editor, key) => {
+                        switch (key) {
+                            case "trigger-auto-hijacked":
+                                handleAutoForward(autoForward === "manual" ? "log" : "manual")
+                                break;
+                            case "forward-response":
+                                forward()
+                                break;
+                            case "drop-response":
+                                hijacking()
+                                dropResponse(currentPacketId).finally(() => {
+                                    // setTimeout(
+                                    //     () => setLoading(false),
+                                    //     300
+                                    // )
+                                })
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            return {
+                forResponseMITMMenu:{
+                    menu: [
+                        {type: "divider"},
+                        {
+                            key:"trigger-auto-hijacked",
+                            label: "切换为自动劫持模式",
+                            keybindings: [
+                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_T
+                            ],
+                        },
+                        {
+                            key:"send-to-fuzzer",
+                            label: "发送到 Web Fuzzer",
+                            keybindings: [
+                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_R
+                            ],
+                        },
+                        {
+                            key:"forward-response",
+                            label: "放行该 HTTP Response",
+                            keybindings: [
+                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_F
+                            ],
+                        },
+                        {
+                            key:"drop-response",
+                            label: "丢弃该 HTTP Response",
+                        },
+                        {
+                            key:"hijack-current-response",
+                            label: "劫持该 Request 对应的响应",
+                        },
+                    ],
+                    onRun: (editor:any, key) => {
+                        switch (key) {
+                            case "trigger-auto-hijacked":
+                                handleAutoForward(autoForward === "manual" ? "log" : "manual")
+                                break;
+                            case "send-to-fuzzer":
+                                execFuzzer(editor.getModel().getValue())
+                                break;
+                            case "forward-response":
+                                forward()
+                                break;
+                            case "drop-response":
+                                hijacking()
+                                dropResponse(currentPacketId).finally(() => {
+                                    // setTimeout(
+                                    //     () => setLoading(false),
+                                    //     300
+                                    // )
+                                })
+                                break;
+                            case "hijack-current-response":
+                                onSetHijackResponseType("onlyOne")
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        
+    },[])
     return (
-        <HTTPPacketEditor
+        <>
+        <NewHTTPPacketEditor
+            originValue={currentPacket}
+            noHeader={true}
+            isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
+            bordered={false}
+            onChange={setModifiedPacket}
+            noPacketModifier={true}
+            readOnly={status === "hijacking"}
+            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
+            contextMenu={mitmManualRightMenu}
+            editorOperationRecord="MITM_Manual_EDITOR_RECORF"
+        />
+        {/* <HTTPPacketEditor
             originValue={currentPacket}
             noHeader={true}
             isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
@@ -335,7 +464,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                           }
                       ])
             ]}
-        />
+        /> */}
+        </>
     )
 })
 

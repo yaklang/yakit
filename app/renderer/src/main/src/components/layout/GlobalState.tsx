@@ -16,7 +16,7 @@ import {
     RocketIcon,
     RocketOffIcon
 } from "./globalStateIcon"
-import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
+import {showConfigSystemProxyForm,showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
 import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
@@ -194,6 +194,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 .catch((e) => reject(`error-system-proxy ${e}`))
         })
     })
+    const [showChromeWarn,setShowChromeWarn] = useState<boolean>(false)
+    /** 获取Chrome启动路径 */
+    const updateChromePath = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("GetChromePath")
+                .then((chromePath: string) => {
+                    if(chromePath) return
+                    else{
+                        setShowChromeWarn(true)
+                        resolve("chrome-path")
+                    }
+                })
+                .catch((e) => reject(`error-chrome-path ${e}`))
+        })
+    })
 
     const [state, setState] = useState<string>("error")
     const [stateNum, setStateNum] = useState<number>(0)
@@ -212,6 +228,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 count = count + 1
             }
         }
+        if(showChromeWarn){
+            status = "warning"
+            count = count + 1
+        }
         if (!pcap.IsPrivileged) {
             status = system === "Windows_NT" ? "warning" : "error"
             count = count + 1
@@ -229,7 +249,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (isRunRef.current) return
 
         isRunRef.current = true
-        Promise.allSettled([updateSystemProxy(), updateGlobalReverse(), updatePcap(), updatePluginTotal()])
+        Promise.allSettled([updateSystemProxy(), updateGlobalReverse(), updatePcap(), updatePluginTotal(),updateChromePath()])
             .then((values) => {
                 isRunRef.current = false
                 setTimeout(() => updateState(), 100)
@@ -321,6 +341,20 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         setPluginShow(true)
     })
 
+    // 是否已经设置过Chrome启动路径
+    const [isAlreadyChromePath,setAlreadyChromePath] = useState<boolean>(false)
+    const setAlreadyChromePathStatus = (is:boolean) => setAlreadyChromePath(is)
+    
+    useEffect(()=>{
+        getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
+            if (!setting) return
+            const values:string = JSON.parse(setting)
+            if(values.length>0){
+                setAlreadyChromePath(true)
+            }
+        })
+    },[])
+    
     const content = useMemo(() => {
         return (
             <div className={styles["global-state-content-wrapper"]}>
@@ -424,6 +458,28 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     </div>
                                 </div>
                             )}
+                            {/* Chrome启动路径 */}
+                            {showChromeWarn&&<div className={styles["body-info"]}>
+                                    <div className={styles["info-left"]}>
+                                        {isAlreadyChromePath?<SuccessIcon/>:<WarningIcon />}
+                                        <div className={styles["left-body"]}>
+                                            <div className={styles["title-style"]}>Chrome启动路径</div>
+                                            <div className={styles["subtitle-style"]}>如无法启动Chrome，请配置Chrome启动路径</div>
+                                        </div>
+                                    </div>
+                                    <div className={styles["info-right"]}>
+                                        <YakitButton
+                                            type='text'
+                                            className={styles["btn-style"]}
+                                            onClick={() => {
+                                                setShow(false)
+                                                showConfigChromePathForm(setAlreadyChromePathStatus)
+                                            }}
+                                        >
+                                            {isAlreadyChromePath?"已配置":"去配置"}
+                                        </YakitButton>
+                                    </div>
+                                </div>}
                             {/* 系统代理 */}
                             <div className={styles["body-info"]}>
                                 <div className={styles["info-left"]}>
@@ -507,7 +563,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 </div>
             </div>
         )
-    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy, timeInterval])
+    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy, timeInterval,isAlreadyChromePath])
 
     return (
         <>

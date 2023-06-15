@@ -206,7 +206,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                     })
                                 }}
                             >
-                                <YakitButton type={"danger"} style={{marginLeft: 8}}>重置引擎版本</YakitButton>
+                                <YakitButton style={{marginLeft: 8}}>重置引擎版本</YakitButton>
                             </Popconfirm>
                             {psLoading && <LoadingOutlined className={styles["loading-icon"]}/>}
                         </div>

@@ -204,6 +204,38 @@ module.exports = (win, getClient) => {
         return await asyncSetKey(params)
     })
 
+    // asyncGetProjectKey wrapper
+    const asyncGetProjectKey = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetProjectKey(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data.Value)
+            })
+        })
+    }
+    ipcMain.handle("GetProjectKey", async (e, params) => {
+        return await asyncGetProjectKey(params)
+    })
+
+    // asyncSetProjectKey wrapper
+    const asyncSetProjectKey = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetProjectKey(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetProjectKey", async (e, params) => {
+        return await asyncSetProjectKey(params)
+    })
+
     // asyncGetEngineDefaultProxy wrapper
     const asyncGetEngineDefaultProxy = (params) => {
         return new Promise((resolve, reject) => {

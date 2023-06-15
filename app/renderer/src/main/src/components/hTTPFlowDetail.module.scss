@@ -4,29 +4,35 @@
     }
 }
 
-.http-history-detail-wrapper {
+.http-history-box{
+    display: flex;
+    flex-direction: row;
     height: 100%;
-    overflow: hidden;
-    :global {
-        .ant-col-24 {
-            height: 100%;
-        }
-        .ant-col-5 {
-            height: 100%;
-            .ant-table-wrapper{
+    .http-history-detail-wrapper {
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+        :global {
+            .ant-col-24 {
                 height: 100%;
-                .ant-spin-nested-loading{
+            }
+            .ant-col-5 {
+                height: 100%;
+                .ant-table-wrapper{
                     height: 100%;
-                    .ant-table{
+                    .ant-spin-nested-loading{
                         height: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        .ant-table-container{
-                            flex: 1;
-                            overflow: hidden;
-                            .ant-table-content{
-                                height: 100%;
-                                overflow: auto !important;
+                        .ant-table{
+                            height: 100%;
+                            display: flex;
+                            flex-direction: column;
+                            .ant-table-container{
+                                flex: 1;
+                                overflow: hidden;
+                                .ant-table-content{
+                                    height: 100%;
+                                    overflow: auto !important;
+                                }
                             }
                         }
                     }
@@ -34,6 +40,44 @@
             }
         }
     }
+}
+.http-history-fold-box{
+    width: 22px;
+    height: 100%;
+    
+    .http-history-icon-box{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .fold-icon{
+            color: #85899E;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+    .fold-icon:hover{
+        background-color: var(--yakit-background-color);
+        color: var(--yakit-primary-5);;
+    }
+}
+.http-history-fold-border-box{
+    width: 32px;
+    border-radius: 2px;
+    border-top: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.http-history-icon-paading-box{
+    padding: 8px 0;
 }
 
 .httpFlow-data-table {

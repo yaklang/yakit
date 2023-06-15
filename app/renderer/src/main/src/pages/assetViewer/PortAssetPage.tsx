@@ -572,8 +572,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         return p
     }, [currentSelectItem])
     return (
-        <div className={styles["portAsset-content"]}>
-            <YakitResizeBox
+        <div className={styles["portAsset-content"]} style={{display:"flex",flexDirection:"row"}}>
+            <div style={{flex:1,overflow:"hidden"}}>
+                <YakitResizeBox
                 isVer={true}
                 firstMinSize={400}
                 secondMinSize={300}
@@ -782,6 +783,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 lineStyle={{display: currentSelectItem?.Id ? "" : "none"}}
                 {...ResizeBoxProps}
             ></YakitResizeBox>
+            </div>
             <PortAssetQuery
                 loading={advancedQueryLoading}
                 portsGroupList={portsGroup}
