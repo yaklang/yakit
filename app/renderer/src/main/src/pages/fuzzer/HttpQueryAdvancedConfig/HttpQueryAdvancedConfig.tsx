@@ -53,7 +53,7 @@ import {
     MatcherValueProps,
     MatchingAndExtraction
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -1049,20 +1049,64 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
             >
                 <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
                 <PencilAltIcon className={styles["pencilAlit-icon"]} onClick={() => onEdit()} />
-                <YakitPopover
-                    placement='topRight'
-                    overlayClassName={classNames(
-                        "yakit-collapse",
-                        styles["matching-extraction-content"],
-                        styles["terminal-popover"]
-                    )}
-                    content={popoverContent}
-                    visible={visiblePopover}
-                    onVisibleChange={setVisiblePopover}
-                >
-                    <TerminalIcon className={styles["terminal-icon"]} />
-                </YakitPopover>
+                <TerminalPopover
+                    popoverContent={popoverContent}
+                    visiblePopover={visiblePopover}
+                    setVisiblePopover={setVisiblePopover}
+                />
             </div>
         )
     }
 )
+
+interface TerminalPopoverProps extends YakitPopoverProp {
+    popoverContent: ReactNode
+    visiblePopover: boolean
+    setVisiblePopover: (b: boolean) => void
+}
+/**
+ * @description 属于一个测试性组件，暂时不建议全局使用。为解决antd Popover箭头无法正确指向目标元素问题
+ */
+const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
+    const {popoverContent, visiblePopover, setVisiblePopover} = props
+    const popoverContentRef = useRef<any>()
+    const terminalIconRef = useRef<any>()
+    const onSetArrowTop = useMemoizedFn(() => {
+        if (terminalIconRef.current && popoverContentRef.current) {
+            try {
+                const {top: iconOffsetTop, height: iconHeight} = terminalIconRef.current.getBoundingClientRect()
+                const {top: popoverContentOffsetTop} = popoverContentRef.current.getBoundingClientRect()
+                const arrowTop = iconOffsetTop - popoverContentOffsetTop + iconHeight / 2
+                popoverContentRef.current.style.setProperty("--arrow-top", `${arrowTop}px`)
+            } catch (error) {}
+        }
+    })
+    return (
+        <YakitPopover
+            placement='right'
+            overlayClassName={classNames(
+                "yakit-collapse",
+                styles["matching-extraction-content"],
+                styles["terminal-popover"]
+            )}
+            content={
+                <div className={styles["terminal-popover-content"]} ref={popoverContentRef}>
+                    {popoverContent}
+                </div>
+            }
+            visible={visiblePopover}
+            onVisibleChange={(v) => {
+                if (v) {
+                    setTimeout(() => {
+                        onSetArrowTop()
+                    }, 200)
+                }
+                setVisiblePopover(v)
+            }}
+        >
+            <span ref={terminalIconRef} style={{height: 16, lineHeight: "16px"}}>
+                <TerminalIcon className={styles["terminal-icon"]} />
+            </span>
+        </YakitPopover>
+    )
+})

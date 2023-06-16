@@ -293,15 +293,34 @@
 .terminal-popover {
     width: 600px;
     padding: 12px 0;
+    --arrow-top: 50%;
     :global {
+        .ant-popover-content {
+            margin-left: 12px;
+            margin-bottom: 12px;
+        }
         .ant-popover-inner-content {
             padding: 4px;
             max-height: 400px;
             overflow-y: overlay;
         }
+        .ant-popover-arrow {
+            display: none;
+        }
+    }
+    .terminal-popover-content {
+        &::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            left: -6px;
+            top: var(--arrow-top);
+            border-left: 12px solid #fff;
+            border-bottom: 12px solid transparent;
+            transform: rotate(-45deg);
+            transition: all 0.3s;
+        }
     }
 }
-
-// .notEditable-mask{
-
-// }

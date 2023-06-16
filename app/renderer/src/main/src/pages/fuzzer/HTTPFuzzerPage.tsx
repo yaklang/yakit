@@ -1396,10 +1396,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     )}
                     <div className={styles["display-flex"]}>
                         {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
-                        {advancedConfigValue.proxy && (
+                        {advancedConfigValue.proxy.length>0 && (
                             <Tooltip title={advancedConfigValue.proxy}>
                                 <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
-                                    代理：{advancedConfigValue.proxy}
+                                    代理：{advancedConfigValue.proxy.join(',')}
                                 </YakitTag>
                             </Tooltip>
                         )}

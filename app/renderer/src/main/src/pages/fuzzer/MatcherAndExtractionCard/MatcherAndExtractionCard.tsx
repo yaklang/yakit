@@ -157,6 +157,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                     </div>
                 }
                 secondMinSize={530}
+                firstMinSize={300}
                 secondNode={<MatcherAndExtraction {...restProps} httpResponse={codeValue} />}
                 secondNodeStyle={{paddingLeft: 0}}
                 lineDirection='right'
