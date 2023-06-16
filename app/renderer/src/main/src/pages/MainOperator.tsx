@@ -931,13 +931,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         saveFuzzerList()
     }
     useEffect(() => {
-        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
-            try {
-                updateFuzzerList(res.key, {...(fuzzerList.current.get(res.key) || {}), ...JSON.parse(res.param)})
-            } catch (error) {
-                failed("webFuzzer数据缓存失败：" + error)
-            }
-        })
+        // ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
+        //     try {
+        //         updateFuzzerList(res.key, {...(fuzzerList.current.get(res.key) || {}), ...JSON.parse(res.param)})
+        //     } catch (error) {
+        //         failed("webFuzzer数据缓存失败：" + error)
+        //     }
+        // })
         // 开发环境不展示fuzzer缓存
         ipcRenderer
             .invoke("is-dev")

@@ -589,19 +589,23 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
 
     return (
         <>
-            <YakitInput
-                {...inputProps}
-                value={rule}
-                placeholder='可用右侧辅助工具，自动生成正则'
-                addonAfter={
-                    <AdjustmentsIcon className={styles["icon-adjustments"]} onClick={() => setRuleVisible(true)} />
-                }
-                onChange={(e) => {
-                    const {value} = e.target
-                    setRule(value)
-                    getRule(value)
-                }}
-            />
+            {props.children ? (
+                <span onClick={() => setRuleVisible(true)}>{props.children}</span>
+            ) : (
+                <YakitInput
+                    {...inputProps}
+                    value={rule}
+                    placeholder='可用右侧辅助工具，自动生成正则'
+                    addonAfter={
+                        <AdjustmentsIcon className={styles["icon-adjustments"]} onClick={() => setRuleVisible(true)} />
+                    }
+                    onChange={(e) => {
+                        const {value} = e.target
+                        setRule(value)
+                        getRule(value)
+                    }}
+                />
+            )}
             <YakitModal
                 title='自动提取正则'
                 subTitle='在编译器中选中内容，即可自动生成正则'
@@ -612,7 +616,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 footer={null}
                 closable={true}
             >
-                <ExtractRegular onSave={(v)=>onGetRule(v)} />
+                <ExtractRegular onSave={(v) => onGetRule(v)} />
             </YakitModal>
         </>
     )

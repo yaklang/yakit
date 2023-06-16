@@ -100,6 +100,8 @@ export interface ColorSelectProps {
 }
 
 export interface MatcherAndExtractionValueListProps {
+    /**@name 是否显示正则表达式icon */
+    showRegex:boolean
     group: string[]
     notEditable?: boolean
     onEditGroup: (group: string[]) => void

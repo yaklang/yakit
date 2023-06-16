@@ -97,6 +97,8 @@ export interface RuleContentProps {
     ref?: any
     getRule: (s: string) => void
     inputProps?: YakitInputProps
+    /**@name  不要传复杂的节点,最好只传一个icon,目前正则Modal触发条件只有:icon和组件默认的共两种情况 */
+    children?: ReactNode
 }
 
 export interface RuleExportAndImportButtonProps {

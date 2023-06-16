@@ -21,6 +21,7 @@ import {HTTPPacketEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import styles from "./MatcherAndExtraction.module.scss"
 import {
+    AdjustmentsIcon,
     ChevronDownIcon,
     ChevronRightIcon,
     ColorSwatchIcon,
@@ -46,6 +47,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -583,6 +585,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                 </LabelNodeItem>
             </div>
             <MatcherAndExtractionValueList
+                showRegex={matcherItem.MatcherType === "regex"}
                 group={matcherItem.Group}
                 notEditable={notEditable}
                 onEditGroup={(g) => {
@@ -603,7 +606,11 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
 })
 
 const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps> = React.memo((props) => {
-    const {group, notEditable, onEditGroup, onAddGroup} = props
+    const {showRegex, group, notEditable, onEditGroup, onAddGroup} = props
+    const onChangeGroupItemValue = useMemoizedFn((v: string, number: number) => {
+        group[number] = v
+        onEditGroup(group)
+    })
     return (
         <div className={styles["matching-extraction-list-value"]}>
             {group.map((groupItem, number) => (
@@ -616,9 +623,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                                 <textarea
                                     value={groupItem}
                                     onChange={(e) => {
-                                        const {value} = e.target
-                                        group[number] = value
-                                        onEditGroup(group)
+                                        onChangeGroupItemValue(e.target.value, number)
                                     }}
                                     rows={1}
                                     placeholder='请输入...'
@@ -630,6 +635,15 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                     </div>
                     {!notEditable && (
                         <div className={styles["matcher-item-operate"]}>
+                            {showRegex && (
+                                <RuleContent
+                                    getRule={(rule) => {
+                                        onChangeGroupItemValue(rule, number)
+                                    }}
+                                >
+                                    <AdjustmentsIcon className={styles["adjustments-icon"]} />
+                                </RuleContent>
+                            )}
                             <TrashIcon
                                 className={styles["trash-icon"]}
                                 onClick={() => {
@@ -847,6 +861,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                     {onRenderTypeExtra}
                 </div>
                 <MatcherAndExtractionValueList
+                    showRegex={extractorItem.Type === "regex"}
                     group={extractorItem.Groups}
                     notEditable={notEditable}
                     onEditGroup={(g) => {

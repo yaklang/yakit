@@ -8,6 +8,19 @@
     align-items: center;
 }
 
+@mixin base-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    @include flex-center;
+    justify-content: center;
+    cursor: pointer;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
 $colors: (
     red: (
         backgroundColor: var(--yakit-tag-color-red)
@@ -173,18 +186,9 @@ $keyColor: map-keys($colors);
     }
     .trash-icon {
         color: var(--yakit-danger-5);
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
-        @include flex-center;
-        justify-content: center;
-        cursor: pointer;
+        @include base-icon;
         &:hover {
             background-color: var(--yakit-background-color);
-        }
-        svg {
-            width: 16px;
-            height: 16px;
         }
     }
 }
@@ -247,6 +251,14 @@ $keyColor: map-keys($colors);
         @include flex-center;
         gap: 4px;
         margin-left: 4px;
+        .adjustments-icon {
+            color: var(--yakit-body-text-color);
+            @include base-icon;
+            &:hover {
+                background-color: var(--yakit-background-color);
+                color: var(--yakit-primary-5);
+            }
+        }
     }
     .add-matcher {
         display: flex;
