@@ -136,12 +136,13 @@ module.exports = (win, getClient) => {
                             return
                         }
                         await new Promise((resolve, reject) => {
-                            httpApi("get", typeApi[type], {code: ghCode})
-                                .then((res) => {
-                                    if (res.code !== 200) {
+                            httpApi("get", typeApi[type], {code: ghCode},
+                                {headers: {'Accept': 'application/json, text/plain, */*'}})
+                                .then((resp) => {
+                                    if (resp.code !== 200) {
                                         win.webContents.send("fetch-signin-data", {
                                             ok: false,
-                                            info: res.data.reason || "请求异常，请重新登录！"
+                                            info: resp.data.reason || "请求异常，请重新登录！"
                                         })
                                         res.end(
                                             JSON.stringify({
@@ -151,7 +152,7 @@ module.exports = (win, getClient) => {
                                         resolve()
                                         return
                                     }
-                                    commonSignIn(res)
+                                    commonSignIn(resp)
                                     res.end(
                                         JSON.stringify({
                                             login: true
