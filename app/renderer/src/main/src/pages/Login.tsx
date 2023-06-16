@@ -120,6 +120,7 @@ const Login: React.FC<LoginProp> = (props) => {
                 <div className='login-type-body'>
                     <h2 className='login-text'>登录</h2>
                     <div className='login-icon-body'>
+                        {/*<div className='login-icon' onClick={() => githubAuth()}>*/}
                         <div className='login-icon' onClick={() => fetchLogin("github")}>
                             <div className='login-icon-text'>
                                 <GithubOutlined className='type-icon' />
