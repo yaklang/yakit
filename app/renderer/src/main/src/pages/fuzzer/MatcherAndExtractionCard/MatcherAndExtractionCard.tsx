@@ -57,7 +57,7 @@ export const filterModeOptions = [
         label: "丢弃"
     },
     {
-        value: "retain",
+        value: "match",
         label: "保留"
     },
     {
@@ -657,8 +657,10 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
 
 export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((props) => {
     const {type, extractor, setExtractor, defActiveKey, notEditable} = props
+
     const [activeKey, setActiveKey] = useState<string>("ID:0")
     const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
+    const [currentIndex, setCurrentIndex] = useState<number>()
 
     useEffect(() => {
         setActiveKey(defActiveKey)
@@ -722,15 +724,16 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                                         }
                                         placement='top'
                                         trigger={["click"]}
-                                        visible={editNameVisible}
+                                        visible={editNameVisible && currentIndex === index}
                                         onVisibleChange={setEditNameVisible}
                                     >
                                         <PencilAltIcon
                                             className={classNames({
-                                                [styles["icon-active"]]: editNameVisible
+                                                [styles["icon-active"]]: editNameVisible && currentIndex === index
                                             })}
                                             onClick={(e) => {
                                                 e.stopPropagation()
+                                                setCurrentIndex(index)
                                             }}
                                         />
                                     </YakitPopover>
@@ -792,6 +795,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                             value={extractorItem.RegexpMatchGroup[0] || 0}
                             onChange={(value) => onEdit("RegexpMatchGroup", [value])}
                             type='horizontal'
+                            min={0}
                         />
                     </LabelNodeItem>
                 )
@@ -846,7 +850,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                     group={extractorItem.Groups}
                     notEditable={notEditable}
                     onEditGroup={(g) => {
-                        onEdit("Group", g)
+                        onEdit("Groups", g)
                     }}
                     onAddGroup={() => {
                         if (isExtractorEmpty(extractorItem)) {

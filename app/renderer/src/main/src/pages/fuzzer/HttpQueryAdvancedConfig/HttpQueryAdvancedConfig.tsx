@@ -813,9 +813,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Form.Item name='filterMode' noStyle>
                                     <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
                                 </Form.Item>
-                                <Form.Item name='hitColor' noStyle>
-                                    <ColorSelect size='small' />
-                                </Form.Item>
+                                {filterMode === "onlyMatch" && (
+                                    <Form.Item name='hitColor' noStyle>
+                                        <ColorSelect size='small' />
+                                    </Form.Item>
+                                )}
                             </div>
                             <Form.Item name='matchersCondition' noStyle>
                                 <YakitRadioButtons
@@ -904,8 +906,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         const v = form.getFieldsValue()
                         onSetValue({
                             ...v,
-                            ...matcher,
-                            ...extractor,
+                            filterMode: matcher.filterMode,
+                            hitColor: matcher.hitColor,
+                            matchersCondition: matcher.matchersCondition,
                             matchers: matcher.matchersList,
                             extractors: extractor.extractorList
                         })

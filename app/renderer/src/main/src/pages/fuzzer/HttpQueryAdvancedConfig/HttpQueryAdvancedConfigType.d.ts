@@ -1,4 +1,5 @@
 
+export type FilterMode = "drop" | "match" | 'onlyMatch'
 export interface AdvancedConfigValueProps {
     // 请求包配置
     forceFuzz?: boolean
@@ -59,10 +60,10 @@ export interface AdvancedConfigValueProps {
     // 设置变量
     params: FuzzerParamItem[]
     // 匹配器
-    filterMode: "drop" | "match" | 'onlyMatch'
+    filterMode: FilterMode
     matchers: HTTPResponseMatcher[]
-    matchersCondition: 'and'|'or'
-    hitColor?:string
+    matchersCondition: 'and' | 'or'
+    hitColor?: string
     //提取器
     extractors: HTTPResponseExtractor[]
 }
