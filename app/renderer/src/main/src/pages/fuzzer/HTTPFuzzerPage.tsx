@@ -647,13 +647,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         // 清楚历史任务的标记
-        // setHistoryTask(undefined)
+        setHistoryTask(undefined)
 
         //  更新默认搜索
-        // setDefaultResponseSearch(affixSearch)
+        setDefaultResponseSearch(affixSearch)
 
-        // setLoading(true)
-        // setDroppedCount(0)
+        setLoading(true)
+        setDroppedCount(0)
 
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = {
@@ -670,14 +670,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ActualAddr: advancedConfigValue.actualHost,
             HotPatchCode: hotPatchCode,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
-            // Filter: {
-            //     // ...advancedConfigValue.getFilter(),
-            //     MinBodySize:advancedConfigValue.MinBodySize,
-            //     MaxBodySize:advancedConfigValue.MaxBodySize,
-            //     StatusCode: advancedConfigValue.statusCode.split(','),
-            //     Keywords: advancedConfigValue.keyWord.split(','),
-            //     Regexps: advancedConfigValue.regexps.split(',')
-            // },
             DelayMinSeconds: advancedConfigValue.minDelaySeconds,
             DelayMaxSeconds: advancedConfigValue.maxDelaySeconds,
             RepeatTimes: advancedConfigValue.repeatTimes,
@@ -718,7 +710,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         console.log("httpParams", httpParams)
-        // ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
+        ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
