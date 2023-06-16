@@ -137,7 +137,7 @@ $keyColor: map-keys($colors);
 
         .matching-extraction-condition {
             @include flex-space-between-and-center;
-            padding: 12px 12px 8px;
+            padding: 12px 12px 0px;
             position: sticky;
             top: 0;
             z-index: 2;
@@ -154,7 +154,7 @@ $keyColor: map-keys($colors);
             }
         }
         .matcher-extraction-collapse {
-            padding: 0 12px 12px;
+            padding: 8px 12px 12px;
             .collapse-panel-header {
                 @include flex-center;
                 gap: 4px;

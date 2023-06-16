@@ -98,7 +98,7 @@ export const defaultExtractorItem: HTTPResponseExtractor = {
     Scope: "raw",
     Groups: [""],
     // ---------
-    Name: "",
+    Name: "ID 0",
     RegexpMatchGroup: [],
     XPathAttribute: ""
 }
@@ -214,7 +214,10 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
         }
         setExtractor({
             ...extractor,
-            extractorList: [...extractor.extractorList, _.cloneDeepWith(defaultExtractorItem)]
+            extractorList: [
+                ...extractor.extractorList,
+                _.cloneDeepWith({...defaultExtractorItem, Name: `Id ${extractor.extractorList.length - 1}`})
+            ]
         })
     })
     const onExecute = useMemoizedFn(() => {
@@ -250,7 +253,7 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
                 Extractors: extractor.extractorList
             })
             .then((obj: {Values: {Key: string; Value: string}[]}) => {
-                console.log("obj", obj)
+                console.log("obj", extractor.extractorList, obj)
                 if (!obj) {
                     yakitNotify("error", "匹配不到有效结果")
                     return
