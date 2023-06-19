@@ -62,7 +62,8 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const {advancedConfigValue, visible, setVisible, onInsertYakFuzzer, onValuesChange, refreshProxy} = props
+    const {advancedConfigValue, visible, setVisible, onInsertYakFuzzer, onValuesChange, refreshProxy, httpResponse} =
+        props
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
 
@@ -897,7 +898,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             >
                 <MatcherAndExtractionCard
                     defActiveType={type}
-                    httpResponse=''
+                    httpResponse={httpResponse}
                     defActiveKey={defActiveKey}
                     matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
                     extractorValue={{extractorList}}
@@ -963,7 +964,12 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                             onRemove={() => onRemove(index)}
                             onEdit={() => onEdit(index)}
                             popoverContent={
-                                <MatcherItem matcherItem={matcherItem} onEdit={() => {}} notEditable={true} />
+                                <MatcherItem
+                                    matcherItem={matcherItem}
+                                    onEdit={() => {}}
+                                    notEditable={true}
+                                    httpResponse=''
+                                />
                             }
                         />
                     </div>
@@ -1009,7 +1015,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                             onRemove={() => onRemove(index)}
                             onEdit={() => onEdit(index)}
                             popoverContent={
-                                <ExtractorItem extractorItem={extractorItem} onEdit={() => {}} notEditable={true} />
+                                <ExtractorItem extractorItem={extractorItem} onEdit={() => {}} notEditable={true} httpResponse=""/>
                             }
                         />
                     </div>

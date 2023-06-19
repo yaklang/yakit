@@ -82,6 +82,8 @@ export interface HttpQueryAdvancedConfigProps {
     onValuesChange: (v: AdvancedConfigValueProps) => void
     /**刷新设置代理的list */
     refreshProxy: boolean
+    /**匹配器和提取器里面的响应 */
+    httpResponse:string
 }
 
 export interface KVPair {

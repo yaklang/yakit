@@ -31,11 +31,13 @@ export interface ExtractorValueProps {
 export interface MatcherCollapseProps extends MatcherAndExtractorProps {
     matcher: MatcherValueProps
     setMatcher: (m: MatcherValueProps) => void
+    httpResponse: string
 }
 
 export interface ExtractorCollapseProps extends MatcherAndExtractorProps {
     extractor: ExtractorValueProps
     setExtractor: (e: ExtractorValueProps) => void
+    httpResponse: string
 }
 
 interface MatcherAndExtractorProps {
@@ -73,10 +75,12 @@ export interface labelNodeItemProps {
 
 export interface MatcherItemProps extends MatcherItemAndExtractorItemProps {
     matcherItem: HTTPResponseMatcher
+    httpResponse: string;
 }
 
 export interface ExtractorItemProps extends MatcherItemAndExtractorItemProps {
     extractorItem: HTTPResponseExtractor
+    httpResponse: string;
 }
 
 interface MatcherItemAndExtractorItemProps {
@@ -106,4 +110,5 @@ export interface MatcherAndExtractionValueListProps {
     notEditable?: boolean
     onEditGroup: (group: string[]) => void
     onAddGroup: () => void
+    httpResponse: string;
 }

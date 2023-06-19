@@ -142,7 +142,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <YakitInput />
                     </Form.Item>
                     <Form.Item label='规则内容' name='Rule' rules={[{required: true, message: "该项为必填"}]}>
-                        <RuleContent getRule={getRule} ref={ruleContentRef}/>
+                        <RuleContent getRule={getRule} ref={ruleContentRef} />
                     </Form.Item>
                     <Row>
                         <Col span={5}>&nbsp;</Col>
@@ -210,14 +210,17 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
 }
 
 const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
-    const {onSave} = props
+    const {onSave, defaultCode} = props
+    const [codeValue, setCodeValue] = useState(defaultCode)
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
     const [selected, setSelected] = useState<string>("")
     const [_responseStr, setResponseStr] = useState<string>("")
 
     //用户选择的数据转换成的正则
     const [matchedRegexp, setMatchedRegexp] = useState<string>("")
-
+    useEffect(() => {
+        setCodeValue(defaultCode)
+    }, [defaultCode])
     useEffect(() => {
         if (!editor) {
             return
@@ -271,13 +274,21 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
         <div className={styles["yakit-extract-regular-editor"]}>
             <div className={styles["yakit-editor"]}>
                 <YakEditor
+                    value={codeValue}
+                    setValue={(c) => setCodeValue(c)}
                     editorDidMount={(e) => {
                         setEditor(e)
                     }}
                     type={"html"}
                 />
             </div>
-            <RegexpInput regexp={matchedRegexp} tagSize="large" showCheck={true} onSave={onSave} onSure={setMatchedRegexp} />
+            <RegexpInput
+                regexp={matchedRegexp}
+                tagSize='large'
+                showCheck={true}
+                onSave={onSave}
+                onSure={setMatchedRegexp}
+            />
         </div>
     )
 })
@@ -578,7 +589,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
             setRule(v)
         }
     }))
-    const {getRule, inputProps} = props
+    const {getRule, inputProps, defaultCode} = props
     const [rule, setRule] = useState<string>("")
     const [ruleVisible, setRuleVisible] = useState<boolean>()
     const onGetRule = useMemoizedFn((val: string) => {
@@ -616,7 +627,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 footer={null}
                 closable={true}
             >
-                <ExtractRegular onSave={(v) => onGetRule(v)} />
+                <ExtractRegular onSave={(v) => onGetRule(v)} defaultCode={defaultCode} />
             </YakitModal>
         </>
     )

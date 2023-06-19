@@ -66,6 +66,7 @@ import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdva
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {Route} from "@/routes/routeSpec"
 import {HTTPResponseExtractor, HTTPResponseMatcher} from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -97,6 +98,14 @@ export const analyzeFuzzerResponse = (
     })
 }
 
+export interface RedirectRequestParams {
+    Request: string
+    Response: string
+    IsHttps: boolean
+    PerRequestTimeoutSeconds: number
+    Proxy: string
+}
+
 export interface HTTPFuzzerPageProp {
     isHttps?: boolean
     isGmTLS?: boolean
@@ -112,35 +121,67 @@ export interface FuzzerResponse {
     StatusCode: number
     Host: string
     ContentType: string
-    Headers: {Header: string; Value: string}[]
+    Headers: HTTPHeader[]
     ResponseRaw: Uint8Array
-    RequestRaw: Uint8Array
     BodyLength: number
+    DurationMs: number
     UUID: string
     Timestamp: number
-    DurationMs: number
-
+    RequestRaw: Uint8Array
+    // GuessResponseEncoding: string;
     Ok: boolean
     Reason: string
-    Payloads?: string[]
-
     IsHTTPS?: boolean
     Count?: number
-
-    HeaderSimilarity?: number
+    Payloads?: string[]
     BodySimilarity?: number
+    HeaderSimilarity?: number
     MatchedByFilter?: boolean
     Url?: string
-
+    // TaskId: string;
+    DNSDurationMs: number
+    FirstByteDurationMs?: number
+    TotalDurationMs: number
     Proxy?: string
     RemoteAddr?: string
-    DNSDurationMs?: number
-    FirstByteDurationMs?: number
-    TotalDurationMs?: number
-
-    /**@name 提取响应数据*/
-    extracted?: string
+    ExtractedResults: KVPair[]
+    MatchedByMatcher: boolean
 }
+
+// export interface FuzzerResponse {
+//     Method: string
+//     StatusCode: number
+//     Host: string
+//     ContentType: string
+//     Headers: {Header: string; Value: string}[]
+//     ResponseRaw: Uint8Array
+//     RequestRaw: Uint8Array
+//     BodyLength: number
+//     UUID: string
+//     Timestamp: number
+//     DurationMs: number
+
+//     Ok: boolean
+//     Reason: string
+//     Payloads?: string[]
+
+//     IsHTTPS?: boolean
+//     Count?: number
+
+//     HeaderSimilarity?: number
+//     BodySimilarity?: number
+//     MatchedByFilter?: boolean
+//     Url?: string
+
+//     Proxy?: string
+//     RemoteAddr?: string
+//     DNSDurationMs?: number
+//     FirstByteDurationMs?: number
+//     TotalDurationMs?: number
+
+//     /**@name 提取响应数据*/
+//     extracted?: string
+// }
 
 const defaultPostTemplate = `POST / HTTP/1.1
 Content-Type: application/json
@@ -274,7 +315,7 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
-const emptyFuzzer = {
+const emptyFuzzer: FuzzerResponse = {
     BodyLength: 0,
     BodySimilarity: 0,
     ContentType: "",
@@ -293,7 +334,13 @@ const emptyFuzzer = {
     ResponseRaw: new Uint8Array(),
     StatusCode: 0,
     Timestamp: 0,
-    UUID: ""
+    UUID: "",
+
+    // 6.16
+    DNSDurationMs: 0,
+    TotalDurationMs: 0,
+    ExtractedResults: [],
+    MatchedByMatcher: false
 }
 
 export interface SelectOptionProps {
@@ -359,7 +406,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         filterMode: "drop",
         matchers: [],
         matchersCondition: "and",
-        hitColor: "",
+        hitColor: "red",
         // 提取器
         extractors: []
     })
@@ -811,24 +858,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             } else {
                 failedCount++
             }
-            // 过滤配置(丢包) date:0612  ---start
-            // if (!filterIsEmpty(getFilter())) {
-            //     // 设置了 Filter
-            //     const hit = data["MatchedByFilter"] === true
-            //     // 丢包的条件：
-            //     //   1. 命中过滤器，同时过滤模式设置为丢弃
-            //     //   2. 未命中过滤器，过滤模式设置为保留
-            //     if ((hit && getFilterMode() === "drop") || (!hit && getFilterMode() === "match")) {
-            //         // 丢弃不匹配的内容
-            //         droppedCount++
-            //         setDroppedCount(droppedCount)
-            //         return
-            //     }
-            // }
-            // 过滤配置(丢包) date:0612  ---end
             if (advancedConfigValue.matchers.length > 0) {
-                // 设置了 Filter
-                const hit = data["MatchedByFilter"] === true
+                // 设置了 matchers
+                const hit = data["MatchedByMatcher"] === true
                 // 丢包的条件：
                 //   1. 命中过滤器，同时过滤模式设置为丢弃
                 //   2. 未命中过滤器，过滤模式设置为保留
@@ -849,9 +881,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Method: data.Method,
                 Host: data.Host,
                 ContentType: data.ContentType,
-                Headers: (data.Headers || []).map((i: any) => {
-                    return {Header: i.Header, Value: i.Value}
-                }),
+                Headers: data.Headers || [],
                 DurationMs: data.DurationMs,
                 BodyLength: data.BodyLength,
                 UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
@@ -868,9 +898,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 RemoteAddr: data.RemoteAddr,
                 FirstByteDurationMs: data.FirstByteDurationMs,
                 DNSDurationMs: data.DNSDurationMs,
-                TotalDurationMs: data.TotalDurationMs
+                TotalDurationMs: data.TotalDurationMs,
+                // 6.16
+                ...data
             } as FuzzerResponse
-
+            console.log("r", r)
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
@@ -1073,7 +1105,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         callback(params)
     })
     /**
-     * 6.16更改分享的数据结构，需提示用户更新版本  
+     * 6.16更改分享的数据结构，需提示用户更新版本
      */
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
         try {
@@ -1251,6 +1283,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
+    const httpResponse: FuzzerResponse = useMemo(() => {
+        return redirectedResponse ? redirectedResponse : getFirstResponse()
+    }, [onlyOneResponse, redirectedResponse, getFirstResponse()])
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1262,6 +1298,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onInsertYakFuzzer={onInsertYakFuzzer}
                 onValuesChange={(v) => onGetFormValue(v)}
                 refreshProxy={refreshProxy}
+                httpResponse=""
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
@@ -1360,17 +1397,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <YakitButton
                             onClick={() => {
                                 setLoading(true)
+                                const redirectRequestProps: RedirectRequestParams = {
+                                    Request: request,
+                                    Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
+                                    IsHttps: advancedConfigValue.isHttps,
+                                    // IsGmTLS: advancedConfigValue.isGmTLS,
+                                    PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+                                    // NoFixContentLength: advancedConfigValue.noFixContentLength,
+                                    // NoSystemProxy: advancedConfigValue.noSystemProxy,
+                                    Proxy: advancedConfigValue.proxy.join(",")
+                                }
                                 ipcRenderer
-                                    .invoke("RedirectRequest", {
-                                        Request: request,
-                                        Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
-                                        IsHttps: advancedConfigValue.isHttps,
-                                        IsGmTLS: advancedConfigValue.isGmTLS,
-                                        PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                                        NoFixContentLength: advancedConfigValue.noFixContentLength,
-                                        NoSystemProxy: advancedConfigValue.noSystemProxy,
-                                        Proxy: advancedConfigValue.proxy.join(",")
-                                    })
+                                    .invoke("RedirectRequest", redirectRequestProps)
                                     .then((rsp: FuzzerResponse) => {
                                         setRedirectedResponse(rsp)
                                     })
@@ -1388,10 +1426,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     )}
                     <div className={styles["display-flex"]}>
                         {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
-                        {advancedConfigValue.proxy.length>0 && (
+                        {advancedConfigValue.proxy.length > 0 && (
                             <Tooltip title={advancedConfigValue.proxy}>
                                 <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
-                                    代理：{advancedConfigValue.proxy.join(',')}
+                                    代理：{advancedConfigValue.proxy.join(",")}
                                 </YakitTag>
                             </Tooltip>
                         )}
@@ -1572,9 +1610,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <YakitSpin spinning={false} style={{height: "100%"}}>
                                 {onlyOneResponse ? (
                                     <>
-                                        {redirectedResponse
+                                        {/* {redirectedResponse
                                             ? responseViewer(redirectedResponse)
-                                            : responseViewer(getFirstResponse())}
+                                            : responseViewer(getFirstResponse())} */}
+                                        {responseViewer(httpResponse)}
                                     </>
                                 ) : (
                                     <>

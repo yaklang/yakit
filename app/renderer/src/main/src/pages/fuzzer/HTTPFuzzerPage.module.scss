@@ -23,9 +23,10 @@
     .fuzzer-heard {
         display: flex;
         align-items: center;
-        height: 36px;
+        // height: 36px;
         padding-bottom: 12px;
-        gap: 16px;
+        gap: 8px 16px;
+        flex-wrap: wrap;
         .fuzzer-heard-force {
             display: flex;
             align-items: center;

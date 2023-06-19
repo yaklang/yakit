@@ -390,3 +390,9 @@ $keyColor: map-keys($colors);
         }
     }
 }
+
+.extract-results {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
