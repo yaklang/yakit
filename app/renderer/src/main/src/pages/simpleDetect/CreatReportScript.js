@@ -18,15 +18,15 @@ if reportName == "" {
 
 reportInstance = report.New()
 reportInstance.From("simple-detect")
-defer func{
-    err := recover()
-    if err != nil {
-        yakit.Info("扫描报告构建失败：%#v", err)
-    }
-    id = reportInstance.Save()
-    yakit.Report(id)
-    
-}
+// defer func{
+//     err := recover()
+//     if err != nil {
+//         yakit.Info("扫描报告构建失败：%#v", err)
+//     }
+//     id = reportInstance.Save()
+//     yakit.Report(id)
+//    
+// }
 
 severityToRisks = {}
 targetToRisks = {}
@@ -362,7 +362,17 @@ for i, riskIns := range potentialRisks {
         cveStr = "-"
     }
     if len(showPotentialLine) < 10 {
-        title = str.SplitN(riskIns.Title,": -",2)[1]
+        title = riskIns.Title
+        try {
+          if str.Contains(riskIns.Title,": -") {
+            title = str.SplitN(riskIns.Title,": -",2)[1]
+          } else if str.Contains(riskIns.Title,":") && str.Contains(riskIns.Title,"CVE-") {
+            title = str.SplitN(riskIns.Title,":",2)[1]
+          }
+        }catch err {
+             yakit.Info("Title %v", err)
+        }
+        
         showPotentialLine = append(showPotentialLine, [
             cveStr,
             title,
