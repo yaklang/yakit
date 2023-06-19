@@ -374,8 +374,6 @@ service Yak {
   rpc DelKey(GetKeyRequest) returns (Empty);
   rpc GetAllProcessEnvKey(Empty) returns (GetProcessEnvKeyResult);
   rpc SetProcessEnvKey(SetKeyRequest) returns (Empty);
-  rpc GetProjectKey(GetKeyRequest) returns (GetKeyResult);
-  rpc SetProjectKey(SetKeyRequest) returns (Empty);
 
   // Online
   rpc GetOnlineProfile(Empty) returns (OnlineProfile);
@@ -2436,6 +2434,7 @@ message QueryYakScriptRequest {
   string UserName = 14;
 
   bool IgnoreGeneralModuleOrder = 15;
+  repeated string Family = 16;
 }
 
 message QueryYakScriptResponse {
@@ -2742,6 +2741,7 @@ message FuzzerRequest {
   repeated HTTPResponseExtractor Extractors = 32;
   repeated HTTPResponseMatcher Matchers = 33;
   string MatchersCondition = 34;
+  string HitColor = 36;
 }
 
 message KVPair {
@@ -2774,7 +2774,6 @@ message ExtractedUrl {
 }
 
 message FuzzerResponse {
-
   string Method = 1;
   int32  StatusCode = 2;
   string Host = 3;
@@ -2828,6 +2827,7 @@ message FuzzerResponse {
   // 如果设置了
   repeated KVPair ExtractedResults = 45;
   bool MatchedByMatcher = 46;
+  string HitColor = 47;
 }
 
 message Paging {
