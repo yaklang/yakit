@@ -2767,6 +2767,15 @@ message RedirectRequestParams {
   bool IsHttps = 3;
   double PerRequestTimeoutSeconds = 4;
   string Proxy = 5;
+
+  // Extractor n Matchers
+  repeated HTTPResponseExtractor Extractors = 6;
+  repeated HTTPResponseMatcher Matchers = 7;
+  string MatchersCondition = 8;
+  string HitColor = 9;
+
+  repeated FuzzerParamItem Params = 10;
+  bool IsGmTLS = 11;
 }
 
 message ExtractedUrl {
