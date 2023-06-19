@@ -204,10 +204,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     if(chromePath) return
                     else{
                         setShowChromeWarn(true)
-                        resolve("chrome-path")
                     }
                 })
                 .catch((e) => reject(`error-chrome-path ${e}`))
+                .finally(() => {
+                    resolve("chrome-path")
+                })
         })
     })
 
