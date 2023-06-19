@@ -24,6 +24,7 @@ import "./PortScanPage.css"
 import {SimplePluginList} from "../../components/SimplePluginList"
 import { isEnpriTrace } from "@/utils/envfile"
 import { CreateReport } from "./CreateReport"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 const ScanPortTemplate = "scan-port-template"
@@ -102,7 +103,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const openPort = useRef<YakitPort[]>([])
     // const closedPort = useRef<YakitPort[]>([])
 
-    const [infoState, {reset}] = useHoldingIPCRStream(
+    const [infoState, {reset, setXtermRef,resetAll}] = useHoldingIPCRStream(
         "scan-port",
         "PortScan",
         token,
@@ -178,6 +179,9 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 
     // 是否允许下载报告
     const [allowDownloadReport, setAllowDownloadReport] = useState<boolean>(false)
+    // 获取最新的唯一标识UUID
+    const uuid: string = uuidv4()
+    const [_, setNowUUID, getNowUUID] = useGetState<string>(uuid)
 
     return (
         <div style={{width: "100%", height: "100%"}}>
@@ -215,14 +219,17 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         setLoading(true)
                                         openPort.current = []
                                         // closedPort.current = []
-                                        reset()
+                                        resetAll()
                                         xtermClear(xtermRef)
                                         // 企业版
                                         if(isEnpriTrace()){
                                             setAllowDownloadReport(true)
+                                            const TaskName = `${params.Targets.split(",")[0].split(/\n/)[0]}风险评估报告`
+                                            const runTaskNameEx = TaskName + "-" + getNowUUID()
+                                            let PortScanRequest = {...params, TaskName: runTaskNameEx}
                                             ipcRenderer.invoke("SimpleDetect", {
                                                 LastRecord:{},
-                                                PortScanRequest:params
+                                                PortScanRequest
                                             }, token)
                                         }
                                         else{
@@ -411,7 +418,9 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     isEnpriTrace()?<CreateReport 
                                     infoState={infoState}
                                     runPluginCount={params.ScriptNames.length}
+                                    targets={params.Targets}
                                     allowDownloadReport={allowDownloadReport}
+                                    nowUUID={getNowUUID()}
                                     setAllowDownloadReport={setAllowDownloadReport}
                                     loading={loading}/>:null
                                 }>

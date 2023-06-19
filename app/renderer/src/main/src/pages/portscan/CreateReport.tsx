@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, memo, useRef, useState} from "react"
 import {Button, Input, Modal, Progress} from "antd"
 import {useGetState} from "ahooks"
 import styles from "./CreateReport.module.scss"
@@ -6,7 +6,6 @@ import {warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {ExecResult} from "../invoker/schema"
 import {CreatReportScript} from "../simpleDetect/CreatReportScript"
-import {v4 as uuidv4} from "uuid"
 import {InfoState} from "@/hook/useHoldingIPCRStream"
 import {Route} from "@/routes/routeSpec"
 const {ipcRenderer} = window.require("electron")
@@ -14,11 +13,13 @@ export interface CreateReportProps {
     loading: boolean
     infoState: InfoState
     runPluginCount: number
+    targets: string
     allowDownloadReport: boolean
+    nowUUID: string
     setAllowDownloadReport: (v: boolean) => void
 }
-export const CreateReport: React.FC<CreateReportProps> = (props) => {
-    const {loading, infoState, runPluginCount, allowDownloadReport, setAllowDownloadReport} = props
+export const CreateReport: React.FC<CreateReportProps> = memo((props) => {
+    const {loading, infoState, runPluginCount, targets,allowDownloadReport, nowUUID,setAllowDownloadReport} = props
 
     // 下载报告Modal
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
@@ -33,6 +34,14 @@ export const CreateReport: React.FC<CreateReportProps> = (props) => {
     const [reportToken, setReportToken] = useState(randomString(40))
     // 是否展示报告生成进度
     const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
+
+    useEffect(()=>{
+        if(isSetTaskName.current){
+            const defaultReportName = `${targets.split(",")[0].split(/\n/)[0]}风险评估报告`
+            setReportName(defaultReportName)
+        }
+    },[targets])
+
     useEffect(() => {
         if (!reportModalVisible) {
             setReportLoading(false)
@@ -88,11 +97,9 @@ export const CreateReport: React.FC<CreateReportProps> = (props) => {
     }
     /** 下载报告 */
     const downloadReport = () => {
-        // 获取最新的唯一标识UUID
-        const uuid: string = uuidv4()
         // 脚本数据
         const scriptData = CreatReportScript
-        const runTaskNameEx = reportName + "-" + uuid
+        const runTaskNameEx = reportName + "-" + nowUUID
         let Params = [
             {Key: "task_name", Value: runTaskNameEx},
             {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
@@ -177,4 +184,4 @@ export const CreateReport: React.FC<CreateReportProps> = (props) => {
             </Modal>
         </div>
     )
-}
+})
