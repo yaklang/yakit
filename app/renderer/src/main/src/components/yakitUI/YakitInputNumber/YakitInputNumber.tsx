@@ -5,6 +5,7 @@ import styles from "./YakitInputNumber.module.scss"
 import classNames from "classnames"
 import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
 import {useMemoizedFn, useMutationObserver} from "ahooks"
+import { getReleaseEditionName } from "@/utils/envfile"
 
 /**
  * 更新说明
@@ -84,7 +85,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
         const stepPrecision = getPrecision(step)
         if (precision !== undefined) {
             if (stepPrecision > precision) {
-                console.warn("[Yakit Warn][InputNumber]precision should not be less than the decimal places of step")
+                console.warn(`[${getReleaseEditionName()} Warn][InputNumber]precision should not be less than the decimal places of step`)
             }
             precisionRef.current = precision
         } else {

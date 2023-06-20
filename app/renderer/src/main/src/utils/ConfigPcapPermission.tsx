@@ -3,6 +3,7 @@ import {showModal} from "@/utils/showModal";
 import {Alert, Button, Form, Tooltip} from "antd";
 import {failed} from "@/utils/notification";
 import {QuestionCircleTwoTone} from "@ant-design/icons/lib";
+import { getReleaseEditionName } from "./envfile";
 
 export interface ConfigPcapPermissionFormProp {
     onClose: () => any
@@ -23,7 +24,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
             failed(`获取 Pcap 权限状态失败：${e}`)
         }).finally(() => {
             ipcRenderer.invoke("fetch-system-and-arch").then((e: string) => setPlatform(e)).catch(e => {
-                failed(`获取 Yakit 操作系统失败：${e}`)
+                failed(`获取 ${getReleaseEditionName()} 操作系统失败：${e}`)
             })
         })
     }, [])
@@ -52,7 +53,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
                     <Tooltip title={"原理：MacOS 通过设置 /dev/bpf* 权限组，可参考 Wireshark ChmodBPF 相关配置，Linux 可通过 setcap 命令设置 pcap 权限，Windows 推荐直接以 UAC 提升管理员权限启动"}>
                         <Button type={"link"} icon={<QuestionCircleTwoTone/>}/>
                     </Tooltip>
-                    {isWindows ? "Windows 可用管理员权限启动 Yakit 以获取对 Pcap 的使用权限" : "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限"}
+                    {isWindows ? `Windows 可用管理员权限启动 ${getReleaseEditionName()} 以获取对 Pcap 的使用权限` : "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限"}
                 </>
             }
         >

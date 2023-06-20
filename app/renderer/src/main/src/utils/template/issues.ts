@@ -1,4 +1,5 @@
 import {LocalInfoProps} from "@/components/layout/UILayout";
+import { getReleaseEditionName } from "../envfile";
 
 export const ReportBug = (system_info?: LocalInfoProps): string => {
     let tpl = `
@@ -26,7 +27,7 @@ export const ReportBug = (system_info?: LocalInfoProps): string => {
 
 - 操作系统: ${system_info?.system}
 - 系统架构: ${system_info?.arch}
-- Yakit 版本: ${system_info?.localYakit}
+- ${getReleaseEditionName()} 版本: ${system_info?.localYakit}
 - YakLang 版本: ${system_info?.localYaklang}
 
 ## 补充说明

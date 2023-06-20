@@ -1054,7 +1054,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     <div>
                         <div className={isSimple ? styles["update-simple-title"] : styles["update-title"]}>{`${
                             isEnterprise ? "企业版" : "社区版"
-                        } Yakit ${isUpdate ? lastVersion : version}`}</div>
+                        } ${getReleaseEditionName()} ${isUpdate ? lastVersion : version}`}</div>
                         {!isSimple && <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>}
                         {/* <div className={styles["update-time"]}>2022-10-01</div> */}
                     </div>

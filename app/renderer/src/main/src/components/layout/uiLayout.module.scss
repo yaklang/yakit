@@ -63,7 +63,7 @@
                 }
 
                 .yakit-header-title {
-                    width: 100px;
+                    // width: 100px;
                     height: 36px;
                     position: absolute;
                     top: 0;
@@ -464,6 +464,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+
+            .logo-img{
+                img{
+                    height: 64px;
+                    width: 64px;
+                }
+            }
 
             .title-style {
                 margin-top: 24px;

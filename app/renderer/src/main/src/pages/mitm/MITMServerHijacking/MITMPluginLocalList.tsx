@@ -37,6 +37,7 @@ import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
+import { getReleaseEditionName } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -318,7 +319,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     return (
         <YakitHint
             visible={visible}
-            title='Yakit 云端插件下载中...'
+            title={`${getReleaseEditionName()} 云端插件下载中...`}
             heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
             onCancel={() => {
                 StopAllPlugin()

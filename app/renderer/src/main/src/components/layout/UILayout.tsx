@@ -37,7 +37,7 @@ import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/componen
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
-import {isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
 import {HomeSvgIcon, StopIcon} from "@/assets/newIcon"
@@ -59,6 +59,8 @@ import {useScreenRecorder} from "@/store/screenRecorder"
 import { ResultObjProps, remoteOperation } from "@/pages/dynamicControl/DynamicControl"
 
 import {useStore, yakitDynamicStatus} from "@/store"
+import yakitEE from "@/assets/yakitEE.png";
+import yakitSE from "@/assets/yakitSE.png";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -980,7 +982,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    Yakit-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
+                                    {getReleaseEditionName()}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
                                 </div>
 
                                 <div className={styles["header-left"]}>
@@ -1087,7 +1089,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    Yakit-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
+                                    {getReleaseEditionName()}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
                                 </div>
 
                                 <div className={styles["header-left"]}>
@@ -1445,7 +1447,17 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             <Spin spinning={loading}>
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
-                        <YakitThemeSvgIcon style={{fontSize: 64}} />
+                        {isCommunityEdition() && <YakitThemeSvgIcon style={{fontSize: 64}} />}
+                        {isEnpriTrace()&& 
+                            <div className={styles["logo-img"]}>
+                                <img src={yakitEE} alt="暂无图片" />
+                            </div>
+                        }
+                        {isEnpriTraceAgent()&& 
+                            <div className={styles["logo-img"]}>
+                                <img src={yakitSE} alt="暂无图片" />
+                            </div>
+                        }
                         <div className={styles["title-style"]}>远程模式</div>
                         <div className={styles["remote-history"]}>
                             <div className={styles["select-title"]}>连接历史</div>
@@ -1696,7 +1708,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
 
     const content = (
         <div style={{width: 430}} className={styles["pem-wrapper"]}>
-            注意：Yakit 并不会把历史记录上传到互联网
+            注意：{getReleaseEditionName()} 并不会把历史记录上传到互联网
             <br />
             你可以在你的本地目录（客户端目录）下找到远程登录信息
             <br />
@@ -1876,7 +1888,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
 
                             <div className={styles["hint-right-wrapper"]}>
                                 <div className={styles["hint-right-download"]}>
-                                    <div className={styles["hint-right-title"]}>Yakit 软件下载中...</div>
+                                    <div className={styles["hint-right-title"]}>{getReleaseEditionName()} 软件下载中...</div>
                                     <div className={styles["download-progress"]}>
                                         <Progress
                                             strokeColor='#F28B44'

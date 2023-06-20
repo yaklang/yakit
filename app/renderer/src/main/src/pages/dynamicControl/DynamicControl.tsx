@@ -20,6 +20,7 @@ import {DynamicStatusProps, UserInfoProps, useStore, yakitDynamicStatus} from "@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { getReleaseEditionName } from "@/utils/envfile"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
 const {RangePicker} = DatePicker
@@ -44,7 +45,7 @@ export const ControlOperation: React.FC<ControlOperationProps> = (props) => {
             <div className={styles["control-operation-box"]}>
                 <div className={styles["control-operation-title"]}>远程控制中</div>
                 <div className={styles["control-operation-seconend-title"]}>
-                    已被用户 {controlName} 远程控制，请勿关闭 Yakit
+                    已被用户 {controlName} 远程控制，请勿关闭 {getReleaseEditionName()}
                 </div>
                 <div className={styles["control-operation-img"]}>
                     <ControlMyselfIcon />

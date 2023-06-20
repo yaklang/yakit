@@ -19,6 +19,7 @@ import { LocalGV } from "@/yakitGV"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
+import { getReleaseEditionName } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -155,7 +156,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                 ipcRenderer
                     .invoke("install-yak-engine", `v${getLatestVersion()}`)
                     .then(() => {
-                        success("安装成功，如未生效，重启 Yakit 即可")
+                        success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
                         if (isBreakDownload.current) return
                         onSuccess()
                     })

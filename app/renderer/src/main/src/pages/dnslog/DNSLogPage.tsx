@@ -6,6 +6,7 @@ import {failed} from "../../utils/notification";
 import {CopyableField, SwitchItem} from "../../utils/inputUtil";
 import {formatDate, formatTimestamp} from "../../utils/timeUtil";
 import {YakEditor} from "../../utils/editors";
+import { getReleaseEditionName } from "@/utils/envfile";
 
 export interface DNSLogPageProp {
 
@@ -83,7 +84,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     return <AutoCard title={<Space>
         DNSLog
         <div style={{color: "#999"}}>
-            使用 Yakit 自带的 DNSLog 反连服务
+            使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务
         </div>
         <Form onSubmitCapture={e => {
             e.preventDefault()
