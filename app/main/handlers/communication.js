@@ -104,8 +104,13 @@ module.exports = (win, getClient) => {
         win.webContents.send("open-screenCap-modal")
     })
 
-     // 定位HTTP History
-     ipcMain.handle("send-positioning-http-history", (e, params) => {
+    // 定位HTTP History
+    ipcMain.handle("send-positioning-http-history", (e, params) => {
         win.webContents.send("fetch-positioning-http-history", params)
+    })
+
+    // webfuzzer 打开提取器和匹配器Modal
+    ipcMain.handle("send-open-matcher-and-extraction", (e, params) => {
+        win.webContents.send("fetch-open-matcher-and-extraction", params)
     })
 }

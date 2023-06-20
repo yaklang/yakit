@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
     ExtractorValueProps,
     HTTPResponseExtractor,
@@ -142,8 +142,10 @@ export const defMatcherAndExtractionCode =
 export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> = React.memo((props) => {
     const {httpResponse, ...restProps} = props
     const [codeValue, setCodeValue] = useState<string>(httpResponse || defMatcherAndExtractionCode)
+    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
         setCodeValue(httpResponse || defMatcherAndExtractionCode)
+        setRefreshTrigger(!refreshTrigger)
     }, [httpResponse])
     return (
         <div className={styles["matching-extraction-resize-box"]}>
@@ -151,6 +153,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                 firstNode={
                     <div className={styles["matching-extraction-editor"]}>
                         <NewHTTPPacketEditor
+                            refreshTrigger={refreshTrigger}
                             bordered={false}
                             noHeader={true}
                             originValue={StringToUint8Array(codeValue)}
@@ -168,306 +171,320 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
     )
 })
 
-export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((props) => {
-    const {onClose, onSave, extractorValue, matcherValue, defActiveKey, httpResponse, defActiveType} = props
-    const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
-    const [matcher, setMatcher] = useState<MatcherValueProps>(matcherValue)
-    const [extractor, setExtractor] = useState<ExtractorValueProps>(extractorValue)
-    const [executeLoading, setExecuteLoading] = useState<boolean>(false)
-    useEffect(() => {
-        setType(defActiveType)
-    }, [defActiveType])
-    useEffect(() => {
-        setMatcher({
-            ..._.cloneDeepWith(matcherValue),
-            matchersList:
-                defActiveType === "matchers" && matcherValue.matchersList.length === 0
-                    ? [defaultMatcherItem]
-                    : matcherValue.matchersList
-        })
-    }, [matcherValue, defActiveType])
-    useEffect(() => {
-        setExtractor({
-            ..._.cloneDeepWith(extractorValue),
-            extractorList:
-                defActiveType === "extractors" && extractorValue.extractorList.length === 0
-                    ? [defaultExtractorItem]
-                    : extractorValue.extractorList
-        })
-    }, [extractorValue, defActiveType])
-    const isEffectiveMatcher: boolean = useMemo(() => {
-        return matcher.matchersList.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
-    }, [matcher.matchersList])
-    const isEffectiveExtractor: boolean = useMemo(() => {
-        return (
-            extractor.extractorList.filter((i) => !((i?.Groups || []).map((i) => i.trim()).join("") === "")).length <= 0
-        )
-    }, [extractor.extractorList])
-    const onIsEmpty = useMemoizedFn(() => {
-        const matcherEmptyList = matcher.matchersList.filter((item) => isMatcherItemEmpty(item))
-        const extractorEmptyList = extractor.extractorList.filter((item) => isExtractorEmpty(item))
-        return matcherEmptyList.length > 0 || extractorEmptyList.length > 0
-    })
+export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo(
+    React.forwardRef((props, ref) => {
+        const {onClose, onSave, extractorValue, matcherValue, defActiveKey, httpResponse, defActiveType} = props
+        const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
+        const [matcher, setMatcher] = useState<MatcherValueProps>(matcherValue)
+        const [extractor, setExtractor] = useState<ExtractorValueProps>(extractorValue)
+        const [executeLoading, setExecuteLoading] = useState<boolean>(false)
 
-    const onAddCondition = useMemoizedFn(() => {
-        switch (type) {
-            case "matchers":
-                onAddMatcher()
-                break
-            case "extractors":
-                onAddExtractors()
-                break
-            default:
-                break
-        }
-    })
-    const onAddMatcher = useMemoizedFn(() => {
-        if (matcher.matchersList.filter((i) => isMatcherItemEmpty(i)).length > 0) {
-            yakitNotify("error", "已有空匹配器条件")
-            return
-        }
-        setMatcher({
-            ...matcher,
-            matchersList: [...matcher.matchersList, _.cloneDeepWith(defaultMatcherItem)]
-        })
-    })
-    const onAddExtractors = useMemoizedFn(() => {
-        if (extractor.extractorList.filter((i) => isExtractorEmpty(i)).length > 0) {
-            yakitNotify("error", "已有空匹配器条件")
-            return
-        }
-        setExtractor({
-            ...extractor,
-            extractorList: [
-                ...extractor.extractorList,
-                _.cloneDeepWith({...defaultExtractorItem, Name: `ID ${extractor.extractorList.length}`})
-            ]
-        })
-    })
-    const onExecute = useMemoizedFn(() => {
-        switch (type) {
-            case "matchers":
-                onExecuteMatcher()
-                break
-            case "extractors":
-                onExecuteExtractors()
-                break
-            default:
-                break
-        }
-    })
-    const onExecuteMatcher = useMemoizedFn(() => {
-        const matchHTTPResponseParams: MatchHTTPResponseParams = {
-            HTTPResponse: httpResponse,
-            Matchers: matcher.matchersList,
-            MatcherCondition: matcher.matchersCondition
-        }
-        if (isEffectiveMatcher) {
-            yakitNotify("error", "所有匹配条件均为空，请先设置条件")
-            return
-        }
-        setExecuteLoading(true)
-        ipcRenderer
-            .invoke("MatchHTTPResponse", matchHTTPResponseParams)
-            .then((data: {Matched: boolean}) => {
-                if (data.Matched) {
-                    yakitNotify("success", "匹配成功")
-                } else {
-                    yakitNotify("error", "匹配失败")
-                }
+        useImperativeHandle(
+            ref,
+            () => ({
+                validate: () => onCheckClose()
+            }),
+            []
+        )
+
+        useEffect(() => {
+            setType(defActiveType)
+        }, [defActiveType])
+        useEffect(() => {
+            setMatcher({
+                ..._.cloneDeepWith(matcherValue),
+                matchersList:
+                    defActiveType === "matchers" && matcherValue.matchersList.length === 0
+                        ? [_.cloneDeepWith(defaultMatcherItem)]
+                        : matcherValue.matchersList
             })
-            .catch((err) => {
-                yakitNotify("error", "匹配报错:" + err)
+        }, [matcherValue, defActiveType])
+        useEffect(() => {
+            setExtractor({
+                ..._.cloneDeepWith(extractorValue),
+                extractorList:
+                    defActiveType === "extractors" && extractorValue.extractorList.length === 0
+                        ? [_.cloneDeepWith(defaultExtractorItem)]
+                        : extractorValue.extractorList
             })
-            .finally(() =>
-                setTimeout(() => {
-                    setExecuteLoading(false)
-                }, 200)
+        }, [extractorValue, defActiveType])
+        const isEffectiveMatcher: boolean = useMemo(() => {
+            return (
+                matcher.matchersList.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
             )
-    })
-    const onExecuteExtractors = useMemoizedFn(() => {
-        if (isEffectiveExtractor) {
-            yakitNotify("error", "没有有效提取器（都为空）")
-            return
-        }
-        setExecuteLoading(true)
-        ipcRenderer
-            .invoke("ExtractHTTPResponse", {
+        }, [matcher.matchersList])
+        const isEffectiveExtractor: boolean = useMemo(() => {
+            return (
+                extractor.extractorList.filter((i) => !((i?.Groups || []).map((i) => i.trim()).join("") === ""))
+                    .length <= 0
+            )
+        }, [extractor.extractorList])
+        const onIsEmpty = useMemoizedFn(() => {
+            const matcherEmptyList = matcher.matchersList.filter((item) => isMatcherItemEmpty(item))
+            const extractorEmptyList = extractor.extractorList.filter((item) => isExtractorEmpty(item))
+            return matcherEmptyList.length > 0 || extractorEmptyList.length > 0
+        })
+
+        const onAddCondition = useMemoizedFn(() => {
+            switch (type) {
+                case "matchers":
+                    onAddMatcher()
+                    break
+                case "extractors":
+                    onAddExtractors()
+                    break
+                default:
+                    break
+            }
+        })
+        const onAddMatcher = useMemoizedFn(() => {
+            if (matcher.matchersList.filter((i) => isMatcherItemEmpty(i)).length > 0) {
+                yakitNotify("error", "已有空匹配器条件")
+                return
+            }
+            setMatcher({
+                ...matcher,
+                matchersList: [...matcher.matchersList, _.cloneDeepWith(defaultMatcherItem)]
+            })
+        })
+        const onAddExtractors = useMemoizedFn(() => {
+            if (extractor.extractorList.filter((i) => isExtractorEmpty(i)).length > 0) {
+                yakitNotify("error", "已有空匹配器条件")
+                return
+            }
+            setExtractor({
+                ...extractor,
+                extractorList: [
+                    ...extractor.extractorList,
+                    _.cloneDeepWith({...defaultExtractorItem, Name: `ID ${extractor.extractorList.length}`})
+                ]
+            })
+        })
+        const onExecute = useMemoizedFn(() => {
+            switch (type) {
+                case "matchers":
+                    onExecuteMatcher()
+                    break
+                case "extractors":
+                    onExecuteExtractors()
+                    break
+                default:
+                    break
+            }
+        })
+        const onExecuteMatcher = useMemoizedFn(() => {
+            const matchHTTPResponseParams: MatchHTTPResponseParams = {
                 HTTPResponse: httpResponse,
-                Extractors: extractor.extractorList
-            })
-            .then((obj: {Values: {Key: string; Value: string}[]}) => {
-                if (!obj) {
-                    yakitNotify("error", "匹配不到有效结果")
-                    return
-                }
-                if ((obj?.Values || []).length <= 0) {
-                    yakitNotify("error", "匹配不到有效结果")
-                    return
-                }
-                showYakitModal({
-                    title: "提取结果",
-                    width: "60%",
-                    footer: <></>,
-                    content: <ExtractionResultsContent list={obj.Values||[]} />
-                })
-            })
-            .catch((err) => {
-                yakitNotify("error", "数据提取报错:" + err)
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setExecuteLoading(false)
-                }, 200)
-            )
-    })
-    const onApply = useMemoizedFn(() => {
-        if (onIsEmpty()) {
-            onApplyConfirm()
-        } else {
-            onSave(matcher, extractor)
-            onClose()
-        }
-    })
-    const onApplyConfirm = useMemoizedFn(() => {
-        let m = YakitModalConfirm({
-            width: 420,
-            type: "white",
-            onCancelText: "取消",
-            onOkText: "确定",
-            icon: <ExclamationCircleOutlined />,
-            onOk: () => {
-                const newMatchersList: HTTPResponseMatcher[] = []
-                matcher.matchersList.forEach((item) => {
-                    if (item.Group.findIndex((g) => g === "") !== 0) {
-                        newMatchersList.push({
-                            ...item,
-                            Group: item.Group.filter((g) => g !== "")
-                        })
+                Matchers: matcher.matchersList,
+                MatcherCondition: matcher.matchersCondition
+            }
+            if (isEffectiveMatcher) {
+                yakitNotify("error", "所有匹配条件均为空，请先设置条件")
+                return
+            }
+            setExecuteLoading(true)
+            ipcRenderer
+                .invoke("MatchHTTPResponse", matchHTTPResponseParams)
+                .then((data: {Matched: boolean}) => {
+                    if (data.Matched) {
+                        yakitNotify("success", "匹配成功")
+                    } else {
+                        yakitNotify("error", "匹配失败")
                     }
                 })
-                const newExtractorList: HTTPResponseExtractor[] = []
-                extractor.extractorList.forEach((item) => {
-                    if (item.Groups.findIndex((g) => g === "") !== 0) {
-                        newExtractorList.push({
-                            ...item,
-                            Groups: item.Groups.filter((g) => g !== "")
-                        })
-                    }
+                .catch((err) => {
+                    yakitNotify("error", "匹配报错:" + err)
                 })
-                onSave({...matcher, matchersList: newMatchersList}, {...extractor, extractorList: newExtractorList})
-                onClose()
-                m.destroy()
-            },
-            onCancel: () => {
-                m.destroy()
-            },
-            content: "有条件未配置完成是否确定要应用？"
+                .finally(() =>
+                    setTimeout(() => {
+                        setExecuteLoading(false)
+                    }, 200)
+                )
         })
-    })
-    const onCheckClose = useMemoizedFn(() => {
-        // 关闭优先检测是否有空的条件
-        if (onIsEmpty()) {
-            onApplyConfirm()
-            return
-        }
-        // 没有空的条件，再检测两次的值是否一致,不一致需提示用户
-        if (_.isEqual(matcherValue, matcher) && _.isEqual(extractorValue, extractor)) {
-            onClose()
-        } else {
+        const onExecuteExtractors = useMemoizedFn(() => {
+            if (isEffectiveExtractor) {
+                yakitNotify("error", "没有有效提取器（都为空）")
+                return
+            }
+            setExecuteLoading(true)
+            ipcRenderer
+                .invoke("ExtractHTTPResponse", {
+                    HTTPResponse: httpResponse,
+                    Extractors: extractor.extractorList
+                })
+                .then((obj: {Values: {Key: string; Value: string}[]}) => {
+                    if (!obj) {
+                        yakitNotify("error", "匹配不到有效结果")
+                        return
+                    }
+                    if ((obj?.Values || []).length <= 0) {
+                        yakitNotify("error", "匹配不到有效结果")
+                        return
+                    }
+                    showYakitModal({
+                        title: "提取结果",
+                        width: "60%",
+                        footer: <></>,
+                        content: <ExtractionResultsContent list={obj.Values || []} />
+                    })
+                })
+                .catch((err) => {
+                    yakitNotify("error", "数据提取报错:" + err)
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setExecuteLoading(false)
+                    }, 200)
+                )
+        })
+        const onApply = useMemoizedFn(() => {
+            if (onIsEmpty()) {
+                onApplyConfirm()
+            } else {
+                onSave(matcher, extractor)
+                onClose()
+            }
+        })
+        const onApplyConfirm = useMemoizedFn(() => {
             let m = YakitModalConfirm({
                 width: 420,
                 type: "white",
-                onCancelText: "不应用",
-                onOkText: "应用",
+                onCancelText: "取消",
+                onOkText: "确定",
                 icon: <ExclamationCircleOutlined />,
                 onOk: () => {
-                    onApply()
-                    m.destroy()
-                },
-                onCancel: () => {
+                    const newMatchersList: HTTPResponseMatcher[] = []
+                    matcher.matchersList.forEach((item) => {
+                        if (item.Group.findIndex((g) => g === "") !== 0) {
+                            newMatchersList.push({
+                                ...item,
+                                Group: item.Group.filter((g) => g !== "")
+                            })
+                        }
+                    })
+                    const newExtractorList: HTTPResponseExtractor[] = []
+                    extractor.extractorList.forEach((item) => {
+                        if (item.Groups.findIndex((g) => g === "") !== 0) {
+                            newExtractorList.push({
+                                ...item,
+                                Groups: item.Groups.filter((g) => g !== "")
+                            })
+                        }
+                    })
+                    onSave({...matcher, matchersList: newMatchersList}, {...extractor, extractorList: newExtractorList})
                     onClose()
                     m.destroy()
                 },
-                content: "是否应用修改的内容"
+                onCancel: () => {
+                    m.destroy()
+                },
+                content: "有条件未配置完成是否确定要应用？"
             })
-        }
-    })
+        })
+        const onCheckClose = useMemoizedFn(() => {
+            // 关闭优先检测是否有空的条件
+            if (onIsEmpty()) {
+                onApplyConfirm()
+                return
+            }
+            // 没有空的条件，再检测两次的值是否一致,不一致需提示用户
+            if (_.isEqual(matcherValue, matcher) && _.isEqual(extractorValue, extractor)) {
+                onClose()
+            } else {
+                let m = YakitModalConfirm({
+                    width: 420,
+                    type: "white",
+                    onCancelText: "不应用",
+                    onOkText: "应用",
+                    icon: <ExclamationCircleOutlined />,
+                    onOk: () => {
+                        onApply()
+                        m.destroy()
+                    },
+                    onCancel: () => {
+                        onClose()
+                        m.destroy()
+                    },
+                    content: "是否应用修改的内容"
+                })
+            }
+        })
 
-    return (
-        <YakitSpin spinning={executeLoading}>
-            <div className={styles["matching-extraction"]}>
-                <div className={styles["matching-extraction-heard"]}>
-                    <div className={styles["matching-extraction-title"]}>
-                        <YakitRadioButtons
-                            value={type}
-                            onChange={(e) => {
-                                const {value} = e.target
-                                setType(value)
-                                if (value === "matchers" && matcher.matchersList.length === 0) {
-                                    setMatcher({
-                                        ...matcher,
-                                        matchersList: [_.cloneDeepWith(defaultMatcherItem)]
-                                    })
-                                }
-                                if (value === "extractors" && extractor.extractorList.length === 0) {
-                                    setExtractor({
-                                        ...extractor,
-                                        extractorList: [_.cloneDeepWith(defaultExtractorItem)]
-                                    })
-                                }
-                            }}
-                            buttonStyle='solid'
-                            options={[
-                                {
-                                    value: "matchers",
-                                    label: "匹配器"
-                                },
-                                {
-                                    value: "extractors",
-                                    label: "数据提取器"
-                                }
-                            ]}
-                        />
-                        <span className={styles["matching-extraction-title-tip"]}>
-                            已添加
-                            <span className={styles["primary-number"]}>
-                                {type === "matchers" ? matcher.matchersList.length : extractor.extractorList.length}
+        return (
+            <YakitSpin spinning={executeLoading}>
+                <div className={styles["matching-extraction"]}>
+                    <div className={styles["matching-extraction-heard"]}>
+                        <div className={styles["matching-extraction-title"]}>
+                            <YakitRadioButtons
+                                value={type}
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    setType(value)
+                                    if (value === "matchers" && matcher.matchersList.length === 0) {
+                                        setMatcher({
+                                            ...matcher,
+                                            matchersList: [_.cloneDeepWith(defaultMatcherItem)]
+                                        })
+                                    }
+                                    if (value === "extractors" && extractor.extractorList.length === 0) {
+                                        setExtractor({
+                                            ...extractor,
+                                            extractorList: [_.cloneDeepWith(defaultExtractorItem)]
+                                        })
+                                    }
+                                }}
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: "matchers",
+                                        label: "匹配器"
+                                    },
+                                    {
+                                        value: "extractors",
+                                        label: "数据提取器"
+                                    }
+                                ]}
+                            />
+                            <span className={styles["matching-extraction-title-tip"]}>
+                                已添加
+                                <span className={styles["primary-number"]}>
+                                    {type === "matchers" ? matcher.matchersList.length : extractor.extractorList.length}
+                                </span>
+                                条
                             </span>
-                            条
-                        </span>
+                        </div>
+                        <div className={styles["matching-extraction-extra"]}>
+                            <YakitButton type='outline1' icon={<PlusIcon />} onClick={() => onAddCondition()}>
+                                添加条件
+                            </YakitButton>
+                            <YakitButton type='outline1' onClick={() => onExecute()}>
+                                调试执行
+                            </YakitButton>
+                            <YakitButton type='primary' onClick={() => onApply()}>
+                                应用
+                            </YakitButton>
+                            <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()} />
+                        </div>
                     </div>
-                    <div className={styles["matching-extraction-extra"]}>
-                        <YakitButton type='outline1' icon={<PlusIcon />} onClick={() => onAddCondition()}>
-                            添加条件
-                        </YakitButton>
-                        <YakitButton type='outline1' onClick={() => onExecute()}>
-                            调试执行
-                        </YakitButton>
-                        <YakitButton type='primary' onClick={() => onApply()}>
-                            应用
-                        </YakitButton>
-                        <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()} />
-                    </div>
+                    <MatcherCollapse
+                        type={type}
+                        matcher={matcher}
+                        setMatcher={setMatcher}
+                        defActiveKey={defActiveKey}
+                        httpResponse={httpResponse}
+                    />
+                    <ExtractorCollapse
+                        type={type}
+                        extractor={extractor}
+                        setExtractor={setExtractor}
+                        defActiveKey={defActiveKey}
+                        httpResponse={httpResponse}
+                    />
                 </div>
-                <MatcherCollapse
-                    type={type}
-                    matcher={matcher}
-                    setMatcher={setMatcher}
-                    defActiveKey={defActiveKey}
-                    httpResponse={httpResponse}
-                />
-                <ExtractorCollapse
-                    type={type}
-                    extractor={extractor}
-                    setExtractor={setExtractor}
-                    defActiveKey={defActiveKey}
-                    httpResponse={httpResponse}
-                />
-            </div>
-        </YakitSpin>
-    )
-})
+            </YakitSpin>
+        )
+    })
+)
 
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props) => {
     const {type, matcher, setMatcher, notEditable, defActiveKey, httpResponse} = props

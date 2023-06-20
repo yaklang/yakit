@@ -25,7 +25,7 @@ import {useWatch} from "antd/lib/form/Form"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
-import {SelectOptionProps} from "../HTTPFuzzerPage"
+import {FuzzerResponse, SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array} from "@/utils/str"
@@ -69,9 +69,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         onInsertYakFuzzer,
         onValuesChange,
         refreshProxy,
-        httpResponse,
+        defaultHttpResponse,
         outsideShowResponseMatcherAndExtraction,
-        onShowResponseMatcherAndExtraction
+        onShowResponseMatcherAndExtraction,
+        disabled
     } = props
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
@@ -84,6 +85,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const [defActiveKey, setDefActiveKey] = useState<string>("")
     const [type, setType] = useState<MatchingAndExtraction>("matchers")
+
+    const [httpResponse, setHttpResponse] = useState<string>(defaultHttpResponse)
 
     const [form] = Form.useForm()
     const queryRef = useRef(null)
@@ -109,8 +112,24 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }, [size.height])
 
     useEffect(() => {
+        setHttpResponse(defaultHttpResponse)
+    }, [defaultHttpResponse])
+
+    useEffect(() => {
         if (!inViewport) setVisibleDrawer(false)
     }, [inViewport])
+
+    useEffect(() => {
+        ipcRenderer.on("fetch-open-matcher-and-extraction", (e, res: {httpResponseCode: string}) => {
+            if (!visibleDrawer) {
+                setVisibleDrawer(true)
+            }
+            setHttpResponse(res.httpResponseCode)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-open-matcher-and-extraction")
+        }
+    }, [])
 
     useEffect(() => {
         if (gmTLS) {
@@ -783,9 +802,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         e.stopPropagation()
                                         const restValue = {
                                             matchers: [],
-                                            filterMode:'drop',
-                                            hitColor:'red',
-                                            matchersCondition:'and'
+                                            filterMode: "drop",
+                                            hitColor: "red",
+                                            matchersCondition: "and"
                                         }
                                         onReset(restValue)
                                     }}
@@ -805,6 +824,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         onAddMatchingAndExtractionCard("matchers")
                                     }}
                                     className={styles["btn-padding-right-0"]}
+                                    disabled={disabled}
                                 >
                                     添加/调试
                                     <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
@@ -836,6 +856,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onAdd={() => onAddMatchingAndExtractionCard("matchers")}
                             onRemove={onRemoveMatcher}
                             onEdit={onEditMatcher}
+                            disabled={disabled}
                         />
                     </Panel>
                     <Panel
@@ -873,6 +894,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         onAddMatchingAndExtractionCard("extractors")
                                     }}
                                     className={styles["btn-padding-right-0"]}
+                                    disabled={disabled}
                                 >
                                     添加/调试
                                     <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
@@ -885,6 +907,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onAdd={() => onAddMatchingAndExtractionCard("extractors")}
                             onRemove={onRemoveExtractors}
                             onEdit={onEditExtractors}
+                            disabled={disabled}
                         />
                     </Panel>
                 </Collapse>
@@ -949,9 +972,10 @@ interface MatchersListProps {
     onAdd: () => void
     onRemove: (index: number) => void
     onEdit: (index: number) => void
+    disabled?: boolean
 }
 const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
-    const {matcherValue, onAdd, onRemove, onEdit} = props
+    const {matcherValue, onAdd, onRemove, onEdit, disabled} = props
     const {matchersList} = matcherValue
     return (
         <>
@@ -974,6 +998,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                     httpResponse=''
                                 />
                             }
+                            disabled={disabled}
                         />
                     </div>
                 ))}
@@ -987,6 +1012,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                         themeClass={styles["plus-button-bolck"]}
                         block
                         style={{justifyContent: "center"}}
+                        disabled={disabled}
                     >
                         添加
                     </YakitButton>
@@ -1000,9 +1026,10 @@ interface ExtractorsListProps {
     onAdd: () => void
     onRemove: (index: number) => void
     onEdit: (index: number) => void
+    disabled?: boolean
 }
 const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
-    const {extractorValue, onAdd, onRemove, onEdit} = props
+    const {extractorValue, onAdd, onRemove, onEdit, disabled} = props
     const {extractorList} = extractorValue
     return (
         <>
@@ -1025,6 +1052,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                                     httpResponse=''
                                 />
                             }
+                            disabled={disabled}
                         />
                     </div>
                 ))}
@@ -1038,6 +1066,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                         themeClass={styles["plus-button-bolck"]}
                         block
                         style={{justifyContent: "center"}}
+                        disabled={disabled}
                     >
                         添加
                     </YakitButton>
@@ -1050,10 +1079,11 @@ interface MatchersAndExtractorsListItemOperateProps {
     onRemove: () => void
     onEdit: () => void
     popoverContent: ReactNode
+    disabled?: boolean
 }
 const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListItemOperateProps> = React.memo(
     (props) => {
-        const {onRemove, onEdit, popoverContent} = props
+        const {onRemove, onEdit, popoverContent, disabled} = props
         const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
         return (
             <div
@@ -1062,7 +1092,22 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
                 })}
             >
                 <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
-                <PencilAltIcon className={styles["pencilAlit-icon"]} onClick={() => onEdit()} />
+                {disabled ? (
+                    <Tooltip title='请点击右侧表格中操作的闪电图标进行添加/调试'>
+                        <PencilAltIcon
+                            className={classNames(styles["pencilAlit-icon"], {
+                                [styles["pencilAlit-icon-disabled"]]: disabled
+                            })}
+                        />
+                    </Tooltip>
+                ) : (
+                    <PencilAltIcon
+                        className={styles["pencilAlit-icon"]}
+                        onClick={() => {
+                            onEdit()
+                        }}
+                    />
+                )}
                 <TerminalPopover
                     popoverContent={popoverContent}
                     visiblePopover={visiblePopover}

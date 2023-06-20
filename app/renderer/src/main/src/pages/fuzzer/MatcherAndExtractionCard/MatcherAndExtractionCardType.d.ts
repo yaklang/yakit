@@ -8,6 +8,7 @@ export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps
 }
 
 export interface MatcherAndExtractionProps {
+    ref?:any
     httpResponse: string
     onClose: () => void
     onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void

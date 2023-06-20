@@ -280,6 +280,12 @@
             .terminal-icon {
                 color: var(--yakit-body-text-color);
             }
+            .pencilAlit-icon-disabled {
+                color: var(--yakit-disable-text-color);
+                svg {
+                    cursor: not-allowed;
+                }
+            }
         }
         .matchersList-item-operate-hover {
             visibility: visible;

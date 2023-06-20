@@ -85,11 +85,13 @@ export interface HttpQueryAdvancedConfigProps {
     /**刷新设置代理的list */
     refreshProxy: boolean
     /**匹配器和提取器里面的响应 */
-    httpResponse: string
+    defaultHttpResponse: string
     /**@name 与onShowShowResponseMatcherAndExtraction配合使用 */
     outsideShowResponseMatcherAndExtraction?: boolean
     /**@name  webfuzzer如果有响应信息,就在响应信息下方展示匹配器和提取器;需与outsideShowResponseMatcherAndExtraction配合使用*/
     onShowResponseMatcherAndExtraction?: (activeType: MatchingAndExtraction, activeKey: string) => void
+    /**@name 目前该字段仅用于匹配器和提取器在有多个返回列表时,处于不可以用状态 */
+    disabled?:boolean
 }
 
 export interface KVPair {
