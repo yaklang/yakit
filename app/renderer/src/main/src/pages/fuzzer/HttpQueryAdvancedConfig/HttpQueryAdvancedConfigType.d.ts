@@ -1,4 +1,6 @@
 
+import { MatchingAndExtraction } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType";
+
 export type FilterMode = "drop" | "match" | 'onlyMatch'
 export interface AdvancedConfigValueProps {
     // 请求包配置
@@ -63,7 +65,7 @@ export interface AdvancedConfigValueProps {
     filterMode: FilterMode
     matchers: HTTPResponseMatcher[]
     matchersCondition: 'and' | 'or'
-    hitColor?: string
+    hitColor: string
     //提取器
     extractors: HTTPResponseExtractor[]
 }
@@ -83,7 +85,11 @@ export interface HttpQueryAdvancedConfigProps {
     /**刷新设置代理的list */
     refreshProxy: boolean
     /**匹配器和提取器里面的响应 */
-    httpResponse:string
+    httpResponse: string
+    /**@name 与onShowShowResponseMatcherAndExtraction配合使用 */
+    outsideShowResponseMatcherAndExtraction?: boolean
+    /**@name  webfuzzer如果有响应信息,就在响应信息下方展示匹配器和提取器;需与outsideShowResponseMatcherAndExtraction配合使用*/
+    onShowResponseMatcherAndExtraction?: (activeType: MatchingAndExtraction, activeKey: string) => void
 }
 
 export interface KVPair {

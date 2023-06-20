@@ -382,7 +382,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                     style={{
                         width: `${isVer ? "100%" : "8px"}`,
                         height: `${isVer ? "8px" : "100%"}`,
-                        cursor: `${isVer ? "row-resize" : "col-resize"}`
+                        cursor: `${isVer ? "row-resize" : "col-resize"}`,
+                        ...lineStyle
                     }}
                     className={classNames(styles["resize-split-line"], {
                         [styles["resize-split-line-top"]]: lineDirection === "top" && isVer,

@@ -27,7 +27,7 @@ interface HTTPFuzzerPageTableProps {
     success?: boolean
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
-    isRefresh: boolean
+    isRefresh?: boolean
     /**@name 提取的数据 */
     extractedMap: Map<string, string>
     /**@name 数据是否传输完成 */
@@ -62,7 +62,7 @@ export interface HTTPFuzzerPageTableQuery {
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
-export const sorterFunction = (list, sorterTable,defSorter='Count') => {
+export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
     // ------------  排序 开始  ------------
     let newList = list
     // 重置
@@ -82,7 +82,7 @@ export const sorterFunction = (list, sorterTable,defSorter='Count') => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd,} = props
+    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -496,7 +496,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
     }, [currentSelectItem, showResponseInfoSecondEditor])
     return (
-        <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
+        <div style={{overflowY: "hidden", height: "100%"}}>
             <ResizeBox
                 isVer={true}
                 lineStyle={{display: firstFull ? "none" : ""}}

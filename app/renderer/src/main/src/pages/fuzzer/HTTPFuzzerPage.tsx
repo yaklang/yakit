@@ -7,7 +7,7 @@ import {StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
-import {useGetState, useInViewport, useMap, useMemoizedFn, useSize} from "ahooks"
+import {useCreation, useGetState, useInViewport, useMap, useMemoizedFn, useSize} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -65,8 +65,22 @@ import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedC
 import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {Route} from "@/routes/routeSpec"
-import {HTTPResponseExtractor, HTTPResponseMatcher} from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    ExtractorValueProps,
+    HTTPResponseExtractor,
+    HTTPResponseMatcher,
+    MatcherAndExtractionProps,
+    MatcherValueProps,
+    MatchingAndExtraction
+} from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {
+    ExtractionResultsContent,
+    MatcherAndExtraction,
+    defaultExtractorItem,
+    defaultMatcherItem
+} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -104,6 +118,12 @@ export interface RedirectRequestParams {
     IsHttps: boolean
     PerRequestTimeoutSeconds: number
     Proxy: string
+    Extractors: HTTPResponseExtractor[]
+    Matchers: HTTPResponseMatcher[]
+    MatchersCondition: string
+    HitColor: string
+    Params: FuzzerParamItem[]
+    IsGmTLS: boolean
 }
 
 export interface HTTPFuzzerPageProp {
@@ -147,41 +167,6 @@ export interface FuzzerResponse {
     ExtractedResults: KVPair[]
     MatchedByMatcher: boolean
 }
-
-// export interface FuzzerResponse {
-//     Method: string
-//     StatusCode: number
-//     Host: string
-//     ContentType: string
-//     Headers: {Header: string; Value: string}[]
-//     ResponseRaw: Uint8Array
-//     RequestRaw: Uint8Array
-//     BodyLength: number
-//     UUID: string
-//     Timestamp: number
-//     DurationMs: number
-
-//     Ok: boolean
-//     Reason: string
-//     Payloads?: string[]
-
-//     IsHTTPS?: boolean
-//     Count?: number
-
-//     HeaderSimilarity?: number
-//     BodySimilarity?: number
-//     MatchedByFilter?: boolean
-//     Url?: string
-
-//     Proxy?: string
-//     RemoteAddr?: string
-//     DNSDurationMs?: number
-//     FirstByteDurationMs?: number
-//     TotalDurationMs?: number
-
-//     /**@name 提取响应数据*/
-//     extracted?: string
-// }
 
 const defaultPostTemplate = `POST / HTTP/1.1
 Content-Type: application/json
@@ -390,13 +375,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             statusCode: "",
             keyWord: ""
         },
-        // 过滤配置
-        // filterMode: "drop",
-        // statusCode: "",
-        // regexps: "",
-        // keyWord: "",
-        // minBodySize: 0,
-        // maxBodySize: 0,
         // dns config
         dnsServers: [],
         etcHosts: [],
@@ -410,26 +388,16 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 提取器
         extractors: []
     })
-    // params
-    // const [isHttps, setIsHttps, getIsHttps] = useGetState<boolean>(
-    //     props.fuzzerParams?.isHttps || props.isHttps || false
-    // )
-    // const [isGmTLS, setIsGmTLS] = useGetState<boolean>(props.fuzzerParams?.isGmTLS || props.isGmTLS || false)
-    // const [noFixContentLength, setNoFixContentLength] = useState(false)
-    // const [noSystemProxy, setNoSystemProxy] = useState(false)
+
+    // 缓存参数
+    const [proxy, setProxy] = useState<string[]>([])
+    const [dnsServers, setDNSServers] = useState<string[]>([])
+    const [etcHosts, setETCHosts] = useState<{Key: string; Value: string}[]>([])
+
     const [request, setRequest, getRequest] = useGetState(
         props.fuzzerParams?.request || props.request || defaultPostTemplate
     )
 
-    // params
-    // const [concurrent, setConcurrent] = useState(props.fuzzerParams?.concurrent || 20)
-    // const [forceFuzz, setForceFuzz] = useState<boolean>(props.fuzzerParams?.forceFuzz || true)
-    // const [timeout, setParamTimeout] = useState(props.fuzzerParams?.timeout || 30.0)
-    // const [minDelaySeconds, setMinDelaySeconds] = useState<number>(0)
-    // const [maxDelaySeconds, setMaxDelaySeconds] = useState<number>(0)
-    // const [repeatTimes, setRepeatTimes] = useState<number>(0)
-    // const [proxy, setProxy] = useState<string>(props.fuzzerParams?.proxy || "")
-    // const [actualHost, setActualHost] = useState<string>(props.fuzzerParams?.actualHost || "")
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
@@ -437,37 +405,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
-    // 重试
-    // const [retryMaxTimes, setRetryMaxTimes] = useState(0)
-    // const [retry, setRetry] = useState<boolean>(true)
-    // const [noRetry, setNoRetry] = useState<boolean>(false)
-    // const [retryInStatusCode, setRetryInStatusCode] = useState("")
-    // const [retryNotInStatusCode, setRetryNotInStatusCode] = useState("")
-    // const [retryWaitSeconds, setRetryWaitSeconds] = useState(0) // float
-    // const [retryMaxWaitSeconds, setRetryMaxWaitSeconds] = useState(0)
-    // 重定向配置
-    // const [redirectMaxTimes, setRedirectMaxTimessetRedirectMaxTimes] = useState(3)
-    // const [noFollowRedirect, setNoFollowRedirect] = useState(true)
-    // const [followJSRedirect, setFollowJSRedirect] = useState(false)
-    // dnsConfig
-    // const [dnsServers, setDNSServers] = useState<string[]>([])
-    // const [etcHosts, setETCHosts] = useState<{Key: string; Value: string}[]>([])
-
-    // 设置变量
-    // const [params, setParams] = useState<FuzzerParamItem[]>([{Key: "", Value: ""}])
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
     /**@name 是否刷新高级配置中的代理列表 */
     const [refreshProxy, setRefreshProxy] = useState<boolean>(false)
-    // filter
-    // const [_, setFilter, getFilter] = useGetState<FuzzResponseFilter>({
-    //     Keywords: [],
-    //     MaxBodySize: 0,
-    //     MinBodySize: 0,
-    //     Regexps: [],
-    //     StatusCode: []
-    // })
-    // const [_filterMode, setFilterMode, getFilterMode] = useGetState<"drop" | "match">("drop")
     const [droppedCount, setDroppedCount] = useState(0)
 
     // state
@@ -476,7 +417,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     /*
      * 内容
      * */
-    // const [content, setContent] = useState<FuzzerResponse[]>([])
     const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer)
     const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([])
     const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([])
@@ -486,30 +426,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     /**/
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [fuzzToken, setFuzzToken] = useState("")
-    const [curlCommandLine, setCurlCommandLine] = useState("")
 
     const [refreshTrigger, setRefreshTrigger] = useState(false)
     const refreshRequest = () => {
         setRefreshTrigger(!refreshTrigger)
     }
-    const [urlPacketShow, setUrlPacketShow] = useState<boolean>(false)
 
-    // editor First Editor
-    const [noWordwrapFirstEditor, setNoWordwrapFirstEditor] = useState(false)
-    const [fontSizeFirstEditor, setFontSizeFirstEditor] = useState<number>()
-    const [showLineBreaksFirstEditor, setShowLineBreaksFirstEditor] = useState<boolean>(true)
-
-    // editor Second Editor
-    const [noWordwrapSecondEditor, setNoWordwrapSecondEditor] = useState(false)
-    const [fontSizeSecondEditor, setFontSizeSecondEditor] = useState<number>()
-    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+    // editor Response
+    const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
 
     // second Node
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
-    const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
@@ -602,13 +532,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             setRequest(historyTask.Request)
         }
-        // setIsHttps(historyTask.IsHTTPS)
-        // setIsGmTLS(historyTask.IsGmTLS)
-        // setProxy(historyTask.Proxy)
         setAdvancedConfigValue({
             ...advancedConfigValue,
             isHttps: historyTask.IsHTTPS,
-            isGmTLS: historyTask.IsGmTLS
+            isGmTLS: historyTask.IsGmTLS,
+            proxy: historyTask.Proxy ? historyTask.Proxy.split(",") : []
         })
         refreshRequest()
     }, [historyTask])
@@ -619,21 +547,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (e) {
                 setLocalValue(WEB_FUZZ_PROXY, "")
                 setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
-                // setProxy(`${e}`)
-                setAdvancedConfigValue({
-                    ...advancedConfigValue,
-                    proxy: e.split(",") || []
-                })
+
+                setProxy(e.split(",") || [])
             } else {
                 getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
                     if (!e) {
                         return
                     }
-                    // setProxy(`${e}`)
-                    setAdvancedConfigValue({
-                        ...advancedConfigValue,
-                        proxy: e.split(",") || []
-                    })
+                    setProxy(e.split(",") || [])
                 })
             }
         })
@@ -642,11 +563,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             try {
-                // setDNSServers(JSON.parse(e))
-                setAdvancedConfigValue({
-                    ...advancedConfigValue,
-                    dnsServers: JSON.parse(e)
-                })
+                setDNSServers(JSON.parse(e))
             } catch (error) {}
         })
         getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
@@ -654,18 +571,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
             try {
-                // setETCHosts(JSON.parse(e))
-                setAdvancedConfigValue({
-                    ...advancedConfigValue,
-                    etcHosts: JSON.parse(e)
-                })
+                setETCHosts(JSON.parse(e))
             } catch (error) {}
         })
     }, [])
+    useEffect(() => {
+        setAdvancedConfigValue({
+            ...advancedConfigValue,
+            proxy,
+            dnsServers,
+            etcHosts
+        })
+    }, [proxy, dnsServers, etcHosts])
 
     useEffect(() => {
-        // setIsHttps(!!props.isHttps)
-        // setIsGmTLS(!!props.isGmTLS)
         setAdvancedConfigValue({
             ...advancedConfigValue,
             isHttps: !!props.isHttps,
@@ -686,6 +605,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
                 .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
+                    console.log("data", data)
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -982,92 +902,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         advancedConfigValue.timeout,
         request
     ])
-    useEffect(() => {
-        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
-            .then((data) => {
-                setShowResponseInfoSecondEditor(data === "false" ? false : true)
-            })
-            .catch(() => {
-                setShowResponseInfoSecondEditor(true)
-            })
-    }, [])
-    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
-        return {
-            overlayWidgetv: {
-                menu: [
-                    {
-                        key: "is-show-add-overlay-widgetv",
-                        label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
-                    }
-                ],
-                onRun: () => {
-                    setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
-                    setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
-                }
-            }
-        }
-    }, [showResponseInfoSecondEditor])
-    const responseViewer = useMemoizedFn((rsp: FuzzerResponse) => {
-        let reason = "未知原因"
-        try {
-            reason = rsp!.Reason
-        } catch (e) {}
-        return (
-            <NewHTTPPacketEditor
-                defaultSearchKeyword={defaultResponseSearch}
-                system={props.system}
-                originValue={rsp.ResponseRaw}
-                bordered={false}
-                hideSearch={true}
-                isResponse={true}
-                noHex={true}
-                noHeader={true}
-                editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE'
-                emptyOr={
-                    !rsp?.Ok && (
-                        <Result
-                            status={
-                                reason.includes("tcp: i/o timeout") ||
-                                reason.includes("empty response") ||
-                                reason.includes("no such host") ||
-                                reason.includes("cannot create proxy")
-                                    ? "warning"
-                                    : "error"
-                            }
-                            title={"请求失败或服务端（代理）异常"}
-                            // no such host
-                            subTitle={(() => {
-                                const reason = rsp?.Reason || "unknown"
-                                if (reason.includes("tcp: i/o timeout")) {
-                                    return `网络超时（请检查目标主机是否在线？）`
-                                }
-                                if (reason.includes("no such host")) {
-                                    return `DNS 错误或主机错误 (请检查域名是否可以被正常解析？)`
-                                }
-                                if (reason.includes("cannot create proxy")) {
-                                    return `无法设置代理（请检查代理是否可用）`
-                                }
-                                if (reason.includes("empty response")) {
-                                    return `服务端没有任何返回数据`
-                                }
-                                return undefined
-                            })()}
-                        >
-                            <>详细原因：{rsp.Reason}</>
-                        </Result>
-                    )
-                }
-                readOnly={true}
-                fontSizeState={fontSizeSecondEditor}
-                noWordWrapState={noWordwrapSecondEditor}
-                onAddOverlayWidget={(editor, isShow) => {
-                    onAddOverlayWidget(editor, rsp, isShow)
-                }}
-                isAddOverlayWidget={showResponseInfoSecondEditor}
-                contextMenu={responseEditorRightMenu}
-            />
-        )
-    })
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
@@ -1105,7 +939,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         callback(params)
     })
     /**
-     * 6.16更改分享的数据结构，需提示用户更新版本
+     * 6.16更改分享的数据结构，报错需提示用户更新版本
      */
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
         try {
@@ -1286,6 +1120,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const httpResponse: FuzzerResponse = useMemo(() => {
         return redirectedResponse ? redirectedResponse : getFirstResponse()
     }, [onlyOneResponse, redirectedResponse, getFirstResponse()])
+    const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
+    const [activeKey, setActiveKey] = useState<string>("")
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1298,7 +1134,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onInsertYakFuzzer={onInsertYakFuzzer}
                 onValuesChange={(v) => onGetFormValue(v)}
                 refreshProxy={refreshProxy}
-                httpResponse=""
+                httpResponse=''
+                outsideShowResponseMatcherAndExtraction={!!Uint8ArrayToString(httpResponse.ResponseRaw)}
+                onShowResponseMatcherAndExtraction={(activeType, activeKey) => {
+                    setShowMatcherAndExtraction(true)
+                    setActiveType(activeType)
+                    setActiveKey(activeKey)
+                }}
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
@@ -1401,15 +1243,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     Request: request,
                                     Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
                                     IsHttps: advancedConfigValue.isHttps,
-                                    // IsGmTLS: advancedConfigValue.isGmTLS,
+                                    IsGmTLS: advancedConfigValue.isGmTLS,
                                     PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                                    // NoFixContentLength: advancedConfigValue.noFixContentLength,
-                                    // NoSystemProxy: advancedConfigValue.noSystemProxy,
-                                    Proxy: advancedConfigValue.proxy.join(",")
+                                    Proxy: advancedConfigValue.proxy.join(","),
+                                    Extractors: advancedConfigValue.extractors,
+                                    Matchers: advancedConfigValue.matchers,
+                                    MatchersCondition: advancedConfigValue.matchersCondition,
+                                    HitColor:
+                                        advancedConfigValue.filterMode === "onlyMatch"
+                                            ? advancedConfigValue.hitColor
+                                            : "",
+                                    Params: advancedConfigValue.params || []
                                 }
                                 ipcRenderer
                                     .invoke("RedirectRequest", redirectRequestProps)
                                     .then((rsp: FuzzerResponse) => {
+                                        console.log("rsp", rsp)
                                         setRedirectedResponse(rsp)
                                     })
                                     .catch((e) => {
@@ -1441,9 +1290,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 请求 Host:{advancedConfigValue.actualHost}
                             </YakitTag>
                         )}
+                        {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
                     </div>
                 </div>
-                {/*<Divider style={{marginTop: 6, marginBottom: 8, paddingTop: 0}}/>*/}
                 <ResizeCardBox
                     firstMinSize={420}
                     secondMinSize={480}
@@ -1546,7 +1395,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <SecondNodeTitle
                                     cachedTotal={cachedTotal}
                                     onlyOneResponse={onlyOneResponse}
-                                    rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
+                                    rsp={httpResponse}
                                     successFuzzerLength={(successFuzzer || []).length}
                                     failedFuzzerLength={(failedFuzzer || []).length}
                                     showSuccess={showSuccess}
@@ -1562,7 +1411,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <SecondNodeExtra
                                     onlyOneResponse={onlyOneResponse}
                                     cachedTotal={cachedTotal}
-                                    rsp={redirectedResponse ? redirectedResponse : getFirstResponse()}
+                                    rsp={httpResponse}
                                     valueSearch={affixSearch}
                                     onSearchValueChange={(value) => {
                                         setAffixSearch(value)
@@ -1599,9 +1448,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             contextMenu={editorRightMenu}
                             onEditor={setReqEditor}
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                            noWordWrapState={noWordwrapFirstEditor}
-                            fontSizeState={fontSizeFirstEditor}
-                            showLineBreaksState={showLineBreaksFirstEditor}
                             editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                         />
                     }
@@ -1609,12 +1455,34 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                             <YakitSpin spinning={false} style={{height: "100%"}}>
                                 {onlyOneResponse ? (
-                                    <>
-                                        {/* {redirectedResponse
-                                            ? responseViewer(redirectedResponse)
-                                            : responseViewer(getFirstResponse())} */}
-                                        {responseViewer(httpResponse)}
-                                    </>
+                                    <ResponseViewer
+                                        fuzzerResponse={httpResponse}
+                                        defaultResponseSearch={defaultResponseSearch}
+                                        system={props.system}
+                                        showMatcherAndExtraction={showMatcherAndExtraction}
+                                        setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                        matcherValue={{
+                                            hitColor: advancedConfigValue.hitColor,
+                                            matchersCondition: advancedConfigValue.matchersCondition,
+                                            matchersList: advancedConfigValue.matchers,
+                                            filterMode: advancedConfigValue.filterMode
+                                        }}
+                                        extractorValue={{
+                                            extractorList: advancedConfigValue.extractors
+                                        }}
+                                        defActiveKey={activeKey}
+                                        defActiveType={activeType}
+                                        onSaveMatcherAndExtraction={(matcher, extractor) => {
+                                            setAdvancedConfigValue({
+                                                ...advancedConfigValue,
+                                                filterMode: matcher.filterMode,
+                                                hitColor: matcher.hitColor,
+                                                matchersCondition: matcher.matchersCondition,
+                                                matchers: matcher.matchersList,
+                                                extractors: extractor.extractorList
+                                            })
+                                        }}
+                                    />
                                 ) : (
                                     <>
                                         {cachedTotal > 1 ? (
@@ -1626,7 +1494,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         data={successFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
-                                                        isRefresh={isRefresh}
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                     />
@@ -1637,7 +1504,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         data={failedFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
-                                                        isRefresh={isRefresh}
                                                         extractedMap={new Map()}
                                                         isEnd={loading}
                                                     />
@@ -1717,6 +1583,15 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         })
     }, [query])
 
+    const onViewExecResults = useMemoizedFn(() => {
+        showYakitModal({
+            title: "提取结果",
+            width: "60%",
+            footer: <></>,
+            content: <ExtractionResultsContent list={rsp.ExtractedResults} />
+        })
+    })
+
     if (onlyOneResponse) {
         const searchNode = (
             <YakitInput.Search
@@ -1755,6 +1630,11 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         showResponseViaResponseRaw(rsp.ResponseRaw || "")
                     }}
                 />
+                {rsp.ExtractedResults.length > 0 && (
+                    <YakitButton type='outline2' size='small' onClick={() => onViewExecResults()}>
+                        查看提取结果
+                    </YakitButton>
+                )}
                 <YakitButton
                     type='primary'
                     onClick={() => {
@@ -2057,5 +1937,163 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
             {Number(rsp.TotalDurationMs) > 0 ? <span>总耗时:{rsp.TotalDurationMs}ms</span> : ""}
             {rsp.Url && <span>URL:{rsp.Url.length > 30 ? rsp.Url.substring(0, 30) + "..." : rsp.Url}</span>}
         </div>
+    )
+})
+
+interface ResponseViewerProps {
+    fuzzerResponse: FuzzerResponse
+    defaultResponseSearch: string
+    system?: string
+    showMatcherAndExtraction: boolean
+    setShowMatcherAndExtraction: (b: boolean) => void
+    matcherValue: MatcherValueProps
+    extractorValue: ExtractorValueProps
+    defActiveKey: string
+    defActiveType: MatchingAndExtraction
+    onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
+}
+const ResponseViewer: React.FC<ResponseViewerProps> = React.memo((props) => {
+    const {
+        fuzzerResponse,
+        defaultResponseSearch,
+        showMatcherAndExtraction,
+        setShowMatcherAndExtraction,
+        extractorValue,
+        matcherValue,
+        defActiveKey,
+        defActiveType,
+        onSaveMatcherAndExtraction
+    } = props
+    const [reason, setReason] = useState<string>("未知原因")
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+    const [activeKey, setActiveKey] = useState<string>("")
+    const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
+
+    useEffect(() => {
+        setActiveKey(defActiveKey)
+    }, [defActiveKey])
+    useEffect(() => {
+        setActiveType(defActiveType)
+    }, [defActiveType])
+
+    useEffect(() => {
+        try {
+            let r = "未知原因"
+            r = fuzzerResponse!.Reason
+            setReason(r)
+        } catch (e) {}
+    }, [fuzzerResponse])
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+        return {
+            overlayWidgetv: {
+                menu: [
+                    {
+                        key: "is-show-add-overlay-widgetv",
+                        label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
+                    }
+                ],
+                onRun: () => {
+                    setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
+                    setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+                }
+            }
+        }
+    }, [showResponseInfoSecondEditor])
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "100%",
+            secondRatio: "0%"
+        }
+        if (showMatcherAndExtraction) {
+            p.secondRatio = "50%"
+            p.firstRatio = "50%"
+        }
+        return p
+    }, [showMatcherAndExtraction])
+    return (
+        <>
+            <YakitResizeBox
+                isVer={true}
+                lineStyle={{display: !showMatcherAndExtraction ? "none" : ""}}
+                firstNodeStyle={{padding: !showMatcherAndExtraction ? 0 : undefined}}
+                firstNode={
+                    <NewHTTPPacketEditor
+                        defaultSearchKeyword={defaultResponseSearch}
+                        system={props.system}
+                        originValue={fuzzerResponse.ResponseRaw}
+                        bordered={false}
+                        hideSearch={true}
+                        isResponse={true}
+                        noHex={true}
+                        noHeader={true}
+                        editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE'
+                        emptyOr={
+                            !fuzzerResponse?.Ok && (
+                                <Result
+                                    status={
+                                        reason.includes("tcp: i/o timeout") ||
+                                        reason.includes("empty response") ||
+                                        reason.includes("no such host") ||
+                                        reason.includes("cannot create proxy")
+                                            ? "warning"
+                                            : "error"
+                                    }
+                                    title={"请求失败或服务端（代理）异常"}
+                                    // no such host
+                                    subTitle={(() => {
+                                        const reason = fuzzerResponse?.Reason || "unknown"
+                                        if (reason.includes("tcp: i/o timeout")) {
+                                            return `网络超时（请检查目标主机是否在线？）`
+                                        }
+                                        if (reason.includes("no such host")) {
+                                            return `DNS 错误或主机错误 (请检查域名是否可以被正常解析？)`
+                                        }
+                                        if (reason.includes("cannot create proxy")) {
+                                            return `无法设置代理（请检查代理是否可用）`
+                                        }
+                                        if (reason.includes("empty response")) {
+                                            return `服务端没有任何返回数据`
+                                        }
+                                        return undefined
+                                    })()}
+                                >
+                                    <>详细原因：{fuzzerResponse.Reason}</>
+                                </Result>
+                            )
+                        }
+                        readOnly={true}
+                        onAddOverlayWidget={(editor, isShow) => {
+                            onAddOverlayWidget(editor, fuzzerResponse, isShow)
+                        }}
+                        isAddOverlayWidget={showResponseInfoSecondEditor}
+                        contextMenu={responseEditorRightMenu}
+                    />
+                }
+                secondNode={
+                    <MatcherAndExtraction
+                        onClose={() => setShowMatcherAndExtraction(false)}
+                        onSave={onSaveMatcherAndExtraction}
+                        httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                        matcherValue={matcherValue}
+                        extractorValue={extractorValue}
+                        defActiveKey={activeKey}
+                        defActiveType={activeType}
+                    />
+                }
+                secondNodeStyle={{display: showMatcherAndExtraction ? "" : "none"}}
+                lineDirection='bottom'
+                secondMinSize={300}
+                {...ResizeBoxProps}
+            />
+        </>
     )
 })

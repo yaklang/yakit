@@ -62,8 +62,17 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const {advancedConfigValue, visible, setVisible, onInsertYakFuzzer, onValuesChange, refreshProxy, httpResponse} =
-        props
+    const {
+        advancedConfigValue,
+        visible,
+        setVisible,
+        onInsertYakFuzzer,
+        onValuesChange,
+        refreshProxy,
+        httpResponse,
+        outsideShowResponseMatcherAndExtraction,
+        onShowResponseMatcherAndExtraction
+    } = props
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
 
@@ -88,7 +97,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const extractorList = useWatch("extractors", form) || []
     const matchersCondition = useWatch("matchersCondition", form)
     const filterMode = useWatch("filterMode", form)
-    const hitColor = useWatch("hitColor", form)
+    const hitColor = useWatch("hitColor", form) || "red"
 
     const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${Route.HTTPFuzzer}`)) || {
         width: 0,
@@ -221,29 +230,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     })
 
     const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
-        const v = form.getFieldsValue()
-        switch (type) {
-            case "matchers":
-                if (matchersList.length === 0) {
-                    onSetValue({
-                        ...v,
-                        matchers: [defaultMatcherItem]
-                    })
-                }
-                break
-            case "extractors":
-                if (extractorList.length === 0) {
-                    onSetValue({
-                        ...v,
-                        extractors: [defaultExtractorItem]
-                    })
-                }
-                break
-            default:
-                break
+        if (outsideShowResponseMatcherAndExtraction) {
+            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
+        } else {
+            setType(type)
+            setVisibleDrawer(true)
         }
-        setType(type)
-        setVisibleDrawer(true)
     })
     const onRemoveMatcher = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
@@ -253,9 +245,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         })
     })
     const onEditMatcher = useMemoizedFn((index) => {
-        setVisibleDrawer(true)
-        setDefActiveKey(`ID:${index}`)
-        setType("matchers")
+        if (outsideShowResponseMatcherAndExtraction) {
+            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("matchers", `ID:${index}`)
+        } else {
+            setVisibleDrawer(true)
+            setDefActiveKey(`ID:${index}`)
+            setType("matchers")
+        }
     })
     const onRemoveExtractors = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
@@ -265,9 +261,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         })
     })
     const onEditExtractors = useMemoizedFn((index) => {
-        setVisibleDrawer(true)
-        setDefActiveKey(`ID:${index}`)
-        setType("extractors")
+        if (outsideShowResponseMatcherAndExtraction) {
+            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("extractors", `ID:${index}`)
+        } else {
+            setVisibleDrawer(true)
+            setDefActiveKey(`ID:${index}`)
+            setType("extractors")
+        }
     })
 
     return (
@@ -782,7 +782,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         const restValue = {
-                                            matchers: []
+                                            matchers: [],
+                                            filterMode:'drop',
+                                            hitColor:'red',
+                                            matchersCondition:'and'
                                         }
                                         onReset(restValue)
                                     }}
@@ -1007,7 +1010,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                 {extractorList.map((extractorItem, index) => (
                     <div className={styles["matchersList-item"]}>
                         <div className={styles["matchersList-item-heard"]}>
-                            <span className={styles["item-id"]}>{extractorItem.Name || `Id:${index}`}</span>
+                            <span className={styles["item-id"]}>{extractorItem.Name || `ID ${index}`}</span>
                             <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
                             <span className={styles["item-number"]}>{extractorItem.Groups.length}</span>
                         </div>
@@ -1015,7 +1018,12 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                             onRemove={() => onRemove(index)}
                             onEdit={() => onEdit(index)}
                             popoverContent={
-                                <ExtractorItem extractorItem={extractorItem} onEdit={() => {}} notEditable={true} httpResponse=""/>
+                                <ExtractorItem
+                                    extractorItem={extractorItem}
+                                    onEdit={() => {}}
+                                    notEditable={true}
+                                    httpResponse=''
+                                />
                             }
                         />
                     </div>

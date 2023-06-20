@@ -14,7 +14,8 @@ import {
     MatchingAndExtraction,
     ExtractorCollapseProps,
     ExtractorItemProps,
-    MatcherAndExtractionValueListProps
+    MatcherAndExtractionValueListProps,
+    ExtractionResultsContentProps
 } from "./MatcherAndExtractionCardType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {HTTPPacketEditor, NewHTTPPacketEditor} from "@/utils/editors"
@@ -167,7 +168,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
     )
 })
 
-const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((props) => {
+export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((props) => {
     const {onClose, onSave, extractorValue, matcherValue, defActiveKey, httpResponse, defActiveType} = props
     const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
     const [matcher, setMatcher] = useState<MatcherValueProps>(matcherValue)
@@ -177,11 +178,23 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
         setType(defActiveType)
     }, [defActiveType])
     useEffect(() => {
-        setMatcher(_.cloneDeepWith(matcherValue))
-    }, [matcherValue])
+        setMatcher({
+            ..._.cloneDeepWith(matcherValue),
+            matchersList:
+                defActiveType === "matchers" && matcherValue.matchersList.length === 0
+                    ? [defaultMatcherItem]
+                    : matcherValue.matchersList
+        })
+    }, [matcherValue, defActiveType])
     useEffect(() => {
-        setExtractor(_.cloneDeepWith(extractorValue))
-    }, [extractorValue])
+        setExtractor({
+            ..._.cloneDeepWith(extractorValue),
+            extractorList:
+                defActiveType === "extractors" && extractorValue.extractorList.length === 0
+                    ? [defaultExtractorItem]
+                    : extractorValue.extractorList
+        })
+    }, [extractorValue, defActiveType])
     const isEffectiveMatcher: boolean = useMemo(() => {
         return matcher.matchersList.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
     }, [matcher.matchersList])
@@ -296,13 +309,7 @@ const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo((pr
                     title: "提取结果",
                     width: "60%",
                     footer: <></>,
-                    content: (
-                        <div className={styles["extract-results"]}>
-                            {obj.Values.map((i) => {
-                                return <p>{`${i.Key}: ${i.Value}`}</p>
-                            })}
-                        </div>
-                    )
+                    content: <ExtractionResultsContent list={obj.Values||[]} />
                 })
             })
             .catch((err) => {
@@ -750,6 +757,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
             className={classNames("yakit-collapse", styles["matching-extraction-content"], {
                 [styles["matching-extraction-content-hidden"]]: type !== "extractors"
             })}
+            style={{paddingTop: 8}}
         >
             <Collapse
                 activeKey={activeKey}
@@ -1025,5 +1033,16 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                 {!value && <ColorSwatchIcon />}
             </div>
         </YakitPopover>
+    )
+})
+
+export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> = React.memo((props) => {
+    const {list = []} = props
+    return (
+        <div className={styles["extract-results"]}>
+            {list.map((i) => {
+                return <p>{`${i.Key}: ${i.Value}`}</p>
+            })}
+        </div>
     )
 })

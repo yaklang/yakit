@@ -1,4 +1,5 @@
 import { ReactNode } from "react"
+import { FilterMode } from '../HTTPFuzzerPage'
 
 export type MatchingAndExtraction = "matchers" | "extractors"
 
@@ -17,9 +18,9 @@ export interface MatcherAndExtractionProps {
 }
 
 export interface MatcherValueProps {
-    filterMode: "drop" | 'retain' | 'onlyMatch'
+    filterMode: FilterMode
     /**@name filterMode为onlyMatch,才会设置该值*/
-    hitColor?: string
+    hitColor: string
     matchersCondition: 'and' | 'or'
     matchersList: HTTPResponseMatcher[]
 }
@@ -105,10 +106,14 @@ export interface ColorSelectProps {
 
 export interface MatcherAndExtractionValueListProps {
     /**@name 是否显示正则表达式icon */
-    showRegex:boolean
+    showRegex: boolean
     group: string[]
     notEditable?: boolean
     onEditGroup: (group: string[]) => void
     onAddGroup: () => void
     httpResponse: string;
+}
+
+export interface ExtractionResultsContentProps{
+    list:{Key: string; Value: string}[]
 }

@@ -167,8 +167,6 @@
     }
 }
 
-
-
 .http-fuzzer-hotPatch {
     padding: 24px;
     max-height: 80vh;
@@ -265,3 +263,8 @@
     }
 }
 
+.extract-results {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
