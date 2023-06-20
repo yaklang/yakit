@@ -18,15 +18,15 @@ if reportName == "" {
 
 reportInstance = report.New()
 reportInstance.From("simple-detect")
-// defer func{
-//     err := recover()
-//     if err != nil {
-//         yakit.Info("扫描报告构建失败：%#v", err)
-//     }
-//     id = reportInstance.Save()
-//     yakit.Report(id)
-//    
-// }
+defer func{
+    err := recover()
+    if err != nil {
+        yakit.Info("扫描报告构建失败：%#v", err)
+    }
+    id = reportInstance.Save()
+    yakit.Report(id)
+   
+}
 
 severityToRisks = {}
 targetToRisks = {}
