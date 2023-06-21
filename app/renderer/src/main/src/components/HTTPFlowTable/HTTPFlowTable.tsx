@@ -453,21 +453,21 @@ export const LogLevelToCode = (level: string) => {
 const TableRowColor = (key: string) => {
     switch (key) {
         case "RED":
-            return classNames(style["row-bg-color-red"])
+            return "color-opacity-bg-red"
         case "GREEN":
-            return classNames(style["row-bg-color-green"])
+            return "color-opacity-bg-green"
         case "BLUE":
-            return classNames(style["row-bg-color-blue"])
+            return "color-opacity-bg-blue"
         case "YELLOW":
-            return classNames(style["row-bg-color-yellow"])
+            return "color-opacity-bg-yellow"
         case "ORANGE":
-            return classNames(style["row-bg-color-orange"])
+            return "color-opacity-bg-orange"
         case "PURPLE":
-            return classNames(style["row-bg-color-purple"])
+            return "color-opacity-bg-purple"
         case "CYAN":
-            return classNames(style["row-bg-color-cyan"])
+            return "color-opacity-bg-cyan"
         case "GREY":
-            return classNames(style["row-bg-color-grey"])
+            return "color-opacity-bg-grey"
         default:
             return ""
     }
@@ -481,7 +481,7 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_RED",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-red-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-red")}></div>
                 红色
             </div>
         )
@@ -493,7 +493,7 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_GREEN",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-green-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-green")}></div>
                 绿色
             </div>
         )
@@ -505,7 +505,7 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_BLUE",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-blue-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-blue")}></div>
                 蓝色
             </div>
         )
@@ -517,7 +517,7 @@ export const availableColors = [
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-yellow-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-yellow")}></div>
                 黄色
             </div>
         )
@@ -529,7 +529,7 @@ export const availableColors = [
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-orange-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-orange")}></div>
                 橙色
             </div>
         )
@@ -541,7 +541,7 @@ export const availableColors = [
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-purple-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-purple")}></div>
                 紫色
             </div>
         )
@@ -553,7 +553,7 @@ export const availableColors = [
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-cyan-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-cyan")}></div>
                 天蓝色
             </div>
         )
@@ -565,7 +565,7 @@ export const availableColors = [
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "bg-color-grey-opacity")}></div>
+                <div className={classNames(style["tag-color-display"], "color-opacity-bg-grey")}></div>
                 灰色
             </div>
         )

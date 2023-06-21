@@ -166,6 +166,8 @@ export interface FuzzerResponse {
     RemoteAddr?: string
     ExtractedResults: KVPair[]
     MatchedByMatcher: boolean
+    /**@name 仅作用于前端表格背景色样式 */
+    cellClassName?: string
 }
 
 const defaultPostTemplate = `POST / HTTP/1.1
@@ -704,7 +706,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        console.log("httpParams", httpParams)
         ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
     })
 
@@ -823,34 +824,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
             }
             const r = {
-                StatusCode: data.StatusCode,
-                Ok: data.Ok,
-                Reason: data.Reason,
-                Method: data.Method,
-                Host: data.Host,
-                ContentType: data.ContentType,
-                Headers: data.Headers || [],
-                DurationMs: data.DurationMs,
-                BodyLength: data.BodyLength,
-                UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
-                Timestamp: data.Timestamp,
-                ResponseRaw: data.ResponseRaw,
-                RequestRaw: data.RequestRaw,
-                Payloads: data.Payloads,
-                IsHTTPS: data.IsHTTPS,
-                Count: count,
-                BodySimilarity: data.BodySimilarity,
-                HeaderSimilarity: data.HeaderSimilarity,
-                Url: data.Url,
-                Proxy: data.Proxy,
-                RemoteAddr: data.RemoteAddr,
-                FirstByteDurationMs: data.FirstByteDurationMs,
-                DNSDurationMs: data.DNSDurationMs,
-                TotalDurationMs: data.TotalDurationMs,
                 // 6.16
-                ...data
+                ...data,
+                Headers: data.Headers || [],
+                UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
+                Count: count,
+                cellClassName:data.MatchedByMatcher? `color-opacity-bg-${data.HitColor}`:''
             } as FuzzerResponse
-            console.log("r", r)
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)

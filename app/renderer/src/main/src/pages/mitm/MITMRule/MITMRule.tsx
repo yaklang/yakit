@@ -51,42 +51,42 @@ const HitColor = {
     red: {
         title: "红色",
         value: "red",
-        className: "bg-color-red-opacity"
+        className: "color-bg-red"
     },
     green: {
         title: "绿色",
         value: "green",
-        className: "bg-color-green-opacity"
+        className: "color-bg-green"
     },
     blue: {
         title: "蓝色",
         value: "blue",
-        className: "bg-color-blue-opacity"
+        className: "color-bg-blue"
     },
     yellow: {
         title: "黄色",
         value: "yellow",
-        className: "bg-color-yellow-opacity"
+        className: "color-bg-yellow"
     },
     orange: {
         title: "橙色",
         value: "orange",
-        className: "bg-color-orange-opacity"
+        className: "color-bg-orange"
     },
     purple: {
         title: "紫色",
         value: "purple",
-        className: "bg-color-purple-opacity"
+        className: "color-bg-purple"
     },
     cyan: {
         title: "天蓝色",
         value: "cyan",
-        className: "bg-color-cyan-opacity"
+        className: "color-bg-cyan"
     },
     grey: {
         title: "灰色",
         value: "grey",
-        className: "bg-color-grey-opacity"
+        className: "color-bg-grey"
     }
 }
 

@@ -1066,9 +1066,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                                     setIsShowColor(false)
                                 }}
                             >
-                                <div
-                                    className={classNames(styles["color-chunk"], styles[`color-bg-${colorItem.color}`])}
-                                />
+                                <div className={classNames(styles["color-chunk"], `color-bg-${colorItem.color}`)} />
                                 <span>{colorItem.title}</span>
                             </div>
                         ))}
@@ -1083,7 +1081,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                 className={classNames(styles["color-select-btn"], {
                     [styles["color-select-btn-active"]]: isShowColor,
                     [styles["color-select-btn-small"]]: size === "small",
-                    [styles[`color-bg-${value}`]]: !!value
+                    [`color-bg-${value}`]: !!value
                 })}
             >
                 {!value && <ColorSwatchIcon />}

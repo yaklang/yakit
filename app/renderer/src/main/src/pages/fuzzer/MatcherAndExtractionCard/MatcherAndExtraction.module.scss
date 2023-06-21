@@ -21,41 +21,6 @@
     }
 }
 
-$colors: (
-    red: (
-        backgroundColor: var(--yakit-tag-color-red)
-    ),
-    green: (
-        backgroundColor: var(--yakit-tag-color-green)
-    ),
-    blue: (
-        backgroundColor: var(--yakit-tag-color-blue)
-    ),
-    yellow: (
-        backgroundColor: var(--yakit-tag-color-yellow)
-    ),
-    orange: (
-        backgroundColor: var(--yakit-tag-color-orange)
-    ),
-    purple: (
-        backgroundColor: var(--yakit-tag-color-purple)
-    ),
-    cyan: (
-        backgroundColor: var(--yakit-tag-color-cyan)
-    ),
-    grey: (
-        backgroundColor: var(--yakit-helper-text-color)
-    )
-);
-$keyColor: map-keys($colors);
-@for $c from 1 through length($keyColor) {
-    $name: nth($keyColor, $c);
-    $currentColor: map-get($colors, $name);
-    .color-bg-#{"" + $name} {
-        background-color: map-get($currentColor, "backgroundColor");
-    }
-}
-
 .icon-active {
     color: var(--yakit-primary-5);
 }
