@@ -29,6 +29,14 @@
         user-select: none;
     }
 
+    .disable-style {
+        opacity: 0.3;
+        cursor: not-allowed !important;
+        svg {
+            cursor: not-allowed !important;
+        }
+    }
+
     .vertical-menu-wrapper {
         display: flex;
         flex-direction: column;
@@ -67,7 +75,7 @@
     .multiple-vertical-menu-wrapper {
         display: flex;
         gap: 4px;
-        .vertical-menu-wrapper{
+        .vertical-menu-wrapper {
             padding-top: 4px;
         }
     }

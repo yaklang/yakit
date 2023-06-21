@@ -48,7 +48,12 @@ export enum RemoteGV {
     /** @name 软件内菜单展示模式 */
     PatternMenu = "PatternMenu",
     /** @name 是否展示引擎控制台  */
-    ShowBaseConsole = "SHOW_BASE_CONSOLE"
+    ShowBaseConsole = "SHOW_BASE_CONSOLE",
+
+    /** @name 菜单是否为用户自行导入的json数据 */
+    IsImportJSONMenu = "is-import-json-menu",
+    /** @name 用户删除的系统内定菜单 */
+    UserDeleteMenu = "user-delete-menu"
 }
 
 /** 项目逻辑全局变量 */
@@ -58,5 +63,7 @@ export enum CodeGV {
     /** @name 远程连接配置信息文件路径 */
     RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json",
     /** @name 历史版本下载页面 */
-    HistoricalVersion = "https://github.com/yaklang/yakit/releases"
+    HistoricalVersion = "https://github.com/yaklang/yakit/releases",
+    /** @name public版本菜单模式 */
+    PublicMenuModeValue = "public"
 }

@@ -172,3 +172,12 @@
         }
     }
 }
+
+.modal-content {
+    margin-top: 8px;
+
+    .menuItem-yakScripName {
+        margin: 0 4px;
+        color: var(--yakit-primary-5);
+    }
+}

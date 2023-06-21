@@ -208,4 +208,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteAllMenu", async (e, params) => {
         return await asyncDeleteAllMenu(params)
     })
+
+    // 获取数据库保存的菜单数据
+    const asyncGetAllNavigationItem = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllNavigationItem(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllNavigationItem", async (e, params) => {
+        return await asyncGetAllNavigationItem(params)
+    })
+
+    // 更新数据库保存的菜单数据
+    const asyncAddToNavigation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AddToNavigation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AddToNavigation", async (e, params) => {
+        return await asyncAddToNavigation(params)
+    })
+
+    // 删除数据库保存的菜单数据
+    const asyncDeleteAllNavigation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAllNavigation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteAllNavigation", async (e, params) => {
+        return await asyncDeleteAllNavigation(params)
+    })
 }

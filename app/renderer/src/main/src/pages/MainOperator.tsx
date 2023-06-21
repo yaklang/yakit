@@ -50,7 +50,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {RouteToPageProps, StringToRoutePage, separator} from "./layout/publicMenu/PublicMenu"
+import {RouteToPageProps} from "./layout/publicMenu/PublicMenu"
 import {
     NoPaddingRoute,
     NoScrollRoutes,
@@ -59,6 +59,7 @@ import {
     YakitRoute,
     YakitRouteToPageInfo
 } from "@/routes/newRoute"
+import {keyToRouteInfo, routeInfoToKey, separator} from "./layout/publicMenu/utils"
 
 import "./main.scss"
 import "./GlobalClass.scss"
@@ -340,9 +341,8 @@ const getInitActiveTabKey = () => {
     return YakitRoute.NewHome
 }
 // 将页面路由信息转化为key值
-const routeConvertKey = (route: YakitRoute, pluginId?: number, pluginName?: string) => {
-    if (route === YakitRoute.Plugin_OP)
-        return `${route}${separator}${+(pluginId || 0) || 0}${separator}${pluginName || ""}`
+const routeConvertKey = (route: YakitRoute, pluginName?: string) => {
+    if (route === YakitRoute.Plugin_OP) return `${route}${separator}${pluginName || ""}`
     else return route
 }
 
@@ -567,15 +567,15 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             const {route, pluginId = 0, pluginName = ""} = routeInfo
             // 菜单在代码内的名字
             const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route].label
-            const filterPage = pageCache.filter((item) => item.route === route)
+            const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
             // 单开页面
             if (SinglePageRoute.includes(route)) {
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
-                    setCurrentTabKey(routeConvertKey(route, pluginId, pluginName))
+                    setCurrentTabKey(routeConvertKey(route, pluginName))
                     return
                 }
-                const tabName = routeKeyToLabel[`${route}|${menuName}`] || menuName
+                const tabName = routeKeyToLabel.current.get(routeInfoToKey(routeInfo)) || menuName
                 setPageCache([
                     ...pageCache,
                     {
@@ -586,19 +586,19 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         multipleNode: []
                     }
                 ])
-                const key = routeConvertKey(route, +pluginId || 0, pluginName)
+                const key = routeConvertKey(route, pluginName)
                 setCurrentTabKey(key)
             } else {
                 // 多开页面
-                const tabName = routeKeyToLabel[`${route}|${menuName}`] || menuName
-                const key = routeConvertKey(route, +pluginId || 0, pluginName)
+                const tabName = routeKeyToLabel.current.get(routeInfoToKey(routeInfo)) || menuName
+                const key = routeConvertKey(route, pluginName)
                 const tabId = `${key}-[${randomString(6)}]`
                 const time = new Date().getTime().toString()
 
                 if (filterPage.length > 0) {
                     const node: multipleNodeInfo = {
                         id: tabId,
-                        verbose: nodeParams?.verbose || `${tabName}-[${filterPage[0].multipleNode.length + 1}]`,
+                        verbose: nodeParams?.verbose || `${tabName}-[${(filterPage[0].multipleLength || 1) + 1}]`,
                         node:
                             nodeParams && nodeParams.node
                                 ? nodeParams?.node || <></>
@@ -609,6 +609,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         if (item.route === route && item.menuName === menuName) {
                             item.multipleNode.push(node)
                             item.multipleCurrentKey = tabId
+                            item.multipleLength = (item.multipleLength || 1) + 1
                             return item
                         }
                         return item
@@ -632,9 +633,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             verbose: tabName,
                             menuName: menuName,
                             route: route,
+                            pluginName: route === YakitRoute.Plugin_OP ? pluginName || "" : undefined,
                             singleNode: undefined,
                             multipleNode: [node],
                             multipleCurrentKey: tabId,
+                            multipleLength: 1,
                             hideAdd: nodeParams?.hideAdd
                         }
                     ])
@@ -669,7 +672,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             else
                 setCurrentTabKey(
                     routeInfo.route === YakitRoute.Plugin_OP
-                        ? routeConvertKey(routeInfo.route, routeInfo.pluginId || 0, routeInfo.pluginName || "")
+                        ? routeConvertKey(routeInfo.route, routeInfo.pluginName || "")
                         : routeInfo.route
                 )
         } else {
@@ -706,7 +709,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         if (index > 0 && getPageCache()[index - 1]) newIndex = index - 1
         if (index === 0 && getPageCache()[index + 1]) newIndex = index + 1
         const {route, pluginId = "0", pluginName = ""} = getPageCache()[newIndex]
-        const key = routeConvertKey(route, +pluginId || 0, pluginName)
+        const key = routeConvertKey(route, pluginName)
         setCurrentTabKey(key)
 
         if (index === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
@@ -739,7 +742,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
     // 关闭除选中页面外的所有页面(包括一级和二级页面)
     const closeOtherCache = useMemoizedFn((activeKey: string) => {
-        const info = StringToRoutePage(activeKey)
+        const info = keyToRouteInfo(activeKey)
         if (!info) return
         const {route, pluginName = ""} = info
 
@@ -1411,7 +1414,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (pageCache.length === 0 || currentTabKey === YakitRoute.NewHome) return
 
             setLoading(true)
-            const data = StringToRoutePage(currentTabKey)
+            // 有点问题
+            const data = keyToRouteInfo(currentTabKey)
             if (data) {
                 const info: OnlyPageCache = {
                     route: data.route,
@@ -1493,8 +1497,23 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             height: "100%"
                         }}
                     >
-                        <HeardMenu onRouteMenuSelect={extraOpenMenuPage} setRouteToLabel={() => {}} />
-                        {/* <PublicMenu onMenuSelect={extraOpenMenuPage} /> */}
+                        <HeardMenu
+                            onRouteMenuSelect={extraOpenMenuPage}
+                            setRouteToLabel={(val) => {
+                                console.log("routetolabel", val)
+                                val.forEach((value, key) => {
+                                    routeKeyToLabel.current.set(key, value)
+                                })
+                            }}
+                        />
+                        {/* <PublicMenu
+                            onMenuSelect={extraOpenMenuPage}
+                            setRouteToLabel={(val) => {
+                                val.forEach((value, key) => {
+                                    routeKeyToLabel.current.set(key, value)
+                                })
+                            }}
+                        /> */}
                         <Content
                             style={{
                                 margin: 0,
@@ -1549,7 +1568,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                             >
                                                 {pageCache.map((i) => {
                                                     // 插件菜单有一个全局的分隔符，每次代码新增需要加上
-                                                    const key = routeConvertKey(i.route, i.pluginId, i.pluginName)
+
+                                                    const key = routeConvertKey(i.route, i.pluginName)
                                                     const onlyPage: OnlyPageCache = {
                                                         route: i.route,
                                                         menuName: i.menuName,

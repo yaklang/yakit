@@ -1757,3 +1757,20 @@ const ArrowNarrowRight = () => (
 export const ArrowNarrowRightIcon = (props: Partial<IconProps>) => {
     return <Icon component={ArrowNarrowRight} {...props} />
 }
+
+const SMViewGridAdd = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M14.1666 11.6668V16.6668M11.6666 14.1668H16.6666M4.99992 8.3335H6.66659C7.58706 8.3335 8.33325 7.5873 8.33325 6.66683V5.00016C8.33325 4.07969 7.58706 3.3335 6.66659 3.3335H4.99992C4.07944 3.3335 3.33325 4.07969 3.33325 5.00016V6.66683C3.33325 7.5873 4.07944 8.3335 4.99992 8.3335ZM13.3333 8.3335H14.9999C15.9204 8.3335 16.6666 7.5873 16.6666 6.66683V5.00016C16.6666 4.07969 15.9204 3.3335 14.9999 3.3335H13.3333C12.4128 3.3335 11.6666 4.07969 11.6666 5.00016V6.66683C11.6666 7.5873 12.4128 8.3335 13.3333 8.3335ZM4.99992 16.6668H6.66659C7.58706 16.6668 8.33325 15.9206 8.33325 15.0002V13.3335C8.33325 12.413 7.58706 11.6668 6.66659 11.6668H4.99992C4.07944 11.6668 3.33325 12.413 3.33325 13.3335V15.0002C3.33325 15.9206 4.07944 16.6668 4.99992 16.6668Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  sm-view-grid-add
+ */
+export const SMViewGridAddIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SMViewGridAdd} {...props} />
+}

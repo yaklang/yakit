@@ -1,5 +1,13 @@
-import React, {useState} from "react"
-import {PublicRouteMenu, PublicRouteMenuProps, YakitRoute} from "@/routes/newRoute"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import {
+    DatabaseFirstMenuProps,
+    PublicCommonPlugins,
+    PublicRouteMenu,
+    PublicRouteMenuProps,
+    ResidentPluginName,
+    YakitRoute,
+    databaseConvertData
+} from "@/routes/newRoute"
 import {ExtraMenu} from "./ExtraMenu"
 import {SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
 import {MenuCodec} from "./MenuCodec"
@@ -7,53 +15,30 @@ import {MenuDNSLog} from "./MenuDNSLog"
 import {MenuMode} from "./MenuMode"
 import {useMemoizedFn} from "ahooks"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {MenuPlugin} from "./MenuPlugin"
+import {yakitNotify} from "@/utils/notification"
+import {useStore} from "@/store"
+import {
+    EnhancedPublicRouteMenuProps,
+    keyToRouteInfo,
+    publicConvertDatabase,
+    publicExchangeProps,
+    routeToMenu,
+    routeInfoToKey,
+    publicUnionMenus,
+    menusConvertKey,
+    DownloadOnlinePluginByScriptNamesResponse
+} from "./utils"
+import {CodeGV, RemoteGV} from "@/yakitGV"
+import {YakScript} from "@/pages/invoker/schema"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {getRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
 
 const {ipcRenderer} = window.require("electron")
-
-export const separator = "|"
-/** 将菜单数据转换成 Menu组件数据 */
-export const routeToMenu = (routes: PublicRouteMenuProps[]) => {
-    const menus: YakitMenuItemProps[] = []
-    for (let item of routes) {
-        const menuItem: YakitMenuItemProps = {
-            label: item.label,
-            key:
-                item.page !== YakitRoute.Plugin_OP
-                    ? item.page || item.label
-                    : `${item.page}${separator}${item.yakScriptId || 0}${separator}${item.yakScripName}`
-        }
-        if (item.children && item.children.length > 0) menuItem.children = routeToMenu(item.children)
-        menus.push(menuItem)
-    }
-    return menus
-}
-/** 将信息转换成 页面配置信息 */
-export const StringToRoutePage = (str: string) => {
-    try {
-        // 判断条件由当前组件方法(routeToMenu)里的分隔符变量(separator)决定
-        if (str.indexOf(separator) > -1) {
-            const keys = str.split(separator)
-            const route = keys[0] as YakitRoute
-
-            const info: RouteToPageProps = {
-                route: route,
-                pluginId: +keys[1] || 0,
-                pluginName: keys[2]
-            }
-            return info
-        } else {
-            const route = str as YakitRoute
-            const info: RouteToPageProps = {route: route}
-            return info
-        }
-    } catch (error) {
-        return null
-    }
-}
 
 /**
  * @name Route信息(用于打开页面)
@@ -68,27 +53,393 @@ export interface RouteToPageProps {
 }
 interface PublicMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
+    setRouteToLabel: (data: Map<string, string>) => void
 }
 
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
-    const {onMenuSelect} = props
-    const DefaultMenuData = PublicRouteMenu
+    const {onMenuSelect, setRouteToLabel} = props
+    // 登录用户状态信息
+    const {userInfo} = useStore()
+    // 本地菜单数据
+    const defaultMenu = useMemo(() => publicExchangeProps(PublicRouteMenu), [])
+    // 本地常用插件数据
+    const defaultPluginMenu = useMemo(() => publicExchangeProps(PublicCommonPlugins), [])
+
+    // 组件初始化的标志位
+    const isInitRef = useRef<boolean>(true)
+
+    // 基础工具内4个插件的对应插件id
+    const [pluginToId, setPluginToId] = useState<Record<ResidentPluginName, number>>({
+        [ResidentPluginName.SubDomainCollection]: 0,
+        [ResidentPluginName.BasicCrawler]: 0,
+        [ResidentPluginName.SpaceEngine]: 0,
+        [ResidentPluginName.DirectoryScanning]: 0
+    })
+
+    const [loading, setLoading] = useState<boolean>(false)
+    // 常用插件菜单
+    const [pluginMenu, setPluginMenu] = useState<EnhancedPublicRouteMenuProps[]>([...defaultPluginMenu])
 
     const [activeMenu, setActiveMenu] = useState<number>(0)
-    const [noExpandMenu, setNoExpandMenu] = useState<number>(-1)
     const [activeTool, setActiveTool] = useState<"codec" | "dnslog">("codec")
     const [isExpand, setIsExpand] = useState<boolean>(true)
 
+    const routeToName = useRef<Map<string, string>>(new Map<string, string>())
+    useEffect(() => {
+        getRouteToName()
+    }, [defaultMenu, pluginMenu])
+    /** 记录菜单项对应的展示名(供外界使用) */
+    const getRouteToName = useMemoizedFn(() => {
+        const names = menusConvertKey(defaultMenu)
+        names.forEach((value, key) => routeToName.current.set(key, value))
+        const pluginNames = menusConvertKey(pluginMenu)
+        pluginNames.forEach((value, key) => routeToName.current.set(key, value))
+        setRouteToLabel(routeToName.current)
+    })
+
+    // 获取 基础工具菜单下的4个插件 是否存在于本地库内
+    const fetchPluginToolInfo = useMemoizedFn(() => {
+        /** 基础工具菜单下的4个插件 */
+        const pluginTool = [
+            ResidentPluginName.SubDomainCollection,
+            ResidentPluginName.BasicCrawler,
+            ResidentPluginName.SpaceEngine,
+            ResidentPluginName.DirectoryScanning
+        ]
+        ipcRenderer
+            .invoke("QueryYakScriptByNames", {YakScriptName: pluginTool})
+            .then((res: {Data: YakScript[]}) => {
+                const {Data} = res
+                const info: Record<string, number> = {}
+                for (let item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
+                const pluginToIds: Record<string, number> = {}
+                for (let name of pluginTool) pluginToIds[name] = info[name] || 0
+                setPluginToId(pluginToIds)
+            })
+            .catch((err) => {})
+    })
+
+    useEffect(() => {
+        fetchPluginToolInfo()
+        fetchCommonPlugins()
+        ipcRenderer.on("refresh-public-menu-callback", (e) => {
+            fetchPluginToolInfo()
+            fetchCommonPlugins()
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("refresh-public-menu-callback")
+        }
+    }, [])
+    /** 获取数据库保存的常用插件列表数据 */
+    const fetchCommonPlugins = useMemoizedFn(() => {
+        setLoading(true)
+
+        ipcRenderer
+            .invoke("GetAllNavigationItem", {Mode: CodeGV.PublicMenuModeValue})
+            .then((res: {Data: DatabaseFirstMenuProps[]}) => {
+                // 没有考虑过滤系统删除的内定页面，因为public版本的可自定义菜单均为插件
+                const database = databaseConvertData(res.Data || [])
+
+                // 过滤掉用户删除的系统内定菜单
+                let filterLocal: PublicRouteMenuProps[] = []
+                getRemoteValue(RemoteGV.UserDeleteMenu)
+                    .then((val) => {
+                        if (!!val) {
+                            let filters: string[] = []
+                            try {
+                                filters = (JSON.parse(val) || {})["public"] || []
+                            } catch (error) {}
+                            for (let item of PublicCommonPlugins) {
+                                if (filters.includes(item.label)) continue
+                                const menu: PublicRouteMenuProps = {...item, children: []}
+                                if (item.children && item.children.length > 0) {
+                                    for (let subitem of item.children) {
+                                        if (!filters.includes(`${item.label}-${subitem.label}`)) {
+                                            menu.children?.push({...subitem})
+                                        }
+                                    }
+                                }
+                                filterLocal.push(menu)
+                            }
+                        } else {
+                            filterLocal = [...PublicCommonPlugins]
+                        }
+                    })
+                    .catch(() => {
+                        filterLocal = [...PublicCommonPlugins]
+                    })
+                    .finally(() => {
+                        // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
+                        const {menus, isUpdate, pluginName} = publicUnionMenus(filterLocal, database)
+
+                        if (isInitRef.current) {
+                            isInitRef.current = false
+                            if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
+                            else {
+                                setPluginMenu(menus)
+                                setTimeout(() => setLoading(false), 300)
+                            }
+                            if (isUpdate) updateMenus(menus)
+                        } else {
+                            if (isUpdate) updateMenus(menus)
+                            else setTimeout(() => setLoading(false), 300)
+                            setPluginMenu(menus)
+                        }
+                    })
+            })
+            .catch((e) => {
+                yakitNotify("error", `获取用户菜单失败: ${e}`)
+                setTimeout(() => setLoading(false), 300)
+            })
+    })
+    /**
+     * @name 批量下载插件
+     * @param menus 常用插件数据
+     * @param pluginName 需要下载的插件名合集
+     */
+    const batchDownloadPlugin = useMemoizedFn((menus: EnhancedPublicRouteMenuProps[], pluginName: string[]) => {
+        ipcRenderer
+            .invoke("DownloadOnlinePluginByScriptNames", {
+                ScriptNames: pluginName,
+                Token: userInfo.token
+            })
+            .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                if (rsp.Data.length > 0) {
+                    // 整理插件名和插件内容的对应关系
+                    const pluginToinfo: Record<string, {ScriptName: string; Id: string; HeadImg: string}> = {}
+                    for (let item of rsp.Data) pluginToinfo[item.ScriptName] = item
+
+                    // 更新菜单数据里的id和头像
+                    menus.forEach((item) => {
+                        if (item.children && item.children.length > 0) {
+                            item.children.forEach((subItem) => {
+                                if (
+                                    subItem.page === YakitRoute.Plugin_OP &&
+                                    pluginToinfo[subItem.yakScripName || subItem.menuName]
+                                ) {
+                                    subItem.yakScriptId =
+                                        +pluginToinfo[subItem.yakScripName || subItem.menuName].Id || 0
+                                    subItem.headImg =
+                                        pluginToinfo[subItem.yakScripName || subItem.menuName].HeadImg || ""
+                                }
+                            })
+                        }
+                    })
+                    setPluginMenu(menus)
+                }
+            })
+            .catch((err) => {
+                yakitNotify("error", "下载菜单插件失败：" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
+    })
+
+    /** 更新数据库菜单数据(全部) */
+    const updateMenus = useMemoizedFn((data: EnhancedPublicRouteMenuProps[]) => {
+        const menus = publicConvertDatabase(data)
+
+        ipcRenderer
+            .invoke("DeleteAllNavigation", {Mode: CodeGV.PublicMenuModeValue})
+            .then(() => {
+                ipcRenderer
+                    .invoke("AddToNavigation", {Data: menus})
+                    .then((rsp) => {})
+                    .catch((e) => {
+                        yakitNotify("error", `保存菜单失败：${e}`)
+                    })
+                    .finally(() => {
+                        setTimeout(() => setLoading(false), 300)
+                    })
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `更新菜单失败:${e}`)
+                setTimeout(() => setLoading(false), 300)
+            })
+    })
+
+    /** 插件菜单-检查插件的可用性 */
+    const onCheckPlugin = useMemoizedFn((info: RouteToPageProps, source: string) => {
+        if (!info.pluginName) return
+        if (info.pluginId === 0) {
+            onOpenDownModal(info, source)
+            return
+        }
+
+        ipcRenderer
+            .invoke("GetYakScriptByName", {Name: info.pluginName})
+            .then((i: YakScript) => {
+                const lastId = +i.Id || 0
+                // 插件不存在于本地数据库中
+                if (lastId === 0) {
+                    onOpenDownModal(info, source)
+                    return
+                }
+                // 打开页面
+                onMenuSelect({
+                    ...info,
+                    pluginId: info.pluginId !== lastId ? lastId : info.pluginId
+                })
+                // 插件id被更新，需同步更新前端菜单数据里的id和headimg
+                if (info.pluginId !== lastId) {
+                    updateSingleMenu({pluginName: i.ScriptName, pluginId: lastId, headImg: i.HeadImg || ""}, source)
+                }
+            })
+            .catch((err) => onOpenDownModal(info, source))
+    })
+    /** 更新前端菜单数据(单项) */
+    const updateSingleMenu = useMemoizedFn(
+        (info: {pluginName: string; pluginId: number; headImg: string}, source: string) => {
+            if (source === "route") {
+                const data = {...pluginToId}
+                data[info.pluginName as any] = info.pluginId
+                setPluginToId(data)
+            } else {
+                pluginMenu.forEach((item) => {
+                    ;(item.children || []).forEach((subItem) => {
+                        if (subItem.yakScripName === info.pluginName) {
+                            subItem.yakScriptId = info.pluginId
+                            subItem.headImg = info.headImg
+                        }
+                    })
+                })
+                setPluginMenu(pluginMenu)
+            }
+        }
+    )
+    /** 下载单个插件菜单 */
+    const singleDownloadPlugin = useMemoizedFn((menuItem: RouteToPageProps, source: string, callback?: () => any) => {
+        ipcRenderer
+            .invoke("DownloadOnlinePluginByScriptNames", {
+                ScriptNames: [menuItem.pluginName],
+                Token: userInfo.token
+            })
+            .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
+                if (rsp.Data.length > 0) {
+                    const info = rsp.Data[0]
+                    // 打开页面
+                    onMenuSelect({
+                        route: YakitRoute.Plugin_OP,
+                        pluginName: info.ScriptName || menuItem.pluginName,
+                        pluginId: +info.Id || 0
+                    })
+                    updateSingleMenu(
+                        {pluginName: info.ScriptName, pluginId: +info.Id || 0, headImg: info.HeadImg},
+                        source
+                    )
+                    if (callback) setTimeout(() => callback(), 200)
+                }
+            })
+            .catch((err) => yakitNotify("error", "下载菜单插件失败：" + err))
+    })
+    /** 插件菜单未下载提示框 */
+    const onOpenDownModal = useMemoizedFn((menuItem: RouteToPageProps, source: string) => {
+        if (!menuItem.pluginName) return
+        const showName = routeToName.current.get(routeInfoToKey(menuItem)) || menuItem.pluginName
+        const m = YakitModalConfirm({
+            width: 420,
+            closable: false,
+            title: "插件加载失败",
+            showConfirmLoading: true,
+            content: (
+                <div className={styles["modal-content"]}>
+                    {showName}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
+                    <span className={styles["menuItem-yakScripName"]}>{menuItem.pluginName}</span>
+                    插件
+                </div>
+            ),
+            onOkText: "重新下载",
+            onOk: () => {
+                singleDownloadPlugin(menuItem, source, () => {
+                    // 下载插件成功，自动销毁弹框
+                    m.destroy()
+                })
+            }
+        })
+    })
+
     // 收起菜单的点击回调
-    const onNoExpandClickMenu = useMemoizedFn((key: string) => {
-        const data = StringToRoutePage(key)
-        if (data) onMenuSelect(data)
+    const onNoExpandClickMenu = useMemoizedFn((key: string, keyPath: string[]) => {
+        if (key === YakitRoute.Plugin_OP) {
+            const data = keyToRouteInfo(key)
+            if (data) {
+                if (!!pluginToId[data?.pluginName || ""]) data.pluginId = pluginToId[data?.pluginName || ""]
+                onCheckPlugin(data, "plugin")
+            }
+        } else {
+            onMenuSelect({route: key as YakitRoute})
+        }
     })
     // 展开菜单的点击回调
     const onClickMenu = useMemoizedFn((route: RouteToPageProps) => {
-        if (route.route === YakitRoute.Plugin_OP && !route.pluginName) return
-        onMenuSelect(route)
+        if (route.route !== YakitRoute.Plugin_OP) onMenuSelect(route)
+        else {
+            if (!route.pluginName) return
+            onCheckPlugin(route, "route")
+        }
     })
+
+    const [noExpandMenu, setNoExpandMenu] = useState<number>(-1)
+    // 收起状态下的菜单组件
+    const noExpand = useMemo(() => {
+        const plugins: EnhancedPublicRouteMenuProps[] = []
+        for (let item of pluginMenu) {
+            if (item.children && item.children.length > 0) {
+                plugins.push({...item})
+            }
+        }
+
+        return (
+            <>
+                {defaultMenu.map((item, index) => {
+                    const data =
+                        item.label === "插件"
+                            ? routeToMenu(
+                                  (item.children || []).concat(
+                                      plugins.length === 0
+                                          ? []
+                                          : [
+                                                {
+                                                    page: undefined,
+                                                    label: "常用插件",
+                                                    menuName: "常用插件",
+                                                    children: plugins
+                                                }
+                                            ]
+                                  )
+                              )
+                            : routeToMenu(item.children || [])
+
+                    return (
+                        <YakitPopover
+                            key={`${item.label}-${index}`}
+                            overlayStyle={{paddingTop: 2}}
+                            overlayClassName={styles["child-menu-popover"]}
+                            placement={index === 0 ? "bottomLeft" : "bottom"}
+                            content={
+                                <YakitMenu
+                                    selectedKeys={[]}
+                                    data={data}
+                                    onClick={({key, keyPath}) => onNoExpandClickMenu(key, keyPath)}
+                                />
+                            }
+                            onVisibleChange={(visible) => setNoExpandMenu(visible ? index : -1)}
+                        >
+                            <div
+                                key={`${item.label}-${index}`}
+                                className={classNames(styles["menu-opt"], {
+                                    [styles["active-menu-opt"]]: noExpandMenu === index
+                                })}
+                            >
+                                {item.label}
+                            </div>
+                        </YakitPopover>
+                    )
+                })}
+            </>
+        )
+    }, [defaultMenu, pluginMenu, noExpandMenu])
 
     return (
         <div
@@ -99,10 +450,10 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             <div className={styles["first-menu-wrapper"]}>
                 {isExpand && (
                     <div className={styles["first-menu-body"]}>
-                        {DefaultMenuData.map((item, index) => {
+                        {defaultMenu.map((item, index) => {
                             return (
                                 <div
-                                    key={`${item.label}-${index}`}
+                                    key={`${item.menuName}-${index}`}
                                     className={classNames(styles["menu-opt"], {
                                         [styles["active-menu-opt"]]: activeMenu === index
                                     })}
@@ -116,38 +467,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         })}
                     </div>
                 )}
-                {!isExpand && (
-                    <div className={styles["first-menu-body"]}>
-                        {DefaultMenuData.map((item, index) => {
-                            return (
-                                <YakitPopover
-                                    key={`${item.label}-${index}`}
-                                    overlayStyle={{paddingTop: 2}}
-                                    overlayClassName={styles["child-menu-popover"]}
-                                    placement={index === 0 ? "bottomLeft" : "bottom"}
-                                    content={
-                                        <YakitMenu
-                                            width={150}
-                                            selectedKeys={[]}
-                                            data={routeToMenu(item.children || [])}
-                                            onClick={({key}) => onNoExpandClickMenu(key)}
-                                        />
-                                    }
-                                    onVisibleChange={(visible) => setNoExpandMenu(visible ? index : -1)}
-                                >
-                                    <div
-                                        key={`${item.label}-${index}`}
-                                        className={classNames(styles["menu-opt"], {
-                                            [styles["active-menu-opt"]]: noExpandMenu === index
-                                        })}
-                                    >
-                                        {item.label}
-                                    </div>
-                                </YakitPopover>
-                            )
-                        })}
-                    </div>
-                )}
+                {!isExpand && <div className={styles["first-menu-body"]}>{noExpand}</div>}
                 <div className={styles["first-menu-extra-wrapper"]}>
                     <ExtraMenu onMenuSelect={onMenuSelect} />
                     {!isExpand && (
@@ -164,56 +484,68 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 })}
             >
                 <div className={styles["second-menu-body"]} style={{flex: 1, overflow: "hidden"}}>
-                    <MenuMode mode={DefaultMenuData[activeMenu].label} onMenuSelect={onClickMenu} />
-                    <div className={styles["divider-style"]}></div>
+                    {!!defaultMenu[activeMenu] && (
+                        <MenuMode
+                            mode={defaultMenu[activeMenu]?.label}
+                            pluginToId={pluginToId}
+                            onMenuSelect={onClickMenu}
+                        />
+                    )}
+
+                    {defaultMenu[activeMenu]?.label !== "插件" && <div className={styles["divider-style"]}></div>}
                     <div className={styles["tool-wrapper"]}>
-                        <div className={styles["tool-body"]}>
-                            <div className={styles["tool-container"]}>
-                                <div
-                                    className={
-                                        activeTool === "codec"
-                                            ? styles["tool-nohidden-container"]
-                                            : styles["tool-hidden-container"]
-                                    }
-                                >
-                                    <MenuCodec />
+                        {defaultMenu[activeMenu]?.label === "插件" && (
+                            <MenuPlugin loading={loading} pluginList={pluginMenu} onMenuSelect={onClickMenu} />
+                        )}
+                        {defaultMenu[activeMenu]?.label !== "插件" && (
+                            <div className={styles["tool-body"]}>
+                                <div className={styles["tool-container"]}>
+                                    <div
+                                        className={
+                                            activeTool === "codec"
+                                                ? styles["tool-nohidden-container"]
+                                                : styles["tool-hidden-container"]
+                                        }
+                                    >
+                                        <MenuCodec />
+                                    </div>
+                                    <div
+                                        className={
+                                            activeTool === "dnslog"
+                                                ? styles["tool-nohidden-container"]
+                                                : styles["tool-hidden-container"]
+                                        }
+                                    >
+                                        <MenuDNSLog />
+                                    </div>
                                 </div>
-                                <div
-                                    className={
-                                        activeTool === "dnslog"
-                                            ? styles["tool-nohidden-container"]
-                                            : styles["tool-hidden-container"]
-                                    }
-                                >
-                                    <MenuDNSLog />
+                                <div className={styles["switch-op-wrapper"]}>
+                                    <div className={styles["border-wrapper"]}></div>
+                                    <div
+                                        className={classNames(styles["tab-bar"], {
+                                            [styles["active-tab-bar"]]: activeTool === "codec"
+                                        })}
+                                        onClick={() => {
+                                            if (activeTool === "codec") return
+                                            setActiveTool("codec")
+                                        }}
+                                    >
+                                        Codec
+                                    </div>
+                                    <div
+                                        className={classNames(styles["tab-bar"], {
+                                            [styles["active-tab-bar"]]: activeTool === "dnslog"
+                                        })}
+                                        onClick={() => {
+                                            if (activeTool === "dnslog") return
+                                            setActiveTool("dnslog")
+                                        }}
+                                    >
+                                        DNSLog
+                                    </div>
                                 </div>
                             </div>
-                            <div className={styles["switch-op-wrapper"]}>
-                                <div className={styles["border-wrapper"]}></div>
-                                <div
-                                    className={classNames(styles["tab-bar"], {
-                                        [styles["active-tab-bar"]]: activeTool === "codec"
-                                    })}
-                                    onClick={() => {
-                                        if (activeTool === "codec") return
-                                        setActiveTool("codec")
-                                    }}
-                                >
-                                    Codec
-                                </div>
-                                <div
-                                    className={classNames(styles["tab-bar"], {
-                                        [styles["active-tab-bar"]]: activeTool === "dnslog"
-                                    })}
-                                    onClick={() => {
-                                        if (activeTool === "dnslog") return
-                                        setActiveTool("dnslog")
-                                    }}
-                                >
-                                    DNSLog
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
                 <div className={styles["expand-wrapper"]}>

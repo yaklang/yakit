@@ -1,5 +1,5 @@
 import React from "react"
-import {ResidentPluginName, YakitRoute, YakitRouteToPageInfo} from "@/routes/newRoute"
+import {ResidentPluginName, YakitRoute} from "@/routes/newRoute"
 import {
     PublicBasicCrawlerIcon,
     PublicBatchPluginIcon,
@@ -38,11 +38,12 @@ import styles from "./MenuMode.module.scss"
 
 interface MenuModeProps {
     mode: string
+    pluginToId: Record<ResidentPluginName, number>
     onMenuSelect: (route: RouteToPageProps) => void
 }
 
 export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
-    const {mode, onMenuSelect} = props
+    const {mode, pluginToId, onMenuSelect} = props
 
     /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
     const onMenu = useMemoizedFn((page: YakitRoute, pluginId?: number, pluginName?: string) => {
@@ -124,8 +125,16 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div
-                        className={styles["vertical-menu-wrapper"]}
-                        onClick={() => onMenu(YakitRoute.Plugin_OP, 0, ResidentPluginName.SubDomainCollection)}
+                        className={classNames(styles["vertical-menu-wrapper"], {
+                            [styles["disable-style"]]: pluginToId[ResidentPluginName.SubDomainCollection] === 0
+                        })}
+                        onClick={() =>
+                            onMenu(
+                                YakitRoute.Plugin_OP,
+                                pluginToId[ResidentPluginName.SubDomainCollection],
+                                ResidentPluginName.SubDomainCollection
+                            )
+                        }
                     >
                         <div className={styles["icon-wrapper"]}>
                             <PublicSubDomainCollectionIcon />
@@ -135,8 +144,16 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                     <div>
                         <div
-                            className={styles["horizontal-menu-wrapper"]}
-                            onClick={() => onMenu(YakitRoute.Plugin_OP, 0, ResidentPluginName.BasicCrawler)}
+                            className={classNames(styles["horizontal-menu-wrapper"], {
+                                [styles["disable-style"]]: pluginToId[ResidentPluginName.BasicCrawler] === 0
+                            })}
+                            onClick={() =>
+                                onMenu(
+                                    YakitRoute.Plugin_OP,
+                                    pluginToId[ResidentPluginName.BasicCrawler],
+                                    ResidentPluginName.BasicCrawler
+                                )
+                            }
                         >
                             <div className={styles["icon-wrapper"]}>
                                 <PublicBasicCrawlerIcon />
@@ -144,8 +161,16 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             <div className={styles["title-style"]}>基础爬虫</div>
                         </div>
                         <div
-                            className={styles["horizontal-menu-wrapper"]}
-                            onClick={() => onMenu(YakitRoute.Plugin_OP, 0, ResidentPluginName.SpaceEngine)}
+                            className={classNames(styles["horizontal-menu-wrapper"], {
+                                [styles["disable-style"]]: pluginToId[ResidentPluginName.SpaceEngine] === 0
+                            })}
+                            onClick={() =>
+                                onMenu(
+                                    YakitRoute.Plugin_OP,
+                                    pluginToId[ResidentPluginName.SpaceEngine],
+                                    ResidentPluginName.SpaceEngine
+                                )
+                            }
                         >
                             <div className={styles["icon-wrapper"]}>
                                 <PublicSpaceEngineIcon />
@@ -163,8 +188,16 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                                 <PublicBruteIcon />
                             </div>
                             <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.Plugin_OP, 0, ResidentPluginName.DirectoryScanning)}
+                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"], {
+                                    [styles["disable-style"]]: pluginToId[ResidentPluginName.DirectoryScanning] === 0
+                                })}
+                                onClick={() =>
+                                    onMenu(
+                                        YakitRoute.Plugin_OP,
+                                        pluginToId[ResidentPluginName.DirectoryScanning],
+                                        ResidentPluginName.DirectoryScanning
+                                    )
+                                }
                             >
                                 <PublicDirectoryScanningIcon />
                             </div>

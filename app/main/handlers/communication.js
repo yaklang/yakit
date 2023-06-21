@@ -6,6 +6,10 @@ module.exports = (win, getClient) => {
     ipcMain.handle("change-main-menu", async (e) => {
         win.webContents.send("fetch-new-main-menu")
     })
+    // 刷新public版本菜单
+    ipcMain.handle("refresh-public-menu", async (e) => {
+        win.webContents.send("refresh-public-menu-callback")
+    })
     // 远程打开一个工具页面 / open a tool page remotely
     ipcMain.handle("send-to-tab", async (e, params) => {
         win.webContents.send("fetch-send-to-tab", params)

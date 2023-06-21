@@ -53,6 +53,7 @@ import {
     PrivateOutlineCodecIcon,
     PrivateOutlineDNSLogIcon,
     PrivateOutlineDataCompareIcon,
+    PrivateOutlineDefaultPluginIcon,
     PrivateOutlineDirectoryScanningIcon,
     PrivateOutlineDomainIcon,
     PrivateOutlineHTTPHistoryIcon,
@@ -81,6 +82,7 @@ import {
     PrivateSolidCodecIcon,
     PrivateSolidDNSLogIcon,
     PrivateSolidDataCompareIcon,
+    PrivateSolidDefaultPluginIcon,
     PrivateSolidDirectoryScanningIcon,
     PrivateSolidDomainIcon,
     PrivateSolidHTTPHistoryIcon,
@@ -491,13 +493,102 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
     }
 }
 
-/** @name 菜单中常驻插件的插件名称(不是展示名称) */
+/** @name 菜单中内定插件的插件名称(不是展示名称) */
 export enum ResidentPluginName {
     SubDomainCollection = "子域名收集",
     BasicCrawler = "基础爬虫",
     SpaceEngine = "空间引擎集成版本",
     DirectoryScanning = "综合目录扫描与爆破"
 }
+
+/** @name 数据库一级菜单项属性 */
+export interface DatabaseFirstMenuProps {
+    /** @name 一级菜单展示名 */
+    Group: string
+    /** @name 二级菜单项集合 */
+    Items: DatabaseSecondMenuProps[]
+    /** @name 一级菜单顺序位 */
+    GroupSort: number
+    /** @name 菜单模式 */
+    Mode: string
+    /** @name 一级菜单初始值 */
+    GroupLabel: string
+}
+/** @name 数据库二级菜单项属性 */
+export interface DatabaseSecondMenuProps {
+    /** @name 插件id */
+    YakScriptId: number
+    /** @name 插件名称 */
+    YakScriptName: string
+    /** @name 插件头像 */
+    HeadImg?: string
+    /** @name 菜单模式 */
+    Mode: string
+    /** @name 二级菜单顺序位 */
+    VerboseSort: number
+    /** @name 一级菜单顺序位 */
+    GroupSort: number
+    /** @name 二级菜单路由 */
+    Route: string
+    /** @name 二级菜单展示名 */
+    Verbose: string
+    /** @name 二级菜单初始值 */
+    VerboseLabel: string
+    /** @name 一级菜单展示名 */
+    Group: string
+    /** @name 一级菜单初始值 */
+    GroupLabel: string
+}
+/**
+ * @name 数据库转化的前端数据属性
+ * @param route 菜单路由
+ * @param label 菜单显示名称
+ * @param menuName 菜单代码名(前端代码中定义的名)
+ * @param pluginId 插件id
+ * @param pluginName 插件名称
+ * @param children 子集
+ */
+export interface DatabaseMenuItemProps {
+    route: YakitRoute | undefined
+    label: string
+    menuName: string
+    pluginId: number
+    pluginName: string
+    HeadImg?: string
+    children?: DatabaseMenuItemProps[]
+}
+/** @name 数据库菜单数据转换为前端数据 */
+export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
+    const menus: DatabaseMenuItemProps[] = []
+    for (let item of data) {
+        const menu: DatabaseMenuItemProps = {
+            route: undefined,
+            label: item.Group,
+            menuName: item.GroupLabel || item.Group,
+            pluginId: 0,
+            pluginName: "",
+            children: []
+        }
+        if (item.Items && item.Items.length > 0) {
+            for (let subItem of item.Items) {
+                const subMenu: DatabaseMenuItemProps = {
+                    route: subItem.Route as YakitRoute,
+                    label: subItem.Verbose,
+                    menuName: subItem.VerboseLabel || subItem.YakScriptName || subItem.Verbose,
+                    pluginId: +subItem.YakScriptId || 0,
+                    pluginName: subItem.YakScriptName || "",
+                    HeadImg: subItem.HeadImg || undefined
+                }
+                menu.children?.push(subMenu)
+            }
+        } else {
+            menu.children = undefined
+        }
+        menus.push(menu)
+    }
+    return menus
+}
+
 
 /** public版菜单项属性 */
 export interface PublicRouteMenuProps {
@@ -657,6 +748,37 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
         ]
     }
 ]
+/**
+ * @name public版常用插件列表
+ * @description 注意！该列表内保存的都为插件的名称
+ */
+export const PublicCommonPlugins: PublicRouteMenuProps[] = [
+    {
+        page: undefined,
+        label: "子域名收集",
+        children: ["crt子域名收集", "纯暴力子域名收集", "SEO综合查询", "被动子域名收集"].map((item) => {
+            return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
+        })
+    },
+    {
+        page: undefined,
+        label: "基础工具",
+        children: [
+            "域名提取",
+            "域名批量转IP并查CDN",
+            "IP反查域名",
+            "批量备案查询",
+            "空间引擎集成版本",
+            "网站信息获取",
+            "主域名提取",
+            "杀软匹配tasklist /svc",
+            "按行去重",
+            "api提取"
+        ].map((item) => {
+            return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
+        })
+    }
+]
 
 /** private版菜单项属性 */
 export interface PrivateRouteMenuProps {
@@ -669,6 +791,52 @@ export interface PrivateRouteMenuProps {
     yakScripName?: string
     children?: PrivateRouteMenuProps[]
 }
+/** 软件内定插件菜单的icon */
+export const getFixedPluginIcon = (name: string) => {
+    switch (name) {
+        case "基础爬虫":
+            return <PrivateOutlineBasicCrawlerIcon />
+        case "空间引擎集成版本":
+            return <PrivateOutlineSpaceEngineIcon />
+        case "子域名收集":
+            return <PrivateOutlineSubDomainCollectionIcon />
+        case "综合目录扫描与爆破":
+            return <PrivateOutlineDirectoryScanningIcon />
+        default:
+            return <PrivateOutlineDefaultPluginIcon />
+    }
+}
+/** 软件内定插件菜单的hover-icon */
+export const getFixedPluginHoverIcon = (name: string) => {
+    switch (name) {
+        case "基础爬虫":
+            return <PrivateSolidBasicCrawlerIcon />
+        case "空间引擎集成版本":
+            return <PrivateSolidSpaceEngineIcon />
+        case "子域名收集":
+            return <PrivateSolidSubDomainCollectionIcon />
+        case "综合目录扫描与爆破":
+            return <PrivateSolidDirectoryScanningIcon />
+        default:
+            return <PrivateSolidDefaultPluginIcon />
+    }
+}
+/** 软件内定插件菜单的describe */
+export const getFixedPluginDescribe = (name: string) => {
+    switch (name) {
+        case "基础爬虫":
+            return "通过爬虫可快速了解网站的整体架构"
+        case "空间引擎集成版本":
+            return ""
+        case "子域名收集":
+            return ""
+        case "综合目录扫描与爆破":
+            return "带有内置字典的综合目录扫描与爆破"
+        default:
+            return ""
+    }
+}
+
 /**
  * @name 可以配置和展示的菜单项
  * @description 主要使用-编辑菜单中的系统功能列表
@@ -698,41 +866,11 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidBruteIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Mod_Brute]
     },
-    [ResidentPluginName.BasicCrawler]: {
-        page: YakitRoute.Plugin_OP,
-        label: "基础爬虫",
-        icon: <PrivateOutlineBasicCrawlerIcon />,
-        hoverIcon: <PrivateSolidBasicCrawlerIcon />,
-        describe: "通过爬虫可快速了解网站的整体架构",
-        yakScripName: ResidentPluginName.BasicCrawler
-    },
-    [ResidentPluginName.SpaceEngine]: {
-        page: YakitRoute.Plugin_OP,
-        label: "空间引擎",
-        icon: <PrivateOutlineSpaceEngineIcon />,
-        hoverIcon: <PrivateSolidSpaceEngineIcon />,
-        yakScripName: ResidentPluginName.SpaceEngine
-    },
     [YakitRoute.Mod_ScanPort]: {
         page: YakitRoute.Mod_ScanPort,
         icon: <PrivateOutlineScanPortIcon />,
         hoverIcon: <PrivateSolidScanPortIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Mod_ScanPort]
-    },
-    [ResidentPluginName.SubDomainCollection]: {
-        page: YakitRoute.Plugin_OP,
-        label: "子域名收集",
-        icon: <PrivateOutlineSubDomainCollectionIcon />,
-        hoverIcon: <PrivateSolidSubDomainCollectionIcon />,
-        yakScripName: ResidentPluginName.SubDomainCollection
-    },
-    [ResidentPluginName.DirectoryScanning]: {
-        page: YakitRoute.Plugin_OP,
-        label: "目录扫描",
-        icon: <PrivateOutlineDirectoryScanningIcon />,
-        hoverIcon: <PrivateSolidDirectoryScanningIcon />,
-        describe: "带有内置字典的综合目录扫描与爆破",
-        yakScripName: ResidentPluginName.DirectoryScanning
     },
     [YakitRoute.PoC]: {
         page: YakitRoute.PoC,
@@ -849,6 +987,7 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         ...YakitRouteToPageInfo[YakitRoute.DB_CVE]
     }
 }
+// 通过传入的 YakitRoute数组 快速生成页面数据数组
 const routeToChildren: (route: (YakitRoute | ResidentPluginName)[]) => PrivateRouteMenuProps[] = (route) => {
     const menus: PrivateRouteMenuProps[] = []
     for (let name of route) {
@@ -881,14 +1020,42 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "基础工具",
-        children: routeToChildren([
-            YakitRoute.Mod_Brute,
-            ResidentPluginName.BasicCrawler,
-            ResidentPluginName.SpaceEngine,
-            YakitRoute.Mod_ScanPort,
-            ResidentPluginName.SubDomainCollection,
-            ResidentPluginName.DirectoryScanning
-        ])
+        children: [
+            PrivateAllMenus[YakitRoute.Mod_Brute],
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "基础爬虫",
+                icon: getFixedPluginIcon(ResidentPluginName.BasicCrawler),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.BasicCrawler),
+                describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
+                yakScripName: ResidentPluginName.BasicCrawler
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "空间引擎",
+                icon: getFixedPluginIcon(ResidentPluginName.SpaceEngine),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SpaceEngine),
+                describe: getFixedPluginDescribe(ResidentPluginName.SpaceEngine),
+                yakScripName: ResidentPluginName.SpaceEngine
+            },
+            PrivateAllMenus[YakitRoute.Mod_ScanPort],
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "子域名收集",
+                icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
+                describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
+                yakScripName: ResidentPluginName.SubDomainCollection
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "目录扫描",
+                icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
+                describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
+                yakScripName: ResidentPluginName.DirectoryScanning
+            }
+        ]
     },
     {
         page: undefined,
@@ -943,14 +1110,42 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "基础工具",
-        children: routeToChildren([
-            YakitRoute.Mod_Brute,
-            ResidentPluginName.BasicCrawler,
-            ResidentPluginName.SpaceEngine,
-            YakitRoute.Mod_ScanPort,
-            ResidentPluginName.SubDomainCollection,
-            ResidentPluginName.DirectoryScanning
-        ])
+        children: [
+            PrivateAllMenus[YakitRoute.Mod_Brute],
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "基础爬虫",
+                icon: getFixedPluginIcon(ResidentPluginName.BasicCrawler),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.BasicCrawler),
+                describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
+                yakScripName: ResidentPluginName.BasicCrawler
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "空间引擎",
+                icon: getFixedPluginIcon(ResidentPluginName.SpaceEngine),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SpaceEngine),
+                describe: getFixedPluginDescribe(ResidentPluginName.SpaceEngine),
+                yakScripName: ResidentPluginName.SpaceEngine
+            },
+            PrivateAllMenus[YakitRoute.Mod_ScanPort],
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "子域名收集",
+                icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
+                describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
+                yakScripName: ResidentPluginName.SubDomainCollection
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "目录扫描",
+                icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
+                describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
+                yakScripName: ResidentPluginName.DirectoryScanning
+            }
+        ]
     },
     {
         page: undefined,
@@ -1058,6 +1253,7 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         ]
     }
 ]
+
 // 要全部删除，但是里面的内容还没确定好
 export enum Route {
     WebsocketHistory = "websocket-history",

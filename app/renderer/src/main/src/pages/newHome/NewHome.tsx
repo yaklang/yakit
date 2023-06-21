@@ -9,7 +9,6 @@ import {useGetState, useMemoizedFn, useSize, useInViewport} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "@/utils/notification"
 import {PluginSearchStatisticsRequest, PluginType} from "@/pages/yakitStore/YakitStorePage"
-import {DownloadOnlinePluginByScriptNamesResponse} from "@/pages/layout/HeardMenu/HeardMenuType"
 import {ReduceCountIcon, AddCountIcon} from "@/pages/customizeMenu/icon/homeIcon"
 import CountUp from "react-countup"
 import {isCommunityEdition, isEnterpriseEdition} from "@/utils/envfile"
@@ -38,6 +37,7 @@ import {
     PrivateSolidYakRunnerIcon
 } from "@/routes/privateIcon"
 import {RouteToPageProps} from "../layout/publicMenu/PublicMenu"
+import {DownloadOnlinePluginByScriptNamesResponse} from "../layout/publicMenu/utils"
 
 import styles from "./newHome.module.scss"
 import classNames from "classnames"
@@ -97,7 +97,8 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
             .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
                 if (rsp.Data.length > 0) {
                     success("添加菜单成功")
-                    ipcRenderer.invoke("change-main-menu")
+                    if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                    else ipcRenderer.invoke("change-main-menu")
                 }
             })
             .catch((e) => {
