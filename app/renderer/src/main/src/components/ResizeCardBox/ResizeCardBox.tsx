@@ -1,9 +1,9 @@
 import React, {ReactNode, useEffect, useState} from "react"
 import styles from "./ResizeCardBox.module.scss"
 import classNames from "classnames"
-import {ResizeBox, ResizeBoxProps} from "../ResizeBox"
 import {useCreation} from "ahooks"
 import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
+import { YakitResizeBox, YakitResizeBoxProps } from "../yakitUI/YakitResizeBox/YakitResizeBox"
 
 interface ResizeCardNodeProps {
     title?: ReactNode
@@ -16,7 +16,7 @@ interface ResizeCardNodeProps {
  * @param {ResizeCardNodeProps} firstNodeProps 第一个节点的额外属性
  * @param {ResizeCardNodeProps} secondNodeProps 第二个节点的额外属性
  */
-interface ResizeCardBoxProps extends ResizeBoxProps {
+interface ResizeCardBoxProps extends YakitResizeBoxProps {
     firstNodeProps?: ResizeCardNodeProps
     secondNodeProps?: ResizeCardNodeProps
 }
@@ -44,7 +44,7 @@ export const ResizeCardBox: React.FC<ResizeCardBoxProps> = (props) => {
         return p
     }, [firstFull, secondFull])
     return (
-        <ResizeBox
+        <YakitResizeBox
             {...resProps}
             lineStyle={{display: firstFull || secondFull ? "none" : ""}}
             secondNodeStyle={{padding: firstFull ? 0 : undefined}}

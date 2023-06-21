@@ -55,6 +55,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }
         .matching-extraction-title-tip {
             font-weight: 400;
