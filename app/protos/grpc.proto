@@ -389,9 +389,6 @@ service Yak {
   rpc GetProjectKey(GetKeyRequest) returns (GetKeyResult);
   rpc SetProjectKey(SetKeyRequest) returns (Empty);
 
-  rpc GetProjectKey(GetKeyRequest) returns (GetKeyResult);
-  rpc SetProjectKey(SetKeyRequest) returns (Empty);
-
   // Online
   rpc GetOnlineProfile(Empty) returns (OnlineProfile);
   rpc SetOnlineProfile(OnlineProfile) returns (Empty);
@@ -490,6 +487,55 @@ service Yak {
   rpc UploadScreenRecorders(UploadScreenRecorderRequest) returns (Empty);
   rpc GetOneScreenRecorders(GetOneScreenRecorderRequest) returns (ScreenRecorder);
   rpc UpdateScreenRecorders(UpdateScreenRecorderRequest) returns (Empty);
+
+  // 通过他可以构造一个 HTTP 请求
+  // 这个请求可能是一个，也可能是一系列
+  // 一般用来调试插件等
+  rpc HTTPRequestBuilder(HTTPRequestBuilderParams) returns (HTTPRequestBuilderResponse);
+  // rpc QueryHTTPRequestBuilder(QueryHTTPRequestBuilderRequest) returns (QueryHTTPRequestBuilderResponse);
+  // rpc DeleteHTTPRequestBuilder(DeleteHTTPRequestBuilderRequest) returns (Empty);
+  rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
+}
+
+message DebugPluginRequest {
+  string Code = 1;
+  string PluginType = 2;
+
+  string Input = 3;
+  HTTPRequestBuilderParams HTTPRequestTemplate = 4;
+}
+
+message HTTPRequestBuilderResult {
+  bool IsHttps = 1;
+  string Url = 2;
+  bytes HTTPRequest = 3;
+}
+
+message HTTPRequestBuilderResponse {
+  repeated HTTPRequestBuilderResult Results = 1;
+  string Templates = 2;
+}
+
+message HTTPRequestBuilderParams {
+  bool IsRawHTTPRequest = 1;
+  bool IsHttps = 2;
+  bytes RawHTTPRequest = 3;
+
+  // fields
+  string Method = 4;
+
+  // path 增强型
+  repeated string Path = 6;
+  repeated KVPair GetParams = 9;
+
+  repeated KVPair Headers = 7;
+  repeated KVPair Cookie = 8;
+
+  // body 增强
+  bytes Body = 10;
+  repeated KVPair PostParams = 11;
+  repeated KVPair MultipartParams = 12;
+  repeated KVPair MultipartFileParams = 13;
 }
 
 message ScreenRecorder {
