@@ -31,8 +31,8 @@
     "pack-linux-ee": "electron-builder build --linux --config ./multibuilder/electron-builder-ee.yaml --x64",
     "pack-linux-se": "electron-builder build --linux --config ./multibuilder/electron-builder-se.yaml --x64",
     "electron-publish": "electron-builder --publish always -mwl",
-    "electron-publish-ee": "yarn run pack-win-ee&&yarn run pack-mac-ee&&yarn run pack-mac-ee-arm64&&pack-linux-ee",
-    "electron-publish-se": "yarn run pack-win-se&&yarn run pack-mac-se&&yarn run pack-mac-se-arm64&&pack-linux-se",
+    "electron-publish-ee": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-ee.yaml",
+    "electron-publish-se": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-se.yaml",
     "release-enpritrace": "electron-builder --publish always -mwl --config ./multibuilder/enpritrace.yml",
     "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml"
   },
