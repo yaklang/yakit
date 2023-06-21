@@ -155,28 +155,28 @@ jobs:
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit(Enterprise) Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit(Enterprise) Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit(Enterprise) Artifacts Linux
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
       # start Special Edition
       - name: Upload Yakit(Special) Artifacts Windows
@@ -185,28 +185,28 @@ jobs:
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-SE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit(Special) Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit(Special) Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit(Special) Artifacts Linux
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-SE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
   publish_yakit_ee_to_oss:
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') && !endsWith(github.ref, '/no-release') }}
