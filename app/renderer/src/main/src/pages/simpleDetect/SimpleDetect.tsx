@@ -57,7 +57,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
-const plainOptions = ["弱口令", "漏洞扫描", "合规检测"]
+const plainOptions = ["弱口令", "网络设备扫描", "合规检测"]
 const layout = {
     labelCol: {span: 6},
     wrapperCol: {span: 16}
@@ -205,8 +205,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     case "弱口令":
                         selectArr.push("弱口令")
                         break
-                    case "漏洞扫描":
-                        selectArr.push("漏洞扫描")
+                    case "网络设备扫描":
+                        selectArr.push("网络设备扫描")
                         break
                     case "合规检测":
                         selectArr.push("合规检测")

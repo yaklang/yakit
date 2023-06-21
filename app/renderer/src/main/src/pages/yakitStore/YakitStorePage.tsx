@@ -2816,12 +2816,12 @@ const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
 
     const [_, setSelectItem, getSelectItem] = useGetState<string[]>(selectItemType)
 
-    const typeList = ["基础扫描", "深度扫描", "弱口令", "漏洞扫描", "合规检测"]
+    const typeList = ["基础扫描", "深度扫描", "弱口令", "网络设备扫描", "合规检测"]
     const submit = () => {
         let obj: PluginGroupPostProps = {
             groupName: []
         }
-        obj.groupName = [...getSelectItem()]
+        obj.groupName = [...getSelectItem()].filter((item)=>item!=="漏洞扫描")
         obj.pluginWhere = {...queryOnline, bind_me: false}
         // 全选
         if (!isSelectAllOnline) {
@@ -2837,13 +2837,14 @@ const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
                 {typeList.map((item) => (
                     <div
                         style={{
-                            width: 108,
+                            width: 130,
                             position: "relative",
                             margin: "0 20px 10px 0",
                             padding: "10px 22px",
                             display: "inline-block",
                             border: "1px solid rgba(0,0,0,.06)",
-                            borderRadius: "2px"
+                            borderRadius: "2px",
+                            textAlign:"center"
                         }}
                     >
                         {item}
@@ -2926,7 +2927,7 @@ const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
                                 <Checkbox value='弱口令'>弱口令</Checkbox>
                             </Col>
                             <Col span={8}>
-                                <Checkbox value='漏洞扫描'>漏洞扫描</Checkbox>
+                                <Checkbox value='网络设备扫描'>网络设备扫描</Checkbox>
                             </Col>
                             <Col span={8}>
                                 <Checkbox value='合规检测'>合规检测</Checkbox>
@@ -2993,7 +2994,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = (props) => {
             number: 10,
             onClickBatch: () => {
                 const n = showModal({
-                    width: "30%",
+                    width: "35%",
                     content: (
                         <RemovePluginGroup
                             onRefList={onRefList}
