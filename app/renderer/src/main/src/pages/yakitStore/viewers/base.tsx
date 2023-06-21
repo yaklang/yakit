@@ -346,18 +346,22 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </AutoCard>
                     </Tabs.TabPane>
                 )}
-                {!props.debugMode && props.onXtermRef ? (
-                    <Tabs.TabPane tab={"Console"} key={"console"}>
-                        <div style={{width: "100%", height: "100%"}}>
-                            <CVXterm ref={xtermRef} options={{convertEol: true}}/>
-                        </div>
-                    </Tabs.TabPane>
-                ) : <Tabs.TabPane tab={"Console"} key={"console"}>
+                <Tabs.TabPane tab={"Console"} key={"console"}>
                     <div style={{width: "100%", height: "100%"}}>
                         <EngineConsole isMini={true}/>
                     </div>
-                </Tabs.TabPane>}
-
+                </Tabs.TabPane>
+                {/*{!props.debugMode && props.onXtermRef ? (*/}
+                {/*    <Tabs.TabPane tab={"Console"} key={"console"}>*/}
+                {/*        <div style={{width: "100%", height: "100%"}}>*/}
+                {/*            <CVXterm ref={xtermRef} options={{convertEol: true}}/>*/}
+                {/*        </div>*/}
+                {/*    </Tabs.TabPane>*/}
+                {/*) : <Tabs.TabPane tab={"Console"} key={"console"}>*/}
+                {/*    <div style={{width: "100%", height: "100%"}}>*/}
+                {/*        <EngineConsole isMini={true}/>*/}
+                {/*    </div>*/}
+                {/*</Tabs.TabPane>}*/}
             </Tabs>
             {/* </div> */}
         </div>
