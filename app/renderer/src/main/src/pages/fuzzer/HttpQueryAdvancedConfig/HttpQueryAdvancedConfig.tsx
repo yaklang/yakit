@@ -54,6 +54,7 @@ import {
     MatchingAndExtraction
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -225,9 +226,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     title: "渲染后变量内容",
                     content: (
                         <Space direction={"vertical"} style={{margin: 20}}>
-                            {rsp.Results.map((data) => {
+                            {rsp.Results.map((data, index) => {
                                 return (
-                                    <div>
+                                    <div key={`${data.Key}-${index}`}>
                                         {data.Key}: {data.Value}
                                     </div>
                                 )
@@ -616,8 +617,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </Form.Item>
                         <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
                             <Space direction={"vertical"}>
-                                {(etcHosts || []).map((i) => (
-                                    <Tag
+                                {(etcHosts || []).map((i, n) => (
+                                    <YakitTag
                                         closable={true}
                                         onClose={() => {
                                             const newEtcHosts = etcHosts.filter((j) => j.Key !== i.Key)
@@ -627,9 +628,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 etcHosts: newEtcHosts
                                             })
                                         }}
+                                        key={`${i.Key}-${n}`}
                                     >
                                         {`${i.Key} => ${i.Value}`}
-                                    </Tag>
+                                    </YakitTag>
                                 ))}
                                 <YakitButton
                                     onClick={() => {
@@ -981,7 +983,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
         <>
             <Form.Item name='matchers' noStyle>
                 {matchersList.map((matcherItem, index) => (
-                    <div className={styles["matchersList-item"]}>
+                    <div className={styles["matchersList-item"]} key={`${index}`}>
                         <div className={styles["matchersList-item-heard"]}>
                             <span className={styles["item-id"]}>ID&nbsp;{index}</span>
                             <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
@@ -1035,7 +1037,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
         <>
             <Form.Item name='extractors' noStyle>
                 {extractorList.map((extractorItem, index) => (
-                    <div className={styles["matchersList-item"]}>
+                    <div className={styles["matchersList-item"]} key={`${extractorItem.Name || index}`}>
                         <div className={styles["matchersList-item-heard"]}>
                             <span className={styles["item-id"]}>{extractorItem.Name || `ID ${index}`}</span>
                             <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
@@ -1093,7 +1095,7 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
             >
                 <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
                 {disabled ? (
-                    <Tooltip title='请点击右侧表格中操作的闪电图标进行添加/调试'>
+                    <Tooltip title='请在右边列表选择响应包进行编辑'>
                         <PencilAltIcon
                             className={classNames(styles["pencilAlit-icon"], {
                                 [styles["pencilAlit-icon-disabled"]]: disabled

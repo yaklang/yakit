@@ -609,15 +609,38 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
                 .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
-                    console.log("data", data)
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
         })
     })
     const responseViewerRef = useRef<any>()
+
+    const onValidateHTTPFuzzer = useMemoizedFn(() => {
+        if (showMatcherAndExtraction && responseViewerRef.current) {
+            responseViewerRef.current
+                .validate()
+                .then((data: {matcher: MatcherValueProps; extractor: ExtractorValueProps}) => {
+                    setAdvancedConfigValue({
+                        ...advancedConfigValue,
+                        filterMode: data.matcher.filterMode,
+                        hitColor: data.matcher.hitColor,
+                        matchersCondition: data.matcher.matchersCondition,
+                        matchers: data.matcher.matchersList,
+                        extractors: data.extractor.extractorList
+                    })
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        submitToHTTPFuzzer()
+                    }, 200)
+                })
+        } else {
+            submitToHTTPFuzzer()
+        }
+    })
     const submitToHTTPFuzzer = useMemoizedFn(() => {
-        // responseViewerRef.current?.validate()
+        resetResponse()
         // 清楚历史任务的标记
         setHistoryTask(undefined)
 
@@ -678,7 +701,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
-
+        setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         console.log("httpParams", httpParams)
@@ -1116,7 +1139,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const httpResponse: FuzzerResponse = useMemo(() => {
         return redirectedResponse ? redirectedResponse : getFirstResponse()
     }, [onlyOneResponse, redirectedResponse, getFirstResponse()])
-
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1155,12 +1177,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     ) : (
                         <YakitButton
                             onClick={() => {
-                                resetResponse()
-
-                                setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
                                 setRedirectedResponse(undefined)
                                 sendFuzzerSettingInfo()
-                                submitToHTTPFuzzer()
+                                onValidateHTTPFuzzer()
                                 setCurrentPage(1)
                             }}
                             icon={<PaperAirplaneIcon style={{height: 16}} />}
@@ -1253,7 +1272,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 ipcRenderer
                                     .invoke("RedirectRequest", redirectRequestProps)
                                     .then((rsp: FuzzerResponse) => {
-                                        console.log("rsp", rsp)
                                         setRedirectedResponse(rsp)
                                     })
                                     .catch((e) => {
@@ -1448,7 +1466,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                     secondNode={
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
-                            <YakitSpin spinning={false} style={{height: "100%"}}>
+                            <YakitSpin spinning={loading} style={{height: "100%"}}>
                                 {onlyOneResponse ? (
                                     <ResponseViewer
                                         ref={responseViewerRef}
@@ -1823,7 +1841,6 @@ interface SecondNodeTitleProps {
 const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
     const {cachedTotal, rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess} =
         props
-    // if (!rsp.BodyLength) return <></>
     if (onlyOneResponse) {
         return (
             <>
@@ -2057,7 +2074,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defActiveType={activeType}
                         />
                     }
-                    secondNodeStyle={{display: showMatcherAndExtraction ? "" : "none"}}
+                    secondNodeStyle={{display: showMatcherAndExtraction ? "" : "none", padding: 0}}
                     lineDirection='bottom'
                     secondMinSize={300}
                     {...ResizeBoxProps}

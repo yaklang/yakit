@@ -182,9 +182,9 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         useImperativeHandle(
             ref,
             () => ({
-                validate: () => onCheckClose()
+                validate: onValidate
             }),
-            []
+            [matcher, extractor]
         )
 
         useEffect(() => {
@@ -196,7 +196,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 matchersList:
                     defActiveType === "matchers" && matcherValue.matchersList.length === 0
                         ? [_.cloneDeepWith(defaultMatcherItem)]
-                        : matcherValue.matchersList
+                        : _.cloneDeepWith(matcherValue.matchersList)
             })
         }, [matcherValue, defActiveType])
         useEffect(() => {
@@ -205,7 +205,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 extractorList:
                     defActiveType === "extractors" && extractorValue.extractorList.length === 0
                         ? [_.cloneDeepWith(defaultExtractorItem)]
-                        : extractorValue.extractorList
+                        : _.cloneDeepWith(extractorValue.extractorList)
             })
         }, [extractorValue, defActiveType])
         const isEffectiveMatcher: boolean = useMemo(() => {
@@ -219,6 +219,42 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     .length <= 0
             )
         }, [extractor.extractorList])
+        const onValidate = useMemoizedFn(() => {
+            return new Promise((resolve, reject) => {
+                const matcherAndExtractor = onClearEmptyGroups()
+                const data = {
+                    matcher: {
+                        ...matcher,
+                        matchersList: matcherAndExtractor.newMatchersList
+                    },
+                    extractor: {
+                        ...extractor,
+                        extractorList: matcherAndExtractor.newExtractorList
+                    }
+                }
+                // 没有空的条件，再检测两次的值是否一致,不一致需提示用户
+                if (_.isEqual(matcherValue, data.matcher) && _.isEqual(extractorValue, data.extractor)) {
+                    resolve(data)
+                } else {
+                    let m = YakitModalConfirm({
+                        width: 420,
+                        type: "white",
+                        onCancelText: "不应用",
+                        onOkText: "应用",
+                        icon: <ExclamationCircleOutlined />,
+                        onOk: () => {
+                            resolve(data)
+                            m.destroy()
+                        },
+                        onCancel: () => {
+                            reject(false)
+                            m.destroy()
+                        },
+                        content: "是否应用修改的内容"
+                    })
+                }
+            })
+        })
         const onIsEmpty = useMemoizedFn(() => {
             const matcherEmptyList = matcher.matchersList.filter((item) => isMatcherItemEmpty(item))
             const extractorEmptyList = extractor.extractorList.filter((item) => isExtractorEmpty(item))
@@ -346,50 +382,53 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             }
         })
         const onApplyConfirm = useMemoizedFn(() => {
-            let m = YakitModalConfirm({
-                width: 420,
-                type: "white",
-                onCancelText: "取消",
-                onOkText: "确定",
-                icon: <ExclamationCircleOutlined />,
-                onOk: () => {
-                    const newMatchersList: HTTPResponseMatcher[] = []
-                    matcher.matchersList.forEach((item) => {
-                        if (item.Group.findIndex((g) => g === "") !== 0) {
-                            newMatchersList.push({
-                                ...item,
-                                Group: item.Group.filter((g) => g !== "")
-                            })
-                        }
-                    })
-                    const newExtractorList: HTTPResponseExtractor[] = []
-                    extractor.extractorList.forEach((item) => {
-                        if (item.Groups.findIndex((g) => g === "") !== 0) {
-                            newExtractorList.push({
-                                ...item,
-                                Groups: item.Groups.filter((g) => g !== "")
-                            })
-                        }
-                    })
-                    onSave({...matcher, matchersList: newMatchersList}, {...extractor, extractorList: newExtractorList})
-                    onClose()
-                    m.destroy()
-                },
-                onCancel: () => {
-                    m.destroy()
-                },
-                content: "有条件未配置完成是否确定要应用？"
-            })
+            const matcherAndExtractor = onClearEmptyGroups()
+            onSave(
+                {...matcher, matchersList: matcherAndExtractor.newMatchersList},
+                {...extractor, extractorList: matcherAndExtractor.newExtractorList}
+            )
+            onClose()
         })
+        /**
+         * @returns 返回过滤空值的Group的匹配器和提取器数据
+         */
+        const onClearEmptyGroups = useMemoizedFn(() => {
+            const newMatchersList: HTTPResponseMatcher[] = []
+            matcher.matchersList.forEach((item) => {
+                newMatchersList.push({
+                    ...item,
+                    Group: item.Group.filter((g) => g !== "")
+                })
+            })
+            const newExtractorList: HTTPResponseExtractor[] = []
+            extractor.extractorList.forEach((item) => {
+                newExtractorList.push({
+                    ...item,
+                    Groups: item.Groups.filter((g) => g !== "")
+                })
+            })
+            return {
+                newMatchersList,
+                newExtractorList
+            }
+        })
+
         const onCheckClose = useMemoizedFn(() => {
-            // 关闭优先检测是否有空的条件
-            if (onIsEmpty()) {
-                onApplyConfirm()
-                return
+            const matcherAndExtractor = onClearEmptyGroups()
+            const data = {
+                matcher: {
+                    ...matcher,
+                    matchersList: matcherAndExtractor.newMatchersList
+                },
+                extractor: {
+                    ...extractor,
+                    extractorList: matcherAndExtractor.newExtractorList
+                }
             }
             // 没有空的条件，再检测两次的值是否一致,不一致需提示用户
-            if (_.isEqual(matcherValue, matcher) && _.isEqual(extractorValue, extractor)) {
+            if (_.isEqual(matcherValue, data.matcher) && _.isEqual(extractorValue, data.extractor)) {
                 onClose()
+                return
             } else {
                 let m = YakitModalConfirm({
                     width: 420,
@@ -1058,7 +1097,7 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
     return (
         <div className={styles["extract-results"]}>
             {list.map((i) => {
-                return <p>{`${i.Key}: ${i.Value}`}</p>
+                return <p key={i.Key}>{`${i.Key}: ${i.Value}`}</p>
             })}
         </div>
     )
