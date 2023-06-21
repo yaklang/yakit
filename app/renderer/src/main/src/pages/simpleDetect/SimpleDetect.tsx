@@ -52,11 +52,12 @@ import {ResizeBox} from "../../components/ResizeBox"
 import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVariable"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {v4 as uuidv4} from "uuid"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
-const plainOptions = ["弱口令", "漏洞扫描", "合规检测"]
+const plainOptions = ["弱口令", "网络设备扫描", "合规检测"]
 const layout = {
     labelCol: {span: 6},
     wrapperCol: {span: 16}
@@ -204,8 +205,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                     case "弱口令":
                         selectArr.push("弱口令")
                         break
-                    case "漏洞扫描":
-                        selectArr.push("漏洞扫描")
+                    case "网络设备扫描":
+                        selectArr.push("网络设备扫描")
                         break
                     case "合规检测":
                         selectArr.push("合规检测")
@@ -1046,6 +1047,17 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
             failed(`停止添加失败:${e}`)
         })
     }
+    const onRemoveAllLocalPlugin = () => {
+        // 全部删除
+        ipcRenderer
+            .invoke("DeleteLocalPluginsByWhere", {})
+            .then(() => {
+                success("全部删除成功")
+            })
+            .catch((e) => {
+                failed(`删除所有本地插件错误:${e}`)
+            })
+    }
     if (type === "modal") {
         return (
             <div className={styles["download-all-plugin-modal"]}>
@@ -1102,6 +1114,19 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     placement={"left"}
                 >
                     <div className={styles["operation-text"]}>一键导入插件</div>
+                </Popconfirm>
+            )}
+            {userInfo.role !== "admin" && (
+                <Popconfirm
+                    title={"确定将插件商店所有本地数据清除吗?"}
+                    onConfirm={onRemoveAllLocalPlugin}
+                    okText='Yes'
+                    cancelText='No'
+                    placement={"left"}
+                >
+                    <YakitButton type='text' className={styles["clean-local-plugin"]}>
+                        一键清除插件
+                    </YakitButton>
                 </Popconfirm>
             )}
         </div>

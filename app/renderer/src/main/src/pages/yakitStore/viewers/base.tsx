@@ -29,6 +29,7 @@ import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {EngineLog} from "@/components/layout/EngineLog";
 import {EngineConsole} from "@/components/baseConsole/BaseConsole";
+import { isEnpriTrace } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -207,6 +208,13 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         })
         .splice(0, 25)
 
+    const newStatusCards = useMemo(()=>{
+        if(isEnpriTrace()){
+            let newStatusCards = statusCards.filter((item)=>["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数","SYN 扫描"].includes(item.tag))
+            return newStatusCards
+        }
+        return statusCards
+    },[statusCards])
     return (
         <div style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
             {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
@@ -226,10 +234,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     </div>
                 </>
             )}
-            {statusCards.length > 0 && (
+            {newStatusCards.length > 0 && (
                 <div style={{margin: "8px 4px 4px"}}>
                     <Row gutter={8}>
-                        {statusCards.map((card, cardIndex) => {
+                        {newStatusCards.map((card, cardIndex) => {
                             return (
                                 <Col key={card.tag} span={8} style={{marginBottom: 8}}>
                                     <Card
@@ -266,7 +274,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <div style={{marginTop: 4, marginBottom: 8}}>{progressBars.map((i) => i.node)}</div>
             )}
             <Tabs
-                style={{flex: 1, overflow: "hidden"}}
+                style={{flex: 1, overflow: "hidden",minHeight:"55%"}}
                 className={"main-content-tabs no-theme-tabs"}
                 size={"small"}
                 activeKey={active}
