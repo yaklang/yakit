@@ -116,6 +116,7 @@ import {CVEViewer} from "@/pages/cve/CVEViewer";
 import {YakScriptExecResultTable} from "@/components/YakScriptExecResultTable";
 import {MatcherExtractorPage} from "@/pages/matcherextractor/MatcherExtractorPage";
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage";
+import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -210,6 +211,9 @@ export enum Route {
 
     // 调试插件的功能
     Beta_DebugPlugin = "beta-debug-plugin",
+
+    // 调试插件编辑器
+    Beta_DebugMonacoEditor = "beta-debug-monaco-editor",
 
     // 首页
     NewHome = "new-home"
@@ -483,6 +487,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <MatcherExtractorPage/>
         case Route.Beta_DebugPlugin:
             return <PluginDebuggerPage />
+        case Route.Beta_DebugMonacoEditor:
+            return <DebugMonacoEditorPage />
         default:
             return <div />
     }

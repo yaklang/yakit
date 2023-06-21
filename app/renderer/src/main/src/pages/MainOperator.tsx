@@ -1238,6 +1238,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "**chaos-maker") addTabPage(Route.DB_ChaosMaker)
             if (type === "**matcher-extractor") addTabPage(Route.Beta_MatcherExtractorPage)
             if (type === "**debug-plugin") addTabPage(Route.Beta_DebugPlugin)
+            if (type === "**debug-monaco-editor") addTabPage(Route.Beta_DebugMonacoEditor)
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === Route.ModManager).length
                 if (flag === 0) {
