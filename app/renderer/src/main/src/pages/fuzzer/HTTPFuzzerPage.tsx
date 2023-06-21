@@ -706,6 +706,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
+        console.log('httpParams',httpParams)
         ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
     })
 
@@ -755,7 +756,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", fuzzToken)
     })
-
+    const dCountRef=useRef<number>(0)
     useEffect(() => {
         const token = randomString(60)
         setFuzzToken(token)
@@ -770,16 +771,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
          * */
         let successCount = 0
         let failedCount = 0
-
         ipcRenderer.on(errToken, (e, details) => {
-            notification["error"]({
-                message: `提交模糊测试请求失败 ${details}`,
-                placement: "bottomRight"
-            })
+            yakitNotify('error',`提交模糊测试请求失败 ${details}`)
         })
         let successBuffer: FuzzerResponse[] = []
         let failedBuffer: FuzzerResponse[] = []
-        let droppedCount = 0
+        
         let count: number = 0
         let lastUpdateCount: number = 0
         const updateData = () => {
@@ -807,22 +804,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             } else {
                 failedCount++
             }
-            if (advancedConfigValue.matchers.length > 0) {
-                // 设置了 matchers
-                const hit = data["MatchedByMatcher"] === true
-                // 丢包的条件：
-                //   1. 命中过滤器，同时过滤模式设置为丢弃
-                //   2. 未命中过滤器，过滤模式设置为保留
-                if (
-                    (hit && advancedConfigValue.filterMode === "drop") ||
-                    (!hit && advancedConfigValue.filterMode === "match")
-                ) {
-                    // 丢弃不匹配的内容
-                    droppedCount++
-                    setDroppedCount(droppedCount)
-                    return
-                }
-            }
+            
+            if(onIsDropped(data))return
             const r = {
                 // 6.16
                 ...data,
@@ -831,6 +814,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Count: count,
                 cellClassName: data.MatchedByMatcher ? `color-opacity-bg-${data.HitColor}` : ""
             } as FuzzerResponse
+            console.log('r',r)
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
@@ -849,7 +833,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             successBuffer = []
             failedBuffer = []
             count = 0
-            droppedCount = 0
+            dCountRef.current = 0
             lastUpdateCount = 0
             setTimeout(() => {
                 setLoading(false)
@@ -871,6 +855,29 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
+
+    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
+    const onIsDropped=useMemoizedFn((data)=>{
+        if (advancedConfigValue.matchers.length > 0) {
+            // 设置了 matchers
+            const hit = data["MatchedByMatcher"] === true
+            // 丢包的条件：
+            //   1. 命中过滤器，同时过滤模式设置为丢弃
+            //   2. 未命中过滤器，过滤模式设置为保留
+            if (
+                (hit && advancedConfigValue.filterMode === "drop") ||
+                (!hit && advancedConfigValue.filterMode === "match")
+            ) {
+                // 丢弃不匹配的内容
+                dCountRef.current++;
+                setDroppedCount(dCountRef.current)
+                return true
+            }
+            return false
+        }
+        return false
+    })
+
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
         const info: fuzzerInfoProp = {
             time: new Date().getTime().toString(),

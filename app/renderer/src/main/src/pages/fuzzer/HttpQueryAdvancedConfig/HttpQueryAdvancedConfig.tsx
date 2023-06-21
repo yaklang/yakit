@@ -763,7 +763,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 <SetVariableItem name={name} />
                                             </Panel>
                                         ))}
-                                        {fields.length === 0 && (
+                                        {fields?.length === 0 && (
                                             <Form.Item wrapperCol={{span: 24}}>
                                                 <YakitButton
                                                     type='outline2'
