@@ -698,6 +698,10 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "debug-plugin",
                     label: "插件调试功能"
+                },
+                {
+                    key: "debug-monaco-editor",
+                    label: "(DEV)调试Monaco"
                 }
             ]
         },
@@ -875,6 +879,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "debug-plugin":
                 addToTab("**debug-plugin")
+                return
+            case "debug-monaco-editor":
+                addToTab("**debug-monaco-editor")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()

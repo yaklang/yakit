@@ -9,7 +9,7 @@ monaco.languages.registerCompletionItemProvider('http', {
     triggerCharacters: ["{"],
     // @ts-ignore
     provideCompletionItems: (model, position) => {
-        var suggestions = [
+        let suggestions = [
             {
                 kind: languages.CompletionItemKind.Snippet,
                 label: "Authorization: Basic ... 快速添加基础认证",
