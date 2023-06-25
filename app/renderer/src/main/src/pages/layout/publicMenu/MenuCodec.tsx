@@ -125,7 +125,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     onChange={(e) => setQuestion(e.target.value)}
                 />
                 <div className={styles["input-textarea-copy"]}>
-                    <CopyComponents className={styles["copy-icon-style"]} copyText={question} iconColor='#85899e' />
+                    <CopyComponents
+                        className={styles["copy-icon-style"]}
+                        copyText={question}
+                        iconColor={!!question ? "#85899e" : "#ccd2de"}
+                    />
                 </div>
             </div>
 
@@ -142,7 +146,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     onChange={(e) => setAnswer(e.target.value)}
                 />
                 <div className={styles["input-textarea-copy"]}>
-                    <CopyComponents className={styles["copy-icon-style"]} copyText={answer} iconColor='#85899e' />
+                    <CopyComponents
+                        className={styles["copy-icon-style"]}
+                        copyText={answer}
+                        iconColor={!!answer ? "#85899e" : "#ccd2de"}
+                    />
                 </div>
             </div>
         </div>

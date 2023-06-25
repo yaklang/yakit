@@ -6,8 +6,10 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DNSLogEvent} from "@/pages/dnslog/DNSLogPage"
 import {yakitNotify} from "@/utils/notification"
-import {formatTimestamp} from "@/utils/timeUtil"
+import {formatTime} from "@/utils/timeUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
+import ReactResizeDetector from "react-resize-detector"
+import {YakitRoute} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuDNSLog.module.scss"
@@ -62,7 +64,9 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         }
     }, [])
 
+    const [tokenLoading, setTokenLoading] = useState<boolean>(false)
     const updateToken = useMemoizedFn(() => {
+        setTokenLoading(true)
         ipcRenderer
             .invoke("RequireDNSLogDomain", {Addr: ""})
             .then((rsp: {Domain: string; Token: string}) => {
@@ -75,6 +79,11 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 yakitNotify("error", `error: ${e}`)
                 setToken("")
                 setDomain("")
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setTokenLoading(false)
+                }, 100)
             })
     })
 
@@ -110,8 +119,23 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     }, [token])
 
     const onInfoDetails = useMemoizedFn((info: DNSLogEvent) => {
-        ipcRenderer.invoke("dnslog-info-details", info)
+        ipcRenderer.invoke("send-to-tab", {
+            type: YakitRoute.DNSLog,
+            data: {}
+        })
+        setTimeout(() => {
+            ipcRenderer.invoke("dnslog-info-details", info)
+        }, 200)
     })
+    const onInfoAll = useMemoizedFn(() => {
+        ipcRenderer.invoke("send-to-tab", {
+            type: YakitRoute.DNSLog,
+            data: {}
+        })
+    })
+
+    // 是否隐藏 dnslog 列表框
+    const [isHide, setIsHide] = useState<boolean>(false)
 
     const [listShow, setListShow] = useState<boolean>(false)
     const listDom = useMemo(() => {
@@ -156,7 +180,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                                             {item.RemoteIP}
                                         </div>
                                         <div className={classNames(styles["opt-style"], styles["opt-time"])}>
-                                            {formatTimestamp(item.Timestamp)}
+                                            {formatTime(item.Timestamp)}
                                         </div>
                                         <div
                                             className={classNames(styles["opt-style"], styles["opt-btn"])}
@@ -175,11 +199,24 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     }, [onlyARecord, records])
 
     return (
-        <div className={styles["menu-dnslog-wrapper"]}>
+        <div className={classNames(styles["menu-dnslog-wrapper"], {[styles["menu-dnslog-hide-wrapper"]]: isHide})}>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) {
+                        return
+                    }
+                    if (width <= 508) setIsHide(true)
+                    else setIsHide(false)
+                }}
+                handleWidth={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+
             <div className={styles["dnslog-generate-host"]}>
                 <div className={!!domain ? styles["generated-wrapper"] : styles["generate-wrapper"]}>
                     <div className={styles["title-style"]}>使用 Yakit 自带 DNSLog 反连服务</div>
-                    <YakitButton size='small' onClick={updateToken}>
+                    <YakitButton size='small' loading={tokenLoading} onClick={updateToken}>
                         生成域名
                     </YakitButton>
                 </div>
@@ -187,6 +224,12 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                     <YakitTag color='info' copyText={domain} enableCopy={true}>
                         {domain}
                     </YakitTag>
+                )}
+                {/* 显示条件：已生成域名 & 有历史数据 & 宽度过小 */}
+                {!!domain && isHide && records.length > 0 && (
+                    <YakitButton type='text' onClick={onInfoAll}>
+                        查看访问记录
+                    </YakitButton>
                 )}
             </div>
 
@@ -209,7 +252,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                                 </div>
                                 <div className={classNames(styles["opt-style"], styles["opt-ip"])}>{item.RemoteIP}</div>
                                 <div className={classNames(styles["opt-style"], styles["opt-time"])}>
-                                    {formatTimestamp(item.Timestamp)}
+                                    {formatTime(item.Timestamp)}
                                 </div>
                                 <div
                                     className={classNames(styles["opt-style"], styles["opt-btn"])}
@@ -221,23 +264,23 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                         )
                     })}
                 </div>
-                <YakitPopover
-                    overlayClassName={styles["dnslog-list-popover"]}
-                    overlayStyle={{paddingTop: 2}}
-                    placement='bottomRight'
-                    trigger={"click"}
-                    content={listDom}
-                    visible={listShow}
-                    onVisibleChange={(visible) => setListShow(visible)}
+                <div
+                    className={classNames(styles["expand-func-wrapper"], {
+                        [styles["active-expand-style"]]: listShow
+                    })}
                 >
-                    <div
-                        className={classNames(styles["expand-func-wrapper"], {
-                            [styles["active-expand-style"]]: listShow
-                        })}
+                    <YakitPopover
+                        overlayClassName={styles["dnslog-list-popover"]}
+                        overlayStyle={{paddingTop: 2}}
+                        placement='bottomRight'
+                        trigger={"click"}
+                        content={listDom}
+                        visible={listShow}
+                        onVisibleChange={(visible) => setListShow(visible)}
                     >
-                        {listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                    </div>
-                </YakitPopover>
+                        <div className={styles["body-style"]}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
+                    </YakitPopover>
+                </div>
             </div>
         </div>
     )

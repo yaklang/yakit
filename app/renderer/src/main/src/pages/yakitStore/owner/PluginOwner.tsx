@@ -505,6 +505,7 @@ export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
                                     userInfo={userInfo}
                                     plugSource={plugSource}
                                     yakScriptId={(script && script.Id) || 0}
+                                    yakScriptName={(script && script.ScriptName) || ""}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
                                     yakScriptUUIdOnlineUUId={scriptUUIdOnlineUUId}
                                     setTrigger={() => {}}

@@ -29,14 +29,12 @@ import {
     ShieldExclamationIcon,
     CloudPluginIcon
 } from "@/assets/newIcon"
-import {MenuDataProps, DefaultRouteMenuData, Route} from "@/routes/routeSpec"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {Avatar, Input, Modal, Tooltip} from "antd"
 import {useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {MenuDefaultPluginIcon} from "./icon/menuIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryYakScriptsResponse, YakScript} from "../invoker/schema"
@@ -48,7 +46,6 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {MenuItem, MenuItemGroup} from "../MainOperator"
 import {
     EnhancedPrivateRouteMenuProps,
     privateConvertDatabase,
@@ -62,10 +59,8 @@ import {
     InvalidPageMenuItem,
     PrivateAllMenus,
     PrivateExpertRouteMenu,
-    PrivateRouteMenuProps,
     PrivateScanRouteMenu,
     PublicCommonPlugins,
-    PublicRouteMenuProps,
     YakitRoute,
     databaseConvertData,
     getFixedPluginHoverIcon,
@@ -76,6 +71,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {publicConvertDatabase, publicExchangeProps, publicUnionMenus} from "../layout/publicMenu/utils"
 import {PrivateOutlineDefaultPluginIcon} from "@/routes/privateIcon"
 import {EnhancedCustomRouteMenuProps, filterCodeMenus, menusConvertJsonData} from "./utils"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -546,7 +542,11 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                     <div className={style["display-flex"]}>
                         <ArrowLeftIcon className={style["content-icon"]} onClick={() => onTip()} />
                         <div className={style["left-title"]}>
-                            {patternMenu === "expert" ? "编辑专家模式" : "编辑扫描模式"}
+                            {isCommunityEdition()
+                                ? "编辑常用插件"
+                                : patternMenu === "expert"
+                                ? "编辑专家模式"
+                                : "编辑扫描模式"}
                         </div>
                         <div className={style["left-number"]}>
                             {menuData.length}/{UpperLimit}
@@ -824,9 +824,15 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                         placeholder='未命名1 (菜单名建议 4-16 个英文字符内最佳)'
                         bordered={false}
                         suffix={
-                            <div onClick={onRemoveFirstMenu}>
-                                <TrashIcon />
-                            </div>
+                            <YakitPopconfirm
+                                title='是否要删除该菜单'
+                                onConfirm={onRemoveFirstMenu}
+                                placement='bottomRight'
+                            >
+                                <div className={style["trash-style"]}>
+                                    <TrashIcon />
+                                </div>
+                            </YakitPopconfirm>
                         }
                         value={currentFirstMenu?.label}
                         onChange={(e) => {

@@ -291,6 +291,18 @@
                 }
             }
 
+            .trash-style {
+                width: 22px;
+                height: 22px;
+                border-radius: 4px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .trash-style:hover {
+                background: #f0f1f3;
+            }
+
             svg {
                 color: var(--yakit-danger-5);
             }

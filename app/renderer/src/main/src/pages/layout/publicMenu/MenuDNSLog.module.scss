@@ -5,7 +5,7 @@
     align-items: center;
     gap: 8px;
     .dnslog-generate-host {
-        width: 240px;
+        width: 259px;
         height: 64px;
         box-sizing: border-box;
         padding: 8px;
@@ -19,7 +19,7 @@
             .title-style {
                 width: 100%;
                 height: 20px;
-                font-size: 10px;
+                font-size: 11px;
                 line-height: 20px;
                 text-align: center;
                 color: #85899e;
@@ -30,11 +30,12 @@
             height: 20px;
             margin-bottom: 6px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
             gap: 8px;
             .title-style {
                 height: 20px;
-                font-size: 10px;
+                font-size: 11px;
                 line-height: 20px;
                 text-align: center;
                 color: #85899e;
@@ -106,7 +107,7 @@
                     overflow: hidden;
                 }
                 .opt-time {
-                    width: 148px;
+                    width: 68px;
                     padding: 3px 6px;
                 }
                 .opt-btn {
@@ -120,19 +121,25 @@
         }
 
         .expand-func-wrapper {
+            box-sizing: border-box;
             width: 24px;
             height: 100%;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             background: #ffffff;
             border-radius: 0px 4px 4px 0px;
+            visibility: hidden;
+            cursor: pointer;
+            .body-style {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
             svg {
                 width: 16px;
                 height: 16px;
                 color: #85899e;
-                cursor: pointer;
             }
         }
         .active-expand-style {
@@ -141,6 +148,28 @@
                 color: #f28b44;
             }
         }
+    }
+    .dnslog-list-wrapper:hover {
+        .expand-func-wrapper {
+            visibility: visible;
+        }
+        .expand-func-wrapper:hover {
+            background: #f8f8f8;
+            svg {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+}
+.menu-dnslog-hide-wrapper {
+    .dnslog-generate-host {
+        width: 507px;
+    }
+    .dnslog-arrow-right-wrapper {
+        display: none;
+    }
+    .dnslog-list-wrapper {
+        display: none;
     }
 }
 

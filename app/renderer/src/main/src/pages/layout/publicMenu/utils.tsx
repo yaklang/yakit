@@ -224,12 +224,22 @@ export const publicConvertDatabase = (data: EnhancedPublicRouteMenuProps[]) => {
 /** ---------- public和private版本共用工具方法 ---------- */
 
 /**
+ * @name 将页面信息转换为唯一标识符
+ * @description 插件菜单：${YakitRoute}|${插件名}
+ * @description 非插件菜单：${YakitRoute}
+ */
+export const routeConvertKey = (route: YakitRoute, pluginName?: string) => {
+    if (route === YakitRoute.Plugin_OP) return `${route}${separator}${pluginName || ""}`
+    else return route
+}
+
+/**
  * 深度遍历所有菜单项,并将菜单项转换为 ${routeInfoToKey()}-菜单展示名
  */
 export const menusConvertKey = (data: EnhancedPublicRouteMenuProps[] | EnhancedPrivateRouteMenuProps[]) => {
     const names: Map<string, string> = new Map<string, string>()
     for (let item of data) {
-        if (item.page) names.set(routeInfoToKey(item), item.label)
+        if (item.page) names.set(routeConvertKey(item.page, item.menuName), item.label)
         if (item.children && item.children.length > 0) {
             const subNames = menusConvertKey(item.children)
             subNames.forEach((value, key) => names.set(key, value))
@@ -248,7 +258,7 @@ export const routeToMenu = (
     for (let item of routes) {
         const menuItem: YakitMenuItemProps = {
             label: item.label,
-            key: `${parent || ""}-${routeInfoToKey(item)}`
+            key: `${routeInfoToKey(item)}${parent ? separator + parent : ""}`
         }
         if (item.children && item.children.length > 0) menuItem.children = routeToMenu(item.children, item.label)
         menus.push(menuItem)
@@ -258,7 +268,7 @@ export const routeToMenu = (
 
 /**
  * 将页面路由信息 转换为key值
- * 转换格式：route|插件名
+ * 转换格式：route|插件ID|插件名
  */
 export const routeInfoToKey = (
     info: RouteToPageProps | EnhancedPublicRouteMenuProps | EnhancedPrivateRouteMenuProps

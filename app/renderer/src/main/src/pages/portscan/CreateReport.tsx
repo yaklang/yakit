@@ -7,7 +7,7 @@ import {randomString} from "@/utils/randomUtil"
 import {ExecResult} from "../invoker/schema"
 import {CreatReportScript} from "../simpleDetect/CreatReportScript"
 import {InfoState} from "@/hook/useHoldingIPCRStream"
-import {Route} from "@/routes/routeSpec"
+import { YakitRoute } from "@/routes/newRoute"
 const {ipcRenderer} = window.require("electron")
 export interface CreateReportProps {
     loading: boolean
@@ -80,7 +80,7 @@ export const CreateReport: React.FC<CreateReportProps> = memo((props) => {
             setShowReportPercent(false)
             setReportPercent(0)
             setReportModalVisible(false)
-            ipcRenderer.invoke("open-user-manage", Route.DB_Report)
+            ipcRenderer.invoke("open-user-manage", YakitRoute.DB_Report)
             setTimeout(() => {
                 ipcRenderer.invoke("simple-open-report", getReportId())
             }, 300)

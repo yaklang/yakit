@@ -1,4 +1,3 @@
-import {MenuItemGroup} from "@/pages/MainOperator"
 import {
     DatabaseMenuItemProps,
     PrivateAllMenus,
@@ -56,10 +55,6 @@ export interface CollapseMenuProp {
     moreLeft: number
     isExpand: boolean
     onMenuSelect: (info: RouteToPageProps) => void
-}
-
-export interface MenuByGroupProps {
-    Groups: MenuItemGroup[]
 }
 
 /**
@@ -538,8 +533,8 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
                     page: YakitRoute.Plugin_OP,
                     label: item.label,
                     menuName: item.menuName,
-                    icon: getScriptIcon(item.pluginName),
-                    hoverIcon: getScriptHoverIcon(item.pluginName),
+                    icon: getFixedPluginIcon(item.pluginName),
+                    hoverIcon: getFixedPluginHoverIcon(item.pluginName),
                     describe: "",
                     children: undefined,
                     yakScriptId: +item.pluginId || 0,

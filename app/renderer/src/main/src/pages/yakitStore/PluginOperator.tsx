@@ -17,7 +17,7 @@ import {
     MenuItemProps
 } from "antd"
 import {YakScript} from "../invoker/schema"
-import {failed, success} from "../../utils/notification"
+import {failed, success, yakitNotify} from "../../utils/notification"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {CopyableField, InputItem} from "../../utils/inputUtil"
 import {YakEditor} from "../../utils/editors"
@@ -44,15 +44,17 @@ import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {MenuByGroupProps} from "../layout/HeardMenu/HeardMenuType"
-import {MenuItemGroup} from "../MainOperator"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {RemoveIcon} from "@/assets/newIcon"
+import {isCommunityEdition} from "@/utils/envfile"
+import {CodeGV} from "@/yakitGV"
+import {DatabaseFirstMenuProps, YakitRoute} from "@/routes/newRoute"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
+    yakScriptName: string
     yakScriptIdOnlineId?: number
     yakScriptUUIdOnlineUUId?: string
     size?: "big" | "small"
@@ -97,8 +99,12 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
         getRemoteValue("PatternMenu").then((patternMenu) => {
             const menuMode = patternMenu || "expert"
             setPatternMenu(menuMode)
+            if (!props.yakScriptName) return
             ipcRenderer
-                .invoke("QueryGroupsByYakScriptId", {YakScriptId: props.yakScriptId, Mode: menuMode})
+                .invoke("QueryNavigationGroups", {
+                    YakScriptName: props.yakScriptName,
+                    Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : menuMode
+                })
                 .then((data: {Groups: string[]}) => {
                     setGroups(data.Groups)
                 })
@@ -641,12 +647,13 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
     const {script, visible, setVisible} = props
     const updateGroups = props?.updateGroups ? props.updateGroups : () => {}
     const [patternMenu, setPatternMenu] = useState<"expert" | "new">("expert")
-    const [menuData, setMenuData] = useState<MenuItemGroup[]>([])
+    const [menuData, setMenuData] = useState<DatabaseFirstMenuProps[]>([])
     const [option, setOption] = useState<OptionsProps[]>([])
 
     useEffect(() => {
         form.setFieldsValue({
-            Group: "社区组件",
+            // Group: "社区组件",
+            Group: "",
             Verbose: props.script.ScriptName
         })
     }, [props.script])
@@ -662,10 +669,14 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
      */
     const init = useMemoizedFn((menuMode: string, updateSubMenu?: boolean) => {
         ipcRenderer
-            .invoke("QueryAllMenuItem", {Mode: menuMode})
-            .then((rsp: MenuByGroupProps) => {
-                setOption(rsp.Groups.map((ele) => ({label: ele.Group, value: ele.Group})))
-                setMenuData(rsp.Groups)
+            .invoke("GetAllNavigationItem", {Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : menuMode})
+            .then((rsp: {Data: DatabaseFirstMenuProps[]}) => {
+                setOption(rsp.Data.map((ele) => ({label: ele.Group, value: ele.Group})))
+                setMenuData(rsp.Data)
+                form.setFieldsValue({
+                    Group: rsp.Data[0].Group || "",
+                    Verbose: props.script?.ScriptName || ""
+                })
             })
             .catch((err) => {
                 failed("获取菜单失败：" + err)
@@ -682,38 +693,53 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                         return
                     }
                     const index = menuData.findIndex((ele) => ele.Group === values.Group)
-                    // 一级排序
-                    let MenuSort = menuData.length + 1
-                    // 二级排序
-                    let GroupSort = 0
+                    let params: any = {}
+
                     if (index === -1) {
                         if (menuData.length >= 50) {
-                            failed("最多添加50个一级菜单")
+                            yakitNotify("error", "最多添加50个一级菜单")
                             return
+                        }
+                        params = {
+                            YakScriptName: props.script.ScriptName,
+                            Verbose: values.Verbose,
+                            VerboseLabel: props.script.ScriptName,
+                            Group: values.Group,
+                            GroupLabel: values.Group,
+                            Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : patternMenu,
+                            VerboseSort: 1,
+                            GroupSort: menuData.length + 1,
+                            Route: YakitRoute.Plugin_OP
                         }
                     } else {
                         if (menuData[index].Items.length >= 50) {
-                            failed("同一个一级菜单最多添加50个二级菜单")
+                            yakitNotify("error", "同一个一级菜单最多添加50个二级菜单")
                             return
                         }
-                        MenuSort = menuData[index].MenuSort
-                        const subIndex = menuData[index].Items.findIndex((ele) => ele.Verbose === values.Verbose)
-                        GroupSort =
+                        const groupInfo = menuData[index]
+                        params = {
+                            YakScriptName: props.script.ScriptName,
+                            Verbose: values.Verbose,
+                            VerboseLabel: props.script.ScriptName,
+                            Group: groupInfo.Group,
+                            GroupLabel: groupInfo.GroupLabel,
+                            Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : patternMenu,
+                            VerboseSort: 0,
+                            GroupSort: groupInfo.GroupSort,
+                            Route: YakitRoute.Plugin_OP
+                        }
+                        const subIndex = groupInfo.Items.findIndex((ele) => ele.Verbose === values.Verbose)
+                        params.VerboseSort =
                             subIndex === -1
                                 ? menuData[index].Items.length + 1
-                                : menuData[index].Items[subIndex].GroupSort || 0
+                                : menuData[index].Items[subIndex].VerboseSort || 0
                     }
-                    const prams: AddToMenuRequest = {
-                        ...values,
-                        YakScriptId: props.script.Id,
-                        Mode: patternMenu,
-                        MenuSort,
-                        GroupSort
-                    }
+
                     ipcRenderer
-                        .invoke("AddToMenu", prams)
+                        .invoke("AddOneNavigation", params)
                         .then(() => {
-                            ipcRenderer.invoke("change-main-menu")
+                            if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                            else ipcRenderer.invoke("change-main-menu")
                             updateGroups()
                             setVisible(false)
                             success("添加成功")
@@ -894,20 +920,20 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                                 <Button
                                     onClick={() => {
                                         ipcRenderer
-                                            .invoke("RemoveFromMenu", {
-                                                YakScriptId: script?.Id,
+                                            .invoke("DeleteAllNavigation", {
+                                                YakScriptName: script?.ScriptName,
                                                 Group: element,
-                                                Mode: patternMenu
+                                                Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : patternMenu
                                             })
                                             .then(() => {
-                                                ipcRenderer.invoke("change-main-menu")
+                                                if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                                                else ipcRenderer.invoke("change-main-menu")
                                                 updateGroups()
                                                 setVisibleRemove(false)
                                             })
                                             .catch((e: any) => {
                                                 failed("移除菜单失败：" + e)
                                             })
-                                            .finally()
                                     }}
                                 >
                                     从 {element} 中移除

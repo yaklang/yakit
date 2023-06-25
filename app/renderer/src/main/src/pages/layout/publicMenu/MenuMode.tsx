@@ -28,10 +28,13 @@ import {
     PublicSubDomainCollectionIcon,
     PublicTCPPortLogIcon,
     PublicWebFuzzerIcon,
+    PublicWebsiteTreeIcon,
     PublicWebsocketFuzzerIcon
 } from "@/routes/publicIcon"
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
+import {Tooltip} from "antd"
+import {YakitRouteToPageInfo} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
@@ -73,18 +76,22 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["parent-menu-wrapper"]}>
                         <div className={styles["childs-menu-wrapper"]}>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.HTTPFuzzer)}
-                            >
-                                <PublicWebFuzzerIcon />
-                            </div>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.WebsocketFuzzer)}
-                            >
-                                <PublicWebsocketFuzzerIcon />
-                            </div>
+                            <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.HTTPFuzzer].label}>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.HTTPFuzzer)}
+                                >
+                                    <PublicWebFuzzerIcon />
+                                </div>
+                            </Tooltip>
+                            <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.WebsocketFuzzer].label}>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.WebsocketFuzzer)}
+                                >
+                                    <PublicWebsocketFuzzerIcon />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className={styles["title-style"]}>Fuzzer</div>
                     </div>
@@ -181,26 +188,31 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["parent-menu-wrapper"]}>
                         <div className={styles["childs-menu-wrapper"]}>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.Mod_Brute)}
-                            >
-                                <PublicBruteIcon />
-                            </div>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"], {
-                                    [styles["disable-style"]]: pluginToId[ResidentPluginName.DirectoryScanning] === 0
-                                })}
-                                onClick={() =>
-                                    onMenu(
-                                        YakitRoute.Plugin_OP,
-                                        pluginToId[ResidentPluginName.DirectoryScanning],
-                                        ResidentPluginName.DirectoryScanning
-                                    )
-                                }
-                            >
-                                <PublicDirectoryScanningIcon />
-                            </div>
+                            <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.Mod_Brute].label}>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.Mod_Brute)}
+                                >
+                                    <PublicBruteIcon />
+                                </div>
+                            </Tooltip>
+                            <Tooltip placement='bottom' title='目录扫描'>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"], {
+                                        [styles["disable-style"]]:
+                                            pluginToId[ResidentPluginName.DirectoryScanning] === 0
+                                    })}
+                                    onClick={() =>
+                                        onMenu(
+                                            YakitRoute.Plugin_OP,
+                                            pluginToId[ResidentPluginName.DirectoryScanning],
+                                            ResidentPluginName.DirectoryScanning
+                                        )
+                                    }
+                                >
+                                    <PublicDirectoryScanningIcon />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className={styles["title-style"]}>爆破与未授权检测</div>
                     </div>
@@ -244,42 +256,58 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                 <>
                     <div className={styles["parent-menu-wrapper"]}>
                         <div className={styles["childs-menu-wrapper"]}>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.DNSLog)}
-                            >
-                                <PublicDNSLogIcon />
-                            </div>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.ICMPSizeLog)}
-                            >
-                                <PublicICMPSizeLogIcon />
-                            </div>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.TCPPortLog)}
-                            >
-                                <PublicTCPPortLogIcon />
-                            </div>
+                            <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.DNSLog].label}>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.DNSLog)}
+                                >
+                                    <PublicDNSLogIcon />
+                                </div>
+                            </Tooltip>
+                            <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.ICMPSizeLog].label}>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.ICMPSizeLog)}
+                                >
+                                    <PublicICMPSizeLogIcon />
+                                </div>
+                            </Tooltip>
+                            <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.TCPPortLog].label}>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.TCPPortLog)}
+                                >
+                                    <PublicTCPPortLogIcon />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className={styles["title-style"]}>反连触发器</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["parent-menu-wrapper"]}>
                         <div className={styles["childs-menu-wrapper"]}>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.PayloadGenerater_New)}
+                            <Tooltip
+                                placement='bottom'
+                                title={YakitRouteToPageInfo[YakitRoute.PayloadGenerater_New].label}
                             >
-                                <PublicPayloadGeneraterIcon />
-                            </div>
-                            <div
-                                className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                onClick={() => onMenu(YakitRoute.ReverseServer_New)}
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.PayloadGenerater_New)}
+                                >
+                                    <PublicPayloadGeneraterIcon />
+                                </div>
+                            </Tooltip>
+                            <Tooltip
+                                placement='bottom'
+                                title={YakitRouteToPageInfo[YakitRoute.ReverseServer_New].label}
                             >
-                                <PublicReverseServerIcon />
-                            </div>
+                                <div
+                                    className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
+                                    onClick={() => onMenu(YakitRoute.ReverseServer_New)}
+                                >
+                                    <PublicReverseServerIcon />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className={styles["title-style"]}>RevHack</div>
                     </div>
@@ -325,6 +353,12 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                                 <PublicDomainIcon />
                             </div>
                             <div className={styles["title-style"]}>域名</div>
+                        </div>
+                        <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.WebsiteTree)}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicWebsiteTreeIcon />
+                            </div>
+                            <div className={styles["title-style"]}>网站树</div>
                         </div>
                     </div>
                     <div className={styles["divider-style"]}></div>

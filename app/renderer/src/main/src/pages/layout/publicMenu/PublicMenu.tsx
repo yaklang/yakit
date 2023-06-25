@@ -361,14 +361,15 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
     // 收起菜单的点击回调
     const onNoExpandClickMenu = useMemoizedFn((key: string, keyPath: string[]) => {
-        if (key === YakitRoute.Plugin_OP) {
-            const data = keyToRouteInfo(key)
-            if (data) {
+        const data = keyToRouteInfo(key)
+
+        if (data) {
+            if (data.route === YakitRoute.Plugin_OP) {
                 if (!!pluginToId[data?.pluginName || ""]) data.pluginId = pluginToId[data?.pluginName || ""]
                 onCheckPlugin(data, "plugin")
+            } else {
+                onMenuSelect({route: key as YakitRoute})
             }
-        } else {
-            onMenuSelect({route: key as YakitRoute})
         }
     })
     // 展开菜单的点击回调
@@ -492,10 +493,21 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         />
                     )}
 
-                    {defaultMenu[activeMenu]?.label !== "插件" && <div className={styles["divider-style"]}></div>}
+                    {defaultMenu[activeMenu]?.label !== "插件" ? (
+                        <div className={styles["divider-style"]}></div>
+                    ) : (
+                        <div></div>
+                    )}
                     <div className={styles["tool-wrapper"]}>
                         {defaultMenu[activeMenu]?.label === "插件" && (
-                            <MenuPlugin loading={loading} pluginList={pluginMenu} onMenuSelect={onClickMenu} />
+                            <MenuPlugin
+                                loading={loading}
+                                pluginList={pluginMenu}
+                                onMenuSelect={onClickMenu}
+                                onRestore={() => {
+                                    isInitRef.current = true
+                                }}
+                            />
                         )}
                         {defaultMenu[activeMenu]?.label !== "插件" && (
                             <div className={styles["tool-body"]}>

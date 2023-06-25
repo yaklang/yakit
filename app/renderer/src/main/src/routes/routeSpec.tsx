@@ -69,7 +69,6 @@ import {
     MenuSubDomainCollectionIcon,
     MenuVulnerabilityRiskIcon,
     MenuWebsocketFuzzerIcon,
-    MenuDefaultPluginIcon,
     MenuBatchVulnerabilityDetectionIcon
 } from "@/pages/customizeMenu/icon/menuIcon"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
@@ -79,7 +78,6 @@ import {
     MenuSolidCodecIcon,
     MenuSolidComprehensiveCatalogScanningAndBlastingIcon,
     MenuSolidDataComparisonIcon,
-    MenuSolidDefaultPluginIcon,
     MenuSolidDNSLogIcon,
     MenuSolidDomainAssetsIcon,
     MenuSolidHTTPHistoryIcon,
@@ -242,6 +240,7 @@ export function RouteNameToVerboseName(r: string) {
 }
 
 /**
+ * @deprecated
  * @description:菜单属性
  * @param {string} id
  * @param {Route} key 路由的跳转页面
@@ -334,7 +333,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <PluginOperator yakScriptId={yakScriptId || id} size={"big"} fromMenu={true} />
+        return <PluginOperator yakScriptId={yakScriptId || id} yakScriptName="" size={"big"} fromMenu={true} />
     }
 
     if (routeStr.startsWith("batch:")) {

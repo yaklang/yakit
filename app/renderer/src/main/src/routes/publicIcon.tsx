@@ -1644,6 +1644,42 @@ export const PublicDomainIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PublicDomain} {...props} />
 }
 
+const PublicWebsiteTree = () => (
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M4 7C4 5.89543 4.89543 5 6 5H16C17.1046 5 18 5.89543 18 7V8C18 9.10457 17.1046 10 16 10H6C4.89543 10 4 9.10457 4 8V7Z'
+            fill='#F28B44'
+        />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M16 6H6C5.44772 6 5 6.44772 5 7V8C5 8.55228 5.44772 9 6 9H16C16.5523 9 17 8.55228 17 8V7C17 6.44772 16.5523 6 16 6ZM6 5C4.89543 5 4 5.89543 4 7V8C4 9.10457 4.89543 10 6 10H16C17.1046 10 18 9.10457 18 8V7C18 5.89543 17.1046 5 16 5H6Z'
+            fill='#31343F'
+        />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M26 14.5H16C15.4477 14.5 15 14.9477 15 15.5V16.5C15 17.0523 15.4477 17.5 16 17.5H26C26.5523 17.5 27 17.0523 27 16.5V15.5C27 14.9477 26.5523 14.5 26 14.5ZM16 13.5C14.8954 13.5 14 14.3954 14 15.5V16.5C14 17.6046 14.8954 18.5 16 18.5H26C27.1046 18.5 28 17.6046 28 16.5V15.5C28 14.3954 27.1046 13.5 26 13.5H16Z'
+            fill='#31343F'
+        />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M26 23H16C15.4477 23 15 23.4477 15 24V25C15 25.5523 15.4477 26 16 26H26C26.5523 26 27 25.5523 27 25V24C27 23.4477 26.5523 23 26 23ZM16 22C14.8954 22 14 22.8954 14 24V25C14 26.1046 14.8954 27 16 27H26C27.1046 27 28 26.1046 28 25V24C28 22.8954 27.1046 22 26 22H16Z'
+            fill='#31343F'
+        />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M9 12C9 11.7239 8.77614 11.5 8.5 11.5C8.22386 11.5 8 11.7239 8 12V22.5C8 23.8807 9.11929 25 10.5 25H12.5C12.7761 25 13 24.7761 13 24.5C13 24.2239 12.7761 24 12.5 24H10.5C9.67157 24 9 23.3284 9 22.5V16.5H12.5C12.7761 16.5 13 16.2761 13 16C13 15.7239 12.7761 15.5 12.5 15.5H9V12Z'
+            fill='#31343F'
+        />
+    </svg>
+)
+export const PublicWebsiteTreeIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicWebsiteTree} {...props} />
+}
+
 const PublicCVE = () => (
     <svg width='44' height='44' viewBox='0 0 44 44' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path

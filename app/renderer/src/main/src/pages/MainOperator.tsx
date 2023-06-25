@@ -35,7 +35,13 @@ import {
 } from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {globalUserLogin, isBreachTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import {
+    globalUserLogin,
+    isBreachTrace,
+    isCommunityEdition,
+    isEnpriTraceAgent,
+    shouldVerifyEnpriTraceLogin
+} from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {RemoteGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
@@ -50,7 +56,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {RouteToPageProps} from "./layout/publicMenu/PublicMenu"
+import PublicMenu, {RouteToPageProps} from "./layout/publicMenu/PublicMenu"
 import {
     NoPaddingRoute,
     NoScrollRoutes,
@@ -59,7 +65,7 @@ import {
     YakitRoute,
     YakitRouteToPageInfo
 } from "@/routes/newRoute"
-import {keyToRouteInfo, routeInfoToKey, separator} from "./layout/publicMenu/utils"
+import {keyToRouteInfo, routeConvertKey} from "./layout/publicMenu/utils"
 
 import "./main.scss"
 import "./GlobalClass.scss"
@@ -102,13 +108,6 @@ export interface MenuItem {
     MenuItemId?: number
     GroupSort?: number
     YakScriptName?: string
-}
-
-export interface MenuItemGroup {
-    Group: string
-    Items: MenuItem[]
-    MenuSort: number
-    Mode: string
 }
 
 export interface MenuItemType {
@@ -340,11 +339,6 @@ const getInitActiveTabKey = () => {
 
     return YakitRoute.NewHome
 }
-// 将页面路由信息转化为key值
-const routeConvertKey = (route: YakitRoute, pluginName?: string) => {
-    if (route === YakitRoute.Plugin_OP) return `${route}${separator}${pluginName || ""}`
-    else return route
-}
 
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [loading, setLoading] = useState(false)
@@ -566,16 +560,19 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ) => {
             const {route, pluginId = 0, pluginName = ""} = routeInfo
             // 菜单在代码内的名字
-            const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route].label
+            const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""           
+            if (!menuName) return
+
             const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
             // 单开页面
             if (SinglePageRoute.includes(route)) {
+                const key = routeConvertKey(route, pluginName)
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
-                    setCurrentTabKey(routeConvertKey(route, pluginName))
+                    setCurrentTabKey(key)
                     return
                 }
-                const tabName = routeKeyToLabel.current.get(routeInfoToKey(routeInfo)) || menuName
+                const tabName = routeKeyToLabel.current.get(key) || menuName
                 setPageCache([
                     ...pageCache,
                     {
@@ -586,12 +583,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         multipleNode: []
                     }
                 ])
-                const key = routeConvertKey(route, pluginName)
                 setCurrentTabKey(key)
             } else {
                 // 多开页面
-                const tabName = routeKeyToLabel.current.get(routeInfoToKey(routeInfo)) || menuName
                 const key = routeConvertKey(route, pluginName)
+                const tabName = routeKeyToLabel.current.get(key) || menuName
                 const tabId = `${key}-[${randomString(6)}]`
                 const time = new Date().getTime().toString()
 
@@ -607,6 +603,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     }
                     const pages = pageCache.map((item) => {
                         if (item.route === route && item.menuName === menuName) {
+                            item.pluginId = pluginId
                             item.multipleNode.push(node)
                             item.multipleCurrentKey = tabId
                             item.multipleLength = (item.multipleLength || 1) + 1
@@ -633,6 +630,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             verbose: tabName,
                             menuName: menuName,
                             route: route,
+                            pluginId: pluginId,
                             pluginName: route === YakitRoute.Plugin_OP ? pluginName || "" : undefined,
                             singleNode: undefined,
                             multipleNode: [node],
@@ -708,7 +706,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         let newIndex = 0
         if (index > 0 && getPageCache()[index - 1]) newIndex = index - 1
         if (index === 0 && getPageCache()[index + 1]) newIndex = index + 1
-        const {route, pluginId = "0", pluginName = ""} = getPageCache()[newIndex]
+        const {route, pluginId = 0, pluginName = ""} = getPageCache()[newIndex]
         const key = routeConvertKey(route, pluginName)
         setCurrentTabKey(key)
 
@@ -724,7 +722,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
         )
         if (data.route === YakitRoute.AddYakitScript) {
-            setCurrentTabKey(YakitRoute.Plugin_Store)
+            setCurrentTabKey(YakitRoute.Plugin_Local)
         }
         if (data.route === YakitRoute.HTTPFuzzer) delFuzzerList(1)
     })
@@ -1015,106 +1013,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             })
     }, [])
 
-    // const addTabPage = useMemoizedFn(
-    //     (
-    //         route: Route,
-    //         nodeParams?: {
-    //             time?: string
-    //             node: ReactNode
-    //             isRecord?: boolean
-    //             hideAdd?: boolean
-    //             verbose?: string
-    //         }
-    //     ) => {
-    //         const filterPage = pageCache.filter((i) => i.route === route)
-    //         const filterPageLength = filterPage.length
-    //         // debugger
-    //         if (singletonRoute.includes(route)) {
-    //             if (filterPageLength > 0) {
-    //                 setCurrentTabKey(route)
-    //             } else {
-    //                 const tabName = RouteNameToVerboseName(routeKeyToLabel.current.get(`${route}`) || `${route}`)
-    //                 setPageCache([
-    //                     ...pageCache,
-    //                     {
-    //                         verbose: nodeParams?.verbose || tabName,
-    //                         route: route,
-    //                         singleNode: ContentByRoute(route),
-    //                         multipleNode: []
-    //                     }
-    //                 ])
-    //                 setCurrentTabKey(route)
-    //             }
-    //         } else {
-    //             if (filterPageLength > 0) {
-    //                 const tabName = RouteNameToVerboseName(routeKeyToLabel.current.get(`${route}`) || `${route}`)
-    //                 const tabId = `${route}-[${randomString(49)}]`
-    //                 const time = new Date().getTime().toString()
-    //                 const node: multipleNodeInfo = {
-    //                     id: tabId,
-    //                     verbose: nodeParams?.verbose || `${tabName}-[${filterPage[0].multipleNode.length + 1}]`,
-    //                     node: nodeParams && nodeParams.node ? nodeParams?.node || <></> : ContentByRoute(route),
-    //                     time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
-    //                 }
-    //                 const pages = pageCache.map((item) => {
-    //                     if (item.route === route) {
-    //                         item.multipleNode.push(node)
-    //                         item.multipleCurrentKey = tabId
-    //                         return item
-    //                     }
-    //                     return item
-    //                 })
-    //                 setPageCache([...pages])
-    //                 setCurrentTabKey(route)
-    //                 if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
-    //             } else {
-    //                 const tabName = RouteNameToVerboseName(routeKeyToLabel.current.get(`${route}`) || `${route}`)
-    //                 const tabId = `${route}-[${randomString(49)}]`
-    //                 const time = new Date().getTime().toString()
-    //                 const node: multipleNodeInfo = {
-    //                     id: tabId,
-    //                     verbose: nodeParams?.verbose || `${tabName}-[1]`,
-    //                     node: nodeParams && nodeParams.node ? nodeParams?.node || <></> : ContentByRoute(route),
-    //                     time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
-    //                 }
-    //                 setPageCache([
-    //                     ...pageCache,
-    //                     {
-    //                         verbose: tabName,
-    //                         route: route,
-    //                         singleNode: undefined,
-    //                         multipleNode: [node],
-    //                         multipleCurrentKey: tabId,
-    //                         hideAdd: nodeParams?.hideAdd
-    //                     }
-    //                 ])
-    //                 setCurrentTabKey(route)
-    //                 if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
-    //             }
-    //         }
-    //     }
-    // )
-
-    // const removePage = (route: string) => {
-    //     const targetIndex = getCacheIndex(route)
-
-    //     if (targetIndex > 0 && getPageCache()[targetIndex - 1]) {
-    //         const targetCache = getPageCache()[targetIndex - 1]
-    //         setCurrentTabKey(targetCache.route)
-    //     }
-    //     if (targetIndex === 0 && getPageCache()[targetIndex + 1]) {
-    //         const targetCache = getPageCache()[targetIndex + 1]
-    //         setCurrentTabKey(targetCache.route)
-    //     }
-    //     if (targetIndex === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
-
-    //     setPageCache(getPageCache().filter((i) => i.route !== route))
-    //     if (route === Route.AddYakitScript) {
-    //         setCurrentTabKey(Route.ModManager)
-    //     }
-    //     if (route === Route.HTTPFuzzer) delFuzzerList(1)
-    // }
-
     // 新增数据对比页面
     useEffect(() => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
@@ -1369,6 +1267,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === YakitRoute.DB_Risk) {
                 openMenuPage({route: YakitRoute.DB_Risk})
             }
+            if (type === YakitRoute.DNSLog) {
+                openMenuPage({route: YakitRoute.DNSLog})
+            }
             console.info("send to tab: ", type)
         })
 
@@ -1497,23 +1398,27 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             height: "100%"
                         }}
                     >
-                        <HeardMenu
-                            onRouteMenuSelect={extraOpenMenuPage}
-                            setRouteToLabel={(val) => {
-                                console.log("routetolabel", val)
-                                val.forEach((value, key) => {
-                                    routeKeyToLabel.current.set(key, value)
-                                })
-                            }}
-                        />
-                        {/* <PublicMenu
-                            onMenuSelect={extraOpenMenuPage}
-                            setRouteToLabel={(val) => {
-                                val.forEach((value, key) => {
-                                    routeKeyToLabel.current.set(key, value)
-                                })
-                            }}
-                        /> */}
+                        {isCommunityEdition() ? (
+                            <PublicMenu
+                                onMenuSelect={extraOpenMenuPage}
+                                setRouteToLabel={(val) => {
+                                    console.log("routetolabel", val)
+                                    val.forEach((value, key) => {
+                                        routeKeyToLabel.current.set(key, value)
+                                    })
+                                }}
+                            />
+                        ) : (
+                            <HeardMenu
+                                onRouteMenuSelect={extraOpenMenuPage}
+                                setRouteToLabel={(val) => {
+                                    console.log("routetolabel", val)
+                                    val.forEach((value, key) => {
+                                        routeKeyToLabel.current.set(key, value)
+                                    })
+                                }}
+                            />
+                        )}
                         <Content
                             style={{
                                 margin: 0,
@@ -1567,8 +1472,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                 }}
                                             >
                                                 {pageCache.map((i) => {
-                                                    // 插件菜单有一个全局的分隔符，每次代码新增需要加上
-
                                                     const key = routeConvertKey(i.route, i.pluginName)
                                                     const onlyPage: OnlyPageCache = {
                                                         route: i.route,

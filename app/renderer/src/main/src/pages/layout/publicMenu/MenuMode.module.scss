@@ -22,7 +22,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 10px;
+        font-size: 11px;
         color: #85899e;
         word-break: keep-all;
         white-space: nowrap;
@@ -74,7 +74,7 @@
 
     .multiple-vertical-menu-wrapper {
         display: flex;
-        gap: 4px;
+        gap: 8px;
         .vertical-menu-wrapper {
             padding-top: 4px;
         }

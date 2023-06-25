@@ -644,6 +644,7 @@ export const PluginStore: React.FC<PluginStoreProp> = (props) => {
                                     userInfo={userInfo}
                                     plugSource={plugSource}
                                     yakScriptId={(script && script.Id) || 0}
+                                    yakScriptName={(script && script.ScriptName) || ""}
                                     yakScriptIdOnlineId={scriptIdOnlineId}
                                     yakScriptUUIdOnlineUUId={scriptUUIdOnlineUUId}
                                     setTrigger={() => {}}

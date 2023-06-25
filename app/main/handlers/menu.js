@@ -256,4 +256,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteAllNavigation", async (e, params) => {
         return await asyncDeleteAllNavigation(params)
     })
+
+    // 新增单项菜单
+    const asyncAddOneNavigation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AddOneNavigation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AddOneNavigation", async (e, params) => {
+        return await asyncAddOneNavigation(params)
+    })
+
+    // 查询菜单项的所有存在一级菜单项列表
+    const asyncQueryNavigationGroups = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryNavigationGroups(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryNavigationGroups", async (e, params) => {
+        return await asyncQueryNavigationGroups(params)
+    })
 }

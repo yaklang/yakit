@@ -26,7 +26,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Divider, Dropdown, Tabs, Tooltip, Form} from "antd"
-import {MenuDefaultPluginIcon, MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
+import {MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -35,15 +35,13 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakCodeEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {MenuSolidDefaultPluginIcon} from "@/pages/customizeMenu/icon/solidMenuIcon"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {MenuItemGroup} from "@/pages/MainOperator"
 import {failed, yakitNotify} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isEnpriTraceAgent, isCommunityEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {RemoteGV} from "@/yakitGV"
 import {
     DatabaseFirstMenuProps,
@@ -51,7 +49,6 @@ import {
     InvalidFirstMenuItem,
     InvalidPageMenuItem,
     PrivateExpertRouteMenu,
-    PrivateRouteMenuProps,
     PrivateScanRouteMenu,
     PrivateSimpleRouteMenu,
     YakitRoute,
@@ -61,6 +58,7 @@ import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {
     DownloadOnlinePluginByScriptNamesResponse,
     keyToRouteInfo,
+    menusConvertKey,
     routeInfoToKey,
     routeToMenu
 } from "../publicMenu/utils"
@@ -70,12 +68,6 @@ import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
-/**
- * @description:
- * @param {MenuDataProps} menuItemGroup 自定义菜单参数
- * @param {menuItemGroup} routeMenuData 路由参数
- * @param {} onRouteMenuSelect 系统菜单选择事件
- */
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const {onRouteMenuSelect, setRouteToLabel} = props
 
@@ -131,12 +123,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [routeMenu])
     /** @description: 菜单更新后，记录菜单项对应的展示菜单名 */
     const getRouteKeyToLabel = useMemoizedFn(() => {
-        routeMenu.forEach((k) => {
-            ;(k.children || []).forEach((subKey) => {
-                routeToName.current.set(routeInfoToKey(subKey), subKey.label)
-            })
-            if (k.page) routeToName.current.set(routeInfoToKey(k), k.label)
-        })
+        const names = menusConvertKey(routeMenu)
+        names.forEach((value, key) => routeToName.current.set(key, value))
         setRouteToLabel(routeToName.current)
     })
 

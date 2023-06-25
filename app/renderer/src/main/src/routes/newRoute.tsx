@@ -110,6 +110,7 @@ import {PluginLocal} from "@/pages/yakitStore/local/PluginLocal"
 import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
+import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -148,6 +149,7 @@ export enum YakitRoute {
     DB_Risk = "db-risks",
     DB_Ports = "db-ports",
     DB_Domain = "db-domains",
+    WebsiteTree = "website-tree",
     DB_CVE = "cve",
     /** 独立功能页面 */
     // Yak-Runner页面
@@ -236,6 +238,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-risks": {label: "漏洞"},
     "db-ports": {label: "端口"},
     "db-domains": {label: "域名"},
+    "website-tree": {label: "网站树"},
     cve: {label: "CVE 管理"},
     yakScript: {label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
     "payload-manager": {
@@ -261,7 +264,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-plugin": {label: "插件调试"},
     "beta-debug-monaco-editor": {label: "插件编辑器"}
 }
-/** 一级页面路由(无法多开的页面) */
+/** 页面路由(无法多开的页面) */
 export const SinglePageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
@@ -279,6 +282,7 @@ export const SinglePageRoute: YakitRoute[] = [
     YakitRoute.DB_Risk,
     YakitRoute.DB_Ports,
     YakitRoute.DB_Domain,
+    YakitRoute.WebsiteTree,
     YakitRoute.DB_CVE,
     YakitRoute.YakScript,
     YakitRoute.PayloadManager,
@@ -309,7 +313,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DNSLog,
     YakitRoute.NewHome,
     YakitRoute.DB_CVE,
-    YakitRoute.HTTPFuzzer
+    YakitRoute.HTTPFuzzer,
+    YakitRoute.WebsiteTree
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -393,7 +398,7 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
-            return <PluginOperator yakScriptId={yakScriptId || 0} size={"big"} fromMenu={true} />
+            return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
         case YakitRoute.Plugin_Store:
@@ -426,6 +431,8 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <PortAssetTable />
         case YakitRoute.DB_Domain:
             return <DomainAssetPage />
+        case YakitRoute.WebsiteTree:
+            return <WebsiteTreeViewer />
         case YakitRoute.DB_CVE:
             return <CVEViewer />
         case YakitRoute.YakScript:
@@ -589,7 +596,6 @@ export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
     return menus
 }
 
-
 /** public版菜单项属性 */
 export interface PublicRouteMenuProps {
     page: YakitRoute | undefined
@@ -744,6 +750,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
             {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
             {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
+            {page: YakitRoute.WebsiteTree, ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]},
             {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
         ]
     }
@@ -764,7 +771,7 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
         page: undefined,
         label: "基础工具",
         children: [
-            "域名提取",
+            "域名、IP提取",
             "域名批量转IP并查CDN",
             "IP反查域名",
             "批量备案查询",
@@ -974,6 +981,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidDomainIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DB_Domain]
     },
+    [YakitRoute.WebsiteTree]: {
+        page: YakitRoute.WebsiteTree,
+        icon: <PrivateOutlineDomainIcon />,
+        hoverIcon: <PrivateSolidDomainIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]
+    },
     [YakitRoute.DB_HTTPHistory]: {
         page: YakitRoute.DB_HTTPHistory,
         icon: <PrivateOutlineHTTPHistoryIcon />,
@@ -1097,6 +1110,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Ports,
             YakitRoute.DB_Risk,
             YakitRoute.DB_Domain,
+            YakitRoute.WebsiteTree,
             YakitRoute.DB_HTTPHistory,
             YakitRoute.DB_CVE
         ])
@@ -1175,6 +1189,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Ports,
             YakitRoute.DB_Risk,
             YakitRoute.DB_Domain,
+            YakitRoute.WebsiteTree,
             YakitRoute.DB_HTTPHistory,
             YakitRoute.DB_CVE
         ])
@@ -1272,7 +1287,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <PluginOperator yakScriptId={yakScriptId || id} size={"big"} fromMenu={true} />
+        return <PluginOperator yakScriptId={yakScriptId || id} yakScriptName='' size={"big"} fromMenu={true} />
     }
 
     if (routeStr.startsWith("batch:")) {
