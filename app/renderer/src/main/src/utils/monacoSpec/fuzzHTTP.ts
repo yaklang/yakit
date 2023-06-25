@@ -360,10 +360,8 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/(html|div|src|\<\/?title\>|<alert>)/i, "keyword"],
             [/(\<script\>|<alert>|<prompt>|<svg )/i, "keyword"],
 
-            [/[^\s; &=]+=[^\s; &=]+/, "bold-keyword"],
-
+            // [/[^\s; &=\/]{,20}=/, "bold-keyword"],
             [/(secret)|(access)|(password)|(verify)|(login)/i, "bold-keyword"]
-
             // [/[^\s]+?\=[^\s]+?/i, "keyword"],
             // [/`/, "string", "@string_backtick"]
         ],
