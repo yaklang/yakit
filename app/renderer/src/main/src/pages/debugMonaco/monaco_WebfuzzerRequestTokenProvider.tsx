@@ -1,5 +1,5 @@
 import React from "react";
-import monaco from "monaco-editor";
+import {monaco} from "react-monaco-editor";
 
 export const MONACO_SPEC_WEBFUZZER_REQUEST = "webfuzzer-request";
 

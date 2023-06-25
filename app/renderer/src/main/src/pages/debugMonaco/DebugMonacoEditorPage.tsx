@@ -30,7 +30,7 @@ a=1&b=2
 
     return <div style={{height: "100%"}}>
         <AutoCard title={"插件调试器"} size={"small"} bodyStyle={{padding: 0}}>
-            <YakEditor value={value} type={languageType}/>
+            <YakEditor value={value} type={"http"}/>
         </AutoCard>
     </div>
 };

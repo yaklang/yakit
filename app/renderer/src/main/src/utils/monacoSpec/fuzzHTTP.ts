@@ -335,7 +335,6 @@ monaco.languages.setMonarchTokensProvider("http", {
     start: "",
     tokenPostfix: "",
     unicode: false,
-
     tokenizer: {
         root: [
             // 基础 Fuzz 标签解析
