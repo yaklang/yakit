@@ -854,7 +854,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
-    const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
+    const onlyOneResponse = useMemo(() => {
+        return !loading && failedFuzzer.length + successFuzzer.length === 1
+    }, [loading, failedFuzzer, successFuzzer])
 
     /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
     const onIsDropped = useMemoizedFn((data) => {
@@ -1059,13 +1061,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * @@description 获取高级配置中的Form values
      */
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
-        setAdvancedConfigValue({
+        const newValue: AdvancedConfigValueProps = {
             ...val,
             forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
             repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
-        })
+        }
+        setAdvancedConfigValue(newValue)
     })
     const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
         setAdvancedConfig(c)
@@ -1989,6 +1992,12 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
             return p
         }, [showMatcherAndExtraction])
+        const extraEditorProps=useCreation(()=>{
+           const overlayWidget={
+            onAddOverlayWidget:(editor, isShow)=>onAddOverlayWidget(editor, fuzzerResponse, isShow)
+           }
+           return overlayWidget
+        },[fuzzerResponse])
         return (
             <>
                 <YakitResizeBox
@@ -2041,11 +2050,12 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                 )
                             }
                             readOnly={true}
-                            onAddOverlayWidget={(editor, isShow) => {
-                                onAddOverlayWidget(editor, fuzzerResponse, isShow)
-                            }}
+                            // onAddOverlayWidget={(editor, isShow) => {
+                            //     onAddOverlayWidget(editor, fuzzerResponse, isShow)
+                            // }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
+                            {...extraEditorProps}
                         />
                     }
                     secondNode={
