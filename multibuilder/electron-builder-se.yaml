@@ -1,4 +1,6 @@
 appId: 'io.yaklang.enpritraceagent'
+extraMetadata: 
+  name: enpritraceagent
 productName: 'EnpriTraceAgent'
 copyright: Copyright © 2021 v1ll4n
 
