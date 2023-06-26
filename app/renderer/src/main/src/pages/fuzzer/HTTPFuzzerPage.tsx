@@ -706,7 +706,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        console.log('httpParams',httpParams)
+        console.log("httpParams", httpParams)
         ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
     })
 
@@ -756,7 +756,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", fuzzToken)
     })
-    const dCountRef=useRef<number>(0)
+    const dCountRef = useRef<number>(0)
     useEffect(() => {
         const token = randomString(60)
         setFuzzToken(token)
@@ -772,11 +772,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let successCount = 0
         let failedCount = 0
         ipcRenderer.on(errToken, (e, details) => {
-            yakitNotify('error',`提交模糊测试请求失败 ${details}`)
+            yakitNotify("error", `提交模糊测试请求失败 ${details}`)
         })
         let successBuffer: FuzzerResponse[] = []
         let failedBuffer: FuzzerResponse[] = []
-        
+
         let count: number = 0
         let lastUpdateCount: number = 0
         const updateData = () => {
@@ -804,8 +804,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             } else {
                 failedCount++
             }
-            
-            if(onIsDropped(data))return
+
+            if (onIsDropped(data)) return
             const r = {
                 // 6.16
                 ...data,
@@ -814,7 +814,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Count: count,
                 cellClassName: data.MatchedByMatcher ? `color-opacity-bg-${data.HitColor}` : ""
             } as FuzzerResponse
-            console.log('r',r)
+            console.log("r", r)
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
@@ -857,7 +857,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onlyOneResponse = !loading && failedFuzzer.length + successFuzzer.length === 1
 
     /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
-    const onIsDropped=useMemoizedFn((data)=>{
+    const onIsDropped = useMemoizedFn((data) => {
         if (advancedConfigValue.matchers.length > 0) {
             // 设置了 matchers
             const hit = data["MatchedByMatcher"] === true
@@ -869,7 +869,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 (!hit && advancedConfigValue.filterMode === "match")
             ) {
                 // 丢弃不匹配的内容
-                dCountRef.current++;
+                dCountRef.current++
                 setDroppedCount(dCountRef.current)
                 return true
             }
@@ -1125,7 +1125,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const httpResponse: FuzzerResponse = useMemo(() => {
         return redirectedResponse ? redirectedResponse : getFirstResponse()
-    }, [onlyOneResponse, redirectedResponse, getFirstResponse()])
+    }, [redirectedResponse, getFirstResponse()])
+    /**多条数据返回的第一条数据 */
+    const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
+        return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
+    }, [successFuzzer])
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1137,14 +1141,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onInsertYakFuzzer={onInsertYakFuzzer}
                 onValuesChange={(v) => onGetFormValue(v)}
                 refreshProxy={refreshProxy}
-                defaultHttpResponse=''
-                outsideShowResponseMatcherAndExtraction={!!Uint8ArrayToString(httpResponse.ResponseRaw)}
+                defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
+                outsideShowResponseMatcherAndExtraction={
+                    onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
+                }
                 onShowResponseMatcherAndExtraction={(activeType, activeKey) => {
                     setShowMatcherAndExtraction(true)
                     setActiveType(activeType)
                     setActiveKey(activeKey)
                 }}
-                disabled={!onlyOneResponse && cachedTotal > 1}
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
@@ -1290,7 +1295,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 请求 Host:{advancedConfigValue.actualHost}
                             </YakitTag>
                         )}
-                        {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
+                        {onlyOneResponse && (
+                            <>
+                                {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
+                                {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers.length > 0 && (
+                                    <YakitTag color='danger'>匹配失败</YakitTag>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
                 <ResizeCardBox
@@ -1423,10 +1435,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     onSearch={() => {
                                         setDefaultResponseSearch(affixSearch)
                                     }}
-                                    onRemove={() => {
-                                        setSuccessFuzzer([])
-                                        setFailedFuzzer([])
-                                    }}
                                     successFuzzer={successFuzzer}
                                     secondNodeSize={secondNodeSize}
                                     query={query}
@@ -1536,7 +1544,6 @@ interface SecondNodeExtraProps {
     valueSearch: string
     onSearchValueChange: (s: string) => void
     onSearch: () => void
-    onRemove: () => void
     successFuzzer: FuzzerResponse[]
     secondNodeSize?: Size
     query?: HTTPFuzzerPageTableQuery
@@ -1554,7 +1561,6 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         valueSearch,
         onSearchValueChange,
         onSearch,
-        onRemove,
         successFuzzer,
         secondNodeSize,
         query,
@@ -1642,14 +1648,6 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 >
                     详情
                 </YakitButton>
-                <Divider type='vertical' style={{margin: 0, top: 1}} />
-                <YakitButton
-                    type='outline2'
-                    size='small'
-                    icon={<TrashIcon />}
-                    className={classNames("button-text-danger", styles["trash-icon-btn"])}
-                    onClick={() => onRemove()}
-                />
             </>
         )
     }

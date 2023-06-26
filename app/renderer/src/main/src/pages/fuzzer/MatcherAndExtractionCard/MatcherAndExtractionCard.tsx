@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
+import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     ExtractorValueProps,
     HTTPResponseExtractor,
@@ -36,7 +36,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Collapse} from "antd"
 import classNames from "classnames"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn, useSize} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -50,6 +50,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -179,6 +180,9 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         const [extractor, setExtractor] = useState<ExtractorValueProps>(extractorValue)
         const [executeLoading, setExecuteLoading] = useState<boolean>(false)
 
+        const contentRef = useRef<any>(null)
+        const {width} = useSize(contentRef) || {width: 0}
+
         useImperativeHandle(
             ref,
             () => ({
@@ -255,12 +259,6 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 }
             })
         })
-        const onIsEmpty = useMemoizedFn(() => {
-            const matcherEmptyList = matcher.matchersList.filter((item) => isMatcherItemEmpty(item))
-            const extractorEmptyList = extractor.extractorList.filter((item) => isExtractorEmpty(item))
-            return matcherEmptyList.length > 0 || extractorEmptyList.length > 0
-        })
-
         const onAddCondition = useMemoizedFn(() => {
             switch (type) {
                 case "matchers":
@@ -373,14 +371,6 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     }, 200)
                 )
         })
-        const onApply = useMemoizedFn(() => {
-            if (onIsEmpty()) {
-                onApplyConfirm()
-            } else {
-                onSave(matcher, extractor)
-                onClose()
-            }
-        })
         const onApplyConfirm = useMemoizedFn(() => {
             const matcherAndExtractor = onClearEmptyGroups()
             onSave(
@@ -395,6 +385,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         const onClearEmptyGroups = useMemoizedFn(() => {
             const newMatchersList: HTTPResponseMatcher[] = []
             matcher.matchersList.forEach((item) => {
+                if (item.Group.join("") === "") return
                 newMatchersList.push({
                     ...item,
                     Group: item.Group.filter((g) => g !== "")
@@ -402,6 +393,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             })
             const newExtractorList: HTTPResponseExtractor[] = []
             extractor.extractorList.forEach((item) => {
+                if (item.Groups.join("") === "") return
                 newExtractorList.push({
                     ...item,
                     Groups: item.Groups.filter((g) => g !== "")
@@ -437,7 +429,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     onOkText: "应用",
                     icon: <ExclamationCircleOutlined />,
                     onOk: () => {
-                        onApply()
+                        onApplyConfirm()
                         m.destroy()
                     },
                     onCancel: () => {
@@ -448,10 +440,16 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 })
             }
         })
-
+        const isSmallMode: boolean = useMemo(() => {
+            if (width) {
+                return width < 500
+            } else {
+                return false
+            }
+        }, [width])
         return (
             <YakitSpin spinning={executeLoading}>
-                <div className={styles["matching-extraction"]}>
+                <div className={styles["matching-extraction"]} ref={contentRef}>
                     <div className={styles["matching-extraction-heard"]}>
                         <div className={styles["matching-extraction-title"]}>
                             <YakitRadioButtons
@@ -473,6 +471,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                     }
                                 }}
                                 buttonStyle='solid'
+                                size={isSmallMode ? "small" : "middle"}
                                 options={[
                                     {
                                         value: "matchers",
@@ -493,13 +492,26 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                             </span>
                         </div>
                         <div className={styles["matching-extraction-extra"]}>
-                            <YakitButton type='outline1' icon={<PlusIcon />} onClick={() => onAddCondition()}>
+                            <YakitButton
+                                type='outline1'
+                                icon={<PlusIcon />}
+                                onClick={() => onAddCondition()}
+                                size={isSmallMode ? "small" : undefined}
+                            >
                                 添加条件
                             </YakitButton>
-                            <YakitButton type='outline1' onClick={() => onExecute()}>
+                            <YakitButton
+                                type='outline1'
+                                onClick={() => onExecute()}
+                                size={isSmallMode ? "small" : undefined}
+                            >
                                 调试执行
                             </YakitButton>
-                            <YakitButton type='primary' onClick={() => onApply()}>
+                            <YakitButton
+                                type='primary'
+                                onClick={() => onApplyConfirm()}
+                                size={isSmallMode ? "small" : undefined}
+                            >
                                 应用
                             </YakitButton>
                             <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()} />
@@ -511,6 +523,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         setMatcher={setMatcher}
                         defActiveKey={defActiveKey}
                         httpResponse={httpResponse}
+                        isSmallMode={isSmallMode}
                     />
                     <ExtractorCollapse
                         type={type}
@@ -518,6 +531,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         setExtractor={setExtractor}
                         defActiveKey={defActiveKey}
                         httpResponse={httpResponse}
+                        isSmallMode={isSmallMode}
                     />
                 </div>
             </YakitSpin>
@@ -526,7 +540,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
 )
 
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props) => {
-    const {type, matcher, setMatcher, notEditable, defActiveKey, httpResponse} = props
+    const {type, matcher, setMatcher, notEditable, defActiveKey, httpResponse, isSmallMode} = props
     const [activeKey, setActiveKey] = useState<string>("ID:0")
     useEffect(() => {
         setActiveKey(defActiveKey)
@@ -562,6 +576,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
                         }}
                         buttonStyle='solid'
                         options={filterModeOptions}
+                        size={isSmallMode ? "small" : "middle"}
                     />
                     {matcher.filterMode === "onlyMatch" && (
                         <ColorSelect
@@ -587,6 +602,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
                         }}
                         buttonStyle='solid'
                         options={matchersConditionOptions}
+                        size={isSmallMode ? "small" : "middle"}
                     />
                 </div>
             </div>
@@ -640,6 +656,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
                             notEditable={notEditable}
                             onEdit={(field, value) => onEdit(field, value, index)}
                             httpResponse={httpResponse}
+                            isSmallMode={isSmallMode}
                         />
                     </Panel>
                 ))}
@@ -649,7 +666,8 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
 })
 
 export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
-    const {notEditable, matcherItem, onEdit, httpResponse} = props
+    const {notEditable, matcherItem, onEdit, httpResponse, isSmallMode} = props
+
     return (
         <>
             <div
@@ -657,7 +675,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                     [styles["collapse-panel-condition-notEditable"]]: notEditable
                 })}
             >
-                <LabelNodeItem label='匹配类型'>
+                <LabelNodeItem label='匹配类型' column={isSmallMode}>
                     <YakitRadioButtons
                         value={matcherItem.MatcherType}
                         onChange={(e) => {
@@ -667,7 +685,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                         options={matcherTypeList}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label='匹配位置'>
+                <LabelNodeItem label='匹配位置' column={isSmallMode}>
                     <YakitRadioButtons
                         value={matcherItem.Scope}
                         onChange={(e) => {
@@ -682,7 +700,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                         ]}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label='条件关系'>
+                <LabelNodeItem label='条件关系' column={isSmallMode}>
                     <YakitRadioButtons
                         value={matcherItem.Condition}
                         onChange={(e) => {
@@ -695,7 +713,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                         ]}
                     />
                 </LabelNodeItem>
-                <LabelNodeItem label='不匹配(取反)'>
+                <LabelNodeItem label='不匹配(取反)' column={isSmallMode}>
                     <YakitSwitch checked={matcherItem.Negative} onChange={(checked) => onEdit("Negative", checked)} />
                 </LabelNodeItem>
             </div>
@@ -736,12 +754,11 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                             <div className={styles["matcher-item-text"]}>{groupItem}</div>
                         ) : (
                             <>
-                                <textarea
+                                <AutoTextarea
                                     value={groupItem}
                                     onChange={(e) => {
                                         onChangeGroupItemValue(e.target.value, number)
                                     }}
-                                    rows={1}
                                     placeholder='请输入...'
                                     className={styles["matcher-item-textarea"]}
                                 />
@@ -787,7 +804,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
 })
 
 export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((props) => {
-    const {type, extractor, setExtractor, defActiveKey, notEditable, httpResponse} = props
+    const {type, extractor, setExtractor, defActiveKey, notEditable, httpResponse, isSmallMode} = props
 
     const [activeKey, setActiveKey] = useState<string>("ID:0")
     const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
@@ -909,6 +926,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                             notEditable={notEditable}
                             onEdit={(field, value) => onEdit(field, value, index)}
                             httpResponse={httpResponse}
+                            isSmallMode={isSmallMode}
                         />
                     </Panel>
                 ))}
@@ -918,7 +936,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
 })
 
 export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) => {
-    const {notEditable, extractorItem, onEdit, httpResponse} = props
+    const {notEditable, extractorItem, onEdit, httpResponse, isSmallMode} = props
     const onRenderTypeExtra: ReactNode = useCreation(() => {
         switch (extractorItem.Type) {
             case "regex":
@@ -947,64 +965,67 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
     }, [extractorItem.Type, extractorItem.RegexpMatchGroup, extractorItem.XPathAttribute])
     return (
         <>
-            <>
-                <div
-                    className={classNames(styles["collapse-panel-condition"], {
-                        [styles["collapse-panel-condition-notEditable"]]: notEditable
-                    })}
-                >
-                    <LabelNodeItem label='提取类型'>
-                        <YakitRadioButtons
-                            value={extractorItem.Type}
-                            onChange={(e) => {
-                                onEdit("Type", e.target.value)
-                            }}
-                            buttonStyle='solid'
-                            options={extractorTypeList}
-                        />
-                    </LabelNodeItem>
-                    <LabelNodeItem label='提取范围'>
-                        <YakitRadioButtons
-                            value={extractorItem.Scope}
-                            onChange={(e) => {
-                                onEdit("Scope", e.target.value)
-                            }}
-                            buttonStyle='solid'
-                            options={[
-                                {label: "响应头", value: "body"},
-                                {label: "响应体", value: "header"},
-                                {label: "Raw", value: "raw"}
-                            ]}
-                        />
-                    </LabelNodeItem>
-                    {onRenderTypeExtra}
-                </div>
-                <MatcherAndExtractionValueList
-                    httpResponse={httpResponse}
-                    showRegex={extractorItem.Type === "regex"}
-                    group={extractorItem.Groups}
-                    notEditable={notEditable}
-                    onEditGroup={(g) => {
-                        onEdit("Groups", g)
-                    }}
-                    onAddGroup={() => {
-                        if (isExtractorEmpty(extractorItem)) {
-                            yakitNotify("error", "请将已添加条件配置完成后再新增")
-                            return
-                        } else {
-                            extractorItem.Groups.push("")
-                            onEdit("Groups", extractorItem.Groups)
-                        }
-                    }}
-                />
-            </>
+            <div
+                className={classNames(styles["collapse-panel-condition"], {
+                    [styles["collapse-panel-condition-notEditable"]]: notEditable
+                })}
+            >
+                <LabelNodeItem label='提取类型' column={isSmallMode}>
+                    <YakitRadioButtons
+                        value={extractorItem.Type}
+                        onChange={(e) => {
+                            onEdit("Type", e.target.value)
+                        }}
+                        buttonStyle='solid'
+                        options={extractorTypeList}
+                    />
+                </LabelNodeItem>
+                <LabelNodeItem label='提取范围' column={isSmallMode}>
+                    <YakitRadioButtons
+                        value={extractorItem.Scope}
+                        onChange={(e) => {
+                            onEdit("Scope", e.target.value)
+                        }}
+                        buttonStyle='solid'
+                        options={[
+                            {label: "响应头", value: "header"},
+                            {label: "响应体", value: "body"},
+                            {label: "Raw", value: "raw"}
+                        ]}
+                    />
+                </LabelNodeItem>
+                {onRenderTypeExtra}
+            </div>
+            <MatcherAndExtractionValueList
+                httpResponse={httpResponse}
+                showRegex={extractorItem.Type === "regex"}
+                group={extractorItem.Groups}
+                notEditable={notEditable}
+                onEditGroup={(g) => {
+                    onEdit("Groups", g)
+                }}
+                onAddGroup={() => {
+                    if (isExtractorEmpty(extractorItem)) {
+                        yakitNotify("error", "请将已添加条件配置完成后再新增")
+                        return
+                    } else {
+                        extractorItem.Groups.push("")
+                        onEdit("Groups", extractorItem.Groups)
+                    }
+                }}
+            />
         </>
     )
 })
 
 const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) => {
+    const {column} = props
     return (
-        <div className={styles["label-node"]}>
+        <div
+            className={classNames(styles["label-node"], {
+                [styles["label-node-column"]]: column
+            })}
+        >
             <span className={styles["label"]}>{props.label}</span>
             {props.children}
         </div>

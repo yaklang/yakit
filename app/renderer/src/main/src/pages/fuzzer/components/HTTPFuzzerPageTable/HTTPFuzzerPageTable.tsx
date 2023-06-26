@@ -209,21 +209,23 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           </div>
                       ),
                       render: (item) =>
-                          item.length > 0 ? (
+                          item?.length > 0 ? (
                               <div className={styles["table-item-extracted-results"]}>
                                   <span className={styles["extracted-results-text"]}>
                                       {item.map((i) => `${i.Key}: ${i.Value} `)}
                                   </span>
-                                  <YakitButton
-                                      type='text'
-                                      size='small'
-                                      onClick={(e) => {
-                                          e.stopPropagation()
-                                          onViewExecResults(item)
-                                      }}
-                                  >
-                                      详情
-                                  </YakitButton>
+                                  {item?.length > 1 && (
+                                      <YakitButton
+                                          type='text'
+                                          size='small'
+                                          onClick={(e) => {
+                                              e.stopPropagation()
+                                              onViewExecResults(item)
+                                          }}
+                                      >
+                                          详情
+                                      </YakitButton>
+                                  )}
                               </div>
                           ) : (
                               "-"

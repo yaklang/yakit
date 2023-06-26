@@ -481,7 +481,7 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_RED",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-red")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-red")}></div>
                 红色
             </div>
         )
@@ -493,7 +493,7 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_GREEN",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-green")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-green")}></div>
                 绿色
             </div>
         )
@@ -505,7 +505,7 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_BLUE",
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-blue")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
                 蓝色
             </div>
         )
@@ -517,7 +517,7 @@ export const availableColors = [
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-yellow")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-yellow")}></div>
                 黄色
             </div>
         )
@@ -529,7 +529,7 @@ export const availableColors = [
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-orange")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-orange")}></div>
                 橙色
             </div>
         )
@@ -541,7 +541,7 @@ export const availableColors = [
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-purple")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-purple")}></div>
                 紫色
             </div>
         )
@@ -553,7 +553,7 @@ export const availableColors = [
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-cyan")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-cyan")}></div>
                 天蓝色
             </div>
         )
@@ -565,7 +565,7 @@ export const availableColors = [
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-opacity-bg-grey")}></div>
+                <div className={classNames(style["tag-color-display"], "color-bg-grey")}></div>
                 灰色
             </div>
         )

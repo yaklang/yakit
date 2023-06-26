@@ -43,6 +43,7 @@ export interface ExtractorCollapseProps extends MatcherAndExtractorProps {
 }
 
 interface MatcherAndExtractorProps {
+    isSmallMode:boolean
     type: MatchingAndExtraction
     /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
     notEditable?: boolean
@@ -73,6 +74,7 @@ export interface HTTPResponseExtractor {
 export interface labelNodeItemProps {
     label: string
     children: ReactNode
+    column?:boolean
 }
 
 export interface MatcherItemProps extends MatcherItemAndExtractorItemProps {
@@ -86,6 +88,7 @@ export interface ExtractorItemProps extends MatcherItemAndExtractorItemProps {
 }
 
 interface MatcherItemAndExtractorItemProps {
+    isSmallMode?:boolean
     /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
     notEditable?: boolean
     onEdit: (f: string, v: any) => void

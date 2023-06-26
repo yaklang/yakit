@@ -1,7 +1,7 @@
 import {
     InformationCircleIcon,
-    ChevronDownIcon,
-    ChevronRightIcon,
+    SolidChevronDownIcon,
+    SolidChevronRightIcon,
     PlusSmIcon,
     PlusIcon,
     TrashIcon,
@@ -22,7 +22,7 @@ import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Tag, Divider} from "antd"
 import {useWatch} from "antd/lib/form/Form"
-import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
+import React, {useState, useRef, useEffect, useMemo, ReactNode, ChangeEvent} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {FuzzerResponse, SelectOptionProps} from "../HTTPFuzzerPage"
@@ -55,6 +55,7 @@ import {
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -72,8 +73,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         refreshProxy,
         defaultHttpResponse,
         outsideShowResponseMatcherAndExtraction,
-        onShowResponseMatcherAndExtraction,
-        disabled
+        onShowResponseMatcherAndExtraction
     } = props
 
     const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
@@ -219,13 +219,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         ipcRenderer
             .invoke("RenderVariables", {
                 Params: form.getFieldValue("params") || [],
-                HTTPResponse: StringToUint8Array(defMatcherAndExtractionCode)
+                HTTPResponse: StringToUint8Array(defaultHttpResponse || defMatcherAndExtractionCode)
             })
             .then((rsp: {Results: {Key: string; Value: string}[]}) => {
                 showYakitModal({
                     title: "渲染后变量内容",
+                    footer: <></>,
                     content: (
-                        <Space direction={"vertical"} style={{margin: 20}}>
+                        <div className={styles["render-variables-modal-content"]}>
                             {rsp.Results.map((data, index) => {
                                 return (
                                     <div key={`${data.Key}-${index}`}>
@@ -233,7 +234,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     </div>
                                 )
                             })}
-                        </Space>
+                        </div>
                     )
                 })
             })
@@ -350,7 +351,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     activeKey={activeKey}
                     onChange={(key) => onSwitchCollapse(key)}
                     ghost
-                    expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                    expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
                 >
                     <Panel
                         header='请求包配置'
@@ -511,7 +512,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             ghost
                             activeKey={retryActive}
                             onChange={(e) => setRetryActive(e as string[])}
-                            expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                            expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
                         >
                             <Panel
                                 header={
@@ -698,7 +699,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             })
                                             setVariableActiveKey([
                                                 ...(variableActiveKey || []),
-                                                `${variableActiveKey.length}`
+                                                `${variableActiveKey?.length || 0}`
                                             ])
                                         } else {
                                             yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
@@ -717,7 +718,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         }
                     >
                         <Form.List name='params'>
-                            {(fields, {add, remove}) => {
+                            {(fields, {add}) => {
                                 return (
                                     <Collapse
                                         ghost
@@ -727,9 +728,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }}
                                         expandIcon={(e) =>
                                             e.isActive ? (
-                                                <ChevronDownIcon className={styles["chevron-down-icon"]} />
+                                                <SolidChevronDownIcon className={styles["chevron-down-icon"]} />
                                             ) : (
-                                                <ChevronRightIcon className={styles["chevron-right-icon"]} />
+                                                <SolidChevronRightIcon className={styles["chevron-right-icon"]} />
                                             )
                                         }
                                         className={styles["variable-list"]}
@@ -771,7 +772,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                         add({Key: "", Value: ""})
                                                         setVariableActiveKey([
                                                             ...(variableActiveKey || []),
-                                                            `${variableActiveKey.length}`
+                                                            `${variableActiveKey?.length}`
                                                         ])
                                                     }}
                                                     icon={<PlusIcon className={styles["plus-sm-icon"]} />}
@@ -791,7 +792,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <Panel
                         header={
                             <div className={styles["matchers-panel"]}>
-                                匹配器<div className={styles["matchers-number"]}>{matchersList.length}</div>
+                                匹配器<div className={styles["matchers-number"]}>{matchersList?.length}</div>
                             </div>
                         }
                         key='匹配器'
@@ -826,7 +827,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         onAddMatchingAndExtractionCard("matchers")
                                     }}
                                     className={styles["btn-padding-right-0"]}
-                                    disabled={disabled}
                                 >
                                     添加/调试
                                     <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
@@ -858,13 +858,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onAdd={() => onAddMatchingAndExtractionCard("matchers")}
                             onRemove={onRemoveMatcher}
                             onEdit={onEditMatcher}
-                            disabled={disabled}
                         />
                     </Panel>
                     <Panel
                         header={
                             <div className={styles["matchers-panel"]}>
-                                数据提取器<div className={styles["matchers-number"]}>{matchersList.length}</div>
+                                数据提取器<div className={styles["matchers-number"]}>{extractorList?.length}</div>
                             </div>
                         }
                         key='数据提取器'
@@ -896,7 +895,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         onAddMatchingAndExtractionCard("extractors")
                                     }}
                                     className={styles["btn-padding-right-0"]}
-                                    disabled={disabled}
                                 >
                                     添加/调试
                                     <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
@@ -909,10 +907,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onAdd={() => onAddMatchingAndExtractionCard("extractors")}
                             onRemove={onRemoveExtractors}
                             onEdit={onEditExtractors}
-                            disabled={disabled}
                         />
                     </Panel>
                 </Collapse>
+                <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
             <YakitDrawer
                 mask={false}
@@ -953,6 +951,7 @@ interface SetVariableItemProps {
 }
 const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
     const {name} = props
+
     return (
         <div className={styles["variable-item"]}>
             <Form.Item name={[name, "Key"]} noStyle wrapperCol={{span: 24}}>
@@ -961,7 +960,7 @@ const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
 
             <div className={styles["variable-item-textarea-body"]}>
                 <Form.Item name={[name, "Value"]} noStyle wrapperCol={{span: 24}}>
-                    <textarea rows={3} placeholder='变量值' className={styles["variable-item-textarea"]} />
+                    <AutoTextarea className={styles["variable-item-textarea"]} placeholder='变量值' />
                 </Form.Item>
                 <ResizerIcon className={styles["resizer-icon"]} />
             </div>
@@ -974,10 +973,9 @@ interface MatchersListProps {
     onAdd: () => void
     onRemove: (index: number) => void
     onEdit: (index: number) => void
-    disabled?: boolean
 }
 const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
-    const {matcherValue, onAdd, onRemove, onEdit, disabled} = props
+    const {matcherValue, onAdd, onRemove, onEdit} = props
     const {matchersList} = matcherValue
     return (
         <>
@@ -987,7 +985,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                         <div className={styles["matchersList-item-heard"]}>
                             <span className={styles["item-id"]}>ID&nbsp;{index}</span>
                             <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
-                            <span className={styles["item-number"]}>{matcherItem.Group.length}</span>
+                            <span className={styles["item-number"]}>{matcherItem.Group?.length}</span>
                         </div>
                         <MatchersAndExtractorsListItemOperate
                             onRemove={() => onRemove(index)}
@@ -1000,12 +998,11 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                     httpResponse=''
                                 />
                             }
-                            disabled={disabled}
                         />
                     </div>
                 ))}
             </Form.Item>
-            {matchersList.length === 0 && (
+            {matchersList?.length === 0 && (
                 <Form.Item wrapperCol={{span: 24}}>
                     <YakitButton
                         type='outline2'
@@ -1014,7 +1011,6 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                         themeClass={styles["plus-button-bolck"]}
                         block
                         style={{justifyContent: "center"}}
-                        disabled={disabled}
                     >
                         添加
                     </YakitButton>
@@ -1028,10 +1024,9 @@ interface ExtractorsListProps {
     onAdd: () => void
     onRemove: (index: number) => void
     onEdit: (index: number) => void
-    disabled?: boolean
 }
 const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
-    const {extractorValue, onAdd, onRemove, onEdit, disabled} = props
+    const {extractorValue, onAdd, onRemove, onEdit} = props
     const {extractorList} = extractorValue
     return (
         <>
@@ -1041,7 +1036,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                         <div className={styles["matchersList-item-heard"]}>
                             <span className={styles["item-id"]}>{extractorItem.Name || `ID ${index}`}</span>
                             <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
-                            <span className={styles["item-number"]}>{extractorItem.Groups.length}</span>
+                            <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>
                         </div>
                         <MatchersAndExtractorsListItemOperate
                             onRemove={() => onRemove(index)}
@@ -1054,12 +1049,11 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                                     httpResponse=''
                                 />
                             }
-                            disabled={disabled}
                         />
                     </div>
                 ))}
             </Form.Item>
-            {extractorList.length === 0 && (
+            {extractorList?.length === 0 && (
                 <Form.Item wrapperCol={{span: 24}}>
                     <YakitButton
                         type='outline2'
@@ -1068,7 +1062,6 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                         themeClass={styles["plus-button-bolck"]}
                         block
                         style={{justifyContent: "center"}}
-                        disabled={disabled}
                     >
                         添加
                     </YakitButton>
@@ -1081,11 +1074,10 @@ interface MatchersAndExtractorsListItemOperateProps {
     onRemove: () => void
     onEdit: () => void
     popoverContent: ReactNode
-    disabled?: boolean
 }
 const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListItemOperateProps> = React.memo(
     (props) => {
-        const {onRemove, onEdit, popoverContent, disabled} = props
+        const {onRemove, onEdit, popoverContent} = props
         const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
         return (
             <div
@@ -1094,22 +1086,12 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
                 })}
             >
                 <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
-                {disabled ? (
-                    <Tooltip title='请在右边列表选择响应包进行编辑'>
-                        <PencilAltIcon
-                            className={classNames(styles["pencilAlit-icon"], {
-                                [styles["pencilAlit-icon-disabled"]]: disabled
-                            })}
-                        />
-                    </Tooltip>
-                ) : (
-                    <PencilAltIcon
-                        className={styles["pencilAlit-icon"]}
-                        onClick={() => {
-                            onEdit()
-                        }}
-                    />
-                )}
+                <HollowLightningBoltIcon
+                    className={styles["hollow-lightningBolt-icon"]}
+                    onClick={() => {
+                        onEdit()
+                    }}
+                />
                 <TerminalPopover
                     popoverContent={popoverContent}
                     visiblePopover={visiblePopover}
@@ -1165,7 +1147,7 @@ const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
                 setVisiblePopover(v)
             }}
         >
-            <span ref={terminalIconRef} style={{height: 16, lineHeight: "16px"}}>
+            <span ref={terminalIconRef} style={{height: 24, lineHeight: "16px"}}>
                 <TerminalIcon className={styles["terminal-icon"]} />
             </span>
         </YakitPopover>

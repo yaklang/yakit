@@ -3,7 +3,7 @@ import styles from "./ResizeCardBox.module.scss"
 import classNames from "classnames"
 import {useCreation} from "ahooks"
 import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
-import { YakitResizeBox, YakitResizeBoxProps } from "../yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitResizeBox, YakitResizeBoxProps} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 
 interface ResizeCardNodeProps {
     title?: ReactNode
@@ -43,12 +43,13 @@ export const ResizeCardBox: React.FC<ResizeCardBoxProps> = (props) => {
         }
         return p
     }, [firstFull, secondFull])
+
     return (
         <YakitResizeBox
             {...resProps}
             lineStyle={{display: firstFull || secondFull ? "none" : ""}}
-            secondNodeStyle={{padding: firstFull ? 0 : undefined}}
-            firstNodeStyle={{padding: secondFull ? 0 : undefined}}
+            secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : resProps.secondMinSize}}
+            firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
             firstNode={
                 <div
                     className={classNames(styles["resize-card"], firstNodeProps?.className || "")}
@@ -68,8 +69,12 @@ export const ResizeCardBox: React.FC<ResizeCardBoxProps> = (props) => {
             }
             secondNode={
                 <div
-                    className={classNames(styles["resize-card"],styles['resize-card-second'], secondNodeProps?.className || "")}
-                    style={{display: firstFull ? "none" : ""}} 
+                    className={classNames(
+                        styles["resize-card"],
+                        styles["resize-card-second"],
+                        secondNodeProps?.className || ""
+                    )}
+                    style={{display: firstFull ? "none" : ""}}
                 >
                     <div className={classNames(styles["resize-card-heard"], secondNodeProps?.heardClassName || "")}>
                         <div className={styles["resize-card-heard-title"]}>{secondNodeProps?.title}</div>

@@ -1,15 +1,5 @@
-// @use "../MatcherAndExtractionCard/MatcherAndExtraction.module.scss";
+@use "../HTTPFuzzerPageShare.module.scss" as HTTPFuzzerPageShare;
 
-.circle-number {
-    height: 16px;
-    padding: 2px 6px;
-    background: var(--yakit-background-color);
-    border-radius: 8px;
-    font-weight: 400;
-    font-size: 10px;
-    line-height: 12px;
-    color: var(--yakit-body-text-color);
-}
 .http-query-advanced-config {
     display: flex;
     flex-direction: column;
@@ -121,15 +111,18 @@
     .variable-list {
         color: var(--yakit-helper-text-color);
         :global {
-            .ant-collapse-header {
+            .ant-collapse-item > .ant-collapse-header {
                 height: 24px;
-                padding: 0 12px;
+                padding: 0 0 0 12px !important;
             }
             .ant-collapse-header-text {
                 color: var(--yakit-body-text-color);
             }
-            .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
-                padding-top: 4px;
+            .ant-collapse-content > .ant-collapse-content-box {
+                padding: 0 0 12px 12px;
+            }
+            .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+                padding-top: 6px !important;
             }
         }
         .variable-list-panel {
@@ -211,7 +204,7 @@
         display: flex;
         align-items: center;
         .matchers-number {
-            @extend .circle-number;
+            @include HTTPFuzzerPageShare.circle-number;
             margin: 0 4px;
         }
     }
@@ -251,14 +244,14 @@
                 color: var(--yakit-helper-text-color);
             }
             .item-number {
-                @extend .circle-number;
+                @include HTTPFuzzerPageShare.circle-number;
             }
         }
         .matchersList-item-operate {
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 8px;
+            gap: 4px;
             visibility: hidden;
 
             svg {
@@ -268,6 +261,7 @@
             }
             .trash-icon {
                 color: var(--yakit-danger-5);
+                @include HTTPFuzzerPageShare.base-icon-card;
                 &:hover {
                     color: var(--yakit-danger-4);
                 }
@@ -276,9 +270,10 @@
                     color: var(--yakit-danger-6);
                 }
             }
-            .pencilAlit-icon,
+            .hollow-lightningBolt-icon,
             .terminal-icon {
                 color: var(--yakit-body-text-color);
+                @include HTTPFuzzerPageShare.base-icon-card;
             }
             .pencilAlit-icon-disabled {
                 color: var(--yakit-disable-text-color);
@@ -293,6 +288,12 @@
     }
     .matchersList-item + .matchersList-item {
         margin-top: 4px;
+    }
+    .to-end {
+        text-align: center;
+        color: var(--yakit-disable-text-color);
+        font-size: 11px;
+        margin-top: 12px;
     }
 }
 
@@ -329,4 +330,12 @@
             transition: all 0.3s;
         }
     }
+}
+.render-variables-modal-content {
+    padding: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
