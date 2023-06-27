@@ -665,6 +665,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             params: [{Key: "", Value: ""}]
                                         }
                                         onReset(restValue)
+                                        setVariableActiveKey(["0"])
                                     }}
                                     size='small'
                                 >
@@ -981,7 +982,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
         <>
             <Form.Item name='matchers' noStyle>
                 {matchersList.map((matcherItem, index) => (
-                    <div className={styles["matchersList-item"]} key={`${index}`}>
+                    <div className={styles["matchersList-item"]} key={`ID:${index}`}>
                         <div className={styles["matchersList-item-heard"]}>
                             <span className={styles["item-id"]}>ID&nbsp;{index}</span>
                             <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
@@ -1032,7 +1033,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
         <>
             <Form.Item name='extractors' noStyle>
                 {extractorList.map((extractorItem, index) => (
-                    <div className={styles["matchersList-item"]} key={`${extractorItem.Name || index}`}>
+                    <div className={styles["matchersList-item"]} key={`${extractorItem.Name}-${index}`}>
                         <div className={styles["matchersList-item-heard"]}>
                             <span className={styles["item-id"]}>{extractorItem.Name || `ID ${index}`}</span>
                             <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
