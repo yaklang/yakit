@@ -964,6 +964,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                         <YakitInput
                             value={extractorItem.XPathAttribute}
                             onChange={(e) => onEdit("XPathAttribute", e.target.value)}
+                            size='small'
                         />
                     </LabelNodeItem>
                 )

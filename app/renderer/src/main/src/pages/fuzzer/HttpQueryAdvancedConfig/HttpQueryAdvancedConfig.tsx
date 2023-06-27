@@ -699,7 +699,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             })
                                             setVariableActiveKey([
                                                 ...(variableActiveKey || []),
-                                                `${variableActiveKey?.length || 0}`
+                                                `${variables?.length || 0}`
                                             ])
                                         } else {
                                             yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
@@ -934,7 +934,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         onSetValue({
                             ...v,
                             filterMode: matcher.filterMode,
-                            hitColor: matcher.hitColor||'red',
+                            hitColor: matcher.hitColor || "red",
                             matchersCondition: matcher.matchersCondition,
                             matchers: matcher.matchersList,
                             extractors: extractor.extractorList
