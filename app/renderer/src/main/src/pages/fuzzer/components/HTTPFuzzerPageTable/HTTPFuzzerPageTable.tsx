@@ -22,7 +22,7 @@ import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../H
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {ArrowRightSvgIcon} from "@/components/layout/icons"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {Divider} from "antd"
+import {Divider, Tooltip} from "antd"
 import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
@@ -123,10 +123,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       }
                   },
                   {
-                      title: "StatusCode",
+                      title: "状态",
                       dataKey: "StatusCode",
                       render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
-                      width: 140,
+                      width: 90,
                       sorterProps: {
                           sorter: true
                       },
@@ -234,7 +234,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   {
                       title: "响应相似度",
                       dataKey: "BodySimilarity",
-                      width: 150,
+                      width: 120,
                       render: (v) => {
                           const text = parseFloat(`${v}`).toFixed(3)
                           return text ? (
@@ -253,7 +253,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "HTTP头相似度",
                       dataKey: "HeaderSimilarity",
                       render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
-                      width: 150,
+                      width: 120,
                       sorterProps: {
                           sorter: true
                       }
@@ -290,14 +290,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (_, record, index: number) => {
                           return (
                               <div className={styles["operate-icons"]}>
-                                  <HollowLightningBoltIcon
-                                      onClick={(e) => {
-                                          e.stopPropagation()
-                                          ipcRenderer.invoke("send-open-matcher-and-extraction", {
-                                              httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
-                                          })
-                                      }}
-                                  />
+                                  <Tooltip title='调试'>
+                                      <HollowLightningBoltIcon
+                                          onClick={(e) => {
+                                              e.stopPropagation()
+                                              ipcRenderer.invoke("send-open-matcher-and-extraction", {
+                                                  httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
+                                              })
+                                          }}
+                                      />
+                                  </Tooltip>
                                   <Divider type='vertical' style={{margin: 0}} />
                                   <ArrowCircleRightSvgIcon
                                       onClick={(e) => {

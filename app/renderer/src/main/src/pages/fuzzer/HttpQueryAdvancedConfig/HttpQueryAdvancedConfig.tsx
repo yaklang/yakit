@@ -8,7 +8,8 @@ import {
     ResizerIcon,
     HollowLightningBoltIcon,
     PencilAltIcon,
-    TerminalIcon
+    TerminalIcon,
+    EyeIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -56,6 +57,7 @@ import {
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
+import "hint.css"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -409,6 +411,126 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Form.Item label='超时时长' name='timeout'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
+                    </Panel>
+                    <Panel
+                        header={
+                            <div className={styles["matchers-panel"]}>
+                                匹配器<div className={styles["matchers-number"]}>{matchersList?.length}</div>
+                            </div>
+                        }
+                        key='匹配器'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    className='button-text-danger'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const restValue = {
+                                            matchers: [],
+                                            filterMode: "drop",
+                                            hitColor: "red",
+                                            matchersCondition: "and"
+                                        }
+                                        onReset(restValue)
+                                    }}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    size='small'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
+                                            onSwitchCollapse([...activeKey, "匹配器"])
+                                        }
+                                        onAddMatchingAndExtractionCard("matchers")
+                                    }}
+                                    className={styles["btn-padding-right-0"]}
+                                >
+                                    添加/调试
+                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <div className={styles["matchers-heard"]}>
+                            <div className={styles["matchers-heard-left"]}>
+                                <Form.Item name='filterMode' noStyle>
+                                    <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
+                                </Form.Item>
+                                {filterMode === "onlyMatch" && (
+                                    <Form.Item name='hitColor' noStyle>
+                                        <ColorSelect size='small' />
+                                    </Form.Item>
+                                )}
+                            </div>
+                            <Form.Item name='matchersCondition' noStyle>
+                                <YakitRadioButtons
+                                    buttonStyle='solid'
+                                    options={matchersConditionOptions}
+                                    size='small'
+                                />
+                            </Form.Item>
+                        </div>
+                        <MatchersList
+                            matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
+                            onAdd={() => onAddMatchingAndExtractionCard("matchers")}
+                            onRemove={onRemoveMatcher}
+                            onEdit={onEditMatcher}
+                        />
+                    </Panel>
+                    <Panel
+                        header={
+                            <div className={styles["matchers-panel"]}>
+                                数据提取器<div className={styles["matchers-number"]}>{extractorList?.length}</div>
+                            </div>
+                        }
+                        key='数据提取器'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    className='button-text-danger'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const restValue = {
+                                            extractors: []
+                                        }
+                                        onReset(restValue)
+                                    }}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    size='small'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
+                                            onSwitchCollapse([...activeKey, "数据提取器"])
+                                        }
+                                        onAddMatchingAndExtractionCard("extractors")
+                                    }}
+                                    className={styles["btn-padding-right-0"]}
+                                >
+                                    添加/调试
+                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <ExtractorsList
+                            extractorValue={{extractorList}}
+                            onAdd={() => onAddMatchingAndExtractionCard("extractors")}
+                            onRemove={onRemoveExtractors}
+                            onEdit={onEditExtractors}
+                        />
                     </Panel>
                     <Panel
                         header='并发配置'
@@ -790,126 +912,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             }}
                         </Form.List>
                     </Panel>
-                    <Panel
-                        header={
-                            <div className={styles["matchers-panel"]}>
-                                匹配器<div className={styles["matchers-number"]}>{matchersList?.length}</div>
-                            </div>
-                        }
-                        key='匹配器'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    className='button-text-danger'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const restValue = {
-                                            matchers: [],
-                                            filterMode: "drop",
-                                            hitColor: "red",
-                                            matchersCondition: "and"
-                                        }
-                                        onReset(restValue)
-                                    }}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    size='small'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
-                                            onSwitchCollapse([...activeKey, "匹配器"])
-                                        }
-                                        onAddMatchingAndExtractionCard("matchers")
-                                    }}
-                                    className={styles["btn-padding-right-0"]}
-                                >
-                                    添加/调试
-                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <div className={styles["matchers-heard"]}>
-                            <div className={styles["matchers-heard-left"]}>
-                                <Form.Item name='filterMode' noStyle>
-                                    <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
-                                </Form.Item>
-                                {filterMode === "onlyMatch" && (
-                                    <Form.Item name='hitColor' noStyle>
-                                        <ColorSelect size='small' />
-                                    </Form.Item>
-                                )}
-                            </div>
-                            <Form.Item name='matchersCondition' noStyle>
-                                <YakitRadioButtons
-                                    buttonStyle='solid'
-                                    options={matchersConditionOptions}
-                                    size='small'
-                                />
-                            </Form.Item>
-                        </div>
-                        <MatchersList
-                            matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
-                            onAdd={() => onAddMatchingAndExtractionCard("matchers")}
-                            onRemove={onRemoveMatcher}
-                            onEdit={onEditMatcher}
-                        />
-                    </Panel>
-                    <Panel
-                        header={
-                            <div className={styles["matchers-panel"]}>
-                                数据提取器<div className={styles["matchers-number"]}>{extractorList?.length}</div>
-                            </div>
-                        }
-                        key='数据提取器'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    className='button-text-danger'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const restValue = {
-                                            extractors: []
-                                        }
-                                        onReset(restValue)
-                                    }}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    size='small'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
-                                            onSwitchCollapse([...activeKey, "数据提取器"])
-                                        }
-                                        onAddMatchingAndExtractionCard("extractors")
-                                    }}
-                                    className={styles["btn-padding-right-0"]}
-                                >
-                                    添加/调试
-                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]} />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <ExtractorsList
-                            extractorValue={{extractorList}}
-                            onAdd={() => onAddMatchingAndExtractionCard("extractors")}
-                            onRemove={onRemoveExtractors}
-                            onEdit={onEditExtractors}
-                        />
-                    </Panel>
                 </Collapse>
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
@@ -1087,12 +1089,15 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
                 })}
             >
                 <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
-                <HollowLightningBoltIcon
-                    className={styles["hollow-lightningBolt-icon"]}
-                    onClick={() => {
-                        onEdit()
-                    }}
-                />
+
+                <Tooltip title='调试'>
+                    <HollowLightningBoltIcon
+                        className={styles["hollow-lightningBolt-icon"]}
+                        onClick={() => {
+                            onEdit()
+                        }}
+                    />
+                </Tooltip>
                 <TerminalPopover
                     popoverContent={popoverContent}
                     visiblePopover={visiblePopover}
@@ -1149,7 +1154,7 @@ const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
             }}
         >
             <span ref={terminalIconRef} style={{height: 24, lineHeight: "16px"}}>
-                <TerminalIcon className={styles["terminal-icon"]} />
+                <EyeIcon className={styles["terminal-icon"]} />
             </span>
         </YakitPopover>
     )

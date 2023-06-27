@@ -1701,3 +1701,27 @@ const SolidChevronDown = () => (
 export const SolidChevronDownIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidChevronDown} {...props} />
 }
+
+const Eye = () => (
+    <svg width='13' height='13' viewBox='0 0 13 13' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8 6.00293C8 6.83136 7.32843 7.50293 6.5 7.50293C5.67157 7.50293 5 6.83136 5 6.00293C5 5.1745 5.67157 4.50293 6.5 4.50293C7.32843 4.50293 8 5.1745 8 6.00293Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M1.72913 6.00291C2.36626 3.97437 4.2614 2.50293 6.50022 2.50293C8.73905 2.50293 10.6342 3.97439 11.2713 6.00295C10.6342 8.03149 8.73904 9.50293 6.50023 9.50293C4.2614 9.50293 2.36625 8.03148 1.72913 6.00291Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:eye 眼睛
+ */
+export const EyeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Eye} {...props} />
+}
