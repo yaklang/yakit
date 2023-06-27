@@ -38,6 +38,7 @@ import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -463,7 +464,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             setFlow(undefined)
             return
         }
-        setFold(false)
+        getRemoteValue("IsFoldValue").then((data) => {
+            if (!data) {
+                return
+            }
+            const is:boolean = JSON.parse(data).is
+            setFold(is)
+        })
         setFlow(undefined)
         setLoading(true)
         ipcRenderer
@@ -576,7 +583,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Tooltip placement='top' title='向右收起'>
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
-                                                    onClick={() => setFold(true)}
+                                                    onClick={() => {
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is:true}))
+                                                        setFold(true)
+                                                    }}
                                                 />
                                             </Tooltip>
                                         </div>
@@ -636,7 +646,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             )}
                         >
                             <Tooltip placement='top' title='向左展开'>
-                                <SideBarCloseIcon className={styles["fold-icon"]} onClick={() => setFold(false)} />
+                                <SideBarCloseIcon className={styles["fold-icon"]} onClick={() => {
+                                        setRemoteValue("IsFoldValue", JSON.stringify({is:false}))
+                                        setFold(false)
+                                    }} />
                             </Tooltip>
                         </div>
                     </div>
