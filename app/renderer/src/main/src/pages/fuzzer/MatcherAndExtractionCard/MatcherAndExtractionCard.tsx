@@ -442,7 +442,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         })
         const isSmallMode: boolean = useMemo(() => {
             if (width) {
-                return width < 500
+                return width < 550
             } else {
                 return false
             }
@@ -859,13 +859,20 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                                                     修改名称
                                                 </div>
                                                 <YakitInput
-                                                    value={extractorItem.Name || `ID ${index}`}
+                                                    defaultValue={extractorItem.Name}
                                                     onChange={(e) => {
                                                         if (e.target.value.length > 20) {
                                                             yakitNotify("error", "字符长度不超过20")
                                                             return
                                                         }
                                                         onEdit("Name", e.target.value, index)
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        if (e.target.value.length > 20) {
+                                                            yakitNotify("error", "字符长度不超过20")
+                                                            return
+                                                        }
+                                                        onEdit("Name", e.target.value || `ID ${index}`, index)
                                                     }}
                                                     maxLength={20}
                                                 />
@@ -947,6 +954,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                             onChange={(value) => onEdit("RegexpMatchGroup", [value])}
                             type='horizontal'
                             min={0}
+                            size='small'
                         />
                     </LabelNodeItem>
                 )
@@ -1094,7 +1102,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                     </div>
                 </div>
             }
-            placement='bottomLeft'
+            placement='bottom'
             visible={isShowColor}
             onVisibleChange={setIsShowColor}
         >

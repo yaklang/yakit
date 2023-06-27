@@ -1063,6 +1063,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
         const newValue: AdvancedConfigValueProps = {
             ...val,
+            hitColor:val.hitColor||'red',
             forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
@@ -1475,7 +1476,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         showMatcherAndExtraction={showMatcherAndExtraction}
                                         setShowMatcherAndExtraction={setShowMatcherAndExtraction}
                                         matcherValue={{
-                                            hitColor: advancedConfigValue.hitColor,
+                                            hitColor: advancedConfigValue.hitColor || "red",
                                             matchersCondition: advancedConfigValue.matchersCondition,
                                             matchersList: advancedConfigValue.matchers,
                                             filterMode: advancedConfigValue.filterMode
@@ -1489,7 +1490,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             setAdvancedConfigValue({
                                                 ...advancedConfigValue,
                                                 filterMode: matcher.filterMode,
-                                                hitColor: matcher.hitColor,
+                                                hitColor: matcher.hitColor||'red',
                                                 matchersCondition: matcher.matchersCondition,
                                                 matchers: matcher.matchersList,
                                                 extractors: extractor.extractorList
@@ -1992,12 +1993,12 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
             return p
         }, [showMatcherAndExtraction])
-        const extraEditorProps=useCreation(()=>{
-           const overlayWidget={
-            onAddOverlayWidget:(editor, isShow)=>onAddOverlayWidget(editor, fuzzerResponse, isShow)
-           }
-           return overlayWidget
-        },[fuzzerResponse])
+        const extraEditorProps = useCreation(() => {
+            const overlayWidget = {
+                onAddOverlayWidget: (editor, isShow) => onAddOverlayWidget(editor, fuzzerResponse, isShow)
+            }
+            return overlayWidget
+        }, [fuzzerResponse])
         return (
             <>
                 <YakitResizeBox

@@ -259,6 +259,9 @@
         .ant-popover-inner-content {
             padding: 0;
         }
+        .ant-popover-arrow{
+            top: initial !important;
+        }
     }
     .color-select-content {
         display: flex;

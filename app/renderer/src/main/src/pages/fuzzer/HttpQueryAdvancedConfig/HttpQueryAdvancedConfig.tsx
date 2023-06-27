@@ -934,7 +934,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         onSetValue({
                             ...v,
                             filterMode: matcher.filterMode,
-                            hitColor: matcher.hitColor,
+                            hitColor: matcher.hitColor||'red',
                             matchersCondition: matcher.matchersCondition,
                             matchers: matcher.matchersList,
                             extractors: extractor.extractorList

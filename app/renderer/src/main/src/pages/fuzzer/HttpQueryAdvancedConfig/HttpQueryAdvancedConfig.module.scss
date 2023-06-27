@@ -126,10 +126,11 @@
             }
         }
         .variable-list-panel {
-            border-bottom: 0;
+            border-bottom: 0 !important;
             &:hover {
                 .variable-list-remove {
                     display: flex;
+                    color: var(--yakit-body-text-color);
                 }
             }
             .variable-list-remove {
@@ -275,6 +276,11 @@
                 color: var(--yakit-body-text-color);
                 @include HTTPFuzzerPageShare.base-icon-card;
             }
+            .hollow-lightningBolt-icon {
+                svg {
+                    stroke-width: 0.8px;
+                }
+            }
             .pencilAlit-icon-disabled {
                 color: var(--yakit-disable-text-color);
                 svg {
@@ -293,7 +299,8 @@
         text-align: center;
         color: var(--yakit-disable-text-color);
         font-size: 11px;
-        margin-top: 12px;
+        padding-top: 12px;
+        padding-bottom: 24px;
     }
 }
 
