@@ -25,10 +25,10 @@ import {
     publicConvertDatabase,
     publicExchangeProps,
     routeToMenu,
-    routeInfoToKey,
     publicUnionMenus,
     menusConvertKey,
-    DownloadOnlinePluginByScriptNamesResponse
+    DownloadOnlinePluginByScriptNamesResponse,
+    routeConvertKey
 } from "./utils"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {YakScript} from "@/pages/invoker/schema"
@@ -154,7 +154,11 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                 const menu: PublicRouteMenuProps = {...item, children: []}
                                 if (item.children && item.children.length > 0) {
                                     for (let subitem of item.children) {
-                                        if (!filters.includes(`${item.label}-${subitem.label}`)) {
+                                        const menuname =
+                                            subitem.page === YakitRoute.Plugin_OP
+                                                ? subitem.yakScripName || subitem.label
+                                                : subitem.label
+                                        if (!filters.includes(`${item.label}-${menuname}`)) {
                                             menu.children?.push({...subitem})
                                         }
                                     }
@@ -273,6 +277,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 const lastId = +i.Id || 0
                 // 插件不存在于本地数据库中
                 if (lastId === 0) {
+                    updateSingleMenu({pluginName: i.ScriptName, pluginId: 0, headImg: ""}, source)
                     onOpenDownModal(info, source)
                     return
                 }
@@ -296,7 +301,8 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 data[info.pluginName as any] = info.pluginId
                 setPluginToId(data)
             } else {
-                pluginMenu.forEach((item) => {
+                const menus = [...pluginMenu]
+                menus.forEach((item) => {
                     ;(item.children || []).forEach((subItem) => {
                         if (subItem.yakScripName === info.pluginName) {
                             subItem.yakScriptId = info.pluginId
@@ -304,7 +310,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         }
                     })
                 })
-                setPluginMenu(pluginMenu)
+                setPluginMenu(menus)
             }
         }
     )
@@ -336,7 +342,8 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     /** 插件菜单未下载提示框 */
     const onOpenDownModal = useMemoizedFn((menuItem: RouteToPageProps, source: string) => {
         if (!menuItem.pluginName) return
-        const showName = routeToName.current.get(routeInfoToKey(menuItem)) || menuItem.pluginName
+        const showName =
+            routeToName.current.get(routeConvertKey(menuItem.route, menuItem.pluginName || "")) || menuItem.pluginName
         const m = YakitModalConfirm({
             width: 420,
             closable: false,
@@ -373,11 +380,11 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         }
     })
     // 展开菜单的点击回调
-    const onClickMenu = useMemoizedFn((route: RouteToPageProps) => {
+    const onClickMenu = useMemoizedFn((route: RouteToPageProps, source: string) => {
         if (route.route !== YakitRoute.Plugin_OP) onMenuSelect(route)
         else {
             if (!route.pluginName) return
-            onCheckPlugin(route, "route")
+            onCheckPlugin(route, source)
         }
     })
 
@@ -489,7 +496,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         <MenuMode
                             mode={defaultMenu[activeMenu]?.label}
                             pluginToId={pluginToId}
-                            onMenuSelect={onClickMenu}
+                            onMenuSelect={(route) => onClickMenu(route, "route")}
                         />
                     )}
 
@@ -503,61 +510,66 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                             <MenuPlugin
                                 loading={loading}
                                 pluginList={pluginMenu}
-                                onMenuSelect={onClickMenu}
+                                onMenuSelect={(route) => onClickMenu(route, "plugin")}
                                 onRestore={() => {
                                     isInitRef.current = true
                                 }}
                             />
                         )}
-                        {defaultMenu[activeMenu]?.label !== "插件" && (
-                            <div className={styles["tool-body"]}>
-                                <div className={styles["tool-container"]}>
-                                    <div
-                                        className={
-                                            activeTool === "codec"
-                                                ? styles["tool-nohidden-container"]
-                                                : styles["tool-hidden-container"]
-                                        }
-                                    >
-                                        <MenuCodec />
-                                    </div>
-                                    <div
-                                        className={
-                                            activeTool === "dnslog"
-                                                ? styles["tool-nohidden-container"]
-                                                : styles["tool-hidden-container"]
-                                        }
-                                    >
-                                        <MenuDNSLog />
-                                    </div>
+
+                        <div
+                            className={
+                                defaultMenu[activeMenu]?.label !== "插件"
+                                    ? styles["tool-body"]
+                                    : styles["hide-tool-body"]
+                            }
+                        >
+                            <div className={styles["tool-container"]}>
+                                <div
+                                    className={
+                                        activeTool === "codec"
+                                            ? styles["tool-nohidden-container"]
+                                            : styles["tool-hidden-container"]
+                                    }
+                                >
+                                    <MenuCodec />
                                 </div>
-                                <div className={styles["switch-op-wrapper"]}>
-                                    <div className={styles["border-wrapper"]}></div>
-                                    <div
-                                        className={classNames(styles["tab-bar"], {
-                                            [styles["active-tab-bar"]]: activeTool === "codec"
-                                        })}
-                                        onClick={() => {
-                                            if (activeTool === "codec") return
-                                            setActiveTool("codec")
-                                        }}
-                                    >
-                                        Codec
-                                    </div>
-                                    <div
-                                        className={classNames(styles["tab-bar"], {
-                                            [styles["active-tab-bar"]]: activeTool === "dnslog"
-                                        })}
-                                        onClick={() => {
-                                            if (activeTool === "dnslog") return
-                                            setActiveTool("dnslog")
-                                        }}
-                                    >
-                                        DNSLog
-                                    </div>
+                                <div
+                                    className={
+                                        activeTool === "dnslog"
+                                            ? styles["tool-nohidden-container"]
+                                            : styles["tool-hidden-container"]
+                                    }
+                                >
+                                    <MenuDNSLog />
                                 </div>
                             </div>
-                        )}
+                            <div className={styles["switch-op-wrapper"]}>
+                                <div className={styles["border-wrapper"]}></div>
+                                <div
+                                    className={classNames(styles["tab-bar"], {
+                                        [styles["active-tab-bar"]]: activeTool === "codec"
+                                    })}
+                                    onClick={() => {
+                                        if (activeTool === "codec") return
+                                        setActiveTool("codec")
+                                    }}
+                                >
+                                    Codec
+                                </div>
+                                <div
+                                    className={classNames(styles["tab-bar"], {
+                                        [styles["active-tab-bar"]]: activeTool === "dnslog"
+                                    })}
+                                    onClick={() => {
+                                        if (activeTool === "dnslog") return
+                                        setActiveTool("dnslog")
+                                    }}
+                                >
+                                    DNSLog
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className={styles["expand-wrapper"]}>

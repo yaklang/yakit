@@ -90,7 +90,10 @@ const filterMenus = (menus: SendDatabaseFirstMenuProps[], local: PublicRouteMenu
         if (item.children && item.children.length > 0) {
             const names = userMenuName[item.label] || []
             for (let subItem of item.children) {
-                if (!names.includes(subItem.label)) filterNames.push(`${item.label}-${subItem.label}`)
+                // 菜单项唯一名
+                const menuname =
+                    subItem.page === YakitRoute.Plugin_OP ? subItem.yakScripName || subItem.label : subItem.label
+                if (!names.includes(menuname)) filterNames.push(`${item.label}-${menuname}`)
             }
         }
     }

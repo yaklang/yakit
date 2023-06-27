@@ -1402,7 +1402,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             <PublicMenu
                                 onMenuSelect={extraOpenMenuPage}
                                 setRouteToLabel={(val) => {
-                                    console.log("routetolabel", val)
                                     val.forEach((value, key) => {
                                         routeKeyToLabel.current.set(key, value)
                                     })
@@ -1412,7 +1411,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             <HeardMenu
                                 onRouteMenuSelect={extraOpenMenuPage}
                                 setRouteToLabel={(val) => {
-                                    console.log("routetolabel", val)
                                     val.forEach((value, key) => {
                                         routeKeyToLabel.current.set(key, value)
                                     })

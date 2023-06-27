@@ -101,9 +101,11 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                         return i.DNSType === "A"
                     }
                     return true
-                }).map((i, index) => {
-                    return {...i, Index: index}
                 })
+                    .map((i, index) => {
+                        return {...i, Index: index}
+                    })
+                    .reverse()
 
                 if (lists.length <= 3) {
                     setLastRecords(lists.slice(0, 3))

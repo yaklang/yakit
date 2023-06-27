@@ -9,6 +9,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 
+import classNames from "classnames"
 import styles from "./MenuCodec.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -38,14 +39,36 @@ const DecodeMenuInfo: YakitMenuItemProps[] = [
 ]
 
 export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
+    const [avtiveKey, setActiveKey] = useState<string>("")
+
     const [codeShow, setCodeShow] = useState<boolean>(false)
     const codeMenu = useMemo(
-        () => <YakitMenu width={245} selectedKeys={[]} data={CodeMenuInfo} onClick={({key}) => onCodec(key)} />,
+        () => (
+            <YakitMenu
+                width={245}
+                selectedKeys={[]}
+                data={CodeMenuInfo}
+                onClick={({key}) => {
+                    setActiveKey("code")
+                    onCodec(key)
+                }}
+            />
+        ),
         []
     )
     const [decodeShow, setDecodeShow] = useState<boolean>(false)
     const decodeMenu = useMemo(
-        () => <YakitMenu width={142} selectedKeys={[]} data={DecodeMenuInfo} onClick={({key}) => onCodec(key)} />,
+        () => (
+            <YakitMenu
+                width={142}
+                selectedKeys={[]}
+                data={DecodeMenuInfo}
+                onClick={({key}) => {
+                    setActiveKey("decode")
+                    onCodec(key)
+                }}
+            />
+        ),
         []
     )
 
@@ -92,12 +115,14 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     overlayClassName={styles["codec-menu-popover"]}
                     overlayStyle={{paddingTop: 2}}
                     placement='bottomLeft'
-                    trigger={"click"}
                     content={decodeMenu}
                     visible={codeShow}
                     onVisibleChange={(visible) => setCodeShow(visible)}
                 >
-                    <YakitButton type='primary' onClick={(e) => e.preventDefault()}>
+                    <YakitButton
+                        type={avtiveKey === "decode" ? "primary" : "outline2"}
+                        onClick={(e) => e.preventDefault()}
+                    >
                         解码
                         {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
                     </YakitButton>
@@ -106,12 +131,14 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     overlayClassName={styles["codec-menu-popover"]}
                     overlayStyle={{paddingTop: 2}}
                     placement='bottomLeft'
-                    trigger={"click"}
                     content={codeMenu}
                     visible={decodeShow}
                     onVisibleChange={(visible) => setDecodeShow(visible)}
                 >
-                    <YakitButton type='outline2' onClick={(e) => e.preventDefault()}>
+                    <YakitButton
+                        type={avtiveKey === "code" ? "primary" : "outline2"}
+                        onClick={(e) => e.preventDefault()}
+                    >
                         编码
                         {decodeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
                     </YakitButton>
@@ -126,7 +153,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                 />
                 <div className={styles["input-textarea-copy"]}>
                     <CopyComponents
-                        className={styles["copy-icon-style"]}
+                        className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !question})}
                         copyText={question}
                         iconColor={!!question ? "#85899e" : "#ccd2de"}
                     />
@@ -147,7 +174,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                 />
                 <div className={styles["input-textarea-copy"]}>
                     <CopyComponents
-                        className={styles["copy-icon-style"]}
+                        className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !answer})}
                         copyText={answer}
                         iconColor={!!answer ? "#85899e" : "#ccd2de"}
                     />

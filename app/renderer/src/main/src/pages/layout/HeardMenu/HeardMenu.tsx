@@ -59,12 +59,13 @@ import {
     DownloadOnlinePluginByScriptNamesResponse,
     keyToRouteInfo,
     menusConvertKey,
+    routeConvertKey,
     routeInfoToKey,
     routeToMenu
 } from "../publicMenu/utils"
 
-import style from "./HeardMenu.module.scss"
 import classNames from "classnames"
+import style from "./HeardMenu.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -131,7 +132,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     /** 登录用户信息 */
     const {userInfo} = useStore()
     useEffect(() => {
-        setRouteMenu(DefaultMenu)
+        setRouteMenu([...DefaultMenu])
         setSubMenuData(DefaultMenu[0].children || [])
         setMenuId(DefaultMenu[0].label)
         // 当为企业简易版
@@ -142,8 +143,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 currentMenuList = currentMenuList.filter((item) => item.label !== "插件")
             }
             setRouteMenu(currentMenuList)
-            setSubMenuData(currentMenuList[0].children || [])
-            setMenuId(currentMenuList[0].label)
+            setSubMenuData(currentMenuList[0]?.children || [])
+            setMenuId(currentMenuList[0]?.label)
             return
         } else {
             // 获取软件内菜单模式
@@ -156,8 +157,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     }, [])
 
-    // 社区版本才会获取新的 menu
-    // 这个地方的逻辑后面将变成只有企业版才会获取新的menu
     useEffect(() => {
         // 除简易版本外 更新菜单
         if (!isEnpriTraceAgent()) {
@@ -181,7 +180,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             .invoke("GetAllNavigationItem", {Mode: menuMode})
             .then((res: {Data: DatabaseFirstMenuProps[]}) => {
                 const database = databaseConvertData(res.Data || [])
-                console.log("database", database)
 
                 // 过滤掉代码中无效菜单项后的用户数据
                 const caches: DatabaseMenuItemProps[] = []
@@ -227,20 +225,24 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         filterLocal = [...DefaultMenu]
                     })
                     .finally(async () => {
-                        const allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-                        if (allowModify === "true") filterLocal = []
+                        let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
+                        try {
+                            allowModify = JSON.parse(allowModify) || {}
+                        } catch (error) {
+                            allowModify = {}
+                        }
+                        if (!!allowModify[menuMode]) filterLocal = []
 
                         // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
                         const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
-                        console.log(1111, menus, isUpdate, pluginName)
 
                         if (isInitRef.current) {
                             isInitRef.current = false
                             if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
                             else {
                                 setRouteMenu(menus)
-                                setSubMenuData(menus[0].children || [])
-                                setMenuId(menus[0].label)
+                                setSubMenuData(menus[0]?.children || [])
+                                setMenuId(menus[0]?.label || "")
                                 setTimeout(() => setLoading(false), 300)
                             }
                             if (isUpdate) updateMenus(menus)
@@ -248,8 +250,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             if (isUpdate) updateMenus(menus)
                             else setTimeout(() => setLoading(false), 300)
                             setRouteMenu(menus)
-                            setSubMenuData(menus[0].children || [])
-                            setMenuId(menus[0].label)
+                            setSubMenuData(menus[0]?.children || [])
+                            setMenuId(menus[0]?.label || "")
                         }
                     })
             })
@@ -290,8 +292,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         }
                     })
                     setRouteMenu(menus)
-                    setSubMenuData(menus[0].children || [])
-                    setMenuId(menus[0].label)
+                    setSubMenuData(menus[0]?.children || [])
+                    setMenuId(menus[0]?.label || "")
                 }
             })
             .catch((err) => {
@@ -373,6 +375,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 const lastId = +i.Id || 0
                 // 插件不存在于本地数据库中
                 if (lastId === 0) {
+                    updateSingleMenu({pluginName: i.ScriptName, pluginId: 0})
                     onOpenDownModal(info)
                     return
                 }
@@ -390,19 +393,21 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     })
     /** 更新前端菜单数据(单项) */
     const updateSingleMenu = useMemoizedFn((info: {pluginName: string; pluginId: number}) => {
-        routeMenu.forEach((item) => {
+        const menus = [...routeMenu]
+        menus.forEach((item) => {
             ;(item.children || []).forEach((subItem) => {
                 if (subItem.yakScripName === info.pluginName) {
                     subItem.yakScriptId = info.pluginId
                 }
             })
         })
-        setRouteMenu(routeMenu)
+        setRouteMenu(menus)
     })
     /** 插件菜单未下载提示框 */
     const onOpenDownModal = useMemoizedFn((menuItem: RouteToPageProps) => {
         if (!menuItem.pluginName) return
-        const showName = routeToName.current.get(routeInfoToKey(menuItem)) || menuItem.pluginName
+        const showName =
+            routeToName.current.get(routeConvertKey(menuItem.route, menuItem.pluginName || "")) || menuItem.pluginName
         const m = YakitModalConfirm({
             width: 420,
             closable: false,
@@ -428,7 +433,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const singleDownloadPlugin = useMemoizedFn((menuItem: RouteToPageProps, callback?: () => any) => {
         ipcRenderer
             .invoke("DownloadOnlinePluginByScriptNames", {
-                ScriptNames: menuItem.pluginName,
+                ScriptNames: [menuItem.pluginName],
                 Token: userInfo.token
             })
             .then((rsp: DownloadOnlinePluginByScriptNamesResponse) => {
@@ -493,8 +498,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onExpand = useMemoizedFn(() => {
         setIsExpand(true)
         if (!menuId && routeMenu.length > 0) {
-            setSubMenuData(routeMenu[0].children || [])
-            setMenuId(routeMenu[0].label || "")
+            setSubMenuData(routeMenu[0]?.children || [])
+            setMenuId(routeMenu[0]?.label || "")
         }
     })
     /** 菜单模式切换 */
@@ -521,9 +526,32 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const onRestoreMenu = useMemoizedFn(() => {
         ipcRenderer
             .invoke("DeleteAllNavigation", {Mode: patternMenu})
-            .then(() => {
-                // 更新菜单
-                ipcRenderer.invoke("change-main-menu")
+            .then(async () => {
+                // 初始化标志重置
+                isInitRef.current = true
+                // 删除缓存中用户删除的系统内定菜单记录
+                let deleteCache: any = await getRemoteValue(RemoteGV.UserDeleteMenu)
+                try {
+                    deleteCache = JSON.parse(deleteCache) || {}
+                } catch (error) {
+                    deleteCache = {}
+                }
+                delete deleteCache[patternMenu]
+
+                setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(deleteCache)).finally(async () => {
+                    // 取消不可更改菜单的标记(JSON导入的菜单无法更新系统新页面)
+                    let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
+                    try {
+                        allowModify = JSON.parse(allowModify) || {}
+                    } catch (error) {
+                        allowModify = {}
+                    }
+                    delete allowModify[patternMenu]
+                    setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))
+                    setTimeout(() => {
+                        ipcRenderer.invoke("change-main-menu")
+                    }, 50)
+                })
             })
             .catch((e: any) => {
                 failed(`删除菜单失败:${e}`)
@@ -568,14 +596,22 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
                     ipcRenderer
                         .invoke("AddToNavigation", {Data: menuLists})
-                        .then(() => {
+                        .then(async () => {
+                            let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
+                            try {
+                                allowModify = JSON.parse(allowModify) || {}
+                            } catch (error) {
+                                allowModify = {}
+                            }
+                            allowModify[patternMenu] = 1
                             // 缓存用户菜单数据的来源，防止菜单初始化时的对比操作改变菜单
-                            setRemoteValue(RemoteGV.IsImportJSONMenu, "true")
+                            setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))
                             setVisibleImport(false)
+                            // isError-标识标识用户有部分数据无法转换为菜单
                             if (isError) yakitNotify("error", "转换过程中有部分数据错误，已自动丢弃")
                             setRouteMenu(menus)
-                            setSubMenuData(menus[0].children || [])
-                            setMenuId(menus[0].label)
+                            setSubMenuData(menus[0]?.children || [])
+                            setMenuId(menus[0]?.label || "")
                         })
                         .catch((err) => {
                             yakitNotify("error", "保存菜单失败：" + err)

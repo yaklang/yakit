@@ -445,12 +445,18 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 ipcRenderer
                     .invoke("AddToNavigation", {Data: menus})
                     .then((rsp) => {
-                        console.log("custom", menus)
                         const cache = {...deleteCache.current}
                         cache[isCommunityEdition() ? "public" : patternMenu] = names || []
-                        setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(cache)).finally(() => {
+                        setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(cache)).finally(async () => {
                             onClose()
-                            setRemoteValue(RemoteGV.IsImportJSONMenu, "")
+                            let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
+                            try {
+                                allowModify = JSON.parse(allowModify) || {}
+                            } catch (error) {
+                                allowModify = {}
+                            }
+                            delete allowModify[patternMenu]
+                            setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))
                             if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
                             else ipcRenderer.invoke("change-main-menu")
                         })

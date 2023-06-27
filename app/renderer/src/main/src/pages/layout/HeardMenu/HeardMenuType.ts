@@ -197,11 +197,15 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
         }
 
         const {plugins, menus} = databaseConvertLocal(referenceMenu, item.children || [])
-        newMenu.children = menus
+        newMenu.children = [...menus]
         newMenus.push(newMenu)
         pluginName = pluginName.concat(plugins)
         delete localToMenus[item.menuName]
     }
+
+    // 将本地菜单数据中新增数据进行末尾填充
+    for (let item of Object.values(localToMenus)) newMenus.push(item)
+
     return {
         menus: newMenus,
         isUpdate,
@@ -218,7 +222,7 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
 const databaseConvertLocal = (local: EnhancedPrivateRouteMenuProps[], database: DatabaseMenuItemProps[]) => {
     // 本地数据转换为对应关系对象
     const localToMenus: Record<string, EnhancedPrivateRouteMenuProps> = {}
-    for (let item of local) localToMenus[item.label] = item
+    for (let item of local) localToMenus[item.menuName] = item
 
     const plugins: string[] = []
     const menus: EnhancedPrivateRouteMenuProps[] = []

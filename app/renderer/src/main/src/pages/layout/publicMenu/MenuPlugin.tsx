@@ -10,7 +10,7 @@ import {RouteToPageProps} from "./PublicMenu"
 import {LoadingOutlined} from "@ant-design/icons"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
-import {setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./MenuPlugin.module.scss"
@@ -49,11 +49,23 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
             .invoke("DeleteAllNavigation", {Mode: CodeGV.PublicMenuModeValue})
             .then(() => {
                 restoreCallback()
-                setRemoteValue(RemoteGV.UserDeleteMenu, "").finally(() => {
-                    setTimeout(() => {
-                        ipcRenderer.invoke("refresh-public-menu")
-                    }, 50)
-                })
+                let deleteCache: any = {}
+                getRemoteValue(RemoteGV.UserDeleteMenu)
+                    .then((val) => {
+                        if (!!val) {
+                            try {
+                                deleteCache = JSON.parse(val) || {}
+                                delete deleteCache[CodeGV.PublicMenuModeValue]
+                            } catch (error) {}
+                        }
+                    })
+                    .finally(() => {
+                        setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(deleteCache)).finally(() => {
+                            setTimeout(() => {
+                                ipcRenderer.invoke("refresh-public-menu")
+                            }, 50)
+                        })
+                    })
             })
             .catch((e: any) => {
                 yakitNotify("error", `更新菜单失败:${e}`)

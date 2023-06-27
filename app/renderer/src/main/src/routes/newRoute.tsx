@@ -74,6 +74,7 @@ import {
     PrivateOutlineSubDomainCollectionIcon,
     PrivateOutlineTCPPortLogIcon,
     PrivateOutlineWebFuzzerIcon,
+    PrivateOutlineWebsiteTreeIcon,
     PrivateOutlineWebsocketFuzzerIcon,
     PrivateSolidBasicCrawlerIcon,
     PrivateSolidBatchPluginIcon,
@@ -102,6 +103,7 @@ import {
     PrivateSolidSubDomainCollectionIcon,
     PrivateSolidTCPPortLogIcon,
     PrivateSolidWebFuzzerIcon,
+    PrivateSolidWebsiteTreeIcon,
     PrivateSolidWebsocketFuzzerIcon
 } from "./privateIcon"
 import {PluginStore} from "@/pages/yakitStore/store/PluginStore"
@@ -218,8 +220,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "plugin-op": {label: "插件"},
     brute: {label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"},
     "plugin-store": {label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件"},
-    "plugin-owner": {label: "我的"},
-    "plugin-local": {label: "本地"},
+    "plugin-owner": {label: "我的插件"},
+    "plugin-local": {label: "本地插件"},
     "batch-executor-page-ex": {label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测"},
     dnslog: {label: "DNSLog", describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"},
     "icmp-sizelog": {label: "ICMP-SizeLog", describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"},
@@ -983,8 +985,8 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     },
     [YakitRoute.WebsiteTree]: {
         page: YakitRoute.WebsiteTree,
-        icon: <PrivateOutlineDomainIcon />,
-        hoverIcon: <PrivateSolidDomainIcon />,
+        icon: <PrivateOutlineWebsiteTreeIcon />,
+        hoverIcon: <PrivateSolidWebsiteTreeIcon />,
         ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]
     },
     [YakitRoute.DB_HTTPHistory]: {

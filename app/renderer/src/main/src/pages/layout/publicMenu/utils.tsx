@@ -86,8 +86,8 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
     for (let item of local) {
         let child: EnhancedPublicRouteMenuProps[] = []
         if (item.children && item.children.length > 0)
-            child = item.children.map((item) => {
-                return {...item, menuName: item.label, children: undefined}
+            child = item.children.map((subitem) => {
+                return {...subitem, menuName: subitem.yakScripName || subitem.label, children: undefined}
             })
         localToMenus[item.label] = {...item, menuName: item.label, children: child}
     }
@@ -138,6 +138,10 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
         pluginName = pluginName.concat(plugins)
         delete localToMenus[item.menuName]
     }
+
+    // 将本地菜单数据中新增数据进行末尾填充
+    for (let item of Object.values(localToMenus)) newMenus.push(item)
+
     return {
         menus: newMenus,
         isUpdate,
@@ -173,8 +177,7 @@ const databaseConvertLocal = (local: EnhancedPublicRouteMenuProps[], database: D
     for (let localItem of Object.values(localToMenus)) {
         const info: EnhancedPublicRouteMenuProps = {
             ...localItem,
-            yakScriptId: 0,
-            yakScripName: ""
+            yakScriptId: 0
         }
         menus.push(info)
     }

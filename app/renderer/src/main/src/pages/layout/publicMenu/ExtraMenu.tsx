@@ -25,7 +25,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 onImportPlugin()
                 setImportMenuShow(false)
                 return
-            case "import-fuzzer":
+            case "import-share":
                 onImportShare()
                 setImportMenuShow(false)
                 return
@@ -45,8 +45,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         label: "导入插件"
                     },
                     {
-                        key: "import-fuzzer",
-                        label: "导入 WebFuzzer"
+                        key: "import-share",
+                        label: "导入分享数据"
                     }
                 ]}
                 onClick={({key}) => importMenuSelect(key)}
