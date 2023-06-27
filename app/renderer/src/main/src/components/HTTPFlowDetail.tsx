@@ -453,17 +453,20 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
+    const { id } = props
     const [flow, setFlow] = useState<HTTPFlow>()
+    const [isSelect,setIsSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(false)
     useEffect(() => {
-        if (!props.id) {
-            setFlow(undefined)
+        if (!id) {
+            setIsSelect(false)
             return
         }
+        setIsSelect(true)
         getRemoteValue("IsFoldValue").then((data) => {
             if (!data) {
                 return
@@ -474,7 +477,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setFlow(undefined)
         setLoading(true)
         ipcRenderer
-            .invoke("GetHTTPFlowById", {Id: props.id})
+            .invoke("GetHTTPFlowById", {Id: id})
             .then((i: HTTPFlow) => {
                 setFlow(i)
                 const existedExtraInfos: HTTPFlowInfoType[] = []
@@ -523,7 +526,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         return () => {
             setExistedInfoType([])
         }
-    }, [props.id])
+    }, [id])
 
     useEffect(() => {
         if (!infoType) {
@@ -543,7 +546,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         return col
     }, [existedInfoType.length, isFold])
 
-    return flow ? (
+    return isSelect ? (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
             <div className={styles["http-history-box"]}>
                 <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
