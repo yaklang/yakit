@@ -373,11 +373,34 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         })
         const onApplyConfirm = useMemoizedFn(() => {
             const matcherAndExtractor = onClearEmptyGroups()
+            if (onIsDuplicateName(matcherAndExtractor.newExtractorList)) return
             onSave(
                 {...matcher, matchersList: matcherAndExtractor.newMatchersList},
                 {...extractor, extractorList: matcherAndExtractor.newExtractorList}
             )
             onClose()
+        })
+        /**
+         * 提取器名称是否重名 并提示
+         * @returns bool
+         */
+        const onIsDuplicateName = useMemoizedFn((list: HTTPResponseExtractor[]) => {
+            let isDuplicateName = false
+            const names = list.map((e) => e.Name)
+            const nameLength = names.length
+            let newNames: string[] = []
+            for (let index = 0; index < nameLength; index++) {
+                const namesElement = names[index]
+                const n = newNames.findIndex((n) => n === namesElement)
+                if (n === -1) {
+                    newNames.push(namesElement)
+                } else {
+                    isDuplicateName = true
+                    yakitNotify("error", `【${namesElement}】名称重复，请修改后再应用`)
+                    break
+                }
+            }
+            return isDuplicateName
         })
         /**
          * @returns 返回过滤空值的Group的匹配器和提取器数据
@@ -825,6 +848,14 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
             extractorList: [...extractor.extractorList]
         })
     })
+    const onEditName = useMemoizedFn((e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const {value} = e.target
+        if (value.length > 20) {
+            yakitNotify("error", "字符长度不超过20")
+            return
+        }
+        onEdit("Name", value || `ID ${index}`, index)
+    })
     return (
         <div
             className={classNames("yakit-collapse", styles["matching-extraction-content"], {
@@ -861,18 +892,10 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                                                 <YakitInput
                                                     defaultValue={extractorItem.Name}
                                                     onChange={(e) => {
-                                                        if (e.target.value.length > 20) {
-                                                            yakitNotify("error", "字符长度不超过20")
-                                                            return
-                                                        }
-                                                        onEdit("Name", e.target.value, index)
+                                                        onEditName(e, index)
                                                     }}
                                                     onBlur={(e) => {
-                                                        if (e.target.value.length > 20) {
-                                                            yakitNotify("error", "字符长度不超过20")
-                                                            return
-                                                        }
-                                                        onEdit("Name", e.target.value || `ID ${index}`, index)
+                                                        onEditName(e, index)
                                                     }}
                                                     maxLength={20}
                                                 />

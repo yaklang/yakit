@@ -706,7 +706,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        console.log("httpParams", httpParams)
         ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
     })
 
@@ -814,7 +813,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Count: count,
                 cellClassName: data.MatchedByMatcher ? `color-opacity-bg-${data.HitColor}` : ""
             } as FuzzerResponse
-            console.log("r", r)
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
