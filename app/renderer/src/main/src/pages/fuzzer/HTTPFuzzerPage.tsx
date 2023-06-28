@@ -81,11 +81,13 @@ import {
     defaultExtractorItem,
     defaultMatcherItem
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
+import _ from "lodash"
 
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
     advancedConfig: boolean
+    request: string
     advancedConfiguration: AdvancedConfigValueProps
 }
 
@@ -548,6 +550,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [historyTask])
 
     useEffect(() => {
+        if (props.shareContent) return
         // 缓存全局参数(将fuzz参数的缓存从本地文件替换到引擎数据库内)
         getLocalValue(WEB_FUZZ_PROXY).then((e) => {
             if (e) {
@@ -582,6 +585,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
     }, [])
     useEffect(() => {
+        if (props.shareContent) return
         setAdvancedConfigValue({
             ...advancedConfigValue,
             proxy,
@@ -591,6 +595,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [proxy, dnsServers, etcHosts])
 
     useEffect(() => {
+        if (props.shareContent) return
         setAdvancedConfigValue({
             ...advancedConfigValue,
             isHttps: !!props.isHttps,
@@ -625,11 +630,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 .then((data: {matcher: MatcherValueProps; extractor: ExtractorValueProps}) => {
                     setAdvancedConfigValue({
                         ...advancedConfigValue,
-                        filterMode: data.matcher.filterMode,
-                        hitColor: data.matcher.hitColor,
-                        matchersCondition: data.matcher.matchersCondition,
-                        matchers: data.matcher.matchersList,
-                        extractors: data.extractor.extractorList
+                        filterMode: data.matcher.filterMode || "drop",
+                        hitColor: data.matcher.hitColor || "red",
+                        matchersCondition: data.matcher.matchersCondition || "and",
+                        matchers: data.matcher.matchersList || [],
+                        extractors: data.extractor.extractorList || []
                     })
                 })
                 .finally(() => {
@@ -858,7 +863,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
     const onIsDropped = useMemoizedFn((data) => {
-        if (advancedConfigValue.matchers.length > 0) {
+        if (advancedConfigValue.matchers?.length > 0) {
             // 设置了 matchers
             const hit = data["MatchedByMatcher"] === true
             // 丢包的条件：
@@ -940,6 +945,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
             advancedConfig,
+            request: getRequest(),
             advancedConfiguration: advancedConfigValue
         }
         callback(params)
@@ -949,8 +955,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      */
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
         try {
+            const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
             setAdvancedConfig(shareContent.advancedConfig)
-            setAdvancedConfigValue(shareContent.advancedConfiguration)
+            setRequest(shareContent.request)
+            setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {
             yakitNotify("error", "获取的数据结构不是最新版,请分享人/被分享人更新版本")
         }
@@ -1061,7 +1069,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
         const newValue: AdvancedConfigValueProps = {
             ...val,
-            hitColor:val.hitColor||'red',
+            hitColor: val.hitColor || "red",
             forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
@@ -1132,6 +1140,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
         return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
     }, [successFuzzer])
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1152,6 +1161,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     setActiveType(activeType)
                     setActiveKey(activeKey)
                 }}
+                inViewportCurrent={inViewport}
             />
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
@@ -1300,7 +1310,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         {onlyOneResponse && (
                             <>
                                 {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
-                                {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers.length > 0 && (
+                                {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers?.length > 0 && (
                                     <YakitTag color='danger'>匹配失败</YakitTag>
                                 )}
                             </>
@@ -1488,7 +1498,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             setAdvancedConfigValue({
                                                 ...advancedConfigValue,
                                                 filterMode: matcher.filterMode,
-                                                hitColor: matcher.hitColor||'red',
+                                                hitColor: matcher.hitColor || "red",
                                                 matchersCondition: matcher.matchersCondition,
                                                 matchers: matcher.matchersList,
                                                 extractors: extractor.extractorList
@@ -2058,16 +2068,20 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         />
                     }
                     secondNode={
-                        <MatcherAndExtraction
-                            ref={ref}
-                            onClose={() => setShowMatcherAndExtraction(false)}
-                            onSave={onSaveMatcherAndExtraction}
-                            httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
-                            matcherValue={matcherValue}
-                            extractorValue={extractorValue}
-                            defActiveKey={activeKey}
-                            defActiveType={activeType}
-                        />
+                        showMatcherAndExtraction ? (
+                            <MatcherAndExtraction
+                                ref={ref}
+                                onClose={() => setShowMatcherAndExtraction(false)}
+                                onSave={onSaveMatcherAndExtraction}
+                                httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                matcherValue={matcherValue}
+                                extractorValue={extractorValue}
+                                defActiveKey={activeKey}
+                                defActiveType={activeType}
+                            />
+                        ) : (
+                            <></>
+                        )
                     }
                     secondNodeStyle={{display: showMatcherAndExtraction ? "" : "none", padding: 0}}
                     lineDirection='bottom'
