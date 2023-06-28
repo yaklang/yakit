@@ -1,0 +1,34 @@
+// webFuzzer该页面的一些公用样式
+%base-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+}
+%circle-number {
+    height: 16px;
+    padding: 2px 6px;
+    background: var(--yakit-background-color);
+    border-radius: 8px;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 12px;
+    color: var(--yakit-body-text-color);
+}
+@mixin base-icon-card {
+    @extend %base-icon;
+}
+
+@mixin circle-number {
+    @extend %circle-number;
+}

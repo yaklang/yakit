@@ -1217,7 +1217,7 @@ const LightningBolt = () => (
     </svg>
 )
 /**
- * @description:lightning-bolt 闪电
+ * @description:lightning-bolt 闪电 实心
  */
 export const LightningBoltIcon = (props: Partial<IconProps>) => {
     return <Icon component={LightningBolt} {...props} />
@@ -1582,10 +1582,22 @@ export const ExclamationOutlineIcon = (props: Partial<IconProps>) => {
 }
 
 const SideBarClose = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M9 3V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M16 15L13 12L16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M9 3V21' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M16 15L13 12L16 9'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
     </svg>
 )
 /**
@@ -1596,10 +1608,22 @@ export const SideBarCloseIcon = (props: Partial<IconProps>) => {
 }
 
 const SideBarOpen = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M9 3V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M14 9L17 12L14 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M9 3V21' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M14 9L17 12L14 15'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
     </svg>
 )
 /**
@@ -1607,4 +1631,97 @@ const SideBarOpen = () => (
  */
 export const SideBarOpenIcon = (props: Partial<IconProps>) => {
     return <Icon component={SideBarOpen} {...props} />
+}
+const Resizer = () => (
+    <svg width='9' height='10' viewBox='0 0 9 10' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M0.646484 8.64941L1.00004 9.00297L9.00004 1.00297L8.64648 0.649414L0.646484 8.64941ZM5.00004 9.00297L9.00004 5.00297L8.64648 4.64941L4.64648 8.64941L5.00004 9.00297Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description: Resizer 拖拽
+ */
+export const ResizerIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Resizer} {...props} />
+}
+
+const HollowLightningBolt = () => (
+    <svg width='13' height='13' viewBox='0 0 13 13' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M7 5.00293V1.50293L2.5 7.00293H6L6 10.5029L10.5 5.00293L7 5.00293Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:lightning-bolt 闪电 空心
+ */
+export const HollowLightningBoltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={HollowLightningBolt} {...props} />
+}
+
+const SolidChevronRight = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M5.83429 11.7657C5.52187 11.4533 5.52187 10.9467 5.83429 10.6343L8.4686 8L5.83429 5.36569C5.52187 5.05327 5.52187 4.54673 5.83429 4.23431C6.14671 3.9219 6.65324 3.9219 6.96566 4.23431L10.1657 7.43431C10.4781 7.74673 10.4781 8.25327 10.1657 8.56569L6.96566 11.7657C6.65324 12.0781 6.14671 12.0781 5.83429 11.7657Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description:向右 right Solid
+ */
+export const SolidChevronRightIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidChevronRight} {...props} />
+}
+
+const SolidChevronDown = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M4.23431 5.83429C4.54673 5.52187 5.05327 5.52187 5.36569 5.83429L8 8.4686L10.6343 5.83429C10.9467 5.52187 11.4533 5.52187 11.7657 5.83429C12.0781 6.14671 12.0781 6.65324 11.7657 6.96566L8.56569 10.1657C8.25327 10.4781 7.74673 10.4781 7.43431 10.1657L4.23431 6.96566C3.9219 6.65324 3.9219 6.14671 4.23431 5.83429Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description:向下 down Solid
+ */
+export const SolidChevronDownIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidChevronDown} {...props} />
+}
+
+const Eye = () => (
+    <svg width='13' height='13' viewBox='0 0 13 13' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8 6.00293C8 6.83136 7.32843 7.50293 6.5 7.50293C5.67157 7.50293 5 6.83136 5 6.00293C5 5.1745 5.67157 4.50293 6.5 4.50293C7.32843 4.50293 8 5.1745 8 6.00293Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M1.72913 6.00291C2.36626 3.97437 4.2614 2.50293 6.50022 2.50293C8.73905 2.50293 10.6342 3.97439 11.2713 6.00295C10.6342 8.03149 8.73904 9.50293 6.50023 9.50293C4.2614 9.50293 2.36625 8.03148 1.72913 6.00291Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description:eye 眼睛
+ */
+export const EyeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Eye} {...props} />
 }

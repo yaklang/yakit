@@ -23,9 +23,10 @@
     .fuzzer-heard {
         display: flex;
         align-items: center;
-        height: 36px;
+        // height: 36px;
         padding-bottom: 12px;
-        gap: 16px;
+        gap: 8px 16px;
+        flex-wrap: wrap;
         .fuzzer-heard-force {
             display: flex;
             align-items: center;
@@ -166,111 +167,6 @@
     }
 }
 
-.http-query-advanced-config {
-    display: flex;
-    flex-direction: column;
-    min-width: 300px;
-    max-width: 300px;
-    border-right: 1px solid var(--yakit-border-color);
-    :global {
-        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-            padding: 8px 12px;
-            align-items: center;
-            line-height: 16px;
-        }
-        .ant-collapse-header-text {
-            font-weight: 500;
-            font-size: 12px;
-            line-height: 16px;
-            color: var(--yakit-header-color);
-            margin-left: 8px;
-        }
-        .ant-collapse-content > .ant-collapse-content-box {
-            padding: 12px;
-        }
-        .ant-collapse-expand-icon {
-            width: 16px;
-            height: 16px;
-        }
-        .ant-collapse-ghost > .ant-collapse-item {
-            border-bottom: 1px solid var(--yakit-border-color);
-            &:last-child {
-                border-bottom: 0;
-            }
-        }
-        .ant-form-item {
-            margin-bottom: 12px;
-        }
-        .ant-select.ant-select-in-form-item {
-            height: auto;
-        }
-    }
-    .advanced-config-heard {
-        display: flex;
-        justify-content: space-between;
-        padding: 16px 12px 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
-        height: 49px;
-        font-size: 12px;
-    }
-    .advanced-config-input-number {
-        width: 100%;
-        max-width: none;
-    }
-    .advanced-config-delay {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        :global {
-            .ant-input {
-                text-align: right;
-                line-height: 16px;
-                height: 16px;
-            }
-        }
-        .delay-input-left {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-        .delay-input-right {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-        }
-    }
-    .plus-sm-icon {
-        width: 12px;
-        height: 12px;
-        svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
-    .advanced-config-form-label {
-        display: flex;
-        align-items: center;
-
-        .info-icon {
-            margin-left: 4px;
-            // cursor: help;
-            svg {
-                color: var(--yakit-helper-text-color);
-            }
-        }
-    }
-    .advanced-config-collapse-secondary-item {
-        border-bottom: 0 !important;
-        :global {
-            .ant-collapse-content > .ant-collapse-content-box {
-                padding: 12px 0 0;
-            }
-        }
-    }
-    .advanced-config-extra-formItem {
-        padding: 8px 12px 0;
-        border-bottom: 1px solid var(--yakit-border-color);
-    }
-}
-
 .http-fuzzer-hotPatch {
     padding: 24px;
     max-height: 80vh;
@@ -365,4 +261,10 @@
         content: ";";
         margin-right: 4px;
     }
+}
+
+.extract-results {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
 }

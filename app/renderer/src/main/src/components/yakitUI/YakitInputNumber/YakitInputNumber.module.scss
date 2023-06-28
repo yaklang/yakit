@@ -17,7 +17,8 @@
     --input-number-hover-error-color: var(--yakit-danger-5);
 
     --input-number-background-disabled-color: var(--yakit-background-color);
-
+    
+    background-color: var(--yakit-background-color-color);
     :global {
         .ant-input-number {
             border-color: var(--input-number-border-color);
@@ -236,8 +237,8 @@
     .icon-midden {
         background-color: var(--yakit-card-background-color);
         width: 24px;
-        height: 28px;
-        line-height: 28px;
+        height: 26px;
+        line-height: 26px;
         text-align: center;
 
         &:active {
@@ -247,14 +248,14 @@
 
     .icon-large {
         width: 24px;
-        height: 32px;
-        line-height: 32px;
+        height: 30px;
+        line-height: 30px;
     }
 
     .icon-small {
         width: 20px;
-        height: 24px;
-        line-height: 24px;
+        height: 22px;
+        line-height: 22px;
     }
 
     .yakit-input-number-wrapper {
@@ -266,6 +267,34 @@
         :global {
             .ant-input-number-handler-wrap {
                 width: 0;
+            }
+        }
+        .yakit-input-number {
+            height: 26px;
+            line-height: 26px;
+            :global {
+                .ant-input-number-input {
+                    height: 26px;
+                }
+            }
+        }
+        .yakit-input-number-small {
+            height: 22px;
+            line-height: 22px;
+            :global {
+                .ant-input-number-input {
+                    height: 22px;
+                }
+            }
+        }
+        .yakit-input-number-large {
+            height: 30px;
+            line-height: 30px;
+
+            :global {
+                .ant-input-number-input {
+                    height: 30px;
+                }
             }
         }
     }

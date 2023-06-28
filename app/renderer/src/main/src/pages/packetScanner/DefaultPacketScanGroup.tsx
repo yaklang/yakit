@@ -43,6 +43,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
     const [visible, setVisible] = useState<false | undefined>(undefined);
     return (
         <YakitPopover
+            key={'数据包扫描'}
             title={"数据包扫描"}
             trigger={["click"]}
             visible={visible}

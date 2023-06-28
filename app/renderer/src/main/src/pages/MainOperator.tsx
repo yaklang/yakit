@@ -39,7 +39,7 @@ import {LocalGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
-import { ControlOperation } from "@/pages/dynamicControl/DynamicControl";
+import {ControlOperation} from "@/pages/dynamicControl/DynamicControl"
 import {YakitHintModal} from "@/components/yakitUI/YakitHint/YakitHintModal"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscribe"
@@ -212,12 +212,11 @@ export interface MenuItemType {
     disabled?: boolean
 }
 
-
-export const judgeAvatar = (userInfo,size:number,avatarColor:string) => {
+export const judgeAvatar = (userInfo, size: number, avatarColor: string) => {
     const {companyHeadImg, companyName} = userInfo
 
     return companyHeadImg && !!companyHeadImg.length ? (
-        <Avatar size={size} style={{cursor: "pointer"}} src={companyHeadImg}/>
+        <Avatar size={size} style={{cursor: "pointer"}} src={companyHeadImg} />
     ) : (
         <Avatar size={size} style={{backgroundColor: avatarColor, cursor: "pointer"}}>
             {companyName && companyName.slice(0, 1)}
@@ -236,7 +235,7 @@ const FileType = ["image/png", "image/jpeg", "image/png"]
 
 // 用户信息
 export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-    const {userInfo, setStoreUserInfo,avatarColor} = props
+    const {userInfo, setStoreUserInfo, avatarColor} = props
 
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
@@ -312,8 +311,8 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 }}
             >
                 <div className='img-box'>
-                    <div className='img-box-mask'>{judgeAvatar(userInfo,40,avatarColor)}</div>
-                    <CameraOutlined className='hover-icon'/>
+                    <div className='img-box-mask'>{judgeAvatar(userInfo, 40, avatarColor)}</div>
+                    <CameraOutlined className='hover-icon' />
                 </div>
             </Upload.Dragger>
 
@@ -326,9 +325,14 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 }
             >
                 <div className='user-name'>{userInfo.companyName}</div>
-                {userInfo.role === "admin" && <><div className='permission-show'>管理员
-                
-                </div><span className='user-admin-icon'><EnterpriseLoginInfoIcon/></span></>}
+                {userInfo.role === "admin" && (
+                    <>
+                        <div className='permission-show'>管理员</div>
+                        <span className='user-admin-icon'>
+                            <EnterpriseLoginInfoIcon />
+                        </span>
+                    </>
+                )}
             </div>
         </div>
     )
@@ -386,8 +390,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [system, setSystem] = useState<string>("")
 
     // 远程控制浮层
-    const [controlShow,setControlShow] = useState<boolean>(false)
-    const [controlName,setControlName] = useState<string>("")
+    const [controlShow, setControlShow] = useState<boolean>(false)
+    const [controlName, setControlName] = useState<string>("")
     const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
 
     // 是否展示console
@@ -395,39 +399,36 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // 展示console方向
     const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
     // 定时器监听是否连接/断开
-    useEffect(()=>{
-        const id = setInterval(()=>{
+    useEffect(() => {
+        const id = setInterval(() => {
             // 当服务启动时 请求接口
-            ipcRenderer.invoke("alive-dynamic-control-status").then((is:boolean) => {
-                if(is){
+            ipcRenderer.invoke("alive-dynamic-control-status").then((is: boolean) => {
+                if (is) {
                     getRemoteValue("REMOTE_OPERATION_ID").then((tunnel) => {
-                        if(!!tunnel){
+                        if (!!tunnel) {
                             NetWorkApi<any, API.RemoteStatusResponse>({
                                 method: "get",
                                 url: "remote/status",
                                 params: {
                                     tunnel
                                 }
-                            })
-                            .then((res) => {
-                                if(res.status){
-                                    setDynamicStatus({...dynamicStatus,isDynamicSelfStatus:true})
+                            }).then((res) => {
+                                if (res.status) {
+                                    setDynamicStatus({...dynamicStatus, isDynamicSelfStatus: true})
                                     setControlShow(true)
-                                    setControlName(res.user_name||"")
-                                }
-                                else{
-                                    setDynamicStatus({...dynamicStatus,isDynamicSelfStatus:false})
+                                    setControlName(res.user_name || "")
+                                } else {
+                                    setDynamicStatus({...dynamicStatus, isDynamicSelfStatus: false})
                                     setControlShow(false)
                                 }
                             })
                         }
                     })
-                }
-                else{
+                } else {
                     setControlShow(false)
                 }
             })
-        },15000)
+        }, 15000)
         // 退出远程控制中页面
         ipcRenderer.on("lougin-out-dynamic-control-page-callback", async () => {
             setControlShow(false)
@@ -437,7 +438,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             clearInterval(id)
             ipcRenderer.removeAllListeners("lougin-out-dynamic-control-page-callback")
         }
-    },[])
+    }, [])
 
     useEffect(() => {
         if (isEnpriTraceAgent()) {
@@ -1375,82 +1376,88 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
     return (
         <>
-        <Layout className='yakit-main-layout' style={controlShow?{display:"none"}:{}}>
-            <AutoSpin spinning={loading}>
-                {isShowCustomizeMenu && (
-                    <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
-                )}
-                <div style={{display: isShowCustomizeMenu ? "none" : "flex", flexDirection: "column", height: "100%"}}>
-                    <HeardMenu
-                        onRouteMenuSelect={onRouteMenuSelect}
-                        setRouteKeyToLabel={(val) => {
-                            val.forEach((value, key) => {
-                                routeKeyToLabel.current.set(key, value)
-                            })
-                        }}
-                    />
-                    <Content
+            <Layout className='yakit-main-layout' style={controlShow ? {display: "none"} : {}}>
+                <AutoSpin spinning={loading}>
+                    {isShowCustomizeMenu && (
+                        <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
+                    )}
+                    <div
                         style={{
-                            margin: 0,
-                            backgroundColor: "#fff",
-                            overflow: "auto",
-                            flex: 1
-                            // marginTop: 0
+                            display: isShowCustomizeMenu ? "none" : "flex",
+                            flexDirection: "column",
+                            height: "100%"
                         }}
                     >
-                        <Layout style={{height: "100%", overflow: "hidden"}}>
-                            <Content
-                                style={{
-                                    overflow: "hidden",
-                                    backgroundColor: "#fff",
-                                    height: "100%",
-                                    display: "flex",
-                                    flexFlow: "column",
-                                    marginLeft: 0
-                                }}
-                            >
-                                <div
+                        <HeardMenu
+                            onRouteMenuSelect={onRouteMenuSelect}
+                            setRouteKeyToLabel={(val) => {
+                                val.forEach((value, key) => {
+                                    routeKeyToLabel.current.set(key, value)
+                                })
+                            }}
+                        />
+                        <Content
+                            style={{
+                                margin: 0,
+                                backgroundColor: "#fff",
+                                overflow: "auto",
+                                flex: 1
+                                // marginTop: 0
+                            }}
+                        >
+                            <Layout style={{height: "100%", overflow: "hidden"}}>
+                                <Content
                                     style={{
-                                        padding: 0,
                                         overflow: "hidden",
-                                        flex: "1",
+                                        backgroundColor: "#fff",
+                                        height: "100%",
                                         display: "flex",
-                                        flexFlow: "column"
+                                        flexFlow: "column",
+                                        marginLeft: 0
                                     }}
                                 >
-                                    {pageCache.length > 0 ? (
-                                        <Tabs
-                                            style={{display: "flex", flex: "1"}}
-                                            // tabBarStyle={{marginBottom: 8}}
-                                            className='main-content-tabs yakit-layout-tabs'
-                                            activeKey={currentTabKey}
-                                            onChange={setCurrentTabKey}
-                                            size={"small"}
-                                            type={"editable-card"}
-                                            renderTabBar={(props, TabBarDefault) => {
-                                                return bars(props, TabBarDefault)
-                                            }}
-                                            hideAdd={true}
-                                            onTabClick={(key, e) => {
-                                                const divExisted = document.getElementById("yakit-cursor-menu")
-                                                if (divExisted) {
-                                                    const div: HTMLDivElement = divExisted as HTMLDivElement
-                                                    const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                                                    if (unmountResult && div.parentNode) {
-                                                        div.parentNode.removeChild(div)
+                                    <div
+                                        style={{
+                                            padding: 0,
+                                            overflow: "hidden",
+                                            flex: "1",
+                                            display: "flex",
+                                            flexFlow: "column"
+                                        }}
+                                    >
+                                        {pageCache.length > 0 ? (
+                                            <Tabs
+                                                style={{display: "flex", flex: "1"}}
+                                                // tabBarStyle={{marginBottom: 8}}
+                                                className='main-content-tabs yakit-layout-tabs'
+                                                activeKey={currentTabKey}
+                                                onChange={setCurrentTabKey}
+                                                size={"small"}
+                                                type={"editable-card"}
+                                                renderTabBar={(props, TabBarDefault) => {
+                                                    return bars(props, TabBarDefault)
+                                                }}
+                                                hideAdd={true}
+                                                onTabClick={(key, e) => {
+                                                    const divExisted = document.getElementById("yakit-cursor-menu")
+                                                    if (divExisted) {
+                                                        const div: HTMLDivElement = divExisted as HTMLDivElement
+                                                        const unmountResult = ReactDOM.unmountComponentAtNode(div)
+                                                        if (unmountResult && div.parentNode) {
+                                                            div.parentNode.removeChild(div)
+                                                        }
                                                     }
-                                                }
-                                            }}
-                                        >
-                                            {pageCache.map((i) => {
-                                                return (
-                                                    <Tabs.TabPane
-                                                        forceRender={true}
-                                                        key={i.route}
-                                                        tab={i.verbose}
-                                                        closeIcon={
-                                                            <Space>
-                                                                {/* <Popover
+                                                }}
+                                            >
+                                                {pageCache.map((i) => {
+                                                    return (
+                                                        <Tabs.TabPane
+                                                            forceRender={true}
+                                                            key={i.route}
+                                                            tab={i.verbose}
+                                                            closeIcon={
+                                                                <Space>
+                                                                    {/* <Popover
                                                                     trigger={"click"}
                                                                     title={"修改名称"}
                                                                     content={
@@ -1470,129 +1477,135 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                 >
                                                                     <EditOutlined className='main-container-cion' />
                                                                 </Popover> */}
-                                                                {i.verbose !== "首页" && (
-                                                                    <CloseOutlined
-                                                                        className='main-container-cion'
-                                                                        onClick={() => onBeforeRemovePage(`${i.route}`)}
+                                                                    {i.verbose !== "首页" && (
+                                                                        <CloseOutlined
+                                                                            className='main-container-cion'
+                                                                            onClick={() =>
+                                                                                onBeforeRemovePage(`${i.route}`)
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                </Space>
+                                                            }
+                                                        >
+                                                            <div
+                                                                style={{
+                                                                    overflowY: NoScrollRoutes.includes(i.route)
+                                                                        ? "hidden"
+                                                                        : "auto",
+                                                                    overflowX: "hidden",
+                                                                    height: "100%",
+                                                                    maxHeight: "100%",
+                                                                    padding:
+                                                                        !i.singleNode || noPaddingPage.includes(i.route)
+                                                                            ? 0
+                                                                            : "8px 16px 13px 16px"
+                                                                }}
+                                                                className={`main-operator-first-menu-page-content-${i.route}`}
+                                                            >
+                                                                {i.singleNode ? (
+                                                                    i.singleNode
+                                                                ) : (
+                                                                    <MainTabs
+                                                                        currentTabKey={currentTabKey}
+                                                                        tabType={i.route}
+                                                                        pages={i.multipleNode}
+                                                                        currentKey={i.multipleCurrentKey || ""}
+                                                                        isShowAdd={!i.hideAdd}
+                                                                        setCurrentKey={(key, type) => {
+                                                                            setMultipleCurrentKey(key, type as Route)
+                                                                        }}
+                                                                        removePage={(key, type) => {
+                                                                            removeMultipleNodePage(key, type as Route)
+                                                                        }}
+                                                                        removeOtherPage={(key, type) => {
+                                                                            removeOtherMultipleNodePage(
+                                                                                key,
+                                                                                type as Route
+                                                                            )
+                                                                        }}
+                                                                        onAddTab={() => menuAddPage(i.route)}
+                                                                        updateCacheVerbose={
+                                                                            updateCacheVerboseMultipleNodePage
+                                                                        }
                                                                     />
                                                                 )}
-                                                            </Space>
-                                                        }
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                overflowY: NoScrollRoutes.includes(i.route)
-                                                                    ? "hidden"
-                                                                    : "auto",
-                                                                overflowX: "hidden",
-                                                                height: "100%",
-                                                                maxHeight: "100%",
-                                                                padding:
-                                                                    !i.singleNode || noPaddingPage.includes(i.route)
-                                                                        ? 0
-                                                                        : "8px 16px 13px 16px"
-                                                            }}
-                                                        >
-                                                            {i.singleNode ? (
-                                                                i.singleNode
-                                                            ) : (
-                                                                <MainTabs
-                                                                    currentTabKey={currentTabKey}
-                                                                    tabType={i.route}
-                                                                    pages={i.multipleNode}
-                                                                    currentKey={i.multipleCurrentKey || ""}
-                                                                    isShowAdd={!i.hideAdd}
-                                                                    setCurrentKey={(key, type) => {
-                                                                        setMultipleCurrentKey(key, type as Route)
-                                                                    }}
-                                                                    removePage={(key, type) => {
-                                                                        removeMultipleNodePage(key, type as Route)
-                                                                    }}
-                                                                    removeOtherPage={(key, type) => {
-                                                                        removeOtherMultipleNodePage(key, type as Route)
-                                                                    }}
-                                                                    onAddTab={() => menuAddPage(i.route)}
-                                                                    updateCacheVerbose={
-                                                                        updateCacheVerboseMultipleNodePage
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    </Tabs.TabPane>
-                                                )
-                                            })}
-                                        </Tabs>
-                                    ) : (
-                                        <></>
-                                    )}
-                                    {isShowBaseConsole && (
-                                        <BaseConsole
-                                            setIsShowBaseConsole={setIsShowBaseConsole}
-                                            directionBaseConsole={directionBaseConsole}
-                                        />
-                                    )}
-                                </div>
-                            </Content>
-                        </Layout>
-                    </Content>
-                </div>
-            </AutoSpin>
-            <YakitModal
-                visible={bugTestShow}
-                onCancel={() => setBugTestShow(false)}
-                onOk={() => {
-                    if ((bugTestValue || []).length === 0) return yakitNotify("error", "请选择类型后再次提交")
-                    addBugTest(2)
-                    setBugTestShow(false)
-                }}
-                type='white'
-                title={<></>}
-                closable={true}
-                // footer={[
-                //     <YakitButton key='link' onClick={() => setBugTestShow(false)}>
-                //         取消
-                //     </YakitButton>,
-                //     <YakitButton
-                //         key='back'
-                //         type='primary'
-                //         onClick={() => {
-                //             if ((bugTestValue || []).length === 0) return yakitNotify('error',"请选择类型后再次提交")
-                //             addBugTest(2)
-                //             setBugTestShow(false)
-                //         }}
-                //     >
-                //         确定
-                //     </YakitButton>
-                // ]}
-            >
-                <div style={{padding: "0 24px"}}>
-                    <Form.Item label='专项漏洞类型'>
-                        <YakitSelect
-                            allowClear={true}
-                            onChange={(value, option: any) => {
-                                const {record} = option
-                                setBugTestValue(
-                                    value
-                                        ? [
-                                              {
-                                                  filter: record?.filter,
-                                                  key: record?.key,
-                                                  title: record?.title
-                                              }
-                                          ]
-                                        : []
-                                )
-                            }}
-                            value={(bugTestValue || [])[0]?.key}
-                        >
-                            {(BugList.concat(bugList) || []).map((item) => (
-                                <YakitSelect.Option key={item.key} value={item.key} record={item}>
-                                    {item.title}
-                                </YakitSelect.Option>
-                            ))}
-                        </YakitSelect>
-                    </Form.Item>
-                    {/* <ItemSelects
+                                                            </div>
+                                                        </Tabs.TabPane>
+                                                    )
+                                                })}
+                                            </Tabs>
+                                        ) : (
+                                            <></>
+                                        )}
+                                        {isShowBaseConsole && (
+                                            <BaseConsole
+                                                setIsShowBaseConsole={setIsShowBaseConsole}
+                                                directionBaseConsole={directionBaseConsole}
+                                            />
+                                        )}
+                                    </div>
+                                </Content>
+                            </Layout>
+                        </Content>
+                    </div>
+                </AutoSpin>
+                <YakitModal
+                    visible={bugTestShow}
+                    onCancel={() => setBugTestShow(false)}
+                    onOk={() => {
+                        if ((bugTestValue || []).length === 0) return yakitNotify("error", "请选择类型后再次提交")
+                        addBugTest(2)
+                        setBugTestShow(false)
+                    }}
+                    type='white'
+                    title={<></>}
+                    closable={true}
+                    // footer={[
+                    //     <YakitButton key='link' onClick={() => setBugTestShow(false)}>
+                    //         取消
+                    //     </YakitButton>,
+                    //     <YakitButton
+                    //         key='back'
+                    //         type='primary'
+                    //         onClick={() => {
+                    //             if ((bugTestValue || []).length === 0) return yakitNotify('error',"请选择类型后再次提交")
+                    //             addBugTest(2)
+                    //             setBugTestShow(false)
+                    //         }}
+                    //     >
+                    //         确定
+                    //     </YakitButton>
+                    // ]}
+                >
+                    <div style={{padding: "0 24px"}}>
+                        <Form.Item label='专项漏洞类型'>
+                            <YakitSelect
+                                allowClear={true}
+                                onChange={(value, option: any) => {
+                                    const {record} = option
+                                    setBugTestValue(
+                                        value
+                                            ? [
+                                                  {
+                                                      filter: record?.filter,
+                                                      key: record?.key,
+                                                      title: record?.title
+                                                  }
+                                              ]
+                                            : []
+                                    )
+                                }}
+                                value={(bugTestValue || [])[0]?.key}
+                            >
+                                {(BugList.concat(bugList) || []).map((item) => (
+                                    <YakitSelect.Option key={item.key} value={item.key} record={item}>
+                                        {item.title}
+                                    </YakitSelect.Option>
+                                ))}
+                            </YakitSelect>
+                        </Form.Item>
+                        {/* <ItemSelects
                         item={{
                             label: "专项漏洞类型",
                             style: {marginTop: 20}
@@ -1619,24 +1632,24 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             }
                         }}
                     /> */}
-                </div>
-            </YakitModal>
-            {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-            <Modal
-                visible={passwordShow}
-                title={"修改密码"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={520}
-                onCancel={() => setPasswordShow(false)}
-                footer={null}
-            >
-                <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-            </Modal>
-        </Layout>
-        {controlShow&&<ControlOperation controlName={controlName}/>}
-        <YakitHintModal
+                    </div>
+                </YakitModal>
+                {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
+                <Modal
+                    visible={passwordShow}
+                    title={"修改密码"}
+                    destroyOnClose={true}
+                    maskClosable={false}
+                    bodyStyle={{padding: "10px 24px 24px 24px"}}
+                    width={520}
+                    onCancel={() => setPasswordShow(false)}
+                    footer={null}
+                >
+                    <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+                </Modal>
+            </Layout>
+            {controlShow && <ControlOperation controlName={controlName} />}
+            <YakitHintModal
                 visible={false}
                 title='收到远程连接请求'
                 content={
@@ -1647,8 +1660,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 }
                 cancelButtonText='拒绝'
                 okButtonText='同意'
-                onOk={()=>{}}
-                onCancel={()=>{}}
+                onOk={() => {}}
+                onCancel={() => {}}
             />
         </>
     )
