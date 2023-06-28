@@ -275,7 +275,9 @@ module.exports = (win, getClient) => {
             }
         })
         stream.on("end", () => {
-            stream.cancel()
+            if (stream) {
+                stream.cancel()
+            }
             stream = undefined
         })
         currentHost = host

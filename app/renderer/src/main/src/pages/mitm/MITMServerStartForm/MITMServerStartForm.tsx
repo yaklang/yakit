@@ -67,6 +67,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [form] = Form.useForm()
     const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
 
+    useEffect(()=>{}, [enableGMTLS])
+
     useEffect(() => {
         if (props.status !== "idle") return
         // 设置 MITM 初始启动插件选项
@@ -82,6 +84,17 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             if (!!e) {
                 form.setFieldsValue({port: e})
             }
+        })
+        getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyValue).then(e => {
+            if (!!e) {
+                form.setFieldsValue({downstreamProxy: e})
+            }
+        })
+        getRemoteValue(MITMConsts.MITMDefaultEnableHTTP2).then(e => {
+            form.setFieldsValue({enableHttp2: !!e})
+        })
+        getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then(e => {
+            form.setFieldsValue({enableGMTLS: !!e})
         })
         getRemoteValue(MITMConsts.MITMDefaultHostHistoryList).then((e) => {
             if (!!e) {
@@ -142,14 +155,17 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
             setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
         }
-        // setRemoteValue(
-        //     MITMConsts.MITMDefaultDownstreamProxy,
-        //     params.downstreamProxy ? params.downstreamProxy : undefined
-        // )
-        downstreamProxyRef.current?.onSetRemoteValues(params.downstreamProxy || "")
+        if (downstreamProxyRef.current) {
+            downstreamProxyRef.current.onSetRemoteValues(params.downstreamProxy || "")
+        }
         setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
+        setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory, `${params.downstreamProxy}`)
+        setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2?"1":""}`)
+        setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS?"1":""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
+        setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyValue, `${params.downstreamProxy}`)
+
     })
     const [width, setWidth] = useState<number>(0)
     return (
@@ -198,7 +214,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 >
                     <YakitAutoComplete
                         ref={downstreamProxyRef}
-                        cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxy}
+                        cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxyHistory}
                         placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
                     />
                 </Item>
