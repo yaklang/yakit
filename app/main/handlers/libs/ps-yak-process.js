@@ -87,7 +87,7 @@ const nonWindowsSingleCall = async (options = {}) => {
         const flags = options.all === false ? 'wwxo' : 'awwxo';
         // TODO: Use the promise version of `execFile` when https://github.com/nodejs/node/issues/28244 is fixed.
         const [psPid, stdoutRaw] = await new Promise((resolve, reject) => {
-            const child = childProcess.exec(`ps ${flags} ${psFields} | grep 'yak ' | grep -v grep`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
+            const child = childProcess.exec(`ps ${flags} ${psFields} | grep 'yak[a-zA-Z_]*\\sgrpc' | grep -v grep`, {maxBuffer: TEN_MEGABYTES}, (error, stdout) => {
                 if (error === null) {
                     resolve([child.pid, stdout]);
                 } else {
