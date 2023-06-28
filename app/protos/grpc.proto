@@ -158,6 +158,7 @@ service Yak {
   rpc QueryYakScriptLocalAndUser(QueryYakScriptLocalAndUserRequest) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptByOnlineGroup(QueryYakScriptByOnlineGroupRequest) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
+  rpc QueryYakScriptByNames(QueryYakScriptByNamesRequest) returns (QueryYakScriptByNamesResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -270,6 +271,13 @@ service Yak {
   rpc QueryAllMenuItem(QueryAllMenuItemRequest) returns (MenuByGroup);
   rpc DeleteAllMenu(QueryAllMenuItemRequest) returns (Empty);
 
+  // NewMenu
+  rpc AddToNavigation(AddToNavigationRequest) returns (Empty);
+  rpc GetAllNavigationItem(GetAllNavigationRequest) returns (GetAllNavigationItemResponse);
+  rpc DeleteAllNavigation(GetAllNavigationRequest) returns (Empty);
+  rpc AddOneNavigation(AddOneNavigationRequest) returns (Empty);
+  rpc QueryNavigationGroups(QueryNavigationGroupsRequest) returns (GroupNames);
+
   // document
   rpc SaveMarkdownDocument(SaveMarkdownDocumentRequest) returns (Empty);
   rpc GetMarkdownDocument(GetMarkdownDocumentRequest) returns (GetMarkdownDocumentResponse);
@@ -374,6 +382,9 @@ service Yak {
   rpc DelKey(GetKeyRequest) returns (Empty);
   rpc GetAllProcessEnvKey(Empty) returns (GetProcessEnvKeyResult);
   rpc SetProcessEnvKey(SetKeyRequest) returns (Empty);
+
+  rpc GetProjectKey(GetKeyRequest) returns (GetKeyResult);
+  rpc SetProjectKey(SetKeyRequest) returns (Empty);
 
   // Online
   rpc GetOnlineProfile(Empty) returns (OnlineProfile);
@@ -1202,6 +1213,7 @@ message DownloadOnlinePluginByScriptNamesResponse {
 message DownloadOnlinePluginByScriptName {
   string ScriptName = 1;
   int64 Id = 2;
+  string HeadImg = 3;
 }
 
 message OnlineProfile {
@@ -1332,6 +1344,14 @@ message QueryYakScriptLocalAndUserResponse {
 
 message QueryYakScriptByOnlineGroupRequest {
   string OnlineGroup = 1;
+}
+
+message QueryYakScriptByNamesRequest {
+  repeated string YakScriptName = 1;
+}
+
+message QueryYakScriptByNamesResponse {
+  repeated YakScript Data = 1;
 }
 
 message ExtractDataToFileRequest {
@@ -2194,6 +2214,60 @@ message ImportMenuItemRequest {
 message ExportMenuItemResult {
   string RawJson = 1;
 }
+
+message AddToNavigationRequest {
+  repeated NavigationList Data = 1;
+}
+
+message NavigationList {
+  string Group = 1;
+  repeated NavigationItem Items = 2;
+  int64 GroupSort = 3;
+  string Mode = 4;
+  string GroupLabel = 5;
+}
+
+message NavigationItem {
+  int64 YakScriptId = 1;
+  string Group = 2;
+  string Mode = 3;
+  int64  VerboseSort = 4;
+  int64  GroupSort = 5;
+  string Route = 6;
+  string YakScriptName = 7;
+  string Verbose = 8;
+  string VerboseLabel = 9;
+  string GroupLabel = 10;
+  string HeadImg = 11;
+}
+
+message GetAllNavigationRequest {
+  string Mode = 1;
+  string Group = 2;
+  string YakScriptName = 3;
+}
+
+message GetAllNavigationItemResponse {
+  repeated NavigationList Data = 1;
+}
+
+message AddOneNavigationRequest {
+  string YakScriptName = 1;
+  string Group = 2;
+  string Verbose = 3;
+  string Mode = 4;
+  int64  VerboseSort = 5;
+  int64  GroupSort = 6;
+  string GroupLabel = 7;
+  string VerboseLabel = 8;
+  string Route = 9;
+}
+
+message QueryNavigationGroupsRequest {
+  string YakScriptName = 1;
+  string Mode = 2;
+}
+
 
 message UpdateFromYakitResourceRequest {
   string Proxy = 1;
