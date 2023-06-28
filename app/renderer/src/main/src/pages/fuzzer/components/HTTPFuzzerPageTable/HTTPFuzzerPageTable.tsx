@@ -1,4 +1,4 @@
-import {FilterIcon} from "@/assets/newIcon"
+import {ArrowCircleRightSvgIcon, FilterIcon} from "@/assets/newIcon"
 import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {ResizeBox} from "@/components/ResizeBox"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -11,7 +11,7 @@ import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
 import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitFailed} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
@@ -20,16 +20,20 @@ import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
+import {ArrowRightSvgIcon} from "@/components/layout/icons"
+import {HollowLightningBoltIcon} from "@/assets/newIcon"
+import {Divider, Tooltip} from "antd"
+import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
+const {ipcRenderer} = window.require("electron")
 interface HTTPFuzzerPageTableProps {
     query?: HTTPFuzzerPageTableQuery
     data: FuzzerResponse[]
     success?: boolean
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
-    isRefresh: boolean
-    /**@name 提取的数据 */
-    extractedMap: Map<string, string>
+    isRefresh?: boolean
     /**@name 数据是否传输完成 */
     isEnd: boolean
 }
@@ -62,7 +66,7 @@ export interface HTTPFuzzerPageTableQuery {
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
-export const sorterFunction = (list, sorterTable,defSorter='Count') => {
+export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
     // ------------  排序 开始  ------------
     let newList = list
     // 重置
@@ -82,7 +86,7 @@ export const sorterFunction = (list, sorterTable,defSorter='Count') => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd,} = props
+    const {data, success, query, setQuery, isRefresh, isEnd} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -119,10 +123,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       }
                   },
                   {
-                      title: "StatusCode",
+                      title: "状态",
                       dataKey: "StatusCode",
                       render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
-                      width: 140,
+                      width: 90,
                       sorterProps: {
                           sorter: true
                       },
@@ -196,7 +200,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   },
                   {
                       title: "提取数据",
-                      dataKey: "extracted",
+                      dataKey: "ExtractedResults",
                       width: 300,
                       beforeIconExtra: (
                           <div className={classNames(styles["extracted-checkbox"])}>
@@ -204,12 +208,33 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               <span className={styles["tip"]}>不为空</span>
                           </div>
                       ),
-                      render: (_, record) => extractedMap.get(record["UUID"]) || "-"
+                      render: (item) =>
+                          item?.length > 0 ? (
+                              <div className={styles["table-item-extracted-results"]}>
+                                  <span className={styles["extracted-results-text"]}>
+                                      {item.map((i) => `${i.Key}: ${i.Value} `)}
+                                  </span>
+                                  {item?.length > 1 && (
+                                      <YakitButton
+                                          type='text'
+                                          size='small'
+                                          onClick={(e) => {
+                                              e.stopPropagation()
+                                              onViewExecResults(item)
+                                          }}
+                                      >
+                                          详情
+                                      </YakitButton>
+                                  )}
+                              </div>
+                          ) : (
+                              "-"
+                          )
                   },
                   {
                       title: "响应相似度",
                       dataKey: "BodySimilarity",
-                      width: 150,
+                      width: 120,
                       render: (v) => {
                           const text = parseFloat(`${v}`).toFixed(3)
                           return text ? (
@@ -228,7 +253,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "HTTP头相似度",
                       dataKey: "HeaderSimilarity",
                       render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
-                      width: 150,
+                      width: 120,
                       sorterProps: {
                           sorter: true
                       }
@@ -261,20 +286,30 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       title: "操作",
                       dataKey: "UUID",
                       fixed: "right",
+                      width: 85,
                       render: (_, record, index: number) => {
                           return (
-                              <YakitButton
-                                  type='text'
-                                  onClick={(e) => {
-                                      e.stopPropagation()
-                                      onDetails(record, index)
-                                  }}
-                              >
-                                  详情
-                              </YakitButton>
+                              <div className={styles["operate-icons"]}>
+                                  <Tooltip title='调试'>
+                                      <HollowLightningBoltIcon
+                                          onClick={(e) => {
+                                              e.stopPropagation()
+                                              ipcRenderer.invoke("send-open-matcher-and-extraction", {
+                                                  httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
+                                              })
+                                          }}
+                                      />
+                                  </Tooltip>
+                                  <Divider type='vertical' style={{margin: 0}} />
+                                  <ArrowCircleRightSvgIcon
+                                      onClick={(e) => {
+                                          e.stopPropagation()
+                                          onDetails(record, index)
+                                      }}
+                                  />
+                              </div>
                           )
-                      },
-                      width: 80
+                      }
                   }
               ]
             : [
@@ -306,7 +341,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   }
               ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, isHaveData])
 
     useThrottleEffect(
         () => {
@@ -338,6 +373,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 setShowResponseInfoSecondEditor(true)
             })
     }, [])
+    const onViewExecResults = useMemoizedFn((list) => {
+        showYakitModal({
+            title: "提取结果",
+            width: "60%",
+            footer: <></>,
+            content: <ExtractionResultsContent list={list} />
+        })
+    })
     const onDetails = useMemoizedFn((record, index: number) => {
         if (props.onSendToWebFuzzer) {
             analyzeFuzzerResponse(record, props.onSendToWebFuzzer, index, data)
@@ -434,7 +477,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                     // 是否有提取数据
                     if (isHaveData) {
-                        isHaveDataIsPush = !!extractedMap.get(record["UUID"])
+                        isHaveDataIsPush = record.ExtractedResults.length > 0
                     }
                     // 搜索同时为true时，push新数组
                     if (
@@ -496,7 +539,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
     }, [currentSelectItem, showResponseInfoSecondEditor])
     return (
-        <div style={{overflowY: "hidden", height: "100%"}} id='8888'>
+        <div style={{overflowY: "hidden", height: "100%"}}>
             <ResizeBox
                 isVer={true}
                 lineStyle={{display: firstFull ? "none" : ""}}

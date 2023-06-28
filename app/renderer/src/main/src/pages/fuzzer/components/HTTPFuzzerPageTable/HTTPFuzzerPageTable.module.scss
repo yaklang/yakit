@@ -1,5 +1,39 @@
+.flex-align-center {
+    display: flex;
+    align-items: center;
+}
+
+.ellipsis-1 {
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
+}
+
 .table-container {
     border: 0 !important;
+    .table-item-extracted-results {
+        @extend .flex-align-center;
+        overflow: hidden;
+        .extracted-results-text {
+            @extend .ellipsis-1;
+        }
+    }
+    .operate-icons {
+        @extend .flex-align-center;
+        gap: 12px;
+        color: var(--yakit-body-text-color);
+
+        svg {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            &:hover {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
 }
 .table-container-border {
     border-bottom: 1px solid var(--yakit-border-color) !important;
@@ -47,19 +81,14 @@
 }
 .filter-icon {
     color: var(--yakit-helper-text-color);
-    display: flex;
-    align-items: center;
+    @extend .flex-align-center;
 }
 .active-icon {
     color: var(--yakit-primary-5);
 }
 
 .fail-reason {
-    max-width: 100%;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: break-all;
+    @extend .ellipsis-1;
 }
 
 .range-input-number {

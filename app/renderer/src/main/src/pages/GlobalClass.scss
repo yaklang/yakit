@@ -96,36 +96,50 @@
 }
 
 // ========================== color ==========================
-.bg-color-red-opacity {
-    background-color: #f4736b;
-}
-
-.bg-color-green-opacity {
-    background-color: #56c991;
-}
-
-.bg-color-blue-opacity {
-    background-color: #4a94f8;
-}
-
-.bg-color-yellow-opacity {
-    background-color: #ffd583;
-}
-
-.bg-color-orange-opacity {
-    background-color: #ffb660;
-}
-
-.bg-color-purple-opacity {
-    background-color: #8863f7;
-}
-
-.bg-color-cyan-opacity {
-    background-color: #35d8ee;
-}
-
-.bg-color-grey-opacity {
-    background-color: #b4bbca;
+$colors: (
+    red: (
+        backgroundColor: var(--yakit-tag-color-red),
+        opacityBackgroundColor: #fcf1f0
+    ),
+    green: (
+        backgroundColor: var(--yakit-tag-color-green),
+        opacityBackgroundColor: #f0f9f4
+    ),
+    blue: (
+        backgroundColor: var(--yakit-tag-color-blue),
+        opacityBackgroundColor: #eff4fe
+    ),
+    yellow: (
+        backgroundColor: var(--yakit-tag-color-yellow),
+        opacityBackgroundColor: #fffbf2
+    ),
+    orange: (
+        backgroundColor: var(--yakit-tag-color-orange),
+        opacityBackgroundColor: #fff8ef
+    ),
+    purple: (
+        backgroundColor: var(--yakit-tag-color-purple),
+        opacityBackgroundColor: #f3effe
+    ),
+    cyan: (
+        backgroundColor: var(--yakit-tag-color-cyan),
+        opacityBackgroundColor: #edfbfd
+    ),
+    grey: (
+        backgroundColor: var(--yakit-helper-text-color),
+        opacityBackgroundColor: #f7f8fa
+    )
+);
+$keyColor: map-keys($colors);
+@for $c from 1 through length($keyColor) {
+    $name: nth($keyColor, $c);
+    $currentColor: map-get($colors, $name);
+    .color-bg-#{"" + $name} {
+        background-color: map-get($currentColor, "backgroundColor");
+    }
+    .color-opacity-bg-#{"" + $name} {
+        background-color: map-get($currentColor, "opacityBackgroundColor");
+    }
 }
 
 // ========================== notification start ==========================
@@ -589,12 +603,15 @@
         align-items: center;
         line-height: 16px;
     }
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow svg {
+        color: var(--yakit-body-text-color);
+    }
     .ant-collapse-header-text {
         font-weight: 500;
         font-size: 12px;
         line-height: 16px;
         color: var(--yakit-header-color);
-        margin-left: 8px;
+        margin-left: 4px;
     }
     .ant-collapse-content > .ant-collapse-content-box {
         padding: 12px;
@@ -677,7 +694,7 @@
             color: var(--yakit-header-color);
         }
     }
-    .descriptions-no-more{
+    .descriptions-no-more {
         font-size: 12px;
         color: var(--yakit-helper-text-color);
         text-align: center;
