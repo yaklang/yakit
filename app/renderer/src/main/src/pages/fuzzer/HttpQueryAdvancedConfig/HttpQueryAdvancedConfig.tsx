@@ -126,12 +126,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     useEffect(() => {
         ipcRenderer.on("fetch-open-matcher-and-extraction", openDrawer)
         return () => {
-            ipcRenderer.removeListener("fetch-open-matcher-and-extraction",openDrawer)
+            ipcRenderer.removeListener("fetch-open-matcher-and-extraction", openDrawer)
         }
     }, [])
 
-    const openDrawer=useMemoizedFn((e,res: {httpResponseCode: string})=>{
-        if (inViewportCurrent&&!visibleDrawer) {
+    const openDrawer = useMemoizedFn((e, res: {httpResponseCode: string}) => {
+        if (inViewportCurrent && !visibleDrawer) {
             setVisibleDrawer(true)
         }
         setHttpResponse(res.httpResponseCode)
@@ -357,6 +357,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     onChange={(key) => onSwitchCollapse(key)}
                     ghost
                     expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
+                    destroyInactivePanel={true}
                 >
                     <Panel
                         header='请求包配置'
@@ -638,6 +639,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             activeKey={retryActive}
                             onChange={(e) => setRetryActive(e as string[])}
                             expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
+                            destroyInactivePanel={true}
                         >
                             <Panel
                                 header={
@@ -860,6 +862,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             )
                                         }
                                         className={styles["variable-list"]}
+                                        destroyInactivePanel={true}
                                     >
                                         {fields.map(({key, name}, i) => (
                                             <Panel
@@ -932,8 +935,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     defActiveType={type}
                     httpResponse={httpResponse}
                     defActiveKey={defActiveKey}
-                    matcherValue={{filterMode, matchersList:matchersList||[], matchersCondition, hitColor}}
-                    extractorValue={{extractorList:extractorList||[]}}
+                    matcherValue={{filterMode, matchersList: matchersList || [], matchersCondition, hitColor}}
+                    extractorValue={{extractorList: extractorList || []}}
                     onClose={() => setVisibleDrawer(false)}
                     onSave={(matcher, extractor) => {
                         const v = form.getFieldsValue()
@@ -942,8 +945,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             filterMode: matcher.filterMode,
                             hitColor: matcher.hitColor || "red",
                             matchersCondition: matcher.matchersCondition,
-                            matchers: matcher.matchersList||[],
-                            extractors: extractor.extractorList||[]
+                            matchers: matcher.matchersList || [],
+                            extractors: extractor.extractorList || []
                         })
                     }}
                 />

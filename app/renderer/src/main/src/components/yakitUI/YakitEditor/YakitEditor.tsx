@@ -561,7 +561,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             />
             <div ref={wrapperRef} className={styles["yakit-editor-container"]} onContextMenu={showContextMenu}>
                 <MonacoEditor
-                    height={100}
+                    // height={100}
                     theme={theme || "kurior"}
                     value={isBytes ? new Buffer((valueBytes || []) as Uint8Array).toString() : value}
                     onChange={setValue}
