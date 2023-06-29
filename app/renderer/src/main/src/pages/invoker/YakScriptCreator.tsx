@@ -23,12 +23,12 @@ import {
     SyncCloudButton,
     SyncCopyCloudButton
 } from "@/components/SyncCloudButton/SyncCloudButton"
-import {Route} from "@/routes/routeSpec"
 import {useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {SearchPluginDetailRequest} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {useSubscribeClose} from "@/store/tabSubscribe"
+import { YakitRoute } from "@/routes/newRoute"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -201,10 +201,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     useEffect(() => {
         if (getParams().Id > 0) {
             onCloseTab()
-            removeSubscribeClose(Route.AddYakitScript)
+            removeSubscribeClose(YakitRoute.AddYakitScript)
             return
         }
-        setSubscribeClose(Route.AddYakitScript, {
+        setSubscribeClose(YakitRoute.AddYakitScript, {
             title: "插件未保存",
             content: "是否要保存该插件?",
             confirmLoading: saveLoading,
@@ -217,7 +217,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             }
         })
         return () => {
-            removeSubscribeClose(Route.AddYakitScript)
+            removeSubscribeClose(YakitRoute.AddYakitScript)
         }
     }, [getParams().Id])
 
@@ -328,7 +328,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
     const onCloseTab = useMemoizedFn(() => {
         ipcRenderer
             .invoke("send-close-tab", {
-                router: Route.AddYakitScript
+                router: YakitRoute.AddYakitScript
             })
             .then(() => {})
     })

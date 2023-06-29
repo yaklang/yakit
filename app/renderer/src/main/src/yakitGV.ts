@@ -44,7 +44,16 @@ export enum RemoteGV {
     /** @name 全局状态的查询间隔时间 */
     GlobalStateTimeInterval = "global-state-time-interval",
     /** @name 全局Chrome启动路径 */
-    GlobalChromePath = "global-chrome-path"
+    GlobalChromePath = "global-chrome-path",
+    /** @name 软件内菜单展示模式 */
+    PatternMenu = "PatternMenu",
+    /** @name 是否展示引擎控制台  */
+    ShowBaseConsole = "SHOW_BASE_CONSOLE",
+
+    /** @name 菜单是否为用户自行导入的json数据 */
+    IsImportJSONMenu = "is-import-json-menu",
+    /** @name 用户删除的系统内定菜单 */
+    UserDeleteMenu = "user-delete-menu"
 }
 
 /** 项目逻辑全局变量 */
@@ -55,11 +64,6 @@ export enum CodeGV {
     RemoteLinkPath = "$HOME/yakit-projects/auth/yakit-remote.json",
     /** @name 历史版本下载页面 */
     HistoricalVersion = "https://github.com/yaklang/yakit/releases",
-
-    /**
-     * @name 强制删除用户端的无效菜单项集合
-     * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
-     * @description 每个菜单项由 '|' 字符进行分割
-     */
-    InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|"
+    /** @name public版本菜单模式 */
+    PublicMenuModeValue = "public"
 }

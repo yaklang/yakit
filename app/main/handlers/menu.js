@@ -208,4 +208,84 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteAllMenu", async (e, params) => {
         return await asyncDeleteAllMenu(params)
     })
+
+    // 获取数据库保存的菜单数据
+    const asyncGetAllNavigationItem = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllNavigationItem(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllNavigationItem", async (e, params) => {
+        return await asyncGetAllNavigationItem(params)
+    })
+
+    // 更新数据库保存的菜单数据
+    const asyncAddToNavigation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AddToNavigation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AddToNavigation", async (e, params) => {
+        return await asyncAddToNavigation(params)
+    })
+
+    // 删除数据库保存的菜单数据
+    const asyncDeleteAllNavigation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAllNavigation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteAllNavigation", async (e, params) => {
+        return await asyncDeleteAllNavigation(params)
+    })
+
+    // 新增单项菜单
+    const asyncAddOneNavigation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AddOneNavigation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AddOneNavigation", async (e, params) => {
+        return await asyncAddOneNavigation(params)
+    })
+
+    // 查询菜单项的所有存在一级菜单项列表
+    const asyncQueryNavigationGroups = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryNavigationGroups(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryNavigationGroups", async (e, params) => {
+        return await asyncQueryNavigationGroups(params)
+    })
 }

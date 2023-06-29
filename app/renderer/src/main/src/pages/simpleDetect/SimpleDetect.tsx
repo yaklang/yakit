@@ -23,8 +23,6 @@ import {
 import {AutoCard} from "@/components/AutoCard"
 import {DeleteOutlined, PaperClipOutlined} from "@ant-design/icons"
 import styles from "./SimpleDetect.module.scss"
-import {Route} from "@/routes/routeSpec"
-import classNames from "classnames"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
 import {failed, info, success, warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
@@ -53,6 +51,7 @@ import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVaria
 import {PresetPorts} from "@/pages/portscan/schema"
 import {v4 as uuidv4} from "uuid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -716,7 +715,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
             setShowReportPercent(false)
             setReportPercent(0)
             setReportModalVisible(false)
-            ipcRenderer.invoke("open-user-manage", Route.DB_Report)
+            ipcRenderer.invoke("open-route-page", {route: YakitRoute.DB_Report})
             setTimeout(() => {
                 ipcRenderer.invoke("simple-open-report", getReportId())
             }, 300)
@@ -783,7 +782,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
     }, [])
     /** 通知软件打开管理页面 */
     const openMenu = () => {
-        ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
+        ipcRenderer.invoke("open-route-page", {route: YakitRoute.DB_Risk})
     }
     /** 获取生成报告返回结果 */
     useEffect(() => {

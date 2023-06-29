@@ -4,7 +4,6 @@ import {AutoCard} from "../../../components/AutoCard";
 import {SimpleQueryYakScriptSchema} from "./QueryYakScriptParam";
 import {ExecResult, genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema";
 import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks";
-import {Route} from "@/routes/routeSpec"
 import {randomString} from "../../../utils/randomUtil";
 import {
     CancelBatchYakScript,
@@ -25,6 +24,7 @@ import {YakitLogFormatter} from "../YakitLogFormatter";
 import "./BatchExecuteByFilter.css"
 import {Risk} from "../../risks/schema";
 import {RisksViewer} from "@/pages/risks/RisksViewer";
+import { YakitRoute, YakitRouteToPageInfo } from "@/routes/newRoute";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -321,7 +321,7 @@ export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterPr
         }
     }, [props.token])
     const openMenu = () => {
-        ipcRenderer.invoke("open-user-manage", Route.DB_Risk)
+        ipcRenderer.invoke("open-route-page",{route: YakitRoute.DB_Risk})
     }
     return <div className="batch-executor-result">
         <div className="result-notice-body">

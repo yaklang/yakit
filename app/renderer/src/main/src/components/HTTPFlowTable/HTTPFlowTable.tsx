@@ -52,8 +52,8 @@ import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareData"
-import {Route} from "@/routes/routeSpec"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1955,7 +1955,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const m = showYakitModal({
             title: "导入分享数据",
-            content: <ShareModal module={Route.HTTPHacker} shareContent={JSON.stringify(ids)} />,
+            content: <ShareModal module={YakitRoute.HTTPHacker} shareContent={JSON.stringify(ids)} />,
             onCancel:()=>{
                 m.destroy()
                 setSelectedRowKeys([])

@@ -65,12 +65,12 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             columns={[
                 {
                     title: "规则名",
-                    render: (i: HTTPFlowExtractedData) => <CopyableField width={100} text={i.RuleName} noCopy={true}/>,
+                    render: (i: HTTPFlowExtractedData) => <div className='content-ellipsis' style={{width:100,overflow:"hidden"}}>{i.RuleName}</div>,
                     width: 100
                 },
                 {
                     title: "规则数据",
-                    render: (i: HTTPFlowExtractedData) => <CopyableField width={200} text={i.Data}/>,
+                    render: (i: HTTPFlowExtractedData) => <div className='content-ellipsis' style={{width:200,overflow:"hidden"}}>{i.Data.slice(0,50)}</div>,
                     width: 210
                 },
             ]}

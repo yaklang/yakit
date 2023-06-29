@@ -9,12 +9,12 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useStore} from "@/store"
 import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
-import {Route} from "@/routes/routeSpec"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {InformationCircleIcon} from "@/assets/newIcon"
 import {RemoteGV} from "@/yakitGV"
+import { YakitRoute } from "@/routes/newRoute"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -111,8 +111,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const onCloseTab = useMemoizedFn(() => {
         ipcRenderer
             .invoke("send-close-tab", {
-                router: Route.YakitPluginJournalDetails,
-                singleNode: true
+                router: YakitRoute.YakitPluginJournalDetails
             })
             .then(() => {})
     })

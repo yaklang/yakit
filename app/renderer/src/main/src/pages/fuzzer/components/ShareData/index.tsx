@@ -7,8 +7,6 @@ import CopyToClipboard from "react-copy-to-clipboard"
 import styles from "./index.module.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {CopyableField} from "@/utils/inputUtil"
-import {showByCursorMenu} from "@/utils/showByCursor"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ShareIcon} from "@/assets/newIcon"
@@ -17,11 +15,10 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFlowsShareRequest, HTTPFlowsShareResponse, ShareDataProps} from "./shareDataType"
-import {Route} from "@/routes/routeSpec"
 import {isCommunityEdition} from "@/utils/envfile"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -177,7 +174,7 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
     })
     const onShare = useMemoizedFn(() => {
         switch (module) {
-            case Route.HTTPHacker:
+            case YakitRoute.HTTPHacker:
                 onShareHttpHistory()
                 break
             default:

@@ -458,7 +458,7 @@
     }
 
     .remote-yaklang-engine-body {
-        overflow: auto;
+        overflow: hidden auto;
 
         .remote-title {
             display: flex;
@@ -766,8 +766,8 @@
 
 @media screen and (max-width: 1200px) {
     .stop-screen-recorder {
-        :global{
-            .ant-btn{
+        :global {
+            .ant-btn {
                 padding-left: 8px;
                 padding-right: 8px;
             }

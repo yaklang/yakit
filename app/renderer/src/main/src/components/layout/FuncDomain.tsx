@@ -1,10 +1,8 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Form, Input, Button,Avatar} from "antd"
+import {Badge, Modal, Tooltip, Form, Input, Button, Avatar} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
-    ScreensHotSvgIcon,
-    RocketSvgIcon,
     UISettingSvgIcon,
     UnLoginSvgIcon,
     UpdateSvgIcon,
@@ -13,10 +11,10 @@ import {
     YaklangSvgIcon
 } from "./icons"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
-import {useCreation, useMemoizedFn,useDebounceFn} from "ahooks"
-import {showDrawer, showModal} from "@/utils/showModal"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
-import {failed, info, success, yakitFailed,warn} from "@/utils/notification"
+import {failed, info, success, yakitFailed, warn} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitSettingCallbackType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
@@ -28,7 +26,6 @@ import {useStore, yakitDynamicStatus} from "@/store"
 import {defaultUserInfo, MenuItemType, SetUserInfo} from "@/pages/MainOperator"
 import {DropdownMenu} from "../baseTemplate/DropdownMenu"
 import {loginOut} from "@/utils/login"
-import {Route} from "@/routes/routeSpec"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
 import SelectUpload from "@/pages/SelectUpload"
@@ -47,7 +44,7 @@ import {
 } from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {CodeGV, LocalGV} from "@/yakitGV"
+import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
@@ -61,7 +58,7 @@ import {addToTab} from "@/pages/MainTabs"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
 
-import { DynamicControl,SelectControlType,ControlMyself,ControlOther } from "../../pages/dynamicControl/DynamicControl";
+import {DynamicControl, SelectControlType, ControlMyself, ControlOther} from "../../pages/dynamicControl/DynamicControl"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
@@ -69,35 +66,52 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {MacKeyborad, WinKeyborad} from "../yakitUI/YakitEditor/editorUtils"
 import {ScrecorderModal} from "@/pages/screenRecorder/ScrecorderModal"
 import {useScreenRecorder} from "@/store/screenRecorder"
+import {YakitRoute} from "@/routes/newRoute"
+import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 
 const {ipcRenderer} = window.require("electron")
 
-export const judgeDynamic = (userInfo,avatarColor:string,active:boolean,dynamicConnect:boolean) => {
+export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean) => {
     const {companyHeadImg, companyName} = userInfo
     // 点击且已被远程控制
-    const activeConnect:boolean = active&&dynamicConnect
-    return <div className={classNames(styles["judge-avatar"],{[styles["judge-avatar-active"]]:activeConnect,[styles["judge-avatar-connect"]]:dynamicConnect})}>
-        <div>
-        {
-          companyHeadImg && !!companyHeadImg.length ? (
-            <Avatar size={20} style={{cursor: "pointer"}} src={companyHeadImg}/>
-          ) : (
-            <Avatar size={20} style={activeConnect?{}:{backgroundColor:avatarColor}} className={classNames(styles["judge-avatar-avatar"],{[styles["judge-avatar-active-avatar"]]:activeConnect})} >
-                {companyName && companyName.slice(0, 1)}
-            </Avatar>
-          )  
-        }
+    const activeConnect: boolean = active && dynamicConnect
+    return (
+        <div
+            className={classNames(styles["judge-avatar"], {
+                [styles["judge-avatar-active"]]: activeConnect,
+                [styles["judge-avatar-connect"]]: dynamicConnect
+            })}
+        >
+            <div>
+                {companyHeadImg && !!companyHeadImg.length ? (
+                    <Avatar size={20} style={{cursor: "pointer"}} src={companyHeadImg} />
+                ) : (
+                    <Avatar
+                        size={20}
+                        style={activeConnect ? {} : {backgroundColor: avatarColor}}
+                        className={classNames(styles["judge-avatar-avatar"], {
+                            [styles["judge-avatar-active-avatar"]]: activeConnect
+                        })}
+                    >
+                        {companyName && companyName.slice(0, 1)}
+                    </Avatar>
+                )}
+            </div>
+            {dynamicConnect && (
+                <div
+                    className={classNames(styles["judge-avatar-text"], {[styles["judge-avatar-active-text"]]: active})}
+                >
+                    远程中
+                </div>
+            )}
         </div>
-        {dynamicConnect&&<div className={classNames(styles["judge-avatar-text"],{[styles["judge-avatar-active-text"]]:active})}>
-            远程中
-        </div>}
-    </div>
+    )
 }
 
 /** 随机头像颜色 */
-const randomAvatarColor = ()=>{
-    const colorArr:string[] = ["#8863F7","#DA5FDD","#4A94F8","#35D8EE","#56C991","#F4736B","#FFB660","#B4BBCA"]
-    let color:string = colorArr[Math.round(Math.random()*7)]
+const randomAvatarColor = () => {
+    const colorArr: string[] = ["#8863F7", "#DA5FDD", "#4A94F8", "#35D8EE", "#56C991", "#F4736B", "#FFB660", "#B4BBCA"]
+    let color: string = colorArr[Math.round(Math.random() * 7)]
     return color
 }
 
@@ -109,7 +123,7 @@ export interface FuncDomainProp {
     onEngineModeChange: (type: YaklangEngineMode) => any
     typeCallback: (type: YakitSettingCallbackType) => any
     /** 远程控制 - 自动切换远程连接 */
-    runDynamicControlRemote: (v:string,url:string) => void
+    runDynamicControlRemote: (v: string, url: string) => void
 
     /** @name 当前是否展示项目管理页面 */
     showProjectManage?: boolean
@@ -144,25 +158,26 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     /** 上传数据弹框 */
     const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
-
     /** 发起远程弹框 受控端 - 控制端 */
     const [dynamicControlModal, setDynamicControlModal] = useState<boolean>(false)
-    const [controlMyselfModal,setControlMyselfModal] = useState<boolean>(false)
-    const [controlOtherModal,setControlOtherModal] = useState<boolean>(false)
-    const [dynamicMenuOpen,setDynamicMenuOpen] = useState<boolean>(false)
+    const [controlMyselfModal, setControlMyselfModal] = useState<boolean>(false)
+    const [controlOtherModal, setControlOtherModal] = useState<boolean>(false)
+    const [dynamicMenuOpen, setDynamicMenuOpen] = useState<boolean>(false)
     /** 当前远程连接状态 */
     const {dynamicStatus} = yakitDynamicStatus()
     const [dynamicConnect] = useState<boolean>(dynamicStatus.isDynamicStatus)
     let avatarColor = useRef<string>(randomAvatarColor())
 
     useEffect(() => {
-        const SetUserInfoModule = () => <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo}/>
+        const SetUserInfoModule = () => (
+            <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
+        )
         const LoginOutBox = () => <div className={styles["login-out-component"]}>退出登录</div>
         // 非企业管理员登录
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
+                {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
         // 非企业超级管理员登录
@@ -171,14 +186,14 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "trust-list", title: "用户管理"},
                 {key: "license-admin", title: "License管理"},
                 {key: "plugIn-admin", title: "插件权限"},
-                {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
+                {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
         // 非企业license管理员
         else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
             setUserMenu([
                 {key: "license-admin", title: "License管理"},
-                {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
+                {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
         // 企业用户管理员登录
@@ -192,7 +207,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         {key: "role-admin", title: "角色管理"},
                         {key: "account-admin", title: "用户管理"},
                         {key: "set-password", title: "修改密码"},
-                        {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
+                        {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
                     ]
                 }
                 let cacheMenu = [
@@ -205,19 +220,19 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     {key: "role-admin", title: "角色管理"},
                     {key: "account-admin", title: "用户管理"},
                     {key: "set-password", title: "修改密码"},
-                    {key: "sign-out", title: "退出登录",render:() => LoginOutBox()}
+                    {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
                 ]
                 // 远程中时不显示发起远程 显示退出远程
-                if(dynamicConnect){
+                if (dynamicConnect) {
                     cacheMenu = cacheMenu.filter((item) => item.key !== "dynamic-control")
                 }
                 // 非远程控制时显示发起远程 不显示退出远程
-                if(!dynamicConnect){
+                if (!dynamicConnect) {
                     cacheMenu = cacheMenu.filter((item) => item.key !== "close-dynamic-control")
                 }
-                    return cacheMenu
-                })()
-                setUserMenu(cacheMenu)
+                return cacheMenu
+            })()
+            setUserMenu(cacheMenu)
         }
         // 企业用户非管理员登录
         else if (userInfo.role !== "admin" && userInfo.platform === "company") {
@@ -233,22 +248,22 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
             }
             // 远程中时不显示发起远程 显示退出远程
-            if(dynamicConnect){
+            if (dynamicConnect) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "dynamic-control")
             }
             // 非远程控制时显示发起远程 不显示退出远程
-            if(!dynamicConnect){
+            if (!dynamicConnect) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "close-dynamic-control")
             }
             setUserMenu(cacheMenu)
         } else {
             setUserMenu([{key: "sign-out", title: "退出登录"}])
         }
-    }, [userInfo.role, userInfo.companyHeadImg,dynamicConnect])
+    }, [userInfo.role, userInfo.companyHeadImg, dynamicConnect])
 
     /** 通知软件打开管理页面 */
-    const openMenu = (type: Route) => {
-        ipcRenderer.invoke("open-user-manage", type)
+    const openMenu = (info: RouteToPageProps) => {
+        ipcRenderer.invoke("open-route-page", info)
     }
 
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
@@ -309,16 +324,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             })
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         // ipc通信退出登录
         ipcRenderer.on("ipc-sign-out-callback", async (e) => {
             setStoreUserInfo(defaultUserInfo)
-            loginOut(userInfo) 
+            loginOut(userInfo)
         })
         return () => {
             ipcRenderer.removeAllListeners("ipc-sign-out-callback")
         }
-    },[])
+    }, [])
 
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
@@ -335,7 +350,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     <div
                         className={styles["ui-op-btn-wrapper"]}
                         onClick={() => {
-                            getLocalValue("SHOW_BASE_CONSOLE").then((val: boolean) => {
+                            getLocalValue(RemoteGV.ShowBaseConsole).then((val: boolean) => {
                                 if (!val) {
                                     typeCallback("console")
                                 }
@@ -364,124 +379,136 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         />
                     )}
                 </div>
-                {!showProjectManage && <>
-                    <div className={styles["divider-wrapper"]}></div>
-                    <div className={classNames(styles["user-wrapper"],{[styles["user-wrapper-dynamic"]]:dynamicConnect}) }>
-                        {userInfo.isLogin ? (
-                            <div className={classNames({
-                                [styles["user-info"]]:!dynamicConnect,
-                                [styles["user-info-dynamic"]]:dynamicConnect,
-                            }) }>
-                                <DropdownMenu
-                                    menu={{
-                                        data: userMenu
-                                    }}
-                                    dropdown={{
-                                        placement: "bottomCenter",
-                                        trigger: ["click"],
-                                        overlayClassName:"user-dropdown-menu-box",
-                                        onVisibleChange:(value:boolean)=>{
-                                            setDynamicMenuOpen(value)
-                                        }
-                                    }}
-                                    onClick={(key) => {
-                                        setDynamicMenuOpen(false)
-                                        if (key === "sign-out") {
-                                            if(dynamicStatus.isDynamicStatus||dynamicStatus.isDynamicSelfStatus){
-                                                Modal.confirm({
-                                                    title: "温馨提示",
-                                                    icon: <ExclamationCircleOutlined />,
-                                                    content: "点击退出登录将自动退出远程控制，是否确认退出",
-                                                    cancelText: "取消",
-                                                    okText: "退出",
-                                                    onOk() {
-                                                        if(dynamicStatus.isDynamicStatus){
-                                                            ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:true})
-                                                        }
-                                                        if(dynamicStatus.isDynamicSelfStatus){
-                                                            ipcRenderer.invoke("kill-dynamic-control").finally(() => {
-                                                                setStoreUserInfo(defaultUserInfo)
-                                                                loginOut(userInfo)
-                                                                setTimeout(() => success("已成功退出账号"), 500)  
-                                                            })
-                                                            // 立即退出界面
-                                                            ipcRenderer.invoke("lougin-out-dynamic-control-page")
-                                                        }
-                                                    },
-                                                    onCancel() {}
-                                                })
-                                            }
-                                            else{
-                                                setStoreUserInfo(defaultUserInfo)
-                                                loginOut(userInfo)
-                                                setTimeout(() => success("已成功退出账号"), 500)
-                                            }
-                                        }
-                                        if (key === "trust-list") {
-                                            const key = Route.TrustListPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "set-password") setPasswordShow(true)
-                                        if (key === "upload-data") setUploadModalShow(true)
-                                        if (key === "role-admin") {
-                                            const key = Route.RoleAdminPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "account-admin") {
-                                            const key = Route.AccountAdminPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "license-admin") {
-                                            const key = Route.LicenseAdminPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "plugIn-admin") {
-                                            const key = Route.PlugInAdminPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "upload-plugin") {
-                                            const m = showModal({
-                                                title: "同步本地插件",
-                                                maskClosable:false,
-                                                content: <AdminUpOnlineBatch 
-                                                    userInfo={userInfo}                           
-                                                    onClose={() => m.destroy()}/>
-                                            })
-                                            return m
-                                        }
-                                        if (key === "hole-collect") {
-                                            const key = Route.HoleCollectPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "control-admin") {
-                                            const key = Route.ControlAdminPage
-                                            openMenu(key)
-                                        }
-                                        if (key === "dynamic-control") {
-                                            setDynamicControlModal(true)
-                                        }
-                                        if(key === "close-dynamic-control"){
-                                            ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:false})
-                                        }
-                                    }}
+                {!showProjectManage && (
+                    <>
+                        <div className={styles["divider-wrapper"]}></div>
+                        <div
+                            className={classNames(styles["user-wrapper"], {
+                                [styles["user-wrapper-dynamic"]]: dynamicConnect
+                            })}
+                        >
+                            {userInfo.isLogin ? (
+                                <div
+                                    className={classNames({
+                                        [styles["user-info"]]: !dynamicConnect,
+                                        [styles["user-info-dynamic"]]: dynamicConnect
+                                    })}
                                 >
-                                    {userInfo.platform === "company" ? (
-                                        judgeDynamic(userInfo,avatarColor.current,dynamicMenuOpen,dynamicConnect)
-                                    ) : (
-                                        <img
-                                            src={userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg}
-                                            style={{width: 24, height: 24, borderRadius: "50%"}}
-                                        />
-                                    )}
-                                </DropdownMenu>
-                            </div>
-                        ) : (
-                            <div className={styles["user-show"]} onClick={() => setLoginShow(true)}>
-                                <UnLoginSvgIcon/>
-                            </div>
-                        )}
-                    </div>
-                </>}
+                                    <DropdownMenu
+                                        menu={{
+                                            data: userMenu
+                                        }}
+                                        dropdown={{
+                                            placement: "bottomCenter",
+                                            trigger: ["click"],
+                                            overlayClassName: "user-dropdown-menu-box",
+                                            onVisibleChange: (value: boolean) => {
+                                                setDynamicMenuOpen(value)
+                                            }
+                                        }}
+                                        onClick={(key) => {
+                                            setDynamicMenuOpen(false)
+                                            if (key === "sign-out") {
+                                                if (
+                                                    dynamicStatus.isDynamicStatus ||
+                                                    dynamicStatus.isDynamicSelfStatus
+                                                ) {
+                                                    Modal.confirm({
+                                                        title: "温馨提示",
+                                                        icon: <ExclamationCircleOutlined />,
+                                                        content: "点击退出登录将自动退出远程控制，是否确认退出",
+                                                        cancelText: "取消",
+                                                        okText: "退出",
+                                                        onOk() {
+                                                            if (dynamicStatus.isDynamicStatus) {
+                                                                ipcRenderer.invoke("lougin-out-dynamic-control", {
+                                                                    loginOut: true
+                                                                })
+                                                            }
+                                                            if (dynamicStatus.isDynamicSelfStatus) {
+                                                                ipcRenderer
+                                                                    .invoke("kill-dynamic-control")
+                                                                    .finally(() => {
+                                                                        setStoreUserInfo(defaultUserInfo)
+                                                                        loginOut(userInfo)
+                                                                        setTimeout(() => success("已成功退出账号"), 500)
+                                                                    })
+                                                                // 立即退出界面
+                                                                ipcRenderer.invoke("lougin-out-dynamic-control-page")
+                                                            }
+                                                        },
+                                                        onCancel() {}
+                                                    })
+                                                } else {
+                                                    setStoreUserInfo(defaultUserInfo)
+                                                    loginOut(userInfo)
+                                                    setTimeout(() => success("已成功退出账号"), 500)
+                                                }
+                                            }
+                                            if (key === "trust-list") {
+                                                openMenu({route: YakitRoute.TrustListPage})
+                                            }
+                                            if (key === "set-password") setPasswordShow(true)
+                                            if (key === "upload-data") setUploadModalShow(true)
+                                            if (key === "role-admin") {
+                                                openMenu({route: YakitRoute.RoleAdminPage})
+                                            }
+                                            if (key === "account-admin") {
+                                                openMenu({route: YakitRoute.AccountAdminPage})
+                                            }
+                                            if (key === "license-admin") {
+                                                openMenu({route: YakitRoute.LicenseAdminPage})
+                                            }
+                                            if (key === "plugIn-admin") {
+                                                openMenu({route: YakitRoute.PlugInAdminPage})
+                                            }
+                                            if (key === "upload-plugin") {
+                                                const m = showModal({
+                                                    title: "同步本地插件",
+                                                    maskClosable: false,
+                                                    content: (
+                                                        <AdminUpOnlineBatch
+                                                            userInfo={userInfo}
+                                                            onClose={() => m.destroy()}
+                                                        />
+                                                    )
+                                                })
+                                                return m
+                                            }
+                                            if (key === "hole-collect") {
+                                                openMenu({route: YakitRoute.HoleCollectPage})
+                                            }
+                                            if (key === "control-admin") {
+                                                openMenu({route: YakitRoute.ControlAdminPage})
+                                            }
+                                            if (key === "dynamic-control") {
+                                                setDynamicControlModal(true)
+                                            }
+                                            if (key === "close-dynamic-control") {
+                                                ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: false})
+                                            }
+                                        }}
+                                    >
+                                        {userInfo.platform === "company" ? (
+                                            judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect)
+                                        ) : (
+                                            <img
+                                                src={
+                                                    userInfo[UserPlatformType[userInfo.platform || ""].img] || yakitImg
+                                                }
+                                                style={{width: 24, height: 24, borderRadius: "50%"}}
+                                            />
+                                        )}
+                                    </DropdownMenu>
+                                </div>
+                            ) : (
+                                <div className={styles["user-show"]} onClick={() => setLoginShow(true)}>
+                                    <UnLoginSvgIcon />
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
             </div>
 
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
@@ -518,14 +545,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 onCancle={() => setDynamicControlModal(false)}
                 width={345}
             >
-                <SelectControlType onControlMyself={()=>{
-                    setControlMyselfModal(true)
-                    setDynamicControlModal(false)
-                }} 
-                    onControlOther={()=>{
+                <SelectControlType
+                    onControlMyself={() => {
+                        setControlMyselfModal(true)
+                        setDynamicControlModal(false)
+                    }}
+                    onControlOther={() => {
                         setControlOtherModal(true)
                         setDynamicControlModal(false)
-                    }}/>
+                    }}
+                />
             </DynamicControl>
 
             <DynamicControl
@@ -534,10 +563,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 isShow={controlMyselfModal}
                 onCancle={() => setControlMyselfModal(false)}
             >
-                <ControlMyself goBack={()=>{
-                    setDynamicControlModal(true)
-                    setControlMyselfModal(false)
-                }}/>
+                <ControlMyself
+                    goBack={() => {
+                        setDynamicControlModal(true)
+                        setControlMyselfModal(false)
+                    }}
+                />
             </DynamicControl>
 
             <DynamicControl
@@ -546,13 +577,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 isShow={controlOtherModal}
                 onCancle={() => setControlOtherModal(false)}
             >
-                <ControlOther goBack={()=>{
-                    setDynamicControlModal(true)
-                    setControlOtherModal(false)
-                }} runControl={(v:string,url:string)=>{
-                    setControlOtherModal(false)
-                    runDynamicControlRemote(v,url)
-                }}/>
+                <ControlOther
+                    goBack={() => {
+                        setDynamicControlModal(true)
+                        setControlOtherModal(false)
+                    }}
+                    runControl={(v: string, url: string) => {
+                        setControlOtherModal(false)
+                        runDynamicControlRemote(v, url)
+                    }}
+                />
             </DynamicControl>
         </div>
     )
@@ -814,7 +848,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 })
                 return
             case "store":
-                if(dynamicStatus.isDynamicStatus){
+                if (dynamicStatus.isDynamicStatus) {
                     warn("远程控制中，暂无法修改")
                     return
                 }
@@ -848,7 +882,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 showConfigYaklangEnvironment()
                 return
             case "remote":
-                if(dynamicStatus.isDynamicStatus){
+                if (dynamicStatus.isDynamicStatus) {
                     warn("远程控制中，暂无法修改")
                     return
                 }
@@ -856,7 +890,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "local":
             case "admin":
-                if(dynamicStatus.isDynamicStatus){
+                if (dynamicStatus.isDynamicStatus) {
                     warn("远程控制中，暂无法修改")
                     return
                 }
@@ -1845,16 +1879,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     })
     /** 查看全部 */
     const viewAll = useMemoizedFn(() => {
-        // showDrawer({
-        //     title: "Vulnerabilities && Risks",
-        //     width: "70%",
-        //     content: (
-        //         <>
-        //             <RiskTable />
-        //         </>
-        //     )
-        // })
-        addToTab(Route.DB_Risk)
+        addToTab(YakitRoute.DB_Risk)
     })
 
     const notice = useMemo(() => {

@@ -1,17 +1,16 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Form, Input, InputNumber} from "antd"
+import {Form, InputNumber} from "antd"
 import {useMemoizedFn} from "ahooks"
 import {failed, info, warn, yakitNotify} from "@/utils/notification"
 import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
-import {showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {Route} from "@/routes/routeSpec"
+import { YakitRoute } from "@/routes/newRoute"
 
 const layout = {
     labelCol: {span: 5},
@@ -121,7 +120,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                     case "fuzzer":
                         handleWebFuzzerShare(res)
                         break
-                    case Route.HTTPHacker:
+                    case YakitRoute.HTTPHacker:
                         handleHttpHistoryShare(res)
                         break
                     default:

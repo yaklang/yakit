@@ -64,7 +64,6 @@ import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {Route} from "@/routes/routeSpec"
 import {
     ExtractorValueProps,
     HTTPResponseExtractor,
@@ -82,6 +81,7 @@ import {
     defaultMatcherItem
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -453,7 +453,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<any>()
     const [inViewport] = useInViewport(fuzzerRef)
     useEffect(() => {
-        setSubscribeClose(Route.HTTPFuzzer, {
+        setSubscribeClose(YakitRoute.HTTPFuzzer, {
             title: "关闭提示",
             content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
             onOkText: "确定",
@@ -461,14 +461,14 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             onOk: (m) => onCloseTab(m)
         })
         return () => {
-            removeSubscribeClose(Route.HTTPFuzzer)
+            removeSubscribeClose(YakitRoute.HTTPFuzzer)
         }
     }, [inViewport])
 
     const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
             .invoke("send-close-tab", {
-                router: Route.HTTPFuzzer
+                router: YakitRoute.HTTPFuzzer
             })
             .then(() => {
                 m.destroy()
@@ -1485,12 +1485,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         setShowMatcherAndExtraction={setShowMatcherAndExtraction}
                                         matcherValue={{
                                             hitColor: advancedConfigValue.hitColor || "red",
-                                            matchersCondition: advancedConfigValue.matchersCondition,
-                                            matchersList: advancedConfigValue.matchers,
-                                            filterMode: advancedConfigValue.filterMode
+                                            matchersCondition: advancedConfigValue.matchersCondition || "and",
+                                            matchersList: advancedConfigValue.matchers || [],
+                                            filterMode: advancedConfigValue.filterMode || "drop"
                                         }}
                                         extractorValue={{
-                                            extractorList: advancedConfigValue.extractors
+                                            extractorList: advancedConfigValue.extractors||[]
                                         }}
                                         defActiveKey={activeKey}
                                         defActiveType={activeType}

@@ -426,4 +426,20 @@ module.exports = (win, getClient) => {
         return await asyncDeleteYakScriptExec(params)
     })
 
+    // 获取传入插件名集合在本地插件的详细信息
+    const asyncQueryYakScriptByNames = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptByNames(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryYakScriptByNames", async (e, params) => {
+        return await asyncQueryYakScriptByNames(params)
+    })
+
 }

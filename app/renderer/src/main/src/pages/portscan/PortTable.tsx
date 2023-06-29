@@ -9,7 +9,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {callCopyToClipboard} from "../../utils/basic"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {useMemoizedFn} from "ahooks"
-import {Route} from "@/routes/routeSpec"
+import { YakitRoute } from "@/routes/newRoute"
 export interface PortTableProp {
     data: YakitPort[]
     isSimple?: boolean
@@ -70,7 +70,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
     })
     /** 通知软件打开管理页面 */
     const openMenu = () => {
-        ipcRenderer.invoke("open-user-manage", Route.DB_Ports)
+        ipcRenderer.invoke("open-route-page", {route: YakitRoute.DB_Ports})
     }
     return (
         <Table<YakitPort>

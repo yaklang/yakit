@@ -63,7 +63,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
             if (info.children && info.children.length > 0) {
                 const itemInfo: ItemType = {
                     label: (
-                        <div style={{width: width}} className={classNames(styles["yakit-menu-item"])}>
+                        <div style={{minWidth: width}} className={classNames(styles["yakit-menu-item"])}>
                             <div className={styles["yakit-submenu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
@@ -114,7 +114,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
             } else {
                 const itemInfo: ItemType = {
                     label: (
-                        <div style={{width: width}} className={classNames(styles["yakit-menu-item"])}>
+                        <div style={{minWidth: width}} className={classNames(styles["yakit-menu-item"])}>
                             <div className={styles["yakit-menu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (

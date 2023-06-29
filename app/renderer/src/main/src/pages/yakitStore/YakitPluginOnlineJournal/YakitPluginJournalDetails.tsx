@@ -1,5 +1,4 @@
 import { FromLayoutProps, YakScriptFormContent, YakScriptLargeEditor } from "@/pages/invoker/YakScriptCreator"
-import { Route } from "@/routes/routeSpec"
 import { Button, Card, Checkbox, Form, Space, Spin, Tooltip } from "antd"
 import React, { useEffect, useRef, useState } from "react"
 import { useCreation, useGetState, useMemoizedFn } from "ahooks"

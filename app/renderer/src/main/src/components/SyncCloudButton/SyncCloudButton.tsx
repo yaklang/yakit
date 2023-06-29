@@ -11,9 +11,9 @@ import {showModal} from "@/utils/showModal"
 import {useMemoizedFn, useGetState} from "ahooks"
 import {Button, Modal, Radio, Space, Form, Input,Progress} from "antd"
 import React, {ReactNode, useRef, useState} from "react"
-import { Route } from "@/routes/routeSpec"
 import { isEnterpriseEdition } from "@/utils/envfile"
 import styles from "./SyncCloudButton.module.scss"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -215,8 +215,7 @@ export const SyncCloudButton: React.FC<SyncCloudButtonProps> = (props) => {
                                         .finally(() => {
                                             ipcRenderer
                                                 .invoke("send-close-tab", {
-                                                    router: Route.AddYakitScript,
-                                                    singleNode: true
+                                                    router: YakitRoute.AddYakitScript
                                                 })
                                                 .finally(() => ipcRenderer.invoke("send-local-script-list"))
                                         })

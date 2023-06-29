@@ -1,15 +1,10 @@
 import React, {useState, useEffect} from "react"
 import {Tabs} from "antd"
 import {MITMPage} from "../mitm/MITMPage"
-import {WebsiteTreeViewer} from "../yakitStore/viewers/WebsiteTree"
-import {YakScriptExecResultTable} from "../../components/YakScriptExecResultTable"
 import {HTTPHistory} from "../../components/HTTPHistory"
 import {showDrawer} from "../../utils/showModal"
 import {HackerPlugin} from "./HackerPlugin"
 import ReactDOM from "react-dom"
-import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
-
-// import "../main.scss"
 
 export interface HTTPHackerProp {}
 
@@ -75,11 +70,11 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
                 {/* <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
                     <YakScriptExecResultTable />
                 </Tabs.TabPane> */}
-                <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
+                {/* <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
                     <div style={{height: "100%"}}>
                         <WebsiteTreeViewer />
                     </div>
-                </Tabs.TabPane>
+                </Tabs.TabPane> */}
             </Tabs>
         </div>
     )

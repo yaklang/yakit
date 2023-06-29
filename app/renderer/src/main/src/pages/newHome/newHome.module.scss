@@ -143,17 +143,28 @@
 .list-content-col3 {
     height: 33.33%;
 }
-.menu-icon::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: 14px;
-    left: 26px;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 182, 96, 0.2);
-    backdrop-filter: blur(2px);
+.menu-icon {
+    position: relative;
+    width: 38px;
+    height: 34px;
+    svg {
+        position: absolute;
+        top: 2px;
+        left: 0;
+        width: 32px;
+        height: 32px;
+        z-index: 3;
+    }
+    .menu-icon-filter {
+        position: absolute;
+        top: -2px;
+        left: 10px;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 182, 96, 0.2);
+        backdrop-filter: blur(2px);
+    }
 }
 .plug-in-main {
     height: 100%;
