@@ -38,6 +38,7 @@ import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -452,22 +453,31 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
+    const { id } = props
     const [flow, setFlow] = useState<HTTPFlow>()
+    const [isSelect,setIsSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(false)
     useEffect(() => {
-        if (!props.id) {
-            setFlow(undefined)
+        if (!id) {
+            setIsSelect(false)
             return
         }
-        setFold(false)
+        setIsSelect(true)
+        getRemoteValue("IsFoldValue").then((data) => {
+            if (!data) {
+                return
+            }
+            const is:boolean = JSON.parse(data).is
+            setFold(is)
+        })
         setFlow(undefined)
         setLoading(true)
         ipcRenderer
-            .invoke("GetHTTPFlowById", {Id: props.id})
+            .invoke("GetHTTPFlowById", {Id: id})
             .then((i: HTTPFlow) => {
                 setFlow(i)
                 const existedExtraInfos: HTTPFlowInfoType[] = []
@@ -516,7 +526,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         return () => {
             setExistedInfoType([])
         }
-    }, [props.id])
+    }, [id])
 
     useEffect(() => {
         if (!infoType) {
@@ -536,7 +546,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         return col
     }, [existedInfoType.length, isFold])
 
-    return flow ? (
+    return isSelect ? (
         <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
             <div className={styles["http-history-box"]}>
                 <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
@@ -576,7 +586,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <Tooltip placement='top' title='向右收起'>
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
-                                                    onClick={() => setFold(true)}
+                                                    onClick={() => {
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is:true}))
+                                                        setFold(true)
+                                                    }}
                                                 />
                                             </Tooltip>
                                         </div>
@@ -636,7 +649,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             )}
                         >
                             <Tooltip placement='top' title='向左展开'>
-                                <SideBarCloseIcon className={styles["fold-icon"]} onClick={() => setFold(false)} />
+                                <SideBarCloseIcon className={styles["fold-icon"]} onClick={() => {
+                                        setRemoteValue("IsFoldValue", JSON.stringify({is:false}))
+                                        setFold(false)
+                                    }} />
                             </Tooltip>
                         </div>
                     </div>

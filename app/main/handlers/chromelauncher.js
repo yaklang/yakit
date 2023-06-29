@@ -33,7 +33,11 @@ module.exports = (win, getClient) => {
         if (chromePath) {
             launchOpt["chromePath"] = chromePath
         }
-        return launch(launchOpt).then(value => {
+        return launch(launchOpt).then(chrome => {
+            chrome.process.on('exit', () => {
+                // 在这里执行您想要的操作，当所有chrome实例都关闭时
+                started=false
+            })
             started = true
             return ""
         })
