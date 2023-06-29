@@ -74,12 +74,15 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                         <div className={styles["title-style"]}>MITM</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
-                    <div className={styles["parent-menu-wrapper"]}>
+                    <div className={styles["parent-menu-wrapper"]} onClick={() => onMenu(YakitRoute.HTTPFuzzer)}>
                         <div className={styles["childs-menu-wrapper"]}>
                             <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.HTTPFuzzer].label}>
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.HTTPFuzzer)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.HTTPFuzzer)
+                                    }}
                                 >
                                     <PublicWebFuzzerIcon />
                                 </div>
@@ -87,7 +90,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.WebsocketFuzzer].label}>
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.WebsocketFuzzer)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.WebsocketFuzzer)
+                                    }}
                                 >
                                     <PublicWebsocketFuzzerIcon />
                                 </div>
@@ -186,12 +192,15 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                         </div>
                     </div>
                     <div className={styles["divider-style"]}></div>
-                    <div className={styles["parent-menu-wrapper"]}>
+                    <div className={styles["parent-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Mod_Brute)}>
                         <div className={styles["childs-menu-wrapper"]}>
                             <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.Mod_Brute].label}>
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.Mod_Brute)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.Mod_Brute)
+                                    }}
                                 >
                                     <PublicBruteIcon />
                                 </div>
@@ -202,13 +211,14 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                                         [styles["disable-style"]]:
                                             pluginToId[ResidentPluginName.DirectoryScanning] === 0
                                     })}
-                                    onClick={() =>
+                                    onClick={(e) => {
+                                        e.stopPropagation()
                                         onMenu(
                                             YakitRoute.Plugin_OP,
                                             pluginToId[ResidentPluginName.DirectoryScanning],
                                             ResidentPluginName.DirectoryScanning
                                         )
-                                    }
+                                    }}
                                 >
                                     <PublicDirectoryScanningIcon />
                                 </div>
@@ -254,12 +264,15 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             )}
             {mode === "反连" && (
                 <>
-                    <div className={styles["parent-menu-wrapper"]}>
+                    <div className={styles["parent-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DNSLog)}>
                         <div className={styles["childs-menu-wrapper"]}>
                             <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.DNSLog].label}>
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.DNSLog)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.DNSLog)
+                                    }}
                                 >
                                     <PublicDNSLogIcon />
                                 </div>
@@ -267,7 +280,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.ICMPSizeLog].label}>
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.ICMPSizeLog)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.ICMPSizeLog)
+                                    }}
                                 >
                                     <PublicICMPSizeLogIcon />
                                 </div>
@@ -275,7 +291,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             <Tooltip placement='bottom' title={YakitRouteToPageInfo[YakitRoute.TCPPortLog].label}>
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.TCPPortLog)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.TCPPortLog)
+                                    }}
                                 >
                                     <PublicTCPPortLogIcon />
                                 </div>
@@ -284,7 +303,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                         <div className={styles["title-style"]}>反连触发器</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
-                    <div className={styles["parent-menu-wrapper"]}>
+                    <div
+                        className={styles["parent-menu-wrapper"]}
+                        onClick={() => onMenu(YakitRoute.PayloadGenerater_New)}
+                    >
                         <div className={styles["childs-menu-wrapper"]}>
                             <Tooltip
                                 placement='bottom'
@@ -292,7 +314,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             >
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.PayloadGenerater_New)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.PayloadGenerater_New)
+                                    }}
                                 >
                                     <PublicPayloadGeneraterIcon />
                                 </div>
@@ -303,7 +328,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             >
                                 <div
                                     className={classNames(styles["icon-wrapper"], styles["child-icon-wrapper"])}
-                                    onClick={() => onMenu(YakitRoute.ReverseServer_New)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onMenu(YakitRoute.ReverseServer_New)
+                                    }}
                                 >
                                     <PublicReverseServerIcon />
                                 </div>
