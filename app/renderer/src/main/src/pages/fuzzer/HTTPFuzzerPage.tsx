@@ -82,6 +82,7 @@ import {
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
+import { HTTPFuzzerEditorMenu } from "./HTTPFuzzerEditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1031,7 +1032,104 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (!reqEditor) {
                 return
             }
+            const instance = {
+                color: "grey",
+                setColor: (c)=>{
+                    if (this === undefined) {
+                        return
+                    }
+                    // @ts-ignore
+                    this.color = c
+                },
+                getId: function () {
+                    return "monaco.contentwidget.webfuzzer-copilot";
+                },
+                getDomNode: function () {
+                    if (!this) {
+                        return "" as any
+                    }
+                    const handleClick = () => {
+                        console.log('Menu item clicked');
+                      };
+                      const menu = (
+                        <div>
+                          <ul>
+                            <li onClick={handleClick}>Menu item 1</li>
+                            <li onClick={handleClick}>Menu item 2</li>
+                            <li onClick={handleClick}>Menu item 3</li>
+                          </ul>
+                        </div>
+                      );
+                    // 将TSX转换为DOM节点
+                    const domNode = document.createElement('div');
+                    ReactDOM.render(menu, domNode);
+                    return domNode;
+                },
+                getPosition: function () {
+                    const currentPos = reqEditor.getPosition();
+                    return {
+                        position: {
+                            lineNumber: currentPos?.lineNumber || 0,
+                            column: currentPos?.column || 0,
+                        },
+                        preference: [1,2],
+                    };
+                },
+            };
+            // 是否展示菜单
+            // if (false) {
+            //     reqEditor.removeContentWidget(instance)
+            //     return
+            // }
             reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
+            reqEditor.onMouseMove(event => {
+                try {
+                    const pos = event.target.position;
+                    console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
+
+                    const lineOffset = (pos?.lineNumber||0)-(reqEditor.getPosition()?.lineNumber||0);
+                    if (lineOffset > 3 || lineOffset < -3) {
+                        console.log("移出三行内");
+                        reqEditor.removeContentWidget(instance)
+                    }else{
+                        console.log("移入三行内");
+                        instance.setColor("red")
+                        reqEditor.layoutContentWidget(instance)
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
+            })
+            reqEditor.onDidBlurEditorWidget(() => {
+                reqEditor.removeContentWidget(instance)
+            })
+            reqEditor.onMouseUp((e)=>{
+                if(e.event.leftButton){
+                    const selection = reqEditor.getSelection();
+                    if(selection){
+                        const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
+                        if(selectedText.length===0){
+                            reqEditor.removeContentWidget(instance)
+                            reqEditor.addContentWidget(instance)  
+                        }
+                    }
+                }
+                
+            })
+            // 监听代码选中的变化
+            reqEditor.onDidChangeCursorPosition((e) => {
+                // const { position } = event;
+                // console.log('当前光标位置：', position);
+                const selection = reqEditor.getSelection();
+                if (selection) {
+                    const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
+                    if(selectedText.length>0){
+                        reqEditor.removeContentWidget(instance)
+                    }
+                    console.log('选中的内容：', selectedText);
+                  }
+                
+            });
         } catch (e) {
             failed("初始化 EOL CRLF 失败")
         }
