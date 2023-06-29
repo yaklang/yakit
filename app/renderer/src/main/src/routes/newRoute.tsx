@@ -643,7 +643,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
     },
     {
         page: undefined,
-        label: "基础工具",
+        label: "安全工具",
         children: [
             {
                 page: YakitRoute.Mod_ScanPort,
@@ -1034,7 +1034,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     },
     {
         page: undefined,
-        label: "基础工具",
+        label: "安全工具",
         children: [
             PrivateAllMenus[YakitRoute.Mod_Brute],
             {
@@ -1125,7 +1125,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
 export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
-        label: "基础工具",
+        label: "安全工具",
         children: [
             PrivateAllMenus[YakitRoute.Mod_Brute],
             {

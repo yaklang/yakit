@@ -121,7 +121,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     </div>
                 </>
             )}
-            {mode === "基础工具" && (
+            {mode === "安全工具" && (
                 <>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Mod_ScanPort)}>
                         <div className={styles["icon-wrapper"]}>
