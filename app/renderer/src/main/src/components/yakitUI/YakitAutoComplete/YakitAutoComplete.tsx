@@ -99,6 +99,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                         // 兼容以前 key 保存的数据
                         cacheData.defaultValue = newData
                     }
+                    if (props.onChange) props.onChange(cacheData.defaultValue||'', cacheData.options||[])
                     setCacheHistoryData({...cacheData})
                 } catch (error) {
                     yakitNotify("error", "YakitAutoComplete:转换数据出错" + error)
