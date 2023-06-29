@@ -53,10 +53,10 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=4096
       - run: wget -O bins/database/default-cve.db.gzip https://cve-db.oss-accelerate.aliyuncs.com/default-cve.db.gzip
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
-        name: "Download CVE(Include CWE) Data (Yakit-EE && Yakit-SE)"
+        name: "Download CVE(Include CWE) Data (EnpriTrace && EnpriTraceAgent)"
       - run: wget -O bins/resources/local-plugins-se.yakitresource.txt https://yaklang.oss-accelerate.aliyuncs.com/yakit-ee/local-plugins-se.yakitresource.txt
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') }}
-        name: "Download Plugin resource Files (Yakit-EE && Yakit-SE)"
+        name: "Download Plugin resource Files (EnpriTrace && EnpriTraceAgent)"
       # 企业版
       - run: yarn build-render-enterprise
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
@@ -65,6 +65,13 @@ jobs:
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
+      - name: Build Yakit (EE)
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: ./
+        run: |
+          yarn add -D dmg-license && yarn electron-publish-ee
       # 特别版
       - run: yarn build-render-simple-enterprise
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
@@ -73,6 +80,14 @@ jobs:
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
+      - name: Build Yakit (SE)
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: ./
+        run: |
+          yarn add -D dmg-license && yarn electron-publish-se
+      # 社区版
       - run: yarn build-render
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
         working-directory: ./
@@ -81,6 +96,7 @@ jobs:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
       - name: Build Yakit (MultiPlatform)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: ./
@@ -138,29 +154,29 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit(Enterprise) Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit(Enterprise) Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit(Enterprise) Artifacts Linux
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
       # start Special Edition
       - name: Upload Yakit(Special) Artifacts Windows
@@ -168,29 +184,29 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Upload Yakit(Special) Artifacts Mac(m1)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Upload Yakit(Special) Artifacts Mac(intel)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Upload Yakit(Special) Artifacts Linux
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
 
   publish_yakit_ee_to_oss:
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') && !endsWith(github.ref, '/no-release') }}
@@ -215,19 +231,19 @@ jobs:
       - name: Download Yakit (Darwin Amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Download Yakit (Windows amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Download Yakit (Darwin arm64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Download Yakit (Linux amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
       - run: ls
         name: Ls Published Artifacts...
 
@@ -243,10 +259,10 @@ jobs:
           bucket: yaklang
           assets: |
             ./yakit-ee-version.txt:/yak/latest/yakit-ee-version.txt
-            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/Yakit-EE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
   # special edition
   publish_yakit_se_to_oss:
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') && !endsWith(github.ref, '/no-release') }}
@@ -271,19 +287,19 @@ jobs:
       - name: Download Yakit (Darwin Amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
       - name: Download Yakit (Windows amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
       - name: Download Yakit (Darwin arm64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
       - name: Download Yakit (Linux amd64)
         uses: actions/download-artifact@v2
         with:
-          name: Yakit-SE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
       - run: ls
         name: Ls Published Artifacts...
 
@@ -299,10 +315,10 @@ jobs:
           bucket: yaklang
           assets: |
             ./yakit-se-version.txt:/yak/latest/yakit-se-version.txt
-            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/Yakit-SE-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/Yakit-SE-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/Yakit-SE-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
   download_artifacts_and_release:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:

@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 
@@ -260,7 +260,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         ipcRenderer
             .invoke("install-yak-engine", latestYaklang)
             .then(() => {
-                success("安装成功，如未生效，重启 Yakit 即可")
+                success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
             })
             .catch((err: any) => {
                 failed(
@@ -293,7 +293,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                         <div className={styles["hint-right-wrapper"]}>
                             {installedYakit ? (
                                 <>
-                                    <div className={styles["hint-right-title"]}>Yakit 下载成功</div>
+                                    <div className={styles["hint-right-title"]}>{getReleaseEditionName()} 下载成功</div>
                                     <div className={styles["hint-right-content"]}>
                                         安装需关闭软件，双击安装包即可安装完成，是否立即安装？
                                     </div>
@@ -347,12 +347,12 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 </div>
                             ) : (
                                 <>
-                                    <div className={styles["hint-right-title"]}>检测到 Yakit 版本升级</div>
+                                    <div className={styles["hint-right-title"]}>检测到 {getReleaseEditionName()} 版本升级</div>
                                     <div className={styles["hint-right-content"]}>
                                         {/* {`当前版本：v${currentYakit}`}
                                         <br />
                                         {`最新版本：${latestYakit}`} */}
-                                        {`Yakit ${latestYakit} 更新说明 :`}
+                                        {`${getReleaseEditionName()} ${latestYakit} 更新说明 :`}
                                     </div>
                                     <div className={styles["hint-right-update-content"]}>
                                         {yakitContent.length === 0

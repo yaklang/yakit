@@ -5,6 +5,7 @@ import {EngineLogCloseSvgIcon} from "./icons"
 import ReactResizeDetector from "react-resize-detector"
 
 import styles from "./EngineLog.module.scss"
+import { getReleaseEditionName } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,13 +34,13 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
             return
         }
 
-        writeToConsole(`欢迎使用 Yakit!\n`)
+        writeToConsole(`欢迎使用 ${getReleaseEditionName()}!\n`)
 
         ipcRenderer.on("live-engine-stdio", (e, stdout) => {
             writeToConsole(stdout)
         })
         ipcRenderer.on("live-engine-log", (e, stdout) => {
-            writeToConsole(`[INFO] Yakit-Verbose-Log: ${stdout}`)
+            writeToConsole(`[INFO] ${getReleaseEditionName()}-Verbose-Log: ${stdout}`)
         })
         return () => {
             ipcRenderer.removeAllListeners("live-engine-stdio")

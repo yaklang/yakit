@@ -26,7 +26,7 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
             return "EnpriTrace"
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
-            return "ETraceAgent"
+            return "EnpriTraceAgent"
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return "BAS"
         default:
@@ -35,7 +35,7 @@ export const getReleaseEditionName = () => {
 }
 
 export const isEnpriTrace = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTraceAgent
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
 }
 
 export const isEnpriTraceAgent = () => {

@@ -16,9 +16,11 @@ import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
 
 import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
-import {isCommunityEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import { RemoteLinkInfo } from "../layout/UILayout"
 import { DynamicStatusProps } from "@/store"
+import yakitSE from "@/assets/yakitSE.png";
+import yakitEE from "@/assets/yakitEE.png";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -562,7 +564,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     /** 加载页随机宣传语 */
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
     /** Title */
-    const Title = useMemo(() => yakitStatus==="control-remote"?"远程控制中 ...":"欢迎使用 Yakit", [])
+    const Title = useMemo(() => yakitStatus==="control-remote"?"远程控制中 ...":`欢迎使用 ${getReleaseEditionName()}`, [])
     
     return (
         <div className={styles["yakit-loading-wrapper"]}>
@@ -573,7 +575,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
                     </div>
 
-                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                    {/* 社区版 - 启动Logo */}
+                    {isCommunityEdition() && <div className={styles["yakit-loading-icon-wrapper"]}>
                         <div className={styles["theme-icon-wrapper"]}>
                             <div className={styles["theme-icon"]}>
                                 <YakitThemeLoadingSvgIcon />
@@ -582,7 +585,23 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <div className={styles["white-icon"]}>
                             <YakitLoadingSvgIcon />
                         </div>
+                    </div>}
+                    {/* 企业版 - 启动Logo */}
+                    {
+                        isEnpriTrace()&& <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["white-icon"]}>
+                            <img src={yakitEE} alt="暂无图片" />
+                        </div>
                     </div>
+                    }
+                    {/* 便携版 - 启动Logo */}
+                    {
+                        isEnpriTraceAgent()&& <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["white-icon"]}>
+                            <img src={yakitSE} alt="暂无图片" />
+                        </div>
+                    </div>
+                    }
 
                     <div className={styles["yakit-loading-content"]}>
                         {hintTitle}
@@ -791,7 +810,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
         ipcRenderer
             .invoke("install-yak-engine", latestVersion)
             .then(() => {
-                success("安装成功，如未生效，重启 Yakit 即可")
+                success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
             })
             .catch((err: any) => {
                 failed(`安装失败: ${err.message.indexOf("operation not permitted") > -1 ? "请关闭引擎后重试" : err}`)

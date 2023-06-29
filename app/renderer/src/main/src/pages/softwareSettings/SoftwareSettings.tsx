@@ -9,6 +9,11 @@ import {ProjectManageProp} from "./ProjectManage"
 
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
+import { isEnpriTrace, isEnpriTraceAgent } from "@/utils/envfile"
+import yakitEEProject from "@/assets/yakitFontEE.png";
+import yakitSEProject from "@/assets/yakitFontSE.png";
+import yakitEEMiniProject from "@/assets/yakitEE.png";
+import yakitSEMiniProject from "@/assets/yakitSE.png";
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
@@ -20,6 +25,17 @@ interface SettingsMenuProp {
     key: string
     name: string
     icon: ReactNode
+}
+const ProjectLogo = (showMini:boolean) => {
+    if(isEnpriTrace()){
+        return <img style={{height:"100%"}} src={showMini?yakitEEMiniProject:yakitEEProject} alt="暂无图片" />
+    }
+    else if(isEnpriTraceAgent()){
+        return <img style={{height:"100%"}} src={showMini?yakitSEMiniProject:yakitSEProject} alt="暂无图片" />
+    }
+    else{
+        return <YakitLogoSvgIcon />
+    }
 }
 const SettingsMenu: SettingsMenuProp[] = [
     {
@@ -94,7 +110,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                     })}
                 >
                     <div className={styles["navbar-logo"]}>
-                        <YakitLogoSvgIcon />
+                        {ProjectLogo(showMini)}
                     </div>
 
                     <div className={styles["navbar-list-wrapper"]}>

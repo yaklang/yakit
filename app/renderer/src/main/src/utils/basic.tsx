@@ -23,6 +23,7 @@ import useHoldingIPCRStream from "../hook/useHoldingIPCRStream";
 import {randomString} from "./randomUtil";
 import {PluginResultUI} from "../pages/yakitStore/viewers/base";
 import {AutoCard} from "../components/AutoCard";
+import { getReleaseEditionName, isCommunityEdition } from "./envfile";
 
 export interface YakVersionProp {
 
@@ -115,7 +116,7 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
 
     if (!newVersion) {
         return <Tag color={isDev ? "red" : "geekblue"}>
-            Yakit-{version}
+            {getReleaseEditionName()}-{version}
         </Tag>
     }
 
@@ -127,7 +128,7 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
                 }
 
                 showModal({
-                    title: "有新的 Yakit 版本可升级！",
+                    title: `有新的 ${getReleaseEditionName()} 版本可升级！`,
                     content: <>
                         如果你现在不是很忙
                         <br/>
@@ -141,7 +142,7 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
                     </>
                 })
             }}>
-                Yakit-{version}
+                {getReleaseEditionName()}-{version}
             </Button>
         </Badge>
     </div>
@@ -406,7 +407,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                 type={"password"} disable={ok}
                 help={`yak bridge 命令的 --secret 参数值`}
             />
-            <Divider orientation={"left"}>Yakit 全局 DNSLog 配置</Divider>
+            <Divider orientation={"left"}>{isCommunityEdition()&&'Yakit'} 全局 DNSLog 配置</Divider>
             <SwitchItem
                 label={"复用 Yak Bridge 配置"} disabled={ok}
                 value={inheritBridge} setValue={setInheritBridge}/>

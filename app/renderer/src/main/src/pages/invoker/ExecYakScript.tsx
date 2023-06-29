@@ -8,6 +8,7 @@ import { PluginResultUI } from "../yakitStore/viewers/base"
 import { useCreation } from "ahooks"
 
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
+import { getReleaseEditionName } from "@/utils/envfile"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -67,7 +68,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
 
 export const startExecuteYakScript = (script: YakScript, params: YakExecutorParam[]) => {
     showDrawer({
-        title: `正在执行的 Yakit 模块：${script.ScriptName}`,
+        title: `正在执行的 ${getReleaseEditionName()} 模块：${script.ScriptName}`,
         width: "85%",
         mask: false,
         content: (
