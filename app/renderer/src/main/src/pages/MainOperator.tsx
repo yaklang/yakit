@@ -560,7 +560,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ) => {
             const {route, pluginId = 0, pluginName = ""} = routeInfo
             // 菜单在代码内的名字
-            const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""           
+            const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""
             if (!menuName) return
 
             const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
@@ -796,7 +796,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         // 设置相邻页面为当前页面
         let active = ""
-        if (currentIndex > 0 && !!removeArr[currentIndex - 1]) active = removeArr[currentIndex + 1].id
+        if (currentIndex > 0 && !!removeArr[currentIndex - 1]) active = removeArr[currentIndex - 1].id
         if (currentIndex === 0 && !!removeArr[currentIndex + 1]) active = removeArr[currentIndex + 1].id
 
         if (active) {
@@ -1262,7 +1262,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 }
             }
             if (type === YakitRoute.HTTPHacker) {
-                openMenuPage({route: YakitRoute.DB_Risk})
+                openMenuPage({route: YakitRoute.HTTPHacker})
             }
             if (type === YakitRoute.DB_Risk) {
                 openMenuPage({route: YakitRoute.DB_Risk})
@@ -1503,7 +1503,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                                     height: "100%",
                                                                     maxHeight: "100%",
                                                                     padding:
-                                                                        !i.singleNode || NoPaddingRoute.includes(i.route)
+                                                                        !i.singleNode ||
+                                                                        NoPaddingRoute.includes(i.route)
                                                                             ? 0
                                                                             : "8px 16px 13px 16px"
                                                                 }}
