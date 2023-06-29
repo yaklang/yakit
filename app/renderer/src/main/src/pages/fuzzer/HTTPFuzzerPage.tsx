@@ -83,6 +83,7 @@ import {
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
 import { HTTPFuzzerEditorMenu } from "./HTTPFuzzerEditorMenu"
+import { HTTPFuzzerRangeEditorMenu,HTTPFuzzerClickEditorMenu } from "./HTTPFuzzerEditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1027,95 +1028,154 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
-    // 编辑器打开状态
-    const editerMenuStatus = useRef<boolean>(false)
+    // 编辑器菜单
+    const editerMenuFun = (reqEditor:IMonacoEditor) => {
+        // 编辑器点击显示的菜单
+        const fizzSelectWidget = {
+            isOpen:false,
+            getId: function () {
+                return "monaco.fizz.select.widget";
+            },
+            getDomNode: function () {
+                console.log(1111);
+                // 将TSX转换为DOM节点
+                const domNode = document.createElement('div');
+                ReactDOM.render(<HTTPFuzzerClickEditorMenu close={()=>{
+                    closeFizzSelectWidget()
+                }}/>, domNode);
+                return domNode;
+            },
+            getPosition: function () {
+                const currentPos = reqEditor.getPosition();
+                return {
+                    position: {
+                        lineNumber: currentPos?.lineNumber || 0,
+                        column: currentPos?.column || 0,
+                    },
+                    preference: [1,2],
+                };
+            },
+            update: function() {
+                // 更新小部件的位置
+                this.getPosition();
+                reqEditor.layoutContentWidget(this);
+            }
+        };
+        // 编辑器选中显示的菜单
+        const fizzRangeWidget = {
+            isOpen:false,
+            getId: function () {
+                return "monaco.fizz.range.widget";
+            },
+            getDomNode: function () {
+                console.log(2222);
+                // 将TSX转换为DOM节点
+                const domNode = document.createElement('div');
+                ReactDOM.render(<HTTPFuzzerRangeEditorMenu/>, domNode);
+                return domNode;
+            },
+            getPosition: function () {
+                const currentPos = reqEditor.getPosition();
+                return {
+                    position: {
+                        lineNumber: currentPos?.lineNumber || 0,
+                        column: currentPos?.column || 0,
+                    },
+                    preference: [1,2],
+                };
+            },
+            update: function() {
+                // 更新小部件的位置
+                this.getPosition();
+                reqEditor.layoutContentWidget(this);
+            }
+        };
+        // 是否展示菜单
+        // if (false) {
+        //     closeFizzSelectWidget()
+        //     return
+        // }
+
+        // 关闭点击的菜单
+        const closeFizzSelectWidget = () => {
+            fizzSelectWidget.isOpen = false
+            reqEditor.removeContentWidget(fizzSelectWidget)
+        }
+        // 关闭选中的菜单
+        const closeFizzRangeWidget = () => {
+            fizzRangeWidget.isOpen = false
+            reqEditor.removeContentWidget(fizzRangeWidget)         
+        }
+
+        reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
+        reqEditor.onMouseMove(event => {
+            try {
+                const pos = event.target.position;
+                // console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
+                if(pos?.lineNumber){
+                    const lineOffset = (pos.lineNumber)-(reqEditor.getPosition()?.lineNumber||0);
+                    // 超出范围移除菜单
+                    if (lineOffset > 2 || lineOffset < -2) {
+                        // console.log("移出两行内");
+                        closeFizzSelectWidget()
+                    }
+                }
+                
+            } catch (e) {
+                console.log(e)
+            }
+        })
+        // 失去焦点时触发
+        reqEditor.onDidBlurEditorWidget(() => {
+            // closeFizzSelectWidget()
+        })
+
+        reqEditor.onMouseUp((e)=>{
+            const {leftButton,rightButton} = e.event
+            if(leftButton){
+                const selection = reqEditor.getSelection();
+                if(selection){
+                    const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
+                    if(fizzSelectWidget.isOpen&&selectedText.length===0){
+                        // 更新点击菜单小部件的位置
+                        fizzSelectWidget.update();
+                    }
+                    else if(fizzRangeWidget.isOpen&&selectedText.length!==0){
+                        fizzRangeWidget.update();
+                    }
+                    else if(selectedText.length===0){
+                        closeFizzRangeWidget()
+                        // 展示点击的菜单
+                        reqEditor.addContentWidget(fizzSelectWidget) 
+                        fizzSelectWidget.isOpen = true
+                    }
+                    else{
+                        console.log("展示选中的菜单");
+                        closeFizzSelectWidget()
+                        // 展示选中的菜单
+                        reqEditor.addContentWidget(fizzRangeWidget) 
+                        fizzRangeWidget.isOpen = true
+                    }
+                }
+            }
+            if(rightButton){
+                closeFizzRangeWidget()
+                closeFizzSelectWidget()
+            }
+            
+        })
+        // 监听代码选中的变化
+        reqEditor.onDidChangeCursorPosition((e) => {
+            // const { position } = e;
+            // console.log('当前光标位置：', position);
+        });
+    }
     useEffect(() => {
         try {
             if (!reqEditor) {
                 return
             }
-            
-            const instance = {
-                getId: function () {
-                    return "monaco.contentwidget.webfuzzer-copilot";
-                },
-                getDomNode: function () {
-                    console.log(1111);
-                    // 将TSX转换为DOM节点
-                    const domNode = document.createElement('div');
-                    ReactDOM.render(<HTTPFuzzerEditorMenu/>, domNode);
-                    return domNode;
-                },
-                getPosition: function () {
-                    const currentPos = reqEditor.getPosition();
-                    return {
-                        position: {
-                            lineNumber: currentPos?.lineNumber || 0,
-                            column: currentPos?.column || 0,
-                        },
-                        preference: [1,2],
-                    };
-                },
-                update: function() {
-                    // 更新小部件的位置
-                    this.getPosition();
-                    reqEditor.layoutContentWidget(this);
-                }
-            };
-            // 是否展示菜单
-            // if (false) {
-            //     reqEditor.removeContentWidget(instance)
-            //     return
-            // }
-            reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
-            reqEditor.onMouseMove(event => {
-                try {
-                    const pos = event.target.position;
-                    // console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
-
-                    const lineOffset = (pos?.lineNumber||0)-(reqEditor.getPosition()?.lineNumber||0);
-                    // 超出范围移除菜单
-                    if (lineOffset > 3 || lineOffset < -3) {
-                        // console.log("移出三行内");
-                        editerMenuStatus.current = false
-                        reqEditor.removeContentWidget(instance)
-                    }
-                } catch (e) {
-                    console.log(e)
-                }
-            })
-            // 失去焦点时触发
-            reqEditor.onDidBlurEditorWidget(() => {
-                reqEditor.removeContentWidget(instance)
-                editerMenuStatus.current = false
-            })
-            reqEditor.onMouseUp((e)=>{
-                const {leftButton} = e.event
-                if(leftButton){
-                    const selection = reqEditor.getSelection();
-                    if(selection){
-                        const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
-                        if(editerMenuStatus.current){
-                            // 更新小部件的位置
-                            instance.update();
-                        }
-                        else if(selectedText.length===0){
-                            reqEditor.removeContentWidget(instance)
-                            reqEditor.addContentWidget(instance) 
-                            editerMenuStatus.current = true
-                        }
-                        else{
-                            console.log("菜单2");
-                        }
-                    }
-                }
-                
-            })
-            // 监听代码选中的变化
-            reqEditor.onDidChangeCursorPosition((e) => {
-                // const { position } = event;
-                // console.log('当前光标位置：', position);
-            });
+            editerMenuFun(reqEditor)
         } catch (e) {
             failed("初始化 EOL CRLF 失败")
         }
