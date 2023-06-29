@@ -85,15 +85,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 form.setFieldsValue({port: e})
             }
         })
-        getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyValue).then(e => {
-            if (!!e) {
-                form.setFieldsValue({downstreamProxy: e})
-            }
-        })
-        getRemoteValue(MITMConsts.MITMDefaultEnableHTTP2).then(e => {
+        getRemoteValue(MITMConsts.MITMDefaultEnableHTTP2).then((e) => {
             form.setFieldsValue({enableHttp2: !!e})
         })
-        getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then(e => {
+        getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
             form.setFieldsValue({enableGMTLS: !!e})
         })
         getRemoteValue(MITMConsts.MITMDefaultHostHistoryList).then((e) => {
@@ -160,12 +155,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
         setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
-        setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory, `${params.downstreamProxy}`)
-        setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2?"1":""}`)
-        setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS?"1":""}`)
+        setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
+        setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS ? "1" : ""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
-        setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyValue, `${params.downstreamProxy}`)
-
     })
     const [width, setWidth] = useState<number>(0)
     return (

@@ -3,7 +3,6 @@ import React from "react";
 export enum MITMConsts {
     MITMDefaultServer = "YAKIT_MITMDefaultServer",
     MITMDefaultPort = "YAKIT_MITMDefaultPort",
-    MITMDefaultDownstreamProxyValue = "YAKIT_MITMDefaultDownstreamProxyValue",
     MITMDefaultDownstreamProxyHistory = "YAKIT_MITMDefaultDownstreamProxyHistory",
     MITMDefaultEnableHTTP2 = "YAKIT_MITMDefaultEnableHTTP2",
     MITMDefaultEnableGMTLS = "YAKIT_MITMDefaultEnableGMTLS",
