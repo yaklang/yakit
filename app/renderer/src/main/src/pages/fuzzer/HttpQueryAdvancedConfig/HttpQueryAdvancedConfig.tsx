@@ -45,7 +45,6 @@ import {
     matcherTypeList,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
-import {Route} from "@/routes/routeSpec"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
 import {
@@ -58,6 +57,7 @@ import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
+import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -106,7 +106,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const filterMode = useWatch("filterMode", form)
     const hitColor = useWatch("hitColor", form) || "red"
 
-    const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${Route.HTTPFuzzer}`)) || {
+    const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${YakitRoute.HTTPFuzzer}`)) || {
         width: 0,
         height: 0
     }

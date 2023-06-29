@@ -386,9 +386,6 @@ service Yak {
   rpc GetProjectKey(GetKeyRequest) returns (GetKeyResult);
   rpc SetProjectKey(SetKeyRequest) returns (Empty);
 
-  rpc GetProjectKey(GetKeyRequest) returns (GetKeyResult);
-  rpc SetProjectKey(SetKeyRequest) returns (Empty);
-
   // Online
   rpc GetOnlineProfile(Empty) returns (OnlineProfile);
   rpc SetOnlineProfile(OnlineProfile) returns (Empty);
