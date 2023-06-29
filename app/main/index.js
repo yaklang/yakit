@@ -209,24 +209,3 @@ app.on("window-all-closed", function () {
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()
 })
-/**@description 获取缓存的屏幕参数，位置以及宽高 */
-function getBrowserWindow() {
-    // 使用 electron-window-state 模块来获取窗口状态
-    let windowState = windowStateKeeper({
-        defaultWidth: 1600,
-        defaultHeight: 1000
-    })
-    // 获取所有可用的屏幕
-    let displays = screen.getAllDisplays()
-    // 获取第二个屏幕的大小和位置
-    let externalDisplay = displays.find((display) => {
-        return display.bounds.x !== 0 || display.bounds.y !== 0
-    })
-    // 如果找到了第二个屏幕，则将窗口放置在第二个屏幕上
-    if (externalDisplay) {
-        // 将窗口的位置设置为第二个屏幕
-        windowState.x = externalDisplay.bounds.x
-        windowState.y = externalDisplay.bounds.y
-    }
-    return windowState
-}

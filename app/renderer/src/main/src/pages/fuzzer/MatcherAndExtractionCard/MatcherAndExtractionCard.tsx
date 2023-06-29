@@ -214,12 +214,12 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         }, [extractorValue, defActiveType])
         const isEffectiveMatcher: boolean = useMemo(() => {
             return (
-                matcher.matchersList.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
+                matcher?.matchersList?.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
             )
         }, [matcher.matchersList])
         const isEffectiveExtractor: boolean = useMemo(() => {
             return (
-                extractor.extractorList.filter((i) => !((i?.Groups || []).map((i) => i.trim()).join("") === ""))
+                extractor?.extractorList?.filter((i) => !((i?.Groups || []).map((i) => i.trim()).join("") === ""))
                     .length <= 0
             )
         }, [extractor.extractorList])

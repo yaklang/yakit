@@ -1485,12 +1485,12 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         setShowMatcherAndExtraction={setShowMatcherAndExtraction}
                                         matcherValue={{
                                             hitColor: advancedConfigValue.hitColor || "red",
-                                            matchersCondition: advancedConfigValue.matchersCondition,
-                                            matchersList: advancedConfigValue.matchers,
-                                            filterMode: advancedConfigValue.filterMode
+                                            matchersCondition: advancedConfigValue.matchersCondition || "and",
+                                            matchersList: advancedConfigValue.matchers || [],
+                                            filterMode: advancedConfigValue.filterMode || "drop"
                                         }}
                                         extractorValue={{
-                                            extractorList: advancedConfigValue.extractors
+                                            extractorList: advancedConfigValue.extractors||[]
                                         }}
                                         defActiveKey={activeKey}
                                         defActiveType={activeType}
