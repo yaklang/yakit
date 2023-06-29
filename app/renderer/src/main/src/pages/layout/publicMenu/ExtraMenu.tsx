@@ -2,7 +2,7 @@ import React, {useMemo, useState} from "react"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SaveIcon} from "@/assets/newIcon"
-import {MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
+import {ExtraMenuCodecIcon, MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRoute} from "@/routes/newRoute"
 import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
@@ -75,6 +75,16 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     导入协作资源
                 </YakitButton>
             </YakitPopover>
+            <YakitButton
+                type='secondary2'
+                className={styles["extra-menu-gray"]}
+                onClick={() => {
+                    onMenuSelect({route: YakitRoute.Codec})
+                }}
+                icon={<ExtraMenuCodecIcon />}
+            >
+                Codec
+            </YakitButton>
             <YakitButton
                 type='secondary2'
                 className={styles["extra-menu-gray"]}
