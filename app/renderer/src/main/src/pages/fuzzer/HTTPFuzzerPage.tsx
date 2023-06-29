@@ -1027,42 +1027,23 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
+    // 编辑器打开状态
+    const editerMenuStatus = useRef<boolean>(false)
     useEffect(() => {
         try {
             if (!reqEditor) {
                 return
             }
+            
             const instance = {
-                color: "grey",
-                setColor: (c)=>{
-                    if (this === undefined) {
-                        return
-                    }
-                    // @ts-ignore
-                    this.color = c
-                },
                 getId: function () {
                     return "monaco.contentwidget.webfuzzer-copilot";
                 },
                 getDomNode: function () {
-                    if (!this) {
-                        return "" as any
-                    }
-                    const handleClick = () => {
-                        console.log('Menu item clicked');
-                      };
-                      const menu = (
-                        <div>
-                          <ul>
-                            <li onClick={handleClick}>Menu item 1</li>
-                            <li onClick={handleClick}>Menu item 2</li>
-                            <li onClick={handleClick}>Menu item 3</li>
-                          </ul>
-                        </div>
-                      );
+                    console.log(1111);
                     // 将TSX转换为DOM节点
                     const domNode = document.createElement('div');
-                    ReactDOM.render(menu, domNode);
+                    ReactDOM.render(<HTTPFuzzerEditorMenu/>, domNode);
                     return domNode;
                 },
                 getPosition: function () {
@@ -1075,6 +1056,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         preference: [1,2],
                     };
                 },
+                update: function() {
+                    // 更新小部件的位置
+                    this.getPosition();
+                    reqEditor.layoutContentWidget(this);
+                }
             };
             // 是否展示菜单
             // if (false) {
@@ -1085,32 +1071,41 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             reqEditor.onMouseMove(event => {
                 try {
                     const pos = event.target.position;
-                    console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
+                    // console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
 
                     const lineOffset = (pos?.lineNumber||0)-(reqEditor.getPosition()?.lineNumber||0);
+                    // 超出范围移除菜单
                     if (lineOffset > 3 || lineOffset < -3) {
-                        console.log("移出三行内");
+                        // console.log("移出三行内");
+                        editerMenuStatus.current = false
                         reqEditor.removeContentWidget(instance)
-                    }else{
-                        console.log("移入三行内");
-                        instance.setColor("red")
-                        reqEditor.layoutContentWidget(instance)
                     }
                 } catch (e) {
                     console.log(e)
                 }
             })
+            // 失去焦点时触发
             reqEditor.onDidBlurEditorWidget(() => {
                 reqEditor.removeContentWidget(instance)
+                editerMenuStatus.current = false
             })
             reqEditor.onMouseUp((e)=>{
-                if(e.event.leftButton){
+                const {leftButton} = e.event
+                if(leftButton){
                     const selection = reqEditor.getSelection();
                     if(selection){
                         const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
-                        if(selectedText.length===0){
+                        if(editerMenuStatus.current){
+                            // 更新小部件的位置
+                            instance.update();
+                        }
+                        else if(selectedText.length===0){
                             reqEditor.removeContentWidget(instance)
-                            reqEditor.addContentWidget(instance)  
+                            reqEditor.addContentWidget(instance) 
+                            editerMenuStatus.current = true
+                        }
+                        else{
+                            console.log("菜单2");
                         }
                     }
                 }
@@ -1120,15 +1115,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             reqEditor.onDidChangeCursorPosition((e) => {
                 // const { position } = event;
                 // console.log('当前光标位置：', position);
-                const selection = reqEditor.getSelection();
-                if (selection) {
-                    const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
-                    if(selectedText.length>0){
-                        reqEditor.removeContentWidget(instance)
-                    }
-                    console.log('选中的内容：', selectedText);
-                  }
-                
             });
         } catch (e) {
             failed("初始化 EOL CRLF 失败")
@@ -2040,7 +2026,8 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
     const {rsp} = props
     if (!rsp) return <></>
     return (
-        <div className={styles["editor-overlay-widget"]}>
+        <div className={styles["editor-overlay-widget"]} onClick={()=>{console.log("wawawa");
+        }}>
             {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
             {rsp.RemoteAddr && <span>远端地址:{rsp.RemoteAddr}</span>}
             {rsp.Proxy && <span>代理:{rsp.Proxy}</span>}

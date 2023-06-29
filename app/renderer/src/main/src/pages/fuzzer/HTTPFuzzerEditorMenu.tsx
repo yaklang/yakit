@@ -8,14 +8,17 @@ import styles from "./HTTPFuzzerEditorMenu.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 const {ipcRenderer} = window.require("electron")
-export interface HTTPFuzzerEditorMenuProps {
-    handleClick:()=>void
-}
+export interface HTTPFuzzerEditorMenuProps {}
 export const HTTPFuzzerEditorMenu: React.FC<HTTPFuzzerEditorMenuProps> = (props) => {
-    const {handleClick} = props
     return (
         <div>
-            <h1 onClick={handleClick}>Hello, World!22</h1>
+            <div>
+                <div onClick={(e) => {
+                    console.log("ppp")
+                    }}>Menu item 1</div>
+                <li>Menu item 2</li>
+                <li>Menu item 3</li>
+            </div>
         </div>
     )
 }
