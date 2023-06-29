@@ -1233,7 +1233,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     }, [props.defaultSearchKeyword, monacoEditor])
     return (
-        <div style={{width: "100%", height: "100%"}}>
+        <div style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <Card
                 className={"flex-card"}
                 size={"small"}
@@ -1292,7 +1292,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                         </Space>
                     )
                 }
-                bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column"}}
+                bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}
                 extra={
                     !props.noHeader && (
                         <Space size={2}>
@@ -1415,7 +1415,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     )
                 }
             >
-                <div style={{flex: 1}}>
+                <div style={{flex: 1, overflow: "hidden"}}>
                     {empty && props.emptyOr}
                     {mode === "text" && !empty && (
                         <HTTPPacketYakitEditor
