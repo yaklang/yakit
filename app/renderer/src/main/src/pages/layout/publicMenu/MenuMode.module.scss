@@ -1,11 +1,11 @@
 .menu-mode-wrapper {
-    height: 64px;
+    height: 72px;
     display: inline-flex;
-    gap: 8px;
+    gap: 4px;
 
     .divider-style {
         width: 1px;
-        height: 64px;
+        height: 72px;
         background-color: #eaecf3;
     }
 
@@ -38,29 +38,30 @@
     }
 
     .vertical-menu-wrapper {
+        padding: 4px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         align-items: center;
+        border-radius: 4px;
         cursor: pointer;
     }
     .vertical-menu-wrapper:hover {
-        .icon-wrapper {
-            background: #eaecf3;
-        }
+        background: #eaecf3;
     }
     .horizontal-menu-wrapper {
+        padding: 2px 4px;
         display: flex;
         align-items: center;
         gap: 4px;
+        border-radius: 4px;
         cursor: pointer;
     }
     .horizontal-menu-wrapper:hover {
-        .icon-wrapper {
-            background: #eaecf3;
-        }
+        background: #eaecf3;
     }
     .parent-menu-wrapper {
+        padding: 4px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;

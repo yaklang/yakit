@@ -303,7 +303,7 @@ export const keyToRouteInfo = (str: string) => {
             const info: RouteToPageProps = {
                 route: route,
                 pluginId: +keys[1] || 0,
-                pluginName: keys[2]
+                pluginName: keys[2] || ""
             }
             return info
         } else {
