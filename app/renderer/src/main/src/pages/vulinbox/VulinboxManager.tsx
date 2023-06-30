@@ -125,6 +125,7 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
 
             props.onSubmit(params)
         }}
+        size={"small"}
     >
         <InputItem label={"Host"} setValue={Host => setParams({...params, Host})} value={params.Host}/>
         <InputInteger label={"Port"} setValue={Port => setParams({...params, Port})} value={params.Port}/>
