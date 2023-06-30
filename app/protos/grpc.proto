@@ -193,6 +193,10 @@ service Yak {
   rpc GenerateExtractRule(GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
   rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
 
+  rpc SaveFuzzerLabel(SaveFuzzerLabelRequest) returns (Empty);
+  rpc QueryFuzzerLabel(Empty) returns (QueryFuzzerLabelResponse);
+  rpc DeleteFuzzerLabel(DeleteFuzzerLabelRequest) returns (Empty);
+
   // HTTPFuzzerResponse
   // 这个挺特殊的，因为数据包太多了，会卡，所以后端会保存一份，通过这个接口做缓存查询
   rpc QueryHTTPFuzzerResponseByTaskId(QueryHTTPFuzzerResponseByTaskIdRequest) returns (QueryHTTPFuzzerResponseByTaskIdResponse) ;
@@ -519,6 +523,30 @@ message SmokingEvaluateResult {
 message SmokingEvaluatePluginResponse {
   int64 Score = 1;
   repeated SmokingEvaluateResult Results = 2;
+}
+
+message IsVulinboxReadyRequest {
+
+}
+
+message IsVulinboxReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message InstallVulinboxRequest {
+  string Proxy = 1;
+}
+
+message StartVulinboxRequest {
+  // 默认应该是 127.0.0.1
+  string Host = 1;
+  // 默认应该是 8787
+  string Port = 2;
+  // 不启用 HTTPS
+  bool NoHttps = 3;
+  // 安全模式：不启用命令执行靶场
+  bool SafeMode = 4;
 }
 
 message IsVulinboxReadyRequest {
@@ -1024,6 +1052,24 @@ message Bytes {
 message ExtractDataResponse {
   string Token = 1;
   bytes Extracted = 2;
+}
+
+message SaveFuzzerLabelRequest {
+  repeated FuzzerLabel Data = 1;
+}
+
+message QueryFuzzerLabelResponse {
+  repeated FuzzerLabel Data = 1;
+}
+
+message FuzzerLabel {
+  int64 Id = 1;
+  string Label = 2;
+  string Description = 3;
+}
+
+message DeleteFuzzerLabelRequest {
+  string Label = 1;
 }
 
 message ExtractDataRequest {
@@ -3473,4 +3519,5 @@ message GetLicenseResponse {
 
 message CheckLicenseRequest {
   string LicenseActivation = 1;
+  string CompanyVersion = 2;
 }
