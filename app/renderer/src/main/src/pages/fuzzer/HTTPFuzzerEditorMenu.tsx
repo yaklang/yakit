@@ -10,6 +10,8 @@ import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {DocumentDuplicateSvgIcon, DragSortIcon, SolidTerminalIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+import {AutoDecodeResult} from "@/utils/encodec"
+import {callCopyToClipboard} from "@/utils/basic"
 const {ipcRenderer} = window.require("electron")
 export interface HTTPFuzzerClickEditorMenuProps {
     close: () => void
@@ -212,70 +214,145 @@ export const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
     )
 }
 
-export interface DecodeComponentProps {
-    isShowTitle?: boolean
+interface DecodeCopyReplaceProps {
+    item: AutoDecodeResult
+    // 是否显示边框
+    isShowBorder: boolean
+    index?: number
+    // 是否允许替换
+    isReplace?: boolean
+    replace?: (v: string) => void
 }
-export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
-    const {isShowTitle} = props
 
-    const decodeCopyReplace = (isBorder?: boolean) => {
-        return (
-            <div className={styles["decode-copy-replace"]}>
-                <div
-                    className={classNames(styles["header"], {
-                        [styles["header-solid"]]: isBorder
-                    })}
-                >
-                    <div className={styles["header-info"]}>
-                        <div className={styles["title"]}>Step [1]</div>
-                        <div className={styles["sub-title"]}>Base64 解码</div>
-                    </div>
-                    <div className={styles["header-opt"]}>
-                        <DocumentDuplicateSvgIcon className={styles["document-duplicate-svg-icon"]} />
-                        <YakitButton size='small'>替换</YakitButton>
-                    </div>
+export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
+    const {item, index, isShowBorder, isReplace=true, replace} = props
+    const itemStr: string = new Buffer(item.Result).toString("utf8")
+    return (
+        <div className={styles["decode-copy-replace"]}>
+            <div
+                className={classNames(styles["header"], {
+                    [styles["header-solid"]]: isShowBorder
+                })}
+            >
+                <div className={styles["header-info"]}>
+                    {!isShowBorder && <div className={styles["title"]}>Step [{index}]</div>}
+                    <div className={styles["sub-title"]}>{item.TypeVerbose}</div>
                 </div>
-                <div
-                    className={classNames(styles["content"], {
-                        [styles["content-solid"]]: isBorder
-                    })}
-                >
-                    6
+                <div className={styles["header-opt"]}>
+                    <div
+                        className={styles["yakit-copy"]}
+                        onClick={() => {
+                            callCopyToClipboard(itemStr)
+                        }}
+                    >
+                        <DocumentDuplicateSvgIcon className={styles["document-duplicate-svg-icon"]} />
+                    </div>
+                    {isReplace && (
+                        <YakitButton
+                            size='small'
+                            onClick={() => {
+                                replace&&replace(itemStr)
+                            }}
+                        >
+                            替换
+                        </YakitButton>
+                    )}
                 </div>
             </div>
-        )
-    }
+            <div
+                className={classNames(styles["content"], {
+                    [styles["content-solid"]]: isShowBorder
+                })}
+            >
+                {itemStr}
+            </div>
+        </div>
+    )
+}
+
+export interface DecodeComponentProps {
+    isShowTitle?: boolean
+    rangeValue: string
+    replace?: (v: string) => void
+}
+
+export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
+    const {isShowTitle, rangeValue, replace} = props
+    const [status, setStatus] = useState<"none" | "only" | "many">()
+    const [result, setResult] = useState<AutoDecodeResult[]>([])
+    useEffect(() => {
+        try {
+            if (!rangeValue) {
+                setStatus("none")
+                return
+            }
+            ipcRenderer.invoke("AutoDecode", {Data: rangeValue}).then((e: {Results: AutoDecodeResult[]}) => {
+                // console.log("Results", e.Results)
+                const {Results} = e
+                let successArr: AutoDecodeResult[] = []
+                let failArr: AutoDecodeResult[] = []
+                Results.map((item) => {
+                    if (item.Type === "No") {
+                        failArr.push(item)
+                    } else {
+                        successArr.push(item)
+                    }
+                })
+                setResult(successArr)
+                if (successArr.length === 0) {
+                    setStatus("none")
+                } else if (successArr.length === 1) {
+                    setStatus("only")
+                } else {
+                    setStatus("many")
+                }
+            })
+        } catch (e) {
+            failed("editor exec auto-decode failed")
+        }
+    }, [])
 
     return (
         <div className={styles["decode-box"]}>
             {isShowTitle && <div className={styles["title"]}>智能解码</div>}
-            <div className={styles["only-one"]}>{decodeCopyReplace(true)}</div>
-            <div className={styles["timeline-box"]}>
-                <Timeline>
-                    <Timeline.Item
-                        className={styles["timeline-item"]}
-                        dot={<SolidTerminalIcon className={styles["solid-terminal-icon"]} />}
-                    >
-                        {decodeCopyReplace()}
-                    </Timeline.Item>
-                    <Timeline.Item
-                        className={styles["timeline-item"]}
-                        dot={<SolidTerminalIcon className={styles["solid-terminal-icon"]} />}
-                    >
-                        {decodeCopyReplace()}
-                    </Timeline.Item>
-                </Timeline>
-            </div>
-            <div className={styles["none-decode"]}>无解码信息</div>
+            {status === "only" && (
+                <div className={styles["only-one"]}>
+                    <DecodeCopyReplace item={result[0]} isShowBorder={true} replace={replace} />
+                </div>
+            )}
+            {status === "many" && (
+                <div className={styles["timeline-box"]}>
+                    <Timeline>
+                        {result.map((item, index) => {
+                            return (
+                                <Timeline.Item
+                                    className={styles["timeline-item"]}
+                                    dot={<SolidTerminalIcon className={styles["solid-terminal-icon"]} />}
+                                >
+                                    <DecodeCopyReplace
+                                        item={item}
+                                        index={index + 1}
+                                        isShowBorder={false}
+                                        replace={replace}
+                                    />
+                                </Timeline.Item>
+                            )
+                        })}
+                    </Timeline>
+                </div>
+            )}
+            {status === "none" && <div className={styles["none-decode"]}>无解码信息</div>}
         </div>
     )
 }
 
 export interface HTTPFuzzerRangeEditorMenuProps {
     insert: (v: any) => void
+    rangeValue: string
+    replace?: (v: string) => void
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {insert} = props
+    const {insert, rangeValue, replace} = props
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">("encode")
     return (
         <div className={styles["http-fuzzer-range-editor-menu"]}>
@@ -300,7 +377,11 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                 />
             </div>
             <div className={styles["menu-content"]}>
-                {segmentedType === "encode" ? <EncodeComponent insert={insert} /> : <DecodeComponent />}
+                {segmentedType === "encode" ? (
+                    <EncodeComponent insert={insert} />
+                ) : (
+                    <DecodeComponent rangeValue={rangeValue} replace={replace} />
+                )}
             </div>
         </div>
     )

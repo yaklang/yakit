@@ -1081,16 +1081,17 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const domNode = document.createElement('div');
                 ReactDOM.render(<HTTPFuzzerRangeEditorMenu
                     insert={(fun:any)=>{
-                        const selection = reqEditor.getSelection();
-                        if(selection){
-                            const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
-                            if(selectedText.length>0){
-                                const text:string = fun(selectedText)
-                                reqEditor.trigger("keyboard", "type", {text})
-                            }
+                        const selectedText = reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any) || "";
+                        if(selectedText.length>0){
+                            const text:string = fun(selectedText)
+                            reqEditor.trigger("keyboard", "type", {text})
                         }
-                        
                     }}
+                    replace={(text:string)=>{
+                        reqEditor.trigger("keyboard", "type", {text})
+                        closeFizzRangeWidget()
+                    }}
+                    rangeValue={reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any) || ""}
                 />, domNode);
                 return domNode;
             },
@@ -1138,6 +1139,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     if (lineOffset > 2 || lineOffset < -2) {
                         // console.log("移出两行内");
                         closeFizzSelectWidget()
+                        closeFizzRangeWidget()
                     }
                 }
                 
@@ -1148,6 +1150,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 失去焦点时触发
         reqEditor.onDidBlurEditorWidget(() => {
             // closeFizzSelectWidget()
+        })
+        // 移出编辑器时触发
+        reqEditor.onMouseLeave(()=>{
+            closeFizzSelectWidget()
+            closeFizzRangeWidget()
         })
 
         reqEditor.onMouseUp((e)=>{

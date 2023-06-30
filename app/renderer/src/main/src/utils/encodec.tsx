@@ -154,7 +154,7 @@ export const MonacoEditorMutateHTTPRequestActions: {
     }
 })
 
-interface AutoDecodeResult {
+export interface AutoDecodeResult {
     Type: string
     TypeVerbose: string
     Origin: Uint8Array

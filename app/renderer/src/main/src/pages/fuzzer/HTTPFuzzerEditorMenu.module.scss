@@ -175,8 +175,10 @@
                         display: flex;
                         align-items: center;
                         gap: 6px;
-                        .document-duplicate-svg-icon {
+                        .yakit-copy{
                             cursor: pointer;
+                            .document-duplicate-svg-icon {
+                            
                             color: var(--yakit-body-text-color);
                             svg {
                                 height: 16px;
@@ -186,6 +188,8 @@
                                 color: var(--yakit-primary-5);
                             }
                         }
+                        }
+                        
                     }
                 }
                 .header-solid {
