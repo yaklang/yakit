@@ -1,5 +1,4 @@
 .http-fuzzer-click-editor-menu {
-    overflow: auto;
     width: 360px;
     height: 350px;
     border: 1px solid #eaecf3;
@@ -38,6 +37,7 @@
         }
     }
     .menu-list {
+        overflow: auto;
         margin-top: 8px;
         padding: 0px 4px;
         flex: 1;
@@ -48,6 +48,7 @@
             align-items: center;
             align-self: stretch;
             height: 24px;
+            box-sizing: content-box;
             cursor: pointer;
             &-info {
                 display: flex;
@@ -67,13 +68,23 @@
                     color: #31343f;
                 }
                 .sub-title {
-                    margin-left: 2px;
                     color: #b4bbca;
                     font-size: 12px;
                     line-height: 16px;
                 }
+                .sub-title-left {
+                    margin-left: 2px;
+                }
             }
             &-opt {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                .form-outlined {
+                    font-size: 12px;
+                    color: var(--yakit-body-text-color);
+                    display: none;
+                }
                 .trash-icon {
                     color: var(--yakit-danger-5);
                     display: none;
@@ -82,6 +93,9 @@
             &:hover {
                 border-radius: 4px;
                 background: #f0f1f3;
+                .form-outlined {
+                    display: block;
+                }
                 .trash-icon {
                     display: block;
                 }
@@ -90,9 +104,8 @@
     }
 }
 .http-fuzzer-range-editor-menu {
-    overflow: auto;
     width: 360px;
-    height: 350px;
+    height: 250px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 8px 4px 6px 4px;
@@ -106,8 +119,9 @@
     .menu-content {
         margin-top: 8px;
         flex: 1;
-        .decode-box {
-            .decode-item {
+        overflow: auto;
+        .encode-box {
+            .encode-item {
                 cursor: pointer;
                 display: flex;
                 padding: 6px 8px 6px 14px;
@@ -132,13 +146,13 @@
                 }
             }
         }
-        .encode-box {
+        .decode-box {
             display: flex;
             flex-direction: column;
             height: 100%;
             .title {
             }
-            .encode-copy-replace {
+            .decode-copy-replace {
                 padding-top: 2px;
                 .header {
                     display: flex;
@@ -218,7 +232,7 @@
                     }
                 }
             }
-            .none-encode {
+            .none-decode {
                 padding: 6px 12px;
                 color: #b4bbca;
                 /* 文字/text/12 */
