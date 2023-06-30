@@ -485,6 +485,11 @@ service Yak {
   rpc GetOneScreenRecorders(GetOneScreenRecorderRequest) returns (ScreenRecorder);
   rpc UpdateScreenRecorders(UpdateScreenRecorderRequest) returns (Empty);
 
+  // Vulinbox
+  rpc IsVulinboxReady(IsVulinboxReadyRequest) returns (IsVulinboxReadyResponse);
+  rpc InstallVulinbox(InstallVulinboxRequest) returns (stream ExecResult);
+  rpc StartVulinbox(StartVulinboxRequest) returns (stream ExecResult);
+
   // 通过他可以构造一个 HTTP 请求
   // 这个请求可能是一个，也可能是一系列
   // 一般用来调试插件等
@@ -492,6 +497,30 @@ service Yak {
   // rpc QueryHTTPRequestBuilder(QueryHTTPRequestBuilderRequest) returns (QueryHTTPRequestBuilderResponse);
   // rpc DeleteHTTPRequestBuilder(DeleteHTTPRequestBuilderRequest) returns (Empty);
   rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
+}
+
+message IsVulinboxReadyRequest {
+
+}
+
+message IsVulinboxReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message InstallVulinboxRequest {
+  string Proxy = 1;
+}
+
+message StartVulinboxRequest {
+  // 默认应该是 127.0.0.1
+  string Host = 1;
+  // 默认应该是 8787
+  string Port = 2;
+  // 不启用 HTTPS
+  bool NoHttps = 3;
+  // 安全模式：不启用命令执行靶场
+  bool SafeMode = 4;
 }
 
 message DebugPluginRequest {

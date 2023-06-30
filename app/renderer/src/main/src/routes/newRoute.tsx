@@ -113,6 +113,7 @@ import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
 import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
+import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -189,7 +190,9 @@ export enum YakitRoute {
     // 调试插件的功能
     Beta_DebugPlugin = "beta-debug-plugin",
     // 调试插件编辑器
-    Beta_DebugMonacoEditor = "beta-debug-monaco-editor"
+    Beta_DebugMonacoEditor = "beta-debug-monaco-editor",
+    // 靶场调试
+    Beta_VulinboxManager = "beta-vulinbox-manager",
 }
 /**
  * @description 页面路由对应的页面信息
@@ -264,7 +267,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-chaosmaker": {label: "BAS实验室"},
     "beta-matcher-extractor-page": {label: "匹配与提取配置"},
     "beta-debug-plugin": {label: "插件调试"},
-    "beta-debug-monaco-editor": {label: "插件编辑器"}
+    "beta-debug-monaco-editor": {label: "插件编辑器"},
+    "beta-vulinbox-manager": {label: "Vulinbox 管理器",}
 }
 /** 页面路由(无法多开的页面) */
 export const SinglePageRoute: YakitRoute[] = [
@@ -299,7 +303,8 @@ export const SinglePageRoute: YakitRoute[] = [
     YakitRoute.DB_ChaosMaker,
     YakitRoute.Beta_MatcherExtractorPage,
     YakitRoute.ScreenRecorderPage,
-    YakitRoute.ControlAdminPage
+    YakitRoute.ControlAdminPage,
+    YakitRoute.Beta_VulinboxManager,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -496,7 +501,8 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <PluginDebuggerPage />
         case YakitRoute.Beta_DebugMonacoEditor:
             return <DebugMonacoEditorPage />
-
+        case YakitRoute.Beta_VulinboxManager:
+            return <VulinboxManager/>
         default:
             return <div />
     }
