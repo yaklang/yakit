@@ -7,11 +7,16 @@ import {StringToUint8Array} from "@/utils/str";
 
 interface InsertFileFuzzTagProp {
     onFinished: (i: string) => any
+    defaultMode?: ModeProps
 }
 
+type ModeProps = "file" | "file:line" | "file:dir"
+
+
 const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
+    const {defaultMode} = props
     const [filename, setFilename] = useState("");
-    const [mode, setMode] = useState<"file" | "file:line" | "file:dir">("file");
+    const [mode, setMode] = useState<ModeProps>(defaultMode||"file");
     return <Form
         labelCol={{span: 5}} wrapperCol={{span: 14}} onSubmitCapture={e => {
         e.preventDefault()
@@ -96,13 +101,13 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
 };
 
 
-export const insertFileFuzzTag = (onInsert: (i: string) => any) => {
+export const insertFileFuzzTag = (onInsert: (i: string) => any,defaultMode?:ModeProps) => {
     let m = showModal({
         title: "选择文件并插入",
         width: "800px",
         content: (
             <>
-                <InsertFileFuzzTag onFinished={e => {
+                <InsertFileFuzzTag defaultMode={defaultMode} onFinished={e => {
                     onInsert(e)
                     m.destroy()
                 }}/>

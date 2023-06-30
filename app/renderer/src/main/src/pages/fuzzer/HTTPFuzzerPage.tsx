@@ -82,8 +82,7 @@ import {
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
-import { HTTPFuzzerEditorMenu } from "./HTTPFuzzerEditorMenu"
-import { HTTPFuzzerRangeEditorMenu,HTTPFuzzerClickEditorMenu } from "./HTTPFuzzerEditorMenu"
+import { HTTPFuzzerRangeEditorMenu,HTTPFuzzerClickEditorMenu, LabelDataProps } from "./HTTPFuzzerEditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1040,9 +1039,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 console.log(1111);
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement('div');
-                ReactDOM.render(<HTTPFuzzerClickEditorMenu close={()=>{
-                    closeFizzSelectWidget()
-                }}/>, domNode);
+                ReactDOM.render(<HTTPFuzzerClickEditorMenu 
+                    close={()=>closeFizzSelectWidget()}
+                    insert={(v:LabelDataProps)=>{
+                        if(v.sub_title){
+                            reqEditor.trigger("keyboard", "type", {text: v.sub_title})
+                        }
+                        else if(v.title==="插入本地文件"){
+                            insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i),"file:line")
+                        }
+                        closeFizzSelectWidget()
+                    }}
+                />, domNode);
                 return domNode;
             },
             getPosition: function () {
@@ -1071,7 +1079,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 console.log(2222);
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement('div');
-                ReactDOM.render(<HTTPFuzzerRangeEditorMenu/>, domNode);
+                ReactDOM.render(<HTTPFuzzerRangeEditorMenu
+                    insert={(fun:any)=>{
+                        const selection = reqEditor.getSelection();
+                        if(selection){
+                            const selectedText = reqEditor.getModel()?.getValueInRange(selection) || "";
+                            if(selectedText.length>0){
+                                const text:string = fun(selectedText)
+                                reqEditor.trigger("keyboard", "type", {text})
+                            }
+                        }
+                        
+                    }}
+                />, domNode);
                 return domNode;
             },
             getPosition: function () {
@@ -1150,7 +1170,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         fizzSelectWidget.isOpen = true
                     }
                     else{
-                        console.log("展示选中的菜单");
                         closeFizzSelectWidget()
                         // 展示选中的菜单
                         reqEditor.addContentWidget(fizzRangeWidget) 
@@ -1164,8 +1183,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             
         })
-        // 监听代码选中的变化
+        // 监听光标移动
         reqEditor.onDidChangeCursorPosition((e) => {
+            closeFizzRangeWidget()
+            closeFizzSelectWidget()
             // const { position } = e;
             // console.log('当前光标位置：', position);
         });

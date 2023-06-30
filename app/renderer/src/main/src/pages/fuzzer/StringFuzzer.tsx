@@ -274,6 +274,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                             >
                                 <YakitButton type='outline2'>重置</YakitButton>
                             </YakitPopconfirm>
+                            <YakitButton type='outline2'>添加到常用标签</YakitButton>
                         </Space>
                     </Form.Item>
                 </Form>
