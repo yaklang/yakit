@@ -677,7 +677,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             openMultipleMenuPage(routeInfo)
         }
     })
-    const {getSubscribeClose} = useSubscribeClose()
+    const {getSubscribeClose, removeSubscribeClose} = useSubscribeClose()
     // 多开页面的一级页面关闭事件
     const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
         switch (data.route) {
@@ -708,7 +708,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         if (index === 0 && getPageCache()[index + 1]) newIndex = index + 1
         const {route, pluginId = 0, pluginName = ""} = getPageCache()[newIndex]
         const key = routeConvertKey(route, pluginName)
-        setCurrentTabKey(key)
+        if (currentTabKey === routeConvertKey(data.route, data.pluginName)) setCurrentTabKey(key)
 
         if (index === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
 
@@ -724,7 +724,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         if (data.route === YakitRoute.AddYakitScript) {
             setCurrentTabKey(YakitRoute.Plugin_Local)
         }
-        if (data.route === YakitRoute.HTTPFuzzer) delFuzzerList(1)
+        if (data.route === YakitRoute.HTTPFuzzer) {
+            delFuzzerList(1)
+            removeSubscribeClose(YakitRoute.HTTPFuzzer)
+        }
     })
     // 关闭所有页面(包括一级和二级页面)
     const closeAllCache = useMemoizedFn(() => {
@@ -803,7 +806,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             const arr = pageCache.map((item) => {
                 if (item.route === data.route && item.menuName === data.menuName) {
                     item.multipleNode = [...removeArr.filter((item) => item.id !== key)]
-                    item.multipleCurrentKey = active
+                    item.multipleCurrentKey = item.multipleCurrentKey === key ? active : item.multipleCurrentKey
                     return item
                 }
                 return item

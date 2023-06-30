@@ -375,7 +375,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 if (!!pluginToId[data?.pluginName || ""]) data.pluginId = pluginToId[data?.pluginName || ""]
                 onCheckPlugin(data, "plugin")
             } else {
-                onMenuSelect({route: key as YakitRoute})
+                onMenuSelect({route: data.route})
             }
         }
     })
@@ -427,6 +427,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                             placement={index === 0 ? "bottomLeft" : "bottom"}
                             content={
                                 <YakitMenu
+                                    selectable={false}
                                     selectedKeys={[]}
                                     data={data}
                                     onClick={({key, keyPath}) => onNoExpandClickMenu(key, keyPath)}

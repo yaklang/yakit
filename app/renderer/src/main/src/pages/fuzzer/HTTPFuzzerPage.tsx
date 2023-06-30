@@ -81,7 +81,7 @@ import {
     defaultMatcherItem
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -449,10 +449,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("")
 
-    const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
+    const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
     const [inViewport] = useInViewport(fuzzerRef)
     useEffect(() => {
+        if (getSubscribeClose(YakitRoute.HTTPFuzzer)) return
         setSubscribeClose(YakitRoute.HTTPFuzzer, {
             title: "关闭提示",
             content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
@@ -460,10 +461,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             onCancelText: "取消",
             onOk: (m) => onCloseTab(m)
         })
-        return () => {
-            removeSubscribeClose(YakitRoute.HTTPFuzzer)
-        }
-    }, [inViewport])
+    }, [])
 
     const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
@@ -1490,7 +1488,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             filterMode: advancedConfigValue.filterMode || "drop"
                                         }}
                                         extractorValue={{
-                                            extractorList: advancedConfigValue.extractors||[]
+                                            extractorList: advancedConfigValue.extractors || []
                                         }}
                                         defActiveKey={activeKey}
                                         defActiveType={activeType}
