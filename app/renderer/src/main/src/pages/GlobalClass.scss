@@ -1,3 +1,5 @@
+@use "../assets/global.scss" as global;
+
 /* 内容过长省略样式 */
 .content-ellipsis {
     white-space: nowrap;
@@ -96,40 +98,7 @@
 }
 
 // ========================== color ==========================
-$colors: (
-    red: (
-        backgroundColor: var(--yakit-tag-color-red),
-        opacityBackgroundColor: #fcf1f0
-    ),
-    green: (
-        backgroundColor: var(--yakit-tag-color-green),
-        opacityBackgroundColor: #f0f9f4
-    ),
-    blue: (
-        backgroundColor: var(--yakit-tag-color-blue),
-        opacityBackgroundColor: #eff4fe
-    ),
-    yellow: (
-        backgroundColor: var(--yakit-tag-color-yellow),
-        opacityBackgroundColor: #fffbf2
-    ),
-    orange: (
-        backgroundColor: var(--yakit-tag-color-orange),
-        opacityBackgroundColor: #fff8ef
-    ),
-    purple: (
-        backgroundColor: var(--yakit-tag-color-purple),
-        opacityBackgroundColor: #f3effe
-    ),
-    cyan: (
-        backgroundColor: var(--yakit-tag-color-cyan),
-        opacityBackgroundColor: #edfbfd
-    ),
-    grey: (
-        backgroundColor: var(--yakit-helper-text-color),
-        opacityBackgroundColor: #f7f8fa
-    )
-);
+$colors: global.$colors;
 $keyColor: map-keys($colors);
 @for $c from 1 through length($keyColor) {
     $name: nth($keyColor, $c);
