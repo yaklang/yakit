@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Avatar} from "antd"
+import {Avatar, Timeline} from "antd"
 import {PlusOutlined} from "@ant-design/icons"
 import {useGetState} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -8,7 +8,7 @@ import styles from "./HTTPFuzzerEditorMenu.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {DragSortIcon, TrashIcon} from "@/assets/newIcon"
+import {DocumentDuplicateSvgIcon, DragSortIcon, SolidTerminalIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 const {ipcRenderer} = window.require("electron")
 export interface HTTPFuzzerClickEditorMenuProps {
@@ -94,9 +94,59 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
     )
 }
 
-export interface EncodeComponentProps {}
+export interface EncodeComponentProps {
+    isShowTitle?: boolean
+}
 export const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
-    return <div className={styles["encode-box"]}></div>
+    const {isShowTitle} = props
+
+    const encodeCopyReplace = (isBorder?: boolean) => {
+        return (
+            <div className={styles["encode-copy-replace"]}>
+                <div className={classNames(styles["header"],{
+                [styles["header-solid"]]: isBorder,
+                }) }>
+                    <div className={styles["header-info"]}>
+                        <div className={styles["title"]}>Step [1]</div>
+                        <div className={styles["sub-title"]}>Base64 解码</div>
+                    </div>
+                    <div className={styles["header-opt"]}>
+                        <DocumentDuplicateSvgIcon className={styles["document-duplicate-svg-icon"]} />
+                        <YakitButton size='small'>替换</YakitButton>
+                    </div>
+                </div>
+                <div className={classNames(styles["content"],{
+                [styles["content-solid"]]: isBorder,
+                }) }>6</div>
+            </div>
+        )
+    }
+
+    return (
+        <div className={styles["encode-box"]}>
+            {isShowTitle && <div className={styles["title"]}>智能解码</div>}
+            <div className={styles['only-one']}>
+                {encodeCopyReplace(true)}
+            </div>
+            <div className={styles["timeline-box"]}>
+                <Timeline>
+                    <Timeline.Item
+                        className={styles["timeline-item"]}
+                        dot={<SolidTerminalIcon className={styles["solid-terminal-icon"]} />}
+                    >
+                        {encodeCopyReplace()}
+                    </Timeline.Item>
+                    <Timeline.Item
+                        className={styles["timeline-item"]}
+                        dot={<SolidTerminalIcon className={styles["solid-terminal-icon"]} />}
+                    >
+                        {encodeCopyReplace()}
+                    </Timeline.Item>
+                </Timeline>
+            </div>
+            <div className={styles["none-encode"]}>无解码信息</div>
+        </div>
+    )
 }
 
 export interface HTTPFuzzerRangeEditorMenuProps {}
