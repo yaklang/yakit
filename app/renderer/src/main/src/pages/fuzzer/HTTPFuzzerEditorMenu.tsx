@@ -219,13 +219,13 @@ interface DecodeCopyReplaceProps {
     // 是否显示边框
     isShowBorder: boolean
     index?: number
-    // 是否允许替换
-    isReplace?: boolean
+    // 是否仅可读
+    isReadOnly?: boolean
     replace?: (v: string) => void
 }
 
 export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
-    const {item, index, isShowBorder, isReplace=true, replace} = props
+    const {item, index, isShowBorder, isReadOnly, replace} = props
     const itemStr: string = new Buffer(item.Result).toString("utf8")
     return (
         <div className={styles["decode-copy-replace"]}>
@@ -247,11 +247,11 @@ export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
                     >
                         <DocumentDuplicateSvgIcon className={styles["document-duplicate-svg-icon"]} />
                     </div>
-                    {isReplace && (
+                    {!isReadOnly && (
                         <YakitButton
                             size='small'
                             onClick={() => {
-                                replace&&replace(itemStr)
+                                replace && replace(itemStr)
                             }}
                         >
                             替换
@@ -271,13 +271,13 @@ export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
 }
 
 export interface DecodeComponentProps {
-    isShowTitle?: boolean
+    isReadOnly?: boolean
     rangeValue: string
     replace?: (v: string) => void
 }
 
 export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
-    const {isShowTitle, rangeValue, replace} = props
+    const {isReadOnly, rangeValue, replace} = props
     const [status, setStatus] = useState<"none" | "only" | "many">()
     const [result, setResult] = useState<AutoDecodeResult[]>([])
     useEffect(() => {
@@ -314,10 +314,10 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
 
     return (
         <div className={styles["decode-box"]}>
-            {isShowTitle && <div className={styles["title"]}>智能解码</div>}
+            {isReadOnly && <div className={styles["title"]}>智能解码</div>}
             {status === "only" && (
                 <div className={styles["only-one"]}>
-                    <DecodeCopyReplace item={result[0]} isShowBorder={true} replace={replace} />
+                    <DecodeCopyReplace isReadOnly={isReadOnly} item={result[0]} isShowBorder={true} replace={replace} />
                 </div>
             )}
             {status === "many" && (
@@ -334,6 +334,7 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
                                         index={index + 1}
                                         isShowBorder={false}
                                         replace={replace}
+                                        isReadOnly={isReadOnly}
                                     />
                                 </Timeline.Item>
                             )
@@ -383,6 +384,19 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                     <DecodeComponent rangeValue={rangeValue} replace={replace} />
                 )}
             </div>
+        </div>
+    )
+}
+
+interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
+    rangeValue: string
+}
+
+export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
+    const {rangeValue} = props
+    return (
+        <div className={styles["http-fuzzer-range-read-only-editor-menu"]}>
+            <DecodeComponent rangeValue={rangeValue} isReadOnly={true}/>
         </div>
     )
 }
