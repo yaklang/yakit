@@ -1472,73 +1472,71 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                     secondNode={
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
-                            <YakitSpin spinning={loading} style={{height: "100%"}}>
-                                {onlyOneResponse ? (
-                                    <ResponseViewer
-                                        ref={responseViewerRef}
-                                        fuzzerResponse={httpResponse}
-                                        defaultResponseSearch={defaultResponseSearch}
-                                        system={props.system}
-                                        showMatcherAndExtraction={showMatcherAndExtraction}
-                                        setShowMatcherAndExtraction={setShowMatcherAndExtraction}
-                                        matcherValue={{
-                                            hitColor: advancedConfigValue.hitColor || "red",
-                                            matchersCondition: advancedConfigValue.matchersCondition || "and",
-                                            matchersList: advancedConfigValue.matchers || [],
-                                            filterMode: advancedConfigValue.filterMode || "drop"
-                                        }}
-                                        extractorValue={{
-                                            extractorList: advancedConfigValue.extractors || []
-                                        }}
-                                        defActiveKey={activeKey}
-                                        defActiveType={activeType}
-                                        onSaveMatcherAndExtraction={(matcher, extractor) => {
-                                            setAdvancedConfigValue({
-                                                ...advancedConfigValue,
-                                                filterMode: matcher.filterMode,
-                                                hitColor: matcher.hitColor || "red",
-                                                matchersCondition: matcher.matchersCondition,
-                                                matchers: matcher.matchersList,
-                                                extractors: extractor.extractorList
-                                            })
-                                        }}
-                                    />
-                                ) : (
-                                    <>
-                                        {cachedTotal > 1 ? (
-                                            <>
-                                                {showSuccess && (
-                                                    <HTTPFuzzerPageTable
-                                                        onSendToWebFuzzer={sendToFuzzer}
-                                                        success={showSuccess}
-                                                        data={successFuzzer}
-                                                        query={query}
-                                                        setQuery={setQuery}
-                                                        isEnd={loading}
-                                                    />
-                                                )}
-                                                {!showSuccess && (
-                                                    <HTTPFuzzerPageTable
-                                                        success={showSuccess}
-                                                        data={failedFuzzer}
-                                                        query={query}
-                                                        setQuery={setQuery}
-                                                        isEnd={loading}
-                                                    />
-                                                )}
-                                            </>
-                                        ) : (
-                                            <Result
-                                                status={"warning"}
-                                                title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                                subTitle={
-                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                                }
-                                            />
-                                        )}
-                                    </>
-                                )}
-                            </YakitSpin>
+                            {onlyOneResponse ? (
+                                <ResponseViewer
+                                    ref={responseViewerRef}
+                                    fuzzerResponse={httpResponse}
+                                    defaultResponseSearch={defaultResponseSearch}
+                                    system={props.system}
+                                    showMatcherAndExtraction={showMatcherAndExtraction}
+                                    setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                    matcherValue={{
+                                        hitColor: advancedConfigValue.hitColor || "red",
+                                        matchersCondition: advancedConfigValue.matchersCondition || "and",
+                                        matchersList: advancedConfigValue.matchers || [],
+                                        filterMode: advancedConfigValue.filterMode || "drop"
+                                    }}
+                                    extractorValue={{
+                                        extractorList: advancedConfigValue.extractors || []
+                                    }}
+                                    defActiveKey={activeKey}
+                                    defActiveType={activeType}
+                                    onSaveMatcherAndExtraction={(matcher, extractor) => {
+                                        setAdvancedConfigValue({
+                                            ...advancedConfigValue,
+                                            filterMode: matcher.filterMode,
+                                            hitColor: matcher.hitColor || "red",
+                                            matchersCondition: matcher.matchersCondition,
+                                            matchers: matcher.matchersList,
+                                            extractors: extractor.extractorList
+                                        })
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    {cachedTotal > 1 ? (
+                                        <>
+                                            {showSuccess && (
+                                                <HTTPFuzzerPageTable
+                                                    onSendToWebFuzzer={sendToFuzzer}
+                                                    success={showSuccess}
+                                                    data={successFuzzer}
+                                                    query={query}
+                                                    setQuery={setQuery}
+                                                    isEnd={loading}
+                                                />
+                                            )}
+                                            {!showSuccess && (
+                                                <HTTPFuzzerPageTable
+                                                    success={showSuccess}
+                                                    data={failedFuzzer}
+                                                    query={query}
+                                                    setQuery={setQuery}
+                                                    isEnd={loading}
+                                                />
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Result
+                                            status={"warning"}
+                                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                            subTitle={
+                                                "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                            }
+                                        />
+                                    )}
+                                </>
+                            )}
                         </div>
                     }
                 />
