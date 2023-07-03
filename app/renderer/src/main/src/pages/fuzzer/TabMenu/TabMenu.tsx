@@ -4,6 +4,7 @@ import {PlusIcon, RemoveIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {useCreation, useMemoizedFn} from "ahooks"
+import _ from "lodash"
 
 interface TabMenuProps {}
 
@@ -98,8 +99,9 @@ let defMenuData: MenuDataProps[] = Array.from({length: 20}, (_, index) => {
         }
     }
 })
+
 export const TabMenu: React.FC<TabMenuProps> = React.memo((props) => {
-    const [menuData, setMenuData] = useState<MenuDataProps[]>(defMenuData)
+    const [menuData, setMenuData] = useState<MenuDataProps[]>(_.cloneDeepWith(defMenuData))
     const [selectFirstMenu, setSelectFirstMenu] = useState<string>("3")
 
     const [subMenu, setSubMenu] = useState<MenuChildrenDataProps[]>([])
@@ -108,7 +110,6 @@ export const TabMenu: React.FC<TabMenuProps> = React.memo((props) => {
         console.log("menuData", menuData)
     }, [])
     const onDragEnd = useMemoizedFn((result) => {
-        // console.log("result", result)
         if (!result.destination) {
             return
         }
@@ -116,19 +117,98 @@ export const TabMenu: React.FC<TabMenuProps> = React.memo((props) => {
             const menuList: MenuDataProps[] = reorder(menuData, result.source.index, result.destination.index)
             setMenuData(menuList)
         }
+    })
+    const onSubMenuDragEnd = useMemoizedFn((result) => {
+        console.log("result222", result)
+        /** 合并组   ---------start--------- */
+        if (
+            result.source.droppableId === "droppable2" &&
+            result.combine &&
+            result.combine.droppableId === "droppable2"
+        ) {
+            mergingGroup(result)
+        }
+        /** 合并组   ---------end--------- */
+        /** 移动排序 ---------start--------- */
+        if (!result.destination) {
+            return
+        }
         if (result.source.droppableId === "droppable2" && result.destination.droppableId === "droppable2") {
-            const subMenuList: MenuDataProps[] = reorder(subMenu, result.source.index, result.destination.index)
-            setSubMenu(subMenuList)
-            const index = menuData.findIndex((ele) => ele.key === selectFirstMenu)
-            if (index !== -1) {
-                menuData[index].children = subMenuList
-                setMenuData(menuData)
-            }
+            movingBetweenOutsideGroups(result)
+        }
+        if (result.source.droppableId === "droppable3" && result.destination.droppableId === "droppable3") {
+            movingBetweenGroups(result)
+        }
+        if (result.source.droppableId === "droppable3" && result.destination.droppableId === "droppable2") {
+            movingWithinAndOutsideGroup(result)
+        }
+        /** 移动排序 ---------end--------- */
+    })
+    /** @description 组外向组内移动合并 */
+    const mergingGroup = useMemoizedFn((result) => {
+        if (!result.combine) {
+            return
+        }
+        const sourceIndex = result.source.index
+        const combineId = result.combine.draggableId
+        const dropItem = subMenu[sourceIndex]
+        const currentCombineItem = subMenu.find((ele) => ele.key === combineId)
+        if (currentCombineItem?.children) {
+            currentCombineItem.children = currentCombineItem.children.concat(dropItem)
+        }
+        subMenu.splice(sourceIndex, 1)
+        setSubMenu(subMenu)
+    })
+    /** @description 组外之间移动 */
+    const movingBetweenOutsideGroups = useMemoizedFn((result) => {
+        if (!result.destination) {
+            return
+        }
+        const subMenuList: MenuDataProps[] = reorder(subMenu, result.source.index, result.destination.index)
+        setSubMenu(subMenuList)
+        const index = menuData.findIndex((ele) => ele.key === selectFirstMenu)
+        if (index !== -1) {
+            menuData[index].children = subMenuList
+            setMenuData(menuData)
         }
     })
+    /** @description 组内之间移动 */
+    const movingBetweenGroups = useMemoizedFn((result) => {
+        if (!result.destination) {
+            return
+        }
+    })
+    /** @description 组内向组外移动 */
+    const movingWithinAndOutsideGroup = useMemoizedFn((result) => {
+        if (!result.destination) {
+            return
+        }
+        const destinationIndex = result.destination.index
+        const length = subMenu.length
+        let currentDropGroupCurrent: MenuChildrenDataProps = {
+            key: "0"
+        }
+        for (let index = 0; index < length; index++) {
+            const subMenuItem = subMenu[index]
+            if (subMenuItem.children && subMenuItem.children.length > 0) {
+                const number = subMenuItem.children.findIndex((e) => e.key === result.draggableId)
+                if (number !== -1) {
+                    currentDropGroupCurrent = subMenuItem.children[number]
+                    subMenuItem.children = subMenuItem.children.filter((_, n) => n !== number)
+                    if (subMenuItem.children.length === 0) {
+                        subMenu.splice(index, 1)
+                        index--
+                    }
+                    break
+                }
+            }
+        }
+        if (currentDropGroupCurrent.key !== "0") subMenu.splice(destinationIndex, 0, currentDropGroupCurrent)
+        setSubMenu([...subMenu])
+    })
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <div className={styles["tab-menu"]}>
+        <div className={styles["tab-menu"]}>
+            <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId='droppable1' direction='horizontal'>
                     {(provided, snapshot) => (
                         <div className={styles["tab-menu-first"]} {...provided.droppableProps} ref={provided.innerRef}>
@@ -163,13 +243,15 @@ export const TabMenu: React.FC<TabMenuProps> = React.memo((props) => {
                         </div>
                     )}
                 </Droppable>
-                <Droppable droppableId='droppable2' direction='horizontal'>
+            </DragDropContext>
+            <DragDropContext onDragEnd={onSubMenuDragEnd}>
+                <Droppable droppableId='droppable2' direction='horizontal' isCombineEnabled={true}>
                     {(provided, snapshot) => (
                         <div className={styles["tab-menu-sub"]} {...provided.droppableProps} ref={provided.innerRef}>
                             {subMenu.map((subItem, number) => (
                                 <Draggable key={subItem.key} draggableId={subItem.key} index={number}>
                                     {(provided, snapshot) => (
-                                        <React.Fragment key={subItem.key}>
+                                        <>
                                             {subItem.groupName !== undefined ? (
                                                 <div
                                                     ref={provided.innerRef}
@@ -199,14 +281,13 @@ export const TabMenu: React.FC<TabMenuProps> = React.memo((props) => {
                                                         [styles["tab-menu-sub-item-active"]]:
                                                             subItem.key === selectSubMenu
                                                     })}
-                                                    key={subItem.key}
                                                     onClick={() => setSelectSubMenu(subItem.key)}
                                                 >
                                                     <span>菜单{subItem.key}</span>
                                                     {subItem.key === selectSubMenu && <RemoveIcon />}
                                                 </div>
                                             )}
-                                        </React.Fragment>
+                                        </>
                                     )}
                                 </Draggable>
                             ))}
@@ -214,8 +295,8 @@ export const TabMenu: React.FC<TabMenuProps> = React.memo((props) => {
                         </div>
                     )}
                 </Droppable>
-            </div>
-        </DragDropContext>
+            </DragDropContext>
+        </div>
     )
 })
 interface SubTabGroupItemProps {
@@ -226,80 +307,75 @@ interface SubTabGroupItemProps {
 const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const {selectSubMenu, setSelectSubMenu} = props
     const [item, setItem] = useState(props.item)
-    const [groupItems, setGroupItems] = useState<MenuChildrenDataProps[]>(item.children || [])
     const onExpand = useMemoizedFn(() => {
         setItem({...item, expand: !item.expand})
     })
-    const onDragEnd = useMemoizedFn((result) => {
-        console.log("result", result)
-        if (!result.destination) {
-            return
-        }
-        if (result.source.droppableId === "droppable3" && result.destination.droppableId === "droppable3") {
-            const groupList: MenuDataProps[] = reorder(groupItems, result.source.index, result.destination.index)
-            setGroupItems(groupList)
-        }
-    })
+    useEffect(() => {
+        setItem(props.item)
+    }, [props.item])
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId='droppable3' direction='horizontal'>
-                {(provided, snapshot) => (
+        <Droppable droppableId='droppable3' direction='horizontal'>
+            {(provided, snapshot) => (
+                <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className={classNames(styles["tab-menu-sub-group"], styles[`tab-menu-sub-group-${item.color}`])}
+                >
                     <div
-                        className={classNames(styles["tab-menu-sub-group"], styles[`tab-menu-sub-group-${item.color}`])}
+                        className={classNames(
+                            styles["tab-menu-sub-group-name"],
+                            styles[`tab-menu-sub-group-name-${item.color}`],
+                            {
+                                [styles["tab-menu-sub-group-name-retract"]]: !item.expand
+                            }
+                        )}
+                        onClick={() => onExpand()}
                     >
-                        <div
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            className={classNames(
-                                styles["tab-menu-sub-group-name"],
-                                styles[`tab-menu-sub-group-name-${item.color}`],
-                                {
-                                    [styles["tab-menu-sub-group-name-retract"]]: !item.expand
-                                }
-                            )}
-                            onClick={() => onExpand()}
-                        >
-                            {item.groupName || ""}
-                            {!item.expand && (
-                                <div
-                                    className={classNames(
-                                        styles["tab-menu-sub-group-number"],
-                                        styles[`tab-menu-sub-group-number-${item.color}`]
-                                    )}
-                                >
-                                    {groupItems.length || 0}
-                                </div>
-                            )}
-                        </div>
-                        {item.expand &&
-                            groupItems.map((groupItem, index) => (
-                                <Draggable key={groupItem.key} draggableId={groupItem.key} index={index}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
-                                            className={classNames(styles["tab-menu-sub-item"], {
-                                                [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
-                                                [styles["tab-menu-sub-item-active"]]: groupItem.key === selectSubMenu
-                                            })}
-                                            key={groupItem.key}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                setSelectSubMenu(groupItem.key)
-                                            }}
-                                        >
-                                            <span>菜单{groupItem.key}</span>
-                                            {groupItem.key === selectSubMenu && <RemoveIcon />}
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
+                        {item.groupName || ""}
+                        {!item.expand && (
+                            <div
+                                className={classNames(
+                                    styles["tab-menu-sub-group-number"],
+                                    styles[`tab-menu-sub-group-number-${item.color}`]
+                                )}
+                            >
+                                {item.children?.length || 0}
+                            </div>
+                        )}
                     </div>
-                )}
-            </Droppable>
-        </DragDropContext>
+                    {item.expand &&
+                        item.children?.map((groupItem, index) => (
+                            <Draggable
+                                key={groupItem.key}
+                                draggableId={groupItem.key}
+                                index={index}
+                                direction='horizontal'
+                            >
+                                {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
+                                        className={classNames(styles["tab-menu-sub-item"], {
+                                            [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
+                                            [styles["tab-menu-sub-item-active"]]: groupItem.key === selectSubMenu
+                                        })}
+                                        key={groupItem.key}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setSelectSubMenu(groupItem.key)
+                                        }}
+                                    >
+                                        <span>菜单{groupItem.key}</span>
+                                        {groupItem.key === selectSubMenu && <RemoveIcon />}
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                </div>
+            )}
+        </Droppable>
     )
 })
 interface SubTabItemProps {
