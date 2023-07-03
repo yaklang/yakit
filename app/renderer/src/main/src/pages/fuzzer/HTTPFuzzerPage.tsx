@@ -349,7 +349,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         timeout: props.fuzzerParams?.timeout || 30.0,
         // 发包配置
         concurrent: props.fuzzerParams?.concurrent || 20,
-        proxy: props.fuzzerParams?.proxy?.split(",") || [],
+        proxy: !!props.fuzzerParams?.proxy ? props.fuzzerParams?.proxy?.split(",") : [],
         minDelaySeconds: 0,
         maxDelaySeconds: 0,
         repeatTimes: 0,
@@ -554,14 +554,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (e) {
                 setLocalValue(WEB_FUZZ_PROXY, "")
                 setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
-
-                setProxy(e.split(",") || [])
+                setProxy(e ? e.split(",") : [])
             } else {
                 getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
                     if (!e) {
                         return
                     }
-                    setProxy(e.split(",") || [])
+                    setProxy(e ? e.split(",") : [])
                 })
             }
         })
@@ -702,7 +701,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             //提取器
             Extractors: advancedConfigValue.extractors
         }
-        if (advancedConfigValue.proxy) {
+        if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
@@ -740,7 +739,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     const oldElement = list[i]
                     const index = newProxyList.findIndex((ele) => ele.value === oldElement.value)
                     if (index === -1) {
-                        newProxyList.push(oldElement)
+                        if (oldElement.value) newProxyList.push(oldElement)
                     }
                     if (i >= 9) {
                         break
@@ -801,6 +800,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
+            if (count === 0) {
+                // 重置extractedMap
+                reset()
+            }
             if (data.Ok) {
                 successCount++
             } else {
@@ -854,7 +857,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-
+    const [extractedMap, {setAll, reset}] = useMap<string, string>()
+    useEffect(() => {
+        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: {extractedMap: Map<string, string>}) => {
+            setAll(data.extractedMap)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-extracted-to-table")
+        }
+    }, [])
     const onlyOneResponse = useMemo(() => {
         return !loading && failedFuzzer.length + successFuzzer.length === 1
     }, [loading, failedFuzzer, successFuzzer])
@@ -1138,7 +1149,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
         return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
     }, [successFuzzer])
-
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1513,6 +1523,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     data={successFuzzer}
                                                     query={query}
                                                     setQuery={setQuery}
+                                                    extractedMap={extractedMap}
                                                     isEnd={loading}
                                                 />
                                             )}
@@ -1523,6 +1534,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     query={query}
                                                     setQuery={setQuery}
                                                     isEnd={loading}
+                                                    extractedMap={extractedMap}
                                                 />
                                             )}
                                         </>
@@ -1583,6 +1595,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
         // bodyLengthUnit: "B"
     })
 
+    const [responseExtractorVisible, setResponseExtractorVisible] = useState<boolean>(false)
     const bodyLengthRef = useRef<any>()
 
     useEffect(() => {
@@ -1781,6 +1794,19 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 </YakitPopover>
 
                 <Divider type='vertical' style={{margin: 0, top: 1}} />
+                <YakitButton
+                    type='outline2'
+                    size='small'
+                    onClick={() => {
+                        if (successFuzzer.length === 0) {
+                            showYakitModal({title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null})
+                            return
+                        }
+                        setResponseExtractorVisible(true)
+                    }}
+                >
+                    提取响应数据
+                </YakitButton>
                 <YakitPopover
                     title={"导出数据"}
                     trigger={["click"]}
@@ -1813,6 +1839,17 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         导出数据
                     </YakitButton>
                 </YakitPopover>
+                <YakitModal
+                    title='提取响应数据包中内容'
+                    onCancel={() => setResponseExtractorVisible(false)}
+                    visible={responseExtractorVisible}
+                    width='80%'
+                    maskClosable={false}
+                    footer={null}
+                    closable={true}
+                >
+                    <WebFuzzerResponseExtractor responses={successFuzzer} />
+                </YakitModal>
             </>
         )
     }
