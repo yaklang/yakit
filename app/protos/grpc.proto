@@ -1066,10 +1066,12 @@ message FuzzerLabel {
   int64 Id = 1;
   string Label = 2;
   string Description = 3;
+  string DefaultDescription = 4;
+  string Hash = 5;
 }
 
 message DeleteFuzzerLabelRequest {
-  string Label = 1;
+  string Hash = 1;
 }
 
 message ExtractDataRequest {
