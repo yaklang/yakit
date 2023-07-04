@@ -618,7 +618,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             <HTTPFlowExtractedDataTable
                                 httpFlowHash={flow?.Hash || ""}
                                 title={
-                                    <Button.Group size={"small"}>
+                                    <div className={styles['table-header']}>
+                                        <Button.Group size={"small"}>
                                         {existedInfoType.map((i) => {
                                             return (
                                                 <Button
@@ -633,6 +634,21 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             )
                                         })}
                                     </Button.Group>
+                                    <div className={classNames(styles["http-history-fold-box"])}>
+                                        <div className={styles["http-history-icon-box"]}>
+                                            <Tooltip placement='top' title='向右收起'>
+                                                <SideBarOpenIcon
+                                                    className={styles["fold-icon"]}
+                                                    onClick={() => {
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is:true}))
+                                                        setFold(true)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    
                                 }
                             />
                         </Col>
