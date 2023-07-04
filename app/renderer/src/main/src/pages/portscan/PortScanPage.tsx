@@ -57,6 +57,7 @@ export interface PortScanParams {
     ExcludeHosts?: string
     ExcludePorts?: string
     EnableBasicCrawler?: boolean
+    EnableBrute?: boolean
     BasicCrawlerRequestMax?: number
 }
 
