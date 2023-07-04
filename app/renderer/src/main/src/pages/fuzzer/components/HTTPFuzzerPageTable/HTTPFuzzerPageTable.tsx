@@ -34,6 +34,8 @@ interface HTTPFuzzerPageTableProps {
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
     isRefresh?: boolean
+    /**@name 提取的数据 */
+    extractedMap: Map<string, string>
     /**@name 数据是否传输完成 */
     isEnd: boolean
 }
@@ -86,7 +88,7 @@ export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, isEnd} = props
+    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -208,8 +210,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               <span className={styles["tip"]}>不为空</span>
                           </div>
                       ),
-                      render: (item) =>
-                          item?.length > 0 ? (
+                      render: (item, record) =>
+                          extractedMap.size > 0 ? (
+                              extractedMap.get(record["UUID"]) || "-"
+                          ) : item?.length > 0 ? (
                               <div className={styles["table-item-extracted-results"]}>
                                   <span className={styles["extracted-results-text"]}>
                                       {item.map((i) => `${i.Key}: ${i.Value} `)}
@@ -341,8 +345,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       render: (v) => v.join(",")
                   }
               ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength, isHaveData])
-
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData])
     useThrottleEffect(
         () => {
             if (isEnd && sorterTable) {
@@ -477,7 +480,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                     // 是否有提取数据
                     if (isHaveData) {
-                        isHaveDataIsPush = record.ExtractedResults.length > 0
+                        if (extractedMap.size > 0) {
+                            isHaveDataIsPush = !!extractedMap.get(record["UUID"])
+                        } else {
+                            isHaveDataIsPush = record.ExtractedResults.length > 0
+                        }
                     }
                     // 搜索同时为true时，push新数组
                     if (
