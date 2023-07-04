@@ -153,6 +153,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         SaveToDB: true,
         SaveClosedPorts: false,
         EnableCClassScan: false,
+        EnableBrute: true,
         SkippedHostAliveScan: false,
         HostAlivePorts: "22,80,443",
         ExcludeHosts: "",
