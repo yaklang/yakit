@@ -396,6 +396,13 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                         </div>
                         <div className={styles["title-style"]}>CVE 管理</div>
                     </div>
+                    <div className={styles["divider-style"]}></div>
+                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_WebShell)}>
+                        <div className={styles["icon-wrapper"]}>
+                            <PublicCVEIcon />
+                        </div>
+                        <div className={styles["title-style"]}>WebShell 管理</div>
+                    </div>
                 </>
             )}
         </div>

@@ -113,6 +113,8 @@ import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
 import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
+import {WebShellsViewer} from "@/pages/webshellManager/WebShellsViewer";
+import {WebShellPage} from "@/pages/webshellManager/WebShellPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -153,8 +155,9 @@ export enum YakitRoute {
     DB_Domain = "db-domains",
     WebsiteTree = "website-tree",
     DB_CVE = "cve",
+    DB_WebShell = "webshell-manager",
     /** 独立功能页面 */
-    // Yak-Runner页面
+        // Yak-Runner页面
     YakScript = "yakScript",
     // Payload页面
     PayloadManager = "payload-manager",
@@ -191,12 +194,13 @@ export enum YakitRoute {
     // 调试插件编辑器
     Beta_DebugMonacoEditor = "beta-debug-monaco-editor"
 }
+
 /**
  * @description 页面路由对应的页面信息
  * * label-页面名称
  * * describe(非必需)-页面描述语
  */
-export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?: string}> = {
+export const YakitRouteToPageInfo: Record<YakitRoute, { label: string; describe?: string }> = {
     "new-home": {label: "首页"},
     httpHacker: {
         label: "MITM 交互式劫持",
@@ -242,6 +246,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-domains": {label: "域名"},
     "website-tree": {label: "网站树"},
     cve: {label: "CVE 管理"},
+    "webshell-manager": {label: "WebShell 管理"},
     yakScript: {label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
     "payload-manager": {
         label: "Payload",
@@ -286,6 +291,7 @@ export const SinglePageRoute: YakitRoute[] = [
     YakitRoute.DB_Domain,
     YakitRoute.WebsiteTree,
     YakitRoute.DB_CVE,
+    YakitRoute.DB_WebShell,
     YakitRoute.YakScript,
     YakitRoute.PayloadManager,
     YakitRoute.AccountAdminPage,
@@ -315,6 +321,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DNSLog,
     YakitRoute.NewHome,
     YakitRoute.DB_CVE,
+    YakitRoute.DB_WebShell,
     YakitRoute.HTTPFuzzer,
     YakitRoute.WebsiteTree
 ]
@@ -355,13 +362,14 @@ interface ComponentParams {
     YakScriptJournalDetailsId?: number
     // facade server参数
     facadeServerParams?: StartFacadeServerParams
-    classGeneraterParams?: {[key: string]: any}
+    classGeneraterParams?: { [key: string]: any }
     classType?: string
 
     // 简易企业版 - 安全检测
     recoverOnlineGroup?: string
     recoverTaskName?: string
 }
+
 export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, params?: ComponentParams) => ReactNode = (
     key,
     yakScriptId,
@@ -369,11 +377,11 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
 ) => {
     switch (key) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            return <NewHome/>
         case YakitRoute.HTTPHacker:
             return (
-                <Suspense fallback={<PageLoading />}>
-                    <HTTPHacker />
+                <Suspense fallback={<PageLoading/>}>
+                    <HTTPHacker/>
                 </Suspense>
             )
         case YakitRoute.HTTPFuzzer:
@@ -389,72 +397,74 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
                 />
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
+            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest}/>
         case YakitRoute.Codec:
-            return <CodecPage />
+            return <CodecPage/>
         case YakitRoute.DataCompare:
-            return <DataCompare />
+            return <DataCompare/>
         case YakitRoute.Mod_ScanPort:
-            return <PortScanPage sendTarget={params?.scanportParams} />
+            return <PortScanPage sendTarget={params?.scanportParams}/>
         case YakitRoute.PoC:
-            return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
+            return <YakBatchExecutors keyword={"poc"} verbose={"Poc"}/>
         case YakitRoute.Plugin_OP:
-            if (!yakScriptId || !+yakScriptId) return <div />
-            return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />
+            if (!yakScriptId || !+yakScriptId) return <div/>
+            return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true}/>
         case YakitRoute.Mod_Brute:
-            return <BrutePage sendTarget={params?.bruteParams} />
+            return <BrutePage sendTarget={params?.bruteParams}/>
         case YakitRoute.Plugin_Store:
-            return <PluginStore />
+            return <PluginStore/>
         case YakitRoute.Plugin_Owner:
-            return <PluginOwner />
+            return <PluginOwner/>
         case YakitRoute.Plugin_Local:
-            return <PluginLocal />
+            return <PluginLocal/>
         case YakitRoute.BatchExecutorPage:
-            return <BatchExecutorPageEx />
+            return <BatchExecutorPageEx/>
         case YakitRoute.DNSLog:
-            return <DNSLogPage />
+            return <DNSLogPage/>
         case YakitRoute.ICMPSizeLog:
-            return <ICMPSizeLoggerPage />
+            return <ICMPSizeLoggerPage/>
         case YakitRoute.TCPPortLog:
-            return <RandomPortLogPage />
+            return <RandomPortLogPage/>
         case YakitRoute.PayloadGenerater_New:
-            return <JavaPayloadPage />
+            return <JavaPayloadPage/>
         case YakitRoute.ReverseServer_New:
-            return <NewReverseServerPage />
+            return <NewReverseServerPage/>
         case YakitRoute.ShellReceiver:
-            return <ShellReceiverPage />
+            return <ShellReceiverPage/>
         case YakitRoute.DB_HTTPHistory:
-            return <HTTPHistory />
+            return <HTTPHistory/>
         case YakitRoute.DB_Report:
-            return <ReportViewerPage />
+            return <ReportViewerPage/>
         case YakitRoute.DB_Risk:
-            return <RiskPage />
+            return <RiskPage/>
         case YakitRoute.DB_Ports:
-            return <PortAssetTable />
+            return <PortAssetTable/>
         case YakitRoute.DB_Domain:
-            return <DomainAssetPage />
+            return <DomainAssetPage/>
         case YakitRoute.WebsiteTree:
-            return <WebsiteTreeViewer />
+            return <WebsiteTreeViewer/>
         case YakitRoute.DB_CVE:
-            return <CVEViewer />
+            return <CVEViewer/>
+        case YakitRoute.DB_WebShell:
+            return <WebShellPage/>
         case YakitRoute.YakScript:
-            return <YakExecutor />
+            return <YakExecutor/>
         case YakitRoute.PayloadManager:
-            return <PayloadManagerPage />
+            return <PayloadManagerPage/>
         case YakitRoute.AccountAdminPage:
-            return <AccountAdminPage />
+            return <AccountAdminPage/>
         case YakitRoute.RoleAdminPage:
-            return <RoleAdminPage />
+            return <RoleAdminPage/>
         case YakitRoute.HoleCollectPage:
-            return <HoleCollectPage />
+            return <HoleCollectPage/>
         case YakitRoute.LicenseAdminPage:
-            return <LicenseAdminPage />
+            return <LicenseAdminPage/>
         case YakitRoute.TrustListPage:
-            return <TrustListPage />
+            return <TrustListPage/>
         case YakitRoute.PlugInAdminPage:
-            return <PlugInAdminPage />
+            return <PlugInAdminPage/>
         case YakitRoute.ControlAdminPage:
-            return <ControlAdminPage />
+            return <ControlAdminPage/>
         case YakitRoute.BatchExecutorRecover:
             return (
                 <ReadOnlyBatchExecutorByRecoverUid
@@ -472,11 +482,11 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
                 />
             )
         case YakitRoute.AddYakitScript:
-            return <AddYakitScript />
+            return <AddYakitScript/>
         case YakitRoute.YakitPluginJournalDetails:
-            return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
+            return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0}/>
         case YakitRoute.OnlinePluginRecycleBin:
-            return <OnlinePluginRecycleBin />
+            return <OnlinePluginRecycleBin/>
         case YakitRoute.SimpleDetect:
             return (
                 <SimpleDetect
@@ -487,18 +497,18 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
                 />
             )
         case YakitRoute.ScreenRecorderPage:
-            return <ScreenRecorderPage />
+            return <ScreenRecorderPage/>
         case YakitRoute.DB_ChaosMaker:
-            return <ChaosMakerPage />
+            return <ChaosMakerPage/>
         case YakitRoute.Beta_MatcherExtractorPage:
-            return <MatcherExtractorPage />
+            return <MatcherExtractorPage/>
         case YakitRoute.Beta_DebugPlugin:
-            return <PluginDebuggerPage />
+            return <PluginDebuggerPage/>
         case YakitRoute.Beta_DebugMonacoEditor:
-            return <DebugMonacoEditorPage />
+            return <DebugMonacoEditorPage/>
 
         default:
-            return <div />
+            return <div/>
     }
 }
 
@@ -523,6 +533,7 @@ export interface DatabaseFirstMenuProps {
     /** @name 一级菜单初始值 */
     GroupLabel: string
 }
+
 /** @name 数据库二级菜单项属性 */
 export interface DatabaseSecondMenuProps {
     /** @name 插件id */
@@ -548,6 +559,7 @@ export interface DatabaseSecondMenuProps {
     /** @name 一级菜单初始值 */
     GroupLabel: string
 }
+
 /**
  * @name 数据库转化的前端数据属性
  * @param route 菜单路由
@@ -566,6 +578,7 @@ export interface DatabaseMenuItemProps {
     HeadImg?: string
     children?: DatabaseMenuItemProps[]
 }
+
 /** @name 数据库菜单数据转换为前端数据 */
 export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
     const menus: DatabaseMenuItemProps[] = []
@@ -607,6 +620,7 @@ export interface PublicRouteMenuProps {
     yakScripName?: string
     children?: PublicRouteMenuProps[]
 }
+
 /**
  * @name public版菜单配置数据
  * @description 注意! 该数据只在折叠菜单时使用，展开菜单的渲染并未使用该数据，如需调整展开菜单，请在组件MenuMode内修改
@@ -753,7 +767,8 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
             {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
             {page: YakitRoute.WebsiteTree, ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]},
-            {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
+            {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]},
+            {page: YakitRoute.DB_WebShell, ...YakitRouteToPageInfo[YakitRoute.DB_WebShell]}
         ]
     }
 ]
@@ -800,34 +815,35 @@ export interface PrivateRouteMenuProps {
     yakScripName?: string
     children?: PrivateRouteMenuProps[]
 }
+
 /** 软件内定插件菜单的icon */
 export const getFixedPluginIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
-            return <PrivateOutlineBasicCrawlerIcon />
+            return <PrivateOutlineBasicCrawlerIcon/>
         case "空间引擎集成版本":
-            return <PrivateOutlineSpaceEngineIcon />
+            return <PrivateOutlineSpaceEngineIcon/>
         case "子域名收集":
-            return <PrivateOutlineSubDomainCollectionIcon />
+            return <PrivateOutlineSubDomainCollectionIcon/>
         case "综合目录扫描与爆破":
-            return <PrivateOutlineDirectoryScanningIcon />
+            return <PrivateOutlineDirectoryScanningIcon/>
         default:
-            return <PrivateOutlineDefaultPluginIcon />
+            return <PrivateOutlineDefaultPluginIcon/>
     }
 }
 /** 软件内定插件菜单的hover-icon */
 export const getFixedPluginHoverIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
-            return <PrivateSolidBasicCrawlerIcon />
+            return <PrivateSolidBasicCrawlerIcon/>
         case "空间引擎集成版本":
-            return <PrivateSolidSpaceEngineIcon />
+            return <PrivateSolidSpaceEngineIcon/>
         case "子域名收集":
-            return <PrivateSolidSubDomainCollectionIcon />
+            return <PrivateSolidSubDomainCollectionIcon/>
         case "综合目录扫描与爆破":
-            return <PrivateSolidDirectoryScanningIcon />
+            return <PrivateSolidDirectoryScanningIcon/>
         default:
-            return <PrivateSolidDefaultPluginIcon />
+            return <PrivateSolidDefaultPluginIcon/>
     }
 }
 /** 软件内定插件菜单的describe */
@@ -853,153 +869,159 @@ export const getFixedPluginDescribe = (name: string) => {
 export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     [YakitRoute.HTTPHacker]: {
         page: YakitRoute.HTTPHacker,
-        icon: <PrivateOutlineMitmIcon />,
-        hoverIcon: <PrivateSolidMitmIcon />,
+        icon: <PrivateOutlineMitmIcon/>,
+        hoverIcon: <PrivateSolidMitmIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.HTTPHacker]
     },
     [YakitRoute.HTTPFuzzer]: {
         page: YakitRoute.HTTPFuzzer,
-        icon: <PrivateOutlineWebFuzzerIcon />,
-        hoverIcon: <PrivateSolidWebFuzzerIcon />,
+        icon: <PrivateOutlineWebFuzzerIcon/>,
+        hoverIcon: <PrivateSolidWebFuzzerIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]
     },
     [YakitRoute.WebsocketFuzzer]: {
         page: YakitRoute.WebsocketFuzzer,
-        icon: <PrivateOutlineWebsocketFuzzerIcon />,
-        hoverIcon: <PrivateSolidWebsocketFuzzerIcon />,
+        icon: <PrivateOutlineWebsocketFuzzerIcon/>,
+        hoverIcon: <PrivateSolidWebsocketFuzzerIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.WebsocketFuzzer]
     },
     [YakitRoute.Mod_Brute]: {
         page: YakitRoute.Mod_Brute,
-        icon: <PrivateOutlineBruteIcon />,
-        hoverIcon: <PrivateSolidBruteIcon />,
+        icon: <PrivateOutlineBruteIcon/>,
+        hoverIcon: <PrivateSolidBruteIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.Mod_Brute]
     },
     [YakitRoute.Mod_ScanPort]: {
         page: YakitRoute.Mod_ScanPort,
-        icon: <PrivateOutlineScanPortIcon />,
-        hoverIcon: <PrivateSolidScanPortIcon />,
+        icon: <PrivateOutlineScanPortIcon/>,
+        hoverIcon: <PrivateSolidScanPortIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.Mod_ScanPort]
     },
     [YakitRoute.PoC]: {
         page: YakitRoute.PoC,
-        icon: <PrivateOutlinePocIcon />,
-        hoverIcon: <PrivateSolidPocIcon />,
+        icon: <PrivateOutlinePocIcon/>,
+        hoverIcon: <PrivateSolidPocIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.PoC]
     },
     [YakitRoute.Plugin_Store]: {
         page: YakitRoute.Plugin_Store,
-        icon: <PrivateOutlinePluginStoreIcon />,
-        hoverIcon: <PrivateSolidPluginStoreIcon />,
+        icon: <PrivateOutlinePluginStoreIcon/>,
+        hoverIcon: <PrivateSolidPluginStoreIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
     },
     [YakitRoute.Plugin_Owner]: {
         page: YakitRoute.Plugin_Owner,
-        icon: <PrivateOutlinePluginOwnerIcon />,
-        hoverIcon: <PrivateSolidPluginOwnerIcon />,
+        icon: <PrivateOutlinePluginOwnerIcon/>,
+        hoverIcon: <PrivateSolidPluginOwnerIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
     },
     [YakitRoute.Plugin_Local]: {
         page: YakitRoute.Plugin_Local,
-        icon: <PrivateOutlinePluginLocalIcon />,
-        hoverIcon: <PrivateSolidPluginLocalIcon />,
+        icon: <PrivateOutlinePluginLocalIcon/>,
+        hoverIcon: <PrivateSolidPluginLocalIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
     },
     [YakitRoute.BatchExecutorPage]: {
         page: YakitRoute.BatchExecutorPage,
-        icon: <PrivateOutlineBatchPluginIcon />,
-        hoverIcon: <PrivateSolidBatchPluginIcon />,
+        icon: <PrivateOutlineBatchPluginIcon/>,
+        hoverIcon: <PrivateSolidBatchPluginIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
     },
     [YakitRoute.ShellReceiver]: {
         page: YakitRoute.ShellReceiver,
-        icon: <PrivateOutlineShellReceiverIcon />,
-        hoverIcon: <PrivateSolidShellReceiverIcon />,
+        icon: <PrivateOutlineShellReceiverIcon/>,
+        hoverIcon: <PrivateSolidShellReceiverIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.ShellReceiver]
     },
     [YakitRoute.ReverseServer_New]: {
         page: YakitRoute.ReverseServer_New,
-        icon: <PrivateOutlineReverseServerIcon />,
-        hoverIcon: <PrivateSolidShellReceiverIcon />,
+        icon: <PrivateOutlineReverseServerIcon/>,
+        hoverIcon: <PrivateSolidShellReceiverIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.ReverseServer_New]
     },
     [YakitRoute.DNSLog]: {
         page: YakitRoute.DNSLog,
-        icon: <PrivateOutlineDNSLogIcon />,
-        hoverIcon: <PrivateSolidDNSLogIcon />,
+        icon: <PrivateOutlineDNSLogIcon/>,
+        hoverIcon: <PrivateSolidDNSLogIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DNSLog]
     },
     [YakitRoute.ICMPSizeLog]: {
         page: YakitRoute.ICMPSizeLog,
-        icon: <PrivateOutlineICMPSizeLogIcon />,
-        hoverIcon: <PrivateSolidICMPSizeLogIcon />,
+        icon: <PrivateOutlineICMPSizeLogIcon/>,
+        hoverIcon: <PrivateSolidICMPSizeLogIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.ICMPSizeLog]
     },
     [YakitRoute.TCPPortLog]: {
         page: YakitRoute.TCPPortLog,
-        icon: <PrivateOutlineTCPPortLogIcon />,
-        hoverIcon: <PrivateSolidTCPPortLogIcon />,
+        icon: <PrivateOutlineTCPPortLogIcon/>,
+        hoverIcon: <PrivateSolidTCPPortLogIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.TCPPortLog]
     },
     [YakitRoute.PayloadGenerater_New]: {
         page: YakitRoute.PayloadGenerater_New,
-        icon: <PrivateOutlinePayloadGeneraterIcon />,
-        hoverIcon: <PrivateSolidPayloadGeneraterIcon />,
+        icon: <PrivateOutlinePayloadGeneraterIcon/>,
+        hoverIcon: <PrivateSolidPayloadGeneraterIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.PayloadGenerater_New]
     },
     [YakitRoute.Codec]: {
         page: YakitRoute.Codec,
-        icon: <PrivateOutlineCodecIcon />,
-        hoverIcon: <PrivateSolidCodecIcon />,
+        icon: <PrivateOutlineCodecIcon/>,
+        hoverIcon: <PrivateSolidCodecIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.Codec]
     },
     [YakitRoute.DataCompare]: {
         page: YakitRoute.DataCompare,
-        icon: <PrivateOutlineDataCompareIcon />,
-        hoverIcon: <PrivateSolidDataCompareIcon />,
+        icon: <PrivateOutlineDataCompareIcon/>,
+        hoverIcon: <PrivateSolidDataCompareIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DataCompare]
     },
     [YakitRoute.DB_Report]: {
         page: YakitRoute.DB_Report,
-        icon: <PrivateOutlineReportIcon />,
-        hoverIcon: <PrivateSolidReportIcon />,
+        icon: <PrivateOutlineReportIcon/>,
+        hoverIcon: <PrivateSolidReportIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DB_Report]
     },
     [YakitRoute.DB_Ports]: {
         page: YakitRoute.DB_Ports,
-        icon: <PrivateOutlinePortsIcon />,
-        hoverIcon: <PrivateSolidPortsIcon />,
+        icon: <PrivateOutlinePortsIcon/>,
+        hoverIcon: <PrivateSolidPortsIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DB_Ports]
     },
     [YakitRoute.DB_Risk]: {
         page: YakitRoute.DB_Risk,
-        icon: <PrivateOutlineRiskIcon />,
-        hoverIcon: <PrivateSolidRiskIcon />,
+        icon: <PrivateOutlineRiskIcon/>,
+        hoverIcon: <PrivateSolidRiskIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DB_Risk]
     },
     [YakitRoute.DB_Domain]: {
         page: YakitRoute.DB_Domain,
-        icon: <PrivateOutlineDomainIcon />,
-        hoverIcon: <PrivateSolidDomainIcon />,
+        icon: <PrivateOutlineDomainIcon/>,
+        hoverIcon: <PrivateSolidDomainIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DB_Domain]
     },
     [YakitRoute.WebsiteTree]: {
         page: YakitRoute.WebsiteTree,
-        icon: <PrivateOutlineWebsiteTreeIcon />,
-        hoverIcon: <PrivateSolidWebsiteTreeIcon />,
+        icon: <PrivateOutlineWebsiteTreeIcon/>,
+        hoverIcon: <PrivateSolidWebsiteTreeIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]
     },
     [YakitRoute.DB_HTTPHistory]: {
         page: YakitRoute.DB_HTTPHistory,
-        icon: <PrivateOutlineHTTPHistoryIcon />,
-        hoverIcon: <PrivateSolidHTTPHistoryIcon />,
+        icon: <PrivateOutlineHTTPHistoryIcon/>,
+        hoverIcon: <PrivateSolidHTTPHistoryIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory]
     },
     [YakitRoute.DB_CVE]: {
         page: YakitRoute.DB_CVE,
-        icon: <PrivateOutlineCVEIcon />,
-        hoverIcon: <PrivateSolidCVEIcon />,
+        icon: <PrivateOutlineCVEIcon/>,
+        hoverIcon: <PrivateSolidCVEIcon/>,
         ...YakitRouteToPageInfo[YakitRoute.DB_CVE]
+    },
+    [YakitRoute.DB_WebShell]: {
+        page: YakitRoute.DB_WebShell,
+        icon: <PrivateOutlineCVEIcon/>,
+        hoverIcon: <PrivateSolidCVEIcon/>,
+        ...YakitRouteToPageInfo[YakitRoute.DB_WebShell]
     }
 }
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
@@ -1114,7 +1136,8 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Domain,
             YakitRoute.WebsiteTree,
             YakitRoute.DB_HTTPHistory,
-            YakitRoute.DB_CVE
+            YakitRoute.DB_CVE,
+            YakitRoute.DB_WebShell
         ])
     }
 ]
@@ -1193,7 +1216,8 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Domain,
             YakitRoute.WebsiteTree,
             YakitRoute.DB_HTTPHistory,
-            YakitRoute.DB_CVE
+            YakitRoute.DB_CVE,
+            YakitRoute.DB_WebShell
         ])
     }
 ]
@@ -1209,8 +1233,8 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         children: [
             {
                 page: YakitRoute.SimpleDetect,
-                icon: <PrivateOutlinePocIcon />,
-                hoverIcon: <PrivateSolidPocIcon />,
+                icon: <PrivateOutlinePocIcon/>,
+                hoverIcon: <PrivateSolidPocIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.SimpleDetect]
             }
         ]
@@ -1221,26 +1245,26 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         children: [
             {
                 page: YakitRoute.Plugin_Store,
-                icon: <PrivateOutlinePluginStoreIcon />,
-                hoverIcon: <PrivateSolidPluginStoreIcon />,
+                icon: <PrivateOutlinePluginStoreIcon/>,
+                hoverIcon: <PrivateSolidPluginStoreIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
             },
             {
                 page: YakitRoute.Plugin_Owner,
-                icon: <PrivateOutlinePluginOwnerIcon />,
-                hoverIcon: <PrivateSolidPluginOwnerIcon />,
+                icon: <PrivateOutlinePluginOwnerIcon/>,
+                hoverIcon: <PrivateSolidPluginOwnerIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
             },
             {
                 page: YakitRoute.Plugin_Local,
-                icon: <PrivateOutlinePluginLocalIcon />,
-                hoverIcon: <PrivateSolidPluginLocalIcon />,
+                icon: <PrivateOutlinePluginLocalIcon/>,
+                hoverIcon: <PrivateSolidPluginLocalIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
             },
             {
                 page: YakitRoute.BatchExecutorPage,
-                icon: <PrivateOutlineBatchPluginIcon />,
-                hoverIcon: <PrivateSolidBatchPluginIcon />,
+                icon: <PrivateOutlineBatchPluginIcon/>,
+                hoverIcon: <PrivateSolidBatchPluginIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
             }
         ]
@@ -1251,31 +1275,33 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         children: [
             {
                 page: YakitRoute.DB_Report,
-                icon: <PrivateOutlineReportIcon />,
-                hoverIcon: <PrivateSolidReportIcon />,
+                icon: <PrivateOutlineReportIcon/>,
+                hoverIcon: <PrivateSolidReportIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.DB_Report]
             },
             {
                 page: YakitRoute.DB_Ports,
-                icon: <PrivateOutlinePortsIcon />,
-                hoverIcon: <PrivateSolidPortsIcon />,
+                icon: <PrivateOutlinePortsIcon/>,
+                hoverIcon: <PrivateSolidPortsIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.DB_Ports]
             },
             {
                 page: YakitRoute.DB_Risk,
-                icon: <PrivateOutlineRiskIcon />,
-                hoverIcon: <PrivateSolidRiskIcon />,
+                icon: <PrivateOutlineRiskIcon/>,
+                hoverIcon: <PrivateSolidRiskIcon/>,
                 ...YakitRouteToPageInfo[YakitRoute.DB_Risk]
             }
         ]
     }
 ]
+
 // 要全部删除，但是里面的内容还没确定好
 export enum Route {
     WebsocketHistory = "websocket-history",
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
+
 // 要全部删除，但是里面的内容还没确定好
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
     const routeStr = `${r}`
@@ -1289,7 +1315,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <PluginOperator yakScriptId={yakScriptId || id} yakScriptName='' size={"big"} fromMenu={true} />
+        return <PluginOperator yakScriptId={yakScriptId || id} yakScriptName='' size={"big"} fromMenu={true}/>
     }
 
     if (routeStr.startsWith("batch:")) {
@@ -1301,15 +1327,15 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId} />
+        return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId}/>
     }
     switch (r) {
         case Route.WebsocketHistory:
-            return <WebsocketFlowHistory />
+            return <WebsocketFlowHistory/>
 
         case Route.AttachEngineCombinedOutput:
-            return <EngineConsole />
+            return <EngineConsole/>
         default:
-            return <div />
+            return <div/>
     }
 }
