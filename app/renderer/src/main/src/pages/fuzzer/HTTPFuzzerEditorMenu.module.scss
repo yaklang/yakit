@@ -30,7 +30,17 @@
             }
         }
         &-opt {
-            padding-right: 4px;
+            // padding-right: 4px;
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            .line {
+                width: 1px;
+                height: 12px;
+                background-color: #eaecf3;
+                position: relative;
+                top: 6px;
+            }
             .add-icon {
                 padding-top: 2px;
             }
@@ -53,6 +63,10 @@
             &-info {
                 display: flex;
                 align-items: center;
+                max-width: 280px;
+                .input {
+                    margin-left: 12px;
+                }
                 .drag-sort-icon {
                     color: var(--yakit-disable-text-color);
                     svg {
@@ -66,6 +80,10 @@
                     font-weight: 500;
                     line-height: 16px;
                     color: #31343f;
+                    flex: 1;
+                    white-space: nowrap; 
+                    overflow: hidden; 
+                    text-overflow: ellipsis; 
                 }
                 .sub-title {
                     color: #b4bbca;
@@ -148,7 +166,7 @@
         }
     }
 }
-.http-fuzzer-range-read-only-editor-menu{
+.http-fuzzer-range-read-only-editor-menu {
     width: 360px;
     height: 250px;
     border: 1px solid #eaecf3;
@@ -167,7 +185,7 @@
         padding: 0px 12px 6px;
         font-size: 12px;
         font-weight: 500;
-        color:  #31343F;
+        color: #31343f;
     }
     .decode-copy-replace {
         padding-top: 2px;
@@ -192,21 +210,19 @@
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                .yakit-copy{
+                .yakit-copy {
                     cursor: pointer;
                     .document-duplicate-svg-icon {
-                    
-                    color: var(--yakit-body-text-color);
-                    svg {
-                        height: 16px;
-                        width: 16px;
-                    }
-                    &:hover {
-                        color: var(--yakit-primary-5);
+                        color: var(--yakit-body-text-color);
+                        svg {
+                            height: 16px;
+                            width: 16px;
+                        }
+                        &:hover {
+                            color: var(--yakit-primary-5);
+                        }
                     }
                 }
-                }
-                
             }
         }
         .header-solid {

@@ -123,6 +123,12 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             options={(props.autoComplete || []).map(i => {
                 return {value: i}
             })}
+            onFocus={(e) => {
+                if (props.isBubbing) e.stopPropagation()
+            }}
+            onClick={(e) => {
+                if (props.isBubbing) e.stopPropagation()
+            }}
         /> : props.textarea ? <>
             <YakitInput.TextArea
                 style={{width: props.width}}
@@ -557,6 +563,7 @@ export interface InputFileNameItemProps {
     accept?: string[]
     required?: boolean
     disabled?: boolean
+    autoComplete?: string[]
 
     // 提示信息内容组件
     hint?: React.ReactNode
@@ -601,6 +608,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
                         可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
                     </div>)}
                 /> : <InputItem
+                    autoComplete={p.autoComplete}
                     label={""}
                     value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
                     placeholder="请输入绝对路径"

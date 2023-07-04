@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {Button, Card, Form, Input, List, notification, PageHeader, Popconfirm, Space, Spin, Tabs, Tag} from "antd"
 import {randomString} from "../../utils/randomUtil"
-import {failed, info, warn} from "../../utils/notification"
+import {failed, info, warn,success} from "../../utils/notification"
 import {showDrawer} from "../../utils/showModal"
 import {YakEditor, IMonacoEditor} from "../../utils/editors"
 import {ManySelectOne, SelectOne} from "../../utils/inputUtil"
@@ -15,17 +15,29 @@ import styles from "./HTTPFuzzerPage.module.scss"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 const {Text} = Typography
 const {ipcRenderer} = window.require("electron")
+
+export interface QueryFuzzerLabelResponseProps {
+    Id: number
+    Label: string
+    Description: string
+    DefaultDescription: string
+    Hash: string
+}
 
 export interface StringFuzzerProp {
     advanced?: boolean
     disableBasicMode?: boolean
     insertCallback?: (s: string) => any
+    close?:()=>void
 }
 
 export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
+    const {close} = props
     const [template, setTemplate] = useState("")
     const [loading, setLoading] = useState(false)
     const [random, _] = useState(randomString(20))
@@ -163,6 +175,36 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
         ipcRenderer.invoke("string-fuzzer", {template, token})
     }
 
+    const addToCommonTag = () => {
+        if (!template) {
+            notification["warning"]({message: "Fuzz模版为空"})
+            return
+        }
+        getRemoteValue(FUZZER_LABEL_LIST_NUMBER).then((data) => {
+            if (!data) {
+                return
+            }
+            const count: number = JSON.parse(data).number
+            ipcRenderer
+                .invoke("SaveFuzzerLabel", {
+                    Data: [
+                        {
+                            Label: template,
+                            Description: `标签${count + 1}`,
+                            DefaultDescription: `标签${count + 1}`
+                        }
+                    ]
+                })
+                .then(() => {
+                    setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: count + 1}))
+                    close&&close()
+                    success("标签添加成功")
+                }).catch((err)=>{
+                    failed(err.toString())
+                })
+        })
+    }
+
     return (
         <Spin spinning={loading}>
             <Space direction={"vertical"} style={{width: "100%"}} size={24}>
@@ -274,7 +316,9 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                             >
                                 <YakitButton type='outline2'>重置</YakitButton>
                             </YakitPopconfirm>
-                            <YakitButton type='outline2'>添加到常用标签</YakitButton>
+                            <YakitButton type='outline2' onClick={() => addToCommonTag()}>
+                                添加到常用标签
+                            </YakitButton>
                         </Space>
                     </Form.Item>
                 </Form>
