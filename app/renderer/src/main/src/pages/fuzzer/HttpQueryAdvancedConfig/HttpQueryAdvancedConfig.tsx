@@ -57,7 +57,7 @@ import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
