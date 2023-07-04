@@ -218,7 +218,10 @@ module.exports = (win, callback, getClient, newClient) => {
                     })
                     
                     // subprocess.unref()
-
+                    process.on("exit", () => {
+                        // 终止子进程
+                        subprocess.kill();
+                    });
                     subprocess.on("error", (err) => {
                         toLog(`本地引擎遭遇错误，错误原因为：${err}`)
                         reject(err)
