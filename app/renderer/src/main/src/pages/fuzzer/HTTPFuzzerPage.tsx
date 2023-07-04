@@ -3,7 +3,7 @@ import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider} fro
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
-import {StringFuzzer} from "./StringFuzzer"
+import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
@@ -82,7 +82,14 @@ import {
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
-import {HTTPFuzzerRangeEditorMenu, HTTPFuzzerClickEditorMenu, LabelDataProps, HTTPFuzzerRangeReadOnlyEditorMenu} from "./HTTPFuzzerEditorMenu"
+import {
+    HTTPFuzzerRangeEditorMenu,
+    HTTPFuzzerClickEditorMenu,
+    LabelDataProps,
+    HTTPFuzzerRangeReadOnlyEditorMenu,
+    defaultLabel,
+    FUZZER_LABEL_LIST_NUMBER
+} from "./HTTPFuzzerEditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -508,6 +515,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setAdvancedConfig(true)
             } else {
                 setAdvancedConfig(c === "true")
+            }
+        })
+    }, [])
+
+    useEffect(() => {
+        // 常用标签默认存储
+        ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+            const {Data} = data
+            if (Array.isArray(Data) && Data.length === 0) {
+                ipcRenderer.invoke("SaveFuzzerLabel", {
+                    Data: defaultLabel
+                })
+                // 缓存标签数量 用于添加生成标签Description
+                setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
             }
         })
     }, [])
@@ -1036,19 +1057,22 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return "monaco.fizz.select.widget"
             },
             getDomNode: function () {
-                console.log(1111)
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement("div")
                 ReactDOM.render(
                     <HTTPFuzzerClickEditorMenu
                         close={() => closeFizzSelectWidget()}
-                        insert={(v: LabelDataProps) => {
-                            if (v.sub_title) {
-                                reqEditor.trigger("keyboard", "type", {text: v.sub_title})
-                            } else if (v.title === "插入本地文件") {
+                        insert={(v: QueryFuzzerLabelResponseProps) => {
+                            if (v.Label) {
+                                reqEditor.trigger("keyboard", "type", {text: v.Label})
+                            } else if (v.DefaultDescription === "插入本地文件") {
                                 insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
                             }
                             closeFizzSelectWidget()
+                        }}
+                        addLabel={() => {
+                            closeFizzSelectWidget()
+                            onInsertYakFuzzer()
                         }}
                     />,
                     domNode
@@ -1078,7 +1102,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return "monaco.fizz.range.widget"
             },
             getDomNode: function () {
-                console.log(2222)
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement("div")
                 ReactDOM.render(
@@ -1239,6 +1262,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 m.destroy()
                             }
                         }}
+                        close={() => m.destroy()}
                     />
                 </div>
             )
@@ -2115,12 +2139,7 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
     const {rsp} = props
     if (!rsp) return <></>
     return (
-        <div
-            className={styles["editor-overlay-widget"]}
-            onClick={() => {
-                console.log("wawawa")
-            }}
-        >
+        <div className={styles["editor-overlay-widget"]}>
             {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
             {rsp.RemoteAddr && <span>远端地址:{rsp.RemoteAddr}</span>}
             {rsp.Proxy && <span>代理:{rsp.Proxy}</span>}
@@ -2308,7 +2327,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                                 lineNumber: currentPos?.lineNumber || 0,
                                                 column: currentPos?.column || 0
                                             },
-                                            preference: [1, 2]
+                                            preference: [1,2]
                                         }
                                     },
                                     update: function () {
@@ -2334,9 +2353,9 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     }
                                 })
                                 // 移出编辑器时触发
-                                // Editor.onMouseLeave(() => {
-                                //     closeFizzRangeReadOnlyWidget()
-                                // })
+                                Editor.onMouseLeave(() => {
+                                    closeFizzRangeReadOnlyWidget()
+                                })
                                 Editor.onMouseUp((e) => {
                                     const {leftButton, rightButton} = e.event
                                     if (leftButton) {

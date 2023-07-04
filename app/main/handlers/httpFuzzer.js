@@ -19,6 +19,54 @@ module.exports = (win, getClient) => {
         return await asyncStringFuzzer(params)
     })
 
+    const asyncSaveFuzzerLabel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveFuzzerLabel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 保存到常用Fuzzer标签
+    ipcMain.handle("SaveFuzzerLabel", async (e, params) => {
+        return await asyncSaveFuzzerLabel(params)
+    })
+
+    const asyncQueryFuzzerLabel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryFuzzerLabel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 查询所有Fuzzer标签
+    ipcMain.handle("QueryFuzzerLabel", async (e, params) => {
+        return await asyncQueryFuzzerLabel(params)
+    })
+
+    const asyncDeleteFuzzerLabel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteFuzzerLabel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除Fuzzer标签
+    ipcMain.handle("DeleteFuzzerLabel", async (e, params) => {
+        return await asyncDeleteFuzzerLabel(params)
+    })
+
     ipcMain.handle("string-fuzzer", (e, params) => {
         getClient().StringFuzzer({Template: params.template}, (err, data) => {
             if (win) {

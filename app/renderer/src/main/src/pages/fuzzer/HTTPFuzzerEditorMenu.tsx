@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Avatar, Timeline} from "antd"
+import {Avatar, Space, Timeline} from "antd"
 import {FormOutlined, PlusOutlined} from "@ant-design/icons"
 import {useGetState} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -12,75 +12,124 @@ import {DocumentDuplicateSvgIcon, DragSortIcon, SolidTerminalIcon, TerminalIcon,
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {AutoDecodeResult} from "@/utils/encodec"
 import {callCopyToClipboard} from "@/utils/basic"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
+import {setRemoteValue} from "@/utils/kv"
 const {ipcRenderer} = window.require("electron")
 export interface HTTPFuzzerClickEditorMenuProps {
     close: () => void
-    insert: (v: LabelDataProps) => void
+    insert: (v: QueryFuzzerLabelResponseProps) => void
+    addLabel: () => void
 }
 
 export interface LabelDataProps {
-    title?: string
-    sub_title?: string
+    DefaultDescription: string
+    Description?: string
+    Label?: string
 }
+
+export const defaultLabel: LabelDataProps[] = [
+    {
+        DefaultDescription: "{{md5(x(pass_top))}}",
+        Label: "{{md5(x(pass_top))}}"
+    },
+    {
+        DefaultDescription: "4位验证码",
+        Description: "4位验证码",
+        Label: "{{int(0000-9999|4)}}"
+    },
+    {
+        DefaultDescription: "6位验证码",
+        Description: "6位验证码",
+        Label: "{{int(000000-999999|6)}}"
+    },
+    {
+        DefaultDescription: "用户名爆破",
+        Description: "用户名爆破",
+        Label: "{{x(user_top10)}}"
+    },
+    {
+        DefaultDescription: "密码爆破",
+        Description: "密码爆破",
+        Label: "{{x(pass_top25)}}"
+    },
+    {
+        DefaultDescription: "插入本地文件",
+        Description: "插入本地文件"
+    },
+    {
+        DefaultDescription: "重复发包",
+        Description: "重复发包",
+        Label: "{{repeat(3)}}"
+    },
+    {
+        DefaultDescription: "随机生成字符串数",
+        Description: "随机生成字符串数",
+        Label: "{{randstr(1,1010)}}"
+    },
+    {
+        DefaultDescription: "整数标签",
+        Description: "整数标签",
+        Label: "{{int(0,100)}}"
+    },
+    {
+        DefaultDescription: "时间戳",
+        Description: "时间戳",
+        Label: "{{timestamp(seconds)}}"
+    },
+    {
+        DefaultDescription: "空字符",
+        Description: "空字符",
+        Label: "{{null(2}}"
+    }
+]
+
+export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
+
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
-    const {close, insert} = props
-    const [labelData, setLabelData] = useState<LabelDataProps[]>([])
-    const defaultLabel = useRef<LabelDataProps[]>([
-        {
-            sub_title: "{{md5(x(pass_top))}}"
-        },
-        {
-            title: "4位验证码",
-            sub_title: "{{int(0000-9999|4)}}"
-        },
-        {
-            title: "6位验证码",
-            sub_title: "{{int(000000-999999|6)}}"
-        },
-        {
-            title: "用户名爆破",
-            sub_title: "{{x(pass_top25)}}"
-        },
-        {
-            title: "密码爆破",
-            sub_title: "{{int(0000-9999|4)}}"
-        },
-        {
-            title: "插入本地文件"
-        },
-        {
-            title: "重复发包",
-            sub_title: "{{repeat(3)}}"
-        },
-        {
-            title: "随机生成字符串数",
-            sub_title: "{{randstr(1,1010)}}"
-        },
-        {
-            title: "整数标签",
-            sub_title: "{{int(0,100)}}"
-        },
-        {
-            title: "时间戳",
-            sub_title: "{{timestamp(seconds)}}"
-        },
-        {
-            title: "空字符",
-            sub_title: "{{null(2}}"
-        }
-    ])
+    const {close, insert, addLabel} = props
+    const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
+    const [selectLabel, setSelectLabel] = useState<string>()
+    const [inputValue, setInputValue] = useState<string>()
+    const getData = () => {
+        ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+            const {Data} = data
+            if (Array.isArray(Data) && Data.length > 0) {
+                setLabelData(Data)
+                setSelectLabel(undefined)
+            }
+        })
+    }
     useEffect(() => {
-        setLabelData(defaultLabel.current)
+        getData()
     }, [])
-    const addLabel = () => {
-        console.log("addLabel")
+    const insertLabel = (item: QueryFuzzerLabelResponseProps) => {
+        if (isSelect(item)) {
+            // 复原修改项
+            setSelectLabel(undefined)
+        } else {
+            insert(item)
+        }
     }
-    const insertLabel = (item: LabelDataProps) => {
-        insert(item)
+    const delLabel = (Hash: string) => {
+        ipcRenderer.invoke("DeleteFuzzerLabel", {Hash}).then(() => {
+            getData()
+        })
     }
-    const delLabel = () => {
-        console.log("delLabel")
+    const reset = () => {
+        // 删除标签后重新添加默认标签
+        ipcRenderer.invoke("DeleteFuzzerLabel", {}).then(() => {
+            setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
+            ipcRenderer
+                .invoke("SaveFuzzerLabel", {
+                    Data: defaultLabel
+                })
+                .then(() => {
+                    getData()
+                })
+        })
     }
+    const isSelect = (item: QueryFuzzerLabelResponseProps) => selectLabel === item.Hash
     return (
         <div className={styles["http-fuzzer-click-editor-menu"]}>
             <div className={styles["menu-header"]}>
@@ -92,40 +141,83 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     <YakitButton type='text' onClick={() => addLabel()}>
                         添加 <PlusOutlined className={styles["add-icon"]} />
                     </YakitButton>
+                    <div className={styles["line"]}></div>
+                    <YakitButton type='text' style={{color: "#85899E"}} onClick={() => reset()}>
+                        复原
+                    </YakitButton>
                 </div>
             </div>
             <div className={styles["menu-list"]}>
                 {labelData.map((item, index) => (
                     <div
-                        key={`${item?.sub_title}-${index}`}
+                        key={`${item?.Label}-${index}`}
                         className={styles["menu-list-item"]}
                         onClick={() => insertLabel(item)}
                     >
                         <div className={styles["menu-list-item-info"]}>
                             <DragSortIcon className={styles["drag-sort-icon"]} />
-                            <div className={styles["title"]}>{item.title}</div>
-                            <div
-                                className={classNames(styles["sub-title"], {
-                                    [styles["sub-title-left"]]: !!item.title
-                                })}
-                            >
-                                {item.sub_title}
-                            </div>
+                            {isSelect(item) ? (
+                                <YakitInput
+                                defaultValue={item.Description}
+                                    className={styles["input"]}
+                                    size='small'
+                                    onChange={(e) => {
+                                        setInputValue(e.target.value)
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    <div className={styles["title"]}>{item.Description}</div>
+                                    <div
+                                        className={classNames(styles["sub-title"], {
+                                            [styles["sub-title-left"]]: !!item.Description
+                                        })}
+                                    >
+                                        {item.Label}
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <div className={styles["menu-list-item-opt"]}>
-                            <FormOutlined
-                                className={styles["form-outlined"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                }}
-                            />
-                            <TrashIcon
-                                className={styles["trash-icon"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    delLabel()
-                                }}
-                            />
+                            {isSelect(item) ? (
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (inputValue) {
+                                            ipcRenderer
+                                                .invoke("SaveFuzzerLabel", {
+                                                    Data: [{...item, Description: inputValue}]
+                                                })
+                                                .then(() => {
+                                                    getData()
+                                                })
+                                        }
+                                    }}
+                                >
+                                    确认
+                                </YakitButton>
+                            ) : (
+                                <>
+                                    <FormOutlined
+                                        className={styles["form-outlined"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setSelectLabel(item.Hash)
+                                        }}
+                                    />
+                                    <TrashIcon
+                                        className={styles["trash-icon"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            delLabel(item.Hash)
+                                        }}
+                                    />
+                                </>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -396,7 +488,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
     const {rangeValue} = props
     return (
         <div className={styles["http-fuzzer-range-read-only-editor-menu"]}>
-            <DecodeComponent rangeValue={rangeValue} isReadOnly={true}/>
+            <DecodeComponent rangeValue={rangeValue} isReadOnly={true} />
         </div>
     )
 }
