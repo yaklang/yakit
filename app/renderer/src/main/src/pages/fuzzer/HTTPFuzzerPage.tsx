@@ -1048,6 +1048,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
+    const downPosY = useRef<number>()
+    const upPosY = useRef<number>()
     // 编辑器菜单
     const editerMenuFun = (reqEditor: IMonacoEditor) => {
         // 编辑器点击显示的菜单
@@ -1110,8 +1112,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             const selectedText =
                                 reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any) || ""
                             if (selectedText.length > 0) {
-                                const text: string = fun(selectedText)
-                                reqEditor.trigger("keyboard", "type", {text})
+                                ipcRenderer
+                                    .invoke("QueryFuzzerLabel", {})
+                                    .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+                                        const {Data} = data
+                                        let newSelectedText: string = selectedText
+                                        if (Array.isArray(Data) && Data.length > 0) {
+                                            // 选中项是否存在于标签中
+                                            let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
+                                            if (isHave) {
+                                                newSelectedText = selectedText.replace(/{{|}}/g, "")
+                                            }
+                                        }
+                                        const text: string = fun(newSelectedText)
+                                        reqEditor.trigger("keyboard", "type", {text})
+                                    })
                             }
                         }}
                         replace={(text: string) => {
@@ -1158,23 +1173,47 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
-        reqEditor.onMouseMove((event) => {
+        reqEditor.onMouseMove((e) => {
             try {
-                const pos = event.target.position
-                // console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
-                if (pos?.lineNumber) {
-                    const lineOffset = pos.lineNumber - (reqEditor.getPosition()?.lineNumber || 0)
-                    // 超出范围移除菜单
-                    if (lineOffset > 2 || lineOffset < -2) {
-                        // console.log("移出两行内");
-                        closeFizzSelectWidget()
-                        closeFizzRangeWidget()
+                // const pos = e.target.position
+                // if (pos?.lineNumber) {
+                //     const lineOffset = pos.lineNumber - (reqEditor.getPosition()?.lineNumber || 0)
+                //     // 超出范围移除菜单
+                //     if (lineOffset > 2 || lineOffset < -2) {
+                //         // console.log("移出两行内");
+                //         closeFizzSelectWidget()
+                //         closeFizzRangeWidget()
+                //     }
+                // }
+
+                const {target, event} = e
+                const {detail} = target
+                const {posy} = event
+                const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
+                if (
+                    detail !== "monaco.fizz.select.widget" &&
+                    detail !== "monaco.fizz.range.widget" &&
+                    downPosY.current &&
+                    upPosY.current
+                ) {
+                    // 超出多少行隐藏
+                    const overLine = 3
+                    const overHeight = overLine * lineHeight
+                    if (fizzSelectWidget.isOpen) {
+                        if (posy < upPosY.current - overHeight || posy > upPosY.current + overHeight) {
+                            closeFizzSelectWidget()
+                        }
+                    } else if (fizzRangeWidget.isOpen) {
+                        if(posy < downPosY.current - overHeight ||posy > upPosY.current + overHeight){
+                            closeFizzRangeWidget()
+                        }
                     }
                 }
             } catch (e) {
                 console.log(e)
             }
         })
+
         // 失去焦点时触发
         reqEditor.onDidBlurEditorWidget(() => {
             // closeFizzSelectWidget()
@@ -1185,9 +1224,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             closeFizzRangeWidget()
         })
 
+        reqEditor.onMouseDown((e) => {
+            const {leftButton, posy} = e.event
+            // 当两者都没有打开时
+            if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
+                // 记录posy位置
+                downPosY.current = posy
+            }
+        })
+
         reqEditor.onMouseUp((e) => {
-            const {leftButton, rightButton} = e.event
+            const {leftButton, rightButton, posy} = e.event
             if (leftButton) {
+                upPosY.current = posy
                 const selection = reqEditor.getSelection()
                 if (selection) {
                     const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
@@ -2327,7 +2376,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                                 lineNumber: currentPos?.lineNumber || 0,
                                                 column: currentPos?.column || 0
                                             },
-                                            preference: [1,2]
+                                            preference: [1, 2]
                                         }
                                     },
                                     update: function () {
