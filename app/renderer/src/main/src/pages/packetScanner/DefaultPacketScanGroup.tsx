@@ -47,7 +47,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
             title={"数据包扫描"}
             trigger={["click"]}
             visible={visible}
-            content={[
+            content={
                 <Space direction={"vertical"} style={{width: 150}}>
                     {packetScanDefaultValue.map((i,n) => {
                         return (
@@ -70,7 +70,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                         )
                     })}
                 </Space>
-            ]}
+            }
         >
             <YakitButton size={"small"} type='outline2'>
                 数据包扫描

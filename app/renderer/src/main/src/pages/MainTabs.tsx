@@ -1,6 +1,5 @@
 import React, {memo, useEffect, useRef, useState, ReactNode, useLayoutEffect} from "react"
 import {Input, Popover, Space, Tabs} from "antd"
-import {multipleNodeInfo} from "./MainOperator"
 import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
@@ -10,6 +9,7 @@ import {useGetState} from "ahooks"
 import {NoPaddingRoute, YakitRoute} from "@/routes/newRoute"
 
 import "./MainTabs.scss"
+import { MultipleNodeInfo } from "./layout/mainOperatorContent/MainOperatorContentType"
 
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
@@ -30,7 +30,7 @@ const InitTabId: React.FC<InitTabIdProp> = (props) => {
 export interface MainTabsProp {
     currentTabKey: string
     tabType: string
-    pages: multipleNodeInfo[]
+    pages: MultipleNodeInfo[]
     currentKey: string
     isShowAdd?: boolean
     setCurrentKey: (key: string) => void
