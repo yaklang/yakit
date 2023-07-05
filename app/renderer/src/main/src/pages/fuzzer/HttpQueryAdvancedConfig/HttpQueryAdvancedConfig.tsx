@@ -322,7 +322,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
                         <YakitSwitch />
                     </Form.Item>
-                    <Form.Item label='请求 Host' name='actualHost'>
+                    <Form.Item label='真实Host' name='actualHost'>
                         <YakitInput placeholder='请输入...' size='small' />
                     </Form.Item>
                     <Form.Item

@@ -1312,7 +1312,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 color='danger'
                                 className={classNames(styles["actualHost-text"], "content-ellipsis")}
                             >
-                                请求 Host:{advancedConfigValue.actualHost}
+                                真实Host:{advancedConfigValue.actualHost}
                             </YakitTag>
                         )}
                         {onlyOneResponse && (
