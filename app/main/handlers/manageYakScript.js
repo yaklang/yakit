@@ -442,4 +442,20 @@ module.exports = (win, getClient) => {
         return await asyncQueryYakScriptByNames(params)
     })
 
+    // asyncSmokingEvaluatePlugin wrapper
+    const asyncSmokingEvaluatePlugin = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SmokingEvaluatePlugin(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SmokingEvaluatePlugin", async (e, params) => {
+        return await asyncSmokingEvaluatePlugin(params)
+    })
+
 }
