@@ -30,10 +30,6 @@ export interface LabelDataProps {
 
 export const defaultLabel: LabelDataProps[] = [
     {
-        DefaultDescription: "{{md5(x(pass_top))}}",
-        Label: "{{md5(x(pass_top))}}"
-    },
-    {
         DefaultDescription: "4位验证码",
         Description: "4位验证码",
         Label: "{{int(0000-9999|4)}}"
