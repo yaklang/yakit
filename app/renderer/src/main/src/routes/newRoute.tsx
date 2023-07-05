@@ -326,7 +326,7 @@ export const NoPaddingRoute: YakitRoute[] = [
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
 
-interface ComponentParams {
+export interface ComponentParams {
     // Route.HTTPFuzzer 参数
     isHttps?: boolean
     isGmTLS?: boolean

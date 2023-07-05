@@ -268,15 +268,6 @@ export interface fuzzerInfoProp {
     verbose?: string
 }
 
-// 已打开页面的二级页面数据
-export interface multipleNodeInfo {
-    /**@name 二级菜单tab唯一值 */
-    id: string
-    verbose: string
-    node: ReactNode
-    time?: string
-}
-
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [loading, setLoading] = useState(false)
 
@@ -576,7 +567,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             />
         )
     }
-
+    /** 通知软件打开页面 */
+    const openMenu = (info: RouteToPageProps) => {
+        ipcRenderer.invoke("open-route-page", info)
+    }
     return (
         <>
             <Layout className='yakit-main-layout' style={controlShow ? {display: "none"} : {}}>
@@ -584,6 +578,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {isShowCustomizeMenu && (
                         <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
                     )}
+
                     <div
                         style={{
                             display: isShowCustomizeMenu ? "none" : "flex",
@@ -593,8 +588,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     >
                         {isCommunityEdition() ? (
                             <PublicMenu
-                                // onMenuSelect={extraOpenMenuPage} // 6.30注释
-                                onMenuSelect={() => {}}
+                                onMenuSelect={openMenu}
                                 setRouteToLabel={(val) => {
                                     val.forEach((value, key) => {
                                         routeKeyToLabel.current.set(key, value)
@@ -603,8 +597,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             />
                         ) : (
                             <HeardMenu
-                                // onRouteMenuSelect={extraOpenMenuPage}
-                                onRouteMenuSelect={() => {}} // 6.30注释
+                                onRouteMenuSelect={openMenu}
                                 setRouteToLabel={(val) => {
                                     val.forEach((value, key) => {
                                         routeKeyToLabel.current.set(key, value)

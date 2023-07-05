@@ -44,25 +44,45 @@ $keyColor: map-keys($colors);
 
 .grey-link {
     @extend .fake-content;
-    background-color: #eaecf3;
+    background-color: var(--yakit-border-color);
 }
 
 .primary-link {
     @extend .fake-content;
-    background-color: #f28b44;
+    background-color: var(--yakit-primary-5) !important;
 }
 
+.dragging {
+    background-color: #fff;
+    &::before {
+        @extend .white-link;
+        bottom: -1px;
+        z-index: 10;
+        height: 2px;
+    }
+}
+
+.base-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--yakit-body-text-color);
+    cursor: pointer;
+}
+
+// -------------- tab样式 -------------
 .tab-menu {
     display: flex;
     flex-direction: column;
     font-size: 12px;
     overflow: hidden;
+    height: 100%;
     .tab-menu-first {
         display: flex;
         flex-wrap: nowrap;
         align-items: center;
         position: relative;
-        background-color: #f8f8f8;
+        background-color: var(--yakit-card-background-color);
         &::before {
             @extend .grey-link;
             top: 0;
@@ -78,12 +98,18 @@ $keyColor: map-keys($colors);
             align-items: center;
             grid-gap: 16px;
             gap: 16px;
-            color: #85899e;
+            color: var(--yakit-body-text-color);
             cursor: pointer;
             flex: 1 1;
             word-break: keep-all;
-            border-right: 1px solid #eaecf3;
+            border-right: 1px solid var(--yakit-border-color);
             overflow: hidden;
+            max-width: 150px;
+            justify-content: space-between;
+            position: relative;
+            &:hover {
+                @extend .dragging;
+            }
             &:last-child {
                 border-right-width: 0;
             }
@@ -92,15 +118,18 @@ $keyColor: map-keys($colors);
                 text-overflow: ellipsis;
                 overflow: hidden;
                 word-break: break-all;
-                min-width: 16px;
+                min-width: 12px;
             }
             svg {
-                color: #85899e;
+                color: var(--yakit-body-text-color);
+            }
+            .tab-menu-item-left-verbose {
+                flex: 1;
             }
         }
         .tab-menu-first-item-active {
             background-color: #fff;
-            color: #31343f;
+            color: var(--yakit-header-color);
             position: relative;
             border-top-width: 0;
             border-bottom-width: 0;
@@ -110,6 +139,7 @@ $keyColor: map-keys($colors);
                 height: 2px;
                 top: 0;
                 z-index: 1;
+                animation: showActive 0.3s linear;
             }
             &::after {
                 @extend .white-link;
@@ -118,25 +148,28 @@ $keyColor: map-keys($colors);
                 z-index: 1;
             }
         }
+        .tab-menu-first-item-dragging {
+            @extend .dragging;
+        }
     }
     .tab-menu-sub {
         display: flex;
         align-items: center;
         position: relative;
-        background-color: #f8f8f8;
-        .plus-icon {
+        background-color: var(--yakit-card-background-color);
+        .outline-plus-icon {
+            @extend .base-icon;
             width: 24px;
             height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #85899e;
-            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
         }
         &::after {
             @extend .fake-content;
             bottom: 0;
-            background-color: #eaecf3;
+            background-color: var(--yakit-border-color);
         }
         .tab-menu-sub-group {
             display: flex;
@@ -149,7 +182,6 @@ $keyColor: map-keys($colors);
                 height: 32px;
                 padding: 4px 6px;
                 border-radius: 4px 0 0 4px;
-                // background-color: #56c991;
                 min-width: 16px;
                 color: #fff;
                 line-height: 16px;
@@ -157,7 +189,6 @@ $keyColor: map-keys($colors);
                 cursor: pointer;
                 .tab-menu-sub-group-number {
                     border-radius: 8px;
-                    // color: #56c991;
                     padding: 2px 6px;
                     background-color: #fff;
                     height: 16px;
@@ -177,12 +208,18 @@ $keyColor: map-keys($colors);
             padding: 4px 8px;
             align-items: center;
             gap: 8px;
-            background-color: #f8f8f8;
+            background-color: var(--yakit-card-background-color);
             cursor: pointer;
             flex: 1;
             word-break: keep-all;
             position: relative;
             overflow: hidden;
+            max-width: 150px;
+            justify-content: space-between;
+
+            &:hover {
+                @extend .dragging;
+            }
             span {
                 white-space: nowrap;
                 text-overflow: ellipsis;
@@ -196,21 +233,35 @@ $keyColor: map-keys($colors);
                 width: 1px;
                 display: flex;
                 align-items: center;
-                background-color: #eaecf3;
+                background-color: var(--yakit-border-color);
                 position: absolute;
                 right: 0;
+            }
+            .remove-icon {
+                @extend .base-icon;
+                height: 16px;
+                width: 16px;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+            .document-text-icon {
+                @extend .base-icon;
+                height: 16px;
+                width: 16px;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
             }
         }
         .tab-menu-sub-item-active {
             background-color: #fff;
-            color: #f28b44;
+            color: var(--yakit-primary-5);
             min-width: fit-content;
-            svg {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                color: #f28b44;
-                cursor: pointer;
+            .document-text-icon {
+                color: var(--yakit-primary-5);
             }
             &::before {
                 content: "";
@@ -224,13 +275,45 @@ $keyColor: map-keys($colors);
             }
         }
         .tab-menu-sub-item-dragging {
+            @extend .dragging;
             background-color: #fff;
-            &::before {
-                @extend .white-link;
-                bottom: -1px;
-                z-index: 10;
-                height: 2px;
-            }
         }
+    }
+    .tab-menu-item-left-verbose {
+        @extend .flex-align-center;
+        justify-content: space-between;
+        gap: 4px;
+    }
+
+    .tab-menu-item-left-verbose[title]:hover::after {
+        content: attr(title);
+        color: #fff;
+        position: fixed;
+        transform: translate(0, -30px);
+        background: #404040;
+        border-radius: 4px;
+        padding: 4px 6px;
+        z-index: 9;
+        width: max-content;
+    }
+    .tab-menu-item-right-verbose[title]:hover::after {
+        transform: translate(-80%, -30px);
+    }
+}
+
+.page-body {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+@keyframes showActive {
+    0% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
     }
 }

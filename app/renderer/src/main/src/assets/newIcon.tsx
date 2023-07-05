@@ -2057,3 +2057,37 @@ const IconOutlinePencilAlt = () => (
 export const IconOutlinePencilAltIcon = (props: Partial<IconProps>) => {
     return <Icon component={IconOutlinePencilAlt} {...props} />
 }
+
+const SolidDocumentText = () => (
+    <svg width='17' height='16' viewBox='0 0 17 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M3.43066 3.2001C3.43066 2.31644 4.14701 1.6001 5.03066 1.6001H8.69929C9.12364 1.6001 9.53061 1.76867 9.83066 2.06873L12.562 4.8001C12.8621 5.10016 13.0307 5.50712 13.0307 5.93147V12.8001C13.0307 13.6838 12.3143 14.4001 11.4307 14.4001H5.03066C4.14701 14.4001 3.43066 13.6838 3.43066 12.8001V3.2001ZM5.03066 8.0001C5.03066 7.55827 5.38884 7.2001 5.83066 7.2001H10.6307C11.0725 7.2001 11.4307 7.55827 11.4307 8.0001C11.4307 8.44193 11.0725 8.8001 10.6307 8.8001H5.83066C5.38884 8.8001 5.03066 8.44193 5.03066 8.0001ZM5.83066 10.4001C5.38884 10.4001 5.03066 10.7583 5.03066 11.2001C5.03066 11.6419 5.38884 12.0001 5.83066 12.0001H10.6307C11.0725 12.0001 11.4307 11.6419 11.4307 11.2001C11.4307 10.7583 11.0725 10.4001 10.6307 10.4001H5.83066Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description  Solid/document-text
+ */
+export const SolidDocumentTextIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidDocumentText} {...props} />
+}
+
+const OutlinePlus = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.00014 2.66675V13.3334M13.3335 8.00008L2.66681 8.00008'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/*
+* @description  Outline/plus
+*/
+export const OutlinePlusIcon = (props: Partial<IconProps>) => {
+   return <Icon component={OutlinePlus} {...props} />
+}
