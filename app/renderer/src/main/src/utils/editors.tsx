@@ -1049,6 +1049,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     system?: string
     isResponse?: boolean
     utf8?: boolean
+    theme?:string
 
     defaultSearchKeyword?: string
 
@@ -1419,6 +1420,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     {empty && props.emptyOr}
                     {mode === "text" && !empty && (
                         <HTTPPacketYakitEditor
+                            theme={props.theme}
                             noLineNumber={props.noLineNumber}
                             lineNumbersMinChars={props.lineNumbersMinChars}
                             noMiniMap={props.noMinimap}
