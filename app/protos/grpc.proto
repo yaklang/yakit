@@ -505,6 +505,9 @@ message SmokingEvaluatePluginRequest {
 
   // 只支持插件名评估
   string PluginName = 2;
+
+  string Code = 3;
+  string PluginType = 4;
 }
 
 message SmokingEvaluateResult {
