@@ -500,4 +500,34 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SaveTextToTemporalFile", async (e, params) => {
         return await asyncSaveTextToTemporalFile(params)
     })
+
+    // asyncIsVulinboxReady wrapper
+    const asyncIsVulinboxReady = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsVulinboxReady(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IsVulinboxReady", async (e, params) => {
+        return await asyncIsVulinboxReady(params)
+    })
+
+    const streamInstallVulinboxMap = new Map();
+    ipcMain.handle("cancel-InstallVulinbox", handlerHelper.cancelHandler(streamInstallVulinboxMap));
+    ipcMain.handle("InstallVulinbox", (e, params, token) => {
+        let stream = getClient().InstallVulinbox(params);
+        handlerHelper.registerHandler(win, stream, streamInstallVulinboxMap, token)
+    })
+
+    const streamStartVulinboxMap = new Map();
+    ipcMain.handle("cancel-StartVulinbox", handlerHelper.cancelHandler(streamStartVulinboxMap));
+    ipcMain.handle("StartVulinbox", (e, params, token) => {
+        let stream = getClient().StartVulinbox(params);
+        handlerHelper.registerHandler(win, stream, streamStartVulinboxMap, token)
+    })
 }

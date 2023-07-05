@@ -736,6 +736,10 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "debug-monaco-editor",
                     label: "(DEV)调试Monaco"
+                },
+                {
+                    key: "vulinbox-manager",
+                    label: "(靶场)Vulinbox"
                 }
             ]
         },
@@ -916,6 +920,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "debug-monaco-editor":
                 addToTab("**debug-monaco-editor")
+                return
+            case "vulinbox-manager":
+                addToTab("**vulinbox-manager")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()

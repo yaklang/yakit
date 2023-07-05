@@ -4,15 +4,19 @@ import React, {ReactNode} from "react"
 import {CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon} from "@/assets/newIcon"
 
 export const warn = (msg: React.ReactNode) => {
-    notification["warning"]({message: msg, placement: "bottomRight"})
+    yakitNotify("warning", msg)
+    // notification["warning"]({message: msg, placement: "bottomRight"})
 }
 
 export const info = (msg: React.ReactNode) => {
-    notification["info"]({message: msg, placement: "bottomRight"})
+    yakitNotify("info", msg)
+    // notification["info"]({message: msg, placement: "bottomRight"})
 }
 
 export const success = (msg: React.ReactNode) => {
-    notification["success"]({message: msg, placement: "bottomRight"})
+    // yakitNotify("info", msg)
+    yakitNotify("success", msg)
+    // notification["success"]({message: msg, placement: "bottomRight"})
 }
 export const successControlled = (msg: React.ReactNode, time?: number) => {
     notification["success"]({message: msg, placement: "bottomRight", duration: time === undefined ? 4.5 : time})

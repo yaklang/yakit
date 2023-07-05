@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react"
-import { YakScript } from "./schema"
-import { YakExecutorParam } from "./YakExecutorParams"
-import { showDrawer } from "../../utils/showModal"
-import { randomString } from "../../utils/randomUtil"
-import { Space } from "antd"
-import { PluginResultUI } from "../yakitStore/viewers/base"
-import { useCreation } from "ahooks"
+import React, {useEffect, useState} from "react"
+import {YakScript} from "./schema"
+import {YakExecutorParam} from "./YakExecutorParams"
+import {showDrawer} from "../../utils/showModal"
+import {randomString} from "../../utils/randomUtil"
+import {Space} from "antd"
+import {PluginResultUI} from "../yakitStore/viewers/base"
+import {useCreation} from "ahooks"
 
-import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
-import { getReleaseEditionName } from "@/utils/envfile"
+import useHoldingIPCRStream, {InfoState} from "../../hook/useHoldingIPCRStream"
+import {getReleaseEditionName} from "@/utils/envfile"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export interface YakScriptRunnerProp {
     script: YakScript
@@ -20,7 +20,7 @@ export interface YakScriptRunnerProp {
 
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     const token = useCreation(() => randomString(40), [])
-    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
+    const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream(
         "exec-script-immediately",
         "exec-yak-script",
         token,
@@ -48,7 +48,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     }, [])
 
     return (
-        <div style={{ width: "100%", height: "100%" }}>
+        <div style={{width: "100%", height: "100%"}}>
             <PluginResultUI
                 script={props.script}
                 debugMode={props.debugMode}
@@ -66,6 +66,30 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
     )
 }
 
+export interface DefaultPluginResultUIProp {
+    infoState: InfoState
+    loading: boolean
+    script?: YakScript
+}
+
+export const DefaultPluginResultUI: React.FC<DefaultPluginResultUIProp> = (props) => {
+    const {script, infoState, loading} = props;
+
+    return <div style={{width: "100%", height: "100%"}}>
+        <PluginResultUI
+            script={script}
+            results={infoState.messageState}
+            statusCards={infoState.statusState}
+            risks={infoState.riskState}
+            featureType={infoState.featureTypeState}
+            progress={infoState.processState}
+            feature={infoState.featureMessageState}
+            loading={loading}
+            cardStyleType={1}
+        />
+    </div>
+};
+
 export const startExecuteYakScript = (script: YakScript, params: YakExecutorParam[]) => {
     showDrawer({
         title: `正在执行的 ${getReleaseEditionName()} 模块：${script.ScriptName}`,
@@ -73,7 +97,7 @@ export const startExecuteYakScript = (script: YakScript, params: YakExecutorPara
         mask: false,
         content: (
             <>
-                <YakScriptRunner {...{ script, params }} />
+                <YakScriptRunner {...{script, params}} />
             </>
         )
     })

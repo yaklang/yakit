@@ -206,6 +206,8 @@ export enum Route {
     // 调试插件编辑器
     Beta_DebugMonacoEditor = "beta-debug-monaco-editor",
 
+    Beta_VulinboxManager = "beta-vulinbox-manager",
+
     // 首页
     NewHome = "new-home"
 }
@@ -477,6 +479,8 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <PluginDebuggerPage />
         case Route.Beta_DebugMonacoEditor:
             return <DebugMonacoEditorPage />
+        case Route.Beta_VulinboxManager:
+            return <div>Hello Vulinbox</div>
         default:
             return <div />
     }

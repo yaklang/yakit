@@ -30,6 +30,8 @@ import "./inputUtil.scss";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
 
 type TooltipPlacement =
     'top'
@@ -122,7 +124,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                 return {value: i}
             })}
         /> : props.textarea ? <>
-            <Input.TextArea
+            <YakitInput.TextArea
                 style={{width: props.width}}
                 // type={props.type}
                 rows={props.textareaRow}
@@ -146,7 +148,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                     if (props.isBubbing) e.stopPropagation()
                 }}
             />
-        </> : <Input
+        </> : <YakitInput
             style={{width: props.width}}
             type={props.type}
             required={!!props.required}
@@ -455,7 +457,7 @@ export const InputFloat: React.FC<InputNumberProps> = (p) => {
 
 export const InputInteger: React.FC<InputNumberProps> = (p) => {
     return <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
-        <InputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}}
+        <YakitInputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}}
                      defaultValue={p.defaultValue} size={p.size}
                      min={p.min} max={p.max} step={1} value={p.value} onChange={e => p.setValue(e as number)}/>
     </Item>

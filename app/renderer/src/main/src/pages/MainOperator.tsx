@@ -476,34 +476,34 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     /** ---------- 登录状态变化的逻辑 end ---------- */
     /** ---------- 其余逻辑 start ---------- */
     // 线上最新消息提示
-    useEffect(() => {
-        ipcRenderer.invoke("query-latest-notification").then((e: string) => {
-            if (e) {
-                success(
-                    <>
-                        <Space direction={"vertical"}>
-                            <span>来自于 yaklang.io 的通知</span>
-                            <Button
-                                type={"link"}
-                                onClick={() => {
-                                    showModal({
-                                        title: "Notification",
-                                        content: (
-                                            <>
-                                                <MDEditor.Markdown source={e} />
-                                            </>
-                                        )
-                                    })
-                                }}
-                            >
-                                点击查看
-                            </Button>
-                        </Space>
-                    </>
-                )
-            }
-        })
-    }, [])
+    // useEffect(() => {
+    //     ipcRenderer.invoke("query-latest-notification").then((e: string) => {
+    //         if (e) {
+    //             success(
+    //                 <>
+    //                     <Space direction={"vertical"}>
+    //                         <span>来自于 yaklang.io 的通知</span>
+    //                         <Button
+    //                             type={"link"}
+    //                             onClick={() => {
+    //                                 showModal({
+    //                                     title: "Notification",
+    //                                     content: (
+    //                                         <>
+    //                                             <MDEditor.Markdown source={e} />
+    //                                         </>
+    //                                     )
+    //                                 })
+    //                             }}
+    //                         >
+    //                             点击查看
+    //                         </Button>
+    //                     </Space>
+    //                 </>
+    //             )
+    //         }
+    //     })
+    // }, [])
     // 刷新登录状态的token
     useEffect(() => {
         ipcRenderer.on("refresh-token", (e, res: any) => {
@@ -1254,6 +1254,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             if (type === "**matcher-extractor") openMenuPage({route: YakitRoute.Beta_MatcherExtractorPage})
             if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
+            if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
