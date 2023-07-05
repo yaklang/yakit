@@ -378,6 +378,7 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/[\w:]+\(/, "fuzz.tag.second", "@fuzz_tag_param_second"],
         ],
         "fuzz_tag_param": [
+            [/\(/, "fuzz.tag.inner", "@fuzz_tag_param"],
             [/\\\)/, "bold-keyword"],
             [/\)/, "fuzz.tag.inner", "@pop"],
             [/{{/, "fuzz.tag.second", "@fuzz_tag_second"],

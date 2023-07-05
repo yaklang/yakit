@@ -90,6 +90,7 @@ import {
     defaultLabel,
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
+import {NewEditorSelectRange} from "../../components/NewEditorSelectRange"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1048,235 +1049,11 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
-    const downPosY = useRef<number>()
-    const upPosY = useRef<number>()
-    // 编辑器菜单
-    const editerMenuFun = (reqEditor: IMonacoEditor) => {
-        // 编辑器点击显示的菜单
-        const fizzSelectWidget = {
-            isOpen: false,
-            getId: function () {
-                return "monaco.fizz.select.widget"
-            },
-            getDomNode: function () {
-                // 将TSX转换为DOM节点
-                const domNode = document.createElement("div")
-                ReactDOM.render(
-                    <HTTPFuzzerClickEditorMenu
-                        close={() => closeFizzSelectWidget()}
-                        insert={(v: QueryFuzzerLabelResponseProps) => {
-                            if (v.Label) {
-                                reqEditor.trigger("keyboard", "type", {text: v.Label})
-                            } else if (v.DefaultDescription === "插入本地文件") {
-                                insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
-                            }
-                            closeFizzSelectWidget()
-                        }}
-                        addLabel={() => {
-                            closeFizzSelectWidget()
-                            onInsertYakFuzzer()
-                        }}
-                    />,
-                    domNode
-                )
-                return domNode
-            },
-            getPosition: function () {
-                const currentPos = reqEditor.getPosition()
-                return {
-                    position: {
-                        lineNumber: currentPos?.lineNumber || 0,
-                        column: currentPos?.column || 0
-                    },
-                    preference: [1, 2]
-                }
-            },
-            update: function () {
-                // 更新小部件的位置
-                this.getPosition()
-                reqEditor.layoutContentWidget(this)
-            }
-        }
-        // 编辑器选中显示的菜单
-        const fizzRangeWidget = {
-            isOpen: false,
-            getId: function () {
-                return "monaco.fizz.range.widget"
-            },
-            getDomNode: function () {
-                // 将TSX转换为DOM节点
-                const domNode = document.createElement("div")
-                ReactDOM.render(
-                    <HTTPFuzzerRangeEditorMenu
-                        insert={(fun: any) => {
-                            const selectedText =
-                                reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any) || ""
-                            if (selectedText.length > 0) {
-                                ipcRenderer
-                                    .invoke("QueryFuzzerLabel", {})
-                                    .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
-                                        const {Data} = data
-                                        let newSelectedText: string = selectedText
-                                        if (Array.isArray(Data) && Data.length > 0) {
-                                            // 选中项是否存在于标签中
-                                            let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
-                                            if (isHave) {
-                                                newSelectedText = selectedText.replace(/{{|}}/g, "")
-                                            }
-                                        }
-                                        const text: string = fun(newSelectedText)
-                                        reqEditor.trigger("keyboard", "type", {text})
-                                    })
-                            }
-                        }}
-                        replace={(text: string) => {
-                            reqEditor.trigger("keyboard", "type", {text})
-                            closeFizzRangeWidget()
-                        }}
-                        rangeValue={reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any) || ""}
-                    />,
-                    domNode
-                )
-                return domNode
-            },
-            getPosition: function () {
-                const currentPos = reqEditor.getPosition()
-                return {
-                    position: {
-                        lineNumber: currentPos?.lineNumber || 0,
-                        column: currentPos?.column || 0
-                    },
-                    preference: [1, 2]
-                }
-            },
-            update: function () {
-                // 更新小部件的位置
-                this.getPosition()
-                reqEditor.layoutContentWidget(this)
-            }
-        }
-        // 是否展示菜单
-        // if (false) {
-        //     closeFizzSelectWidget()
-        //     return
-        // }
-
-        // 关闭点击的菜单
-        const closeFizzSelectWidget = () => {
-            fizzSelectWidget.isOpen = false
-            reqEditor.removeContentWidget(fizzSelectWidget)
-        }
-        // 关闭选中的菜单
-        const closeFizzRangeWidget = () => {
-            fizzRangeWidget.isOpen = false
-            reqEditor.removeContentWidget(fizzRangeWidget)
-        }
-
-        reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
-        reqEditor.onMouseMove((e) => {
-            try {
-                // const pos = e.target.position
-                // if (pos?.lineNumber) {
-                //     const lineOffset = pos.lineNumber - (reqEditor.getPosition()?.lineNumber || 0)
-                //     // 超出范围移除菜单
-                //     if (lineOffset > 2 || lineOffset < -2) {
-                //         // console.log("移出两行内");
-                //         closeFizzSelectWidget()
-                //         closeFizzRangeWidget()
-                //     }
-                // }
-
-                const {target, event} = e
-                const {detail} = target
-                const {posy} = event
-                const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
-                if (
-                    detail !== "monaco.fizz.select.widget" &&
-                    detail !== "monaco.fizz.range.widget" &&
-                    downPosY.current &&
-                    upPosY.current
-                ) {
-                    // 超出多少行隐藏
-                    const overLine = 3
-                    const overHeight = overLine * lineHeight
-                    if (fizzSelectWidget.isOpen) {
-                        if (posy < upPosY.current - overHeight || posy > upPosY.current + overHeight) {
-                            closeFizzSelectWidget()
-                        }
-                    } else if (fizzRangeWidget.isOpen) {
-                        if(posy < downPosY.current - overHeight ||posy > upPosY.current + overHeight){
-                            closeFizzRangeWidget()
-                        }
-                    }
-                }
-            } catch (e) {
-                console.log(e)
-            }
-        })
-
-        // 失去焦点时触发
-        reqEditor.onDidBlurEditorWidget(() => {
-            // closeFizzSelectWidget()
-        })
-        // 移出编辑器时触发
-        reqEditor.onMouseLeave(() => {
-            closeFizzSelectWidget()
-            closeFizzRangeWidget()
-        })
-
-        reqEditor.onMouseDown((e) => {
-            const {leftButton, posy} = e.event
-            // 当两者都没有打开时
-            if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
-                // 记录posy位置
-                downPosY.current = posy
-            }
-        })
-
-        reqEditor.onMouseUp((e) => {
-            const {leftButton, rightButton, posy} = e.event
-            if (leftButton) {
-                upPosY.current = posy
-                const selection = reqEditor.getSelection()
-                if (selection) {
-                    const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
-                    if (fizzSelectWidget.isOpen && selectedText.length === 0) {
-                        // 更新点击菜单小部件的位置
-                        fizzSelectWidget.update()
-                    } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
-                        fizzRangeWidget.update()
-                    } else if (selectedText.length === 0) {
-                        closeFizzRangeWidget()
-                        // 展示点击的菜单
-                        reqEditor.addContentWidget(fizzSelectWidget)
-                        fizzSelectWidget.isOpen = true
-                    } else {
-                        closeFizzSelectWidget()
-                        // 展示选中的菜单
-                        reqEditor.addContentWidget(fizzRangeWidget)
-                        fizzRangeWidget.isOpen = true
-                    }
-                }
-            }
-            if (rightButton) {
-                closeFizzRangeWidget()
-                closeFizzSelectWidget()
-            }
-        })
-        // 监听光标移动
-        reqEditor.onDidChangeCursorPosition((e) => {
-            closeFizzRangeWidget()
-            closeFizzSelectWidget()
-            // const { position } = e;
-            // console.log('当前光标位置：', position);
-        })
-    }
     useEffect(() => {
         try {
             if (!reqEditor) {
                 return
             }
-            editerMenuFun(reqEditor)
         } catch (e) {
             failed("初始化 EOL CRLF 失败")
         }
@@ -1710,7 +1487,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )
                     }}
                     firstNode={
-                        <NewHTTPPacketEditor
+                        <NewEditorSelectRange
                             system={props.system}
                             noHex={true}
                             noHeader={true}
@@ -1724,6 +1501,68 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onEditor={setReqEditor}
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                             editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
+                            selectId='monaco.fizz.select.widget'
+                            selectNode={(closeFizzSelectWidget) => (
+                                <HTTPFuzzerClickEditorMenu
+                                    close={() => closeFizzSelectWidget()}
+                                    insert={(v: QueryFuzzerLabelResponseProps) => {
+                                        if (v.Label) {
+                                            reqEditor && reqEditor.trigger("keyboard", "type", {text: v.Label})
+                                        } else if (v.DefaultDescription === "插入本地文件") {
+                                            reqEditor &&
+                                                insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
+                                        }
+                                        closeFizzSelectWidget()
+                                    }}
+                                    addLabel={() => {
+                                        closeFizzSelectWidget()
+                                        onInsertYakFuzzer()
+                                    }}
+                                />
+                            )}
+                            rangeId='monaco.fizz.range.widget'
+                            rangeNode={(closeFizzRangeWidget) => (
+                                <HTTPFuzzerRangeEditorMenu
+                                    insert={(fun: any) => {
+                                        if (reqEditor) {
+                                            const selectedText =
+                                                reqEditor
+                                                    .getModel()
+                                                    ?.getValueInRange(reqEditor.getSelection() as any) || ""
+                                            if (selectedText.length > 0) {
+                                                ipcRenderer
+                                                    .invoke("QueryFuzzerLabel", {})
+                                                    .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+                                                        const {Data} = data
+                                                        let newSelectedText: string = selectedText
+                                                        if (Array.isArray(Data) && Data.length > 0) {
+                                                            // 选中项是否存在于标签中
+                                                            let isHave: boolean = Data.map(
+                                                                (item) => item.Label
+                                                            ).includes(selectedText)
+                                                            if (isHave) {
+                                                                newSelectedText = selectedText.replace(/{{|}}/g, "")
+                                                            }
+                                                        }
+                                                        const text: string = fun(newSelectedText)
+                                                        reqEditor.trigger("keyboard", "type", {text})
+                                                    })
+                                            }
+                                        }
+                                    }}
+                                    replace={(text: string) => {
+                                        if (reqEditor) {
+                                            reqEditor.trigger("keyboard", "type", {text})
+                                            closeFizzRangeWidget()
+                                        }
+                                    }}
+                                    rangeValue={
+                                        (reqEditor &&
+                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
+                                        ""
+                                    }
+                                />
+                            )}
                         />
                     }
                     secondNode={
@@ -2229,7 +2068,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
-
+        const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
         useEffect(() => {
             setActiveKey(defActiveKey)
         }, [defActiveKey])
@@ -2293,7 +2132,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     lineStyle={{display: !showMatcherAndExtraction ? "none" : ""}}
                     firstNodeStyle={{padding: !showMatcherAndExtraction ? 0 : undefined}}
                     firstNode={
-                        <NewHTTPPacketEditor
+                        <NewEditorSelectRange
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
                             originValue={fuzzerResponse.ResponseRaw}
@@ -2343,93 +2182,17 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             // }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
-                            onEditor={(Editor: IMonacoEditor) => {
-                                // 关闭选中的菜单
-                                const closeFizzRangeReadOnlyWidget = () => {
-                                    fizzRangeReadOnlyWidget.isOpen = false
-                                    Editor.removeContentWidget(fizzRangeReadOnlyWidget)
-                                }
-                                // 编辑器选中显示的菜单
-                                const fizzRangeReadOnlyWidget = {
-                                    isOpen: false,
-                                    getId: function () {
-                                        return "monaco.fizz.range.read.only.widget"
-                                    },
-                                    getDomNode: function () {
-                                        // 将TSX转换为DOM节点
-                                        const domNode = document.createElement("div")
-                                        ReactDOM.render(
-                                            <HTTPFuzzerRangeReadOnlyEditorMenu
-                                                rangeValue={
-                                                    Editor.getModel()?.getValueInRange(Editor.getSelection() as any) ||
-                                                    ""
-                                                }
-                                            />,
-                                            domNode
-                                        )
-                                        return domNode
-                                    },
-                                    getPosition: function () {
-                                        const currentPos = Editor.getPosition()
-                                        return {
-                                            position: {
-                                                lineNumber: currentPos?.lineNumber || 0,
-                                                column: currentPos?.column || 0
-                                            },
-                                            preference: [1, 2]
-                                        }
-                                    },
-                                    update: function () {
-                                        // 更新小部件的位置
-                                        this.getPosition()
-                                        Editor.layoutContentWidget(this)
+                            rangeId='monaco.fizz.range.read.only.widget'
+                            rangeNode={() => (
+                                <HTTPFuzzerRangeReadOnlyEditorMenu
+                                    rangeValue={
+                                        (reqEditor &&
+                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
+                                        ""
                                     }
-                                }
-                                Editor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
-                                Editor.onMouseMove((event) => {
-                                    try {
-                                        const pos = event.target.position
-                                        // console.info("mouse move: ", pos?.lineNumber, "cursor:" , reqEditor.getPosition()?.lineNumber);
-                                        if (pos?.lineNumber) {
-                                            const lineOffset = pos.lineNumber - (Editor.getPosition()?.lineNumber || 0)
-                                            // 超出范围移除菜单
-                                            if (lineOffset > 2 || lineOffset < -2) {
-                                                closeFizzRangeReadOnlyWidget()
-                                            }
-                                        }
-                                    } catch (e) {
-                                        console.log(e)
-                                    }
-                                })
-                                // 移出编辑器时触发
-                                Editor.onMouseLeave(() => {
-                                    closeFizzRangeReadOnlyWidget()
-                                })
-                                Editor.onMouseUp((e) => {
-                                    const {leftButton, rightButton} = e.event
-                                    if (leftButton) {
-                                        const selection = Editor.getSelection()
-                                        if (selection) {
-                                            const selectedText = Editor.getModel()?.getValueInRange(selection) || ""
-                                            if (fizzRangeReadOnlyWidget.isOpen && selectedText.length !== 0) {
-                                                // 更新菜单小部件的位置
-                                                fizzRangeReadOnlyWidget.update()
-                                            } else if (selectedText.length > 0) {
-                                                // 展示选中的菜单
-                                                Editor.addContentWidget(fizzRangeReadOnlyWidget)
-                                                fizzRangeReadOnlyWidget.isOpen = true
-                                            }
-                                        }
-                                    }
-                                    if (rightButton) {
-                                        closeFizzRangeReadOnlyWidget()
-                                    }
-                                })
-                                // 监听光标移动
-                                Editor.onDidChangeCursorPosition((e) => {
-                                    closeFizzRangeReadOnlyWidget()
-                                })
-                            }}
+                                />
+                            )}
+                            onEditor={setReqEditor}
                             {...extraEditorProps}
                         />
                     }
