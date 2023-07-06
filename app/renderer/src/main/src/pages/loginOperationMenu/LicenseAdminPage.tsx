@@ -25,7 +25,7 @@ import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
-
+const { Option } = Select;
 export interface ShowUserInfoProps {
     text: string
     onClose: () => void
@@ -126,13 +126,14 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
 
     const onFinish = useMemoizedFn((values) => {
         setLoading(true)
-        const {id, license} = values
+        const {id, license,company_version} = values
         const selectDate = data.filter((item) => item.id === id)[0]
         const {company, maxUser} = selectDate
         let params = {
             license,
             company,
-            maxUser
+            maxUser,
+            company_version
         }
         NetWorkApi<LicenseProps, string>({
             method: "post",
@@ -190,6 +191,12 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                         }}
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                     />
+                </Form.Item>
+                <Form.Item name='company_version' label='版本' rules={[{required: true, message: "该项为必选"}]}>
+                    <Select placeholder='请选择版本' allowClear>
+                        <Option value='EnpriTrace'>企业版</Option>
+                        <Option value='EnpriTraceAgent'>便携版</Option>
+                    </Select>
                 </Form.Item>
                 <Form.Item name='license' label='申请码' rules={[{required: true, message: "该项为必选"}]}>
                     <Input.TextArea placeholder='请输入申请码' allowClear rows={13} />
@@ -270,11 +277,9 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
                     requestFun(params)
                 }
             })
-        }
-        else{
+        } else {
             requestFun(params)
         }
-        
     })
     return (
         <div style={{marginTop: 24}}>
@@ -519,7 +524,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                 <Space>
                     <Button
                         size='small'
-                        type="link"
+                        type='link'
                         onClick={() => {
                             setEditInfo(i)
                             setLicenseFormShow(true)
@@ -532,9 +537,9 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                         onConfirm={() => {
                             onRemove(i.id)
                         }}
-                        placement="right"
+                        placement='right'
                     >
-                        <Button size={"small"} danger={true} type="link">
+                        <Button size={"small"} danger={true} type='link'>
                             删除
                         </Button>
                     </Popconfirm>
