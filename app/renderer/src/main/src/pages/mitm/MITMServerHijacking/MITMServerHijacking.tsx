@@ -109,14 +109,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             证书下载
                         </div>
                     </div>
-                    <YakitButton
-                        onClick={() => {
-                            showConfigSystemProxyForm(`${host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`)
-                        }}
-                        type='outline2'
-                    >
-                        系统代理
-                    </YakitButton>
+                    {/*<YakitButton*/}
+                    {/*    onClick={() => {*/}
+                    {/*        showConfigSystemProxyForm(`${host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`)*/}
+                    {/*    }}*/}
+                    {/*    type='outline2'*/}
+                    {/*>*/}
+                    {/*    系统代理*/}
+                    {/*</YakitButton>*/}
                     <div className={style["mitm-server-chrome"]}>
                         <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
                     </div>
