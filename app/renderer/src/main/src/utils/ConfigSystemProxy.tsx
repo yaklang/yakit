@@ -3,7 +3,7 @@ import {showModal} from "./showModal"
 import {Alert, Button, Form, Input, Space, Spin, Tag, Upload} from "antd"
 import {InputItem, SwitchItem} from "./inputUtil"
 import {useMemoizedFn} from "ahooks"
-import {info, yakitFailed} from "@/utils/notification"
+import {info, yakitFailed, warn} from "@/utils/notification"
 import {ReloadOutlined} from "@ant-design/icons"
 import {IsWindows} from "@/utils/basic"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -168,6 +168,11 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
         info("设置Chrome启动路径成功")
         onClose()
     })
+
+    const suffixFun = (file_name: string) => {
+        let file_index = file_name.lastIndexOf(".");
+        return file_name.slice(file_index, file_name.length);
+    };
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["config-system-proxy"]}>
@@ -182,6 +187,12 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
                     <Form.Item label='启动路径'>
                         <YakitInput value={chromePath} placeholder={"请选择启动路径"} size='large' onChange={(e)=>setChromePath(e.target.value)}/>
                         <Upload accept={".exe"} multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f) => {
+                            const file_name = f.name;
+                            const suffix = suffixFun(file_name);
+                            if (![".exe"].includes(suffix)) {
+                              warn("上传文件格式错误，请重新上传");
+                              return false;
+                            }
                             // @ts-ignore
                             const path:string = f?.path||""
                             if(path.length>0){

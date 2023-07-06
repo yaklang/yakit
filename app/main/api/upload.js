@@ -40,6 +40,23 @@ module.exports = (win, getClient) => {
         )
         return res
     })
+
+    ipcMain.handle("yak-install-package", async (event, params) => {
+        const {path} = params
+        // 创建数据流
+        const readerStream = fs.createReadStream(path)// 可以像使用同步接口一样使用它。
+        const formData = new FormData()
+        formData.append("installPackage", readerStream)
+        const res=httpApi(
+            "post",
+            "yak/install/package",
+            formData,
+            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            false
+        )
+        return res
+    })
+
     ipcMain.handle("get-folder-under-files", async (event, params) => {
         const {folderPath} = params
         if (!folderPath) return 0
