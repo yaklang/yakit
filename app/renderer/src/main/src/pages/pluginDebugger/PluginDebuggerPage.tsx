@@ -18,6 +18,7 @@ import {YakScript} from "@/pages/invoker/schema";
 import {failed, info} from "@/utils/notification";
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec";
+import {execSmokingEvaluateCode} from "@/pages/pluginDebugger/SmokingEvaluate";
 
 export interface PluginDebuggerPageProp {
 
@@ -89,6 +90,14 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                     bodyStyle={{overflow: "hidden", padding: 0}}
                     extra={[
                         <Space>
+                            <YakitPopconfirm
+                                title={"执行自动打分评估？"}
+                                onConfirm={()=>{
+                                    execSmokingEvaluateCode(pluginType, code)
+                                }}
+                            >
+                                <YakitButton type={"outline2"}>自动打分评估</YakitButton>
+                            </YakitPopconfirm>
                             <YakitPopconfirm title={"对比合并到本地插件？"}>
                                 <YakitButton>对比合并到插件</YakitButton>
                             </YakitPopconfirm>
