@@ -5,15 +5,15 @@ import {
     MainOperatorContentProps,
     OnlyPageCache,
     PageCache,
-    MainTabMenuProps,
-    TabMenuProps,
+    TabContentProps,
     TabItemProps,
     MultipleNodeInfo,
     TabListProps,
     SubTabListProps,
     SubTabItemProps,
     TabChildrenProps,
-    PageItemProps
+    PageItemProps,
+    TabContentRefProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, RouteToPage, SinglePageRoute, NoPaddingRoute} from "@/routes/newRoute"
@@ -59,7 +59,8 @@ export const getInitPageCache: () => PageCache[] = () => {
                 verbose: "入侵模拟",
                 menuName: YakitRouteToPageInfo[YakitRoute.DB_ChaosMaker].label,
                 route: YakitRoute.DB_ChaosMaker,
-                singleNode: RouteToPage(YakitRoute.DB_ChaosMaker),
+                // singleNode: RouteToPage(YakitRoute.DB_ChaosMaker),
+                singleNode: true,
                 multipleNode: []
             }
         ]
@@ -70,7 +71,8 @@ export const getInitPageCache: () => PageCache[] = () => {
             verbose: "首页",
             menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
             route: YakitRoute.NewHome,
-            singleNode: RouteToPage(YakitRoute.NewHome),
+            // singleNode: RouteToPage(YakitRoute.NewHome),
+            singleNode: true,
             multipleNode: []
         }
     ]
@@ -111,16 +113,6 @@ const reorder = (list: any[], startIndex: number, endIndex: number) => {
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
     const {routeKeyToLabel} = props
 
-    return (
-        <Content>
-            <MainTabMenu routeKeyToLabel={routeKeyToLabel} />
-        </Content>
-    )
-})
-
-const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
-    const {routeKeyToLabel} = props
-
     const [loading, setLoading] = useState(false)
 
     // tab数据
@@ -131,6 +123,10 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
     const [bugList, setBugList] = useState<BugInfoProps[]>([])
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
+
+    const tabContentRef = useRef<TabContentRefProps>({
+        setCurrentTabKey: () => {}
+    })
 
     // 打开tab页面
     useEffect(() => {
@@ -471,7 +467,7 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                 const key = routeConvertKey(route, pluginName)
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
-                    // setCurrentTabKey(key)
+                    tabContentRef.current.setCurrentTabKey(key)
                     return
                 }
                 const tabName = routeKeyToLabel.get(key) || menuName
@@ -486,7 +482,7 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                         multipleNode: []
                     }
                 ])
-                // setCurrentTabKey(key)
+                tabContentRef.current.setCurrentTabKey(key)
             } else {
                 // 多开页面
                 const key = routeConvertKey(route, pluginName)
@@ -505,18 +501,19 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                         node: undefined,
                         time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
                     }
-                    const pages = pageCache.map((item) => {
-                        if (item.route === route && item.menuName === menuName) {
-                            item.pluginId = pluginId
-                            item.multipleNode.push(node)
-                            item.multipleCurrentKey = tabId
-                            item.multipleLength = (item.multipleLength || 1) + 1
-                            return item
+                    const pages: PageCache[] = []
+                    pageCache.forEach((item) => {
+                        const eleItem: PageCache = {...item, multipleNode: [...item.multipleNode]}
+                        if (eleItem.route === route && eleItem.menuName === menuName) {
+                            eleItem.pluginId = pluginId
+                            eleItem.multipleNode.push({...node})
+                            eleItem.multipleCurrentKey = tabId
+                            eleItem.multipleLength = (eleItem.multipleLength || 1) + 1
                         }
-                        return item
+                        pages.push({...eleItem})
                     })
                     setPageCache([...pages])
-                    // setCurrentTabKey(key)
+                    tabContentRef.current.setCurrentTabKey(key)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 } else {
                     const node: MultipleNodeInfo = {
@@ -538,13 +535,13 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                             pluginId: pluginId,
                             pluginName: route === YakitRoute.Plugin_OP ? pluginName || "" : undefined,
                             singleNode: undefined,
-                            multipleNode: [node],
+                            multipleNode: [{...node}],
                             multipleCurrentKey: tabId,
                             multipleLength: 1,
                             hideAdd: nodeParams?.hideAdd
                         }
                     ])
-                    // setCurrentTabKey(key)
+                    tabContentRef.current.setCurrentTabKey(key)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 }
             }
@@ -574,11 +571,11 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                 ).length === 0
             if (flag) openMenuPage(routeInfo)
             else {
-                // setCurrentTabKey(
-                //     routeInfo.route === YakitRoute.Plugin_OP
-                //         ? routeConvertKey(routeInfo.route, routeInfo.pluginName || "")
-                //         : routeInfo.route
-                // )
+                tabContentRef.current.setCurrentTabKey(
+                    routeInfo.route === YakitRoute.Plugin_OP
+                        ? routeConvertKey(routeInfo.route, routeInfo.pluginName || "")
+                        : routeInfo.route
+                )
             }
         } else {
             openMultipleMenuPage(routeInfo)
@@ -667,7 +664,8 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                         verbose: "首页",
                         menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
                         route: YakitRoute.NewHome,
-                        singleNode: RouteToPage(YakitRoute.NewHome),
+                        // singleNode: RouteToPage(YakitRoute.NewHome),
+                        singleNode: true,
                         multipleNode: []
                     })
                 }
@@ -946,9 +944,10 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
     }, [pageCache])
+
     return (
-        <>
-            <TabMenu pageCache={pageCache} setPageCache={setPageCache} />
+        <Content>
+            <TabContent ref={tabContentRef} pageCache={pageCache} setPageCache={setPageCache} />
             <YakitModal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
@@ -990,17 +989,34 @@ const MainTabMenu: React.FC<MainTabMenuProps> = React.memo((props) => {
                     </Form.Item>
                 </div>
             </YakitModal>
-        </>
+        </Content>
     )
 })
 
-const TabMenu: React.FC<TabMenuProps> = React.memo(
-    (props) => {
-        // const {pageCache, setPageCache, currentTabKey, setCurrentTabKey} = props
+const TabContent: React.FC<TabContentProps> = React.memo(
+    forwardRef((props, ref) => {
         const {pageCache, setPageCache} = props
 
         const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
 
+        useUpdateEffect(() => {
+            const pageLength = pageCache.length
+            if (pageLength > 0) {
+                const lastPage = pageCache[pageLength - 1]
+                const key =
+                    lastPage.route === YakitRoute.Plugin_OP
+                        ? routeConvertKey(lastPage.route, lastPage.pluginName)
+                        : lastPage.route
+                setCurrentTabKey(key)
+            }
+        }, [pageCache.length])
+        useImperativeHandle(
+            ref,
+            () => ({
+                setCurrentTabKey
+            }),
+            []
+        )
         /** ---------- 拖拽排序 start ---------- */
         const onDragEnd = useMemoizedFn((result) => {
             if (!result.destination) {
@@ -1013,7 +1029,6 @@ const TabMenu: React.FC<TabMenuProps> = React.memo(
         })
 
         /** ---------- 拖拽排序 end ---------- */
-        console.log("pageCache", pageCache)
         return (
             <div className={styles["tab-menu"]}>
                 <TabList
@@ -1025,7 +1040,7 @@ const TabMenu: React.FC<TabMenuProps> = React.memo(
                 <TabChildren pageCache={pageCache} currentTabKey={currentTabKey} />
             </div>
         )
-    },
+    }),
     (preProps, nextProps) => {
         if (_.isEqual(preProps.pageCache, nextProps.pageCache)) {
             return true
@@ -1070,7 +1085,7 @@ const PageItem: React.FC<PageItemProps> = React.memo(
         return <>{RouteToPage(props.routeKey, props.yakScriptId, props.params)}</>
     },
     (preProps, nextProps) => {
-        if (_.isEqual(preProps, nextProps)) {
+        if (preProps.routeKey === nextProps.routeKey) {
             return true
         }
         return false
@@ -1180,9 +1195,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         setRenderList(selectSubMenu.id, true)
     }, [selectSubMenu])
     useUpdateEffect(() => {
+        const multipleNodeLength = pageItem.multipleNode.length
         setSubPage(pageItem.multipleNode || [])
         if (selectSubMenu.id === "0") {
             onInitSelectSubMenu()
+        } else {
+            setSelectSubMenu(
+                pageItem.multipleNode[multipleNodeLength - 1] || {
+                    id: "0",
+                    verbose: "",
+                    node: <></>
+                }
+            )
         }
     }, [pageItem.multipleNode])
     /**@description selectSubMenu为未选择状态时默认选中第一个 */

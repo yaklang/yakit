@@ -28,7 +28,8 @@ export interface PageCache {
     route: YakitRoute
     pluginId?: number
     pluginName?: string
-    singleNode: ReactNode | any
+    // singleNode: ReactNode | any
+    singleNode: boolean | undefined
     multipleNode: MultipleNodeInfo[] | any[]
     multipleCurrentKey?: string
     multipleLength?: number
@@ -51,16 +52,14 @@ export interface MainOperatorContentProps {
     routeKeyToLabel: Map<string, string>
 }
 
-export interface MainTabMenuProps {
-    routeKeyToLabel: Map<string, string>
-}
 
 /**
  * @description content 展示
- * @property pageCache 页面数据
  * @function setPageCache 修改页面数据
- */
-export interface TabMenuProps {
+ * @property pageCache 页面数据
+*/
+export interface TabContentProps {
+    ref?: any
     pageCache: PageCache[]
     setPageCache: (p: PageCache[]) => void
 }
@@ -113,8 +112,8 @@ export interface TabItemProps {
 export interface TabListProps {
     tabList: PageCache[]
     onDragEnd: (p: any) => void
-    currentTabKey: string
-    setCurrentTabKey: (s: string) => void
+    currentTabKey: YakitRoute | string
+    setCurrentTabKey: (s: YakitRoute | string) => void
 }
 
 /**
@@ -138,4 +137,8 @@ export interface SubTabItemProps {
     index: number
     selectSubMenu: MultipleNodeInfo
     setSelectSubMenu: (m: MultipleNodeInfo) => void
+}
+
+export interface TabContentRefProps {
+    setCurrentTabKey: (s: YakitRoute | string) => void
 }
