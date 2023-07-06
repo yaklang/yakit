@@ -1,4 +1,14 @@
-import React, {useState, ReactNode, useEffect, useRef, forwardRef, useImperativeHandle, useMemo} from "react"
+import React, {
+    useState,
+    ReactNode,
+    useEffect,
+    useRef,
+    forwardRef,
+    useImperativeHandle,
+    useMemo,
+    useContext,
+    createContext
+} from "react"
 import {Layout, Modal, Form, Tooltip} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {
@@ -13,12 +23,13 @@ import {
     SubTabItemProps,
     TabChildrenProps,
     PageItemProps,
-    TabContentRefProps
+    TabContentRefProps,
+    MainOperatorContextProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, RouteToPage, SinglePageRoute, NoPaddingRoute} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useCreation, useGetState, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useGetState, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -26,7 +37,7 @@ import {keyToRouteInfo, routeConvertKey} from "../publicMenu/utils"
 import {OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultUserInfo, fuzzerInfoProp} from "@/pages/MainOperator"
 import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {getLocalValue, getRemoteProjectValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
@@ -40,9 +51,21 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import debounce from "lodash/debounce"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+
+const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
 const {Content} = Layout
 const {ipcRenderer} = window.require("electron")
+
+const MainOperatorContext = createContext<MainOperatorContextProps>({
+    pageCache: [],
+    setPageCache: () => {},
+    currentTabKey: "",
+    setCurrentTabKey: () => {},
+    openMultipleMenuPage: () => {}
+})
 
 /** web-fuzzer缓存数据对应键 */
 const FuzzerCache = "fuzzer-list-cache"
@@ -117,16 +140,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
+    const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
 
     // 发送到专项漏洞检测modal-show变量
     const [bugTestShow, setBugTestShow] = useState<boolean>(false)
     const [bugList, setBugList] = useState<BugInfoProps[]>([])
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
-
-    const tabContentRef = useRef<TabContentRefProps>({
-        setCurrentTabKey: () => {}
-    })
 
     // 打开tab页面
     useEffect(() => {
@@ -265,7 +285,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }, 300)
             } else {
                 ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
-                // setCurrentTabKey(YakitRoute.PoC)
+                setCurrentTabKey(YakitRoute.PoC)
                 setBugTestValue([])
                 setBugUrl("")
             }
@@ -284,7 +304,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }, 300)
         } else {
             ipcRenderer.invoke("send-to-yak-running", {name, code})
-            // setCurrentTabKey(YakitRoute.YakScript)
+            setCurrentTabKey(YakitRoute.YakScript)
         }
     })
     const addBatchExecRecover = useMemoizedFn((task: UnfinishedBatchTask) => {
@@ -394,7 +414,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         ipcRenderer.on("fetch-close-all-tab", () => {
             delFuzzerList(1)
             setPageCache(getInitPageCache())
-            // setCurrentTabKey(getInitActiveTabKey())
+            setCurrentTabKey(getInitActiveTabKey())
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-close-tab")
@@ -467,7 +487,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const key = routeConvertKey(route, pluginName)
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
-                    tabContentRef.current.setCurrentTabKey(key)
+                    setCurrentTabKey(key)
                     return
                 }
                 const tabName = routeKeyToLabel.get(key) || menuName
@@ -482,7 +502,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         multipleNode: []
                     }
                 ])
-                tabContentRef.current.setCurrentTabKey(key)
+                setCurrentTabKey(key)
             } else {
                 // 多开页面
                 const key = routeConvertKey(route, pluginName)
@@ -493,7 +513,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (filterPage.length > 0) {
                     const node: MultipleNodeInfo = {
                         id: tabId,
-                        verbose: nodeParams?.verbose || `${tabName}-[${(filterPage[0].multipleLength || 1) + 1}]`,
+                        verbose: nodeParams?.verbose || `${tabName}-[${(filterPage[0].multipleLength || 0) + 1}]`,
                         // node:
                         //     nodeParams && nodeParams.node
                         //         ? nodeParams?.node || <></>
@@ -508,12 +528,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             eleItem.pluginId = pluginId
                             eleItem.multipleNode.push({...node})
                             eleItem.multipleCurrentKey = tabId
-                            eleItem.multipleLength = (eleItem.multipleLength || 1) + 1
+                            eleItem.multipleLength = (eleItem.multipleLength || 0) + 1
                         }
                         pages.push({...eleItem})
                     })
                     setPageCache([...pages])
-                    tabContentRef.current.setCurrentTabKey(key)
+                    setCurrentTabKey(key)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 } else {
                     const node: MultipleNodeInfo = {
@@ -541,7 +561,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             hideAdd: nodeParams?.hideAdd
                         }
                     ])
-                    tabContentRef.current.setCurrentTabKey(key)
+                    setCurrentTabKey(key)
                     if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 }
             }
@@ -571,7 +591,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 ).length === 0
             if (flag) openMenuPage(routeInfo)
             else {
-                tabContentRef.current.setCurrentTabKey(
+                setCurrentTabKey(
                     routeInfo.route === YakitRoute.Plugin_OP
                         ? routeConvertKey(routeInfo.route, routeInfo.pluginName || "")
                         : routeInfo.route
@@ -582,7 +602,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const {getSubscribeClose, removeSubscribeClose} = useSubscribeClose()
-    // 多开页面的一级页面关闭事件
+    /** @description 多开页面的一级页面关闭事件 */
     const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
         switch (data.route) {
             case YakitRoute.AddYakitScript:
@@ -612,10 +632,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (index === 0 && getPageCache()[index + 1]) newIndex = index + 1
         const {route, pluginId = 0, pluginName = ""} = getPageCache()[newIndex]
         const key = routeConvertKey(route, pluginName)
-        // if (currentTabKey === routeConvertKey(data.route, data.pluginName)) setCurrentTabKey(key)
-
-        // if (index === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
-
+        if (currentTabKey === routeConvertKey(data.route, data.pluginName)) {
+            setCurrentTabKey(key)
+        }
+        if (index === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
         setPageCache(
             getPageCache().filter((i) => {
                 if (data.route === YakitRoute.Plugin_OP) {
@@ -626,7 +646,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             })
         )
         if (data.route === YakitRoute.AddYakitScript) {
-            // setCurrentTabKey(YakitRoute.Plugin_Local)
+            setCurrentTabKey(YakitRoute.Plugin_Local)
         }
         if (data.route === YakitRoute.HTTPFuzzer) {
             delFuzzerList(1) // 删除web-fuzzer页面缓存数据
@@ -641,7 +661,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             onOk: () => {
                 delFuzzerList(1)
                 setPageCache(getInitPageCache())
-                // setCurrentTabKey(getInitActiveTabKey())
+                setCurrentTabKey(getInitActiveTabKey())
             }
         })
     })
@@ -822,7 +842,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const filters = historys.filter(
             (item) => (item.request || "").length < 1000000 && (item.request || "").length > 0
         )
-        // setRemoteProjectValue(FuzzerCache, JSON.stringify(filters))
+        setRemoteProjectValue(FuzzerCache, JSON.stringify(filters))
     }, 500)
     // 获取数据库中缓存的web-fuzzer页面信息(qs: 有可以优化的点)
     const fetchFuzzerList = useMemoizedFn(() => {
@@ -831,6 +851,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         getRemoteProjectValue(FuzzerCache)
             .then((res: any) => {
                 const cache = JSON.parse(res || "[]")
+
                 let multipleNodeList: MultipleNodeInfo[] = []
                 // 菜单在代码内的名字
                 const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
@@ -855,6 +876,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     })
                 }
+                if (multipleNodeList.length === 0) return
                 const webFuzzerPage = {
                     verbose: tabName,
                     menuName: menuName,
@@ -875,6 +897,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     oldPageCache.splice(index, 1, webFuzzerPage)
                 }
                 setPageCache(oldPageCache)
+                setCurrentTabKey(key)
             })
             .catch((e) => {
                 console.info(e)
@@ -944,10 +967,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
     }, [pageCache])
-
+    console.log("currentTabKey", currentTabKey)
     return (
         <Content>
-            <TabContent ref={tabContentRef} pageCache={pageCache} setPageCache={setPageCache} />
+            <MainOperatorContext.Provider
+                value={{
+                    pageCache,
+                    setPageCache,
+                    currentTabKey,
+                    setCurrentTabKey,
+                    openMultipleMenuPage
+                }}
+            >
+                <TabContent
+                    onRemove={(tabItem) => {
+                        const removeItem: OnlyPageCache = {
+                            menuName: tabItem.menuName,
+                            route: tabItem.route,
+                            pluginId: tabItem.pluginId,
+                            pluginName: tabItem.pluginName
+                        }
+                        console.log("removeItem", removeItem)
+                        onBeforeRemovePage(removeItem)
+                    }}
+                />
+            </MainOperatorContext.Provider>
             <YakitModal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
@@ -993,67 +1037,36 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
 })
 
-const TabContent: React.FC<TabContentProps> = React.memo(
-    forwardRef((props, ref) => {
-        const {pageCache, setPageCache} = props
+const TabContent: React.FC<TabContentProps> = React.memo((props) => {
+    const {pageCache, setPageCache, currentTabKey} = useContext(MainOperatorContext)
+    const {onRemove} = props
 
-        const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
-
-        useUpdateEffect(() => {
-            const pageLength = pageCache.length
-            if (pageLength > 0) {
-                const lastPage = pageCache[pageLength - 1]
-                const key =
-                    lastPage.route === YakitRoute.Plugin_OP
-                        ? routeConvertKey(lastPage.route, lastPage.pluginName)
-                        : lastPage.route
-                setCurrentTabKey(key)
-            }
-        }, [pageCache.length])
-        useImperativeHandle(
-            ref,
-            () => ({
-                setCurrentTabKey
-            }),
-            []
-        )
-        /** ---------- 拖拽排序 start ---------- */
-        const onDragEnd = useMemoizedFn((result) => {
-            if (!result.destination) {
-                return
-            }
-            if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
-                const menuList: PageCache[] = reorder(pageCache, result.source.index, result.destination.index)
-                setPageCache(menuList)
-            }
-        })
-
-        /** ---------- 拖拽排序 end ---------- */
-        return (
-            <div className={styles["tab-menu"]}>
-                <TabList
-                    tabList={pageCache}
-                    onDragEnd={onDragEnd}
-                    currentTabKey={currentTabKey}
-                    setCurrentTabKey={setCurrentTabKey}
-                />
-                <TabChildren pageCache={pageCache} currentTabKey={currentTabKey} />
-            </div>
-        )
-    }),
-    (preProps, nextProps) => {
-        if (_.isEqual(preProps.pageCache, nextProps.pageCache)) {
-            return true
+    /** ---------- 拖拽排序 start ---------- */
+    const onDragEnd = useMemoizedFn((result) => {
+        if (!result.destination) {
+            return
         }
-        return false
-    }
-)
+        if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
+            const menuList: PageCache[] = reorder(pageCache, result.source.index, result.destination.index)
+            setPageCache(menuList)
+        }
+    })
+
+    /** ---------- 拖拽排序 end ---------- */
+    console.log("pageCache", pageCache, currentTabKey)
+    return (
+        <div className={styles["tab-menu"]}>
+            <TabList onRemove={onRemove} onDragEnd={onDragEnd} />
+            <TabChildren />
+        </div>
+    )
+})
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
-    const {pageCache, currentTabKey} = props
+    const {pageCache, currentTabKey} = useContext(MainOperatorContext)
     return (
         <>
-            {pageCache.map((pageItem) => {
+            {pageCache.map((pageItem, index) => {
                 const key = routeConvertKey(pageItem.route, pageItem.pluginName)
                 return (
                     <div
@@ -1071,7 +1084,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                         {pageItem.singleNode ? (
                             <PageItem routeKey={pageItem.route} />
                         ) : (
-                            <SubTabList pageItem={pageItem} />
+                            <SubTabList pageItem={pageItem} index={index} />
                         )}
                     </div>
                 )
@@ -1093,7 +1106,8 @@ const PageItem: React.FC<PageItemProps> = React.memo(
 )
 
 const TabList: React.FC<TabListProps> = React.memo((props) => {
-    const {tabList, onDragEnd, currentTabKey, setCurrentTabKey} = props
+    const {pageCache: tabList, currentTabKey, setCurrentTabKey} = useContext(MainOperatorContext)
+    const {onDragEnd, onRemove} = props
     const tabLength = useMemo(() => tabList.length || 0, [tabList.length])
     return (
         <DragDropContext onDragEnd={onDragEnd}>
@@ -1112,6 +1126,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                                         onSelect={(val, k) => {
                                             setCurrentTabKey(k)
                                         }}
+                                        onRemove={onRemove}
                                     />
                                 </React.Fragment>
                             )
@@ -1123,7 +1138,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     )
 })
 const TabItem: React.FC<TabItemProps> = React.memo((props) => {
-    const {index, item, currentTabKey, onSelect, tabLength} = props
+    const {index, item, currentTabKey, onSelect, tabLength, onRemove} = props
     const key = useMemo(() => routeConvertKey(item.route, item.pluginName), [item.route, item.pluginName])
 
     return (
@@ -1164,9 +1179,15 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                                 })}
                                 title={item.verbose || ""}
                             >
-                                {item.verbose || ""}
-                                <RemoveIcon />
+                                <span className='content-ellipsis'>{item.verbose || ""}</span>
                             </div>
+                            <RemoveIcon
+                                className={styles["remove-icon"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRemove(item)
+                                }}
+                            />
                         </div>
                     )}
                 </Draggable>
@@ -1175,7 +1196,9 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
     )
 })
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
-    const {pageItem} = props
+    const {openMultipleMenuPage, pageCache, setPageCache, currentTabKey, setCurrentTabKey} =
+        useContext(MainOperatorContext)
+    const {pageItem, index} = props
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
@@ -1191,11 +1214,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     useEffect(() => {
         onInitSelectSubMenu()
     }, [])
-    useUpdateEffect(() => {
-        setRenderList(selectSubMenu.id, true)
-    }, [selectSubMenu])
+    useDebounceEffect(
+        () => {
+            // 多个二级批量新增时，控制渲染
+            setRenderList(selectSubMenu.id, true)
+        },
+        [selectSubMenu],
+        {wait: 500}
+    )
     useUpdateEffect(() => {
         const multipleNodeLength = pageItem.multipleNode.length
+        // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
         if (selectSubMenu.id === "0") {
             onInitSelectSubMenu()
@@ -1222,9 +1251,152 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         if (result.source.droppableId === "droppable2" && result.destination.droppableId === "droppable2") {
             const subMenuList: MultipleNodeInfo[] = reorder(subPage, result.source.index, result.destination.index)
-            setSubPage(subMenuList)
+            onUpdatePageCache(subMenuList)
         }
         /** 移动排序 ---------end--------- */
+    })
+    /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
+    const onUpdatePageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[]) => {
+        try {
+            if (subMenuList.length > 0) {
+                pageCache[index].multipleNode = subMenuList
+                setSubPage(subMenuList)
+                setPageCache(pageCache)
+            } else {
+                const newPage = pageCache.filter((_, i) => i !== index)
+                setSubPage([])
+                setPageCache([...newPage])
+                if (newPage.length > 0) {
+                    const activeTabItem = pageCache[index - 1]
+                    const key = routeConvertKey(activeTabItem.route, activeTabItem.pluginName)
+                    setCurrentTabKey(key)
+                }
+            }
+        } catch (error) {}
+    })
+    const onAddSubPage = useMemoizedFn(() => {
+        openMultipleMenuPage({
+            route: pageItem.route,
+            pluginId: pageItem.pluginId,
+            pluginName: pageItem.pluginName
+        })
+    })
+    const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo, indexSub: number) => {
+        const newSubPage = subPage.filter((_, i) => i !== indexSub)
+        onUpdatePageCache(newSubPage)
+    })
+    const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, indexSub: number) => {
+        const currentSubItem: MultipleNodeInfo = subPage[indexSub]
+        showByRightContext(
+            {
+                width: 180,
+                type: "grey",
+                data: [
+                    {
+                        label: "重命名",
+                        key: "rename"
+                    },
+                    {
+                        label: "将标签页添加到组",
+                        key: "addToGroup",
+                        children: [
+                            {
+                                label: (
+                                    <div className={styles["right-menu-item"]}>
+                                        <OutlinePlusIcon />
+                                        新建组
+                                    </div>
+                                ),
+                                key: "newGroup"
+                            },
+                            {
+                                label: (
+                                    <div className={styles["right-menu-item"]}>
+                                        <div className={classNames(styles["item-color-block"], `color-bg-blue`)} />
+                                        <span>正式项目配置</span>
+                                    </div>
+                                ),
+                                key: "55"
+                            }
+                        ]
+                    },
+                    {
+                        label: "从组中移出",
+                        key: "removeFromGroup"
+                    },
+                    {
+                        type: "divider"
+                    },
+                    {
+                        label: "关闭标签页",
+                        key: "remove"
+                    },
+                    {
+                        label: "关闭其他标签页",
+                        key: "removeOther"
+                    }
+                ],
+                onClick: ({key, keyPath}) => {
+                    switch (key) {
+                        case "rename":
+                            onRename(currentSubItem, indexSub)
+                            break
+                        case "addToGroup":
+                            onAddToGroup(currentSubItem)
+                            break
+                        case "removeFromGroup":
+                            onRemoveFromGroup(currentSubItem)
+                            break
+                        case "remove":
+                            onRemove(currentSubItem, indexSub)
+                            break
+                        case "removeOther":
+                            onRemoveOther(currentSubItem)
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
+            event.clientX,
+            event.clientY
+        )
+    })
+    /**重命名 */
+    const onRename = useMemoizedFn((item: MultipleNodeInfo, indexSub: number) => {
+        const m = showYakitModal({
+            footer: null,
+            closable: false,
+            content: (
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <TabRenameModalContent
+                        title='重命名'
+                        onClose={() => {
+                            m.destroy()
+                        }}
+                        name={item.verbose}
+                        onOk={(val) => {
+                            subPage[indexSub].verbose = val
+                            onUpdatePageCache(subPage)
+                            m.destroy()
+                        }}
+                    />
+                </React.Suspense>
+            )
+        })
+    })
+    /**将标签页添加到组 */
+    const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo) => {})
+    /**从组中移出 */
+    const onRemoveFromGroup = useMemoizedFn((item: MultipleNodeInfo) => {})
+    /**关闭标签页 */
+    const onRemove = useMemoizedFn((item: MultipleNodeInfo, indexSub: number) => {
+        onRemoveSubPage(item, indexSub)
+    })
+    /**关闭其他标签页 */
+    const onRemoveOther = useMemoizedFn((item: MultipleNodeInfo) => {
+        const newSubPage: MultipleNodeInfo[] = [item]
+        onUpdatePageCache(newSubPage)
     })
     return (
         <>
@@ -1232,22 +1404,26 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 <Droppable droppableId='droppable2' direction='horizontal'>
                     {(provided, snapshot) => (
                         <div className={styles["tab-menu-sub"]} {...provided.droppableProps} ref={provided.innerRef}>
-                            {subPage.map((item, index) => {
+                            {subPage.map((item, indexSub) => {
                                 return (
                                     <React.Fragment key={item.id}>
                                         <SubTabItem
                                             subPageLength={subPageLength}
                                             subItem={item}
-                                            index={index}
+                                            index={indexSub}
                                             selectSubMenu={selectSubMenu}
-                                            setSelectSubMenu={(val) => {
-                                                setSelectSubMenu(val)
+                                            setSelectSubMenu={setSelectSubMenu}
+                                            onRemoveSub={(val) => {
+                                                onRemoveSubPage(val, indexSub)
+                                            }}
+                                            onContextMenu={(e) => {
+                                                onRightClickOperation(e, indexSub)
                                             }}
                                         />
                                     </React.Fragment>
                                 )
                             })}
-                            <OutlinePlusIcon className={styles["outline-plus-icon"]} />
+                            <OutlinePlusIcon className={styles["outline-plus-icon"]} onClick={() => onAddSubPage()} />
                         </div>
                     )}
                 </Droppable>
@@ -1273,7 +1449,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 })
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {subItem, index, selectSubMenu, setSelectSubMenu, subPageLength} = props
+    const {subItem, index, selectSubMenu, setSelectSubMenu, subPageLength, onRemoveSub, onContextMenu} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
@@ -1290,6 +1466,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                     onClick={() => {
                         setSelectSubMenu(subItem)
                     }}
+                    onContextMenu={onContextMenu}
                 >
                     <div
                         title={subItem.verbose || ""}
@@ -1300,7 +1477,15 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         <SolidDocumentTextIcon className={styles["document-text-icon"]} />
                         <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                     </div>
-                    {isActive && <RemoveIcon className={styles["remove-icon"]} />}
+                    {isActive && (
+                        <RemoveIcon
+                            className={styles["remove-icon"]}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onRemoveSub(subItem)
+                            }}
+                        />
+                    )}
                 </div>
             )}
         </Draggable>

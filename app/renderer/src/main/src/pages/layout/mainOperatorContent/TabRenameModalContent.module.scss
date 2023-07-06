@@ -1,0 +1,38 @@
+.subMenu-edit-modal {
+    padding: 18px 24px;
+
+    .subMenu-edit-modal-heard {
+        display: flex;
+        justify-content: space-between;
+
+        .subMenu-edit-modal-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--yakit-header-color);
+        }
+
+        .close-icon {
+            color: var(--yakit-helper-text-color);
+            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+    }
+
+    .subMenu-edit-modal-body {
+        padding-top: 16px;
+        padding-bottom: 38px;
+    }
+
+    .subMenu-edit-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}
