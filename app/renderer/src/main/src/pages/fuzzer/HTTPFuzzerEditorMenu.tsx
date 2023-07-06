@@ -76,7 +76,7 @@ export const defaultLabel: LabelDataProps[] = [
     {
         DefaultDescription: "空字符",
         Description: "空字符",
-        Label: "{{null(2}}"
+        Label: "{{null(2)}}"
     }
 ]
 
