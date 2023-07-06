@@ -60,7 +60,8 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     const judgeLicenseGrpc = (LicenseActivation: string, isCache = false) => {
         ipcRenderer
             .invoke("CheckLicense", {
-                LicenseActivation
+                LicenseActivation,
+                CompanyVersion: isEnpriTraceAgent() ? "EnpriTraceAgent" : "EnpriTrace"
             })
             .then((e) => {
                 setActivateLicense(true)
@@ -90,8 +91,12 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
             ) : (
                 <>
                     {activateLicense ? (
-                        <div style={{width: 480, margin: "0 auto", paddingTop: 200,height:"100%"}}>
-                            <ConfigPrivateDomain enterpriseLogin={true} onSuccee={() => setJudgeLicense(false)} skipShow={isEnpriTraceAgent()}/>
+                        <div style={{width: 480, margin: "0 auto", paddingTop: 200, height: "100%"}}>
+                            <ConfigPrivateDomain
+                                enterpriseLogin={true}
+                                onSuccee={() => setJudgeLicense(false)}
+                                skipShow={isEnpriTraceAgent()}
+                            />
                         </div>
                     ) : (
                         <LicensePage
