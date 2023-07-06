@@ -62,12 +62,23 @@ $keyColor: map-keys($colors);
     }
 }
 
-.base-icon {
+.base-show-icon {
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--yakit-body-text-color);
     cursor: pointer;
+    border-radius: 4px;
+}
+.base-operate-icon {
+    @extend .base-show-icon;
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+}
+
+.icon-active {
+    color: var(--yakit-primary-5);
 }
 
 // -------------- tab样式 -------------
@@ -100,11 +111,11 @@ $keyColor: map-keys($colors);
             gap: 16px;
             color: var(--yakit-body-text-color);
             cursor: pointer;
-            flex: 1 1;
+            // flex: 1 1;
             word-break: keep-all;
             border-right: 1px solid var(--yakit-border-color);
             overflow: hidden;
-            max-width: 150px;
+            max-width: 200px;
             justify-content: space-between;
             position: relative;
             &:hover {
@@ -113,18 +124,23 @@ $keyColor: map-keys($colors);
             &:last-child {
                 border-right-width: 0;
             }
-            span {
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-                min-width: 12px;
-            }
-            svg {
-                color: var(--yakit-body-text-color);
-            }
             .tab-menu-item-left-verbose {
                 flex: 1;
+
+                span {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    min-width: 12px;
+                }
+            }
+            .remove-icon {
+                @extend .base-operate-icon;
+                height: 16px;
+                width: 16px;
+                svg {
+                    height: 12px;
+                    width: 12px;
+                }
             }
         }
         .tab-menu-first-item-active {
@@ -156,16 +172,9 @@ $keyColor: map-keys($colors);
         display: flex;
         align-items: center;
         position: relative;
+        height: 32px;
         background-color: var(--yakit-card-background-color);
-        .outline-plus-icon {
-            @extend .base-icon;
-            width: 24px;
-            height: 24px;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
+
         &::after {
             @extend .fake-content;
             bottom: 0;
@@ -214,7 +223,8 @@ $keyColor: map-keys($colors);
             word-break: keep-all;
             position: relative;
             overflow: hidden;
-            max-width: 150px;
+            max-width: 200px;
+            min-width: 24px;
             justify-content: space-between;
 
             &:hover {
@@ -238,16 +248,16 @@ $keyColor: map-keys($colors);
                 right: 0;
             }
             .remove-icon {
-                @extend .base-icon;
-                height: 16px;
-                width: 16px;
+                @extend .base-operate-icon;
+                height: 20px;
+                width: 20px;
                 svg {
                     height: 16px;
                     width: 16px;
                 }
             }
             .document-text-icon {
-                @extend .base-icon;
+                @extend .base-show-icon;
                 height: 16px;
                 width: 16px;
                 svg {
@@ -279,10 +289,23 @@ $keyColor: map-keys($colors);
             background-color: #fff;
         }
     }
+    .outline-plus-icon {
+        @extend .base-operate-icon;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
     .tab-menu-item-left-verbose {
         @extend .flex-align-center;
         justify-content: space-between;
         gap: 4px;
+        overflow: hidden;
     }
 
     .tab-menu-item-left-verbose[title]:hover::after {
@@ -315,5 +338,15 @@ $keyColor: map-keys($colors);
     }
     100% {
         opacity: 1;
+    }
+}
+
+.right-menu-item {
+    @extend .flex-align-center;
+    gap: 12px;
+    .item-color-block {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
     }
 }

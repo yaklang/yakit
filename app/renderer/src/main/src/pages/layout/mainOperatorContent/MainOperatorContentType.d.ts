@@ -1,5 +1,7 @@
 
+import React from "react";
 import { YakitRoute, ComponentParams } from "../../../routes/newRoute";
+import { RouteToPageProps } from '../publicMenu/PublicMenu'
 
 // 已打开页面的二级页面数据
 export interface MultipleNodeInfo {
@@ -55,23 +57,16 @@ export interface MainOperatorContentProps {
 
 /**
  * @description content 展示
- * @function setPageCache 修改页面数据
- * @property pageCache 页面数据
+ * @function onRemove 删除一级tab
 */
 export interface TabContentProps {
-    ref?: any
-    pageCache: PageCache[]
-    setPageCache: (p: PageCache[]) => void
+    onRemove: (p: PageCache) => vid
 }
 
 /**
  * @description Tab Children 展示
- * @property pageCache 页面数据
- * @property currentTabKey 当前选择的tab key
  */
 export interface TabChildrenProps {
-    pageCache: PageCache[]
-    currentTabKey: string
 }
 
 /**
@@ -93,6 +88,7 @@ export interface PageItemProps {
  * @property index 在数组中的下标
  * @property currentTabKey 当前选择的tab key
  * @function onSelect 选中一级tab
+ * @function onRemove 删除一级tab
  */
 export interface TabItemProps {
     tabLength: number
@@ -100,20 +96,17 @@ export interface TabItemProps {
     index: number
     currentTabKey: YakitRoute | string
     onSelect: (p: PageCache, key: string) => void
+    onRemove: (p: PageCache) => void
 }
 
 /**
  * @description 一级tab
- * @property tabList  tab数据
  * @function onDragEnd 一级tab拖拽 
- * @property currentTabKey 当前选择的tab key
- * @function setCurrentTabKey 设置一级tab key
+ * @function onRemove 删除一级tab
  */
 export interface TabListProps {
-    tabList: PageCache[]
     onDragEnd: (p: any) => void
-    currentTabKey: YakitRoute | string
-    setCurrentTabKey: (s: YakitRoute | string) => void
+    onRemove: (p: PageCache) => void
 }
 
 /**
@@ -122,6 +115,7 @@ export interface TabListProps {
  */
 export interface SubTabListProps {
     pageItem: PageCache
+    index: number
 }
 /**
  * @description 二级tab item
@@ -137,8 +131,19 @@ export interface SubTabItemProps {
     index: number
     selectSubMenu: MultipleNodeInfo
     setSelectSubMenu: (m: MultipleNodeInfo) => void
+    onRemoveSub: (m: MultipleNodeInfo) => void
+    onContextMenu: (e: React.MouseEvent) => void
 }
 
 export interface TabContentRefProps {
+    currentTabKey: YakitRoute | string
     setCurrentTabKey: (s: YakitRoute | string) => void
+}
+
+export interface MainOperatorContextProps {
+    pageCache: PageCache[]
+    setPageCache: (p: PageCache[]) => void
+    currentTabKey: string
+    setCurrentTabKey: (s: YakitRoute | string) => void
+    openMultipleMenuPage: (route: RouteToPageProps) => void
 }
