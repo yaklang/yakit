@@ -1085,6 +1085,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 typeCallback={typeCallback}
                                                 showProjectManage={linkDatabase}
                                                 system={system}
+                                                isJudgeLicense={isJudgeLicense}
                                             />
                                             {!linkDatabase && (
                                                 <>
@@ -1148,6 +1149,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     typeCallback={typeCallback}
                                                     showProjectManage={linkDatabase}
                                                     system={system}
+                                                    isJudgeLicense={isJudgeLicense}
                                                 />
                                             </div>
                                         </>

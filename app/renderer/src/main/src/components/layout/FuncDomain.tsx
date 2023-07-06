@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Form, Input, Button, Avatar} from "antd"
+import {Badge, Modal, Tooltip, Form, Input, Button,Avatar,Upload, Spin} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -56,7 +56,7 @@ import {API} from "@/services/swagger/resposeType"
 import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage"
 import {addToTab} from "@/pages/MainTabs"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
-import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined, InboxOutlined, LoadingOutlined} from "@ant-design/icons"
 
 import {DynamicControl, SelectControlType, ControlMyself, ControlOther} from "../../pages/dynamicControl/DynamicControl"
 import classNames from "classnames"
@@ -68,8 +68,10 @@ import {ScrecorderModal} from "@/pages/screenRecorder/ScrecorderModal"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitRoute} from "@/routes/newRoute"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
+import { RcFile } from "antd/lib/upload"
 
 const {ipcRenderer} = window.require("electron")
+const { Dragger } = Upload;
 
 export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean) => {
     const {companyHeadImg, companyName} = userInfo
@@ -115,6 +117,71 @@ const randomAvatarColor = () => {
     return color
 }
 
+export interface UploadYakitEEProps {
+    onClose: () => void
+}
+export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
+    const suffixFun = (file_name: string) => {
+        let file_index = file_name.lastIndexOf(".");
+        return file_name.slice(file_index, file_name.length);
+    };
+    const [filePath,setFilePath] = useState<RcFile>()
+    const [loading,setLoading] = useState<boolean>(false)
+    const uploadYakitEEPackage = useMemoizedFn(async () => {
+        setLoading(true)
+        // @ts-ignore
+        const {path} = filePath
+        await ipcRenderer
+            .invoke("yak-install-package", {path})
+            .then((res) => {
+                console.log("yak-install-package",res);
+                
+            })
+            .catch((err) => {
+                failed("文件上传失败")
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+    return(
+    <div className={styles['upload-yakit-ee']}>
+        <Spin spinning={loading}>
+        <div style={{ marginBottom: 8 }}>
+            选择文件进行上传
+        </div>
+            <Dragger
+                multiple={false}
+                maxCount={1}
+                showUploadList={false}
+                accept={".zip"}
+                beforeUpload={(f) => {
+                    const file_name = f.name;
+                    const suffix = suffixFun(file_name);
+                    if (![".zip"].includes(suffix)) {
+                        warn("上传文件格式错误，请重新上传");
+                        return false;
+                    }
+                    setFilePath(f)
+                    return false;
+                }}
+            >
+            <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+            </p>
+            <p className="ant-upload-text">{filePath?filePath.name:"拖拽文件到框内或点击上传"}</p>
+            </Dragger>
+            <div style={{ textAlign: "center", marginTop: 16 }}>
+                <YakitButton className={styles['btn-style']} type="primary" onClick={() => {
+                    uploadYakitEEPackage()
+                    }}>
+                    确定
+                </YakitButton>
+            </div>
+            </Spin>
+    </div>)
+}
+
 export interface FuncDomainProp {
     isEngineLink: boolean
     isReverse?: Boolean
@@ -123,7 +190,9 @@ export interface FuncDomainProp {
     onEngineModeChange: (type: YaklangEngineMode) => any
     typeCallback: (type: YakitSettingCallbackType) => any
     /** 远程控制 - 自动切换远程连接 */
-    runDynamicControlRemote: (v: string, url: string) => void
+    runDynamicControlRemote: (v:string,url:string) => void
+    /** 当前是否验证License/登录 */
+    isJudgeLicense: boolean
 
     /** @name 当前是否展示项目管理页面 */
     showProjectManage?: boolean
@@ -141,7 +210,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         runDynamicControlRemote,
         typeCallback,
         showProjectManage = false,
-        system
+        system,
+        isJudgeLicense
     } = props
 
     /** 登录用户信息 */
@@ -220,7 +290,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     {key: "role-admin", title: "角色管理"},
                     {key: "account-admin", title: "用户管理"},
                     {key: "set-password", title: "修改密码"},
-                    {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
+                    {key: "upload-yakit-ee", title: "上传安装包"},
+                    {key: "sign-out", title: "退出登录",render:() => LoginOutBox()},
                 ]
                 // 远程中时不显示发起远程 显示退出远程
                 if (dynamicConnect) {
@@ -379,7 +450,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         />
                     )}
                 </div>
-                {!showProjectManage && (
+                {!showProjectManage && !isJudgeLicense && (
                     <>
                         <div className={styles["divider-wrapper"]}></div>
                         <div
@@ -450,6 +521,17 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             }
                                             if (key === "set-password") setPasswordShow(true)
                                             if (key === "upload-data") setUploadModalShow(true)
+                                            if (key === "upload-yakit-ee") {
+                                                const m = showYakitModal({
+                                                    title: "上传安装包",
+                                                    width: 450,
+                                                    footer: null,
+                                                    centered: true,
+                                                    content: (
+                                                            <UploadYakitEE onClose={() => {m.destroy()}}/>
+                                                    )
+                                                })
+                                            }
                                             if (key === "role-admin") {
                                                 openMenu({route: YakitRoute.RoleAdminPage})
                                             }
@@ -1390,6 +1472,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         ipcRenderer
             .invoke("fetch-latest-yakit-version")
             .then((data: string) => {
+                console.log("获取yakit最新版本号---",data,yakitVersion);
                 if (yakitVersion !== data) setYakitLastVersion(data)
             })
             .catch(() => {})
@@ -1401,6 +1484,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             params: {type: "yakit", source: "community"}
         })
             .then((res: any) => {
+                console.log("社区版yakit更新内容---",res);
                 if (!res) return
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
@@ -1417,6 +1501,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             params: {type: "yakit", source: "company"}
         })
             .then((res: any) => {
+                console.log("企业版yakit更新内容---",res);
                 if (!res) return
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
