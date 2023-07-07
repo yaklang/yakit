@@ -28,6 +28,14 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
                     value={value}
                     maxLength={50}
                     onChange={(e) => setValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        // 限制enter换行
+                        const keyCode = e.keyCode ? e.keyCode : e.key
+                        if (keyCode === 13) {
+                            e.stopPropagation()
+                            e.preventDefault()
+                        }
+                    }}
                 />
             </div>
             <div className={styles["subMenu-edit-modal-footer"]}>

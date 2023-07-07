@@ -1,14 +1,4 @@
-import React, {
-    useState,
-    ReactNode,
-    useEffect,
-    useRef,
-    forwardRef,
-    useImperativeHandle,
-    useMemo,
-    useContext,
-    createContext
-} from "react"
+import React, {useState, ReactNode, useEffect, useRef, useMemo, useContext, createContext} from "react"
 import {Layout, Modal, Form, Tooltip} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {
@@ -23,13 +13,12 @@ import {
     SubTabItemProps,
     TabChildrenProps,
     PageItemProps,
-    TabContentRefProps,
     MainOperatorContextProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, RouteToPage, SinglePageRoute, NoPaddingRoute} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useCreation, useDebounceEffect, useGetState, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useGetState, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -39,7 +28,7 @@ import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultUserInfo, fuzzerInfoProp} from "@/pages/MainOperator"
-import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
+import {UserInfoProps, useStore} from "@/store"
 import {getLocalValue, getRemoteProjectValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
 import {BugInfoProps, BugList, CustomBugList} from "@/pages/invoker/batch/YakBatchExecutors"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
@@ -52,7 +41,6 @@ import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import debounce from "lodash/debounce"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
@@ -967,7 +955,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
     }, [pageCache])
-    console.log("currentTabKey", currentTabKey)
     return (
         <Content>
             <MainOperatorContext.Provider
@@ -987,7 +974,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             pluginId: tabItem.pluginId,
                             pluginName: tabItem.pluginName
                         }
-                        console.log("removeItem", removeItem)
                         onBeforeRemovePage(removeItem)
                     }}
                 />
@@ -1053,7 +1039,6 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     })
 
     /** ---------- 拖拽排序 end ---------- */
-    console.log("pageCache", pageCache, currentTabKey)
     return (
         <div className={styles["tab-menu"]}>
             <TabList onRemove={onRemove} onDragEnd={onDragEnd} />
@@ -1106,20 +1091,68 @@ const PageItem: React.FC<PageItemProps> = React.memo(
 )
 
 const TabList: React.FC<TabListProps> = React.memo((props) => {
-    const {pageCache: tabList, currentTabKey, setCurrentTabKey} = useContext(MainOperatorContext)
+    const {pageCache, setPageCache, currentTabKey, setCurrentTabKey} = useContext(MainOperatorContext)
     const {onDragEnd, onRemove} = props
-    const tabLength = useMemo(() => tabList.length || 0, [tabList.length])
+    const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, index: number) => {
+        const currentPageItem: PageCache = pageCache[index]
+        showByRightContext(
+            {
+                width: 180,
+                type: "grey",
+                data: [
+                    {
+                        label: "关闭所有标签页",
+                        key: "remove"
+                    },
+                    {
+                        label: "关闭其他标签页",
+                        key: "removeOther"
+                    }
+                ],
+                onClick: ({key, keyPath}) => {
+                    switch (key) {
+                        case "remove":
+                            onRemoveAllTabs(currentPageItem, index)
+                            break
+                        case "removeOther":
+                            onRemoveOtherTabs(currentPageItem)
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
+            event.clientX,
+            event.clientY
+        )
+    })
+    /**关闭所有标签页 如果有首页需要保留首页 */
+    const onRemoveAllTabs = useMemoizedFn((item: PageCache, index: number) => {
+        const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
+        if (!!newPage) {
+            const key = routeConvertKey(newPage.route, newPage.pluginName)
+            setPageCache([newPage])
+            setCurrentTabKey(key)
+        } else {
+            setPageCache([])
+        }
+    })
+    /**关闭其他标签页 如果有首页需要保留首页*/
+    const onRemoveOtherTabs = useMemoizedFn((item: PageCache) => {
+        if (pageCache.length <= 0) return
+        const newPage: PageCache[] = [{...pageCache[0]}, item]
+        setPageCache(newPage)
+    })
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId='droppable1' direction='horizontal'>
                 {(provided, snapshot) => (
                     <div className={styles["tab-menu-first"]} {...provided.droppableProps} ref={provided.innerRef}>
-                        {tabList.map((item, index) => {
+                        {pageCache.map((item, index) => {
                             const key = routeConvertKey(item.route, item.pluginName)
                             return (
                                 <React.Fragment key={key}>
                                     <TabItem
-                                        tabLength={tabLength}
                                         item={item}
                                         index={index}
                                         currentTabKey={currentTabKey}
@@ -1127,6 +1160,9 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                                             setCurrentTabKey(k)
                                         }}
                                         onRemove={onRemove}
+                                        onContextMenu={(e) => {
+                                            onRightClickOperation(e, index)
+                                        }}
                                     />
                                 </React.Fragment>
                             )
@@ -1138,7 +1174,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     )
 })
 const TabItem: React.FC<TabItemProps> = React.memo((props) => {
-    const {index, item, currentTabKey, onSelect, tabLength, onRemove} = props
+    const {index, item, currentTabKey, onSelect, onRemove, onContextMenu} = props
     const key = useMemo(() => routeConvertKey(item.route, item.pluginName), [item.route, item.pluginName])
 
     return (
@@ -1152,7 +1188,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                     onClick={() => {
                         onSelect(item, key)
                     }}
-                    style={{maxWidth: 60}}
+                    style={{maxWidth: 60, minWidth: 40}}
                 >
                     <span>{item.verbose || ""}</span>
                 </div>
@@ -1172,22 +1208,25 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                             onClick={() => {
                                 onSelect(item, key)
                             }}
+                            onContextMenu={onContextMenu}
                         >
-                            <div
-                                className={classNames(styles["tab-menu-item-left-verbose"], {
-                                    [styles["tab-menu-item-right-verbose"]]: tabLength > 10 && index > tabLength / 2
-                                })}
+                            <Tooltip
                                 title={item.verbose || ""}
+                                overlayClassName={styles["toolTip-overlay"]}
+                                destroyTooltipOnHide={true}
+                                placement='top'
                             >
-                                <span className='content-ellipsis'>{item.verbose || ""}</span>
-                            </div>
-                            <RemoveIcon
-                                className={styles["remove-icon"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onRemove(item)
-                                }}
-                            />
+                                <div className={styles["tab-menu-item-verbose"]}>
+                                    <span className='content-ellipsis'>{item.verbose || ""}</span>
+                                    <RemoveIcon
+                                        className={styles["remove-icon"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onRemove(item)
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
                         </div>
                     )}
                 </Draggable>
@@ -1196,8 +1235,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
     )
 })
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
-    const {openMultipleMenuPage, pageCache, setPageCache, currentTabKey, setCurrentTabKey} =
-        useContext(MainOperatorContext)
+    const {openMultipleMenuPage, pageCache, setPageCache, setCurrentTabKey} = useContext(MainOperatorContext)
     const {pageItem, index} = props
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
@@ -1209,7 +1247,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const [alreadyRenderList, {set: setRenderList, get: getRenderList}] = useMap<string, boolean>(
         new Map<string, boolean>()
     )
-    const subPageLength = useMemo(() => subPage.length || 0, [subPage.length])
 
     useEffect(() => {
         onInitSelectSubMenu()
@@ -1237,7 +1274,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 }
             )
         }
-    }, [pageItem.multipleNode])
+    }, [pageItem.multipleNode.length])
     /**@description selectSubMenu为未选择状态时默认选中第一个 */
     const onInitSelectSubMenu = useMemoizedFn(() => {
         if (pageItem.multipleNode && pageItem.multipleNode.length > 0) {
@@ -1260,7 +1297,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         try {
             if (subMenuList.length > 0) {
                 pageCache[index].multipleNode = subMenuList
-                setSubPage(subMenuList)
+                setSubPage([...subMenuList])
                 setPageCache(pageCache)
             } else {
                 const newPage = pageCache.filter((_, i) => i !== index)
@@ -1320,10 +1357,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                             }
                         ]
                     },
-                    {
-                        label: "从组中移出",
-                        key: "removeFromGroup"
-                    },
+                    // 组内的tab才有下面这个菜单
+                    // {
+                    //     label: "从组中移出",
+                    //     key: "removeFromGroup"
+                    // },
                     {
                         type: "divider"
                     },
@@ -1376,6 +1414,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         }}
                         name={item.verbose}
                         onOk={(val) => {
+                            if (subPage.findIndex((ele) => ele.verbose === val) !== -1) {
+                                yakitNotify("error", "该名称已存在")
+                                return
+                            }
                             subPage[indexSub].verbose = val
                             onUpdatePageCache(subPage)
                             m.destroy()
@@ -1403,26 +1445,31 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             <DragDropContext onDragEnd={onSubMenuDragEnd}>
                 <Droppable droppableId='droppable2' direction='horizontal'>
                     {(provided, snapshot) => (
-                        <div className={styles["tab-menu-sub"]} {...provided.droppableProps} ref={provided.innerRef}>
-                            {subPage.map((item, indexSub) => {
-                                return (
-                                    <React.Fragment key={item.id}>
-                                        <SubTabItem
-                                            subPageLength={subPageLength}
-                                            subItem={item}
-                                            index={indexSub}
-                                            selectSubMenu={selectSubMenu}
-                                            setSelectSubMenu={setSelectSubMenu}
-                                            onRemoveSub={(val) => {
-                                                onRemoveSubPage(val, indexSub)
-                                            }}
-                                            onContextMenu={(e) => {
-                                                onRightClickOperation(e, indexSub)
-                                            }}
-                                        />
-                                    </React.Fragment>
-                                )
-                            })}
+                        <div className={styles["tab-menu-sub-body"]}>
+                            <div
+                                className={styles["tab-menu-sub"]}
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                            >
+                                {subPage.map((item, indexSub) => {
+                                    return (
+                                        <React.Fragment key={item.id}>
+                                            <SubTabItem
+                                                subItem={item}
+                                                index={indexSub}
+                                                selectSubMenu={selectSubMenu}
+                                                setSelectSubMenu={setSelectSubMenu}
+                                                onRemoveSub={(val) => {
+                                                    onRemoveSubPage(val, indexSub)
+                                                }}
+                                                onContextMenu={(e) => {
+                                                    onRightClickOperation(e, indexSub)
+                                                }}
+                                            />
+                                        </React.Fragment>
+                                    )
+                                })}
+                            </div>
                             <OutlinePlusIcon className={styles["outline-plus-icon"]} onClick={() => onAddSubPage()} />
                         </div>
                     )}
@@ -1449,8 +1496,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 })
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {subItem, index, selectSubMenu, setSelectSubMenu, subPageLength, onRemoveSub, onContextMenu} = props
+    const {subItem, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
+
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(provided, snapshot) => (
@@ -1468,15 +1516,17 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                     }}
                     onContextMenu={onContextMenu}
                 >
-                    <div
+                    <Tooltip
                         title={subItem.verbose || ""}
-                        className={classNames(styles["tab-menu-item-left-verbose"], {
-                            [styles["tab-menu-item-right-verbose"]]: subPageLength > 10 && index > subPageLength / 2
-                        })}
+                        overlayClassName={styles["toolTip-overlay"]}
+                        destroyTooltipOnHide={true}
+                        placement='top'
                     >
-                        <SolidDocumentTextIcon className={styles["document-text-icon"]} />
-                        <span className='content-ellipsis'>{subItem.verbose || ""}</span>
-                    </div>
+                        <div className={styles["tab-menu-item-verbose"]}>
+                            <SolidDocumentTextIcon className={styles["document-text-icon"]} />
+                            <span className='content-ellipsis'>{subItem.verbose || ""}</span>
+                        </div>
+                    </Tooltip>
                     {isActive && (
                         <RemoveIcon
                             className={styles["remove-icon"]}
