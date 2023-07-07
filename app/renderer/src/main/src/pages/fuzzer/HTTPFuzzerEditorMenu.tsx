@@ -1,23 +1,47 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Avatar, Space, Timeline} from "antd"
 import {FormOutlined, PlusOutlined} from "@ant-design/icons"
-import {useGetState} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import styles from "./HTTPFuzzerEditorMenu.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {DocumentDuplicateSvgIcon, DragSortIcon, SolidTerminalIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
+import {
+    ChevronDownIcon,
+    ChevronUpIcon,
+    DocumentDuplicateSvgIcon,
+    DragSortIcon,
+    IconSolidCodeIcon,
+    IconSolidSparklesIcon,
+    IconSolidTagIcon,
+    SolidTerminalIcon,
+    TerminalIcon,
+    TrashIcon
+} from "@/assets/newIcon"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {AutoDecodeResult} from "@/utils/encodec"
 import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
+import {CountDirectionProps} from "@/components/NewEditorSelectRange"
 const {ipcRenderer} = window.require("electron")
+
+const directionStyle = (direction) => {
+    let obj: any = {}
+    if (direction) {
+        if (direction.x === "right") {
+            obj.right = 0
+        }
+        if (direction.y === "bottom") {
+            obj.bottom = "32px"
+        }
+    }
+    return obj
+}
+
 export interface HTTPFuzzerClickEditorMenuProps {
     close: () => void
+    direction?: CountDirectionProps
     insert: (v: QueryFuzzerLabelResponseProps) => void
     addLabel: () => void
 }
@@ -83,10 +107,13 @@ export const defaultLabel: LabelDataProps[] = [
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
-    const {close, insert, addLabel} = props
+    const {close, direction, insert, addLabel} = props
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
     const [selectLabel, setSelectLabel] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
+    const [isEnterSimple, setEnterSimple] = useState<boolean>(false)
+    const clickElementRef = useRef<any>()
+    const isRight = useRef<boolean>(false)
     const getData = () => {
         ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -126,98 +153,123 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         })
     }
     const isSelect = (item: QueryFuzzerLabelResponseProps) => selectLabel === item.Hash
+    
     return (
-        <div className={styles["http-fuzzer-click-editor-menu"]}>
-            <div className={styles["menu-header"]}>
-                <div className={styles["menu-header-left"]}>
-                    常用标签
-                    <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
-                </div>
-                <div className={styles["menu-header-opt"]}>
-                    <YakitButton type='text' onClick={() => addLabel()}>
-                        添加 <PlusOutlined className={styles["add-icon"]} />
-                    </YakitButton>
-                    <div className={styles["line"]}></div>
-                    <YakitButton type='text' style={{color: "#85899E"}} onClick={() => reset()}>
-                        复原
-                    </YakitButton>
+        <div className={styles["http-fuzzer-click-editor"]} ref={clickElementRef}>
+            <div className={styles["http-fuzzer-click-editor-simple"]}>
+                <div
+                    className={styles["show-box"]}
+                    onMouseEnter={() => {
+                        setEnterSimple(true)
+                    }}
+                >
+                    <IconSolidTagIcon className={styles["tag"]} />
+                    <div className={styles["content"]}>插入标签</div>
+                    {isEnterSimple ? (
+                        <ChevronUpIcon className={styles["up"]} />
+                    ) : (
+                        <ChevronDownIcon className={styles["down"]} />
+                    )}
                 </div>
             </div>
-            <div className={styles["menu-list"]}>
-                {labelData.map((item, index) => (
-                    <div
-                        key={`${item?.Label}-${index}`}
-                        className={styles["menu-list-item"]}
-                        onClick={() => insertLabel(item)}
-                    >
-                        <div className={styles["menu-list-item-info"]}>
-                            <DragSortIcon className={styles["drag-sort-icon"]} />
-                            {isSelect(item) ? (
-                                <YakitInput
-                                defaultValue={item.Description}
-                                    className={styles["input"]}
-                                    size='small'
-                                    onChange={(e) => {
-                                        setInputValue(e.target.value)
-                                    }}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                    }}
-                                />
-                            ) : (
-                                <>
-                                    <div className={styles["title"]}>{item.Description}</div>
-                                    <div
-                                        className={classNames(styles["sub-title"], {
-                                            [styles["sub-title-left"]]: !!item.Description
-                                        })}
-                                    >
-                                        {item.Label}
-                                    </div>
-                                </>
-                            )}
+            {isEnterSimple && (
+                <div
+                    className={styles["http-fuzzer-click-editor-menu"]}
+                    onMouseLeave={() => setEnterSimple(false)}
+                    style={{...directionStyle(direction), ...(isRight.current && {right: 0})}}
+                >
+                    <div className={styles["menu-header"]}>
+                        <div className={styles["menu-header-left"]}>
+                            常用标签
+                            <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
                         </div>
-                        <div className={styles["menu-list-item-opt"]}>
-                            {isSelect(item) ? (
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (inputValue) {
-                                            ipcRenderer
-                                                .invoke("SaveFuzzerLabel", {
-                                                    Data: [{...item, Description: inputValue}]
-                                                })
-                                                .then(() => {
-                                                    getData()
-                                                })
-                                        }
-                                    }}
-                                >
-                                    确认
-                                </YakitButton>
-                            ) : (
-                                <>
-                                    <FormOutlined
-                                        className={styles["form-outlined"]}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            setSelectLabel(item.Hash)
-                                        }}
-                                    />
-                                    <TrashIcon
-                                        className={styles["trash-icon"]}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            delLabel(item.Hash)
-                                        }}
-                                    />
-                                </>
-                            )}
+                        <div className={styles["menu-header-opt"]}>
+                            <YakitButton type='text' onClick={() => addLabel()}>
+                                添加 <PlusOutlined className={styles["add-icon"]} />
+                            </YakitButton>
+                            <div className={styles["line"]}></div>
+                            <YakitButton type='text' style={{color: "#85899E"}} onClick={() => reset()}>
+                                复原
+                            </YakitButton>
                         </div>
                     </div>
-                ))}
-            </div>
+                    <div className={styles["menu-list"]}>
+                        {labelData.map((item, index) => (
+                            <div
+                                key={`${item?.Label}-${index}`}
+                                className={styles["menu-list-item"]}
+                                onClick={() => insertLabel(item)}
+                            >
+                                <div className={styles["menu-list-item-info"]}>
+                                    <DragSortIcon className={styles["drag-sort-icon"]} />
+                                    {isSelect(item) ? (
+                                        <YakitInput
+                                            defaultValue={item.Description}
+                                            className={styles["input"]}
+                                            size='small'
+                                            onChange={(e) => {
+                                                setInputValue(e.target.value)
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        />
+                                    ) : (
+                                        <>
+                                            <div className={styles["title"]}>{item.Description}</div>
+                                            <div
+                                                className={classNames(styles["sub-title"], {
+                                                    [styles["sub-title-left"]]: !!item.Description
+                                                })}
+                                            >
+                                                {item.Label}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className={styles["menu-list-item-opt"]}>
+                                    {isSelect(item) ? (
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                if (inputValue) {
+                                                    ipcRenderer
+                                                        .invoke("SaveFuzzerLabel", {
+                                                            Data: [{...item, Description: inputValue}]
+                                                        })
+                                                        .then(() => {
+                                                            getData()
+                                                        })
+                                                }
+                                            }}
+                                        >
+                                            确认
+                                        </YakitButton>
+                                    ) : (
+                                        <>
+                                            <FormOutlined
+                                                className={styles["form-outlined"]}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setSelectLabel(item.Hash)
+                                                }}
+                                            />
+                                            <TrashIcon
+                                                className={styles["trash-icon"]}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    delLabel(item.Hash)
+                                                }}
+                                            />
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -436,55 +488,94 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
 }
 
 export interface HTTPFuzzerRangeEditorMenuProps {
+    direction?: CountDirectionProps
     insert: (v: any) => void
     rangeValue: string
     replace?: (v: string) => void
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {insert, rangeValue, replace} = props
-    const [segmentedType, setSegmentedType] = useState<"decode" | "encode">("encode")
+    const {direction, insert, rangeValue, replace} = props
+    const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
+    const fuzzerElementRef = useRef<any>()
+    const isRight = useRef<boolean>(false)
     return (
-        <div className={styles["http-fuzzer-range-editor-menu"]}>
-            <div className={styles["menu-header"]}>
-                <YakitSegmented
-                    className={styles["segmented-type"]}
-                    value={segmentedType}
-                    onChange={(v) => {
-                        // @ts-ignore
-                        setSegmentedType(v)
-                    }}
-                    options={[
-                        {
-                            label: "编码",
-                            value: "encode"
-                        },
-                        {
-                            label: "智能解码",
-                            value: "decode"
-                        }
-                    ]}
-                />
+        <div className={styles["http-fuzzer-range-editor"]} ref={fuzzerElementRef}>
+            <div
+                className={styles["http-fuzzer-range-editor-simple"]}
+            >
+                <div className={styles["show-box"]}>
+                    <div
+                        className={styles["encode-box"]}
+                        onMouseEnter={() => {
+                            setSegmentedType("encode")
+                        }}
+                    >
+                        <IconSolidCodeIcon className={styles["tag"]} />
+                        <div className={styles["content"]}>编码</div>
+                        {segmentedType === "encode" ? (
+                            <ChevronUpIcon className={styles["up"]} />
+                        ) : (
+                            <ChevronDownIcon className={styles["down"]} />
+                        )}
+                    </div>
+                    <div className={styles["line"]}></div>
+                    <div
+                        className={styles["decode-box"]}
+                        onClick={() => {
+                            setSegmentedType("decode")
+                        }}
+                    >
+                        <IconSolidSparklesIcon className={styles[""]} />
+                        <div className={styles["content"]}>解码</div>
+                    </div>
+                </div>
             </div>
-            <div className={styles["menu-content"]}>
-                {segmentedType === "encode" ? (
-                    <EncodeComponent insert={insert} />
-                ) : (
-                    <DecodeComponent rangeValue={rangeValue} replace={replace} />
-                )}
-            </div>
+            {segmentedType && (
+                <div
+                    style={{...directionStyle(direction), ...(isRight.current && {right: 0})}}
+                    className={styles["http-fuzzer-range-editor-menu"]}
+                    onMouseLeave={() => setSegmentedType(undefined)}
+                >
+                    <div className={styles["menu-content"]}>
+                        {segmentedType === "encode" ? (
+                            <EncodeComponent insert={insert} />
+                        ) : (
+                            <DecodeComponent rangeValue={rangeValue} replace={replace} />
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
 
 interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
+    direction?: CountDirectionProps
     rangeValue: string
 }
 
 export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
-    const {rangeValue} = props
+    const {direction, rangeValue} = props
+    const [segmentedType, setSegmentedType] = useState<"decode">()
     return (
-        <div className={styles["http-fuzzer-range-read-only-editor-menu"]}>
-            <DecodeComponent rangeValue={rangeValue} isReadOnly={true} />
+        <div className={styles["http-fuzzer-read-editor"]}>
+            <div className={styles["http-fuzzer-read-editor-simple"]}>
+                <div className={styles["show-box"]}>
+                    <div className={styles["decode-box"]} onClick={() => setSegmentedType("decode")}>
+                        <IconSolidSparklesIcon className={styles[""]} />
+                        <div className={styles["content"]}>解码</div>
+                    </div>
+                </div>
+            </div>
+            {segmentedType && (
+                <div
+                    style={directionStyle(direction)}
+                    className={styles["http-fuzzer-range-read-only-editor-menu"]}
+                    onMouseLeave={() => setSegmentedType(undefined)}
+                >
+                    <DecodeComponent rangeValue={rangeValue} isReadOnly={true} />
+                </div>
+            )}
         </div>
     )
 }

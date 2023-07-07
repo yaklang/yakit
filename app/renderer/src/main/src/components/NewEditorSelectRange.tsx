@@ -4,15 +4,19 @@ import ReactDOM from "react-dom"
 import {editor} from "monaco-editor"
 import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
 
+export interface CountDirectionProps {
+    x?: string
+    y?: string
+}
 export interface NewEditorSelectRangeProps extends NewHTTPPacketEditorProp {
     // 编辑器点击弹窗的唯一Id
     selectId?: string
     // 点击弹窗内容
-    selectNode?: (v) => ReactElement
+    selectNode?: (close: () => void, direction?: CountDirectionProps, editorInfo?: any) => ReactElement
     // 编辑器选中弹窗的唯一Id
     rangeId?: string
     // 选中弹窗内容
-    rangeNode?: (v) => ReactElement
+    rangeNode?: (close: () => void, direction?: CountDirectionProps, editorInfo?: any) => ReactElement
     // 超出多少行将弹窗隐藏(默认三行)
     overLine?: number
 }
@@ -21,6 +25,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const downPosY = useRef<number>()
     const upPosY = useRef<number>()
+    // 焦点所在编辑器方位(上下左右)
+    const direction = useRef<CountDirectionProps>()
+    // 编辑器信息(长宽等)
+    const editorInfo = useRef<any>()
     useEffect(() => {
         if (reqEditor) {
             editerMenuFun(reqEditor)
@@ -39,8 +47,9 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement("div")
                 // 解决弹窗内鼠标滑轮无法滚动的问题
-                domNode.onwheel = (e)=> e.stopPropagation();
-                selectNode && ReactDOM.render(selectNode(closeFizzSelectWidget), domNode)
+                domNode.onwheel = (e) => e.stopPropagation()
+                selectNode &&
+                    ReactDOM.render(selectNode(closeFizzSelectWidget, direction.current, editorInfo.current), domNode)
                 return domNode
             },
             getPosition: function () {
@@ -69,12 +78,14 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement("div")
                 // 解决弹窗内鼠标滑轮无法滚动的问题
-                domNode.onwheel = (e)=> e.stopPropagation();
-                rangeNode && ReactDOM.render(rangeNode(closeFizzRangeWidget), domNode)
+                domNode.onwheel = (e) => e.stopPropagation()
+                rangeNode &&
+                    ReactDOM.render(rangeNode(closeFizzRangeWidget, direction.current, editorInfo.current), domNode)
                 return domNode
             },
             getPosition: function () {
                 const currentPos = reqEditor.getPosition()
+
                 return {
                     position: {
                         lineNumber: currentPos?.lineNumber || 0,
@@ -146,10 +157,6 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
             }
         })
 
-        // 失去焦点时触发
-        reqEditor.onDidBlurEditorWidget(() => {
-            // closeFizzSelectWidget()
-        })
         // 移出编辑器时触发
         reqEditor.onMouseLeave(() => {
             closeFizzSelectWidget()
@@ -166,33 +173,85 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
         })
 
         reqEditor.onMouseUp((e) => {
-            const {leftButton, rightButton, posy} = e.event
-            if (leftButton) {
-                upPosY.current = posy
-                const selection = reqEditor.getSelection()
-                if (selection) {
-                    const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
-                    if (fizzSelectWidget.isOpen && selectedText.length === 0) {
-                        // 更新点击菜单小部件的位置
-                        fizzSelectWidget.update()
-                    } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
-                        fizzRangeWidget.update()
-                    } else if (selectedText.length === 0) {
-                        closeFizzRangeWidget()
-                        // 展示点击的菜单
-                        selectId && reqEditor.addContentWidget(fizzSelectWidget)
-                        fizzSelectWidget.isOpen = true
-                    } else {
-                        closeFizzSelectWidget()
-                        // 展示选中的菜单
-                        rangeId && reqEditor.addContentWidget(fizzRangeWidget)
-                        fizzRangeWidget.isOpen = true
+            // @ts-ignore
+            const {leftButton, rightButton, posx, posy, editorPos} = e.event
+            // 获取编辑器所处x，y轴,并获取其长宽
+            const {x, y} = editorPos
+            const editorHeight = editorPos.height
+            const editorWidth = editorPos.width
+
+            // 计算焦点的坐标位置
+            let a: any = reqEditor.getPosition()
+            const position = reqEditor.getScrolledVisiblePosition(a)
+            if (position) {
+                // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
+                const {top, left, height} = position
+
+                // 解决方法1
+                // 获取焦点位置判断焦点所处于编辑器的位置（上下左右）从而决定弹出层显示方向
+                // 问题  需要焦点位置进行计算 如何获取焦点位置？  目前仅找到行列号 无法定位到其具体坐标位置
+                // console.log("焦点位置：", e, x, left, y, top, x + left, y + top)
+                const focusX = x + left
+                const focusY = y + top
+
+                if (leftButton) {
+                    // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
+                    const editorContainer = reqEditor.getDomNode()
+                    if (editorContainer) {
+                        const editorContainerInfo = editorContainer.getBoundingClientRect()
+                        const {top, bottom, left, right} = editorContainerInfo
+                        editorInfo.current = editorContainerInfo
+
+                        // 判断焦点位置
+                        const isTopHalf = focusY < (top + bottom) / 2
+                        const isLeftHalf = focusX < (left + right) / 2
+                        // 行高
+                        const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
+
+                        let countDirection: CountDirectionProps = {}
+                        if (isTopHalf) {
+                            // 鼠标位于编辑器上半部分
+                            countDirection.y = "top"
+                        } else {
+                            // 鼠标位于编辑器下半部分
+                            countDirection.y = "bottom"
+                        }
+                        if (isLeftHalf) {
+                            // 鼠标位于编辑器左半部分
+                            countDirection.x = "left"
+                        } else {
+                            // 鼠标位于编辑器右半部分
+                            countDirection.x = "right"
+                        }
+                        direction.current = countDirection
+                    }
+
+                    upPosY.current = posy
+                    const selection = reqEditor.getSelection()
+                    if (selection) {
+                        const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
+                        if (fizzSelectWidget.isOpen && selectedText.length === 0) {
+                            // 更新点击菜单小部件的位置
+                            fizzSelectWidget.update()
+                        } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
+                            fizzRangeWidget.update()
+                        } else if (selectedText.length === 0) {
+                            closeFizzRangeWidget()
+                            // 展示点击的菜单
+                            selectId && reqEditor.addContentWidget(fizzSelectWidget)
+                            fizzSelectWidget.isOpen = true
+                        } else {
+                            closeFizzSelectWidget()
+                            // 展示选中的菜单
+                            rangeId && reqEditor.addContentWidget(fizzRangeWidget)
+                            fizzRangeWidget.isOpen = true
+                        }
                     }
                 }
-            }
-            if (rightButton) {
-                closeFizzRangeWidget()
-                closeFizzSelectWidget()
+                if (rightButton) {
+                    closeFizzRangeWidget()
+                    closeFizzSelectWidget()
+                }
             }
         })
         // 监听光标移动

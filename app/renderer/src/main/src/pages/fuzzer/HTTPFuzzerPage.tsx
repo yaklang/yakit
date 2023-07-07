@@ -1502,9 +1502,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                             editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                             selectId='monaco.fizz.select.widget'
-                            selectNode={(closeFizzSelectWidget) => (
+                            selectNode={(close, direction) => (
                                 <HTTPFuzzerClickEditorMenu
-                                    close={() => closeFizzSelectWidget()}
+                                    direction={direction}
+                                    close={() => close()}
                                     insert={(v: QueryFuzzerLabelResponseProps) => {
                                         if (v.Label) {
                                             reqEditor && reqEditor.trigger("keyboard", "type", {text: v.Label})
@@ -1512,17 +1513,18 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             reqEditor &&
                                                 insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
                                         }
-                                        closeFizzSelectWidget()
+                                        close()
                                     }}
                                     addLabel={() => {
-                                        closeFizzSelectWidget()
+                                        close()
                                         onInsertYakFuzzer()
                                     }}
                                 />
                             )}
                             rangeId='monaco.fizz.range.widget'
-                            rangeNode={(closeFizzRangeWidget) => (
+                            rangeNode={(closeFizzRangeWidget, direction) => (
                                 <HTTPFuzzerRangeEditorMenu
+                                    direction={direction}
                                     insert={(fun: any) => {
                                         if (reqEditor) {
                                             const selectedText =
@@ -2183,8 +2185,9 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
                             rangeId='monaco.fizz.range.read.only.widget'
-                            rangeNode={() => (
+                            rangeNode={(close, direction) => (
                                 <HTTPFuzzerRangeReadOnlyEditorMenu
+                                    direction={direction}
                                     rangeValue={
                                         (reqEditor &&
                                             reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
