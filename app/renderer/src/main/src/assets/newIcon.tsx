@@ -1796,3 +1796,112 @@ const SMViewGridAdd = () => (
 export const SMViewGridAddIcon = (props: Partial<IconProps>) => {
     return <Icon component={SMViewGridAdd} {...props} />
 }
+
+const IconSolidTag = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M14.1657 7.43441C14.4781 7.74683 14.4781 8.25336 14.1657 8.56578L8.56566 14.1658C8.25324 14.4782 7.74671 14.4782 7.43429 14.1658L1.83429 8.56578C1.67806 8.40955 1.59995 8.20477 1.59998 8V4.0001C1.59998 2.67461 2.67449 1.6001 3.99998 1.6001H8.00019C8.20486 1.60015 8.40951 1.67826 8.56566 1.83441L14.1657 7.43441ZM3.99998 4.8001C4.4418 4.8001 4.79998 4.44193 4.79998 4.0001C4.79998 3.55827 4.4418 3.2001 3.99998 3.2001C3.55815 3.2001 3.19998 3.55827 3.19998 4.0001C3.19998 4.44193 3.55815 4.8001 3.99998 4.8001Z'
+            fill='url(#paint0_linear_15674_1492)'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_15674_1492'
+                x1='4.79997'
+                y1='1.6001'
+                x2='11.0736'
+                y2='15.0963'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#63DDA1' />
+                <stop offset='1' stopColor='#35BC7A' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+/**
+ * @description  Icon/Solid/tag
+ */
+export const IconSolidTagIcon = (props: Partial<IconProps>) => {
+    return <Icon component={IconSolidTag} {...props} />
+}
+
+const IconSolidCode = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M9.85303 2.44117C10.2722 2.58089 10.4987 3.03395 10.359 3.4531L7.159 13.0531C7.01928 13.4723 6.56622 13.6988 6.14707 13.5591C5.72791 13.4193 5.50138 12.9663 5.6411 12.5471L8.8411 2.94714C8.98082 2.52798 9.43388 2.30145 9.85303 2.44117ZM4.56573 5.03443C4.87815 5.34685 4.87815 5.85338 4.56573 6.1658L2.73142 8.00012L4.56573 9.83443C4.87815 10.1469 4.87815 10.6534 4.56573 10.9658C4.25331 11.2782 3.74678 11.2782 3.43436 10.9658L1.03436 8.5658C0.721944 8.25339 0.721944 7.74685 1.03436 7.43443L3.43436 5.03443C3.74678 4.72201 4.25331 4.72201 4.56573 5.03443ZM11.4344 5.03443C11.7468 4.72201 12.2533 4.72201 12.5657 5.03443L14.9657 7.43443C15.2782 7.74685 15.2782 8.25339 14.9657 8.5658L12.5657 10.9658C12.2533 11.2782 11.7468 11.2782 11.4344 10.9658C11.1219 10.6534 11.1219 10.1469 11.4344 9.83443L13.2687 8.00012L11.4344 6.1658C11.1219 5.85338 11.1219 5.34685 11.4344 5.03443Z'
+            fill='url(#paint0_linear_15685_3932)'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_15685_3932'
+                x1='0.687576'
+                y1='2.15371'
+                x2='16.1287'
+                y2='11.933'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#DA5FDD' />
+                <stop offset='1' stopColor='#8863F7' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/code
+ */
+export const IconSolidCodeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={IconSolidCode} {...props} />
+}
+
+const IconSolidSparkles = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M4.0001 1.6001C4.44193 1.6001 4.8001 1.95827 4.8001 2.4001V3.2001H5.6001C6.04192 3.2001 6.4001 3.55827 6.4001 4.0001C6.4001 4.44193 6.04192 4.8001 5.6001 4.8001H4.8001V5.6001C4.8001 6.04192 4.44193 6.4001 4.0001 6.4001C3.55827 6.4001 3.2001 6.04192 3.2001 5.6001V4.8001H2.4001C1.95827 4.8001 1.6001 4.44193 1.6001 4.0001C1.6001 3.55827 1.95827 3.2001 2.4001 3.2001H3.2001V2.4001C3.2001 1.95827 3.55827 1.6001 4.0001 1.6001ZM4.0001 9.6001C4.44193 9.6001 4.8001 9.95827 4.8001 10.4001V11.2001H5.6001C6.04192 11.2001 6.4001 11.5583 6.4001 12.0001C6.4001 12.4419 6.04192 12.8001 5.6001 12.8001H4.8001V13.6001C4.8001 14.0419 4.44193 14.4001 4.0001 14.4001C3.55827 14.4001 3.2001 14.0419 3.2001 13.6001V12.8001H2.4001C1.95827 12.8001 1.6001 12.4419 1.6001 12.0001C1.6001 11.5583 1.95827 11.2001 2.4001 11.2001H3.2001V10.4001C3.2001 9.95827 3.55827 9.6001 4.0001 9.6001Z'
+            fill='url(#paint0_linear_15685_3942)'
+        />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M9.60006 1.6001C9.96304 1.6001 10.2805 1.84448 10.3734 2.19538L11.3168 5.75924L13.9998 7.30715C14.2475 7.45002 14.4001 7.71419 14.4001 8.0001C14.4001 8.286 14.2475 8.55017 13.9998 8.69305L11.3168 10.241L10.3734 13.8048C10.2805 14.1557 9.96304 14.4001 9.60006 14.4001C9.23707 14.4001 8.91958 14.1557 8.82669 13.8048L7.88332 10.241L5.20032 8.69304C4.95267 8.55017 4.8001 8.286 4.8001 8.0001C4.8001 7.71419 4.95267 7.45002 5.20032 7.30715L7.88332 5.75924L8.82669 2.19538C8.91958 1.84448 9.23707 1.6001 9.60006 1.6001Z'
+            fill='url(#paint1_linear_15685_3942)'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_15685_3942'
+                x1='10.8445'
+                y1='14.8572'
+                x2='3.04667'
+                y2='2.7273'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#2A82F8' />
+                <stop offset='1' stopColor='#8FBFFF' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_15685_3942'
+                x1='10.8445'
+                y1='14.8572'
+                x2='3.04667'
+                y2='2.7273'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#2A82F8' />
+                <stop offset='1' stopColor='#8FBFFF' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/sparkles
+ */
+export const IconSolidSparklesIcon = (props: Partial<IconProps>) => {
+    return <Icon component={IconSolidSparkles} {...props} />
+}

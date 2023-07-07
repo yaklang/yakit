@@ -1,4 +1,50 @@
+.http-fuzzer-click-editor {
+    width: 104px;
+    height: 24px;
+    position: relative;
+    .http-fuzzer-click-editor-simple {
+        box-sizing: content-box;
+        background-color: #ffffff;
+        border-radius: 6px;
+        border: 0.5px solid #eaecf3;
+        box-shadow: 0px 2px 4px 0px rgba(133, 137, 158, 0.2);
+        padding: 2px;
+        .show-box {
+            box-sizing: content-box;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            .tag {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+            .content {
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+            }
+            .down,
+            .up {
+                svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+            &:hover {
+                background: #f0f1f3;
+                border-radius: 4px;
+            }
+        }
+    }
+}
 .http-fuzzer-click-editor-menu {
+    position: absolute;
+    margin-top: 2px;
     width: 360px;
     height: 350px;
     border: 1px solid #eaecf3;
@@ -81,9 +127,9 @@
                     line-height: 16px;
                     color: #31343f;
                     flex: 1;
-                    white-space: nowrap; 
-                    overflow: hidden; 
-                    text-overflow: ellipsis; 
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
                 .sub-title {
                     color: #b4bbca;
@@ -121,9 +167,69 @@
         }
     }
 }
+.http-fuzzer-range-editor {
+    position: relative;
+    width: 152px;
+    height: 28px;
+    .http-fuzzer-range-editor-simple {
+        flex-shrink: 0;
+        background-color: #ffffff;
+        border-radius: 6px;
+        border: 0.5px solid #eaecf3;
+        box-shadow: 0px 2px 4px 0px rgba(133, 137, 158, 0.2);
+        padding: 2px;
+        .show-box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            .line {
+                width: 1px;
+                background-color: #eaecf3;
+                height: 12px;
+            }
+            .decode-box {
+                cursor: pointer;
+            }
+            .encode-box,
+            .decode-box {
+                padding: 4px 8px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                .tag {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+                .content {
+                    color: #31343f;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 16px;
+                }
+                .down,
+                .up {
+                    svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+                &:hover {
+                    background: #f0f1f3;
+                    border-radius: 4px;
+                }
+            }
+        }
+    }
+}
 .http-fuzzer-range-editor-menu {
+    position: absolute;
+    margin-top: 2px;
     width: 360px;
-    height: 250px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 8px 4px 6px 4px;
@@ -131,11 +237,7 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
-    .menu-header {
-        padding: 4px 12px 0px 12px;
-    }
     .menu-content {
-        margin-top: 8px;
         flex: 1;
         overflow: auto;
         .encode-box {
@@ -166,7 +268,59 @@
         }
     }
 }
+.http-fuzzer-read-editor {
+    position: relative;
+    width: 68px;
+    height: 28px;
+    .http-fuzzer-read-editor-simple {
+        flex-shrink: 0;
+        background-color: #ffffff;
+        border-radius: 6px;
+        border: 0.5px solid #eaecf3;
+        box-shadow: 0px 2px 4px 0px rgba(133, 137, 158, 0.2);
+        padding: 2px;
+        .show-box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            .decode-box {
+                padding: 4px 8px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                .tag {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+                .content {
+                    color: #31343f;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 16px;
+                }
+                .down,
+                .up {
+                    svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+                &:hover {
+                    background: #f0f1f3;
+                    border-radius: 4px;
+                }
+            }
+        }
+    }
+}
 .http-fuzzer-range-read-only-editor-menu {
+    position: absolute;
+    margin-top: 2px;
     width: 360px;
     height: 250px;
     border: 1px solid #eaecf3;
