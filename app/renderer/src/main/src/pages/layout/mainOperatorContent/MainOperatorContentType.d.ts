@@ -83,20 +83,20 @@ export interface PageItemProps {
 
 /**
  * @description 二级Tab展示
- * @property tabLength tab长度
  * @property item 一级tab详情
  * @property index 在数组中的下标
  * @property currentTabKey 当前选择的tab key
  * @function onSelect 选中一级tab
  * @function onRemove 删除一级tab
+ * @function onContextMenu 右键操作
  */
 export interface TabItemProps {
-    tabLength: number
     item: PageCache
     index: number
     currentTabKey: YakitRoute | string
     onSelect: (p: PageCache, key: string) => void
     onRemove: (p: PageCache) => void
+    onContextMenu: (e: React.MouseEvent) => void
 }
 
 /**
@@ -119,14 +119,13 @@ export interface SubTabListProps {
 }
 /**
  * @description 二级tab item
- * @property subPageLength  二级tab长度
  * @property subItem  二级详情
  * @property index 在数组中的下标
  * @property selectSubMenu 选中的二级tab详情
  * @function setSelectSubMenu 选中二级tab
+ * @function onContextMenu 右键操作
  */
 export interface SubTabItemProps {
-    subPageLength: number
     subItem: MultipleNodeInfo
     index: number
     selectSubMenu: MultipleNodeInfo
@@ -135,11 +134,15 @@ export interface SubTabItemProps {
     onContextMenu: (e: React.MouseEvent) => void
 }
 
-export interface TabContentRefProps {
-    currentTabKey: YakitRoute | string
-    setCurrentTabKey: (s: YakitRoute | string) => void
-}
 
+/**
+ * @description MainOperatorContextProps
+ * @property pageCache  路由数据
+ * @function setPageCache 修改路由
+ * @property currentTabKey 一级选中的tab
+ * @function setCurrentTabKey 设置选中tab
+ * @function openMultipleMenuPage 打开页面
+ */
 export interface MainOperatorContextProps {
     pageCache: PageCache[]
     setPageCache: (p: PageCache[]) => void

@@ -94,6 +94,13 @@ $keyColor: map-keys($colors);
         align-items: center;
         position: relative;
         background-color: var(--yakit-card-background-color);
+
+        overflow-x: auto;
+        overflow-y: hidden;
+        // 下面是滚动条的样式
+        &::-webkit-scrollbar {
+            display: none;
+        }
         &::before {
             @extend .grey-link;
             top: 0;
@@ -116,15 +123,14 @@ $keyColor: map-keys($colors);
             border-right: 1px solid var(--yakit-border-color);
             overflow: hidden;
             max-width: 200px;
+            min-width: 24px;
             justify-content: space-between;
             position: relative;
+
             &:hover {
                 @extend .dragging;
             }
-            &:last-child {
-                border-right-width: 0;
-            }
-            .tab-menu-item-left-verbose {
+            .tab-menu-item-verbose {
                 flex: 1;
 
                 span {
@@ -168,6 +174,18 @@ $keyColor: map-keys($colors);
             @extend .dragging;
         }
     }
+    .tab-menu-sub-body {
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        background-color: var(--yakit-card-background-color);
+        position: relative;
+        &::after {
+            @extend .fake-content;
+            bottom: 0;
+            background-color: var(--yakit-border-color);
+        }
+    }
     .tab-menu-sub {
         display: flex;
         align-items: center;
@@ -175,11 +193,16 @@ $keyColor: map-keys($colors);
         height: 32px;
         background-color: var(--yakit-card-background-color);
 
-        &::after {
-            @extend .fake-content;
-            bottom: 0;
-            background-color: var(--yakit-border-color);
+        max-width: calc(100% - 32px);
+        overflow: hidden;
+        overflow-x: auto;
+        // justify-content: end;
+
+        // 下面是滚动条的样式
+        &::-webkit-scrollbar {
+            display: none;
         }
+
         .tab-menu-sub-group {
             display: flex;
             border-radius: 4px;
@@ -217,7 +240,6 @@ $keyColor: map-keys($colors);
             padding: 4px 8px;
             align-items: center;
             gap: 8px;
-            background-color: var(--yakit-card-background-color);
             cursor: pointer;
             flex: 1;
             word-break: keep-all;
@@ -225,16 +247,13 @@ $keyColor: map-keys($colors);
             overflow: hidden;
             max-width: 200px;
             min-width: 24px;
+            // width: fit-content;
             justify-content: space-between;
 
             &:hover {
                 @extend .dragging;
             }
             span {
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
                 min-width: 16px;
             }
             &::after {
@@ -301,26 +320,11 @@ $keyColor: map-keys($colors);
             height: 16px;
         }
     }
-    .tab-menu-item-left-verbose {
+    .tab-menu-item-verbose {
         @extend .flex-align-center;
         justify-content: space-between;
         gap: 4px;
         overflow: hidden;
-    }
-
-    .tab-menu-item-left-verbose[title]:hover::after {
-        content: attr(title);
-        color: #fff;
-        position: fixed;
-        transform: translate(0, -30px);
-        background: #404040;
-        border-radius: 4px;
-        padding: 4px 6px;
-        z-index: 9;
-        width: max-content;
-    }
-    .tab-menu-item-right-verbose[title]:hover::after {
-        transform: translate(-80%, -30px);
     }
 }
 
@@ -348,5 +352,15 @@ $keyColor: map-keys($colors);
         width: 16px;
         height: 16px;
         border-radius: 4px;
+    }
+}
+
+.toolTip-overlay {
+    padding-bottom: 4px;
+    max-width: initial;
+    :global {
+        .ant-tooltip-arrow {
+            display: none;
+        }
     }
 }
