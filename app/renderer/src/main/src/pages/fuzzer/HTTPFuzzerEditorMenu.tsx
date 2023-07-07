@@ -112,8 +112,6 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const [selectLabel, setSelectLabel] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
     const [isEnterSimple, setEnterSimple] = useState<boolean>(false)
-    const clickElementRef = useRef<any>()
-    const isRight = useRef<boolean>(false)
     const getData = () => {
         ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -155,7 +153,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const isSelect = (item: QueryFuzzerLabelResponseProps) => selectLabel === item.Hash
     
     return (
-        <div className={styles["http-fuzzer-click-editor"]} ref={clickElementRef}>
+        <div className={styles["http-fuzzer-click-editor"]}>
             <div className={styles["http-fuzzer-click-editor-simple"]}>
                 <div
                     className={styles["show-box"]}
@@ -176,7 +174,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                 <div
                     className={styles["http-fuzzer-click-editor-menu"]}
                     onMouseLeave={() => setEnterSimple(false)}
-                    style={{...directionStyle(direction), ...(isRight.current && {right: 0})}}
+                    style={{...directionStyle(direction)}}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
@@ -496,10 +494,8 @@ export interface HTTPFuzzerRangeEditorMenuProps {
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
     const {direction, insert, rangeValue, replace} = props
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
-    const fuzzerElementRef = useRef<any>()
-    const isRight = useRef<boolean>(false)
     return (
-        <div className={styles["http-fuzzer-range-editor"]} ref={fuzzerElementRef}>
+        <div className={styles["http-fuzzer-range-editor"]}>
             <div
                 className={styles["http-fuzzer-range-editor-simple"]}
             >
@@ -532,7 +528,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             </div>
             {segmentedType && (
                 <div
-                    style={{...directionStyle(direction), ...(isRight.current && {right: 0})}}
+                    style={{...directionStyle(direction)}}
                     className={styles["http-fuzzer-range-editor-menu"]}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
