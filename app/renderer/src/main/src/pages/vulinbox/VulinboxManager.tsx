@@ -56,8 +56,12 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
     }, [])
 
     useEffect(() => {
-        ipcRenderer.invoke("IsVulinboxReady", {}).then(() => {
-            setAvailable(true)
+        ipcRenderer.invoke("IsVulinboxReady", {}).then((res) => {
+            if (res.Ok) {
+                setAvailable(true)
+            } else {
+                failed(res.Reason)
+            }
         }).catch((e) => {
             failed(`${e}`)
             setAvailable(false)
