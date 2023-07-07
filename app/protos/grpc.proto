@@ -549,30 +549,6 @@ message StartVulinboxRequest {
   bool SafeMode = 4;
 }
 
-message IsVulinboxReadyRequest {
-
-}
-
-message IsVulinboxReadyResponse {
-  bool Ok = 1;
-  string Reason = 2;
-}
-
-message InstallVulinboxRequest {
-  string Proxy = 1;
-}
-
-message StartVulinboxRequest {
-  // 默认应该是 127.0.0.1
-  string Host = 1;
-  // 默认应该是 8787
-  string Port = 2;
-  // 不启用 HTTPS
-  bool NoHttps = 3;
-  // 安全模式：不启用命令执行靶场
-  bool SafeMode = 4;
-}
-
 message DebugPluginRequest {
   string Code = 1;
   string PluginType = 2;
@@ -3327,6 +3303,8 @@ message MITMRequest {
   bool enableProxyAuth = 51;
   string proxyUsername = 49;
   string proxyPassword = 50;
+  repeated string dnsServers = 52;
+  repeated KVPair hosts = 53;
 }
 
 message Certificate {
