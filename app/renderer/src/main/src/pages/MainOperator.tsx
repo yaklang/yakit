@@ -285,6 +285,7 @@ export interface PageCache {
     multipleCurrentKey?: string
     multipleLength?: number
     hideAdd?: boolean
+    disableClose?: boolean
 }
 // 页面的唯一标识属性
 interface OnlyPageCache {
@@ -324,8 +325,17 @@ const getInitPageCache: () => PageCache[] = () => {
             menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
             route: YakitRoute.NewHome,
             singleNode: RouteToPage(YakitRoute.NewHome),
-            multipleNode: []
-        }
+            multipleNode: [],
+            disableClose: true,
+        },
+        {
+            verbose: "HTTP History",
+            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+            route: YakitRoute.DB_HTTPHistory,
+            singleNode: RouteToPage(YakitRoute.DB_HTTPHistory),
+            multipleNode: [],
+            disableClose: true,
+        },
     ]
 }
 // 软件初始化时的默认当前打开页面的key
@@ -761,7 +771,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
                         route: YakitRoute.NewHome,
                         singleNode: RouteToPage(YakitRoute.NewHome),
-                        multipleNode: []
+                        multipleNode: [],
+                        disableClose: true,
                     })
                 }
                 setPageCache(arr)
@@ -1489,7 +1500,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                                             tab={i.verbose}
                                                             closeIcon={
                                                                 <Space>
-                                                                    {i.verbose !== "首页" && (
+                                                                    {!i.disableClose && (
                                                                         <CloseOutlined
                                                                             className='main-container-cion'
                                                                             onClick={() => onBeforeRemovePage(onlyPage)}
