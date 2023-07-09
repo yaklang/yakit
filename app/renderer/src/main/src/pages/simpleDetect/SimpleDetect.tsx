@@ -52,6 +52,7 @@ import {PresetPorts} from "@/pages/portscan/schema"
 import {v4 as uuidv4} from "uuid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import { YakitRoute } from "@/routes/newRoute"
+import {BruteParamsForm, StartBruteParams} from "@/pages/brute/BrutePage";
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -128,7 +129,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
 
-    const [params, setParams, getParams] = useGetState<PortScanParams>({
+    const [portParams, setPortParams, getPortParams] = useGetState<PortScanParams>({
         Ports: "",
         Mode: "fingerprint",
         Targets: "",
@@ -161,6 +162,29 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         Proxy: []
     })
 
+    const [bruteParams, setBruteParams,getBruteParams] = useGetState<StartBruteParams>({
+        Concurrent: 50,
+        DelayMax: 5,
+        DelayMin: 1,
+        OkToStop: true,
+        PasswordFile: "",
+        Passwords: [],
+        PasswordsDict: [],
+        ReplaceDefaultPasswordDict: false,
+        PluginScriptName: "",
+        Prefix: "",
+        TargetFile: "",
+        TargetTaskConcurrent: 1,
+        Targets: "",
+        Type: "",
+        UsernameFile: "",
+        Usernames: [],
+        UsernamesDict: [],
+        ReplaceDefaultUsernameDict: false,
+
+        usernameValue: "",
+        passwordValue: ""
+    })
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
     const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "合规检测"])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
@@ -171,15 +195,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         switch (getScanDeep()) {
             // 快速
             case 3:
-                setParams({...params, Ports: PresetPorts["fast"]})
+                setPortParams({...portParams, Ports: PresetPorts["fast"]})
                 break
             // 适中
             case 2:
-                setParams({...params, Ports: PresetPorts["middle"]})
+                setPortParams({...portParams, Ports: PresetPorts["middle"]})
                 break
             // 慢速
             case 1:
-                setParams({...params, Ports: PresetPorts["slow"]})
+                setPortParams({...portParams, Ports: PresetPorts["slow"]})
                 break
         }
     }, [getScanDeep()])
@@ -191,7 +215,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         if (oldRunParams) {
             const {LastRecord, PortScanRequest} = oldRunParams
             const {Targets, TargetsFile} = PortScanRequest
-            setParams({...params, Targets, TargetsFile})
+            setPortParams({...portParams, Targets, TargetsFile})
             setShield(true)
         }
     }, [oldRunParams])
@@ -227,15 +251,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         if (!isInputValue.current) {
             // 任务名称-时间戳-扫描目标
             let taskNameTimeTarget: string = moment(new Date()).unix().toString()
-            if (params?.Targets && params.Targets.length > 0) {
-                taskNameTimeTarget = params.Targets.split(",")[0].split(/\n/)[0]
+            if (portParams?.Targets && portParams.Targets.length > 0) {
+                taskNameTimeTarget = portParams.Targets.split(",")[0].split(/\n/)[0]
             }
             form.setFieldsValue({
                 TaskName: `${getScanType()}-${taskNameTimeTarget}`
             })
             setRunTaskName(`${getScanType()}-${taskNameTimeTarget}`)
         }
-    }, [getScanType(), executing, params?.Targets])
+    }, [getScanType(), executing, portParams?.Targets])
 
     useEffect(() => {
         if (TaskName) {
@@ -248,7 +272,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     // 保存任务
     const saveTask = (v?: string) => {
         const cacheData = v ? JSON.parse(v) : false
-        let newParams: PortScanParams = {...getParams()}
+        let newParams: PortScanParams = {...getPortParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
         // 继续任务暂存报告参数 用于恢复任务下载 --如果直接关闭Dom则无法存储报告
         const ReportParams = getReportParams()
@@ -289,7 +313,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 PortScanRequest
             }
         } else {
-            let newParams: PortScanParams = {...getParams()}
+            let newParams: PortScanParams = {...getPortParams()}
             const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
             obj = {
                 LastRecord: {
@@ -312,13 +336,14 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     const run = (OnlineGroup: string, TaskName: string) => {
         setPercent(0)
-        setRunPluginCount(getParams().ScriptNames.length)
+        setRunPluginCount(getPortParams().ScriptNames.length)
 
         reset()
-        console.log("params11----", getParams())
+        console.log("params11----", getPortParams())
         setRunTaskName(TaskName)
         setExecuting(true)
-        let newParams: PortScanParams = {...getParams()}
+        let newParams: PortScanParams = {...getPortParams()}
+        let StartBruteParams: StartBruteParams = {...getBruteParams()}
         switch (getScanDeep()) {
             // 快速
             case 3:
@@ -349,10 +374,16 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         const runTaskNameEx = TaskName + "-" + nowUUID
         let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
         setAllowDownloadReport(true)
+        console.log({
+            LastRecord,
+            StartBruteParams,
+            PortScanRequest
+        })
         ipcRenderer.invoke(
             "SimpleDetect",
             {
                 LastRecord,
+                StartBruteParams,
                 PortScanRequest
             },
             token
@@ -371,7 +402,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     const onFinish = useMemoizedFn((values) => {
         const {TaskName} = values
-        if (!params.Targets && !params.TargetsFile) {
+        if (!portParams.Targets && !portParams.TargetsFile) {
             warn("需要设置扫描目标")
             return
         }
@@ -383,7 +414,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             warn("请选择自定义内容")
             return
         }
-        if (params.Ports.length === 0) {
+        if (portParams.Ports.length === 0) {
             warn("请选择或输入扫描端口")
             return
         }
@@ -401,7 +432,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
-                    setParams({...getParams(), ScriptNames})
+                    setPortParams({...getPortParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
                 })
                 .catch((e) => {
@@ -459,7 +490,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 return false
                             }
                             setUploadLoading(true)
-                            const TargetsFile = getParams().TargetsFile
+                            const TargetsFile = getPortParams().TargetsFile
                             const absPath: string = (f as any).path
                             // 当已有文件上传时
                             if (TargetsFile && TargetsFile?.length > 0) {
@@ -472,13 +503,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 }
                                 // 当不存在时添加
                                 if (!arr.includes(absPath)) {
-                                    setParams({...params, TargetsFile: `${TargetsFile},${absPath}`})
+                                    setPortParams({...portParams, TargetsFile: `${TargetsFile},${absPath}`})
                                 } else {
                                     info("路径已存在，请勿重复上传")
                                 }
                             } // 当未上传过文件时
                             else {
-                                setParams({...params, TargetsFile: absPath})
+                                setPortParams({...portParams, TargetsFile: absPath})
                             }
                             setUploadLoading(false)
                             return false
@@ -489,8 +520,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }}
                         textarea={{
                             isBubbing: true,
-                            setValue: (Targets) => setParams({...params, Targets}),
-                            value: params.Targets,
+                            setValue: (Targets) => setPortParams({...portParams, Targets}),
+                            value: portParams.Targets,
                             rows: 1,
                             placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
                             disabled: executing || shield
@@ -500,12 +531,12 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                 <span className={styles["help-hint-title"]}>
                                     <Checkbox
                                         onClick={(e) => {
-                                            setParams({
-                                                ...params,
-                                                SkippedHostAliveScan: !params.SkippedHostAliveScan
+                                            setPortParams({
+                                                ...portParams,
+                                                SkippedHostAliveScan: !portParams.SkippedHostAliveScan
                                             })
                                         }}
-                                        checked={params.SkippedHostAliveScan}
+                                        checked={portParams.SkippedHostAliveScan}
                                     >
                                         跳过主机存活检测
                                     </Checkbox>
@@ -525,9 +556,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                                         isSetPort={isSetSpeed.current !== getScanDeep()}
                                                         deepLevel={getScanDeep()}
                                                         isSimpleDetectShow={true}
-                                                        defaultParams={params}
+                                                        defaultParams={portParams}
                                                         setParams={(value) => {
-                                                            setParams(value)
+                                                            setPortParams(value)
                                                         }}
                                                     />
                                                 </>
@@ -566,9 +597,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         }
                     />
                 </Spin>
-                {getParams().TargetsFile && (
+                {getPortParams().TargetsFile && (
                     <Form.Item label=' ' colon={false}>
-                        {getParams()
+                        {getPortParams()
                             .TargetsFile?.split(",")
                             .map((item: string) => {
                                 return (
@@ -586,9 +617,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                             <DeleteOutlined
                                                 className={styles["icon"]}
                                                 onClick={() => {
-                                                    let arr = getParams().TargetsFile?.split(",") || []
+                                                    let arr = getPortParams().TargetsFile?.split(",") || []
                                                     let str = arr?.filter((itemIn: string) => itemIn !== item).join(",")
-                                                    setParams({...params, TargetsFile: str})
+                                                    setPortParams({...portParams, TargetsFile: str})
                                                 }}
                                             />
                                         )}
@@ -651,6 +682,28 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
                         </div>
                     </Form.Item>
+                </div>
+                <div>
+                    <Button
+                        type={"link"}
+                        size={"small"}
+                        onClick={(e) => {
+                            showModal({
+                                title: "设置高级参数",
+                                width: "50%",
+                                content: (
+                                    <>
+                                        <BruteParamsForm
+                                            defaultParams={bruteParams}
+                                            setParams={setBruteParams}
+                                        />
+                                    </>
+                                )
+                            })
+                        }}
+                    >
+                        更多参数
+                    </Button>
                 </div>
             </Form>
         </div>

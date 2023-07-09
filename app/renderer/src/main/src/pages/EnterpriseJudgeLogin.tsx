@@ -22,6 +22,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     useEffect(() => {
         // 验证License
         judgeLicense()
+        setActivateLicense(true)
     }, [])
 
     const judgeLogin = () => {

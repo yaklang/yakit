@@ -349,7 +349,7 @@ interface BruteParamsFormProp {
     setParams: (p: StartBruteParams) => any
 }
 
-const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
+export const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
     const [params, setParams] = useState<StartBruteParams>(props.defaultParams)
 
     useEffect(() => {
