@@ -117,7 +117,11 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
             warn("请选择")
             return
         }
-        ipcRenderer.invoke("DeleteHTTPFlows", {URLPrefixBatch: delUrlArr}).then((res) => {
+        let obj:any = {URLPrefixBatch: delUrlArr}
+        if(checkedAll){
+            obj = {DeleteAll:true}
+        }
+        ipcRenderer.invoke("DeleteHTTPFlows", obj).then((res) => {
             setDelUrlArr([])
             refresh()
         })
@@ -344,7 +348,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     onCheck={(checkedKeys, info) => {
                                         // @ts-ignore
                                         setSelectedKeys(checkedKeys)
-                                        // @ts-ignore
+                                        
                                         const {children, key, parent, title, urls} = info.node
                                         let node = {
                                             children,
@@ -353,9 +357,9 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             title,
                                             urls
                                         }
-                                        // @ts-ignore
+                                        
                                         const delUrlStr = fetchDelUrl(node, "")
-                                        // @ts-ignore
+                                        
                                         const pathStr: string = title
                                         if (info.checked) {
                                             if (Array.isArray(checkedKeys) && checkedKeys.length === treeData.length) {
@@ -421,7 +425,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             data,
                                             onClick: ({key}) => {
                                                 if (key === "del-item") {
-                                                    // @ts-ignore
+                                                    
                                                     delReord(node)
                                                     return
                                                 }
