@@ -20,6 +20,7 @@ export interface MultipleNodeInfo {
 
 /**
  * @name 已打开页面数据
+ * @property routeKey-一级页面唯一值
  * @property verbose-页面展示名称
  * @property menuName-页面菜单名称
  * @property route-页面的yakitRoute
@@ -30,6 +31,8 @@ export interface MultipleNodeInfo {
  * @property params-页面传递参数
  */
 export interface PageCache {
+    /**@name 一级页面唯一值 */
+    routeKey: string
     verbose: string
     menuName: string
     route: YakitRoute
@@ -148,6 +151,10 @@ export interface SubTabItemProps {
  * @property currentTabKey 一级选中的tab
  * @function setCurrentTabKey 设置选中tab
  * @function openMultipleMenuPage 打开页面
+ * @function afterDeleteFirstPage 删除一级页面的回调  'all'|'other'|'single' 
+ * @function afterDeleteSubPage 删除二级页面的回调 'other'|'single'
+ * @function afterUpdateSubPage 更新页面信息后的回调
+ * @function afterDragEndSubPage 二级tab拖拽后的回调
  */
 export interface MainOperatorContextProps {
     pageCache: PageCache[]
@@ -155,4 +162,8 @@ export interface MainOperatorContextProps {
     currentTabKey: string
     setCurrentTabKey: (s: YakitRoute | string) => void
     openMultipleMenuPage: (route: RouteToPageProps) => void
+    afterDeleteFirstPage: (type: 'all' | 'other' | 'single', page?: PageCache) => void
+    afterDeleteSubPage: (type: 'other' | 'single', r: YakitRoute | string, subItem: MultipleNodeInfo) => void
+    afterUpdateSubPage: (page: PageCache, subItem: MultipleNodeInfo) => void
+    afterDragEndSubPage: (page: PageCache,subItems: MultipleNodeInfo[]) => void
 }

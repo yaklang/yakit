@@ -6,6 +6,7 @@
     min-width: 300px;
     max-width: 300px;
     border-right: 1px solid var(--yakit-border-color);
+    animation: show 0.5s linear;
     :global {
         .ant-collapse > .ant-collapse-item > .ant-collapse-header {
             padding: 8px 12px;
@@ -301,6 +302,24 @@
         font-size: 11px;
         padding-top: 12px;
         padding-bottom: 24px;
+    }
+}
+
+@keyframes show {
+    0% {
+        width: 0;
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    90% {
+        width: 300px;
+        opacity: 0.9;
+    }
+    100% {
+        width: 300px;
+        opacity: 1;
     }
 }
 

@@ -255,12 +255,12 @@ export interface fuzzerInfoProp {
     time: string
 
     isHttps?: boolean
-    isGmTLS?: boolean
-    forceFuzz?: boolean
-    concurrent?: number
-    proxy?: string
+    // isGmTLS?: boolean
+    // forceFuzz?: boolean
+    // concurrent?: number
+    // proxy?: string
     actualHost?: string
-    timeout?: number
+    // timeout?: number
     request?: string
     /**
      * @param 二级菜单修改了名称后保存的字段，目前仅仅webFuzzer二级支持
