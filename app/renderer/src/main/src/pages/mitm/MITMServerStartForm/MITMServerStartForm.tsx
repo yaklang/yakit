@@ -274,15 +274,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <YakitSwitch size='large' />
                 </Item>
                 <Item
-                    label={"国密劫持"}
-                    name='enableGMTLS'
-                    initialValue={true}
-                    help={"适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"}
-                    valuePropName='checked'
-                >
-                    <YakitSwitch size='large' />
-                </Item>
-                <Item
                     label={"内容规则"}
                     help={
                         <span className={styles["form-rule-help"]}>
