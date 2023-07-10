@@ -230,7 +230,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
-            console.log(extra)
             return ipcRenderer
                 .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs, extra)
                 .catch((e: any) => {
