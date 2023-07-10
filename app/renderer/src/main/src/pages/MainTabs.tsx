@@ -243,7 +243,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                                         maxHeight: "100%"
                                     }}
                                 >
-                                    <InitTabId children={item.node} id={item.id} />
+                                    {/* <InitTabId children={item.node} id={item.id} /> */}
                                 </div>
                             </TabPane>
                         )

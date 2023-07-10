@@ -3,14 +3,19 @@ import React from "react";
 import { YakitRoute, ComponentParams } from "../../../routes/newRoute";
 import { RouteToPageProps } from '../publicMenu/PublicMenu'
 
-// 已打开页面的二级页面数据
+/**
+ * @name 已打开页面的二级页面数据
+ * @property id
+ * @property verbose-页面展示名称
+ * @property time webFuzzer 缓存使用
+ * @property params-页面传递参数
+ */
 export interface MultipleNodeInfo {
     /**@name 二级菜单tab唯一值 */
     id: string
     verbose: string
-    node: ReactNode
     time?: string
-    params?: any
+    params?: ComponentParams
 }
 
 /**
@@ -20,9 +25,9 @@ export interface MultipleNodeInfo {
  * @property route-页面的yakitRoute
  * @property singleNode-单开页面Node
  * @property multipleNode-多开页面的Node合集
- * @property multipleCurrentKey-多开页面当前页面的key
  * @property multipleLength-多开页面已打开过多少个
  * @property hideAdd-二级页面是否隐藏添加按钮
+ * @property params-页面传递参数
  */
 export interface PageCache {
     verbose: string
@@ -33,9 +38,9 @@ export interface PageCache {
     // singleNode: ReactNode | any
     singleNode: boolean | undefined
     multipleNode: MultipleNodeInfo[] | any[]
-    multipleCurrentKey?: string
     multipleLength?: number
     hideAdd?: boolean
+    params?: ComponentParams
 }
 
 // 页面的唯一标识属性
@@ -112,6 +117,7 @@ export interface TabListProps {
 /**
  * @description 二级tab
  * @property pageItem  选中的一级tab详情
+ * @property index  
  */
 export interface SubTabListProps {
     pageItem: PageCache
