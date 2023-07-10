@@ -7,7 +7,7 @@ import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
-import {useCreation, useGetState, useInViewport, useMap, useMemoizedFn, useSize} from "ahooks"
+import {useCreation, useGetState, useInViewport, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
@@ -350,16 +350,16 @@ export interface SelectOptionProps {
 export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>({
         // 请求包配置
-        forceFuzz: props.fuzzerParams?.forceFuzz || true,
+        forceFuzz: true,
         isHttps: props.fuzzerParams?.isHttps || props.isHttps || false,
-        isGmTLS: props.fuzzerParams?.isGmTLS || props.isGmTLS || false,
+        isGmTLS: props.isGmTLS || false,
         noFixContentLength: false,
         noSystemProxy: false,
         actualHost: props.fuzzerParams?.actualHost || "",
-        timeout: props.fuzzerParams?.timeout || 30.0,
+        timeout: 30.0,
         // 发包配置
-        concurrent: props.fuzzerParams?.concurrent || 20,
-        proxy: !!props.fuzzerParams?.proxy ? props.fuzzerParams?.proxy?.split(",") : [],
+        concurrent: 20,
+        proxy: [],
         minDelaySeconds: 0,
         maxDelaySeconds: 0,
         repeatTimes: 0,
@@ -919,33 +919,35 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const sendFuzzerSettingInfo = useMemoizedFn(() => {
+        // 23.7.10 最新只保存 isHttps、actualHost和request
         const info: fuzzerInfoProp = {
             time: new Date().getTime().toString(),
             isHttps: advancedConfigValue.isHttps,
-            forceFuzz: advancedConfigValue.forceFuzz,
-            concurrent: advancedConfigValue.concurrent,
-            proxy: advancedConfigValue.proxy.join(","),
+            // forceFuzz: advancedConfigValue.forceFuzz,
+            // concurrent: advancedConfigValue.concurrent,
+            // proxy: advancedConfigValue.proxy.join(","),
             actualHost: advancedConfigValue.actualHost,
-            timeout: advancedConfigValue.timeout,
-            request: request
+            // timeout: advancedConfigValue.timeout,
+            request: request,
         }
         if (sendTimer.current) {
             clearTimeout(sendTimer.current)
             sendTimer.current = null
         }
+
         sendTimer.current = setTimeout(() => {
             ipcRenderer.invoke("send-fuzzer-setting-data", {key: props.order || "", param: JSON.stringify(info)})
         }, 1000)
     })
-    useEffect(() => {
+    useUpdateEffect(() => {
         sendFuzzerSettingInfo()
     }, [
         advancedConfigValue.isHttps,
-        advancedConfigValue.forceFuzz,
-        advancedConfigValue.concurrent,
-        advancedConfigValue.proxy,
+        // advancedConfigValue.forceFuzz,
+        // advancedConfigValue.concurrent,
+        // advancedConfigValue.proxy,
         advancedConfigValue.actualHost,
-        advancedConfigValue.timeout,
+        // advancedConfigValue.timeout,
         request
     ])
 

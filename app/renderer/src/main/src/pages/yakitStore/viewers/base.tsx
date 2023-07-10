@@ -434,6 +434,7 @@ export const compareAsc = (value1: object, value2: object, text: string) => {
             return 0
         }
     } catch (error) {
+        return 0
     }
 }
 
@@ -448,6 +449,7 @@ export const compareDesc = (value1: object, value2: object, text: string) => {
             return 0
         }
     } catch (error) {
+        return 0
     }
 }
 
