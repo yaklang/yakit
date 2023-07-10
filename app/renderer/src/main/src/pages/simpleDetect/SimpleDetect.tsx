@@ -339,11 +339,12 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setRunPluginCount(getPortParams().ScriptNames.length)
 
         reset()
-        console.log("params11----", getPortParams())
+        console.log("params11----", getPortParams(),getBruteParams())
         setRunTaskName(TaskName)
         setExecuting(true)
         let newParams: PortScanParams = {...getPortParams()}
         let StartBruteParams: StartBruteParams = {...getBruteParams()}
+        
         switch (getScanDeep()) {
             // 快速
             case 3:
@@ -560,6 +561,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                                                         setParams={(value) => {
                                                             setPortParams(value)
                                                         }}
+                                                        bruteParams={bruteParams}
+                                                        setBruteParams={setBruteParams}
                                                     />
                                                 </>
                                             )

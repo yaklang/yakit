@@ -22,9 +22,10 @@ import {ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
 import {SimplePluginList} from "../../components/SimplePluginList"
-import { isEnpriTrace } from "@/utils/envfile"
-import { CreateReport } from "./CreateReport"
+import {isEnpriTrace} from "@/utils/envfile"
+import {CreateReport} from "./CreateReport"
 import {v4 as uuidv4} from "uuid"
+import {StartBruteParams} from "../brute/BrutePage"
 
 const {ipcRenderer} = window.require("electron")
 const ScanPortTemplate = "scan-port-template"
@@ -104,7 +105,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const openPort = useRef<YakitPort[]>([])
     // const closedPort = useRef<YakitPort[]>([])
 
-    const [infoState, {reset, setXtermRef,resetAll}] = useHoldingIPCRStream(
+    const [infoState, {reset, setXtermRef, resetAll}] = useHoldingIPCRStream(
         "scan-port",
         "PortScan",
         token,
@@ -223,17 +224,22 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         resetAll()
                                         xtermClear(xtermRef)
                                         // 企业版
-                                        if(isEnpriTrace()){
+                                        if (isEnpriTrace()) {
                                             setAllowDownloadReport(true)
-                                            const TaskName = `${params.Targets.split(",")[0].split(/\n/)[0]}风险评估报告`
+                                            const TaskName = `${
+                                                params.Targets.split(",")[0].split(/\n/)[0]
+                                            }风险评估报告`
                                             const runTaskNameEx = TaskName + "-" + getNowUUID()
                                             let PortScanRequest = {...params, TaskName: runTaskNameEx}
-                                            ipcRenderer.invoke("SimpleDetect", {
-                                                LastRecord:{},
-                                                PortScanRequest
-                                            }, token)
-                                        }
-                                        else{
+                                            ipcRenderer.invoke(
+                                                "SimpleDetect",
+                                                {
+                                                    LastRecord: {},
+                                                    PortScanRequest
+                                                },
+                                                token
+                                            )
+                                        } else {
                                             ipcRenderer.invoke("PortScan", params, token)
                                         }
                                     }}
@@ -287,13 +293,13 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                         className='form-submit-style'
                                                         type='primary'
                                                         danger
-                                                        onClick={(e) =>{
-                                                            if(isEnpriTrace()){
+                                                        onClick={(e) => {
+                                                            if (isEnpriTrace()) {
                                                                 ipcRenderer.invoke("cancel-SimpleDetect", token)
                                                                 return
                                                             }
-                                                            ipcRenderer.invoke("cancel-PortScan", token)}
-                                                        }
+                                                            ipcRenderer.invoke("cancel-PortScan", token)
+                                                        }}
                                                     >
                                                         停止扫描
                                                     </Button>
@@ -415,16 +421,23 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                             </div>
                             <Divider style={{margin: "5px 0"}} />
                             <div style={{flex: 1, overflow: "hidden"}}>
-                                <Tabs className='scan-port-tabs' tabBarStyle={{marginBottom: 5}} tabBarExtraContent={
-                                    isEnpriTrace()?<CreateReport 
-                                    infoState={infoState}
-                                    runPluginCount={params.ScriptNames.length}
-                                    targets={params.Targets}
-                                    allowDownloadReport={allowDownloadReport}
-                                    nowUUID={getNowUUID()}
-                                    setAllowDownloadReport={setAllowDownloadReport}
-                                    loading={loading}/>:null
-                                }>
+                                <Tabs
+                                    className='scan-port-tabs'
+                                    tabBarStyle={{marginBottom: 5}}
+                                    tabBarExtraContent={
+                                        isEnpriTrace() ? (
+                                            <CreateReport
+                                                infoState={infoState}
+                                                runPluginCount={params.ScriptNames.length}
+                                                targets={params.Targets}
+                                                allowDownloadReport={allowDownloadReport}
+                                                nowUUID={getNowUUID()}
+                                                setAllowDownloadReport={setAllowDownloadReport}
+                                                loading={loading}
+                                            />
+                                        ) : null
+                                    }
+                                >
                                     <Tabs.TabPane tab={"扫描端口列表"} key={"scanPort"} forceRender>
                                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                                             <Row style={{marginTop: 6}} gutter={6}>
@@ -504,37 +517,55 @@ interface ScanPortFormProp {
     // 简易企业版显示
     isSimpleDetectShow?: boolean
     // 简易版扫描速度
-    deepLevel?:number
+    deepLevel?: number
     // 简易版是否已修改速度
-    isSetPort?:boolean
+    isSetPort?: boolean
+    // 简易版BruteParams参数更改
+    bruteParams?: StartBruteParams
+    setBruteParams?: (v: StartBruteParams) => void
 }
 
 export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
-    const { deepLevel,isSetPort } = props
+    const {deepLevel, isSetPort, bruteParams, setBruteParams} = props
     const isSimpleDetectShow = props.isSimpleDetectShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
-    const [_,setPortroupValue,getPortroupValue] = useGetState<any[]>([])
+    const [simpleParams, setSimpleParams] = useState<StartBruteParams | undefined>(bruteParams)
+    const [_, setPortroupValue, getPortroupValue] = useGetState<any[]>([])
+
     useEffect(() => {
         if (!params) return
         props.setParams({...params})
     }, [params])
 
-    useEffect(()=>{
-        if(deepLevel&&isSetPort){
-            switch (deepLevel) {
-            case 3:
-                setPortroupValue(["fast"])
-            break;
-            case 2:
-                setPortroupValue(["middle"])
-            break;
-            case 1:
-                setPortroupValue(["slow"])
-            break;
-        }
-        }
-    },[deepLevel])
+    useEffect(() => {
+        if (!simpleParams) return
+        setBruteParams && setBruteParams({...simpleParams})
+    }, [simpleParams])
 
+    useEffect(() => {
+        if (deepLevel && isSetPort) {
+            switch (deepLevel) {
+                case 3:
+                    setPortroupValue(["fast"])
+                    break
+                case 2:
+                    setPortroupValue(["middle"])
+                    break
+                case 1:
+                    setPortroupValue(["slow"])
+                    break
+            }
+        }
+    }, [deepLevel])
+
+    const typeArr: string[] = [
+        "text/plain",
+        ".csv",
+        ".xls",
+        ".xlsx",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ]
     return (
         <Form
             onSubmitCapture={(e) => {
@@ -586,7 +617,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                             <Form.Item label='预设端口' className='form-item-margin'>
                                 <Checkbox.Group
                                     value={getPortroupValue()}
-                                    onChange={(value) => {                  
+                                    onChange={(value) => {
                                         let res: string = (value || [])
                                             .map((i) => {
                                                 // @ts-ignore
@@ -694,6 +725,141 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                         setValue={(FingerprintMode) => setParams({...params, FingerprintMode})}
                         value={params.FingerprintMode}
                     />
+                    {isSimpleDetectShow && simpleParams && setSimpleParams && (
+                        <>
+                            <Divider orientation={"left"}>弱口令配置</Divider>
+                            <ContentUploadInput
+                                type='textarea'
+                                dragger={{
+                                    disabled: false,
+                                    accept:typeArr.join(",")
+                                }}
+                                beforeUpload={(f) => {
+                                    
+                                    if (!typeArr.includes(f.type)) {
+                                        failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                                        return false
+                                    }
+                                    setSimpleParams({
+                                        ...simpleParams,
+                                        UsernameFile:f.path
+                                    })
+                                    return false
+                                }}
+                                item={{
+                                    style: {textAlign: "left"},
+                                    label: "用户字典:"
+                                }}
+                                textarea={{
+                                    isBubbing: true,
+                                    setValue: (Targets) => {
+                                        setSimpleParams({
+                                            ...simpleParams,
+                                            UsernameFile:Targets
+                                        })
+                                    },
+                                    value: simpleParams.UsernameFile,
+                                    rows: 1,
+                                    // placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
+                                    disabled: false
+                                }}
+                                otherHelpNode={
+                                    <Checkbox
+                                        checked={!simpleParams.ReplaceDefaultUsernameDict}
+                                        style={{marginLeft: 16}}
+                                        onChange={() => {
+                                            setSimpleParams({
+                                                ...simpleParams,
+                                                ReplaceDefaultUsernameDict: !simpleParams.ReplaceDefaultUsernameDict
+                                            })
+                                        }}
+                                    >
+                                        同时使用默认用户字典
+                                    </Checkbox>
+                                }
+                            />
+                            <ContentUploadInput
+                                type='textarea'
+                                dragger={{
+                                    disabled: false,
+                                    accept:typeArr.join(",")
+                                }}
+                                beforeUpload={(f) => {
+                                    if (!typeArr.includes(f.type)) {
+                                        failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                                        return false
+                                    }
+                                    setSimpleParams({
+                                        ...simpleParams,
+                                        PasswordFile:f.path
+                                    })
+                                    return false
+                                }}
+                                item={{
+                                    style: {textAlign: "left"},
+                                    label: "密码字典:"
+                                }}
+                                textarea={{
+                                    isBubbing: true,
+                                    setValue: (Targets) => {
+                                        setSimpleParams({
+                                            ...simpleParams,
+                                            PasswordFile:Targets
+                                        })
+                                    },
+                                    value: simpleParams.PasswordFile,
+                                    rows: 1,
+                                    // placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
+                                    disabled: false
+                                }}
+                                otherHelpNode={
+                                    <Checkbox
+                                        checked={!simpleParams.ReplaceDefaultPasswordDict}
+                                        style={{marginLeft: 16}}
+                                        onChange={() => {
+                                            setSimpleParams({
+                                                ...simpleParams,
+                                                ReplaceDefaultPasswordDict: !simpleParams.ReplaceDefaultPasswordDict
+                                            })
+                                        }}
+                                    >
+                                        同时使用默认密码字典
+                                    </Checkbox>
+                                }
+                            />
+                            <InputInteger
+                                label={"目标并发"}
+                                help={"同时爆破 n 个目标"}
+                                value={simpleParams.Concurrent}
+                                setValue={(e) => setSimpleParams({...simpleParams, Concurrent: e})}
+                            />
+                            <InputInteger
+                                label={"目标内并发"}
+                                help={"每个目标同时执行多少爆破任务"}
+                                value={simpleParams.TargetTaskConcurrent}
+                                setValue={(e) => setSimpleParams({...simpleParams, TargetTaskConcurrent: e})}
+                            />
+                            <SwitchItem
+                                label={"自动停止"}
+                                help={"遇到第一个爆破结果时终止任务"}
+                                setValue={(OkToStop) => setSimpleParams({...simpleParams, OkToStop})}
+                                value={simpleParams.OkToStop}
+                            />
+                            <InputInteger
+                                label={"最小延迟"}
+                                max={simpleParams.DelayMax}
+                                min={0}
+                                setValue={(DelayMin) => setSimpleParams({...simpleParams, DelayMin})}
+                                value={simpleParams.DelayMin}
+                            />
+                            <InputInteger
+                                label={"最大延迟"}
+                                setValue={(DelayMax) => setSimpleParams({...simpleParams, DelayMax})}
+                                value={simpleParams.DelayMax}
+                                min={simpleParams.DelayMin}
+                            />
+                        </>
+                    )}
                     <Divider orientation={"left"}>基础爬虫配置</Divider>
                     <Form.Item
                         label={"爬虫设置"}
