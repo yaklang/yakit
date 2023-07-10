@@ -147,7 +147,18 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             closeFizzSelectWidget()
                         }
                     } else if (fizzRangeWidget.isOpen) {
-                        if (posy < downPosY.current - overHeight || posy > upPosY.current + overHeight) {
+                        // 从上到下的选择范围
+                        if (
+                            downPosY.current < upPosY.current &&
+                            (posy < downPosY.current - overHeight || posy > upPosY.current + overHeight)
+                        ) {
+                            closeFizzRangeWidget()
+                        }
+                        // 从下到上的选择范围
+                        else if(
+                            downPosY.current > upPosY.current &&
+                            (posy < upPosY.current - overHeight || posy > downPosY.current + overHeight)
+                        ){
                             closeFizzRangeWidget()
                         }
                     }
