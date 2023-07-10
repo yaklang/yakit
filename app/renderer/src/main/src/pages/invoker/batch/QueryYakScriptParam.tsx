@@ -32,6 +32,7 @@ export interface QueryYakScriptParamProp {
 export interface SimpleQueryYakScriptSchema {
     type: string
     tags: string
+    keyword?: string
     exclude: string[]
     include: string[]
 }
@@ -54,6 +55,8 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     const [topTags, setTopTags] = useState<FieldName[]>([])
     const [topN, setTopN] = useState(15)
     const [selectedTags, setSelectedTags] = useState<string[]>([])
+    // 用于存储 关键字 的搜索与结果
+    const [inputKeyword,setInputKeyword] = useState<string>()
 
     // 更新搜索，这个也可以用于后端保存
     const [params, setParams] = useState<SimpleQueryYakScriptSchema>(props.params)
@@ -118,6 +121,15 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
         syncTags()
     }, [useDebounce(selectedTags, {wait: 300})])
 
+    const syncKeyword = () => {
+        setParams({...params,keyword:inputKeyword})
+    }
+
+    // 更新 params Keyword
+    useEffect(() => {
+        syncKeyword()
+    }, [useDebounce(inputKeyword, {wait: 300})])
+
     useEffect(() => {
         setTopN(10)
     }, [searchTag])
@@ -128,7 +140,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                 onIsAll(true)
                 setItemSelects([])
                 setSearchTag("")
-                setParams({type: params.type, tags: selectedTags.join(","), include: [], exclude: []})
+                setParams({type: params.type, tags: selectedTags.join(","),keyword:inputKeyword, include: [], exclude: []})
             }, 200)
         } else {
             onIsAll(false)
@@ -265,7 +277,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
                         selectedTags,
                         setSelectedTags,
                         selectedAll,
-                        
+                        setInputKeyword,
                     }}
                     setIncludeFun={(v:string[])=>{
                         setParams({...params,include:v})
@@ -309,6 +321,7 @@ interface searchFilterProps {
     selectedTags: string[]
     setSelectedTags: (v: string[]) => void
     selectedAll: (v: boolean) => void
+    setInputKeyword: (v: string) => void
 }
 interface SearchYakScriptForFilterProp {
     simpleFilter: SimpleQueryYakScriptSchema
@@ -320,7 +333,7 @@ interface SearchYakScriptForFilterProp {
     onInclude: (i: YakScript) => any
 }
 const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.memo((props) => {
-    const {selectedTags, setSelectedTags, selectedAll} = props.searchFilter
+    const {selectedTags, setSelectedTags, selectedAll,setInputKeyword} = props.searchFilter
     const [params, setParams] = useState<QueryYakScriptRequest>({
         ExcludeNucleiWorkflow: true,
         ExcludeScriptNames: [],
@@ -440,7 +453,7 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
 
     useEffect(() => {
         update(1)
-    }, [props.simpleFilter.tags,props.simpleFilter.type, refresh])
+    }, [props.simpleFilter.tags,props.simpleFilter.type, refresh,searchType])
     const loadMoreData = useMemoizedFn(() => {
         update(Number(response.Pagination.Page) + 1)
     })
@@ -462,11 +475,18 @@ const SearchYakScriptForFilter: React.FC<SearchYakScriptForFilterProp> = React.m
                     setSearchKeyword={(value) => setParams({...params, Keyword: value})}
                     checkList={Array.from(new Set([...cachePlugInList,...tagsPlugInList]))} // props.simpleFilter.include
                     searchType={searchType}
-                    setSearchType={setSearchType}
+                    setSearchType={(v)=>{
+                        setSearchType(v)
+                        setInputKeyword("")
+                        setParams({...params, Keyword: ""})
+                    }}
                     // 动态加载tags列表
                     TagsSelectRender={props.TagsSelectRender}
                     refresh={refresh}
-                    setRefresh={setRefresh}
+                    setRefresh={(v:boolean)=>{
+                        setInputKeyword(params.Keyword||"")
+                        setRefresh(v)
+                    }}
                     onDeselect={() => {}}
                     multipleCallBack={(value) => {props.setIncludeFun(value)}}
                 />
