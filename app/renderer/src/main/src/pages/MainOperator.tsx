@@ -271,9 +271,6 @@ export interface fuzzerInfoProp {
 const Main: React.FC<MainProp> = React.memo((props) => {
     const [loading, setLoading] = useState(false)
 
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(getInitPageCache())
-    const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
-
     // 修改密码弹框
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
 

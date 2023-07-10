@@ -237,6 +237,30 @@ export const routeConvertKey = (route: YakitRoute, pluginName?: string) => {
 }
 
 /**
+ * @name 唯一标识符转为页面信息 与routeConvertKey配套
+ */
+export const KeyConvertRoute = (str: string) => {
+    try {
+        // 判断条件由当前组件方法(routeToMenu)里的分隔符变量(separator)决定
+        if (str.indexOf(separator) > -1) {
+            const keys = str.split(separator)
+            const route = keys[0] as YakitRoute
+            const info: RouteToPageProps = {
+                route: route,
+                pluginName: keys[1] || ""
+            }
+            return info
+        } else {
+            const route = str as YakitRoute
+            const info: RouteToPageProps = {route: route}
+            return info
+        }
+    } catch (error) {
+        return null
+    }
+}
+
+/**
  * 深度遍历所有菜单项,并将菜单项转换为 ${routeInfoToKey()}-菜单展示名
  */
 export const menusConvertKey = (data: EnhancedPublicRouteMenuProps[] | EnhancedPrivateRouteMenuProps[]) => {
@@ -299,7 +323,6 @@ export const keyToRouteInfo = (str: string) => {
         if (str.indexOf(separator) > -1) {
             const keys = str.split(separator)
             const route = keys[0] as YakitRoute
-
             const info: RouteToPageProps = {
                 route: route,
                 pluginId: +keys[1] || 0,

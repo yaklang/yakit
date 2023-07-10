@@ -174,140 +174,149 @@ $keyColor: map-keys($colors);
             @extend .dragging;
         }
     }
-    .tab-menu-sub-body {
+    .tab-menu-sub-content {
         display: flex;
+        flex: 1;
         overflow: hidden;
-        width: 100%;
-        background-color: var(--yakit-card-background-color);
-        position: relative;
-        &::after {
-            @extend .fake-content;
-            bottom: 0;
-            background-color: var(--yakit-border-color);
-        }
-    }
-    .tab-menu-sub {
-        display: flex;
-        align-items: center;
-        position: relative;
-        height: 32px;
-        background-color: var(--yakit-card-background-color);
-
-        max-width: calc(100% - 32px);
-        overflow: hidden;
-        overflow-x: auto;
-        // justify-content: end;
-
-        // 下面是滚动条的样式
-        &::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab-menu-sub-group {
+        flex-direction: column;
+        .tab-menu-sub-body {
             display: flex;
-            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+            background-color: var(--yakit-card-background-color);
             position: relative;
-            .tab-menu-sub-group-name {
+            &::after {
+                @extend .fake-content;
+                bottom: 0;
+                background-color: var(--yakit-border-color);
+            }
+        }
+        .tab-menu-sub {
+            display: flex;
+            align-items: center;
+            position: relative;
+            height: 32px;
+            background-color: var(--yakit-card-background-color);
+
+            max-width: calc(100% - 32px);
+            overflow: hidden;
+            overflow-x: auto;
+
+            // 下面是滚动条的样式
+            &::-webkit-scrollbar {
+                display: none;
+            }
+
+            .tab-menu-sub-group {
                 display: flex;
-                align-items: center;
-                gap: 4px;
-                height: 32px;
-                padding: 4px 6px;
-                border-radius: 4px 0 0 4px;
-                min-width: 16px;
-                color: #fff;
-                line-height: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                .tab-menu-sub-group-number {
-                    border-radius: 8px;
-                    padding: 2px 6px;
-                    background-color: #fff;
-                    height: 16px;
+                border-radius: 4px;
+                position: relative;
+                .tab-menu-sub-group-name {
                     display: flex;
                     align-items: center;
-                    width: 18px;
-                    justify-content: center;
+                    gap: 4px;
+                    height: 32px;
+                    padding: 4px 6px;
+                    border-radius: 4px 0 0 4px;
+                    min-width: 16px;
+                    color: #fff;
+                    line-height: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    .tab-menu-sub-group-number {
+                        border-radius: 8px;
+                        padding: 2px 6px;
+                        background-color: #fff;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        width: 18px;
+                        justify-content: center;
+                    }
+                }
+                .tab-menu-sub-group-name-retract {
+                    border-radius: 4px;
                 }
             }
-            .tab-menu-sub-group-name-retract {
-                border-radius: 4px;
-            }
-        }
-        .tab-menu-sub-item {
-            display: flex;
-            height: 32px;
-            padding: 4px 8px;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            flex: 1;
-            word-break: keep-all;
-            position: relative;
-            overflow: hidden;
-            max-width: 200px;
-            min-width: 24px;
-            // width: fit-content;
-            justify-content: space-between;
-
-            &:hover {
-                @extend .dragging;
-            }
-            span {
-                min-width: 16px;
-            }
-            &::after {
-                content: "";
-                height: 16px;
-                width: 1px;
+            .tab-menu-sub-item {
                 display: flex;
+                height: 32px;
+                padding: 4px 8px;
                 align-items: center;
-                background-color: var(--yakit-border-color);
-                position: absolute;
-                right: 0;
-            }
-            .remove-icon {
-                @extend .base-operate-icon;
-                height: 20px;
-                width: 20px;
-                svg {
+                gap: 8px;
+                cursor: pointer;
+                flex: 1;
+                word-break: keep-all;
+                position: relative;
+                overflow: hidden;
+                max-width: 200px;
+                min-width: 24px;
+                // width: fit-content;
+                justify-content: space-between;
+
+                &:hover {
+                    @extend .dragging;
+                }
+                span {
+                    min-width: 16px;
+                }
+                &::after {
+                    content: "";
+                    height: 16px;
+                    width: 1px;
+                    display: flex;
+                    align-items: center;
+                    background-color: var(--yakit-border-color);
+                    position: absolute;
+                    right: 0;
+                }
+                .remove-icon {
+                    @extend .base-operate-icon;
+                    height: 20px;
+                    width: 20px;
+                    svg {
+                        height: 16px;
+                        width: 16px;
+                    }
+                }
+                .document-text-icon {
+                    @extend .base-show-icon;
                     height: 16px;
                     width: 16px;
+                    svg {
+                        height: 16px;
+                        width: 16px;
+                    }
                 }
             }
-            .document-text-icon {
-                @extend .base-show-icon;
-                height: 16px;
-                width: 16px;
-                svg {
-                    height: 16px;
-                    width: 16px;
-                }
-            }
-        }
-        .tab-menu-sub-item-active {
-            background-color: #fff;
-            color: var(--yakit-primary-5);
-            min-width: fit-content;
-            .document-text-icon {
-                color: var(--yakit-primary-5);
-            }
-            &::before {
-                content: "";
-                width: 100%;
-                height: 2px;
-                position: absolute;
-                bottom: -1px;
-                left: 0;
+            .tab-menu-sub-item-active {
                 background-color: #fff;
-                z-index: 1;
+                color: var(--yakit-primary-5);
+                min-width: fit-content;
+                .document-text-icon {
+                    color: var(--yakit-primary-5);
+                }
+                &::before {
+                    content: "";
+                    width: 100%;
+                    height: 2px;
+                    position: absolute;
+                    bottom: -1px;
+                    left: 0;
+                    background-color: #fff;
+                    z-index: 1;
+                }
+            }
+            .tab-menu-sub-item-dragging {
+                @extend .dragging;
+                background-color: #fff;
             }
         }
-        .tab-menu-sub-item-dragging {
-            @extend .dragging;
-            background-color: #fff;
+        .tab-menu-sub-width {
+            max-width: 100%;
         }
     }
+
     .outline-plus-icon {
         @extend .base-operate-icon;
         width: 32px;

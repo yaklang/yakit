@@ -16,13 +16,20 @@ import {
     MainOperatorContextProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
-import {YakitRouteToPageInfo, YakitRoute, RouteToPage, SinglePageRoute, NoPaddingRoute} from "@/routes/newRoute"
+import {
+    YakitRouteToPageInfo,
+    YakitRoute,
+    RouteToPage,
+    SinglePageRoute,
+    NoPaddingRoute,
+    ComponentParams
+} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {useDebounceEffect, useGetState, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
-import {keyToRouteInfo, routeConvertKey} from "../publicMenu/utils"
+import {KeyConvertRoute, keyToRouteInfo, routeConvertKey} from "../publicMenu/utils"
 import {OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
@@ -190,25 +197,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, isGmTLS, request, list} = res || {}
+        const {isHttps, isGmTLS, request} = res || {}
         const time = new Date().getTime().toString()
         if (request) {
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
                 {
-                    time: time,
-                    node: undefined
-                    // node: RouteToPage(YakitRoute.HTTPFuzzer, undefined, {
-                    //     isHttps: isHttps || false,
-                    //     isGmTLS: isGmTLS || false,
-                    //     request: request || "",
-                    //     system: system,
-                    //     order: time,
-                    //     shareContent: res.shareContent
-                    // })
+                    params: {
+                        isHttps: isHttps || false,
+                        isGmTLS: isGmTLS || false,
+                        request: request || "",
+                        system: system,
+                        order: time,
+                        shareContent: res.shareContent
+                    }
                 }
             )
-            addFuzzerList(time, request || "", isHttps || false, isGmTLS || false)
+            // addFuzzerList(time, request || "", isHttps || false, isGmTLS || false)
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
@@ -216,14 +221,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.WebsocketFuzzer},
             {
-                hideAdd: false,
-                isRecord: false,
-                node: undefined,
-                // node: RouteToPage(YakitRoute.WebsocketFuzzer, undefined, {
-                //     wsRequest: res.request,
-                //     wsTls: res.tls
-                // }),
-                time: ""
+                params: {
+                    wsRequest: res.request,
+                    wsTls: res.tls
+                }
             }
         )
     })
@@ -233,8 +234,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.Mod_ScanPort},
                 {
-                    // node: RouteToPage(YakitRoute.Mod_ScanPort, undefined, {scanportParams: URL})
-                    node: undefined
+                    params: {
+                        scanportParams: URL
+                    }
                 }
             )
         }
@@ -245,8 +247,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.Mod_Brute},
                 {
-                    // node: RouteToPage(YakitRoute.Mod_Brute, undefined, {bruteParams: URL})
-                    node: undefined
+                    params: {
+                        bruteParams: URL
+                    }
                 }
             )
         }
@@ -299,12 +302,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.BatchExecutorRecover},
             {
-                hideAdd: true,
-                node: undefined
-                // node: RouteToPage(YakitRoute.BatchExecutorRecover, undefined, {
-                //     recoverUid: task.Uid,
-                //     recoverBaseProgress: task.Percent
-                // })
+                params: {
+                    recoverUid: task.Uid,
+                    recoverBaseProgress: task.Percent
+                },
+                hideAdd: true
             }
         )
     })
@@ -312,14 +314,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.SimpleDetect},
             {
-                hideAdd: true,
-                // node: RouteToPage(YakitRoute.SimpleDetect, undefined, {
-                //     recoverUid: task.Uid,
-                //     recoverBaseProgress: task.Percent,
-                //     recoverOnlineGroup: task.YakScriptOnlineGroup,
-                //     recoverTaskName: task.TaskName
-                // })
-                node: undefined
+                params: {
+                    recoverUid: task.Uid,
+                    recoverBaseProgress: task.Percent,
+                    recoverOnlineGroup: task.YakScriptOnlineGroup,
+                    recoverTaskName: task.TaskName
+                },
+                hideAdd: true
             }
         )
     })
@@ -328,14 +329,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.PacketScanPage},
                 {
-                    hideAdd: true,
-                    node: undefined
-                    // node: RouteToPage(YakitRoute.PacketScanPage, undefined, {
-                    //     packetScan_FlowIds: httpFlows,
-                    //     packetScan_Https: https,
-                    //     packetScan_HttpRequest: request,
-                    //     packetScan_Keyword: keyword
-                    // })
+                    params: {
+                        packetScan_FlowIds: httpFlows,
+                        packetScan_Https: https,
+                        packetScan_HttpRequest: request,
+                        packetScan_Keyword: keyword
+                    },
+                    hideAdd: true
                 }
             )
         }
@@ -350,11 +350,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.YakitPluginJournalDetails},
             {
-                time: time,
-                node: undefined,
-                // node: RouteToPage(YakitRoute.YakitPluginJournalDetails, undefined, {
-                //     YakScriptJournalDetailsId: res.YakScriptJournalDetailsId
-                // }),
+                params: {
+                    YakScriptJournalDetailsId: res.YakScriptJournalDetailsId
+                },
                 hideAdd: true
             }
         )
@@ -369,12 +367,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.ReverseServer_New},
                 {
-                    node: undefined
-                    // node: RouteToPage(YakitRoute.ReverseServer_New, undefined, {
-                    //     facadeServerParams: facadeParams,
-                    //     classGeneraterParams: classParam,
-                    //     classType: classType
-                    // })
+                    params: {
+                        facadeServerParams: facadeParams,
+                        classGeneraterParams: classParam,
+                        classType: classType
+                    }
                 }
             )
         }
@@ -416,27 +413,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      */
     const documentKeyDown = useMemoizedFn((e: any) => {
         // ctrl/command + w 关闭当前页面
-        // if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
-        //     e.preventDefault()
-        //     if (pageCache.length === 0 || currentTabKey === YakitRoute.NewHome) return
-        //     setLoading(true)
-        //     // 有点问题
-        //     const data = keyToRouteInfo(currentTabKey)
-        //     if (data) {
-        //         const info: OnlyPageCache = {
-        //             route: data.route,
-        //             menuName:
-        //                 data.route === YakitRoute.Plugin_OP
-        //                     ? data.pluginName || ""
-        //                     : YakitRouteToPageInfo[data.route]?.label || "",
-        //             pluginId: data.pluginId,
-        //             pluginName: data.pluginName
-        //         }
-        //         removeMenuPage(info)
-        //     }
-        //     setTimeout(() => setLoading(false), 300)
-        //     return
-        // }
+        e.stopPropagation()
+        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            if (pageCache.length === 0 || currentTabKey === YakitRoute.NewHome) return
+            setLoading(true)
+            const data = KeyConvertRoute(currentTabKey)
+            if (data) {
+                const info: OnlyPageCache = {
+                    route: data.route,
+                    menuName:
+                        data.route === YakitRoute.Plugin_OP
+                            ? data.pluginName || ""
+                            : YakitRouteToPageInfo[data.route]?.label || "",
+                    pluginId: data.pluginId,
+                    pluginName: data.pluginName
+                }
+                removeMenuPage(info)
+            }
+            setTimeout(() => setLoading(false), 300)
+            return
+        }
     })
     useEffect(() => {
         document.onkeydown = documentKeyDown
@@ -457,11 +454,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         (
             routeInfo: RouteToPageProps,
             nodeParams?: {
-                time?: string
-                node: ReactNode
-                isRecord?: boolean
-                hideAdd?: boolean
                 verbose?: string
+                hideAdd?: boolean
+                params?: ComponentParams
             }
         ) => {
             const {route, pluginId = 0, pluginName = ""} = routeInfo
@@ -485,9 +480,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         verbose: tabName,
                         menuName: menuName,
                         route: route,
-                        // singleNode: RouteToPage(route),
                         singleNode: true,
-                        multipleNode: []
+                        multipleNode: [],
+                        params: nodeParams?.params
                     }
                 ])
                 setCurrentTabKey(key)
@@ -502,12 +497,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const node: MultipleNodeInfo = {
                         id: tabId,
                         verbose: nodeParams?.verbose || `${tabName}-[${(filterPage[0].multipleLength || 0) + 1}]`,
-                        // node:
-                        //     nodeParams && nodeParams.node
-                        //         ? nodeParams?.node || <></>
-                        //         : RouteToPage(route, +pluginId || 0),
-                        node: undefined,
-                        time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
+                        time,
+                        params: nodeParams?.params
                     }
                     const pages: PageCache[] = []
                     pageCache.forEach((item) => {
@@ -515,24 +506,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         if (eleItem.route === route && eleItem.menuName === menuName) {
                             eleItem.pluginId = pluginId
                             eleItem.multipleNode.push({...node})
-                            eleItem.multipleCurrentKey = tabId
                             eleItem.multipleLength = (eleItem.multipleLength || 0) + 1
                         }
                         pages.push({...eleItem})
                     })
                     setPageCache([...pages])
                     setCurrentTabKey(key)
-                    if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
                 } else {
                     const node: MultipleNodeInfo = {
                         id: tabId,
                         verbose: nodeParams?.verbose || `${tabName}-[1]`,
-                        // node:
-                        //     nodeParams && nodeParams.node
-                        //         ? nodeParams?.node || <></>
-                        //         : RouteToPage(route, +pluginId || 0),
-                        node: undefined,
-                        time: nodeParams && nodeParams.node ? nodeParams?.time || time : time
+                        time,
+                        params: nodeParams?.params
                     }
                     setPageCache([
                         ...pageCache,
@@ -544,13 +529,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             pluginName: route === YakitRoute.Plugin_OP ? pluginName || "" : undefined,
                             singleNode: undefined,
                             multipleNode: [{...node}],
-                            multipleCurrentKey: tabId,
                             multipleLength: 1,
                             hideAdd: nodeParams?.hideAdd
                         }
                     ])
                     setCurrentTabKey(key)
-                    if (nodeParams && !!nodeParams.isRecord) addFuzzerList(nodeParams?.time || time)
+                }
+                if (route === YakitRoute.HTTPFuzzer) {
+                    const {isHttps, request} = nodeParams?.params || {}
+                    addFuzzerList(time, request || "", isHttps || false)
                 }
             }
         }
@@ -560,13 +547,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (route.route === YakitRoute.HTTPFuzzer) {
             const time = new Date().getTime().toString()
             openMenuPage(route, {
-                time: time,
-                node: undefined,
-                // node: RouteToPage(YakitRoute.HTTPFuzzer, undefined, {
-                //     system: system,
-                //     order: time
-                // }),
-                isRecord: true
+                params: {
+                    system: system,
+                    order: time
+                }
             })
         } else openMenuPage(route)
     })
@@ -641,129 +625,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             removeSubscribeClose(YakitRoute.HTTPFuzzer)
         }
     })
-    // 关闭所有页面(包括一级和二级页面)
-    const closeAllCache = useMemoizedFn(() => {
-        Modal.confirm({
-            title: "确定要关闭所有 Tabs？",
-            content: "这样将会关闭所有进行中的进程",
-            onOk: () => {
-                delFuzzerList(1)
-                setPageCache(getInitPageCache())
-                setCurrentTabKey(getInitActiveTabKey())
-            }
-        })
-    })
-    // 关闭除选中页面外的所有页面(包括一级和二级页面)
-    const closeOtherCache = useMemoizedFn((activeKey: string) => {
-        const info = keyToRouteInfo(activeKey)
-        if (!info) return
-        const {route, pluginName = ""} = info
 
-        Modal.confirm({
-            title: "确定要关闭除此之外所有 Tabs？",
-            content: "这样将会关闭所有进行中的进程",
-            onOk: () => {
-                const arr = pageCache.filter((i) => {
-                    if (route !== YakitRoute.Plugin_OP) return i.route === route
-                    else return i.route === route && i.pluginName === pluginName
-                })
-                if (!isEnpriTraceAgent()) {
-                    arr.unshift({
-                        verbose: "首页",
-                        menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
-                        route: YakitRoute.NewHome,
-                        // singleNode: RouteToPage(YakitRoute.NewHome),
-                        singleNode: true,
-                        multipleNode: []
-                    })
-                }
-                setPageCache(arr)
-                if (route === YakitRoute.HTTPFuzzer) delFuzzerList(1)
-            }
-        })
-    })
     /** ---------- 一级页面的逻辑 end ---------- */
-
-    /** ---------- 多开页面的逻辑 start ---------- */
-    /** 更改多开页面的当前页面key值 */
-    const setMultipleCurrentKey = useMemoizedFn((key: string, data: OnlyPageCache) => {
-        const arr = pageCache.map((item) => {
-            if (item.route === data.route && item.menuName === data.menuName) {
-                item.multipleCurrentKey = key
-                return item
-            }
-            return item
-        })
-        setPageCache([...arr])
-    })
-    /** 移除多开页面合集里的指定页面 */
-    const removeMultipleNodePage = useMemoizedFn((key: string, data: OnlyPageCache) => {
-        const removeArr: MultipleNodeInfo[] =
-            pageCache.filter((item) => item.route === data.route && item.menuName === data.menuName)[0]?.multipleNode ||
-            []
-        if (removeArr.length === 0) return
-
-        const currentIndex = removeArr.findIndex((item) => item.id === key)
-        if (currentIndex === -1) return
-        const currentTime = removeArr[currentIndex]?.time
-        // 多开页面合集只有一个页面，删除一级页面
-        if (currentIndex > -1 && removeArr.length === 1) {
-            removeMenuPage(data)
-            return
-        }
-        // 设置相邻页面为当前页面
-        let active = ""
-        if (currentIndex > 0 && !!removeArr[currentIndex - 1]) active = removeArr[currentIndex - 1].id
-        if (currentIndex === 0 && !!removeArr[currentIndex + 1]) active = removeArr[currentIndex + 1].id
-
-        if (active) {
-            const arr = pageCache.map((item) => {
-                if (item.route === data.route && item.menuName === data.menuName) {
-                    item.multipleNode = [...removeArr.filter((item) => item.id !== key)]
-                    item.multipleCurrentKey = item.multipleCurrentKey === key ? active : item.multipleCurrentKey
-                    return item
-                }
-                return item
-            })
-            setPageCache([...arr])
-            if (data.route === YakitRoute.HTTPFuzzer) delFuzzerList(2, currentTime)
-        }
-    })
-    /** 移除多开页面合集里除指定外的所有页面 */
-    const removeOtherMultipleNodePage = useMemoizedFn((key: string, data: OnlyPageCache) => {
-        const removeArr: MultipleNodeInfo[] =
-            pageCache.filter((item) => item.route === data.route && item.menuName === data.menuName)[0]?.multipleNode ||
-            []
-        if (removeArr.length === 0) return
-        const nodes = removeArr.filter((item) => item.id === key)
-        const time = nodes[0].time
-
-        const arr = pageCache.map((item) => {
-            if (item.route === data.route && item.menuName === data.menuName) {
-                item.multipleNode = [...nodes]
-                item.multipleCurrentKey = key
-                return item
-            }
-            return item
-        })
-        setPageCache([...arr])
-        if (data.route === YakitRoute.HTTPFuzzer) delFuzzerList(3, time)
-    })
-    const updateCacheVerboseMultipleNodePage = useMemoizedFn((key: string, data: OnlyPageCache, verbose: string) => {
-        const index = getPageCache().findIndex((item) => item.route === data.route && item.menuName === data.menuName)
-        if (index < 0) return
-        const indexNode = pageCache[index].multipleNode.findIndex((ele) => ele.id === key)
-        if (indexNode < 0) return
-        pageCache[index].multipleNode[indexNode].verbose = verbose
-        // 更新web-fuzzer页面缓存数据
-        if (data.route === YakitRoute.HTTPFuzzer) {
-            const currentTimeKey: string = pageCache[index].multipleNode[indexNode].time
-            const newFuzzerItem = {...fuzzerList.current.get(currentTimeKey)}
-            updateFuzzerList(currentTimeKey, {...newFuzzerItem, time: currentTimeKey, verbose})
-        }
-        setPageCache([...pageCache])
-    })
-    /** ---------- 多开页面的逻辑 end ---------- */
 
     /** ---------- 登录状态变化的逻辑 start ---------- */
     const {userInfo, setStoreUserInfo} = useStore()
@@ -844,17 +707,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 菜单在代码内的名字
                 const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
                 const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
-                const tabId = `${key}-[${randomString(6)}]`
                 const tabName = routeKeyToLabel.get(key) || menuName
                 // 这里看看需要对其数量进行限制不
                 for (let item of cache) {
                     const time = new Date().getTime().toString()
                     fuzzerList.current.set(time, {...item, time: time})
+                    const tabId = `${key}-[${randomString(6)}]`
                     multipleNodeList.push({
-                        id: randomString(8),
+                        id: tabId,
                         time: time,
                         verbose: item.verbose || `${tabName}-[${(multipleNodeList.length || 0) + 1}]`, // webFuzzer 保存的修改后的菜单二级tab名字
-                        node: undefined,
                         params: {
                             isHttps: item.isHttps || false,
                             request: item.request || "",
@@ -873,9 +735,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pluginName: undefined,
                     singleNode: undefined,
                     multipleNode: multipleNodeList,
-                    multipleCurrentKey: tabId,
-                    multipleLength: multipleNodeList.length,
-                    hideAdd: true
+                    multipleLength: multipleNodeList.length
                 }
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
@@ -893,7 +753,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
     // 新增缓存数据
-    const addFuzzerList = (key: string, request?: string, isHttps?: boolean, isGmTLS?: boolean, verbose?: string) => {
+    /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */
+    const addFuzzerList = (key: string, request?: string, isHttps?: boolean, verbose?: string) => {
         fuzzerList.current.set(key, {request, isHttps, time: key, verbose})
     }
     /**
@@ -943,7 +804,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.DataCompare},
                 {
-                    node: undefined
                     //node: RouteToPage(YakitRoute.DataCompare, undefined, {system: system})
                 }
             )
@@ -1024,7 +884,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 })
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
-    const {pageCache, setPageCache, currentTabKey} = useContext(MainOperatorContext)
+    const {pageCache, setPageCache} = useContext(MainOperatorContext)
     const {onRemove} = props
 
     /** ---------- 拖拽排序 start ---------- */
@@ -1067,7 +927,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                         className={styles["page-body"]}
                     >
                         {pageItem.singleNode ? (
-                            <PageItem routeKey={pageItem.route} />
+                            <PageItem routeKey={pageItem.route} params={pageItem.params} />
                         ) : (
                             <SubTabList pageItem={pageItem} index={index} />
                         )}
@@ -1235,18 +1095,21 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
     )
 })
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
-    const {openMultipleMenuPage, pageCache, setPageCache, setCurrentTabKey} = useContext(MainOperatorContext)
+    const {openMultipleMenuPage, pageCache, setPageCache, currentTabKey, setCurrentTabKey} =
+        useContext(MainOperatorContext)
     const {pageItem, index} = props
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
-        verbose: "",
-        node: <></>
+        verbose: ""
     }) // 选中的二级菜单
+    const [currentSubIndex, setCurrentSubIndex] = useState<number>(0)
 
     const [alreadyRenderList, {set: setRenderList, get: getRenderList}] = useMap<string, boolean>(
         new Map<string, boolean>()
     )
+
+    const tabsRef = useRef(null)
 
     useEffect(() => {
         onInitSelectSubMenu()
@@ -1269,16 +1132,28 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSelectSubMenu(
                 pageItem.multipleNode[multipleNodeLength - 1] || {
                     id: "0",
-                    verbose: "",
-                    node: <></>
+                    verbose: ""
                 }
             )
+            setCurrentSubIndex(multipleNodeLength - 1)
         }
     }, [pageItem.multipleNode.length])
+    // 切换一级页面时聚焦
+    useEffect(() => {
+        const key = routeConvertKey(pageItem.route, pageItem.pluginName)
+        if (currentTabKey === key) {
+            setTimeout(() => {
+                if (!tabsRef || !tabsRef.current) return
+                const ref = tabsRef.current as unknown as HTMLDivElement
+                ref.focus()
+            }, 100)
+        }
+    }, [currentTabKey])
     /**@description selectSubMenu为未选择状态时默认选中第一个 */
     const onInitSelectSubMenu = useMemoizedFn(() => {
         if (pageItem.multipleNode && pageItem.multipleNode.length > 0) {
             setSelectSubMenu(pageItem.multipleNode[0])
+            setCurrentSubIndex(0)
         }
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
@@ -1440,14 +1315,42 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const newSubPage: MultipleNodeInfo[] = [item]
         onUpdatePageCache(newSubPage)
     })
+    const onKeyDown = useMemoizedFn((e: React.KeyboardEvent, subItem: MultipleNodeInfo, indexSub: number) => {
+        e.stopPropagation()
+        // 快捷键关闭
+        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            e.stopPropagation()
+            if (pageCache.length === 0) return
+            onRemove(subItem, indexSub)
+            return
+        }
+        // 快捷键新增
+        if (e.code === "KeyT" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            e.stopPropagation()
+            onAddSubPage()
+            return
+        }
+    })
+
     return (
-        <>
+        <div
+            ref={tabsRef}
+            className={styles["tab-menu-sub-content"]}
+            onKeyDown={(e) => {
+                onKeyDown(e, selectSubMenu, currentSubIndex)
+            }}
+            tabIndex={0}
+        >
             <DragDropContext onDragEnd={onSubMenuDragEnd}>
                 <Droppable droppableId='droppable2' direction='horizontal'>
                     {(provided, snapshot) => (
                         <div className={styles["tab-menu-sub-body"]}>
                             <div
-                                className={styles["tab-menu-sub"]}
+                                className={classNames(styles["tab-menu-sub"],{
+                                    [styles['tab-menu-sub-width']]:pageItem.hideAdd===true
+                                })}
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
                             >
@@ -1458,7 +1361,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                                 subItem={item}
                                                 index={indexSub}
                                                 selectSubMenu={selectSubMenu}
-                                                setSelectSubMenu={setSelectSubMenu}
+                                                setSelectSubMenu={(val) => {
+                                                    setSelectSubMenu(val)
+                                                    setCurrentSubIndex(indexSub)
+                                                }}
                                                 onRemoveSub={(val) => {
                                                     onRemoveSubPage(val, indexSub)
                                                 }}
@@ -1470,12 +1376,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                     )
                                 })}
                             </div>
-                            <OutlinePlusIcon className={styles["outline-plus-icon"]} onClick={() => onAddSubPage()} />
+                            {pageItem.hideAdd !== true && (
+                                <OutlinePlusIcon
+                                    className={styles["outline-plus-icon"]}
+                                    onClick={() => onAddSubPage()}
+                                />
+                            )}
                         </div>
                     )}
                 </Droppable>
             </DragDropContext>
-            {subPage.map((subItem) => {
+            {subPage.map((subItem, numberSub) => {
                 return (
                     getRenderList(subItem.id) && (
                         <div
@@ -1486,12 +1397,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                             }}
                             className={styles["page-body"]}
                         >
-                            <PageItem routeKey={pageItem.route} yakScriptId={+(pageItem.pluginId || 0)} />
+                            <PageItem
+                                routeKey={pageItem.route}
+                                yakScriptId={+(pageItem.pluginId || 0)}
+                                params={subItem.params}
+                            />
                         </div>
                     )
                 )
             })}
-        </>
+        </div>
     )
 })
 
