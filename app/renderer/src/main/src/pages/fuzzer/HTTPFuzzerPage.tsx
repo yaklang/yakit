@@ -1598,6 +1598,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             extractors: extractor.extractorList
                                         })
                                     }}
+                                    webFuzzerValue={StringToUint8Array(request)}
                                 />
                             ) : (
                                 <>
@@ -2052,6 +2053,7 @@ interface ResponseViewerProps {
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
+    webFuzzerValue?: Uint8Array
 }
 const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -2184,6 +2186,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             // }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
+                            webFuzzerValue={props.webFuzzerValue}
                             rangeId='monaco.fizz.range.read.only.widget'
                             rangeNode={(close, direction) => (
                                 <HTTPFuzzerRangeReadOnlyEditorMenu
