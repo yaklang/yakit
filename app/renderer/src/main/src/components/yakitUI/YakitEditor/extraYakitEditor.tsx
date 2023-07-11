@@ -25,6 +25,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     originValue: Uint8Array
     noPacketModifier?: boolean
     extraEditorProps?: YakitEditorProps | any
+    webFuzzerValue?: string
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -35,6 +36,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         extraEditorProps,
         contextMenu,
         readOnly,
+        webFuzzerValue,
         ...restProps
     } = props
 
@@ -176,7 +178,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     try {
-                        const text = editor.getModel()?.getValue() || ""
+                        const text = webFuzzerValue || editor.getModel()?.getValue() || ""
                         if (!text) {
                             info("数据包为空")
                             return

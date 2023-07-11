@@ -350,6 +350,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             originValue={new Buffer(flow.Response)}
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
+                                            webFuzzerValue={new Buffer(flow.Request)}
                                             rangeId='http.flow.detail.response.read.only.widget'
                                             rangeNode={(close, direction) => (
                                                 <HTTPFuzzerRangeReadOnlyEditorMenu
@@ -819,6 +820,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         hideSearch={true}
                         defaultSearchKeyword={props.search}
                         defaultHttps={props.defaultHttps}
+                        webFuzzerValue={flow?.Request || new Uint8Array()}
                         onEditor={setReqSecondEditor}
                         rangeId='http.flow.detail.second.range.read.widget'
                         rangeNode={(close, direction) => (

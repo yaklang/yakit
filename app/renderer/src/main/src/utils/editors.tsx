@@ -1063,6 +1063,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     isAddOverlayWidget?: boolean
     /**@name 外部控制是否记录操作(拥有此项可记录字体大小及换行符) */
     editorOperationRecord?: string
+    /**@name 外部控制WebFuzzer数据 */
+    webFuzzerValue?: Uint8Array
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
@@ -1444,6 +1446,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             }}
                             editorOperationRecord={props.editorOperationRecord}
                             defaultHttps={props.defaultHttps}
+                            webFuzzerValue={
+                                props.webFuzzerValue&&new Buffer(props.webFuzzerValue).toString(getEncoding())
+                            }
                             {...props.extraEditorProps}
                         />
                     )}
