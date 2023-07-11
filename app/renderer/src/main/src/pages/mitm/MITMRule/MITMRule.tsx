@@ -1,5 +1,5 @@
 import {Divider, Modal, Tag, Tooltip} from "antd"
-import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
+import React, {ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
     MITMContentReplacerRule,
     MITMRuleProp,
@@ -44,6 +44,7 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {MainOperatorContext} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -123,7 +124,8 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
-    const {visible, setVisible, getContainer, top, status} = props
+    const {tabMenuHeight} = useContext(MainOperatorContext)
+    const {visible, setVisible, getContainer, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
     const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
@@ -142,6 +144,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
     const [currentIndex, setCurrentIndex] = useState<number>()
+
+    const heightDrawer = useMemo(() => {
+        return tabMenuHeight - 58
+    }, [tabMenuHeight])
+
     useEffect(() => {
         ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
             const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
@@ -180,9 +187,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         setIsNoReplace(listReplace.length === 0)
         setIsAllBan(listDisabled.length === 0)
     })
-    const styleDrawer = useCreation(() => {
-        return {width: "100vw", top, height: `calc(100vh - ${top + 1}px)`}
-    }, [top])
+
     const onSelectAll = (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
         const rows = selected.filter((ele) => !ele.Disabled)
         setIsAllSelect(checked)
@@ -676,7 +681,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 visible={visible}
                 getContainer={getContainer}
                 mask={false}
-                style={(visible && styleDrawer) || {}}
+                style={{height: visible ? heightDrawer : 0}}
                 className={classNames(styles["mitm-rule-drawer"])}
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={<div className={styles["heard-title"]}>内容规则配置</div>}

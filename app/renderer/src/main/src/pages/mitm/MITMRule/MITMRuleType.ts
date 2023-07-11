@@ -28,7 +28,6 @@ export interface MITMContentReplacerRule {
 
 export interface MITMRuleProp {
     status: "idle" | "hijacked" | "hijacking"
-    top: number
     visible: boolean
     setVisible: (b: boolean) => void
     getContainer?: HTMLElement | (() => HTMLElement) | false

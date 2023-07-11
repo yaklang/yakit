@@ -150,6 +150,8 @@ export interface SubTabItemProps {
  * @function setPageCache 修改路由
  * @property currentTabKey 一级选中的tab
  * @function setCurrentTabKey 设置选中tab
+ * @property TabMenuHeight tab-menu内容高度
+ * @function setTabMenuHeight 设置tab-menu的内容高度
  * @function openMultipleMenuPage 打开页面
  * @function afterDeleteFirstPage 删除一级页面的回调  'all'|'other'|'single' 
  * @function afterDeleteSubPage 删除二级页面的回调 'other'|'single'
@@ -161,9 +163,11 @@ export interface MainOperatorContextProps {
     setPageCache: (p: PageCache[]) => void
     currentTabKey: string
     setCurrentTabKey: (s: YakitRoute | string) => void
+    tabMenuHeight: number
+    setTabMenuHeight: (n: number) => void
     openMultipleMenuPage: (route: RouteToPageProps) => void
     afterDeleteFirstPage: (type: 'all' | 'other' | 'single', page?: PageCache) => void
     afterDeleteSubPage: (type: 'other' | 'single', r: YakitRoute | string, subItem: MultipleNodeInfo) => void
     afterUpdateSubPage: (page: PageCache, subItem: MultipleNodeInfo) => void
-    afterDragEndSubPage: (page: PageCache,subItems: MultipleNodeInfo[]) => void
+    afterDragEndSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
 }
