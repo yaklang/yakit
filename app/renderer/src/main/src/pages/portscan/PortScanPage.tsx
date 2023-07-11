@@ -732,17 +732,16 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 type='textarea'
                                 dragger={{
                                     disabled: false,
-                                    accept:typeArr.join(",")
+                                    accept: typeArr.join(",")
                                 }}
                                 beforeUpload={(f) => {
-                                    
                                     if (!typeArr.includes(f.type)) {
                                         failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
                                         return false
                                     }
                                     setSimpleParams({
                                         ...simpleParams,
-                                        UsernameFile:f.path
+                                        UsernameFile: f.path
                                     })
                                     return false
                                 }}
@@ -752,37 +751,40 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 textarea={{
                                     isBubbing: true,
-                                    setValue: (Targets) => {
+                                    setValue: (Usernames) => {
                                         setSimpleParams({
                                             ...simpleParams,
-                                            UsernameFile:Targets
+                                            Usernames: Usernames ? Usernames.split("\n") : []
                                         })
                                     },
-                                    value: simpleParams.UsernameFile,
+                                    value: (simpleParams?.Usernames || []).join("\n"),
                                     rows: 1,
                                     // placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
                                     disabled: false
                                 }}
                                 otherHelpNode={
-                                    <Checkbox
-                                        checked={!simpleParams.ReplaceDefaultUsernameDict}
-                                        style={{marginLeft: 16}}
-                                        onChange={() => {
-                                            setSimpleParams({
-                                                ...simpleParams,
-                                                ReplaceDefaultUsernameDict: !simpleParams.ReplaceDefaultUsernameDict
-                                            })
-                                        }}
-                                    >
-                                        同时使用默认用户字典
-                                    </Checkbox>
+                                    <>
+                                        <Checkbox
+                                            checked={simpleParams.ReplaceDefaultUsernameDict}
+                                            style={{marginLeft: 16}}
+                                            onChange={() => {
+                                                setSimpleParams({
+                                                    ...simpleParams,
+                                                    ReplaceDefaultUsernameDict: !simpleParams.ReplaceDefaultUsernameDict
+                                                })
+                                            }}
+                                        >
+                                            同时使用默认用户字典
+                                        </Checkbox>
+                                        {simpleParams.UsernameFile && <div>{simpleParams.UsernameFile}</div>}
+                                    </>
                                 }
                             />
                             <ContentUploadInput
                                 type='textarea'
                                 dragger={{
                                     disabled: false,
-                                    accept:typeArr.join(",")
+                                    accept: typeArr.join(",")
                                 }}
                                 beforeUpload={(f) => {
                                     if (!typeArr.includes(f.type)) {
@@ -791,7 +793,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     }
                                     setSimpleParams({
                                         ...simpleParams,
-                                        PasswordFile:f.path
+                                        PasswordFile: f.path
                                     })
                                     return false
                                 }}
@@ -801,30 +803,30 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 }}
                                 textarea={{
                                     isBubbing: true,
-                                    setValue: (Targets) => {
-                                        setSimpleParams({
-                                            ...simpleParams,
-                                            PasswordFile:Targets
-                                        })
+                                    setValue: (item) => {
+                                        setSimpleParams({...simpleParams, Passwords: item ? item.split("\n") : []})
                                     },
-                                    value: simpleParams.PasswordFile,
+                                    value: (simpleParams?.Passwords || []).join("\n"),
                                     rows: 1,
                                     // placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
                                     disabled: false
                                 }}
                                 otherHelpNode={
-                                    <Checkbox
-                                        checked={!simpleParams.ReplaceDefaultPasswordDict}
-                                        style={{marginLeft: 16}}
-                                        onChange={() => {
-                                            setSimpleParams({
-                                                ...simpleParams,
-                                                ReplaceDefaultPasswordDict: !simpleParams.ReplaceDefaultPasswordDict
-                                            })
-                                        }}
-                                    >
-                                        同时使用默认密码字典
-                                    </Checkbox>
+                                    <>
+                                        <Checkbox
+                                            checked={simpleParams.ReplaceDefaultPasswordDict}
+                                            style={{marginLeft: 16}}
+                                            onChange={() => {
+                                                setSimpleParams({
+                                                    ...simpleParams,
+                                                    ReplaceDefaultPasswordDict: !simpleParams.ReplaceDefaultPasswordDict
+                                                })
+                                            }}
+                                        >
+                                            同时使用默认密码字典
+                                        </Checkbox>
+                                        {simpleParams.PasswordFile && <div>{simpleParams.PasswordFile}</div>}
+                                    </>
                                 }
                             />
                             <InputInteger

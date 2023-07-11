@@ -52,7 +52,7 @@ import {PresetPorts} from "@/pages/portscan/schema"
 import {v4 as uuidv4} from "uuid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import { YakitRoute } from "@/routes/newRoute"
-import {BruteParamsForm, StartBruteParams} from "@/pages/brute/BrutePage";
+import { StartBruteParams } from "@/pages/brute/BrutePage";
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -261,6 +261,15 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
     }, [getScanType(), executing, portParams?.Targets])
 
+    useEffect(()=>{
+        if(getScanType()==="自定义"&&!getCheckedList().includes("弱口令")){
+            setPortParams({...getPortParams(),EnableBrute:false})
+        }
+        else{
+            setPortParams({...getPortParams(),EnableBrute:true})
+        }
+    },[getScanType(),getCheckedList()])
+
     useEffect(() => {
         if (TaskName) {
             form.setFieldsValue({
@@ -274,6 +283,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         const cacheData = v ? JSON.parse(v) : false
         let newParams: PortScanParams = {...getPortParams()}
         const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+        let StartBruteParams: StartBruteParams = {...getBruteParams()}
         // 继续任务暂存报告参数 用于恢复任务下载 --如果直接关闭Dom则无法存储报告
         const ReportParams = getReportParams()
         if (oldRunParams) {
@@ -282,6 +292,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 "SaveCancelSimpleDetect",
                 cacheData || {
                     LastRecord,
+                    StartBruteParams,
                     PortScanRequest,
                     ExtraInfo: JSON.stringify({statusCards, Params: ReportParams})
                 }
@@ -296,6 +307,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         YakScriptOnlineGroup: OnlineGroup,
                         ExtraInfo: JSON.stringify({statusCards, Params: ReportParams})
                     },
+                    StartBruteParams,
                     PortScanRequest: {...newParams, TaskName: runTaskName}
                 }
             )
@@ -685,28 +697,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
                         </div>
                     </Form.Item>
-                </div>
-                <div>
-                    <Button
-                        type={"link"}
-                        size={"small"}
-                        onClick={(e) => {
-                            showModal({
-                                title: "设置高级参数",
-                                width: "50%",
-                                content: (
-                                    <>
-                                        <BruteParamsForm
-                                            defaultParams={bruteParams}
-                                            setParams={setBruteParams}
-                                        />
-                                    </>
-                                )
-                            })
-                        }}
-                    >
-                        更多参数
-                    </Button>
                 </div>
             </Form>
         </div>
