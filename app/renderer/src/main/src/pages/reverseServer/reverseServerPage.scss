@@ -11,7 +11,8 @@
         flex-direction: column;
         .ant-page-header-content {
             flex: 1;
-            overflow: hidden;
+            // overflow: hidden;
+            overflow-y: auto;
             display: flex;
             justify-content: center;
             .setting-reverse-server-wrapper {

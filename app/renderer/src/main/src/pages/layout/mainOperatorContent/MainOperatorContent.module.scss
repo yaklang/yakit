@@ -342,7 +342,9 @@ $keyColor: map-keys($colors);
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow: hidden;
+    // overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 @keyframes showActive {

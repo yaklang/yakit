@@ -176,6 +176,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**matcher-extractor") openMenuPage({route: YakitRoute.Beta_MatcherExtractorPage})
             if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
+            if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
@@ -1538,7 +1539,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                             key={subItem.id}
                             tabIndex={selectSubMenu.id === subItem.id ? 1 : -1}
                             style={{
-                                display: selectSubMenu.id === subItem.id ? "" : "none"
+                                display: selectSubMenu.id === subItem.id ? "" : "none",
+                                padding: NoPaddingRoute.includes(pageItem.route) ? 0 : "8px 16px 13px 16px"
                             }}
                             className={styles["page-body"]}
                         >
