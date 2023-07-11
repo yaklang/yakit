@@ -7,8 +7,6 @@ import {
     TrashIcon,
     ResizerIcon,
     HollowLightningBoltIcon,
-    PencilAltIcon,
-    TerminalIcon,
     EyeIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -20,26 +18,22 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn, useSize} from "ahooks"
-import {Form, Tooltip, Collapse, Space, Tag, Divider} from "antd"
+import {useInViewport, useMemoizedFn} from "ahooks"
+import {Form, Tooltip, Collapse, Space, Divider} from "antd"
 import {useWatch} from "antd/lib/form/Form"
-import React, {useState, useRef, useEffect, useMemo, ReactNode, ChangeEvent} from "react"
+import React, {useState, useRef, useEffect, useMemo, ReactNode, useContext} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
-import {FuzzerResponse, SelectOptionProps} from "../HTTPFuzzerPage"
+import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array} from "@/utils/str"
-import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {
     ColorSelect,
     ExtractorItem,
     MatcherAndExtractionCard,
-    MatcherCollapse,
     MatcherItem,
     defMatcherAndExtractionCode,
-    defaultExtractorItem,
-    defaultMatcherItem,
     extractorTypeList,
     filterModeOptions,
     matcherTypeList,
@@ -49,7 +43,6 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import classNames from "classnames"
 import {
     ExtractorValueProps,
-    HTTPResponseMatcher,
     MatcherValueProps,
     MatchingAndExtraction
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
@@ -57,7 +50,7 @@ import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
-import {YakitRoute} from "@/routes/newRoute"
+import {MainOperatorContext} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
@@ -66,6 +59,7 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
+    const {tabMenuHeight} = useContext(MainOperatorContext)
     const {
         advancedConfigValue,
         visible,
@@ -106,14 +100,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const filterMode = useWatch("filterMode", form)
     const hitColor = useWatch("hitColor", form) || "red"
 
-    const size = useSize(document.querySelector(`.main-operator-first-menu-page-content-${YakitRoute.HTTPFuzzer}`)) || {
-        width: 0,
-        height: 0
-    }
-
     const heightDrawer = useMemo(() => {
-        return size.height - 18
-    }, [size.height])
+        return tabMenuHeight - 40
+    }, [tabMenuHeight])
 
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
@@ -295,7 +284,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             setType("extractors")
         }
     })
-
     return (
         <div className={styles["http-query-advanced-config"]} style={{display: visible ? "" : "none"}} ref={queryRef}>
             <div className={styles["advanced-config-heard"]}>

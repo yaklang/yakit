@@ -273,15 +273,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     )
 
     const [visible, setVisible] = useState<boolean>(false)
-    const [top, setTop] = useState<number>(0)
-    const [height, setHeight] = useState<number>(0)
     const mitmPageRef = useRef<any>()
     const [inViewport] = useInViewport(mitmPageRef)
-    useEffect(() => {
-        if (!mitmPageRef.current) return
-        const client = mitmPageRef.current.getBoundingClientRect()
-        setTop(client.top)
-    }, [height])
+
     const onRenderMITM = useMemoizedFn(() => {
         switch (status) {
             case "idle":
@@ -319,21 +313,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     return (
         <>
             <div className={style["mitm-page"]} ref={mitmPageRef}>
-                <ReactResizeDetector
-                    onResize={(w, h) => {
-                        if (!h) {
-                            return
-                        }
-                        setHeight(h)
-                    }}
-                    handleWidth={true}
-                    handleHeight={true}
-                    refreshMode={"debounce"}
-                    refreshRate={50}
-                />
                 {onRenderMITM()}
             </div>
-            <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} top={top} />
+            <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} />
         </>
     )
 }

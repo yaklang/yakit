@@ -1,5 +1,5 @@
-import React, {useState, ReactNode, useEffect, useRef, useMemo, useContext, createContext} from "react"
-import {Layout, Modal, Form, Tooltip} from "antd"
+import React, {useState, useEffect, useRef, useMemo, useContext, createContext} from "react"
+import {Layout, Form, Tooltip} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {
     MainOperatorContentProps,
@@ -25,17 +25,17 @@ import {
     ComponentParams
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useDebounceEffect, useDebounceFn, useGetState, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useGetState, useMap, useMemoizedFn} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
-import {KeyConvertRoute, keyToRouteInfo, routeConvertKey} from "../publicMenu/utils"
+import {KeyConvertRoute, routeConvertKey} from "../publicMenu/utils"
 import {OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultUserInfo, fuzzerInfoProp} from "@/pages/MainOperator"
-import {UserInfoProps, useStore} from "@/store"
+import {useStore} from "@/store"
 import {getLocalValue, getRemoteProjectValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
 import {BugInfoProps, BugList, CustomBugList} from "@/pages/invoker/batch/YakBatchExecutors"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
@@ -48,18 +48,20 @@ import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import debounce from "lodash/debounce"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {compareAsc} from "@/pages/yakitStore/viewers/base"
+import ReactResizeDetector from "react-resize-detector"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
 const {Content} = Layout
 const {ipcRenderer} = window.require("electron")
 
-const MainOperatorContext = createContext<MainOperatorContextProps>({
+export const MainOperatorContext = createContext<MainOperatorContextProps>({
     pageCache: [],
     setPageCache: () => {},
     currentTabKey: "",
     setCurrentTabKey: () => {},
+    tabMenuHeight: 0,
+    setTabMenuHeight: () => {},
     openMultipleMenuPage: () => {},
     afterDeleteFirstPage: () => {},
     afterDeleteSubPage: () => {},
@@ -137,6 +139,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const {routeKeyToLabel} = props
 
     const [loading, setLoading] = useState(false)
+    const [tabMenuHeight, setTabMenuHeight] = useState<number>(0)
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
@@ -497,8 +500,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const tabName = routeKeyToLabel.get(key) || menuName
                 const tabId = `${key}-[${randomString(6)}]`
                 const time = new Date().getTime().toString()
-                const verbose = nodeParams?.verbose || `${tabName}-[${(filterPage[0].multipleLength || 0) + 1}]`
-
+                const verbose =
+                    nodeParams?.verbose ||
+                    `${tabName}-[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
                 if (filterPage.length > 0) {
                     const node: MultipleNodeInfo = {
                         id: tabId,
@@ -760,7 +764,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 } else {
                     oldPageCache.splice(index, 1, webFuzzerPage)
                 }
-                console.log("webFuzzerPage", webFuzzerPage)
                 setPageCache(oldPageCache)
                 setCurrentTabKey(key)
             })
@@ -900,6 +903,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     setPageCache,
                     currentTabKey,
                     setCurrentTabKey,
+                    tabMenuHeight,
+                    setTabMenuHeight,
                     openMultipleMenuPage,
                     afterDeleteFirstPage: onAfterDeleteFirstPage,
                     afterDeleteSubPage: onAfterDeleteSubPage,
@@ -965,7 +970,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 })
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
-    const {pageCache, setPageCache} = useContext(MainOperatorContext)
+    const {pageCache, setPageCache, setTabMenuHeight} = useContext(MainOperatorContext)
     const {onRemove} = props
 
     /** ---------- 拖拽排序 start ---------- */
@@ -982,6 +987,16 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     /** ---------- 拖拽排序 end ---------- */
     return (
         <div className={styles["tab-menu"]}>
+            <ReactResizeDetector
+                onResize={(_, height) => {
+                    if (!height) return
+                    setTabMenuHeight(height)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <TabList onRemove={onRemove} onDragEnd={onDragEnd} />
             <TabChildren />
         </div>
