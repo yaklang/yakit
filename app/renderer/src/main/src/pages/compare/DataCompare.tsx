@@ -24,6 +24,7 @@ export const DataCompare: React.FC = (props) => {
         <AutoCard
             title={"数据对比"}
             bodyStyle={{ padding: 0 }}
+            bordered={false}
             extra={
                 <Space>
                     <Button

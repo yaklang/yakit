@@ -6,5 +6,6 @@
 }
 .tabs-container .ant-tabs-content-holder {
     flex-grow: 1;
-    overflow-y: hidden;
+    /* overflow-y: hidden; */
+    overflow-y: auto;
 }

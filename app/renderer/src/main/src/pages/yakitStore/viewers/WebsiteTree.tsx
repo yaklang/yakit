@@ -339,6 +339,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             }
                             size={"small"}
                             extra={null}
+                            style={{borderTop: 0}}
                         >
                             <div ref={TreeBoxRef} style={{height: "100%", maxHeight: props.maxHeight}}>
                                 <Tree
@@ -467,6 +468,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         className={"flex-card"}
                         title={"HTTP Flow Record"}
                         bodyStyle={{padding: 0}}
+                        style={{borderTop: 0}}
                         extra={
                             <Pagination
                                 simple={true}

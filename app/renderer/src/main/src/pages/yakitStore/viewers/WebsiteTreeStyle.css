@@ -44,10 +44,17 @@
 }
 .Website-tree-card .ant-card-body{
     flex: 1;
+    overflow-y: auto;
 }
 .Website-tree-card .ant-card-body .ant-tree-list-holder div:first-child{
     overflow: initial !important;
 }
 .Website-tree-card .ant-card-head{
     min-width: auto;
+}
+.flex-card .ant-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }

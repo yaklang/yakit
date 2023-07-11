@@ -576,8 +576,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             <div style={{flex:1,overflow:"hidden"}}>
                 <YakitResizeBox
                 isVer={true}
-                firstMinSize={400}
-                secondMinSize={300}
+                firstMinSize={150}
+                secondMinSize={100}
                 firstNode={
                     <div className={styles["portAsset"]}>
                         <div className={styles["portAsset-head"]}>

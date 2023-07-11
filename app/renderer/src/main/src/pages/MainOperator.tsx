@@ -570,7 +570,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }
     return (
         <>
-            <Layout className='yakit-main-layout' style={controlShow ? {display: "none"} : {}}>
+            <Layout className='yakit-main-layout main-content-tabs yakit-layout-tabs' style={controlShow ? {display: "none"} : {}}>
                 <AutoSpin spinning={loading}>
                     {isShowCustomizeMenu && (
                         <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />

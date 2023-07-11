@@ -152,6 +152,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 </Space>
             }
             bordered={false}
+            style={{overflowY:'auto'}}
         >
             <Space direction={"vertical"} style={{width: "100%"}}>
                 {token !== "" && (
