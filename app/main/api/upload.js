@@ -45,16 +45,33 @@ module.exports = (win, getClient) => {
         const {path} = params
         // 创建数据流
         const readerStream = fs.createReadStream(path)// 可以像使用同步接口一样使用它。
-        const formData = new FormData()
-        formData.append("installPackage", readerStream)
-        const res=httpApi(
-            "post",
-            "yak/install/package",
-            formData,
-            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false
-        )
-        return res
+        readerStream.on('data', (chunk) => {
+            // 处理读取的分片数据
+            console.log('Received a chunk of data:');
+            console.log(chunk.toString());
+          });
+          
+          readerStream.on('end', () => {
+            // 读取完成的回调
+            console.log('File reading completed.');
+          });
+          
+          readerStream.on('error', (error) => {
+            // 读取过程中出错的回调
+            console.error('An error occurred while reading the file.');
+            console.error(error);
+          });
+        // const formData = new FormData()
+        // formData.append("installPackage", readerStream)
+        // const res=httpApi(
+        //     "post",
+        //     "yak/install/package",
+        //     formData,
+        //     {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+        //     false,
+        //     30*60*1000
+        // )
+        // return res
     })
 
     ipcMain.handle("get-folder-under-files", async (event, params) => {

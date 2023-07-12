@@ -3,6 +3,9 @@ const https = require('https');
 const {ipcMain, webContents} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
 
+// 请求超时时间
+const DefaultTimeOut = 30 * 1000
+
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
     event.returnValue = arg
@@ -11,7 +14,7 @@ ipcMain.on("sync-edit-baseUrl", (event, arg) => {
 const service = axios.create({
     // baseURL: "http://onlinecs.vaiwan.cn/api/",
     baseURL: `${HttpSetting.httpBaseURL}/api/`,
-    timeout: 30 * 1000, // 请求超时时间
+    timeout: DefaultTimeOut, // 请求超时时间
     maxBodyLength: Infinity, //设置适当的大小
     httpsAgent: new https.Agent({rejectUnauthorized: false}), // 忽略 HTTPS 错误
 })
@@ -72,7 +75,7 @@ service.interceptors.response.use(
     }
 )
 
-function httpApi(method, url, params, headers, isAddParams = true) {
+function httpApi(method, url, params, headers, isAddParams = true,timeout = DefaultTimeOut) {
     if (!["get", "post"].includes(method)) {
         return Promise.reject(`call yak echo failed: ${e}`)
     }
@@ -81,7 +84,8 @@ function httpApi(method, url, params, headers, isAddParams = true) {
         method: method,
         headers,
         params: isAddParams ? params : undefined,
-        data: method === "post" ? params : undefined
+        data: method === "post" ? params : undefined,
+        timeout
     })
 }
 
