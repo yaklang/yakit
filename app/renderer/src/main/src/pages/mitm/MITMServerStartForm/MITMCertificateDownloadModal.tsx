@@ -45,7 +45,7 @@ const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> 
                     在设置代理后访问：
                     <YakitTag
                         enableCopy
-                        copyText='http://download-mitm-cert.yaklang.io'
+                        copyText='http://mitm'
                         iconColor='var(--yakit-primary-5)'
                     />
                     可自动下载证书
