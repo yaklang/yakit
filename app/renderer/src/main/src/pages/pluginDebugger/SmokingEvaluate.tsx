@@ -16,7 +16,7 @@ interface SmokingEvaluateProp {
 
 export interface SmokingEvaluateResult {
     Item: string
-    Suggestions: string
+    Suggestion: string
     ExtraInfo: Uint8Array
 }
 
@@ -65,8 +65,9 @@ const SmokingEvaluate: React.FC<SmokingEvaluateProp> = (props) => {
             正在进行插件基础评估
         </YakitSpin> : <Space direction={"vertical"}>
             {response && response.Results.map(i => {
+                console.log(i)
                 return <AutoCard title={i.Item} size={"small"} bordered={true}>
-                    {i.Suggestions}
+                    {i.Suggestion}
                 </AutoCard>
             })}
             {response && (

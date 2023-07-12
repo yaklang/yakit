@@ -349,6 +349,8 @@ export interface ExtraMITMServerProps {
     preferGMTLS: boolean
     proxyPassword: string
     proxyUsername: string
+    dnsServers: string[]
+    hosts: {Key: string; Value: string}[]
 }
 
 interface MITMServerProps {
