@@ -13,7 +13,7 @@ import {
     YaklangInstallHintSvgIcon
 } from "./icons"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
-import {FuncDomain} from "./FuncDomain"
+import {FuncDomain, UpdateEnpriTraceInfoProps} from "./FuncDomain"
 import {WinUIOp} from "./WinUIOp"
 import {GlobalState} from "./GlobalState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
@@ -62,6 +62,7 @@ import {useStore, yakitDynamicStatus} from "@/store"
 import yakitEE from "@/assets/yakitEE.png";
 import yakitSE from "@/assets/yakitSE.png";
 import yakitCattle from "@/assets/yakitCattle.png";
+import { NetWorkApi } from "@/services/fetch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1811,53 +1812,82 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
      */
     useEffect(() => {
         if (visible) {
-            isBreakRef.current = true
-            setDownloadProgress(undefined)
-            ipcRenderer
-                .invoke("fetch-latest-yakit-version")
-                .then((data: string) => {
-                    let version = data
-                    if (version.startsWith("v")) version = version.substr(1)
-
-                    ipcRenderer
-                        .invoke("download-latest-yakit", version, isEnterpriseEdition())
-                        .then(() => {
-                            if (!isBreakRef.current) return
-                            success("下载完毕")
-                            if (!getDownloadProgress()?.size) return
-                            setDownloadProgress({
-                                time: {
-                                    elapsed: downloadProgress?.time.elapsed || 0,
-                                    remaining: 0
-                                },
-                                speed: 0,
-                                percent: 100,
-                                // @ts-ignore
-                                size: getDownloadProgress().size
+            // 社区更新
+            if(isCommunityEdition()){
+                isBreakRef.current = true
+                setDownloadProgress(undefined)
+                ipcRenderer
+                    .invoke("fetch-latest-yakit-version")
+                    .then((data: string) => {
+                        let version = data
+                        if (version.startsWith("v")) version = version.substr(1)
+    
+                        ipcRenderer
+                            .invoke("download-latest-yakit", version, isEnterpriseEdition())
+                            .then(() => {
+                                if (!isBreakRef.current) return
+                                success("下载完毕")
+                                if (!getDownloadProgress()?.size) return
+                                setDownloadProgress({
+                                    time: {
+                                        elapsed: downloadProgress?.time.elapsed || 0,
+                                        remaining: 0
+                                    },
+                                    speed: 0,
+                                    percent: 100,
+                                    // @ts-ignore
+                                    size: getDownloadProgress().size
+                                })
+                                ipcRenderer.invoke("open-yakit-or-yaklang")
+                                ipcRenderer.invoke("download-update-wait", "yakit")
                             })
-                            ipcRenderer.invoke("open-yakit-or-yaklang")
-                            ipcRenderer.invoke("download-update-wait", "yakit")
-                        })
-                        .catch((e: any) => {
-                            if (!isBreakRef.current) return
-                            failed(`下载失败: ${e}`)
-                        })
-                        .finally(() => setVisible(false))
-                })
-                .catch((e: any) => {
+                            .catch((e: any) => {
+                                if (!isBreakRef.current) return
+                                failed(`下载失败: ${e}`)
+                            })
+                            .finally(() => setVisible(false))
+                    })
+                    .catch((e: any) => {
+                        if (!isBreakRef.current) return
+                        failed(`${e}`)
+                        setVisible(false)
+                    })
+    
+                ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
                     if (!isBreakRef.current) return
-                    failed(`${e}`)
-                    setVisible(false)
+                    setDownloadProgress(state)
                 })
-
-            ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
-                if (!isBreakRef.current) return
-                setDownloadProgress(state)
-            })
-
-            return () => {
-                ipcRenderer.removeAllListeners("download-yakit-engine-progress")
+    
+                return () => {
+                    ipcRenderer.removeAllListeners("download-yakit-engine-progress")
+                }
             }
+            // 企业版更新
+            else if(isEnpriTrace()){
+                ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
+                    console.log("发送请求",info);
+                    const {version,downloadPath} = info
+                    NetWorkApi<UpdateEnpriTraceInfoProps, any>({
+                    method: "get",
+                    url: "download/install/package",
+                    params: {version,downloadPath}
+                })
+                    .then((res: {from: string}) => {
+                        console.log("下载成功",res);
+                        if (!res) return
+                        
+                        
+                    })
+                    .catch((err) => {
+                        console.log("错误",err);
+                        
+                    }).finally(()=>{
+                        console.log("完成")
+                    })
+                })
+                
+            }
+            
         } else {
             isBreakRef.current = false
         }

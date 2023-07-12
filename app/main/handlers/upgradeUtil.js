@@ -177,6 +177,22 @@ const getYakitDownloadUrl = (version, isEnterprise = false) => {
 
 }
 
+// 获取Yakit所处平台
+const getYakitPlatform = () => {
+    switch (process.platform) {
+        case "darwin":
+            if (process.arch === "arm64") {
+                return `darwin-arm64`
+            } else {
+                return `darwin-x64`
+            }
+        case "win32":
+            return `windows-amd64`
+        case "linux":
+            return `linux-amd64`
+    }
+}
+
 module.exports = {
     getLatestYakLocalEngine,
     initial: async () => {
@@ -376,6 +392,10 @@ module.exports = {
         }
         ipcMain.handle("download-latest-yakit", async (e, version, isEnterprise) => {
             return await asyncDownloadLatestYakit(version, isEnterprise)
+        })
+
+        ipcMain.handle("update-enpritrace-info", async () => {
+            return await {version:getYakitPlatform(),downloadPath:yakEngineDir}
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
