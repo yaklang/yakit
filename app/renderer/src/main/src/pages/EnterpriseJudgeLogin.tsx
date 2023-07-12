@@ -6,7 +6,7 @@ import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivat
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState} from "ahooks"
 import {aboutLoginUpload} from "@/utils/login"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
@@ -95,7 +95,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                             <ConfigPrivateDomain
                                 enterpriseLogin={true}
                                 onSuccee={() => setJudgeLicense(false)}
-                                skipShow={isEnpriTraceAgent()}
+                                skipShow={isEnpriTrace()||isEnpriTraceAgent()}
                             />
                         </div>
                     ) : (
