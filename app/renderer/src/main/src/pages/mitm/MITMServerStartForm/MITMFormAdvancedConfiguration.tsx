@@ -10,13 +10,16 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {yakitFailed} from "@/utils/notification"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Divider, Form, Modal, Upload} from "antd"
+import {Divider, Form, Modal, Space, Upload} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {ExportIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {useWatch} from "antd/lib/form/Form"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { inputHTTPFuzzerHostConfigItem } from "@/pages/fuzzer/HTTPFuzzerHosts"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -30,6 +33,8 @@ interface MITMFormAdvancedConfigurationProps {
     setVisible: (b: boolean) => void
     onSave: (v: AdvancedConfigurationFromValue) => void
     enableGMTLS: boolean
+    etcHosts: any[]
+    setEtcHosts:(v:any[]) => void
 }
 export interface AdvancedConfigurationFromValue {
     certs: ClientCertificate[]
@@ -41,7 +46,7 @@ export interface AdvancedConfigurationFromValue {
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {visible, setVisible, onSave, enableGMTLS} = props
+        const {visible, setVisible, onSave, enableGMTLS,etcHosts,setEtcHosts} = props
         const [certs, setCerts] = useState<ClientCertificate[]>([])
 
         // 保存初始默认值
@@ -217,13 +222,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         })
         const onClose = useMemoizedFn(() => {
             const formValue = form.getFieldsValue()
-            const oldValue = {
+            const oldValue:any = {
                 certs: certsDef,
-                preferGMTLS: preferGMTLSDef,
-                onlyEnableGMTLS: onlyEnableGMTLSDef,
                 enableProxyAuth: enableProxyAuthDef,
                 proxyUsername: proxyUsernameDef,
                 proxyPassword: proxyPasswordDef
+            }
+            if(enableGMTLS){
+                oldValue.preferGMTLS = preferGMTLSDef
+                oldValue.onlyEnableGMTLS = onlyEnableGMTLSDef
             }
             const newValue = {
                 certs,
@@ -231,7 +238,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 proxyUsername:formValue.proxyUsername||'',
                 proxyPassword:formValue.proxyPassword||'',
             }
-            if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+            // 提取不需要参与保存对比的项
+            const {dnsServers,etcHosts,...rest} = newValue
+            const newObj = Object.assign({}, rest);           
+            if (JSON.stringify(oldValue) !== JSON.stringify(newObj)) {
                 Modal.confirm({
                     title: "温馨提示",
                     icon: <ExclamationCircleOutlined />,
@@ -290,6 +300,45 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 maskClosable={false}
             >
                 <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+                <Form.Item
+                    label='DNS服务器'
+                    name='dnsServers'
+                    help={"指定DNS服务器"}
+                    initialValue={["8.8.8.8", "114.114.114.114"]}
+                >
+                    <YakitSelect
+                        options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
+                            return {value: i, label: i}
+                        })}
+                        mode='tags'
+                        allowClear={true}
+                        placeholder={"例如 1.1.1.1"}
+                    />
+                </Form.Item>
+                <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
+                    <Space direction={"horizontal"}>
+                        {etcHosts.map((i, n) => (
+                            <YakitTag
+                                closable={true}
+                                onClose={() => {
+                                    setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+                                }}
+                                key={`${i.Key}-${n}`}
+                            >
+                                {`${i.Key} => ${i.Value}`}
+                            </YakitTag>
+                        ))}
+                        <YakitButton
+                            onClick={() => {
+                                inputHTTPFuzzerHostConfigItem((obj) => {
+                                    setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                                })
+                            }}
+                        >
+                            添加 Hosts 映射
+                        </YakitButton>
+                    </Space>
+                </Form.Item>
                     {enableGMTLS && (
                         <>
                             <Form.Item

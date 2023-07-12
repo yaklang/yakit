@@ -215,45 +215,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
                     />
                 </Item>
-                <Form.Item
-                    label='DNS服务器'
-                    name='dnsServers'
-                    help={"指定DNS服务器"}
-                    initialValue={["8.8.8.8", "114.114.114.114"]}
-                >
-                    <YakitSelect
-                        options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
-                            return {value: i, label: i}
-                        })}
-                        mode='tags'
-                        allowClear={true}
-                        placeholder={"例如 1.1.1.1"}
-                    />
-                </Form.Item>
-                <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
-                    <Space direction={"horizontal"}>
-                        {etcHosts.map((i, n) => (
-                            <YakitTag
-                                closable={true}
-                                onClose={() => {
-                                    setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
-                                }}
-                                key={`${i.Key}-${n}`}
-                            >
-                                {`${i.Key} => ${i.Value}`}
-                            </YakitTag>
-                        ))}
-                        <YakitButton
-                            onClick={() => {
-                                inputHTTPFuzzerHostConfigItem((obj) => {
-                                    setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
-                                })
-                            }}
-                        >
-                            添加 Hosts 映射
-                        </YakitButton>
-                    </Space>
-                </Form.Item>
                 <Item
                     label={"HTTP/2.0 支持"}
                     name='enableHttp2'
@@ -344,6 +305,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }}
                     enableGMTLS={enableGMTLS}
                     ref={advancedFormRef}
+                    etcHosts={etcHosts}
+                    setEtcHosts={setEtcHosts}
                 />
             </React.Suspense>
         </div>
