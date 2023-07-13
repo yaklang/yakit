@@ -316,7 +316,16 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     />
                 </Form.Item>
                 <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
-                    <Space direction={"horizontal"}>
+                    <Space direction={"horizontal"} wrap>
+                        <YakitButton
+                            onClick={() => {
+                                inputHTTPFuzzerHostConfigItem((obj) => {
+                                    setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                                })
+                            }}
+                        >
+                            添加 Hosts 映射
+                        </YakitButton>
                         {etcHosts.map((i, n) => (
                             <YakitTag
                                 closable={true}
@@ -328,15 +337,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 {`${i.Key} => ${i.Value}`}
                             </YakitTag>
                         ))}
-                        <YakitButton
-                            onClick={() => {
-                                inputHTTPFuzzerHostConfigItem((obj) => {
-                                    setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
-                                })
-                            }}
-                        >
-                            添加 Hosts 映射
-                        </YakitButton>
                     </Space>
                 </Form.Item>
                     {enableGMTLS && (
