@@ -68,7 +68,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const [form] = Form.useForm()
     const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
-    const [etcHosts, setEtcHosts] = useState<any[]>([])
     useEffect(() => {}, [enableGMTLS])
 
     useEffect(() => {
@@ -146,7 +145,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 proxyUsername: params.proxyUsername,
                 proxyPassword: params.proxyPassword,
                 dnsServers: params.dnsServers,
-                hosts: etcHosts
+                hosts: params.etcHosts
             }
         )
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
@@ -305,8 +304,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }}
                     enableGMTLS={enableGMTLS}
                     ref={advancedFormRef}
-                    etcHosts={etcHosts}
-                    setEtcHosts={setEtcHosts}
                 />
             </React.Suspense>
         </div>
