@@ -173,6 +173,8 @@ interface MITMManualEditorProps {
     execFuzzer: (s: string) => void
     status: MITMStatus
     onSetHijackResponseType: (s: string) => void
+    currentIsForResponse: boolean
+    requestPacket: Uint8Array
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
@@ -186,7 +188,9 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         hijacking,
         execFuzzer,
         status,
-        onSetHijackResponseType
+        onSetHijackResponseType,
+        currentIsForResponse,
+        requestPacket
     } = props
     // 操作系统类型
     const [system, setSystem] = useState<string>()
@@ -310,7 +314,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         
     },[])
     return (
-        <>
         <NewHTTPPacketEditor
             originValue={currentPacket}
             noHeader={true}
@@ -322,150 +325,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
             contextMenu={mitmManualRightMenu}
             editorOperationRecord="MITM_Manual_EDITOR_RECORF"
+            webFuzzerValue={currentIsForResponse?requestPacket:undefined}
         />
-        {/* <HTTPPacketEditor
-            originValue={currentPacket}
-            noHeader={true}
-            isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
-            bordered={false}
-            onChange={setModifiedPacket}
-            noPacketModifier={true}
-            readOnly={status === "hijacking"}
-            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
-            actions={[
-                // {
-                //     id: "send-to-scan-packet", label: "发送到数据包扫描器",
-                //     run: e => {
-                //         // console.info(mouseState)
-                //         scanPacket(mouseState, false, "GET / HTTP/1.1\r\nHost: www.baidu.com", "")
-                //     }, contextMenuGroupId: "Scanners",
-                // },
-                ...(forResponse
-                    ? [
-                          {
-                              id: "trigger-auto-hijacked",
-                              label: "切换为自动劫持模式",
-                              keybindings: [
-                                  monaco.KeyMod.Shift |
-                                      (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                      monaco.KeyCode.KEY_T
-                              ],
-                              run: () => {
-                                  handleAutoForward(autoForward === "manual" ? "log" : "manual")
-                              },
-                              contextMenuGroupId: "Actions"
-                          },
-                          {
-                              id: "forward-response",
-                              label: "放行该 HTTP Response",
-                              run: function () {
-                                  forward()
-                                  // hijacking()
-                                  // forwardResponse(getCurrentId()).finally(() => {
-                                  //     setTimeout(() => setLoading(false), 300)
-                                  // })
-                              },
-                              contextMenuGroupId: "Actions"
-                          },
-                          {
-                              id: "drop-response",
-                              label: "丢弃该 HTTP Response",
-                              run: function () {
-                                  hijacking()
-                                  dropResponse(currentPacketId).finally(() => {
-                                      // setTimeout(
-                                      //     () => setLoading(false),
-                                      //     300
-                                      // )
-                                  })
-                              },
-                              contextMenuGroupId: "Actions"
-                          }
-                      ]
-                    : [
-                          {
-                              id: "trigger-auto-hijacked",
-                              label: "切换为自动劫持模式",
-                              keybindings: [
-                                  monaco.KeyMod.Shift |
-                                      (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                      monaco.KeyCode.KEY_T
-                              ],
-                              run: () => {
-                                  handleAutoForward(autoForward === "manual" ? "log" : "manual")
-                              },
-                              contextMenuGroupId: "Actions"
-                          },
-                          {
-                              id: "send-to-fuzzer",
-                              label: "发送到 Web Fuzzer",
-                              keybindings: [
-                                  monaco.KeyMod.Shift |
-                                      (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                      monaco.KeyCode.KEY_R
-                              ],
-                              run: function (StandaloneEditor: any) {
-                                  execFuzzer(StandaloneEditor.getModel().getValue())
-                              },
-                              contextMenuGroupId: "Actions"
-                          },
-                          // {
-                          //     id: "send-to-plugin",
-                          //     label: "发送到 数据包扫描",
-                          //     keybindings: [
-                          //         monaco.KeyMod.Shift |
-                          //         (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                          //         monaco.KeyCode.KEY_E
-                          //     ],
-                          //     run: function (StandaloneEditor: any) {
-                          //         if (!StandaloneEditor.getModel().getValue()) return
-                          //         execPlugin(StandaloneEditor.getModel().getValue())
-                          //     },
-                          //     contextMenuGroupId: "Actions"
-                          // },
-                          {
-                              id: "forward-response",
-                              label: "放行该 HTTP Request",
-                              keybindings: [
-                                  monaco.KeyMod.Shift |
-                                      (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                      monaco.KeyCode.KEY_F
-                              ],
-                              run: function () {
-                                  forward()
-                                  // hijacking()
-                                  // forwardRequest(getCurrentId()).finally(() => {
-                                  //     setTimeout(() => setLoading(false), 300)
-                                  // })
-                              },
-                              contextMenuGroupId: "Actions"
-                          },
-                          {
-                              id: "drop-response",
-                              label: "丢弃该 HTTP Request",
-                              run: function () {
-                                  hijacking()
-                                  dropRequest(currentPacketId).finally(() => {
-                                      // setTimeout(
-                                      //     () => setLoading(false),
-                                      //     300
-                                      // )
-                                  })
-                              },
-                              contextMenuGroupId: "Actions"
-                          },
-                          {
-                              id: "hijack-current-response",
-                              label: "劫持该 Request 对应的响应",
-                              run: function () {
-                                  onSetHijackResponseType("onlyOne")
-                              },
-                              contextMenuGroupId: "Actions"
-                          }
-                      ])
-            ]}
-        /> */}
-        </>
     )
 })
 
