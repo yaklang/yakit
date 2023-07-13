@@ -43,11 +43,19 @@ module.exports = (win, getClient) => {
         })
     })
 
+    let existedChromePath = "";
+    let executedGetChromePath = false;
     ipcMain.handle("GetChromePath", async () => {
+        if (executedGetChromePath) {
+            return existedChromePath
+        }
         try {
-            return getChromePath()
+            existedChromePath = getChromePath()
+            return existedChromePath
         } catch (e) {
             return null
+        } finally {
+            executedGetChromePath = true;
         }
     })
 
