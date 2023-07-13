@@ -1,6 +1,6 @@
 import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {info, yakitFailed} from "@/utils/notification"
+import {failed, info, yakitFailed} from "@/utils/notification"
 import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import React, {useEffect, useRef, useState} from "react"
 import {MITMResponse} from "../MITMPage"
@@ -49,10 +49,18 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     // 存储修改前和修改后的包！
     const [currentPacketInfo, setCurrentPacketInfo] = useState<{
+        requestPacket: Uint8Array
         currentPacket: Uint8Array
         currentPacketId: number
         isHttp: boolean
-    }>({currentPacketId: 0, currentPacket: new Buffer([]), isHttp: true})
+        isResponse: boolean
+    }>({
+        requestPacket: new Buffer([]),
+        currentPacketId: 0,
+        currentPacket: new Buffer([]),
+        isHttp: true,
+        isResponse: false
+    })
     const {currentPacket, currentPacketId, isHttp} = currentPacketInfo
 
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]))
@@ -129,7 +137,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 setCurrentPacketInfo({
                     currentPacket: msg.response,
                     currentPacketId: msg.responseId,
-                    isHttp: msg.isHttps
+                    isHttp: msg.isHttps,
+                    requestPacket: msg.request,
+                    isResponse: true
                 })
             }
         } else {
@@ -145,7 +155,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     setForResponse(false)
                     // setCurrentPacket(msg.request)
                     // setCurrentPacketId(msg.id)
-                    setCurrentPacketInfo({currentPacket: msg.request, currentPacketId: msg.id, isHttp: msg.isHttps})
+                    setCurrentPacketInfo({
+                        currentPacket: msg.request,
+                        currentPacketId: msg.id,
+                        isHttp: msg.isHttps,
+                        requestPacket: msg.request,
+                        isResponse: true
+                    })
                     setUrlInfo(msg.url)
                     // ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
                     //     setIpInfo(res)
@@ -155,7 +171,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
     })
     const clearCurrentPacket = () => {
-        setCurrentPacketInfo({currentPacketId: 0, currentPacket: new Buffer([]), isHttp: true})
+        setCurrentPacketInfo({
+            currentPacketId: 0,
+            currentPacket: new Buffer([]),
+            requestPacket: new Buffer([]),
+            isHttp: true,
+            isResponse: false
+        })
     }
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
         try {
@@ -207,7 +229,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const execFuzzer = useMemoizedFn((value: string) => {
         ipcRenderer.invoke("send-to-tab", {
             type: "fuzzer",
-            data: {isHttps: currentPacketInfo.isHttp, request: value}
+            data: {
+                isHttps: currentPacketInfo.isHttp,
+                request: currentPacketInfo.isResponse ? currentPacketInfo.requestPacket : value
+            }
         })
     })
     const cancleFilter = useMemoizedFn((value) => {
