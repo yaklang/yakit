@@ -61,7 +61,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         isHttp: true,
         isResponse: false
     })
-    const {currentPacket, currentPacketId, isHttp} = currentPacketInfo
+    const {currentPacket, currentPacketId, isHttp,requestPacket,isResponse} = currentPacketInfo
 
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]))
 
@@ -230,8 +230,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         ipcRenderer.invoke("send-to-tab", {
             type: "fuzzer",
             data: {
-                isHttps: currentPacketInfo.isHttp,
-                request: currentPacketInfo.isResponse ? currentPacketInfo.requestPacket : value
+                isHttps: isHttp,
+                request: isResponse ? requestPacket : value
             }
         })
     })
@@ -343,6 +343,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 execFuzzer={execFuzzer}
                                 status={status}
                                 onSetHijackResponseType={onSetHijackResponseType}
+                                currentIsForResponse={currentIsForResponse}
+                                requestPacket={requestPacket}
                             />
                         </div>
                     </div>
