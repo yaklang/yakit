@@ -33,8 +33,6 @@ interface MITMFormAdvancedConfigurationProps {
     setVisible: (b: boolean) => void
     onSave: (v: AdvancedConfigurationFromValue) => void
     enableGMTLS: boolean
-    etcHosts: any[]
-    setEtcHosts:(v:any[]) => void
 }
 export interface AdvancedConfigurationFromValue {
     certs: ClientCertificate[]
@@ -43,10 +41,12 @@ export interface AdvancedConfigurationFromValue {
     enableProxyAuth: boolean
     proxyUsername: string
     proxyPassword: string
+    dnsServers: string[]
+    etcHosts: any[]
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {visible, setVisible, onSave, enableGMTLS,etcHosts,setEtcHosts} = props
+        const {visible, setVisible, onSave, enableGMTLS} = props
         const [certs, setCerts] = useState<ClientCertificate[]>([])
 
         // 保存初始默认值
@@ -56,12 +56,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [enableProxyAuthDef, setEnableProxyAuthDef] = useState<boolean>(false)
         const [proxyUsernameDef, setProxyUsernameDef] = useState<string>()
         const [proxyPasswordDef, setProxyPasswordDef] = useState<string>()
+        const [dnsServersDef,setDnsServersDef] = useState<string[]>(["8.8.8.8", "114.114.114.114"])
+        const [etcHostsDef,setEtcHostsDef] = useState<any[]>([])
+        const [etcHosts, setEtcHosts] = useState<any[]>([])
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
         const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
-
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
 
@@ -71,15 +73,17 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 getValue: () => {
                     const v = form.getFieldsValue()
                     if (Object.keys(v).length > 0) {
-                        return v
+                        return {...v,etcHosts}
                     } else {
                         return {
                             certs: certsDef,
+                            etcHosts: etcHostsDef,
                             preferGMTLS: preferGMTLSDef,
                             onlyEnableGMTLS: onlyEnableGMTLSDef,
                             enableProxyAuth: enableProxyAuthDef,
+                            dnsServers: dnsServersDef,
                             proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
-                            proxyPassword: enableProxyAuthDef ? proxyPasswordDef : ""
+                            proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
                         }
                     }
                 }
@@ -91,6 +95,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 enableProxyAuthDef,
                 proxyUsernameDef,
                 proxyPasswordDef,
+                dnsServersDef,
                 visible,
                 form
             ]
@@ -137,6 +142,23 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             getRemoteValue(MITMConsts.MITMDefaultProxyPassword).then((e) => {
                 setProxyPasswordDef(e)
                 form.setFieldsValue({proxyPassword: e})
+            })
+            // DNS服务器
+            getRemoteValue(MITMConsts.MITMDefaultDnsServers).then((e) => {
+                if (!!e) {
+                    const dnsServers = JSON.parse(e)
+                    setDnsServersDef(dnsServers)
+                    form.setFieldsValue({dnsServers}) 
+                }
+            })
+            // Host配置
+            getRemoteValue(MITMConsts.MITMDefaultEtcHosts).then((e) => {
+                if (!!e) {
+                    const etcHosts = JSON.parse(e)
+                    setEtcHostsDef(etcHosts)
+                    setEtcHosts(etcHosts)
+                    form.setFieldsValue({etcHosts})
+                }
             })
         }, [visible])
         /**
@@ -217,6 +239,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultEnableProxyAuth, `${params.enableProxyAuth}`)
                 setRemoteValue(MITMConsts.MITMDefaultProxyUsername, params.proxyUsername)
                 setRemoteValue(MITMConsts.MITMDefaultProxyPassword, params.proxyPassword)
+                setRemoteValue(MITMConsts.MITMDefaultDnsServers, JSON.stringify(params.dnsServers))
+                setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts)) 
                 onSave(params)
             })
         })
@@ -224,9 +248,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             const formValue = form.getFieldsValue()
             const oldValue:any = {
                 certs: certsDef,
+                dnsServers: dnsServersDef,
+                etcHosts:etcHostsDef,
                 enableProxyAuth: enableProxyAuthDef,
                 proxyUsername: proxyUsernameDef,
-                proxyPassword: proxyPasswordDef
+                proxyPassword: proxyPasswordDef,
             }
             if(enableGMTLS){
                 oldValue.preferGMTLS = preferGMTLSDef
@@ -237,11 +263,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 ...formValue,
                 proxyUsername:formValue.proxyUsername||'',
                 proxyPassword:formValue.proxyPassword||'',
-            }
-            // 提取不需要参与保存对比的项
-            const {dnsServers,etcHosts,...rest} = newValue
-            const newObj = Object.assign({}, rest);           
-            if (JSON.stringify(oldValue) !== JSON.stringify(newObj)) {
+                etcHosts
+            }    
+            if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                 Modal.confirm({
                     title: "温馨提示",
                     icon: <ExclamationCircleOutlined />,
@@ -315,7 +339,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         placeholder={"例如 1.1.1.1"}
                     />
                 </Form.Item>
-                <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
+                <Form.Item label={"Hosts配置"} name='etcHosts'>
                     <Space direction={"horizontal"} wrap>
                         <YakitButton
                             onClick={() => {

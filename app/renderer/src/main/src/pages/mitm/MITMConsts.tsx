@@ -13,4 +13,6 @@ export enum MITMConsts {
     MITMDefaultEnableProxyAuth = "YAKIT_MITMDefaultEnableProxyAuth",
     MITMDefaultProxyUsername = "YAKIT_MITMDefaultProxyUsername",
     MITMDefaultProxyPassword = "YAKIT_MITMDefaultProxyPassword",
+    MITMDefaultDnsServers = "YAKIT_MITMDefaultDnsServers",
+    MITMDefaultEtcHosts = "YAKIT_MITMDefaultEtcHosts"
 }
