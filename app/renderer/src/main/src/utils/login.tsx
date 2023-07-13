@@ -33,7 +33,7 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
             OnlineBaseUrl
         })
         .finally(() => {
-            ipcRenderer.send("user-sign-out",{isEnpriTrace:isEnpriTrace()})
+            // ipcRenderer.send("user-sign-out",{isEnpriTrace:isEnpriTrace()})
         })
     })
     
