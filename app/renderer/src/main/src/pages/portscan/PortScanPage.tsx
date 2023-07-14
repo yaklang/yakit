@@ -700,7 +700,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     >
                         <Space>
                             <Checkbox
-                                onChange={(e) => setParams({...params, EnableBasicCrawler: e.target.value})}
+                                onChange={(e) => setParams({...params, EnableBasicCrawler: e.target.checked})}
                                 checked={params.EnableBasicCrawler}
                             >
                                 启用爬虫

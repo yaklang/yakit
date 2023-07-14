@@ -17,7 +17,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {HTTPPacketEditor, NewHTTPPacketEditor} from "../utils/editors"
+import {HTTPPacketEditor, IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -39,6 +39,8 @@ import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
 import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { NewEditorSelectRange } from "./NewEditorSelectRange"
+import { HTTPFuzzerRangeReadOnlyEditorMenu } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -128,7 +130,8 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
-
+    const [requestEditor, setRequestEditor] = useState<IMonacoEditor>()
+    const [responseEditor, setResponseEditor] = useState<IMonacoEditor>()
     const actionFuzzer = [
         {
             id: "send-fuzzer-info",
@@ -312,7 +315,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <HTTPPacketEditor
+                                        <NewEditorSelectRange
                                             readOnly={true}
                                             hideSearch={true}
                                             noHex={true}
@@ -320,6 +323,18 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             originValue={new Buffer(flow.Request)}
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
+                                            rangeId='http.flow.detail.request.read.only.widget'
+                                            rangeNode={(close, direction) => (
+                                                <HTTPFuzzerRangeReadOnlyEditorMenu
+                                                    direction={direction}
+                                                    rangeValue={
+                                                        (requestEditor &&
+                                                            requestEditor.getModel()?.getValueInRange(requestEditor.getSelection() as any)) ||
+                                                        ""
+                                                    }
+                                                />
+                                            )}
+                                            onEditor={setRequestEditor}
                                         />
                                     </div>
                                 </Card>
@@ -327,7 +342,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <HTTPPacketEditor
+                                        <NewEditorSelectRange
                                             readOnly={true}
                                             hideSearch={true}
                                             noHex={true}
@@ -335,6 +350,19 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             originValue={new Buffer(flow.Response)}
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
+                                            webFuzzerValue={new Buffer(flow.Request)}
+                                            rangeId='http.flow.detail.response.read.only.widget'
+                                            rangeNode={(close, direction) => (
+                                                <HTTPFuzzerRangeReadOnlyEditorMenu
+                                                    direction={direction}
+                                                    rangeValue={
+                                                        (responseEditor &&
+                                                            responseEditor.getModel()?.getValueInRange(responseEditor.getSelection() as any)) ||
+                                                        ""
+                                                    }
+                                                />
+                                            )}
+                                            onEditor={setResponseEditor}
                                         />
                                     </div>
                                 </Card>
@@ -618,7 +646,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             <HTTPFlowExtractedDataTable
                                 httpFlowHash={flow?.Hash || ""}
                                 title={
-                                    <Button.Group size={"small"}>
+                                    <div className={styles['table-header']}>
+                                        <Button.Group size={"small"}>
                                         {existedInfoType.map((i) => {
                                             return (
                                                 <Button
@@ -633,6 +662,21 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             )
                                         })}
                                     </Button.Group>
+                                    <div className={classNames(styles["http-history-fold-box"])}>
+                                        <div className={styles["http-history-icon-box"]}>
+                                            <Tooltip placement='top' title='向右收起'>
+                                                <SideBarOpenIcon
+                                                    className={styles["fold-icon"]}
+                                                    onClick={() => {
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is:true}))
+                                                        setFold(true)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    
                                 }
                             />
                         </Col>
@@ -700,6 +744,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             }
         }
     }, [])
+
+    const [reqFirstEditor, setReqFirstEditor] = useState<IMonacoEditor>()
+    const [reqSecondEditor, setReqSecondEditor] = useState<IMonacoEditor>()
     return (
         <ResizeBox
             firstNode={() => {
@@ -710,7 +757,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     return <HTTPFlowForWebsocketViewer flow={flow} />
                 }
                 return (
-                    <NewHTTPPacketEditor
+                    <NewEditorSelectRange
                         originValue={flow?.Request || new Uint8Array()}
                         readOnly={true}
                         noLineNumber={true}
@@ -726,6 +773,18 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
                         defaultSearchKeyword={search}
+                        onEditor={setReqFirstEditor}
+                        rangeId='http.flow.detail.first.range.read.widget'
+                        rangeNode={(close, direction) => (
+                            <HTTPFuzzerRangeReadOnlyEditorMenu
+                                direction={direction}
+                                rangeValue={
+                                    (reqFirstEditor &&
+                                        reqFirstEditor.getModel()?.getValueInRange(reqFirstEditor.getSelection() as any)) ||
+                                    ""
+                                }
+                            />
+                        )}
                     />
                 )
             }}
@@ -738,7 +797,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
                 }
                 return (
-                    <NewHTTPPacketEditor
+                    <NewEditorSelectRange
                         contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
                         extra={[
                             <Button
@@ -761,6 +820,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         hideSearch={true}
                         defaultSearchKeyword={props.search}
                         defaultHttps={props.defaultHttps}
+                        webFuzzerValue={flow?.Request || new Uint8Array()}
+                        onEditor={setReqSecondEditor}
+                        rangeId='http.flow.detail.second.range.read.widget'
+                        rangeNode={(close, direction) => (
+                            <HTTPFuzzerRangeReadOnlyEditorMenu
+                                direction={direction}
+                                rangeValue={
+                                    (reqSecondEditor &&
+                                        reqSecondEditor.getModel()?.getValueInRange(reqSecondEditor.getSelection() as any)) ||
+                                    ""
+                                }
+                            />
+                        )}
                     />
                 )
             }}

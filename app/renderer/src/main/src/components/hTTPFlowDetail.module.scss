@@ -39,6 +39,11 @@
                 }
             }
         }
+        .table-header{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
     }
 }
 .http-history-fold-box{

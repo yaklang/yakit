@@ -10,13 +10,16 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {yakitFailed} from "@/utils/notification"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Divider, Form, Modal, Upload} from "antd"
+import {Divider, Form, Modal, Space, Upload} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {ExportIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {useWatch} from "antd/lib/form/Form"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { inputHTTPFuzzerHostConfigItem } from "@/pages/fuzzer/HTTPFuzzerHosts"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -38,6 +41,8 @@ export interface AdvancedConfigurationFromValue {
     enableProxyAuth: boolean
     proxyUsername: string
     proxyPassword: string
+    dnsServers: string[]
+    etcHosts: any[]
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -51,12 +56,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [enableProxyAuthDef, setEnableProxyAuthDef] = useState<boolean>(false)
         const [proxyUsernameDef, setProxyUsernameDef] = useState<string>()
         const [proxyPasswordDef, setProxyPasswordDef] = useState<string>()
+        const [dnsServersDef,setDnsServersDef] = useState<string[]>(["8.8.8.8", "114.114.114.114"])
+        const [etcHostsDef,setEtcHostsDef] = useState<any[]>([])
+        const [etcHosts, setEtcHosts] = useState<any[]>([])
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
         const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
-
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
 
@@ -66,15 +73,17 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 getValue: () => {
                     const v = form.getFieldsValue()
                     if (Object.keys(v).length > 0) {
-                        return v
+                        return {...v,etcHosts}
                     } else {
                         return {
                             certs: certsDef,
+                            etcHosts: etcHostsDef,
                             preferGMTLS: preferGMTLSDef,
                             onlyEnableGMTLS: onlyEnableGMTLSDef,
                             enableProxyAuth: enableProxyAuthDef,
+                            dnsServers: dnsServersDef,
                             proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
-                            proxyPassword: enableProxyAuthDef ? proxyPasswordDef : ""
+                            proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
                         }
                     }
                 }
@@ -86,6 +95,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 enableProxyAuthDef,
                 proxyUsernameDef,
                 proxyPasswordDef,
+                dnsServersDef,
                 visible,
                 form
             ]
@@ -132,6 +142,23 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             getRemoteValue(MITMConsts.MITMDefaultProxyPassword).then((e) => {
                 setProxyPasswordDef(e)
                 form.setFieldsValue({proxyPassword: e})
+            })
+            // DNS服务器
+            getRemoteValue(MITMConsts.MITMDefaultDnsServers).then((e) => {
+                if (!!e) {
+                    const dnsServers = JSON.parse(e)
+                    setDnsServersDef(dnsServers)
+                    form.setFieldsValue({dnsServers}) 
+                }
+            })
+            // Host配置
+            getRemoteValue(MITMConsts.MITMDefaultEtcHosts).then((e) => {
+                if (!!e) {
+                    const etcHosts = JSON.parse(e)
+                    setEtcHostsDef(etcHosts)
+                    setEtcHosts(etcHosts)
+                    form.setFieldsValue({etcHosts})
+                }
             })
         }, [visible])
         /**
@@ -212,25 +239,32 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultEnableProxyAuth, `${params.enableProxyAuth}`)
                 setRemoteValue(MITMConsts.MITMDefaultProxyUsername, params.proxyUsername)
                 setRemoteValue(MITMConsts.MITMDefaultProxyPassword, params.proxyPassword)
+                setRemoteValue(MITMConsts.MITMDefaultDnsServers, JSON.stringify(params.dnsServers))
+                setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts)) 
                 onSave(params)
             })
         })
         const onClose = useMemoizedFn(() => {
             const formValue = form.getFieldsValue()
-            const oldValue = {
+            const oldValue:any = {
                 certs: certsDef,
-                preferGMTLS: preferGMTLSDef,
-                onlyEnableGMTLS: onlyEnableGMTLSDef,
+                dnsServers: dnsServersDef,
+                etcHosts:etcHostsDef,
                 enableProxyAuth: enableProxyAuthDef,
                 proxyUsername: proxyUsernameDef,
-                proxyPassword: proxyPasswordDef
+                proxyPassword: proxyPasswordDef,
+            }
+            if(enableGMTLS){
+                oldValue.preferGMTLS = preferGMTLSDef
+                oldValue.onlyEnableGMTLS = onlyEnableGMTLSDef
             }
             const newValue = {
                 certs,
                 ...formValue,
                 proxyUsername:formValue.proxyUsername||'',
                 proxyPassword:formValue.proxyPassword||'',
-            }
+                etcHosts
+            }    
             if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                 Modal.confirm({
                     title: "温馨提示",
@@ -290,6 +324,45 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 maskClosable={false}
             >
                 <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+                <Form.Item
+                    label='DNS服务器'
+                    name='dnsServers'
+                    help={"指定DNS服务器"}
+                    initialValue={["8.8.8.8", "114.114.114.114"]}
+                >
+                    <YakitSelect
+                        options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
+                            return {value: i, label: i}
+                        })}
+                        mode='tags'
+                        allowClear={true}
+                        placeholder={"例如 1.1.1.1"}
+                    />
+                </Form.Item>
+                <Form.Item label={"Hosts配置"} name='etcHosts'>
+                    <Space direction={"horizontal"} wrap>
+                        <YakitButton
+                            onClick={() => {
+                                inputHTTPFuzzerHostConfigItem((obj) => {
+                                    setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                                })
+                            }}
+                        >
+                            添加 Hosts 映射
+                        </YakitButton>
+                        {etcHosts.map((i, n) => (
+                            <YakitTag
+                                closable={true}
+                                onClose={() => {
+                                    setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+                                }}
+                                key={`${i.Key}-${n}`}
+                            >
+                                {`${i.Key} => ${i.Value}`}
+                            </YakitTag>
+                        ))}
+                    </Space>
+                </Form.Item>
                     {enableGMTLS && (
                         <>
                             <Form.Item

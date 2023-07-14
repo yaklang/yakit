@@ -55,6 +55,7 @@ export const simpleQueryToFull = (isAll: boolean, i: SimpleQueryYakScriptSchema,
         ExcludeScriptNames: i.exclude,
         IncludedScriptNames: i.include,
         Tag: i.tags.split(","),
+        Keyword: i.keyword,
         NoResultReturn: false,
     }
 
