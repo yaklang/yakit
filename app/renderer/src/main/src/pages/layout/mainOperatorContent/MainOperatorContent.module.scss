@@ -5,6 +5,18 @@ $keyColor: map-keys($colors);
 @for $c from 1 through length($keyColor) {
     $name: nth($keyColor, $c);
     $currentColor: map-get($colors, $name);
+    .tab-menu-sub-item-combine-#{"" + $name} {
+        &::before {
+            content: "";
+            width: 100%;
+            height: 2px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: map-get($currentColor, "backgroundColor");
+            z-index: 1;
+        }
+    }
     .tab-menu-sub-group-#{"" + $name} {
         &::before {
             content: "";

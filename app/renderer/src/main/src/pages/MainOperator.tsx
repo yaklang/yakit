@@ -76,7 +76,7 @@ import {
     getInitActiveTabKey,
     getInitPageCache
 } from "./layout/mainOperatorContent/MainOperatorContent"
-import {PageCache} from "./layout/mainOperatorContent/MainOperatorContentType"
+import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContentType"
 
 const {ipcRenderer} = window.require("electron")
 const {Content} = Layout
@@ -266,6 +266,9 @@ export interface fuzzerInfoProp {
      * @param 二级菜单修改了名称后保存的字段，目前仅仅webFuzzer二级支持
      */
     verbose?: string
+    /**@param 组信息  */
+    groupChildren?: MultipleNodeInfo[]
+    id?: string
 }
 
 const Main: React.FC<MainProp> = React.memo((props) => {

@@ -9,13 +9,31 @@ import { RouteToPageProps } from '../publicMenu/PublicMenu'
  * @property verbose-页面展示名称
  * @property time webFuzzer 缓存使用
  * @property params-页面传递参数
+ * @property sortField-二级tab 排序字段
  */
-export interface MultipleNodeInfo {
+export interface MultipleNodeInfo extends MultipleNodeGroup {
     /**@name 二级菜单tab唯一值 */
     id: string
     verbose: string
     time?: string
     params?: ComponentParams
+    sortFieId: number
+}
+/**
+ * @name 组信息
+ * @property expand 组是否展开
+ * @property color 组的颜色
+ * @property groupName 组的名称
+ * @property params 页面传递参数
+ * @property groupTime 组内的item与组的对应联系
+ * @property groupChildren 组内的内容
+ */
+export interface MultipleNodeGroup {
+    expand?: boolean
+    color?: string
+    groupName?: string
+    groupId?: string
+    groupChildren?: MultipleNodeInfo[]
 }
 
 /**
@@ -133,6 +151,8 @@ export interface SubTabListProps {
  * @property selectSubMenu 选中的二级tab详情
  * @function setSelectSubMenu 选中二级tab
  * @function onContextMenu 右键操作
+ * @property isCombine 是否在组合过程中
+ * @property combineColor 当前组合的颜色
  */
 export interface SubTabItemProps {
     subItem: MultipleNodeInfo
@@ -141,8 +161,13 @@ export interface SubTabItemProps {
     setSelectSubMenu: (m: MultipleNodeInfo) => void
     onRemoveSub: (m: MultipleNodeInfo) => void
     onContextMenu: (e: React.MouseEvent) => void
+    isCombine?: boolean
+    combineColor?: string
 }
 
+export interface SubTabGroupItemProps extends SubTabItemProps {
+
+}
 
 /**
  * @description MainOperatorContextProps
