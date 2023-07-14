@@ -467,7 +467,12 @@ service Yak {
   rpc QueryChaosMakerRule(QueryChaosMakerRuleRequest) returns (QueryChaosMakerRuleResponse);
   rpc DeleteChaosMakerRuleByID(DeleteChaosMakerRuleByIDRequest) returns (Empty);
   rpc ExecuteChaosMakerRule(ExecuteChaosMakerRuleRequest) returns (stream ExecResult);
+
+  // 这个接口是判断 BAS Agent 远程端口是否可用的，使用 Vulinbox ws agent 协议连接
   rpc IsRemoteAddrAvailable(IsRemoteAddrAvailableRequest) returns (IsRemoteAddrAvailableResponse);
+  rpc ConnectVulinboxAgent(IsRemoteAddrAvailableRequest) returns (IsRemoteAddrAvailableResponse);
+  rpc GetRegisteredVulinboxAgent(GetRegisteredAgentRequest) returns (GetRegisteredAgentResponse);
+  rpc DisconnectVulinboxAgent(DisconnectVulinboxAgentRequest) returns (Empty);
 
   // CVE
   rpc IsCVEDatabaseReady(IsCVEDatabaseReadyRequest) returns (IsCVEDatabaseReadyResponse);
@@ -502,6 +507,18 @@ service Yak {
   // rpc DeleteHTTPRequestBuilder(DeleteHTTPRequestBuilderRequest) returns (Empty);
   rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
   rpc SmokingEvaluatePlugin(SmokingEvaluatePluginRequest) returns (SmokingEvaluatePluginResponse);
+}
+
+message DisconnectVulinboxAgentRequest {
+  string Addr = 1;
+}
+
+message GetRegisteredAgentRequest {
+
+}
+
+message GetRegisteredAgentResponse {
+  repeated IsRemoteAddrAvailableResponse Agents = 1;
 }
 
 message SmokingEvaluatePluginRequest {
@@ -768,6 +785,11 @@ message IsRemoteAddrAvailableResponse {
   bool IsAvailable = 2;
   string Reason = 3;
   string Status = 4;
+
+  int64 PingCount = 5;
+  int64 RequestCount = 6;
+
+  int64 LastActiveAt = 7;
 }
 
 message ExecuteChaosMakerRuleRequest {
