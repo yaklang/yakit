@@ -143,9 +143,9 @@ export interface HTTPFuzzerPageProp {
     isGmTLS?: boolean
     request?: string
     system?: string
-    order?: string
     fuzzerParams?: fuzzerInfoProp
     shareContent?: string
+    id: string
 }
 
 export interface FuzzerResponse {
@@ -928,15 +928,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             // proxy: advancedConfigValue.proxy.join(","),
             actualHost: advancedConfigValue.actualHost,
             // timeout: advancedConfigValue.timeout,
-            request: request,
+            request: getRequest(),
+            id: props.id
         }
         if (sendTimer.current) {
             clearTimeout(sendTimer.current)
             sendTimer.current = null
         }
-
         sendTimer.current = setTimeout(() => {
-            ipcRenderer.invoke("send-fuzzer-setting-data", {key: props.order || "", param: JSON.stringify(info)})
+            ipcRenderer.invoke("send-fuzzer-setting-data", {key: props.id || "", param: JSON.stringify(info)})
         }, 1000)
     })
     useUpdateEffect(() => {

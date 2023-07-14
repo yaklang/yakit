@@ -287,7 +287,7 @@ interface ComponentParams {
     isGmTLS?: boolean
     request?: string
     system?: string
-    order?: string
+    id?: string
     fuzzerParams?: fuzzerInfoProp
 
     // Route.Mod_ScanPort 参数
@@ -371,7 +371,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
                     isGmTLS={params?.isGmTLS}
                     request={params?.request}
                     system={params?.system}
-                    order={params?.order}
+                    id={params?.id||''}
                     fuzzerParams={params?.fuzzerParams}
                     shareContent={params?.shareContent}
                 />

@@ -332,7 +332,9 @@ export interface ComponentParams {
     isGmTLS?: boolean
     request?: string
     system?: string
-    order?: string
+    // order?: string
+    /**@param id 页面唯一标识id HTTPFuzzer必须要有的，其他页面可以不用 */
+    id?: string
     fuzzerParams?: fuzzerInfoProp
 
     // Route.Mod_ScanPort 参数
@@ -388,7 +390,7 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
                     isGmTLS={params?.isGmTLS}
                     request={params?.request}
                     system={params?.system}
-                    order={params?.order}
+                    id={params?.id || ""}
                     fuzzerParams={params?.fuzzerParams}
                     shareContent={params?.shareContent}
                 />
