@@ -1417,6 +1417,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 refreshRequest()
                                                             }
                                                         })
+                                                        .catch((e) => {
+                                                            failed(e.message)
+                                                        })
                                                         .finally(() => {
                                                         })
                                                 }}
