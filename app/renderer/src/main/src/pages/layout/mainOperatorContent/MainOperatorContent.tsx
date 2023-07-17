@@ -1116,7 +1116,6 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
     const {pageCache, currentTabKey} = useContext(MainOperatorContext)
-
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -1422,7 +1421,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /**@description  关闭组是否需要提示*/
     const getIsCloseGroupTip = useMemoizedFn(() => {
         getRemoteValue(Close_Group_Tip).then((e) => {
-            console.log("Close_Group_Tip", e)
             setCloseGroupTip(e === "false" ? false : true)
         })
     })
