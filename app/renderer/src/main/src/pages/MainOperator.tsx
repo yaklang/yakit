@@ -66,6 +66,8 @@ import {
     YakitRouteToPageInfo
 } from "@/routes/newRoute"
 import {keyToRouteInfo, routeConvertKey} from "./layout/publicMenu/utils"
+import {YakChatCS} from "@/components/yakChat/chatCS"
+import yakitCattle from "../assets/yakitCattle.png"
 
 import "./main.scss"
 import "./GlobalClass.scss"
@@ -1353,6 +1355,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
     }, [])
 
+    /** yak-chat 相关逻辑 */
+    const [chatShow, setChatShow] = useState<boolean>(false)
+    useEffect(() => {
+        if (!userInfo.isLogin) setChatShow(false)
+    }, [userInfo])
+
     const bars = (props: any, TabBarDefault: any) => {
         return (
             <TabBarDefault
@@ -1564,6 +1572,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                         )}
                                     </div>
                                 </Content>
+
+                                {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
                             </Layout>
                         </Content>
                     </div>
@@ -1622,6 +1632,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 >
                     <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                 </Modal>
+
+                {isCommunityEdition() && userInfo.isLogin && !chatShow && (
+                    <div className='chat-icon-wrapper' onClick={() => setChatShow(true)}>
+                        <img src={yakitCattle} />
+                    </div>
+                )}
             </Layout>
             {controlShow && <ControlOperation controlName={controlName} />}
             <YakitHintModal
