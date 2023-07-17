@@ -18,7 +18,7 @@ import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {CVXterm} from "../../components/CVXterm"
 import {ContentUploadInput} from "../../components/functionTemplate/ContentUploadTextArea"
-import {ReloadOutlined} from "@ant-design/icons"
+import {DeleteOutlined, PaperClipOutlined, ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
 import {SimplePluginList} from "../../components/SimplePluginList"
@@ -531,7 +531,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
     const [simpleParams, setSimpleParams] = useState<StartBruteParams | undefined>(bruteParams)
     const [_, setPortroupValue, getPortroupValue] = useGetState<any[]>([])
-
+    const [usernamesValue,setUsernamesValue] = useState<string>()
+    const [passwordsValue,setPasswordsValue] = useState<string>()
     useEffect(() => {
         if (!params) return
         props.setParams({...params})
@@ -539,8 +540,15 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
 
     useEffect(() => {
         if (!simpleParams) return
-        setBruteParams && setBruteParams({...simpleParams})
-    }, [simpleParams])
+        let bruteParams = {
+            ...simpleParams,
+            Usernames:usernamesValue?usernamesValue.split(/\n|,/):[],
+            Passwords:passwordsValue?passwordsValue.split(/\n|,/):[],
+        }
+        console.log("ppx",bruteParams);
+        
+        setBruteParams && setBruteParams({...bruteParams})
+    }, [simpleParams,usernamesValue,passwordsValue])
 
     useEffect(() => {
         if (deepLevel && isSetPort) {
@@ -752,12 +760,9 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 textarea={{
                                     isBubbing: true,
                                     setValue: (Usernames) => {
-                                        setSimpleParams({
-                                            ...simpleParams,
-                                            Usernames: Usernames ? Usernames.split("\n") : []
-                                        })
+                                        setUsernamesValue(Usernames)
                                     },
-                                    value: (simpleParams?.Usernames || []).join("\n"),
+                                    value: usernamesValue,
                                     rows: 1,
                                     // placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
                                     disabled: false
@@ -776,7 +781,23 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         >
                                             同时使用默认用户字典
                                         </Checkbox>
-                                        {simpleParams.UsernameFile && <div>{simpleParams.UsernameFile}</div>}
+                                        {simpleParams.UsernameFile && (
+                                            <div>
+                                                <PaperClipOutlined />
+                                                <span style={{marginLeft: 6, color: "#198fff"}}>
+                                                    {simpleParams.UsernameFile}
+                                                </span>
+                                                <DeleteOutlined
+                                                    onClick={() => {
+                                                        setSimpleParams({
+                                                            ...simpleParams,
+                                                            UsernameFile: undefined
+                                                        })
+                                                    }}
+                                                    className='port-scan-upload-del'
+                                                />
+                                            </div>
+                                        )}
                                     </>
                                 }
                             />
@@ -804,9 +825,9 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                 textarea={{
                                     isBubbing: true,
                                     setValue: (item) => {
-                                        setSimpleParams({...simpleParams, Passwords: item ? item.split("\n") : []})
+                                        setPasswordsValue(item)
                                     },
-                                    value: (simpleParams?.Passwords || []).join("\n"),
+                                    value: passwordsValue,
                                     rows: 1,
                                     // placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
                                     disabled: false
@@ -825,7 +846,23 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         >
                                             同时使用默认密码字典
                                         </Checkbox>
-                                        {simpleParams.PasswordFile && <div>{simpleParams.PasswordFile}</div>}
+                                        {simpleParams.PasswordFile && (
+                                            <div>
+                                                <PaperClipOutlined />
+                                                <span style={{marginLeft: 6, color: "#198fff"}}>
+                                                    {simpleParams.PasswordFile}
+                                                </span>
+                                                <DeleteOutlined
+                                                    onClick={() => {
+                                                        setSimpleParams({
+                                                            ...simpleParams,
+                                                            PasswordFile: undefined
+                                                        })
+                                                    }}
+                                                    className='port-scan-upload-del'
+                                                />
+                                            </div>
+                                        )}
                                     </>
                                 }
                             />
