@@ -469,8 +469,11 @@ service Yak {
   rpc ExecuteChaosMakerRule(ExecuteChaosMakerRuleRequest) returns (stream ExecResult);
 
   // 这个接口是判断 BAS Agent 远程端口是否可用的，使用 Vulinbox ws agent 协议连接
+  // ConnectVulinboxAgent is the same as IsRemoteAddrAvailable
   rpc IsRemoteAddrAvailable(IsRemoteAddrAvailableRequest) returns (IsRemoteAddrAvailableResponse);
   rpc ConnectVulinboxAgent(IsRemoteAddrAvailableRequest) returns (IsRemoteAddrAvailableResponse);
+
+  // vulinbox agent 的操作接口
   rpc GetRegisteredVulinboxAgent(GetRegisteredAgentRequest) returns (GetRegisteredAgentResponse);
   rpc DisconnectVulinboxAgent(DisconnectVulinboxAgentRequest) returns (Empty);
 

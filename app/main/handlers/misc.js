@@ -501,6 +501,38 @@ module.exports = (win, getClient) => {
         return await asyncSaveTextToTemporalFile(params)
     })
 
+    // asyncGetRegisteredVulinboxAgent wrapper
+    const asyncGetRegisteredVulinboxAgent = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetRegisteredVulinboxAgent(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetRegisteredVulinboxAgent", async (e, params) => {
+        return await asyncGetRegisteredVulinboxAgent(params)
+    })
+
+    // asyncDisconnectVulinboxAgent wrapper
+    const asyncDisconnectVulinboxAgent = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DisconnectVulinboxAgent(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DisconnectVulinboxAgent", async (e, params) => {
+        return await asyncDisconnectVulinboxAgent(params)
+    })
+
     // asyncIsVulinboxReady wrapper
     const asyncIsVulinboxReady = (params) => {
         return new Promise((resolve, reject) => {
