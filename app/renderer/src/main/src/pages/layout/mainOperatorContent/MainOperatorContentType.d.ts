@@ -32,6 +32,7 @@ export interface MultipleNodeGroup {
     expand?: boolean
     color?: string
     groupName?: string
+    /**@param 目前根据该字段分组 */
     groupId?: string
     groupChildren?: MultipleNodeInfo[]
 }
@@ -164,9 +165,14 @@ export interface SubTabItemProps {
     isCombine?: boolean
     combineColor?: string
 }
-
+/**
+ * @description 组
+ * @function onUnfoldAndCollapse 收起和展开事件
+ * @function onGroupContextMenu 组的右键操作
+ */
 export interface SubTabGroupItemProps extends SubTabItemProps {
-
+    onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
+    onGroupContextMenu: (e: React.MouseEvent) => void
 }
 
 /**
@@ -181,7 +187,7 @@ export interface SubTabGroupItemProps extends SubTabItemProps {
  * @function afterDeleteFirstPage 删除一级页面的回调  'all'|'other'|'single' 
  * @function afterDeleteSubPage 删除二级页面的回调 'other'|'single'
  * @function afterUpdateSubPage 更新页面信息后的回调
- * @function afterDragEndSubPage 二级tab拖拽后的回调
+ * @function afterDragEndSubPage 二级tab拖拽后的回调/关闭组的操作也是走的该方法
  */
 export interface MainOperatorContextProps {
     pageCache: PageCache[]
@@ -195,4 +201,16 @@ export interface MainOperatorContextProps {
     afterDeleteSubPage: (type: 'other' | 'single', r: YakitRoute | string, subItem: MultipleNodeInfo) => void
     afterUpdateSubPage: (page: PageCache, subItem: MultipleNodeInfo) => void
     afterDragEndSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
+}
+export type OperateGroup = 'cancelGroup' | 'closeGroup' | 'closeOtherTabs'
+/**
+ * @description 组的右键点击展示内容
+ * @property groupItem  组详情
+ * @function onUpdateGroup  更新组详情
+ * @function onOperateGroup  组的一些操作
+ */
+export interface GroupRightClickShowContentProps {
+    groupItem: MultipleNodeInfo
+    onUpdateGroup: (m: MultipleNodeInfo) => void
+    onOperateGroup: (type: OperateGroup, m: MultipleNodeInfo) => void
 }

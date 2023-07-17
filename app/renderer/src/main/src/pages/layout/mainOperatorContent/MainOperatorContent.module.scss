@@ -26,7 +26,7 @@ $keyColor: map-keys($colors);
             top: 0;
             left: 4px;
             background-color: map-get($currentColor, "backgroundColor");
-            z-index: 1;
+            z-index: 9;
         }
     }
     .tab-menu-sub-group-name-#{"" + $name} {
@@ -91,6 +91,12 @@ $keyColor: map-keys($colors);
 
 .icon-active {
     color: var(--yakit-primary-5);
+}
+
+@mixin item-color($size) {
+    width: $size;
+    height: $size;
+    border-radius: 4px;
 }
 
 // -------------- tab样式 -------------
@@ -211,7 +217,7 @@ $keyColor: map-keys($colors);
             background-color: var(--yakit-card-background-color);
 
             max-width: calc(100% - 32px);
-            overflow: hidden;
+            overflow-y: hidden;
             overflow-x: auto;
 
             // 下面是滚动条的样式
@@ -235,6 +241,7 @@ $keyColor: map-keys($colors);
                     line-height: 16px;
                     font-weight: 600;
                     cursor: pointer;
+                    word-break: keep-all;
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;
@@ -249,7 +256,12 @@ $keyColor: map-keys($colors);
                 .tab-menu-sub-group-name-retract {
                     border-radius: 4px;
                 }
+                .tab-menu-sub-group-children {
+                    display: flex;
+                    flex: 1;
+                }
             }
+
             .tab-menu-sub-item {
                 display: flex;
                 height: 32px;
@@ -265,9 +277,12 @@ $keyColor: map-keys($colors);
                 min-width: 24px;
                 // width: fit-content;
                 justify-content: space-between;
-
+                background-color: var(--yakit-card-background-color);
                 &:hover {
                     @extend .dragging;
+                    .remove-icon {
+                        display: flex;
+                    }
                 }
                 span {
                     min-width: 16px;
@@ -286,10 +301,14 @@ $keyColor: map-keys($colors);
                     @extend .base-operate-icon;
                     height: 20px;
                     width: 20px;
+                    display: none;
                     svg {
                         height: 16px;
                         width: 16px;
                     }
+                }
+                .remove-show-icon {
+                    display: flex;
                 }
                 .document-text-icon {
                     @extend .base-show-icon;
@@ -359,22 +378,11 @@ $keyColor: map-keys($colors);
     overflow-x: hidden;
 }
 
-@keyframes showActive {
-    0% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
 .right-menu-item {
     @extend .flex-align-center;
     gap: 12px;
     .item-color-block {
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
+        @include item-color(16px);
     }
 }
 
@@ -385,5 +393,53 @@ $keyColor: map-keys($colors);
         .ant-tooltip-arrow {
             display: none;
         }
+    }
+}
+.group-right-click-show-content {
+    display: inline-flex;
+    // padding: 12px 4px 6px 4px;
+    padding: 8px 12px 2px 12px;
+    flex-direction: column;
+    align-items: center;
+    .color-list {
+        @extend .flex-align-center;
+        padding: 8px 0;
+        gap: 8px;
+        .color-list-item {
+            @include item-color(20px);
+            @extend .flex-align-center;
+            justify-content: center;
+            cursor: pointer;
+            .check-icon {
+                @extend .flex-align-center;
+                justify-content: center;
+                color: #fff;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+        }
+    }
+}
+
+.close-group-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    .close-group-check {
+        @extend .flex-align-center;
+        gap: 12px;
+        width: fit-content;
+        cursor: pointer;
+    }
+}
+
+@keyframes showActive {
+    0% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
     }
 }
