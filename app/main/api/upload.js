@@ -2,7 +2,7 @@ const {httpApi} = require("../httpServer")
 const {ipcMain} = require("electron")
 const fs = require("fs")
 const FormData = require("form-data")
-const {Readable} = require("stream")
+const crypto = require("crypto")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("upload-img", async (event, params) => {
@@ -10,7 +10,6 @@ module.exports = (win, getClient) => {
         // 创建数据流
         // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
         const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
-        console.log('3333',JSON.stringify(readerStream))
         const formData = new FormData()
         formData.append("file_name", readerStream)
         formData.append("type", type)
@@ -43,6 +42,29 @@ module.exports = (win, getClient) => {
         return res
     })
 
+    const postChunk = (path, size, chunkSize, totalChunk, chunkIndex) => {
+        return new Promise((resolve, reject) => {
+            const start = chunkIndex * chunkSize
+            const end = Math.min(start + chunkSize, size)
+            // 创建当前分片的读取流
+            const chunkStream = fs.createReadStream(path, {start, end})
+            // 计算Hash
+            const hash = crypto.createHash("sha256")
+            chunkStream.on("data", (chunk) => {
+                hash.update(chunk)
+            })
+            chunkStream.on("end", () => {
+                // 单独一片的Hash
+                const fileChunkHash = hash.digest("hex")
+                resolve({index: chunkIndex + 1, totalChunks: totalChunk, hash: fileChunkHash})
+            })
+
+            chunkStream.on("error", (err) => {
+                reject(err)
+            })
+        })
+    }
+
     ipcMain.handle("yak-install-package", async (event, params) => {
         const {path, size} = params
         // 每块分片大小
@@ -51,15 +73,19 @@ module.exports = (win, getClient) => {
         const totalChunk = Math.ceil(size / chunkSize)
 
         for (let chunkIndex = 0; chunkIndex < totalChunk; chunkIndex++) {
+            const data = await postChunk(path, size, chunkSize, totalChunk, chunkIndex)
+            console.log("poppo", data)
+            const {index,totalChunks,hash} = data
             const start = chunkIndex * chunkSize
             const end = Math.min(start + chunkSize, size)
+
             // 创建当前分片的读取流
-            const chunkStream = fs.createReadStream(path,{start,end})
+            const chunkStream = fs.createReadStream(path, {start, end})
             const formData = new FormData()
             formData.append("file", chunkStream)
-            formData.append("index", chunkIndex + 1)
-            formData.append("totalChunks", totalChunk)
-            // formData.append("hash", totalChunk)
+            formData.append("index", index)
+            formData.append("totalChunks", totalChunks)
+            formData.append("hash", hash)
             await httpApi(
                 "post",
                 "upload/install/package",
@@ -69,7 +95,12 @@ module.exports = (win, getClient) => {
                 30 * 60 * 1000
             )
                 .then((res) => {
-                    win.webContents.send("call-back-upload-yakit-ee", res)
+                    const progress = Math.floor(((chunkIndex + 1) / totalChunk) * 100)
+                    if(res.code!==200){
+                        // 传输失败
+                        return
+                    }
+                    win.webContents.send("call-back-upload-yakit-ee", {res, progress})
                     console.log("yak-install-package", res, chunkIndex + 1)
                 })
                 .catch((err) => {
