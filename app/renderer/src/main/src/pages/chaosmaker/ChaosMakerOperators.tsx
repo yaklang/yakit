@@ -5,7 +5,11 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {ChaosMakerRuleGroup} from "@/pages/chaosmaker/ChaosMaker";
 import {showModal} from "@/utils/showModal";
 import {InputInteger, InputItem} from "@/utils/inputUtil";
-import {failed} from "@/utils/notification";
+import {failed, info} from "@/utils/notification";
+import {debugYakitModal, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
+import {useMemoizedFn} from "ahooks";
+import {showByContextMenu} from "@/components/functionTemplate/showByContext";
+import {showByCursorMenu} from "@/utils/showByCursor";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -37,6 +41,34 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
     });
     const [availableAddrs, setAvailableAddrs] = useState<IsRemoteAddrAvailableResponse[]>([]);
 
+    const updateAvailableAddrs = useMemoizedFn(() => {
+        ipcRenderer.invoke("GetRegisteredVulinboxAgent", {}).then((data: { Agents: IsRemoteAddrAvailableResponse[] }) => {
+            setAvailableAddrs(data.Agents)
+            // debugYakitModal(data)
+        }).catch(e => {
+            if (e) {
+                failed(`获取探针列表失败: ${e}`)
+            }
+        })
+    })
+
+    const debugUpdateAvailableAddrs = useMemoizedFn(() => {
+        ipcRenderer.invoke("GetRegisteredVulinboxAgent", {}).then((data: { Agents: IsRemoteAddrAvailableResponse[] }) => {
+            // setAvailableAddrs(data.Agents)
+            debugYakitModal(data)
+        }).catch(e => {
+            if (e) {
+                failed(`获取探针列表失败: ${e}`)
+            }
+        })
+    })
+
+    useEffect(() => {
+        setInterval(() => {
+            updateAvailableAddrs()
+        }, 5000)
+    }, [])
+
     useEffect(() => {
         setParams({...params, Groups: (props?.groups || [])})
     }, [props.groups])
@@ -53,12 +85,29 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
         e.preventDefault()
 
     }} layout={"vertical"} disabled={props.running}>
-        <Form.Item label={<div>
-            设置发起任务的参数
-        </div>} help={"如果添加探针，模拟攻击流量将会额外对探针进行发送"}>
+        <Form.Item help={"如果添加探针，模拟攻击流量将会额外对探针进行发送"}>
             <Space>
                 {availableAddrs.map(i => {
                     return <AutoCard
+                        onClick={e => {
+                            showByCursorMenu({
+                                content: [
+                                    {
+                                        title: "断开并移除Agent", onClick: () => {
+                                            ipcRenderer.invoke("DisconnectVulinboxAgent", {
+                                                Addr: i.Addr,
+                                            }).then(() => {
+                                                info("断开并移除成功")
+                                            }).catch(e => {
+                                                failed(`断开并移除失败: ${e}`)
+                                            }).finally(() => {
+                                                updateAvailableAddrs()
+                                            })
+                                        }
+                                    }
+                                ]
+                            }, e.clientX, e.clientY)
+                        }}
                         style={{
                             height: 40, width: 40, borderRadius: '6px',
                             backgroundColor: (() => {
@@ -85,16 +134,44 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                     })()}]</AutoCard>
                 })}
                 <AutoCard style={{height: 40, width: 40, borderRadius: '6px'}}>
-                    <YakitButton type={"text"} onClick={() => {
-                        const m = showModal({
-                            title: "添加一个新的 BAS 节点", width: "50%",
-                            content: (
-                                <AddBASAgent onFinished={(data) => {
-                                    m.destroy()
-                                    setAvailableAddrs([...availableAddrs, data])
-                                }}/>
-                            )
-                        })
+                    <YakitButton type={"text"} onClick={(e) => {
+                        showByCursorMenu({
+                            content: [
+                                {
+                                    title: "添加节点", onClick: () => {
+                                        const m = showModal({
+                                            title: "添加一个新的 BAS 节点", width: "50%",
+                                            content: (
+                                                <AddBASAgent onFinished={(data) => {
+                                                    if (data.IsAvailable) {
+                                                        m.destroy()
+                                                        updateAvailableAddrs()
+                                                        return
+                                                    } else {
+                                                        showYakitModal({
+                                                            title: "错误提示",
+                                                            content: (
+                                                                <div style={{margin: 24}}>
+                                                                    添加 Agent 失败：{data.Reason}
+                                                                </div>
+                                                            ),
+                                                            okButtonProps: {hidden: true},
+                                                            cancelButtonProps: {hidden: true},
+                                                        })
+                                                        failed(`添加 BAS Agent 失败：${data.Reason}`)
+                                                    }
+                                                }}/>
+                                            )
+                                        })
+                                    }
+                                },
+                                {
+                                    title: "查看节点信息", onClick: () => {
+                                        debugUpdateAvailableAddrs()
+                                    }
+                                }
+                            ]
+                        }, e.clientX, e.clientY)
                     }}>添加探针</YakitButton>
                 </AutoCard>
                 {
@@ -105,7 +182,7 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                             backgroundColor: '#e01f1f',
                         }}
                         hoverable={true}
-                        onClick={()=>{
+                        onClick={() => {
                             if (props.onReset) {
                                 props.onReset()
                             }
@@ -143,6 +220,9 @@ interface IsRemoteAddrAvailableResponse {
     IsAvailable: boolean;
     Reason: string;
     Status: string;
+    PingCount: number;
+    RequestCount: number;
+    LastActiveAt: number
 }
 
 
