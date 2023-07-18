@@ -1866,23 +1866,22 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
             else if(isEnpriTrace()){
                 ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
                     console.log("发送请求",info);
-                    const {version,downloadPath} = info
+                    const {version} = info
                     NetWorkApi<UpdateEnpriTraceInfoProps, any>({
                     method: "get",
                     url: "download/install/package",
-                    params: {version,downloadPath}
+                    params: {version}
                 })
-                    .then((res: {from: string}) => {
-                        console.log("下载成功",res);
-                        if (!res) return
-                        
-                        
+                    .then((res:{form:string,ok:boolean}) => {
+                        const {form,ok} = res
+                        if(ok){
+
+                        }
+                        console.log("下载成功",form); 
                     })
                     .catch((err) => {
                         console.log("错误",err);
                         
-                    }).finally(()=>{
-                        console.log("完成")
                     })
                 })
                 
