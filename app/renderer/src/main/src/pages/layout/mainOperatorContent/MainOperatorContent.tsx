@@ -889,7 +889,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 for (let index = 0; index < l; index++) {
                     const itemObj = fuzeerArray[index]
                     const groupChildrenList: MultipleNodeInfo[] = []
-                    const groupId=getGroupId()
+                    const groupId = getGroupId()
                     let groupItem: MultipleNodeInfo = {
                         id: "0",
                         verbose: "",
@@ -1737,7 +1737,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             pluginName: pageItem.pluginName
         })
     })
-    /** @description 删除item后 更新选中的item*/
+    /** @description 删除item 更新选中的item*/
     const onUpdateSelectSubPage = useMemoizedFn((handleItem: MultipleNodeInfo) => {
         if (selectSubMenu.id === "0") return
         if (handleItem.id !== selectSubMenu.id) return
@@ -1785,6 +1785,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSelectSubMenu(currentChildrenNode)
         }
     })
+    /**@description 设置传入的item为选中的item */
+    const onSetSelectSubMenu = useMemoizedFn((handleItem: MultipleNodeInfo) => {
+        if (handleItem.groupChildren && handleItem.groupChildren.length > 0) {
+            const index = handleItem.groupChildren.findIndex((ele) => ele.id === selectSubMenu.id)
+            if (index === -1) setSelectSubMenu(handleItem.groupChildren[0])
+        } else {
+            setSelectSubMenu(handleItem)
+        }
+    })
+    /** 关闭当前标签页 */
     const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
         //  先更改当前选择item,在删除
         onUpdateSelectSubPage(removeItem)
@@ -2013,6 +2023,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 icon: <ExclamationCircleOutlined />,
                 onOk: () => {
                     const newSubPage: MultipleNodeInfo[] = [item]
+                    onSetSelectSubMenu(item)
                     onUpdatePageCache(newSubPage)
                     afterDeleteSubPage("other", pageItem.route, item)
                     m.destroy()
@@ -2031,7 +2042,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 onOkText: "关闭组内其他",
                 icon: <ExclamationCircleOutlined />,
                 onOk: () => {
-                    subPage[index].groupChildren=[item]
+                    subPage[index].groupChildren = [item]
+                    onSetSelectSubMenu(item)
                     onUpdatePageCache(subPage)
                     afterDragEndSubPage(pageItem, subPage)
                     m.destroy()
@@ -2101,7 +2113,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         subPage.splice(index, 1, ...groupChildrenList)
-        setSubPage([...subPage])
+        onUpdatePageCache([...subPage])
         afterDragEndSubPage(pageItem, [...subPage])
     })
     /**@description 关闭组/删除组包括组里的页面,有一个弹窗不再提示的功能 */
@@ -2132,8 +2144,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const index = subPage.findIndex((ele) => ele.id === groupItem.id)
         if (index === -1) return
         subPage.splice(index, 1)
-        setSubPage([...subPage])
         onUpdateSelectSubPage(groupItem)
+        onUpdatePageCache([...subPage])
         afterDragEndSubPage(pageItem, [...subPage])
     })
     /**@description 组的右键事件 关闭其他标签页 */
@@ -2145,9 +2157,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             onOkText: "关闭其他",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                console.log("groupItem", groupItem)
                 const newPage = [{...groupItem}]
-                setSubPage(newPage)
+                onSetSelectSubMenu(groupItem)
+                onUpdatePageCache(newPage)
                 afterDragEndSubPage(pageItem, newPage)
                 m.destroy()
             },
