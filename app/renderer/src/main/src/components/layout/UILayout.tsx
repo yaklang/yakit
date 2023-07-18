@@ -1852,39 +1852,68 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                         failed(`${e}`)
                         setVisible(false)
                     })
-    
-                ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
-                    if (!isBreakRef.current) return
-                    setDownloadProgress(state)
-                })
-    
-                return () => {
-                    ipcRenderer.removeAllListeners("download-yakit-engine-progress")
-                }
             }
             // 企业版更新
             else if(isEnpriTrace()){
+                isBreakRef.current = true
                 ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
-                    console.log("发送请求",info);
                     const {version} = info
                     NetWorkApi<UpdateEnpriTraceInfoProps, any>({
                     method: "get",
                     url: "download/install/package",
                     params: {version}
                 })
-                    .then((res:{form:string,ok:boolean}) => {
-                        const {form,ok} = res
+                    .then((res:{from:string,ok:boolean}) => {
+                        const {from,ok} = res
                         if(ok){
-
+                            getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+                                if (!setting) return
+                                const value = JSON.parse(setting)
+                                const searchStr = "/yakit-projects";
+                                const startIndex = from.indexOf(searchStr) + searchStr.length;;
+                                const result = from.substring(startIndex);
+                                const url = value.BaseUrl.replace(/:\d+$/, '') + result
+                                ipcRenderer
+                                .invoke("download-enpriTrace-latest-yakit", url)
+                                .then(() => {
+                                    if (!isBreakRef.current) return
+                                    success("下载完毕")
+                                    if (!getDownloadProgress()?.size) return
+                                    setDownloadProgress({
+                                        time: {
+                                            elapsed: downloadProgress?.time.elapsed || 0,
+                                            remaining: 0
+                                        },
+                                        speed: 0,
+                                        percent: 100,
+                                        // @ts-ignore
+                                        size: getDownloadProgress().size
+                                    })
+                                    ipcRenderer.invoke("open-yakit-or-yaklang")
+                                    ipcRenderer.invoke("download-update-wait", "yakit")
+                                })
+                                .catch((e: any) => {
+                                    if (!isBreakRef.current) return
+                                    failed(`下载失败: ${e}`)
+                                })
+                                .finally(() => setVisible(false))
+                            })
                         }
-                        console.log("下载成功",form); 
                     })
                     .catch((err) => {
-                        console.log("错误",err);
-                        
+                        failed(err)
                     })
                 })
                 
+            }
+
+            ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
+                if (!isBreakRef.current) return
+                setDownloadProgress(state)
+            })
+
+            return () => {
+                ipcRenderer.removeAllListeners("download-yakit-engine-progress")
             }
             
         } else {

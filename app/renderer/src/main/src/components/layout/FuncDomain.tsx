@@ -1547,14 +1547,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             if (!res) return
                             try {
                                 const {from} = res
-
                                 if (from) {
                                     const regex = /EnpriTrace-(.*?)-(darwin-arm64|darwin-x64|linux-amd64|windows-amd64)/
                                     const match = from.match(regex)
-
                                     if (match) {
-                                        const result = `v1.2.2-sp9` || `v${match[1]}`
-                                        console.log(result)
+                                        const result = `v${match[1]}`
                                         if (yakitVersion !== result) setYakitLastVersion(result)
                                     }
                                 }
