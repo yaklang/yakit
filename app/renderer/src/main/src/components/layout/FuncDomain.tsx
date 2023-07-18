@@ -122,6 +122,7 @@ export interface UploadYakitEEProps {
     onClose: () => void
 }
 export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
+    const { onClose } = props
     const [filePath, setFilePath] = useState<RcFile>()
     const [loading, setLoading] = useState<boolean>(false)
     const [percent, setPercent] = useState(0)
@@ -131,57 +132,37 @@ export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
         return file_name.slice(file_index, file_name.length)
     }
 
-    useEffect(()=>{
-        ipcRenderer.on("call-back-upload-yakit-ee", async(e, res: any) => {
-            console.log("响应",res);
-            
+    useEffect(() => {
+        ipcRenderer.on("call-back-upload-yakit-ee", async (e, res: any) => {
+            const {progress} = res
+            setPercent(progress)
         })
         return () => {
             ipcRenderer.removeAllListeners("call-back-upload-yakit-ee")
         }
-    },[])
+    }, [])
 
     const uploadYakitEEPackage = useMemoizedFn(async () => {
         setLoading(true)
-        const interval = setInterval(() => {
-            setPercent(prevPercent => {
-              const randomIncrement = Math.round(Math.random() * 10);
-              const newPercent = prevPercent + randomIncrement;
-              return newPercent >= 100 ? 99 : newPercent;
-            });
-          }, 500);
         // @ts-ignore
-        const {path,size} = filePath
-        console.log("filePath",filePath);
-        
+        const {path, size} = filePath
         await ipcRenderer
-            .invoke("yak-install-package", {path,size})
+            .invoke("yak-install-package", {path, size})
             .then((res) => {
-                const {code,data} = res
-                if(code===200){
-                    const {filepath,packagePath} = data
-                    NetWorkApi<API.PostInstallPackageResponse, API.ActionSucceeded>({
-                        method: "get",
-                        url: "unzip/install/package",
-                        params: {filepath,packagePath}
-                    }).then((res)=>{
-                        console.log("res",res);
-                        
-                    })
-                }
-                console.log("yak-install-package", res)
+                success("上传成功")
+                setPercent(100)
+                setTimeout(() => {
+                    onClose()
+                }, 1000)
             })
             .catch((err) => {
                 console.log("文件上传失败", err)
+                setFilePath(undefined)
                 failed(`文件上传失败：${err}`)
-            })
-            .finally(() => {
-                setPercent(100)
-                setTimeout(()=>{
+                setTimeout(() => {
                     setLoading(false)
-                    setPercent(0) 
-                },1000)
-                clearInterval(interval)
+                    setPercent(0)
+                }, 1000)
             })
     })
     return (
@@ -216,6 +197,7 @@ export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
                     className={styles["btn-style"]}
                     loading={loading}
                     type='primary'
+                    disabled={!filePath}
                     onClick={() => {
                         uploadYakitEEPackage()
                     }}
@@ -1470,7 +1452,6 @@ export interface FetchEnpriTraceUpdateContentProp {
 
 export interface UpdateEnpriTraceInfoProps {
     version: string
-    downloadPath: string
 }
 
 interface SetUpdateContentProp extends FetchUpdateContentProp {
@@ -1553,37 +1534,35 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 })
                 .catch((err) => {})
         /** 企业版获取yakit最新版本号 */
-        // isEnpriTrace() &&
-        //     ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
-        //         const {version} = info
-        //         if (version) {
-        //             NetWorkApi<FetchEnpriTraceUpdateContentProp, any>({
-        //                 method: "get",
-        //                 url: "yak/install/package",
-        //                 params: {version}
-        //             })
-        //                 .then((res: {from: string}) => {
-        //                     if (!res) return
-        //                     try {
-        //                         const {from} = res
-        //                         console.log("from---------", from)
+        isEnpriTrace() &&
+            ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
+                const {version} = info
+                if (version) {
+                    NetWorkApi<FetchEnpriTraceUpdateContentProp, any>({
+                        method: "get",
+                        url: "yak/install/package",
+                        params: {version}
+                    })
+                        .then((res: {from: string}) => {
+                            if (!res) return
+                            try {
+                                const {from} = res
 
-        //                         if (from) {
-        //                             const regex = /EnpriTrace-(.*?)-(darwin-arm64|darwin-x64|linux-amd64|windows-amd64)/
-        //                             const match = from.match(regex)
-        //                             console.log("match", match)
+                                if (from) {
+                                    const regex = /EnpriTrace-(.*?)-(darwin-arm64|darwin-x64|linux-amd64|windows-amd64)/
+                                    const match = from.match(regex)
 
-        //                             if (match) {
-        //                                 const result = `v1.2.2-sp9` || `v${match[1]}`
-        //                                 console.log(result)
-        //                                 if (yakitVersion !== result) setYakitLastVersion(result)
-        //                             }
-        //                         }
-        //                     } catch (error) {}
-        //                 })
-        //                 .catch((err) => {})
-        //         }
-        //     })
+                                    if (match) {
+                                        const result = `v1.2.2-sp9` || `v${match[1]}`
+                                        console.log(result)
+                                        if (yakitVersion !== result) setYakitLastVersion(result)
+                                    }
+                                }
+                            } catch (error) {}
+                        })
+                        .catch((err) => {})
+                }
+            })
         /** 获取企业版yakit更新内容 */
         isEnpriTrace() &&
             NetWorkApi<FetchUpdateContentProp, any>({

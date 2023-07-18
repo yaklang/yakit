@@ -42,7 +42,8 @@ module.exports = (win, getClient) => {
         return res
     })
 
-    const postChunk = (path, size, chunkSize, totalChunk, chunkIndex) => {
+    // 计算Hash
+    const hashChunk = (path, size, chunkSize, chunkIndex) => {
         return new Promise((resolve, reject) => {
             const start = chunkIndex * chunkSize
             const end = Math.min(start + chunkSize, size)
@@ -56,7 +57,7 @@ module.exports = (win, getClient) => {
             chunkStream.on("end", () => {
                 // 单独一片的Hash
                 const fileChunkHash = hash.digest("hex")
-                resolve({index: chunkIndex + 1, totalChunks: totalChunk, hash: fileChunkHash})
+                resolve(fileChunkHash)
             })
 
             chunkStream.on("error", (err) => {
@@ -65,49 +66,70 @@ module.exports = (win, getClient) => {
         })
     }
 
-    ipcMain.handle("yak-install-package", async (event, params) => {
-        const {path, size} = params
-        // 每块分片大小
-        const chunkSize = 30 * 1024 * 1024 // 每个分片的大小，这里设置为30MB
-        // 计算分片总数
-        const totalChunk = Math.ceil(size / chunkSize)
-
-        for (let chunkIndex = 0; chunkIndex < totalChunk; chunkIndex++) {
-            const data = await postChunk(path, size, chunkSize, totalChunk, chunkIndex)
-            console.log("poppo", data)
-            const {index,totalChunks,hash} = data
-            const start = chunkIndex * chunkSize
-            const end = Math.min(start + chunkSize, size)
-
-            // 创建当前分片的读取流
-            const chunkStream = fs.createReadStream(path, {start, end})
+    // 上传次数缓存
+    let postPackageHistory = {}
+    const postPackage = (chunkStream, chunkIndex, totalChunks, hash) => {
+        return new Promise((resolve, reject) => {
+            postPackageHistory[hash] ? (postPackageHistory[hash] += 1) : (postPackageHistory[hash] = 1)
+            const percent = (chunkIndex + 1) / totalChunks
             const formData = new FormData()
             formData.append("file", chunkStream)
-            formData.append("index", index)
+            formData.append("index", chunkIndex)
             formData.append("totalChunks", totalChunks)
             formData.append("hash", hash)
-            await httpApi(
+            httpApi(
                 "post",
                 "upload/install/package",
                 formData,
                 {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
                 false,
-                30 * 60 * 1000
+                percent === 1 ? 60 * 1000 : 30 * 1000
             )
-                .then((res) => {
-                    const progress = Math.floor(((chunkIndex + 1) / totalChunk) * 100)
-                    if(res.code!==200){
-                        // 传输失败
-                        return
+                .then(async (res) => {
+                    const progress = Math.floor(percent * 100)
+                    win.webContents.send("call-back-upload-yakit-ee", {res, progress: progress === 100 ? 99 : progress})
+                    if (res.code !== 200 && postPackageHistory[hash] <= 3) {
+                        console.log("重传", postPackageHistory[hash])
+                        // 传输失败 重传3次
+                        await postPackage(chunkStream, chunkIndex, totalChunks, hash)
+                    } else if (postPackageHistory[hash] > 3) {
+                        reject("重传三次失败")
                     }
-                    win.webContents.send("call-back-upload-yakit-ee", {res, progress})
-                    console.log("yak-install-package", res, chunkIndex + 1)
+                    resolve()
                 })
                 .catch((err) => {
-                    console.log("文件上传失败", err)
+                    reject(err)
                 })
-        }
-        console.log("File upload completed.")
+        })
+    }
+
+    ipcMain.handle("yak-install-package", (event, params) => {
+        return new Promise(async (resolve, reject) => {
+            const {path, size} = params
+            // 每块分片大小
+            const chunkSize = 30 * 1024 * 1024 // 每个分片的大小，这里设置为30MB
+            // 计算分片总数
+            const totalChunks = Math.ceil(size / chunkSize)
+            let TaskStatus = true
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                if (TaskStatus) {
+                    try {
+                        const hash = await hashChunk(path, size, chunkSize, chunkIndex)
+                        let add = chunkIndex === 0 ? 0 : 1
+                        const start = chunkIndex * chunkSize + add
+                        const end = Math.min((chunkIndex + 1) * chunkSize, size)
+                        // 创建当前分片的读取流
+                        const chunkStream = fs.createReadStream(path, {start, end})
+                        await postPackage(chunkStream, chunkIndex, totalChunks, hash)
+                    } catch (error) {
+                        reject(error)
+                        TaskStatus = false
+                    }
+                }
+            }
+            postPackageHistory = {}
+            resolve()
+        })
     })
 
     ipcMain.handle("get-folder-under-files", async (event, params) => {

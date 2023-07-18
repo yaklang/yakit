@@ -395,7 +395,7 @@ module.exports = {
         })
 
         ipcMain.handle("update-enpritrace-info", async () => {
-            return await {version:getYakitPlatform(),downloadPath:yakEngineDir}
+            return await {version:getYakitPlatform()}
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {

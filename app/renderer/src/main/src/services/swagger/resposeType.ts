@@ -346,10 +346,6 @@ export declare namespace API {
     head_img: string;
     from_platform: string;
   }
-  export interface PostInstallPackageResponse {
-    filepath: string;
-    packagePath: string;
-  }
   export interface PluginTypeListResponse {
     data: PluginTypeList[];
   }
