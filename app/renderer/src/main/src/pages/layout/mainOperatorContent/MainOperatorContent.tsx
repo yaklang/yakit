@@ -54,7 +54,7 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import ReactResizeDetector from "react-resize-detector"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -83,6 +83,52 @@ const Close_Group_Tip = "close-group_tip"
 
 const colorList = ["red", "green", "blue", "yellow", "orange", "purple", "cyan", "bluePurple", "grey"]
 
+const pageTabItemRightOperation: YakitMenuItemType[] = [
+    {
+        label: "重命名",
+        key: "rename"
+    },
+    {
+        label: "将标签页添加到组",
+        key: "addToGroup",
+        children: [
+            {
+                label: (
+                    <div className={styles["right-menu-item"]}>
+                        <OutlinePlusIcon />
+                        新建组
+                    </div>
+                ),
+                key: "newGroup"
+            }
+            // {
+            //     label: (
+            //         <div className={styles["right-menu-item"]}>
+            //             <div className={classNames(styles["item-color-block"], `color-bg-blue`)} />
+            //             <span>正式项目配置</span>
+            //         </div>
+            //     ),
+            //     key: "55"
+            // }
+        ]
+    },
+    // 组内的tab才有下面这个菜单
+    // {
+    //     label: "从组中移出",
+    //     key: "removeFromGroup"
+    // },
+    {
+        type: "divider"
+    },
+    {
+        label: "关闭当前标签页",
+        key: "remove"
+    },
+    {
+        label: "关闭其他标签页",
+        key: "removeOther"
+    }
+]
 const getWebFuzzerCacheToPage = (list) => {
     try {
         const l = list.length
@@ -114,6 +160,70 @@ const getWebFuzzerCacheToPage = (list) => {
     } catch (error) {
         return []
     }
+}
+/**
+ * 生成组id
+ * @returns {string} 生成的组id
+ */
+const getGroupId = (gIndex?: number) => {
+    const time = (new Date().getTime() + (gIndex || 0)).toString()
+    const groupId = `[${randomString(6)}]-${time}`
+    return groupId
+}
+/**
+ * @description 通过id在subPage中找到对应的item
+ * @returns {currentItem:MultipleNodeInfo,index:number,subIndex:number}
+ * */
+const getPageItemById = (subPage: MultipleNodeInfo[], id: string) => {
+    let current: MultipleNodeInfo = {
+        id: "0",
+        verbose: "",
+        sortFieId: 1
+    }
+    let index = -1
+    let subIndex = -1
+    const l = subPage.length
+    for (let i = 0; i < l; i++) {
+        const element = subPage[i]
+        if (element.id === id) {
+            current = {...element}
+            index = i
+            break
+        }
+        let isBreak = false
+        const groupChildrenList = element.groupChildren || []
+        const gLength = groupChildrenList.length
+        for (let j = 0; j < gLength; j++) {
+            const children = groupChildrenList[j]
+            if (children.id === id) {
+                current = {...children}
+                isBreak = true
+                index = i
+                subIndex = j
+                break
+            }
+        }
+        if (isBreak) break
+    }
+    return {current, index, subIndex}
+}
+/**
+ * @description 获取组的个数
+ * @param subPage
+ * @returns {number} 组的个数
+ */
+const getGroupLength = (subPage) => {
+    return subPage.filter((ele) => ele.groupChildren && ele.groupChildren.length > 0).length
+}
+/**
+ * @description 获取当前组的颜色
+ * @param subPage
+ * @returns {string} 返回颜色
+ */
+const getColor = (subPage) => {
+    const groupLength = getGroupLength(subPage)
+    const randNum = Math.floor(Math.random() * 10) // 0-9随机数
+    return groupLength === 0 ? "purple" : colorList[randNum] || "purple"
 }
 // 软件初始化时的默认打开页面数据
 export const getInitPageCache: () => PageCache[] = () => {
@@ -564,7 +674,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         ...nodeParams?.params,
                         id: tabId
                     },
-                    groupId: `[${randomString(6)}]-${time}`,
+                    groupId: getGroupId(),
+                    // groupId:tabId,
                     sortFieId: filterPage.length || 1
                 }
                 if (filterPage.length > 0) {
@@ -778,13 +889,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 for (let index = 0; index < l; index++) {
                     const itemObj = fuzeerArray[index]
                     const groupChildrenList: MultipleNodeInfo[] = []
+                    const groupId=getGroupId()
                     let groupItem: MultipleNodeInfo = {
                         id: "0",
                         verbose: "",
-                        sortFieId: 1
+                        sortFieId: 1,
+                        groupId
                     }
-                    const groupTime = (new Date().getTime() + index).toString()
-                    const groupId = `[${randomString(6)}]-${groupTime}`
                     itemObj.data.forEach((ele, number) => {
                         const time = (new Date().getTime() + number).toString() // +index 唯一
                         const verbose = ele.verbose || `${tabName}-[${(multipleNodeList.length || 0) + 1}]` // webFuzzer 保存的修改后的菜单二级tab名字
@@ -1437,9 +1548,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         ) {
             const ids = [result.combine.draggableId, result.draggableId]
             if (combineIds.length === 0) {
-                const index = subPage.findIndex((ele) => ele.groupChildren && ele.groupChildren.length > 0)
-                const randNum = Math.floor(Math.random() * 10) // 0-9随机数
-                combineColorRef.current = index === -1 ? "purple" : colorList[randNum] || "purple"
+                combineColorRef.current = getColor(subPage)
             }
             setCombineIds(ids)
             return
@@ -1510,7 +1619,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(dropItem)
         } else {
             const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
-            const groupLength = subPage.filter((ele) => ele.groupChildren && ele.groupChildren.length > 0).length
+            const groupLength = getGroupLength(subPage)
             subPage[combineIndex].groupChildren = [{...subPage[combineIndex]}, dropItem]
             subPage[combineIndex].groupName = `未命名[${groupLength}]`
             subPage[combineIndex].color = combineColorRef.current
@@ -1677,99 +1786,85 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     })
     const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
-        const newSubPage: MultipleNodeInfo[] = []
-        subPage.forEach((subItem) => {
-            if (!subItem.groupChildren) subItem.groupChildren = []
-            const index = subItem.groupChildren.findIndex((ele) => ele.id === removeItem.id)
-            let newGroupChildren = subItem.groupChildren || []
-            if (index !== -1) {
-                newGroupChildren = subItem.groupChildren.filter((_, i) => i !== index)
-            }
-            // 删除的当前item和组内删除最后一个都不添加到新的newSubPage
-            if (subItem.id === removeItem.id) return
-            if (subItem.groupChildren.length === 1 && index !== -1) return
-            newSubPage.push({
-                ...subItem,
-                groupChildren: newGroupChildren
-            })
-        })
+        //  先更改当前选择item,在删除
         onUpdateSelectSubPage(removeItem)
-        onUpdatePageCache(newSubPage)
+        const {index, subIndex} = getPageItemById(subPage, removeItem.id)
+        if (subIndex === -1) {
+            // 删除游离页面
+            subPage.splice(index, 1)
+        } else {
+            // 删除组内页面
+            const groupChildren = subPage[index].groupChildren || []
+            if (groupChildren.length > 0) {
+                groupChildren.splice(subIndex, 1)
+            }
+            if (groupChildren.length === 0) {
+                subPage.splice(index, 1)
+            } else {
+                subPage.splice(index + 1, 0)
+            }
+        }
+        onUpdatePageCache([...subPage])
         afterDeleteSubPage("single", pageItem.route, removeItem)
     })
     /**
      * @description 页面节点的右键点击事件
      */
-    const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, indexSub: number) => {
-        const currentSubItem: MultipleNodeInfo = subPage[indexSub]
+    const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, item: MultipleNodeInfo) => {
+        let menuData: YakitMenuItemType[] = _.cloneDeepWith(pageTabItemRightOperation)
+        const groupList = subPage.filter((ele) => (ele.groupChildren?.length || 0) > 0)
+        groupList.forEach((item) => {
+            let labelText = item.groupName
+            if (!labelText) {
+                const groupChildren = item.groupChildren || []
+                const gLength = groupChildren.length
+                if (gLength > 0) {
+                    labelText = `“${groupChildren[0].verbose}”和另外 ${gLength - 1} 个标签页`
+                }
+            }
+            const node = {
+                label: (
+                    <div className={styles["right-menu-item"]}>
+                        <div className={classNames(styles["item-color-block"], `color-bg-${item.color}`)} />
+                        <span>{labelText}</span>
+                    </div>
+                ),
+                key: item.id
+            }
+            const i = menuData[1] as YakitMenuItemProps
+            i.children?.push(node)
+        })
+        const {subIndex} = getPageItemById(subPage, item.id)
+        if (subIndex !== -1) {
+            menuData.splice(2, 0, {
+                label: "从组中移出",
+                key: "removeFromGroup"
+            })
+        }
         showByRightContext(
             {
                 width: 180,
                 type: "grey",
-                data: [
-                    {
-                        label: "重命名",
-                        key: "rename"
-                    },
-                    {
-                        label: "将标签页添加到组",
-                        key: "addToGroup",
-                        children: [
-                            {
-                                label: (
-                                    <div className={styles["right-menu-item"]}>
-                                        <OutlinePlusIcon />
-                                        新建组
-                                    </div>
-                                ),
-                                key: "newGroup"
-                            },
-                            {
-                                label: (
-                                    <div className={styles["right-menu-item"]}>
-                                        <div className={classNames(styles["item-color-block"], `color-bg-blue`)} />
-                                        <span>正式项目配置</span>
-                                    </div>
-                                ),
-                                key: "55"
-                            }
-                        ]
-                    },
-                    // 组内的tab才有下面这个菜单
-                    // {
-                    //     label: "从组中移出",
-                    //     key: "removeFromGroup"
-                    // },
-                    {
-                        type: "divider"
-                    },
-                    {
-                        label: "关闭当前标签页",
-                        key: "remove"
-                    },
-                    {
-                        label: "关闭其他标签页",
-                        key: "removeOther"
-                    }
-                ],
+                data: menuData,
                 onClick: ({key, keyPath}) => {
                     switch (key) {
                         case "rename":
-                            onRename(currentSubItem, indexSub)
-                            break
-                        case "addToGroup":
-                            onAddToGroup(currentSubItem)
+                            onRename(item)
                             break
                         case "removeFromGroup":
-                            onRemoveFromGroup(currentSubItem)
+                            onRemoveFromGroup(item)
                             break
                         case "remove":
-                            onRemove(currentSubItem)
+                            onRemove(item)
                             break
                         case "removeOther":
-                            onRemoveOther(currentSubItem)
+                            onRemoveOther(item)
+                            break
+                        case "newGroup":
+                            onNewGroup(item)
                             break
                         default:
+                            onAddToGroup(item, key)
                             break
                     }
                 }
@@ -1778,8 +1873,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             event.clientY
         )
     })
+
     /**重命名 */
-    const onRename = useMemoizedFn((item: MultipleNodeInfo, indexSub: number) => {
+    const onRename = useMemoizedFn((item: MultipleNodeInfo) => {
         const m = showYakitModal({
             footer: null,
             closable: false,
@@ -1792,13 +1888,28 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         }}
                         name={item.verbose}
                         onOk={(val) => {
-                            if (val.length>50) {
+                            if (val.length > 50) {
                                 yakitNotify("error", "不能超过50个字符")
                                 return
                             }
-                            subPage[indexSub].verbose = val
-                            afterUpdateSubPage(pageItem, subPage[indexSub])
-                            onUpdatePageCache(subPage)
+                            const {index, subIndex} = getPageItemById(subPage, item.id)
+                            if (index === -1) return
+                            if (subIndex === -1) {
+                                // 当前情况说明item是游离的页面,没有在其他组内
+                                subPage[index].verbose = val
+                                afterUpdateSubPage(pageItem, subPage[index])
+                                onUpdatePageCache(subPage)
+                            }
+                            if (subIndex !== -1) {
+                                // 当前情况说明item在subPage[index]的组内
+                                const groupChildrenList = subPage[index].groupChildren || []
+                                if (groupChildrenList.length > 0) {
+                                    groupChildrenList[subIndex].verbose = val
+                                    afterUpdateSubPage(pageItem, subPage[index])
+                                    onUpdatePageCache(subPage)
+                                }
+                            }
+
                             m.destroy()
                         }}
                     />
@@ -1806,33 +1917,131 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             )
         })
     })
+    /**将页面添加到新建组 */
+    const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
+        const {index, subIndex} = getPageItemById(subPage, item.id)
+        const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
+        const groupLength = getGroupLength(subPage)
+        const groupId = getGroupId()
+        const newGroup: MultipleNodeInfo = {
+            id,
+            verbose: `未命名[${groupLength}]`,
+            sortFieId: subPage.length,
+            // groupId: id,
+            groupId,
+            groupName: `未命名[${groupLength}]`,
+            groupChildren: [{...item, groupId}],
+            expand: true,
+            color: getColor(subPage)
+        }
+        if (subIndex === -1) {
+            // 游离页面移动到新建组
+            subPage.splice(index, 1, newGroup)
+        } else {
+            // 组A移动到新建组
+            const groupChildren = subPage[index].groupChildren || []
+            if (groupChildren.length > 0) {
+                groupChildren.splice(subIndex, 1)
+            }
+            if (groupChildren.length === 0) {
+                subPage.splice(index, 1, newGroup)
+            } else {
+                subPage.splice(index + 1, 0, newGroup)
+            }
+        }
+        onUpdatePageCache([...subPage])
+        afterDragEndSubPage(pageItem, [...subPage])
+    })
     /**将标签页添加到组 */
-    const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo) => {})
+    const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo, key: string) => {
+        const {index, subIndex} = getPageItemById(subPage, item.id)
+        const {index: gIndex} = getPageItemById(subPage, key)
+        if (subIndex === -1) {
+            //游离页面移动到组内
+            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].groupId})
+            subPage.splice(index, 1)
+        } else {
+            // 组A移动到组B
+            const groupChildren = subPage[index].groupChildren || []
+            if (groupChildren.length > 0) {
+                groupChildren.splice(subIndex, 1)
+            }
+            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].groupId})
+            if (groupChildren.length === 0) subPage.splice(index, 1)
+        }
+        onUpdatePageCache([...subPage])
+        afterDragEndSubPage(pageItem, [...subPage])
+    })
     /**从组中移出 */
-    const onRemoveFromGroup = useMemoizedFn((item: MultipleNodeInfo) => {})
+    const onRemoveFromGroup = useMemoizedFn((item: MultipleNodeInfo) => {
+        const {index, subIndex} = getPageItemById(subPage, item.id)
+        if (subIndex === -1) return
+        const groupChildren = subPage[index].groupChildren || []
+        if (groupChildren.length > 0) {
+            groupChildren.splice(subIndex, 1)
+        }
+        const newGroup = {
+            ...item,
+            groupId: getGroupId(),
+            groupChildren: [],
+            groupName: undefined,
+            expand: undefined,
+            color: undefined
+        }
+        if (groupChildren.length === 0) {
+            subPage.splice(index, 1, newGroup)
+        } else {
+            subPage.splice(index + 1, 0, newGroup)
+        }
+        onUpdatePageCache([...subPage])
+        afterDragEndSubPage(pageItem, [...subPage])
+    })
     /**关闭当前标签页 */
     const onRemove = useMemoizedFn((item: MultipleNodeInfo) => {
         onRemoveSubPage(item)
     })
-    /**二级 关闭其他标签页 */
+    /**二级游离页面/未分组的页面 关闭其他标签页 */
     const onRemoveOther = useMemoizedFn((item: MultipleNodeInfo) => {
-        const m = YakitModalConfirm({
-            width: 420,
-            type: "white",
-            onCancelText: "取消",
-            onOkText: "关闭其他",
-            icon: <ExclamationCircleOutlined />,
-            onOk: () => {
-                const newSubPage: MultipleNodeInfo[] = [item]
-                onUpdatePageCache(newSubPage)
-                afterDeleteSubPage("other", pageItem.route, item)
-                m.destroy()
-            },
-            onCancel: () => {
-                m.destroy()
-            },
-            content: "是否保留当前标签页，关闭其他标签页"
-        })
+        const {index, subIndex} = getPageItemById(subPage, item.id)
+        if (subIndex === -1) {
+            // 游离页面的关闭其他tabs
+            const m = YakitModalConfirm({
+                width: 420,
+                type: "white",
+                onCancelText: "取消",
+                onOkText: "关闭其他",
+                icon: <ExclamationCircleOutlined />,
+                onOk: () => {
+                    const newSubPage: MultipleNodeInfo[] = [item]
+                    onUpdatePageCache(newSubPage)
+                    afterDeleteSubPage("other", pageItem.route, item)
+                    m.destroy()
+                },
+                onCancel: () => {
+                    m.destroy()
+                },
+                content: "是否保留当前标签页，关闭其他标签页"
+            })
+        } else {
+            // 关闭组内的其他tabs
+            const m = YakitModalConfirm({
+                width: 420,
+                type: "white",
+                onCancelText: "取消",
+                onOkText: "关闭组内其他",
+                icon: <ExclamationCircleOutlined />,
+                onOk: () => {
+                    subPage[index].groupChildren=[item]
+                    onUpdatePageCache(subPage)
+                    afterDragEndSubPage(pageItem, subPage)
+                    m.destroy()
+                },
+                onCancel: () => {
+                    m.destroy()
+                },
+                content: "是否保留组内的当前标签页，关闭组内的其他标签页"
+            })
+        }
     })
     const onKeyDown = useMemoizedFn((e: React.KeyboardEvent, subItem: MultipleNodeInfo) => {
         e.stopPropagation()
@@ -1886,11 +2095,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const index = subPage.findIndex((ele) => ele.id === groupItem.id)
         if (index === -1) return
         const groupChildrenList = (subPage[index].groupChildren || []).map((g, gIndex) => {
-            const groupTime = (new Date().getTime() + gIndex).toString()
-            const groupId = `[${randomString(6)}]-${groupTime}`
             return {
                 ...g,
-                groupId
+                groupId: getGroupId(gIndex)
             }
         })
         subPage.splice(index, 1, ...groupChildrenList)
@@ -1920,7 +2127,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             onCloseGroup(groupItem)
         }
     })
-    /**关闭组 */
+    /**关闭组 组的右键事件 */
     const onCloseGroup = useMemoizedFn((groupItem: MultipleNodeInfo) => {
         const index = subPage.findIndex((ele) => ele.id === groupItem.id)
         if (index === -1) return
@@ -1929,7 +2136,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdateSelectSubPage(groupItem)
         afterDragEndSubPage(pageItem, [...subPage])
     })
-    /**@description 关闭其他标签页 */
+    /**@description 组的右键事件 关闭其他标签页 */
     const onCloseOtherTabs = useMemoizedFn((groupItem: MultipleNodeInfo) => {
         const m = YakitModalConfirm({
             width: 420,
@@ -1938,7 +2145,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             onOkText: "关闭其他",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                console.log('groupItem',groupItem)
+                console.log("groupItem", groupItem)
                 const newPage = [{...groupItem}]
                 setSubPage(newPage)
                 afterDragEndSubPage(pageItem, newPage)
@@ -1951,7 +2158,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
     })
     /**
-     * @description 收起和展开事件
+     * @description 组的右键事件 收起和展开事件
      */
     const onUnfoldAndCollapse = useMemoizedFn((item: MultipleNodeInfo) => {
         const newItem = {...item}
@@ -2003,8 +2210,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                                     onRemoveSub={(val) => {
                                                         onRemoveSubPage(val)
                                                     }}
-                                                    onContextMenu={(e) => {
-                                                        onRightClickOperation(e, indexSub)
+                                                    onContextMenu={(e, groupItem) => {
+                                                        onRightClickOperation(e, groupItem)
                                                     }}
                                                     onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                     onGroupContextMenu={(e) => onGroupRightClickOperation(e, indexSub)}
@@ -2025,8 +2232,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                                 onRemoveSub={(val) => {
                                                     onRemoveSubPage(val)
                                                 }}
-                                                onContextMenu={(e) => {
-                                                    onRightClickOperation(e, indexSub)
+                                                onContextMenu={(e, val) => {
+                                                    onRightClickOperation(e, val)
                                                 }}
                                                 isCombine={combineIds.findIndex((ele) => ele === item.id) !== -1}
                                                 combineColor={combineColorRef.current}
@@ -2095,7 +2302,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         onClick={() => {
                             setSelectSubMenu(subItem)
                         }}
-                        onContextMenu={onContextMenu}
+                        onContextMenu={(e) => onContextMenu(e, subItem)}
                     >
                         <Tooltip
                             title={subItem.verbose || ""}
@@ -2210,7 +2417,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                                             onRemoveSub(val)
                                                         }}
                                                         onContextMenu={(e) => {
-                                                            onContextMenu(e)
+                                                            onContextMenu(e, groupItem)
                                                         }}
                                                     />
                                                 </React.Fragment>
