@@ -1512,7 +1512,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             ipcRenderer
                 .invoke("fetch-latest-yakit-version")
                 .then((data: string) => {
-                    console.log("获取yakit最新版本号---", data, yakitVersion)
                     if (yakitVersion !== data) setYakitLastVersion(data)
                 })
                 .catch(() => {})
