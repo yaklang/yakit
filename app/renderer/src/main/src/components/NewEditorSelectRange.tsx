@@ -205,7 +205,9 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 const focusX = x + left
                 const focusY = y + top
 
-                if (leftButton) {
+                // 焦点与抬起坐标是否超出限制
+                const isOver:boolean = overLine * height < Math.abs(focusY - posy)
+                if (leftButton&&!isOver) {
                     // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
                     const editorContainer = reqEditor.getDomNode()
                     if (editorContainer) {
@@ -259,7 +261,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                         }
                     }
                 }
-                if (rightButton) {
+                if (rightButton||isOver) {
                     closeFizzRangeWidget()
                     closeFizzSelectWidget()
                 }
