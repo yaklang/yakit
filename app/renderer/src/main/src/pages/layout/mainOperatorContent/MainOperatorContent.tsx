@@ -1597,7 +1597,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (!result.destination && !result.source) {
                 return
             }
-            console.log("result", result, subPage)
 
             const {droppableId: destinationDroppableId} = result.destination || {droppableId: "0"}
             // 组外之间移动
@@ -1635,22 +1634,28 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const combineId = result.combine.draggableId
         const combineIndex = subPage.findIndex((ele) => ele.id === combineId)
         if (combineIndex === -1 || !subPage[combineIndex]) return
-        //  拖动的来源item是组时，不用合并
-        if ((subPage[sourceIndex]?.groupChildren?.length || 0) > 0) return
-        const dropItem: MultipleNodeInfo = {
-            ...subPage[sourceIndex],
-            groupId: subPage[combineIndex].groupId
-        }
-        if (subPage[combineIndex].groupChildren && (subPage[combineIndex].groupChildren || []).length > 0) {
-            subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(dropItem)
-        } else {
-            const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
-            const groupLength = getGroupLength(subPage)
-            subPage[combineIndex].groupChildren = [{...subPage[combineIndex]}, dropItem]
-            subPage[combineIndex].groupName = `未命名[${groupLength}]`
-            subPage[combineIndex].color = combineColorRef.current
+      
+        if ((subPage[sourceIndex]?.groupChildren?.length || 0) > 0) {
+            // 拖动的来源item是组时，合并
+            const groupList=subPage[sourceIndex].groupChildren?.map(ele=>({...ele,groupId:subPage[combineIndex].groupId}))||[]
+            subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(groupList)
             subPage[combineIndex].expand = true
-            subPage[combineIndex].id = id
+        }else{
+            const dropItem: MultipleNodeInfo = {
+                ...subPage[sourceIndex],
+                groupId: subPage[combineIndex].groupId
+            }
+            if (subPage[combineIndex].groupChildren && (subPage[combineIndex].groupChildren || []).length > 0) {
+                subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(dropItem)
+            } else {
+                const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
+                const groupLength = getGroupLength(subPage)
+                subPage[combineIndex].groupChildren = [{...subPage[combineIndex]}, dropItem]
+                subPage[combineIndex].groupName = `未命名[${groupLength}]`
+                subPage[combineIndex].color = combineColorRef.current
+                subPage[combineIndex].expand = true
+                subPage[combineIndex].id = id
+            }
         }
         subPage.splice(sourceIndex, 1)
         afterDragEndSubPage(pageItem, subPage)
