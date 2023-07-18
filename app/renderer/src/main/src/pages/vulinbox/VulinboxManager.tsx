@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
-import {failed, info, success, yakitNotify} from "@/utils/notification";
-import {Form, Popconfirm, Progress, Space, Tag} from "antd";
+import {failed, info, success, yakitFailed, yakitNotify} from "@/utils/notification";
+import {Form, Popconfirm, Progress, Space, Tag, Tooltip} from "antd";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {randomString} from "@/utils/randomUtil";
@@ -15,9 +15,13 @@ import {ExecResult} from "@/pages/invoker/schema";
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
 import {useGetState} from "ahooks";
 import styles from "@/pages/screenRecorder/ScreenRecorderPage.module.scss";
-import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon";
+import {ChromeFrameSvgIcon, ChromeSvgIcon, InformationCircleIcon} from "@/assets/newIcon";
 import {CheckOutlined} from "@ant-design/icons";
 import {openExternalWebsite} from "@/utils/openWebsite";
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
+import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
+import {getRemoteValue} from "@/utils/kv";
+import {WEB_FUZZ_PROXY_LIST} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig";
 
 export interface VulinboxManagerProp {
 
@@ -85,37 +89,71 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 </YakitButton>}
             </> : <Tag color={"red"}>未安装</Tag>}
             {available && (
-                started ? <Popconfirm title={"确定要关闭靶场进程吗？"} onConfirm={() => {
-                        ipcRenderer.invoke("cancel-StartVulinbox", token).then(() => {
-                            setStarted(false)
-                        })
-                    }}>
+                <>
+                    {started ? (
+                        <>
+                            <Popconfirm title={"确定要关闭靶场进程吗？"} onConfirm={() => {
+                                ipcRenderer.invoke("cancel-StartVulinbox", token).then(() => {
+                                    setStarted(false)
+                                })
+                            }}>
                         <YakitButton colors="danger">关闭靶场</YakitButton>
                     </Popconfirm> :
-                    <YakitButton type={"primary"} onClick={() => {
-                        const m = showYakitModal({
-                            title: "启动靶场参数", width: "50%",
-                            content: (
-                                <div style={{marginTop: 20, marginLeft: 20}}>
-                                    <VulinboxStart onSubmit={param => {
-                                        ipcRenderer.invoke("StartVulinbox", param, token).then(() => {
-                                            setCurrentParams(param)
-                                            info("启动靶场成功")
-                                            setStarted(true)
-                                            m.destroy()
-                                        }).catch((e) => {
-                                            failed(`${e}`)
-                                        })
-                                    }} params={{
-                                        Host: "127.0.0.1",
-                                        Port: 8787, NoHttps: true,
-                                        SafeMode: false
-                                    }}/>
-                                </div>
-                            )
-                        })
+                                <YakitButton type={"danger"}>关闭靶场</YakitButton>
+                            </Popconfirm>
 
-                    }}>启动靶场</YakitButton>
+                            <YakitButton type={"success"} onClick={() => {
+                                const m = showYakitModal({
+                                    title: "测试参数", width: "50%",
+                                    content: (
+                                        <div style={{marginTop: 20, marginLeft: 20}}>
+                                            <GenQualityInspectionReport onSubmit={parmam => {
+                                                console.log(parmam)
+                                                // setFormData(parmam);
+                                            }} params={{
+                                                ScriptNames: [],
+                                                TaskName: "xxxx"
+                                            }}
+                                            />
+                                        </div>
+                                    ),
+                                    okButtonProps: {
+                                        onClick: (e,) => {
+                                            console.log('确定按钮被点击了')
+                                            // console.log('Form data:', formData);
+                                        }
+                                    }
+                                })
+                            }}>
+                                进行测试
+                            </YakitButton>
+                        </>
+                    ) : (
+                        <YakitButton type={"primary"} onClick={() => {
+                            const m = showYakitModal({
+                                title: "启动靶场参数", width: "50%",
+                                content: (
+                                    <div style={{marginTop: 20, marginLeft: 20}}>
+                                        <VulinboxStart onSubmit={param => {
+                                            ipcRenderer.invoke("StartVulinbox", param, token).then(() => {
+                                                setCurrentParams(param)
+                                                info("启动靶场成功")
+                                                setStarted(true)
+                                                m.destroy()
+                                            }).catch((e) => {
+                                                failed(`${e}`)
+                                            })
+                                        }} params={{
+                                            Host: "127.0.0.1",
+                                            Port: 8787, NoHttps: true,
+                                            SafeMode: false
+                                        }}/>
+                                    </div>
+                                )
+                            })
+                        }}>启动靶场</YakitButton>
+                    )}
+                </>
             )}
         </Space>} bodyStyle={{padding: 0}} extra={(
             <Popconfirm title={"将从互联网下载靶场程序并安装"} onConfirm={() => {
@@ -181,6 +219,75 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
                     setValue={SafeMode => setParams({...params, SafeMode})} value={params.SafeMode}/>
         <Form.Item colon={false} label={" "}>
             <YakitButton type="primary" htmlType="submit"> 启动靶场 </YakitButton>
+        </Form.Item>
+    </Form>
+};
+
+
+interface GenQualityInspectionReportParams {
+    ScriptNames: string[]
+    TaskName: string
+}
+
+interface GenQualityInspectionReportProp {
+    params: GenQualityInspectionReportParams
+    setParams?: (p: GenQualityInspectionReportParams) => any
+    onSubmit: (p: GenQualityInspectionReportParams) => any
+}
+
+const GenQualityInspectionReport: React.FC<GenQualityInspectionReportProp> = (props) => {
+    const [params, setParams] = useState<GenQualityInspectionReportParams>(props.params);
+    const [scriptNamesList, setScriptNamesList] = useState<SelectOptionProps[]>([]) // 代理代表
+    useEffect(() => {
+        // 代理数据 最近10条
+        getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
+            try {
+                ipcRenderer.invoke("QueryYakScriptByIsCore", {IsCorePlugin: true}).then((res) => {
+                    if (res.Data.length > 0) {
+                        const scriptNames = res.Data.map(item => ({label: item.ScriptName, value: item.ScriptName}));
+                        console.log(scriptNames)
+                        setScriptNamesList(scriptNames);
+                    }
+                }).catch((e) => {
+                    failed(`${e}`)
+                })
+            } catch (error) {
+                yakitFailed("代理列表获取失败:" + error)
+            }
+        })
+    }, [])
+    return <Form
+        labelCol={{span: 5}} wrapperCol={{span: 14}}
+        onSubmitCapture={e => {
+            e.preventDefault()
+
+            props.onSubmit(params)
+        }}
+        size={"small"}
+    >
+        <InputItem label={"TaskName"} setValue={TaskName => setParams({...params, TaskName})} value={params.TaskName}/>
+        <Form.Item
+            label={
+                <span className={styles["advanced-config-form-label"]}>
+                                内置插件
+                            </span>
+            }
+            name='ScriptNames'
+
+        >
+            <YakitSelect
+                allowClear
+                options={scriptNamesList}
+                placeholder='请选择...'
+                mode='tags'
+                size='small'
+                value={params.ScriptNames}
+                onChange={ScriptNames => setParams({...params, ScriptNames})}
+                maxTagCount={10}
+            />
+        </Form.Item>
+        <Form.Item colon={false} label={" "}>
+            <YakitButton type="primary" htmlType="submit"> 执行检测 </YakitButton>
         </Form.Item>
     </Form>
 };

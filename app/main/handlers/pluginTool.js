@@ -171,6 +171,23 @@ module.exports = (win, getClient) => {
             })
         })
     }
+
+    ipcMain.handle("QueryYakScriptByIsCore", async (e, params) => {
+        return await asyncQueryYakScriptByIsCore(params)
+    })
+
+    const asyncQueryYakScriptByIsCore = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptByIsCore(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
     //企业版管理员获取所有可上传插件
     ipcMain.handle("QueryYakScriptLocalAll", async (e, params) => {
         return await asyncQueryYakScriptLocalAll(params)
