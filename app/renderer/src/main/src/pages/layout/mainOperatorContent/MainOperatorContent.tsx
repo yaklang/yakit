@@ -165,11 +165,24 @@ const getWebFuzzerCacheToPage = (list) => {
  * 生成组id
  * @returns {string} 生成的组id
  */
-const getGroupId = (gIndex?: number) => {
+const generateGroupId = (gIndex?: number) => {
     const time = (new Date().getTime() + (gIndex || 0)).toString()
     const groupId = `[${randomString(6)}]-${time}`
     return groupId
 }
+/**
+ * 通过拖拽区域的 droppableId 获取组的id
+ * @param droppableId
+ * @returns {string} 组的id
+ */
+const getGroupIdByDroppableId = (droppableId: string) => {
+    const groupId = droppableId
+        .split("-")
+        .filter((_, i) => i < 2)
+        .join("-")
+    return groupId
+}
+
 /**
  * @description 通过id在subPage中找到对应的item
  * @returns {currentItem:MultipleNodeInfo,index:number,subIndex:number}
@@ -674,7 +687,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         ...nodeParams?.params,
                         id: tabId
                     },
-                    groupId: getGroupId(),
+                    groupId: generateGroupId(),
                     // groupId:tabId,
                     sortFieId: filterPage.length || 1
                 }
@@ -889,7 +902,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 for (let index = 0; index < l; index++) {
                     const itemObj = fuzeerArray[index]
                     const groupChildrenList: MultipleNodeInfo[] = []
-                    const groupId = getGroupId()
+                    const groupId = generateGroupId()
                     let groupItem: MultipleNodeInfo = {
                         id: "0",
                         verbose: "",
@@ -1556,48 +1569,50 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         setCombineIds([])
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
-        // console.log("subPage", subPage)
-        /** 合并生成组   ---------start--------- */
-        if (
-            result.source.droppableId === "droppable2" &&
-            result.combine &&
-            result.combine.droppableId === "droppable2"
-        ) {
-            mergingGroup(result)
-        }
-        setCombineIds([])
-        combineColorRef.current = ""
-        /** 合并生成组   ---------end--------- */
-        /** 移动排序 ---------start--------- */
-        if (!result.destination && !result.source) {
-            return
-        }
-        console.log("result", result)
-        const {droppableId: sourceDroppableId} = result.source
-        const {droppableId: destinationDroppableId} = result.destination || {droppableId: "0"}
-        // 组外之间移动
-        if (sourceDroppableId === "droppable2" && destinationDroppableId === "droppable2") {
-            movingBetweenOutsideGroups(result)
-        }
-        //组之间的移动
-        if (sourceDroppableId.includes("group") && destinationDroppableId.includes("group")) {
-            if (sourceDroppableId === destinationDroppableId) {
-                //同一个组之间的移动
-                movingWithinSameGroup(result)
-            } else {
-                // 从组A到组B
-                movingBetweenDifferentGroups(result)
+        try {
+            // console.log("subPage", subPage)
+            /** 合并生成组   ---------start--------- */
+            if (
+                result.source.droppableId === "droppable2" &&
+                result.combine &&
+                result.combine.droppableId === "droppable2"
+            ) {
+                mergingGroup(result)
             }
-        }
+            setCombineIds([])
+            combineColorRef.current = ""
+            /** 合并生成组   ---------end--------- */
+            /** 移动排序 ---------start--------- */
+            if (!result.destination && !result.source) {
+                return
+            }
+            console.log("result", result,subPage)
+            const {droppableId: sourceDroppableId} = result.source
+            const {droppableId: destinationDroppableId} = result.destination || {droppableId: "0"}
+            // 组外之间移动
+            if (sourceDroppableId === "droppable2" && destinationDroppableId === "droppable2") {
+                movingBetweenOutsideGroups(result)
+            }
+            //组之间的移动
+            if (sourceDroppableId.includes("group") && destinationDroppableId.includes("group")) {
+                if (sourceDroppableId === destinationDroppableId) {
+                    //同一个组之间的移动
+                    movingWithinSameGroup(result)
+                } else {
+                    // 从组A到组B
+                    movingBetweenDifferentGroups(result)
+                }
+            }
 
-        // 组内向外移动 变游离的tab
-        if (sourceDroppableId.includes("group") && destinationDroppableId === "droppable2") {
-            movingWithinAndOutsideGroup(result)
-        }
-        if (result.source.droppableId === "droppable2" && destinationDroppableId.includes("group")) {
-            moveOutOfGroupAndInGroup(result)
-        }
-        /** 移动排序 ---------end--------- */
+            // 组内向外移动 变游离的tab
+            if (sourceDroppableId.includes("group") && destinationDroppableId === "droppable2") {
+                movingWithinAndOutsideGroup(result)
+            }
+            if (result.source.droppableId === "droppable2" && destinationDroppableId.includes("group")) {
+                moveOutOfGroupAndInGroup(result)
+            }
+            /** 移动排序 ---------end--------- */
+        } catch (error) {}
     })
     /** @description 组外向组内移动合并 */
     const mergingGroup = useMemoizedFn((result) => {
@@ -1645,42 +1660,77 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         console.log("同一个组内之间移动", result)
+        const {index: sourceIndex} = result.source
+        const {droppableId, index: destinationIndex} = result.destination
+        const groupId = getGroupIdByDroppableId(droppableId)
+        const gIndex = subPage.findIndex((ele) => ele.groupId === groupId)
+        if (gIndex === -1) return
+        const groupChildrenList = subPage[gIndex].groupChildren || []
+        const newGroupChildrenList: MultipleNodeInfo[] = reorder(groupChildrenList, sourceIndex, destinationIndex)
+        subPage[gIndex].groupChildren = newGroupChildrenList
+        afterDragEndSubPage(pageItem, subPage)
+        onUpdatePageCache(subPage)
     })
     /** @description 不同一个组间移动 从组A到组B */
     const movingBetweenDifferentGroups = useMemoizedFn((result) => {
         if (!result.destination) {
             return
         }
+        const {droppableId: dropSourceId, index: sourceIndex} = result.source
+        const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
+        const sourceGroupId = getGroupIdByDroppableId(dropSourceId)
+        const destinationGroupId = getGroupIdByDroppableId(dropDestinationId)
         console.log("从组A到组B", result)
+        // 将拖拽的item从来源地中删除
+        const sourceNumber = subPage.findIndex((ele) => ele.groupId === sourceGroupId)
+        if (sourceNumber === -1) return
+        const sourceGroupChildrenList = subPage[sourceNumber].groupChildren || []
+        const sourceItem = sourceGroupChildrenList[sourceIndex] // 拖拽的item
+        sourceGroupChildrenList.splice(sourceIndex, 1)
+        subPage[sourceNumber].groupChildren = sourceGroupChildrenList
+
+        // 将拖拽的item添加到目的地的组内
+        const destinationNumber = subPage.findIndex((ele) => ele.groupId === destinationGroupId)
+        const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
+        if (destinationGroupChildrenList.length === 0) return
+        destinationGroupChildrenList.splice(destinationIndex, 0, {
+            ...sourceItem,
+            groupId: destinationGroupChildrenList[0].groupId
+        }) // 按顺序将拖拽的item放进目的地中并修改组的id
+        subPage[destinationNumber].groupChildren = destinationGroupChildrenList
+
+        if (sourceGroupChildrenList.length === 0) {
+            // 组内的标签页为0时,删除该组
+            subPage.splice(sourceNumber, 1)
+        }
+        afterDragEndSubPage(pageItem, subPage)
+        onUpdatePageCache(subPage)
     })
     /** @description 组内向组外移动 */
     const movingWithinAndOutsideGroup = useMemoizedFn((result) => {
         if (!result.destination) {
             return
         }
-        console.log("组内向组外移动", result)
-        // const destinationIndex = result.destination.index
-        // const length = subMenu.length
-        // let currentDropGroupCurrent: MenuChildrenDataProps = {
-        //     key: "0"
-        // }
-        // for (let index = 0; index < length; index++) {
-        //     const subMenuItem = subMenu[index]
-        //     if (subMenuItem.children && subMenuItem.children.length > 0) {
-        //         const number = subMenuItem.children.findIndex((e) => e.key === result.draggableId)
-        //         if (number !== -1) {
-        //             currentDropGroupCurrent = subMenuItem.children[number]
-        //             subMenuItem.children = subMenuItem.children.filter((_, n) => n !== number)
-        //             if (subMenuItem.children.length === 0) {
-        //                 subMenu.splice(index, 1)
-        //                 index--
-        //             }
-        //             break
-        //         }
-        //     }
-        // }
-        // if (currentDropGroupCurrent.key !== "0") subMenu.splice(destinationIndex, 0, currentDropGroupCurrent)
-        // setSubMenu([...subMenu])
+        console.log("组内向组外移动", result, subPage)
+        const {droppableId: dropSourceId, index: sourceIndex} = result.source
+        const {index: destinationIndex} = result.destination
+
+        const sourceGroupId = getGroupIdByDroppableId(dropSourceId)
+        // 将拖拽的item从来源地中删除
+        const sourceNumber = subPage.findIndex((ele) => ele.groupId === sourceGroupId)
+        if (sourceNumber === -1) return
+        const sourceGroupChildrenList = subPage[sourceNumber].groupChildren || []
+        const sourceItem = sourceGroupChildrenList[sourceIndex] // 拖拽的item
+        sourceGroupChildrenList.splice(sourceIndex, 1)
+        subPage[sourceNumber].groupChildren = sourceGroupChildrenList
+
+        // 将拖拽的item添加到目的地的组内
+        subPage.splice(destinationIndex, 0, {
+            ...sourceItem,
+            groupId: generateGroupId()
+        })
+        afterDragEndSubPage(pageItem, subPage)
+        onUpdatePageCache(subPage)
     })
     /** @description 组外向组内移动 */
     const moveOutOfGroupAndInGroup = useMemoizedFn((result) => {
@@ -1688,28 +1738,26 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         console.log("组外向组内移动", result)
-        // const destinationIndex = result.destination.index
-        // const length = subMenu.length
-        // let currentDropGroupCurrent: MenuChildrenDataProps = {
-        //     key: "0"
-        // }
-        // for (let index = 0; index < length; index++) {
-        //     const subMenuItem = subMenu[index]
-        //     if (subMenuItem.children && subMenuItem.children.length > 0) {
-        //         const number = subMenuItem.children.findIndex((e) => e.key === result.draggableId)
-        //         if (number !== -1) {
-        //             currentDropGroupCurrent = subMenuItem.children[number]
-        //             subMenuItem.children = subMenuItem.children.filter((_, n) => n !== number)
-        //             if (subMenuItem.children.length === 0) {
-        //                 subMenu.splice(index, 1)
-        //                 index--
-        //             }
-        //             break
-        //         }
-        //     }
-        // }
-        // if (currentDropGroupCurrent.key !== "0") subMenu.splice(destinationIndex, 0, currentDropGroupCurrent)
-        // setSubMenu([...subMenu])
+        const {index: sourceIndex} = result.source
+        const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
+        const destinationGroupId = getGroupIdByDroppableId(dropDestinationId)
+        const sourceItem = subPage[sourceIndex] // 拖拽的item
+
+        // 将拖拽的item添加到目的地的组内
+        const destinationNumber = subPage.findIndex((ele) => ele.groupId === destinationGroupId)
+        const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
+        if (destinationGroupChildrenList.length === 0) return
+        destinationGroupChildrenList.splice(destinationIndex, 0, {
+            ...sourceItem,
+            groupId: destinationGroupChildrenList[0].groupId
+        }) // 按顺序将拖拽的item放进目的地中并修改组的id
+        subPage[destinationNumber].groupChildren = destinationGroupChildrenList
+
+        // 将拖拽的item从来源地中删除
+        subPage.splice(sourceIndex, 1)
+
+        afterDragEndSubPage(pageItem, subPage)
+        onUpdatePageCache(subPage)
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
     const onUpdatePageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[]) => {
@@ -1932,7 +1980,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const {index, subIndex} = getPageItemById(subPage, item.id)
         const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
         const groupLength = getGroupLength(subPage)
-        const groupId = getGroupId()
+        const groupId = generateGroupId()
         const newGroup: MultipleNodeInfo = {
             id,
             verbose: `未命名[${groupLength}]`,
@@ -1992,7 +2040,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         const newGroup = {
             ...item,
-            groupId: getGroupId(),
+            groupId: generateGroupId(),
             groupChildren: [],
             groupName: undefined,
             expand: undefined,
@@ -2109,7 +2157,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const groupChildrenList = (subPage[index].groupChildren || []).map((g, gIndex) => {
             return {
                 ...g,
-                groupId: getGroupId(gIndex)
+                groupId: generateGroupId(gIndex)
             }
         })
         subPage.splice(index, 1, ...groupChildrenList)
@@ -2352,6 +2400,7 @@ const getGroupItemStyle = (snapshotGroup, draggableStyle) => {
     }
     return {
         ...draggableStyle,
+        // opacity: 1,
         transform
     }
 }
@@ -2368,7 +2417,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     } = props
     const groupDroppableId = useMemo(() => `${subItem.groupId}-group`, [subItem.groupId])
     return (
-        <Draggable key={subItem.id} draggableId={subItem.id} index={index} isCombineEnabled={false}>
+        <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {
                 const groupStyle = getGroupItemStyle(snapshotGroup, providedGroup.draggableProps.style)
                 return (
@@ -2378,7 +2427,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                         {...providedGroup.dragHandleProps}
                         style={{...groupStyle}}
                     >
-                        <Droppable droppableId={groupDroppableId} direction='horizontal'>
+                        <Droppable droppableId={groupDroppableId} direction='horizontal' isCombineEnabled={false}>
                             {(provided, snapshot) => {
                                 return (
                                     <div
