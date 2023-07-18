@@ -242,6 +242,7 @@ $keyColor: map-keys($colors);
                     font-weight: 600;
                     cursor: pointer;
                     word-break: keep-all;
+                    white-space: nowrap;
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;

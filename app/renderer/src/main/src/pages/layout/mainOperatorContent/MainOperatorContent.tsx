@@ -1553,41 +1553,52 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const sourceIndex = result.source.index
         //  拖动的来源item是组时，不用合并
         if ((subPage[sourceIndex]?.groupChildren?.length || 0) > 0) return
-
-        if (
-            result.source.droppableId === "droppable2" &&
-            result.combine &&
-            result.combine.droppableId === "droppable2"
-        ) {
-            const ids = [result.combine.draggableId, result.draggableId]
-            if (combineIds.length === 0) {
-                combineColorRef.current = getColor(subPage)
+        const {droppableId: sourceDroppableId} = result.source
+        if (result.combine) {
+            if (result.source.droppableId === "droppable2" && result.combine.droppableId === "droppable2") {
+                const ids = [result.combine.draggableId, result.draggableId]
+                if (combineIds.length === 0&&!combineColorRef.current) {
+                    combineColorRef.current = getColor(subPage)
+                }
+                setCombineIds(ids)
+                return
             }
-            setCombineIds(ids)
-            return
+            if (sourceDroppableId.includes("group") && result.combine.droppableId === "droppable2") {
+                const groupId = getGroupIdByDroppableId(result.draggableId)
+                const ids = [result.combine.draggableId, groupId]
+                if (combineIds.length === 0&&!combineColorRef.current) {
+                    combineColorRef.current = getColor(subPage)
+                }
+                setCombineIds(ids)
+                return
+            }
         }
+       
         setCombineIds([])
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
-            // console.log("subPage", subPage)
-            /** 合并生成组   ---------start--------- */
-            if (
-                result.source.droppableId === "droppable2" &&
-                result.combine &&
-                result.combine.droppableId === "droppable2"
-            ) {
-                mergingGroup(result)
+            const {droppableId: sourceDroppableId} = result.source
+            /** 合并组   ---------start--------- */
+            if (result.combine) {
+                // 组外两个游离的标签页合成组
+                if (result.source.droppableId === "droppable2" && result.combine.droppableId === "droppable2") {
+                    mergingGroup(result)
+                }
+                // 组内的标签页拖拽到组外并和组外的一个标签页合成组(组内向组外合并)
+                if (sourceDroppableId.includes("group") && result.combine.droppableId === "droppable2") {
+                    mergeWithinAndOutsideGroup(result)
+                }
             }
             setCombineIds([])
             combineColorRef.current = ""
-            /** 合并生成组   ---------end--------- */
+            /** 合并组   ---------end--------- */
             /** 移动排序 ---------start--------- */
             if (!result.destination && !result.source) {
                 return
             }
-            console.log("result", result,subPage)
-            const {droppableId: sourceDroppableId} = result.source
+            console.log("result", result, subPage)
+
             const {droppableId: destinationDroppableId} = result.destination || {droppableId: "0"}
             // 组外之间移动
             if (sourceDroppableId === "droppable2" && destinationDroppableId === "droppable2") {
@@ -1645,6 +1656,41 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         afterDragEndSubPage(pageItem, subPage)
         onUpdatePageCache(subPage)
     })
+    /**@description 组内向组外合并 */
+    const mergeWithinAndOutsideGroup = useMemoizedFn((result) => {
+        if (!result.combine) {
+            return
+        }
+        const {index: sourceIndex, droppableId} = result.source
+        const {draggableId: combineDraggableId} = result.combine
+        // console.log("result", result, subPage)
+        // 删除拖拽的组内标签页
+        const groupId = getGroupIdByDroppableId(droppableId)
+        const gIndex = subPage.findIndex((ele) => ele.groupId === groupId)
+        if (gIndex === -1) return
+        subPage[gIndex].groupChildren?.splice(sourceIndex, 1)
+        const combineIndex = subPage.findIndex((ele) => ele.id === combineDraggableId)
+        if (combineIndex === -1) return
+        //将拖拽的item和组外的目的地item合并
+        const dropItem: MultipleNodeInfo = {
+            ...subPage[sourceIndex],
+            groupId: subPage[combineIndex].groupId
+        }
+        const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
+        const groupLength = getGroupLength(subPage)
+        subPage[combineIndex].groupChildren = [{...subPage[combineIndex]}, dropItem]
+        subPage[combineIndex].groupName = `未命名[${groupLength}]`
+        subPage[combineIndex].color = combineColorRef.current
+        subPage[combineIndex].expand = true
+        subPage[combineIndex].id = id
+
+        // 拖拽后组内item===0,则删除该组
+        if (subPage[gIndex].groupChildren?.length === 0) {
+            subPage.splice(gIndex, 1)
+        }
+        afterDragEndSubPage(pageItem, subPage)
+        onUpdatePageCache(subPage)
+    })
     /** @description 组外之间移动 */
     const movingBetweenOutsideGroups = useMemoizedFn((result) => {
         if (!result.destination) {
@@ -1695,7 +1741,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (destinationGroupChildrenList.length === 0) return
         destinationGroupChildrenList.splice(destinationIndex, 0, {
             ...sourceItem,
-            groupId: destinationGroupChildrenList[0].groupId
+            groupId: destinationGroupId
         }) // 按顺序将拖拽的item放进目的地中并修改组的id
         subPage[destinationNumber].groupChildren = destinationGroupChildrenList
 
@@ -1737,22 +1783,32 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
-        console.log("组外向组内移动", result)
+        console.log("组外向组内移动", result, subPage)
         const {index: sourceIndex} = result.source
         const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
-        const destinationGroupId = getGroupIdByDroppableId(dropDestinationId)
         const sourceItem = subPage[sourceIndex] // 拖拽的item
 
-        // 将拖拽的item添加到目的地的组内
-        const destinationNumber = subPage.findIndex((ele) => ele.groupId === destinationGroupId)
-        const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
-        if (destinationGroupChildrenList.length === 0) return
-        destinationGroupChildrenList.splice(destinationIndex, 0, {
-            ...sourceItem,
-            groupId: destinationGroupChildrenList[0].groupId
-        }) // 按顺序将拖拽的item放进目的地中并修改组的id
-        subPage[destinationNumber].groupChildren = destinationGroupChildrenList
+        const destinationGroupId = getGroupIdByDroppableId(dropDestinationId)
 
+        const destinationNumber = subPage.findIndex((ele) => ele.groupId === destinationGroupId)
+        if (sourceItem.groupChildren && sourceItem.groupChildren.length > 0) {
+            // 拖拽的item是一个组,两个组合并
+            const pageList = sourceItem.groupChildren.map((ele) => ({
+                ...ele,
+                groupId: destinationGroupId
+            }))
+            subPage[destinationNumber].groupChildren?.splice(destinationIndex, 0, ...pageList)
+        } else {
+            // 将拖拽的item添加到目的地的组内
+
+            const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
+            if (destinationGroupChildrenList.length === 0) return
+            destinationGroupChildrenList.splice(destinationIndex, 0, {
+                ...sourceItem,
+                groupId: destinationGroupId
+            }) // 按顺序将拖拽的item放进目的地中并修改组的id
+            subPage[destinationNumber].groupChildren = destinationGroupChildrenList
+        }
         // 将拖拽的item从来源地中删除
         subPage.splice(sourceIndex, 1)
 
@@ -2246,71 +2302,76 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         >
             <DragDropContext onDragEnd={onSubMenuDragEnd} onDragUpdate={onDragUpdate}>
                 <Droppable droppableId='droppable2' direction='horizontal' isCombineEnabled={true}>
-                    {(provided, snapshot) => (
-                        <div className={styles["tab-menu-sub-body"]}>
-                            <div
-                                className={classNames(styles["tab-menu-sub"], {
-                                    [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
-                                })}
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                            >
-                                {subPage.map((item, indexSub) => {
-                                    if (item.groupChildren && item.groupChildren.length > 0) {
+                    {(provided, snapshot) => {
+                        // console.log("snapshot", snapshot)
+                        return (
+                            <div className={styles["tab-menu-sub-body"]}>
+                                <div
+                                    className={classNames(styles["tab-menu-sub"], {
+                                        [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
+                                    })}
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                >
+                                    {subPage.map((item, indexSub) => {
+                                        if (item.groupChildren && item.groupChildren.length > 0) {
+                                            return (
+                                                <React.Fragment key={item.id}>
+                                                    <SubTabGroupItem
+                                                        subItem={item}
+                                                        index={indexSub}
+                                                        selectSubMenu={selectSubMenu}
+                                                        setSelectSubMenu={(val) => {
+                                                            setSelectSubMenu(val)
+                                                            setCurrentSubIndex(0)
+                                                        }}
+                                                        onRemoveSub={(val) => {
+                                                            onRemoveSubPage(val)
+                                                        }}
+                                                        onContextMenu={(e, groupItem) => {
+                                                            onRightClickOperation(e, groupItem)
+                                                        }}
+                                                        onUnfoldAndCollapse={onUnfoldAndCollapse}
+                                                        onGroupContextMenu={(e) =>
+                                                            onGroupRightClickOperation(e, indexSub)
+                                                        }
+                                                    />
+                                                </React.Fragment>
+                                            )
+                                        }
                                         return (
                                             <React.Fragment key={item.id}>
-                                                <SubTabGroupItem
+                                                <SubTabItem
                                                     subItem={item}
                                                     index={indexSub}
                                                     selectSubMenu={selectSubMenu}
                                                     setSelectSubMenu={(val) => {
                                                         setSelectSubMenu(val)
-                                                        setCurrentSubIndex(0)
+                                                        setCurrentSubIndex(indexSub)
                                                     }}
                                                     onRemoveSub={(val) => {
                                                         onRemoveSubPage(val)
                                                     }}
-                                                    onContextMenu={(e, groupItem) => {
-                                                        onRightClickOperation(e, groupItem)
+                                                    onContextMenu={(e, val) => {
+                                                        onRightClickOperation(e, val)
                                                     }}
-                                                    onUnfoldAndCollapse={onUnfoldAndCollapse}
-                                                    onGroupContextMenu={(e) => onGroupRightClickOperation(e, indexSub)}
+                                                    isCombine={combineIds.findIndex((ele) => ele === item.id) !== -1}
+                                                    combineColor={combineColorRef.current}
                                                 />
                                             </React.Fragment>
                                         )
-                                    }
-                                    return (
-                                        <React.Fragment key={item.id}>
-                                            <SubTabItem
-                                                subItem={item}
-                                                index={indexSub}
-                                                selectSubMenu={selectSubMenu}
-                                                setSelectSubMenu={(val) => {
-                                                    setSelectSubMenu(val)
-                                                    setCurrentSubIndex(indexSub)
-                                                }}
-                                                onRemoveSub={(val) => {
-                                                    onRemoveSubPage(val)
-                                                }}
-                                                onContextMenu={(e, val) => {
-                                                    onRightClickOperation(e, val)
-                                                }}
-                                                isCombine={combineIds.findIndex((ele) => ele === item.id) !== -1}
-                                                combineColor={combineColorRef.current}
-                                            />
-                                        </React.Fragment>
-                                    )
-                                })}
-                                {provided.placeholder}
+                                    })}
+                                    {provided.placeholder}
+                                </div>
+                                {pageItem.hideAdd !== true && (
+                                    <OutlinePlusIcon
+                                        className={styles["outline-plus-icon"]}
+                                        onClick={() => onAddSubPage()}
+                                    />
+                                )}
                             </div>
-                            {pageItem.hideAdd !== true && (
-                                <OutlinePlusIcon
-                                    className={styles["outline-plus-icon"]}
-                                    onClick={() => onAddSubPage()}
-                                />
-                            )}
-                        </div>
-                    )}
+                        )
+                    }}
                 </Droppable>
             </DragDropContext>
             {renderSubPage.map((subItem, numberSub) => {
