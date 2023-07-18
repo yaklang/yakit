@@ -638,6 +638,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             return new Uint8Array()
                                     }
                                 })()}
+                                editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
                             />
                         </Col>
                     )}
@@ -773,6 +774,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
                         defaultSearchKeyword={search}
+                        editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST'
                         onEditor={setReqFirstEditor}
                         rangeId='http.flow.detail.first.range.read.widget'
                         rangeNode={(close, direction) => (
@@ -821,6 +823,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultSearchKeyword={props.search}
                         defaultHttps={props.defaultHttps}
                         webFuzzerValue={flow?.Request || new Uint8Array()}
+                        editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         onEditor={setReqSecondEditor}
                         rangeId='http.flow.detail.second.range.read.widget'
                         rangeNode={(close, direction) => (
