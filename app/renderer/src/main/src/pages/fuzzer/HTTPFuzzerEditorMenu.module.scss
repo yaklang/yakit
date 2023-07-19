@@ -143,15 +143,24 @@
             &-opt {
                 display: flex;
                 align-items: center;
-                gap: 4px;
+                gap: 8px;
                 .form-outlined {
-                    font-size: 12px;
                     color: var(--yakit-body-text-color);
                     display: none;
+                    padding: 4px;
+                    &:hover {
+                        background: #eaecf3;
+                        border-radius: 4px;
+                    }
                 }
                 .trash-icon {
                     color: var(--yakit-danger-5);
                     display: none;
+                    padding: 4px;
+                    &:hover {
+                        background: #eaecf3;
+                        border-radius: 4px;
+                    }
                 }
             }
             &:hover {
