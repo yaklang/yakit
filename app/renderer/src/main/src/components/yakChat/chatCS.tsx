@@ -14,6 +14,8 @@ import {
     PlusIcon,
     QuestionMarkCircleIcon,
     RemoveIcon,
+    SolidThumbDownIcon,
+    SolidThumbUpIcon,
     StopIcon,
     ThumbDownIcon,
     ThumbUpIcon,
@@ -38,7 +40,6 @@ import {ArrowRightSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {chatCS, chatGrade} from "@/services/yakChat"
-import {LoadingOutlined} from "@ant-design/icons"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
@@ -90,19 +91,26 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     return
                 }
                 setHistroy([...data.lists])
-                if (data.lists.length > 0) setActive(data[0].token)
+                if (data.lists.length > 0) setActive(data.lists[0].token)
             } catch (error) {}
         })
     }, [userInfo])
+    useEffect(() => {
+        if (visible) scrollToBottom()
+    }, [visible])
     /** 缓存对话内容 */
     const setStorage = useMemoizedFn((data: CacheChatCSProps[]) => {
         let cache: string = ""
-        if (data.length > 0) cache = JSON.stringify({lists: data, user_id: userInfo.user_id})
+        if (data.length > 0) cache = JSON.stringify({lists: data, user_id: userInfo.user_id || 0})
         setRemoteValue(RemoteGV.ChatCSStorage, cache)
     })
 
     const [width, setWidth] = useState<number | string>(481)
     const divRef = useRef<any>()
+    const modalWidth = useMemo(() => {
+        if (!+width) return 448
+        return +width - 40 > 448 ? 448 : +width - 40
+    }, [width])
 
     const [history, setHistroy] = useState<CacheChatCSProps[]>([])
     const [active, setActive] = useState<string>("")
@@ -115,8 +123,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const [addShow, setAddShow] = useState<boolean>(false)
     const onAddChat = useMemoizedFn(() => {
+        if (loading) return
+
         const data = [...history]
-        if (data.length === 5) {
+        if (data.length >= 5) {
             setAddShow(true)
             return
         }
@@ -253,6 +263,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         if (!event.target) return
                         const {responseText} = event.target
                         if (!responseText) return
+                        console.log("responseText", responseText)
 
                         const lastIndex = responseText.lastIndexOf("data: ")
                         if (lastIndex === -1) return
@@ -268,7 +279,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer) {
-                            console.log(`${params.intell_type}-text`, answer.text)
+                            console.log("text", answer.text)
+
                             if (cs.content === answer.text) return
                             if (!cs.id) cs.id = answer.id
                             cs.content = answer.text
@@ -311,6 +323,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                   }
         lists.history.push(info)
         if (filterIndex === -1) group.push(lists)
+        else lists.time = formatDate(+new Date())
 
         setLoading(true)
         setHistroy([...group])
@@ -341,11 +354,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
         setLoadingToken(answers.token)
         lists.history.push(answers)
+        lists.time = formatDate(+new Date())
         setHistroy([...group])
         setStorage([...group])
-        scrollToBottom()
-
-        const promises: Promise<any>[] = []
+        setTimeout(() => {
+            scrollToBottom()
+        }, 100)
 
         /** 查询 cs_info或vuln_info */
         if (params.baseType) {
@@ -391,13 +405,16 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             if (resTimeRef.current) {
                 clearInterval(resTimeRef.current)
                 resTimeRef.current = null
-                answers.time = getResTime()
-                setHistroy([...group])
-                setStorage([...group])
-                setResTime("")
             }
+            answers.time = getResTime()
+            lists.time = formatDate(+new Date())
+            setHistroy([...group])
+            setStorage([...group])
+
+            setResTime("")
             setLoadingToken("")
             setLoading(false)
+
             scrollToBottom()
         }, 100)
     })
@@ -406,24 +423,21 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const onStop = useMemoizedFn(() => {
         if (resTimeRef.current) {
             clearInterval(resTimeRef.current)
+            resTimeRef.current = null
         }
         isBreak.current = true
         if (controller.current) controller.current.abort()
     })
     /** 点赞|踩 */
-    const [likeLoading, setLikeLoading] = useState<boolean>(false)
     const generateLikePromise = useMemoizedFn((params: {uid: string; grade: "good" | "bad"}) => {
         return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve(`success`)
-            }, 3000)
-            // chatGrade({...params})
-            //     .then(() => {
-            //         resolve(`success`)
-            //     })
-            //     .catch((e) => {
-            //         reject(`error|${e}`)
-            //     })
+            chatGrade({...params})
+                .then(() => {
+                    resolve(`success`)
+                })
+                .catch((e) => {
+                    reject(`error|${e}`)
+                })
         })
     })
     const onLikes = useMemoizedFn((info: ChatInfoProps, isLike: boolean) => {
@@ -434,28 +448,25 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         const filterIndex = data.findIndex((item) => item.token === active)
         if (filterIndex === -1) return
 
-        setLikeLoading(true)
         const promises: Promise<any>[] = []
         for (let item of answers.content) {
             if (!item.id) continue
             promises.push(generateLikePromise({uid: item.id, grade: isLike ? "good" : "bad"}))
         }
 
-        Promise.allSettled(promises).finally(() => {
-            answers.likeType = isLike ? "good" : "bad"
-            const contents = {...info}
-            contents.info = answers
+        Promise.allSettled(promises)
 
-            data[filterIndex].history = data[filterIndex].history.map((item) => {
-                if (item.token === contents.token) return contents
-                return item
-            })
-            setHistroy([...data])
-            setStorage([...data])
-            setTimeout(() => {
-                setLikeLoading(false)
-            }, 100)
+        answers.likeType = isLike ? "good" : "bad"
+        const contents = {...info}
+        contents.info = answers
+
+        data[filterIndex].history = data[filterIndex].history.map((item) => {
+            if (item.token === contents.token) return contents
+            return item
         })
+        data[filterIndex].time = formatDate(+new Date())
+        setHistroy([...data])
+        setStorage([...data])
     })
     /** 删除单条问答内容 */
     const onDelContent = useMemoizedFn((info: ChatInfoProps) => {
@@ -474,6 +485,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const onCurrent = useMemoizedFn((info: CacheChatCSProps) => {
         if (active === info.token) return
         setActive(info.token)
+        setHistoryShow(false)
     })
     const [editShow, setEditShow] = useState<boolean>(false)
     const [editInfo, setEditInfo] = useState<CacheChatCSProps>()
@@ -487,7 +499,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         if (!editInfo) return
         const data = history.map((item) => {
             const info = {...item}
-            if (info.token === editInfo?.token) info.name = name
+            if (info.token === editInfo?.token) {
+                info.name = name
+                info.time = formatDate(+new Date())
+            }
             return info
         })
         setHistroy([...data])
@@ -609,8 +624,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     </Tooltip>
                                     <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"提示词"}>
                                         <div
-                                            className={classNames(styles["big-btn"], styles["btn-style"])}
-                                            onClick={() => setHintShow(true)}
+                                            className={classNames(styles["big-btn"], styles["btn-style"], {
+                                                [styles["disable-style"]]: loading
+                                            })}
+                                            onClick={() => {
+                                                if (loading) return
+                                                setHintShow(true)
+                                            }}
                                         >
                                             <ClipboardListIcon />
                                         </div>
@@ -619,7 +639,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 </>
                             )}
                             <div
-                                className={classNames(styles["small-btn"], styles["btn-style"])}
+                                className={classNames(styles["small-btn"], styles["btn-style"], styles["expand-icon"])}
                                 onClick={() => {
                                     if (width === "95vw") setWidth(481)
                                     else setWidth("95vw")
@@ -628,7 +648,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 {width === "95vw" ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
                             </div>
                             <div
-                                className={classNames(styles["big-btn"], styles["btn-style"])}
+                                className={classNames(styles["big-btn"], styles["btn-style"], styles["close-icon"])}
                                 onClick={() => setVisible(false)}
                             >
                                 <RemoveIcon />
@@ -692,7 +712,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 time={time}
                                                 info={info as ChatCSMultipleInfoProps}
                                                 onStop={onStop}
-                                                likeLoading={likeLoading}
                                                 onLike={(isLike) => onLikes(item, isLike)}
                                                 onDel={() => onDelContent(item)}
                                             />
@@ -898,6 +917,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 />
 
                 <YakitHint
+                    width={modalWidth}
                     getContainer={divRef.current}
                     visible={addShow}
                     title='超过对话框个数限制'
@@ -911,6 +931,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 />
 
                 <EditNameModal
+                    width={width}
                     getContainer={divRef.current}
                     visible={editShow}
                     setVisible={setEditShow}
@@ -970,12 +991,11 @@ interface ChatCSContentProps {
     time: string
     info: ChatCSMultipleInfoProps
     onStop: () => any
-    likeLoading: boolean
     onLike: (isLike: boolean) => any
     onDel: () => any
 }
 const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
-    const {token, loadingToken, loading, resTime, time, info, onStop, likeLoading, onLike, onDel} = props
+    const {token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel} = props
 
     const copyContent = useMemo(() => {
         let content: string = ""
@@ -985,46 +1005,55 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         return content
     }, [resTime, info])
 
+    const showLoading = useMemo(() => {
+        return token === loadingToken && loading
+    }, [token, loadingToken, loading])
+
     return (
         <div key={token} className={styles["content-opt-wrapper"]}>
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
                     <YakChatLogIcon />
-                    {loading ? resTime : time}
+                    {showLoading ? resTime : time}
                 </div>
-                <div className={loading ? styles["header-right-loading"] : styles["header-right"]}>
-                    {loading ? (
+                <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
+                    {showLoading ? (
                         <YakitButton className={styles["btn-style"]} type='danger' icon={<StopIcon />} onClick={onStop}>
                             停止
                         </YakitButton>
                     ) : (
                         <>
-                            {!info.likeType && (
-                                <>
-                                    <div className={styles["right-btn"]} onClick={() => onLike(true)}>
+                            {info.likeType !== "bad" && (
+                                <div
+                                    className={styles["right-btn"]}
+                                    onClick={() => {
+                                        if (info.likeType) return
+                                        onLike(true)
+                                    }}
+                                >
+                                    {info.likeType === "good" ? (
+                                        <SolidThumbUpIcon className={styles["actived-icon"]} />
+                                    ) : (
                                         <ThumbUpIcon />
-                                        {likeLoading && (
-                                            <div
-                                                className={styles["loading-icon"]}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <LoadingOutlined />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className={styles["right-btn"]} onClick={() => onLike(false)}>
-                                        <ThumbDownIcon />
-                                        {likeLoading && (
-                                            <div
-                                                className={styles["loading-icon"]}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <LoadingOutlined />
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
+                                    )}
+                                </div>
                             )}
+                            {info.likeType !== "good" && (
+                                <div
+                                    className={styles["right-btn"]}
+                                    onClick={() => {
+                                        if (info.likeType) return
+                                        onLike(false)
+                                    }}
+                                >
+                                    {info.likeType === "bad" ? (
+                                        <SolidThumbDownIcon className={styles["actived-icon"]} />
+                                    ) : (
+                                        <ThumbDownIcon />
+                                    )}
+                                </div>
+                            )}
+
                             <div className={styles["right-btn"]}>
                                 <CopyComponents
                                     className={classNames(styles["copy-icon-style"])}
@@ -1073,7 +1102,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                     </div>
                 )}
 
-                {token === loadingToken && loading && (
+                {showLoading && (
                     <div className={styles["loading-wrapper"]}>
                         <div className={classNames(styles["loading-style"], styles["loading-dot-before"])}></div>
                         <div className={classNames(styles["loading-style"], styles["loading-dot"])}></div>
@@ -1230,6 +1259,7 @@ const HintDrawer: React.FC<HintDrawerProps> = memo((props) => {
 })
 
 interface EditNameModalProps {
+    width: number | string
     /** 是否被dom节点包含 */
     getContainer: any
     visible: boolean
@@ -1238,7 +1268,12 @@ interface EditNameModalProps {
     onOk: (name: string) => any
 }
 const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
-    const {getContainer, visible, setVisible, chatName, onOk} = props
+    const {width, getContainer, visible, setVisible, chatName, onOk} = props
+
+    const modalWidth = useMemo(() => {
+        if (!+width) return 400
+        return +width - 40 > 400 ? 400 : +width - 40
+    }, [width])
 
     const [loading, setLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
@@ -1266,7 +1301,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
             footer={null}
             keyboard={false}
             maskClosable={false}
-            width={400}
+            width={modalWidth}
             visible={visible}
             onCancel={() => setVisible(false)}
         >
@@ -1279,7 +1314,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
                 </div>
                 <div className={styles["name-edit-modal-body"]}>
                     <YakitInput.TextArea
-                        autoSize={{minRows: 1, maxRows: 1}}
+                        autoSize={{minRows: 1, maxRows: 3}}
                         showCount
                         value={name}
                         maxLength={50}

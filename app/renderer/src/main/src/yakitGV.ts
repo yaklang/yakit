@@ -56,7 +56,9 @@ export enum RemoteGV {
     UserDeleteMenu = "user-delete-menu",
 
     /** @name chat-cs聊天记录 */
-    ChatCSStorage = "chat-cs-storage"
+    ChatCSStorage = "chat-cs-storage",
+    /** @name 是否已了解chat-cs功能 */
+    KnowChatCS = "know-chat-cs"
 }
 
 /** 项目逻辑全局变量 */
