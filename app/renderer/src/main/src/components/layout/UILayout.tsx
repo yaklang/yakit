@@ -27,11 +27,11 @@ import {
 import {failed, info, success,warn} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
-import {EngineModeVerbose, YakitLoading,YakitControlLoading} from "../basics/YakitLoading"
+import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {getRandomLocalEnginePort, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
@@ -40,7 +40,7 @@ import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
-import {HomeSvgIcon, StopIcon} from "@/assets/newIcon"
+import {HomeSvgIcon, PolygonIcon, StopIcon} from "@/assets/newIcon"
 import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin"
 import {
     ExportProjectProps,
@@ -61,6 +61,7 @@ import { ResultObjProps, remoteOperation } from "@/pages/dynamicControl/DynamicC
 import {useStore, yakitDynamicStatus} from "@/store"
 import yakitEE from "@/assets/yakitEE.png";
 import yakitSE from "@/assets/yakitSE.png";
+import yakitCattle from "@/assets/yakitCattle.png";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -957,6 +958,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             </>
         )
     }, [screenRecorderInfo])
+
+    /** chat-cs 功能逻辑 */
+    const [showChatCS, setShowChatCS] = useState<boolean>(true)
+    useEffect(()=>{
+        getRemoteValue(RemoteGV.KnowChatCS).then((value:any) => {
+            if(!value) return
+            else setShowChatCS(false)
+        })
+    }, [])
+    const onChatCS = useMemoizedFn(() => {
+        setShowChatCS(false)
+        setRemoteValue(RemoteGV.KnowChatCS, "true")
+    })
+
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <div className={styles["ui-layout-container"]}>
@@ -1332,6 +1347,27 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }}
                 onCancel={() => setLinkDatabaseHint(false)}
             />
+
+            {isCommunityEdition() && engineLink && !isJudgeLicense && !linkDatabase && showChatCS && (
+                <div className={styles["chat-cs-hint-wrapper"]}>
+                    <div  className={styles['hint-wrapper']}>
+                        <div className={styles['hint-modal-wrapper']}>
+                            <div className={styles['modal-content']}>
+                                <div className={styles['content-style']}>ChatCS</div>
+                                <div className={styles['subcontent-style']}>与安全有关的问题都可以问牛牛哦~</div>
+                            </div>
+                            <div className={styles['modal-btn']} onClick={onChatCS}>我知道了</div>
+                        </div>
+                        <div className={styles['hint-modal-arrow']}>
+                            <PolygonIcon />
+                        </div>
+
+                        <div className={styles['show-chat-icon-wrapper']}>
+                            <img src={yakitCattle} />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

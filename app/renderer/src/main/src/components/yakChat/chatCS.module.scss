@@ -94,6 +94,22 @@
                     border-radius: 4px;
                     background: #f0f1f3;
                 }
+                .expand-icon {
+                    svg {
+                        stroke-width: 1.5px;
+                    }
+                }
+                .close-icon {
+                    svg {
+                        stroke-width: 0.7px;
+                    }
+                }
+                .disable-style {
+                    cursor: not-allowed;
+                    svg {
+                        color: #ccd2de;
+                    }
+                }
             }
         }
     }
@@ -202,7 +218,7 @@
     }
     .layout-footer {
         max-height: 35%;
-        min-height: 129px;
+        min-height: 109px;
         padding: 0 16px 12px 16px;
         .footer-wrapper {
             width: 100%;
@@ -398,21 +414,9 @@
                     height: 16px;
                     color: #85899e;
                 }
-                .loading-icon {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 20px;
-                    height: 20px;
-                    display: flex;
-                    padding: 4px;
-                    justify-content: center;
-                    align-items: center;
-                    background-color: rgba(255, 255, 255, 0.4);
+                .actived-icon {
                     svg {
-                        width: 16px;
-                        height: 16px;
-                        color: var(--yakit-primary-5);
+                        color: #f28b44;
                     }
                 }
                 .copy-icon-style {

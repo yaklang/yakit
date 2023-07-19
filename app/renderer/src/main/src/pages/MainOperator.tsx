@@ -1360,6 +1360,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     useEffect(() => {
         if (!userInfo.isLogin) setChatShow(false)
     }, [userInfo])
+    const onChatCS = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            yakitNotify("warning", "请登录后使用")
+            return
+        }
+        setChatShow(true)
+    })
 
     const bars = (props: any, TabBarDefault: any) => {
         return (
@@ -1633,8 +1640,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                 </Modal>
 
-                {isCommunityEdition() && userInfo.isLogin && !chatShow && (
-                    <div className='chat-icon-wrapper' onClick={() => setChatShow(true)}>
+                {isCommunityEdition() && !chatShow && (
+                    <div className='chat-icon-wrapper' onClick={onChatCS}>
                         <img src={yakitCattle} />
                     </div>
                 )}

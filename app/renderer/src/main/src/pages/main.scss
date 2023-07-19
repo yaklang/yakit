@@ -303,6 +303,7 @@
     transition: all 0.4s ease 0s;
     transform-origin: 100% 0;
     transform: translateX(75px);
+    z-index: 99;
 
     img {
         width: 100%;

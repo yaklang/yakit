@@ -1,7 +1,8 @@
 import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from "axios"
 
 const service = axios.create({
-    baseURL: "http://region-3.seetacloud.com:34850/"
+    // baseURL: "http://region-3.seetacloud.com:34850/"
+    baseURL: "https://u91298-b6ae-0354ec61.neimeng.seetacloud.com:6443/"
 })
 
 service.interceptors.request.use(
@@ -58,6 +59,7 @@ export const chatCS = ({prompt, intell_type, token, signal, onDownloadProgress}:
 
 export const chatGrade = (params: {uid: string; grade: "good" | "bad"}) => {
     return service({
+        url: "chat-grade",
         method: "POST",
         headers: {
             "Content-Type": "application/json"
