@@ -1,6 +1,5 @@
 .http-fuzzer-click-editor {
     width: 104px;
-    // height: 24px;
     position: relative;
     .http-fuzzer-click-editor-simple {
         box-sizing: content-box;
@@ -90,6 +89,10 @@
             .add-icon {
                 padding-top: 2px;
             }
+            .reset-icon:hover {
+                border-radius: 4px;
+                background: #f0f1f3;
+            }
         }
     }
     .menu-list {
@@ -109,7 +112,7 @@
             &-info {
                 display: flex;
                 align-items: center;
-                max-width: 280px;
+                max-width: 260px;
                 .input {
                     margin-left: 12px;
                 }
@@ -186,10 +189,21 @@
         }
     }
 }
+.http-fuzzer-click-editor-menu-middle {
+    width: 300px;
+    .menu-list-item-info {
+        max-width: 200px;
+    }
+}
+.http-fuzzer-click-editor-menu-small {
+    width: 220px;
+    .menu-list-item-info {
+        max-width: 120px;
+    }
+}
 .http-fuzzer-range-editor {
     position: relative;
     width: 152px;
-    // height: 28px;
     .http-fuzzer-range-editor-simple {
         flex-shrink: 0;
         background-color: #ffffff;
@@ -256,6 +270,8 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
+    max-height: 360px;
+    overflow: auto;
     .menu-content {
         flex: 1;
         overflow: auto;
@@ -273,6 +289,10 @@
                     color: #31343f;
                     font-weight: 500;
                     line-height: 16px;
+                    flex: 1;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
                 .sub-title {
                     margin-left: 2px;
@@ -287,10 +307,15 @@
         }
     }
 }
+.http-fuzzer-range-editor-menu-middle {
+    width: 300px;
+}
+.http-fuzzer-range-editor-menu-small {
+    width: 220px;
+}
 .http-fuzzer-read-editor {
     position: relative;
     width: 68px;
-    // height: 28px;
     .http-fuzzer-read-editor-simple {
         flex-shrink: 0;
         background-color: #ffffff;
@@ -349,6 +374,12 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
+}
+.http-fuzzer-range-read-only-editor-menu-middle {
+    width: 300px;
+}
+.http-fuzzer-range-read-only-editor-menu-small {
+    width: 220px;
 }
 .decode-box {
     display: flex;
@@ -412,6 +443,7 @@
             border-radius: 4px;
             border: 1px solid var(--yakit-border-color);
             background: var(--yakit-background-color);
+            word-wrap: break-word;
         }
         .content-solid {
             margin-top: 0px;

@@ -15,6 +15,8 @@ export interface EditorDetailInfoProps {
     bottom: number
     left: number
     right: number
+    focusX: number
+    focusY: number
     lineHeight: number
 }
 
@@ -234,7 +236,11 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             // 鼠标位于编辑器下半部分
                             countDirection.y = "bottom"
                         }
-                        if (isLeftHalf) {
+                        if(Math.abs(focusX-(left + right) / 2)<50) {
+                            // 鼠标位于编辑器中间部分
+                            countDirection.x = "middle"
+                        }
+                        else if (isLeftHalf) {
                             // 鼠标位于编辑器左半部分
                             countDirection.x = "left"
                         } else {
@@ -247,6 +253,8 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             bottom,
                             left,
                             right,
+                            focusX,
+                            focusY,
                             lineHeight: height
                         }
                     }
