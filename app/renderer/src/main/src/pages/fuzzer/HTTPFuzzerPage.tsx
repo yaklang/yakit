@@ -1534,9 +1534,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                             editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                             selectId='monaco.fizz.select.widget'
-                            selectNode={(close, direction) => (
+                            selectNode={(close, editorInfo) => (
                                 <HTTPFuzzerClickEditorMenu
-                                    direction={direction}
+                                    editorInfo={editorInfo}
                                     close={() => close()}
                                     insert={(v: QueryFuzzerLabelResponseProps) => {
                                         if (v.Label) {
@@ -1554,9 +1554,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 />
                             )}
                             rangeId='monaco.fizz.range.widget'
-                            rangeNode={(closeFizzRangeWidget, direction) => (
+                            rangeNode={(closeFizzRangeWidget, editorInfo) => (
                                 <HTTPFuzzerRangeEditorMenu
-                                    direction={direction}
+                                    editorInfo={editorInfo}
                                     insert={(fun: any) => {
                                         if (reqEditor) {
                                             const selectedText =
@@ -2224,9 +2224,9 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
                             rangeId='monaco.fizz.range.read.only.widget'
-                            rangeNode={(close, direction) => (
+                            rangeNode={(close, editorInfo) => (
                                 <HTTPFuzzerRangeReadOnlyEditorMenu
-                                    direction={direction}
+                                    editorInfo={editorInfo}
                                     rangeValue={
                                         (reqEditor &&
                                             reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
