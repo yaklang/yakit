@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Avatar, Space, Timeline} from "antd"
-import {FormOutlined, PlusOutlined} from "@ant-design/icons"
+import {PlusOutlined} from "@ant-design/icons"
 import styles from "./HTTPFuzzerEditorMenu.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -14,7 +14,7 @@ import {
     IconSolidSparklesIcon,
     IconSolidTagIcon,
     SolidTerminalIcon,
-    TerminalIcon,
+    IconOutlinePencilAltIcon,
     TrashIcon
 } from "@/assets/newIcon"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
@@ -151,7 +151,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         })
     }
     const isSelect = (item: QueryFuzzerLabelResponseProps) => selectLabel === item.Hash
-    
+
     return (
         <div className={styles["http-fuzzer-click-editor"]}>
             <div className={styles["http-fuzzer-click-editor-simple"]}>
@@ -246,7 +246,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                         </YakitButton>
                                     ) : (
                                         <>
-                                            <FormOutlined
+                                            <IconOutlinePencilAltIcon
                                                 className={styles["form-outlined"]}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
@@ -496,9 +496,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
     return (
         <div className={styles["http-fuzzer-range-editor"]}>
-            <div
-                className={styles["http-fuzzer-range-editor-simple"]}
-            >
+            <div className={styles["http-fuzzer-range-editor-simple"]}>
                 <div className={styles["show-box"]}>
                     <div
                         className={styles["encode-box"]}
