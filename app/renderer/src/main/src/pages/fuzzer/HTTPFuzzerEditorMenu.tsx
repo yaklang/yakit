@@ -23,13 +23,17 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
-import {CountDirectionProps, EditorDetailInfoProps} from "@/components/NewEditorSelectRange"
+import {EditorDetailInfoProps} from "@/components/NewEditorSelectRange"
 import {useThrottleFn} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
-const directionStyle = (direction) => {
+const directionStyle = (editorInfo) => {
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
+        if (direction.x === "middle") {
+            obj.transform = "translate(-38%, 0px)"
+        }
         if (direction.x === "right") {
             obj.right = 0
         }
@@ -110,7 +114,7 @@ export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
     const {close, editorInfo, insert, addLabel} = props
 
-    const {direction, top = 0, left = 0} = editorInfo || {}
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
     const [selectLabel, setSelectLabel] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
@@ -118,6 +122,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-editor")
     // 是否在拖拽中
     const isDragging = useRef<boolean>(false)
+    // 菜单显示大小
+    const [menuSize, setMenuSize] = useState<"middle" | "small">()
     const getData = () => {
         ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -128,8 +134,14 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         })
     }
     useEffect(() => {
+        if (right - left < 570) {
+            setMenuSize("small")
+        } else if (right - left < 680) {
+            setMenuSize("middle")
+        }
         getData()
     }, [])
+
     const insertLabel = (item: QueryFuzzerLabelResponseProps) => {
         if (isSelect(item)) {
             // 复原修改项
@@ -162,10 +174,9 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         // 重新排序
         ipcRenderer.invoke("DeleteFuzzerLabel", {}).then(() => {
             setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: newItems.length}))
-            ipcRenderer
-                .invoke("SaveFuzzerLabel", {
-                    Data: newItems
-                })
+            ipcRenderer.invoke("SaveFuzzerLabel", {
+                Data: newItems
+            })
         })
     }
 
@@ -215,12 +226,15 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             </div>
             {isEnterSimple && (
                 <div
-                    className={styles["http-fuzzer-click-editor-menu"]}
+                    className={classNames(styles["http-fuzzer-click-editor-menu"], {
+                        [styles["http-fuzzer-click-editor-menu-middle"]]: menuSize === "middle",
+                        [styles["http-fuzzer-click-editor-menu-small"]]: menuSize === "small"
+                    })}
                     // 此处会引起拖拽卡死
                     onMouseLeave={() => {
                         if (!isDragging.current) setEnterSimple(false)
                     }}
-                    style={{...directionStyle(direction)}}
+                    style={{...directionStyle(editorInfo)}}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
@@ -232,7 +246,12 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                 添加 <PlusOutlined className={styles["add-icon"]} />
                             </YakitButton>
                             <div className={styles["line"]}></div>
-                            <YakitButton type='text' style={{color: "#85899E"}} onClick={() => reset()}>
+                            <YakitButton
+                                type='text'
+                                className={styles["reset-icon"]}
+                                style={{color: "#85899E"}}
+                                onClick={() => reset()}
+                            >
                                 复原
                             </YakitButton>
                         </div>
@@ -299,17 +318,19 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                             <div className={styles["title"]}>
                                                                                 {item.Description}
                                                                             </div>
-                                                                            <div
-                                                                                className={classNames(
-                                                                                    styles["sub-title"],
-                                                                                    {
-                                                                                        [styles["sub-title-left"]]:
-                                                                                            !!item.Description
-                                                                                    }
-                                                                                )}
-                                                                            >
-                                                                                {item.Label}
-                                                                            </div>
+                                                                            {menuSize !== "small" && (
+                                                                                <div
+                                                                                    className={classNames(
+                                                                                        styles["sub-title"],
+                                                                                        {
+                                                                                            [styles["sub-title-left"]]:
+                                                                                                !!item.Description
+                                                                                        }
+                                                                                    )}
+                                                                                >
+                                                                                    {item.Label}
+                                                                                </div>
+                                                                            )}
                                                                         </>
                                                                     )}
                                                                 </div>
@@ -603,7 +624,16 @@ export interface HTTPFuzzerRangeEditorMenuProps {
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
     const {editorInfo, insert, rangeValue, replace} = props
-    const {direction} = editorInfo || {}
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
+    // 菜单显示大小
+    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    useEffect(() => {
+        if (right - left < 570) {
+            setMenuSize("small")
+        } else if (right - left < 680) {
+            setMenuSize("middle")
+        }
+    }, [])
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
     return (
         <div className={styles["http-fuzzer-range-editor"]}>
@@ -637,8 +667,11 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             </div>
             {segmentedType && (
                 <div
-                    style={{...directionStyle(direction)}}
-                    className={styles["http-fuzzer-range-editor-menu"]}
+                    style={{...directionStyle(editorInfo)}}
+                    className={classNames(styles["http-fuzzer-range-editor-menu"], {
+                        [styles["http-fuzzer-range-editor-menu-middle"]]: menuSize === "middle",
+                        [styles["http-fuzzer-range-editor-menu-small"]]: menuSize === "small"
+                    })}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
                     <div className={styles["menu-content"]}>
@@ -661,8 +694,17 @@ interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
 
 export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
     const {editorInfo, rangeValue} = props
-    const {direction} = editorInfo || {}
     const [segmentedType, setSegmentedType] = useState<"decode">()
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
+    // 菜单显示大小
+    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    useEffect(() => {
+        if (right - left < 570) {
+            setMenuSize("small")
+        } else if (right - left < 680) {
+            setMenuSize("middle")
+        }
+    }, [])
     return (
         <div className={styles["http-fuzzer-read-editor"]}>
             <div className={styles["http-fuzzer-read-editor-simple"]}>
@@ -675,8 +717,11 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             </div>
             {segmentedType && (
                 <div
-                    style={directionStyle(direction)}
-                    className={styles["http-fuzzer-range-read-only-editor-menu"]}
+                    style={directionStyle(editorInfo)}
+                    className={classNames(styles["http-fuzzer-range-read-only-editor-menu"], {
+                        [styles["http-fuzzer-range-read-only-editor-menu-middle"]]: menuSize === "middle",
+                        [styles["http-fuzzer-range-read-only-editor-menu-small"]]: menuSize === "small"
+                    })}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
                     <DecodeComponent rangeValue={rangeValue} isReadOnly={true} />
