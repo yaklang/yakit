@@ -233,6 +233,24 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         onSubmit(data)
     })
 
+    /** 解析后端流内的内容数据 */
+    const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
+        if (!flow) return undefined
+        const lastIndex = flow.lastIndexOf("data: ")
+        if (lastIndex === -1) return undefined
+
+        let chunk = flow
+        chunk = chunk.substring(lastIndex)
+        if (chunk && chunk.startsWith("data: ")) chunk = chunk.slice(6)
+
+        let answer: ChatCSAnswerProps | undefined = undefined
+        try {
+            answer = JSON.parse(chunk)
+        } catch (error) {}
+
+        if (!answer) return analysisFlowData(flow.substring(0, lastIndex))
+        return answer
+    })
     const setContentList = useMemoizedFn(
         (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
             const lastIndex = contents.content.findIndex((item) => item.id === info.id && item.type === info.type)
@@ -262,25 +280,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     onDownloadProgress: ({event}) => {
                         if (!event.target) return
                         const {responseText} = event.target
-                        if (!responseText) return
-                        console.log("responseText", responseText)
-
-                        const lastIndex = responseText.lastIndexOf("data: ")
-                        if (lastIndex === -1) return
-                        // 切割数据中的信息部分
-                        let chunk: string = responseText
-                        chunk = chunk.substring(lastIndex)
-                        if (chunk && chunk.startsWith("data: ")) chunk = chunk.slice(6)
-
-                        let answer: ChatCSAnswerProps | undefined = undefined
-                        try {
-                            answer = JSON.parse(chunk)
-                        } catch (error) {}
+                        let answer: ChatCSAnswerProps | undefined = analysisFlowData(`${responseText}dadq`)
 
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer) {
-                            console.log("text", answer.text)
-
                             if (cs.content === answer.text) return
                             if (!cs.id) cs.id = answer.id
                             cs.content = answer.text
@@ -607,7 +610,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     </div>
                     <div className={styles["header-extra"]}>
                         {history.length !== 0 && (
-                            <YakitButton className={styles["new-chat-btn"]} icon={<PlusIcon />} onClick={onAddChat}>
+                            <YakitButton
+                                className={styles["new-chat-btn"]}
+                                disabled={loading}
+                                icon={<PlusIcon />}
+                                onClick={onAddChat}
+                            >
                                 {(+width || 351) < 350 ? undefined : "新会话"}
                             </YakitButton>
                         )}
@@ -616,8 +624,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 <>
                                     <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"会话历史记录"}>
                                         <div
-                                            className={classNames(styles["big-btn"], styles["btn-style"])}
-                                            onClick={() => setHistoryShow(true)}
+                                            className={classNames(styles["big-btn"], styles["btn-style"], {
+                                                [styles["disable-style"]]: loading
+                                            })}
+                                            onClick={() => {
+                                                if (loading) return
+                                                setHistoryShow(true)
+                                            }}
                                         >
                                             <ClockIcon />
                                         </div>
@@ -696,7 +709,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     if (isMe) {
                                         return (
                                             <ChatUserContent
-                                                token={token}
+                                                key={token}
                                                 time={time}
                                                 info={info as ChatMeInfoProps}
                                                 onDel={() => onDelContent(item)}
@@ -705,6 +718,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     } else {
                                         return (
                                             <ChatCSContent
+                                                key={token}
                                                 token={token}
                                                 loadingToken={loadingToken}
                                                 loading={loading}
@@ -944,13 +958,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 }
 
 interface ChatUserContentProps {
-    token: string
     time: string
     info: ChatMeInfoProps
     onDel: () => any
 }
 const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
-    const {token, time, info, onDel} = props
+    const {time, info, onDel} = props
 
     const {userInfo} = useStore()
     const showImg = useMemo(() => {
@@ -961,10 +974,9 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
     }, [userInfo])
 
     return (
-        <div key={token} className={classNames(styles["content-opt-wrapper"], styles["content-opt-me-wrapper"])}>
+        <div className={classNames(styles["content-opt-wrapper"], styles["content-opt-me-wrapper"])}>
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
-                    {/* <YakChatLogIcon /> */}
                     <img className={styles["img-style"]} src={showImg} />
                     {time}
                 </div>
@@ -1010,7 +1022,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     }, [token, loadingToken, loading])
 
     return (
-        <div key={token} className={styles["content-opt-wrapper"]}>
+        <div className={styles["content-opt-wrapper"]}>
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
                     <YakChatLogIcon />
