@@ -2393,6 +2393,7 @@ message LastRecord {
 
 message RecordPortScanRequest {
   LastRecord LastRecord = 1;
+  StartBruteParams StartBruteParams = 3;
   PortScanRequest PortScanRequest = 2;
 }
 
@@ -2451,6 +2452,8 @@ message PortScanRequest {
   int64 SynConcurrent = 24;
 
   string TaskName = 25;
+
+  bool EnableBrute = 26;
 }
 
 message DeletePortsRequest {
