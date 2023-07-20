@@ -1,8 +1,7 @@
 import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from "axios"
 
 const service = axios.create({
-    // baseURL: "http://region-3.seetacloud.com:34850/"
-    baseURL: "https://u91298-b6ae-0354ec61.neimeng.seetacloud.com:6443/"
+    baseURL: "http://region-3.seetacloud.com:34850/"
 })
 
 service.interceptors.request.use(
