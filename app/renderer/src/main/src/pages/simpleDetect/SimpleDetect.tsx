@@ -52,7 +52,7 @@ import {PresetPorts} from "@/pages/portscan/schema"
 import {v4 as uuidv4} from "uuid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/routes/newRoute"
-import {StartBruteParams} from "@/pages/brute/BrutePage";
+import {StartBruteParams} from "@/pages/brute/BrutePage"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -98,6 +98,7 @@ interface SimpleDetectFormProps {
     statusCards: StatusCardInfoProps[]
     getReportParams: () => CacheReportParamsProps[]
     setIsLastReport: (v: boolean) => void
+    setRunTaskNameEx: (v: string) => void
 }
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
@@ -124,7 +125,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setAllowDownloadReport,
         statusCards,
         getReportParams,
-        setIsLastReport
+        setIsLastReport,
+        setRunTaskNameEx
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
@@ -191,22 +193,29 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const isInputValue = useRef<boolean>(false)
     // 是否已经修改速度
     const isSetSpeed = useRef<number>()
+
     useEffect(() => {
+        let obj: any = {}
+        if (getScanType() === "自定义" && !getCheckedList().includes("弱口令")) {
+            obj.EnableBrute = false
+        } else {
+            obj.EnableBrute = true
+        }
         switch (getScanDeep()) {
             // 快速
             case 3:
-                setPortParams({...portParams, Ports: PresetPorts["fast"]})
+                setPortParams({...portParams, ...obj, Ports: PresetPorts["fast"]})
                 break
             // 适中
             case 2:
-                setPortParams({...portParams, Ports: PresetPorts["middle"]})
+                setPortParams({...portParams, ...obj, Ports: PresetPorts["middle"]})
                 break
             // 慢速
             case 1:
-                setPortParams({...portParams, Ports: PresetPorts["slow"]})
+                setPortParams({...portParams, ...obj, Ports: PresetPorts["slow"]})
                 break
         }
-    }, [getScanDeep()])
+    }, [getScanDeep(), getScanType(), getCheckedList()])
 
     // 继续任务操作屏蔽
     const [shield, setShield] = useState<boolean>(false)
@@ -254,20 +263,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             if (portParams?.Targets && portParams.Targets.length > 0) {
                 taskNameTimeTarget = portParams.Targets.split(",")[0].split(/\n/)[0]
             }
+
             form.setFieldsValue({
                 TaskName: `${getScanType()}-${taskNameTimeTarget}`
             })
             setRunTaskName(`${getScanType()}-${taskNameTimeTarget}`)
         }
     }, [getScanType(), executing, portParams?.Targets])
-
-    useEffect(() => {
-        if (getScanType() === "自定义" && !getCheckedList().includes("弱口令")) {
-            setPortParams({...getPortParams(), EnableBrute: false})
-        } else {
-            setPortParams({...getPortParams(), EnableBrute: true})
-        }
-    }, [getScanType(), getCheckedList()])
 
     useEffect(() => {
         if (TaskName) {
@@ -384,6 +386,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
         let LastRecord = {}
         const runTaskNameEx = TaskName + "-" + nowUUID
+        setRunTaskNameEx(runTaskNameEx)
         let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
         setAllowDownloadReport(true)
         console.log({
@@ -431,7 +434,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             return
         }
 
-        const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].filter(name => name !== "弱口令").join(",")
+        const OnlineGroup: string =
+            getScanType() !== "自定义" ? getScanType() : [...checkedList].filter((name) => name !== "弱口令").join(",")
         // 继续任务 参数拦截
         if (Uid) {
             recoverRun()
@@ -442,7 +446,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
-                .then((data: { Data: YakScript[] }) => {
+                .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setPortParams({...getPortParams(), ScriptNames})
                     run(OnlineGroup, TaskName)
@@ -450,8 +454,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
     })
 
@@ -715,6 +718,7 @@ export interface SimpleDetectTableProps {
     ref: any
     oldRunParams?: OldRunParamsProps
     isLastReport: boolean
+    runTaskNameEx?: string
 }
 
 export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forwardRef((props, ref) => {
@@ -728,7 +732,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
         nowUUID,
         allowDownloadReport,
         oldRunParams,
-        isLastReport
+        isLastReport,
+        runTaskNameEx
     } = props
 
     const [openPorts, setOpenPorts] = useState<YakitPort[]>([])
@@ -837,7 +842,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
             if (data.IsMessage) {
                 // console.log("获取生成报告返回结果", new Buffer(data.Message).toString())
                 const obj = JSON.parse(new Buffer(data.Message).toString())
-                console.log(obj)
                 if (obj?.type === "progress") {
                     setReportPercent(obj.content.progress)
                 }
@@ -867,7 +871,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
     const downloadReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
-        const runTaskNameEx = reportName + "-" + nowUUID
         let Params = [
             {Key: "task_name", Value: runTaskNameEx},
             {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
@@ -896,7 +899,6 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
     // 通过 ref 回调函数将子组件的实例传递给 childRef。
     React.useImperativeHandle(ref, () => ({
         getReportParams: () => {
-            const runTaskNameEx = reportName + "-" + nowUUID
             return [
                 {Key: "task_name", Value: runTaskNameEx},
                 {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
@@ -939,7 +941,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
                             >
                                 <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                     {infoState.riskState.slice(0, 10).map((i) => {
-                                        return <RiskDetails info={i} shrink={true}/>
+                                        return <RiskDetails info={i} shrink={true} />
                                     })}
                                 </Space>
                             </AutoCard>
@@ -950,7 +952,7 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                             <Row style={{marginTop: 6}} gutter={6}>
                                 <Col span={24}>
-                                    <OpenPortTableViewer data={openPorts} isSimple={true}/>
+                                    <OpenPortTableViewer data={openPorts} isSimple={true} />
                                 </Col>
                             </Row>
                         </div>
@@ -1063,8 +1065,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                 onClose && onClose()
             }, 500)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -1082,8 +1083,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
         ipcRenderer
             .invoke("DownloadOnlinePluginAll", addParams, taskToken)
-            .then(() => {
-            })
+            .then(() => {})
             .catch((e) => {
                 failed(`添加失败:${e}`)
             })
@@ -1233,10 +1233,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         "simple-scan",
         "SimpleDetect",
         token,
-        () => {
-        },
-        () => {
-        },
+        () => {},
+        () => {},
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
     // 缓存最新的报告参数 用于继续任务时生成报告
@@ -1276,6 +1274,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     const filePtr = infoState.statusState.filter((item) => ["当前文件指针"].includes(item.tag))
     const filePtrValue: number = Array.isArray(filePtr) ? parseInt(filePtr[0]?.info[0]?.Data) : 0
 
+    const [runTaskNameEx, setRunTaskNameEx] = useState<string>()
     useEffect(() => {
         if (statusCards.length > 0) {
             setShowOldCard(false)
@@ -1323,12 +1322,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 .then(({LastRecord, PortScanRequest}) => {
                     setIsLastReport(true)
                     setShowOldCard(true)
-                    const {ScriptNames} = PortScanRequest
+                    const {ScriptNames,TaskName} = PortScanRequest
                     setOldRunParams({
                         LastRecord,
                         PortScanRequest
                     })
                     setOpenScriptNames(ScriptNames)
+                    setRunTaskNameEx(TaskName)
                 })
                 .catch((e) => {
                     console.info(e)
@@ -1350,10 +1350,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 status = "success"
             }
             !!status &&
-            ipcRenderer.invoke("refresh-tabs-color", {
-                tabId: getTabId(),
-                status
-            })
+                ipcRenderer.invoke("refresh-tabs-color", {
+                    tabId: getTabId(),
+                    status
+                })
         }
     }, [percent, executing, getTabId()])
 
@@ -1364,7 +1364,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         .splice(0, 3)
     return (
         <>
-            {loading && <Spin tip={"正在恢复未完成的任务"}/>}
+            {loading && <Spin tip={"正在恢复未完成的任务"} />}
             <div className={styles["simple-detect"]} style={loading ? {display: "none"} : {}}>
                 <ResizeBox
                     isVer={true}
@@ -1372,7 +1372,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                         <AutoCard
                             size={"small"}
                             bordered={false}
-                            title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin}/> : null}
+                            title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} /> : null}
                             bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
                         >
                             <Row>
@@ -1433,13 +1433,14 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                             return []
                                         }}
                                         setIsLastReport={setIsLastReport}
+                                        setRunTaskNameEx={setRunTaskNameEx}
                                     />
                                 </Col>
                             </Row>
 
-                            <Divider style={{margin: 4}}/>
+                            <Divider style={{margin: 4}} />
 
-                            <SimpleCardBox statusCards={Cards}/>
+                            <SimpleCardBox statusCards={Cards} />
                         </AutoCard>
                     }
                     firstMinSize={"200px"}
@@ -1462,6 +1463,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 ref={childRef}
                                 oldRunParams={oldRunParams}
                                 isLastReport={isLastReport}
+                                runTaskNameEx={runTaskNameEx}
                             />
                         )
                     }}
