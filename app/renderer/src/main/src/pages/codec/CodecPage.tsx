@@ -259,7 +259,8 @@ const CodecMenu: CodecType[] = [
         subTypes: [
             {key: "http-get-query", verbose: "解析 HTTP 参数"},
             {key: "pretty-packet", verbose: "HTTP 数据包美化"},
-            {key: "packet-from-url", verbose: "从 URL 中加载数据包"}
+            {key: "packet-from-url", verbose: "从 URL 中加载数据包"},
+            {key: "packet-to-curl", verbose: "数据包转 CURL 命令"},
         ]
     }
 ]

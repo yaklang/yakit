@@ -11,7 +11,7 @@ export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"
     | "base64" | "base64-decode" | "htmlencode" | "htmldecode" | "htmlescape"
     | "urlencode" | "urlunescape" | "double-urlencode" | "double-urldecode"
-    | "hex-encode" | "hex-decode";
+    | "hex-encode" | "hex-decode" | "packet-to-curl" | any;
 
 const {ipcRenderer} = window.require("electron");
 
@@ -205,8 +205,8 @@ export const execAutoDecode = async (text: string) => {
     })
 }
 
-export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean) => {
-    return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr}).then((result: { Result: string }) => {
+export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean, extraParams?: {Key: string, Value: string}[]) => {
+    return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr, Params: extraParams}).then((result: { Result: string }) => {
         if (replaceEditor) {
             let m = showModal({
                 width: "50%",
@@ -250,8 +250,9 @@ export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boo
                 </div>
             })
         }
+        return result?.Result || ""
     }).catch((e: any) => {
-
+        failed(`CODEC[${typeStr}] 执行失败：${e}`)
     })
 }
 
