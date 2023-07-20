@@ -135,6 +135,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 }
                 setFormValue(values)
                 if (!enterpriseLogin) {
+                    ipcRenderer.invoke("ipc-sign-out")
                     success("私有域设置成功")
                     syncLoginOut()
                     onCloseTab()

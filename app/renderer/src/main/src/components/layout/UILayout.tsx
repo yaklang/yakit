@@ -450,7 +450,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 await remoteOperation(false,dynamicStatus,userInfo)
                 // 是否退出登录
                 if(params?.loginOut){
-                    ipcRenderer.send("ipc-sign-out")
+                    ipcRenderer.invoke("ipc-sign-out")
                 }
             }
         })

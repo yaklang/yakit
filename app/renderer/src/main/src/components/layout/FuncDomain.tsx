@@ -122,7 +122,7 @@ export interface UploadYakitEEProps {
     onClose: () => void
 }
 export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
-    const { onClose } = props
+    const {onClose} = props
     const [filePath, setFilePath] = useState<RcFile>()
     const [loading, setLoading] = useState<boolean>(false)
     const [percent, setPercent] = useState(0)
@@ -148,12 +148,14 @@ export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
         const {path, size} = filePath
         await ipcRenderer
             .invoke("yak-install-package", {path, size})
-            .then((res) => {
-                success("上传成功")
-                setPercent(100)
-                setTimeout(() => {
-                    onClose()
-                }, 1000)
+            .then((TaskStatus) => {
+                if (TaskStatus) {
+                    success("上传成功")
+                    setPercent(100)
+                    setTimeout(() => {
+                        onClose()
+                    }, 1000)
+                }
             })
             .catch((err) => {
                 console.log("文件上传失败", err)
@@ -165,9 +167,17 @@ export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
                 }, 1000)
             })
     })
+
+    const cancleUpload = () => {
+        ipcRenderer.invoke("yak-cancle-upload-package").then(() => {
+            warn("取消上传成功")
+            setLoading(false)
+            setPercent(0)
+        })
+    }
     return (
         <div className={styles["upload-yakit-ee"]}>
-            <div style={{marginBottom: 8}}>选择文件进行上传</div>
+            <div style={{marginBottom: 8}}>选择zip压缩文件进行上传</div>
             <Spin spinning={loading}>
                 <Dragger
                     multiple={false}
@@ -193,17 +203,27 @@ export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
             </Spin>
             {loading && <Progress percent={percent} status='active' />}
             <div style={{textAlign: "center", marginTop: 16}}>
-                <YakitButton
-                    className={styles["btn-style"]}
-                    loading={loading}
-                    type='primary'
-                    disabled={!filePath}
-                    onClick={() => {
-                        uploadYakitEEPackage()
-                    }}
-                >
-                    确定
-                </YakitButton>
+                {loading ? (
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        onClick={() => {
+                            cancleUpload()
+                        }}
+                    >
+                        取消
+                    </YakitButton>
+                ) : (
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        type='primary'
+                        disabled={!filePath}
+                        onClick={() => {
+                            uploadYakitEEPackage()
+                        }}
+                    >
+                        确定
+                    </YakitButton>
+                )}
             </div>
         </div>
     )
@@ -1556,7 +1576,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                 }
                             } catch (error) {}
                         })
-                        .catch((err) => {})
+                        .catch((err) => {
+                            // console.log("err", err)
+                        })
                 }
             })
         /** 获取企业版yakit更新内容 */
