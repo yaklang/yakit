@@ -280,7 +280,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     onDownloadProgress: ({event}) => {
                         if (!event.target) return
                         const {responseText} = event.target
-                        let answer: ChatCSAnswerProps | undefined = analysisFlowData(`${responseText}dadq`)
+                        let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
 
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer) {
