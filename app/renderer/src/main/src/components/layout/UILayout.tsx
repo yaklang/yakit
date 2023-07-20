@@ -961,12 +961,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** chat-cs 功能逻辑 */
     const [showChatCS, setShowChatCS] = useState<boolean>(true)
-    useEffect(()=>{
-        getRemoteValue(RemoteGV.KnowChatCS).then((value:any) => {
-            if(!value) return
+    useEffect(() => {
+        getRemoteValue(RemoteGV.KnowChatCS).then((value: any) => {
+            if (!value) return
             else setShowChatCS(false)
         })
-    }, [])
+    }, [engineLink])
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)
         setRemoteValue(RemoteGV.KnowChatCS, "true")
