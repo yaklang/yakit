@@ -103,6 +103,8 @@ module.exports = (win, getClient) => {
         })
     }
 
+    // 上传状态
+    let TaskStatus = true
     ipcMain.handle("yak-install-package", (event, params) => {
         return new Promise(async (resolve, reject) => {
             const {path, size} = params
@@ -110,7 +112,7 @@ module.exports = (win, getClient) => {
             const chunkSize = 30 * 1024 * 1024 // 每个分片的大小，这里设置为30MB
             // 计算分片总数
             const totalChunks = Math.ceil(size / chunkSize)
-            let TaskStatus = true
+            TaskStatus = true
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 if (TaskStatus) {
                     try {
@@ -128,6 +130,12 @@ module.exports = (win, getClient) => {
                 }
             }
             postPackageHistory = {}
+            resolve(TaskStatus)
+        })
+    })
+    ipcMain.handle("yak-cancle-upload-package", (event, params) => {
+        return new Promise(async (resolve, reject) => {
+            TaskStatus = false
             resolve()
         })
     })
