@@ -91,6 +91,7 @@ import {
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
 import {NewEditorSelectRange} from "../../components/NewEditorSelectRange"
+import {execCodec} from "@/utils/encodec";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1159,11 +1160,26 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
             },
             copyURL: {
-                menu: [{key: "copy-as-url", label: "复制为 URL"}],
+                menu: [
+                    {key: "copy-as-url", label: "复制为 URL"},
+                    {key: "copy-as-curl", label: "复制 curl 命令"},
+                ],
                 onRun: (editor, key) => {
-                    copyAsUrl({Request: getRequest(), IsHTTPS: advancedConfigValue.isHttps})
+                    switch (key) {
+                        case "copy-as-url":
+                            copyAsUrl({Request: getRequest(), IsHTTPS: advancedConfigValue.isHttps})
+                            return
+                        case "copy-as-curl":
+                            execCodec("packet-to-curl", getRequest(), undefined, undefined, undefined, [
+                                {Key: "https", Value: advancedConfigValue.isHttps ? "true" : ""},
+                            ]).then(data => {
+                                callCopyToClipboard(data)
+                                info("复制到剪贴板")
+                            })
+                            return;
+                    }
                 }
-            }
+            },
         }
     }, [])
 
