@@ -393,6 +393,9 @@
     }
     .decode-copy-replace {
         padding-top: 2px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
         .header {
             display: flex;
             flex-direction: row;
@@ -436,6 +439,8 @@
             padding: 6px 8px 6px 12px;
         }
         .content {
+            flex: 1;
+            overflow: auto;
             margin-top: 6px;
             font-size: 12px;
             color: var(--yakit-header-color);
@@ -456,6 +461,8 @@
     }
     .only-one {
         padding: 0 12px;
+        flex: 1;
+        overflow: hidden;
     }
     .timeline-box {
         flex: 1;
