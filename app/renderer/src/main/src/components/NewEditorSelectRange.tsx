@@ -221,7 +221,8 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                     if (editorContainer) {
                         const editorContainerInfo = editorContainer.getBoundingClientRect()
                         const {top, bottom, left, right} = editorContainerInfo
-
+                        // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
+                        const isShowByLimit = ((right-left)>250)&&((bottom-top)>200)
                         // 判断焦点位置
                         const isTopHalf = focusY < (top + bottom) / 2
                         const isLeftHalf = focusX < (left + right) / 2
@@ -236,11 +237,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             // 鼠标位于编辑器下半部分
                             countDirection.y = "bottom"
                         }
-                        if(Math.abs(focusX-(left + right) / 2)<50) {
+                        if (Math.abs(focusX - (left + right) / 2) < 50) {
                             // 鼠标位于编辑器中间部分
                             countDirection.x = "middle"
-                        }
-                        else if (isLeftHalf) {
+                        } else if (isLeftHalf) {
                             // 鼠标位于编辑器左半部分
                             countDirection.x = "left"
                         } else {
@@ -257,27 +257,31 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             focusY,
                             lineHeight: height
                         }
-                    }
 
-                    upPosY.current = posy
-                    const selection = reqEditor.getSelection()
-                    if (selection) {
-                        const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
-                        if (fizzSelectWidget.isOpen && selectedText.length === 0) {
-                            // 更新点击菜单小部件的位置
-                            fizzSelectWidget.update()
-                        } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
-                            fizzRangeWidget.update()
-                        } else if (selectedText.length === 0) {
+                        upPosY.current = posy
+                        const selection = reqEditor.getSelection()
+                        if (selection&&isShowByLimit) {
+                            const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
+                            if (fizzSelectWidget.isOpen && selectedText.length === 0) {
+                                // 更新点击菜单小部件的位置
+                                fizzSelectWidget.update()
+                            } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
+                                fizzRangeWidget.update()
+                            } else if (selectedText.length === 0) {
+                                closeFizzRangeWidget()
+                                // 展示点击的菜单
+                                selectId && reqEditor.addContentWidget(fizzSelectWidget)
+                                fizzSelectWidget.isOpen = true
+                            } else {
+                                closeFizzSelectWidget()
+                                // 展示选中的菜单
+                                rangeId && reqEditor.addContentWidget(fizzRangeWidget)
+                                fizzRangeWidget.isOpen = true
+                            }
+                        }
+                        else{
                             closeFizzRangeWidget()
-                            // 展示点击的菜单
-                            selectId && reqEditor.addContentWidget(fizzSelectWidget)
-                            fizzSelectWidget.isOpen = true
-                        } else {
                             closeFizzSelectWidget()
-                            // 展示选中的菜单
-                            rangeId && reqEditor.addContentWidget(fizzRangeWidget)
-                            fizzRangeWidget.isOpen = true
                         }
                     }
                 }

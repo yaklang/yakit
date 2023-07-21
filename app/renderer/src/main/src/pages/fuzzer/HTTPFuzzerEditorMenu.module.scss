@@ -45,7 +45,7 @@
     position: absolute;
     margin-top: 2px;
     width: 360px;
-    height: 350px;
+    max-height: 350px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 0 0 6px 0;
@@ -366,7 +366,7 @@
     position: absolute;
     margin-top: 2px;
     width: 360px;
-    height: 250px;
+    max-height: 250px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 8px 4px 6px 4px;
