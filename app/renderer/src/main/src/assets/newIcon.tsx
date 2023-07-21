@@ -1850,7 +1850,6 @@ const IconSolidCode = () => (
         </defs>
     </svg>
 )
-
 /**
  * @description  Icon/Solid/code
  */
@@ -1898,10 +1897,145 @@ const IconSolidSparkles = () => (
         </defs>
     </svg>
 )
-
 /**
  * @description  Icon/Solid/sparkles
  */
 export const IconSolidSparklesIcon = (props: Partial<IconProps>) => {
     return <Icon component={IconSolidSparkles} {...props} />
+}
+
+const ThumbUp = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M9.33333 6.66667H12.5093C13.5005 6.66667 14.1451 7.70975 13.7019 8.59629L11.3685 13.263C11.1427 13.7147 10.681 14 10.176 14L7.49747 14C7.38846 14 7.27985 13.9866 7.17409 13.9602L4.66667 13.3333M9.33333 6.66667V3.33333C9.33333 2.59695 8.73638 2 8 2H7.93635C7.60331 2 7.33333 2.26998 7.33333 2.60302C7.33333 3.07922 7.19238 3.54477 6.92823 3.94099L4.66667 7.33333L4.66667 13.3333M9.33333 6.66667H8M4.66667 13.3333H3.33333C2.59695 13.3333 2 12.7364 2 12L2 8C2 7.26362 2.59695 6.66667 3.33333 6.66667H5'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  thumb-up
+ */
+export const ThumbUpIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ThumbUp} {...props} />
+}
+
+const ThumbDown = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M6.66665 9.33333H3.49069C2.49952 9.33333 1.85486 8.29025 2.29812 7.40371L4.63146 2.73705C4.85731 2.28534 5.319 2 5.82403 2L8.50251 2C8.61152 2 8.72013 2.01337 8.82589 2.03981L11.3333 2.66667M6.66665 9.33333V12.6667C6.66665 13.403 7.2636 14 7.99998 14H8.06363C8.39667 14 8.66665 13.73 8.66665 13.397C8.66665 12.9208 8.8076 12.4552 9.07175 12.059L11.3333 8.66667V2.66667M6.66665 9.33333H7.99998M11.3333 2.66667L12.6666 2.66667C13.403 2.66667 14 3.26362 14 4V8C14 8.73638 13.403 9.33333 12.6666 9.33333H11'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  thumb-down
+ */
+export const ThumbDownIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ThumbDown} {...props} />
+}
+
+const ClipboardList = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M7.49999 4.16667H5.83332C4.91285 4.16667 4.16666 4.91286 4.16666 5.83333V15.8333C4.16666 16.7538 4.91285 17.5 5.83332 17.5H14.1667C15.0871 17.5 15.8333 16.7538 15.8333 15.8333V5.83333C15.8333 4.91286 15.0871 4.16667 14.1667 4.16667H12.5M7.49999 4.16667C7.49999 5.08714 8.24618 5.83333 9.16666 5.83333H10.8333C11.7538 5.83333 12.5 5.08714 12.5 4.16667M7.49999 4.16667C7.49999 3.24619 8.24618 2.5 9.16666 2.5H10.8333C11.7538 2.5 12.5 3.24619 12.5 4.16667M9.99999 10H12.5M9.99999 13.3333H12.5M7.49999 10H7.50832M7.49999 13.3333H7.50832'
+            stroke='currentColor'
+            strokeLinecap='round'
+        />
+    </svg>
+)
+/**
+ * @description  clipboard-list
+ */
+export const ClipboardListIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ClipboardList} {...props} />
+}
+
+const PaperPlaneRight = () => (
+    <svg width='21' height='21' viewBox='0 0 21 21' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M18.013 9.40626L4.84898 2.03907C4.62964 1.91116 4.37707 1.85175 4.12371 1.86845C3.87034 1.88516 3.62776 1.97722 3.42711 2.13282C3.22219 2.2945 3.07341 2.51662 3.00189 2.76765C2.93037 3.01868 2.93974 3.28586 3.02867 3.53126L5.22398 9.66407C5.24619 9.72522 5.28649 9.77816 5.33953 9.81584C5.39256 9.85352 5.45581 9.87416 5.52086 9.87501H11.1615C11.3237 9.87244 11.4808 9.93149 11.6011 10.0402C11.7215 10.149 11.7961 10.2993 11.8099 10.4609C11.8153 10.5463 11.8031 10.6317 11.774 10.7121C11.745 10.7925 11.6998 10.8661 11.6413 10.9284C11.5827 10.9906 11.512 11.0402 11.4335 11.074C11.355 11.1078 11.2704 11.1252 11.1849 11.125H5.52086C5.45581 11.1259 5.39256 11.1465 5.33953 11.1842C5.28649 11.2219 5.24619 11.2748 5.22398 11.3359L3.02867 17.4688C2.9628 17.6577 2.94295 17.8596 2.97078 18.0578C2.9986 18.2559 3.07329 18.4445 3.18864 18.608C3.304 18.7715 3.45669 18.9051 3.63404 18.9977C3.81139 19.0904 4.00828 19.1394 4.20836 19.1406C4.42127 19.1397 4.63063 19.086 4.81773 18.9844L18.013 11.5938C18.2064 11.484 18.3671 11.3249 18.479 11.1328C18.5908 10.9407 18.6497 10.7223 18.6497 10.5C18.6497 10.2777 18.5908 10.0594 18.479 9.86723C18.3671 9.6751 18.2064 9.51604 18.013 9.40626Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description  paper-plane-right
+ */
+export const PaperPlaneRightIcon = (props: Partial<IconProps>) => {
+    return <Icon component={PaperPlaneRight} {...props} />
+}
+
+const ArrowDown = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M15.8333 11.6667L9.99996 17.5M9.99996 17.5L4.16663 11.6667M9.99996 17.5L9.99996 2.5'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  arrow-down
+ */
+export const ArrowDownIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ArrowDown} {...props} />
+}
+
+const SolidThumbUp = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M2 10.5C2 9.67157 2.67157 9 3.5 9C4.32843 9 5 9.67157 5 10.5V16.5C5 17.3284 4.32843 18 3.5 18C2.67157 18 2 17.3284 2 16.5V10.5Z'
+            fill='currentColor'
+        />
+        <path
+            d='M6 10.3333V15.7639C6 16.5215 6.428 17.214 7.10557 17.5528L7.15542 17.5777C7.71084 17.8554 8.32329 18 8.94427 18H14.3604C15.3138 18 16.1346 17.3271 16.3216 16.3922L17.5216 10.3922C17.7691 9.15465 16.8225 8 15.5604 8H12V4C12 2.89543 11.1046 2 10 2C9.44772 2 9 2.44772 9 3V3.66667C9 4.53215 8.71929 5.37428 8.2 6.06667L6.8 7.93333C6.28071 8.62572 6 9.46785 6 10.3333Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description  solid-thumb-up
+ */
+export const SolidThumbUpIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidThumbUp} {...props} />
+}
+
+const SolidThumbDown = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M18 9.5C18 10.3284 17.3285 11 16.5 11C15.6716 11 15 10.3284 15 9.5V3.5C15 2.67157 15.6716 2 16.5 2C17.3285 2 18 2.67157 18 3.5V9.5Z'
+            fill='currentColor'
+        />
+        <path
+            d='M14 9.66667V4.23607C14 3.47852 13.572 2.786 12.8945 2.44721L12.8446 2.42229C12.2892 2.14458 11.6767 2 11.0558 2L5.63964 2C4.68628 2 3.86545 2.67292 3.67848 3.60777L2.47848 9.60777C2.23097 10.8453 3.17755 12 4.43964 12H8.00004V16C8.00004 17.1046 8.89547 18 10 18C10.5523 18 11 17.5523 11 17V16.3333C11 15.4679 11.2807 14.6257 11.8 13.9333L13.2 12.0667C13.7193 11.3743 14 10.5321 14 9.66667Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+/**
+ * @description  solid-thumb-down
+ */
+export const SolidThumbDownIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidThumbDown} {...props} />
+}
+
+const Polygon = () => (
+    <svg width='10' height='20' viewBox='0 0 10 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M8.58579 8.58579C9.36684 9.36684 9.36683 10.6332 8.58579 11.4142L-1.8279e-06 20L-9.53674e-07 -4.37114e-07L8.58579 8.58579Z'
+            fill='#F05D28'
+        />
+    </svg>
+)
+/**
+ * @description  polygon
+ */
+export const PolygonIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Polygon} {...props} />
 }

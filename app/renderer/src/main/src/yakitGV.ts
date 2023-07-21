@@ -53,7 +53,12 @@ export enum RemoteGV {
     /** @name 菜单是否为用户自行导入的json数据 */
     IsImportJSONMenu = "is-import-json-menu",
     /** @name 用户删除的系统内定菜单 */
-    UserDeleteMenu = "user-delete-menu"
+    UserDeleteMenu = "user-delete-menu",
+
+    /** @name chat-cs聊天记录 */
+    ChatCSStorage = "chat-cs-storage",
+    /** @name 是否已了解chat-cs功能 */
+    KnowChatCS = "know-chat-cs"
 }
 
 /** 项目逻辑全局变量 */

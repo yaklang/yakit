@@ -197,6 +197,88 @@
     .uilayout-noshow-log {
         display: none;
     }
+
+    .chat-cs-hint-wrapper {
+        position: absolute;
+        top: 0px;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 99;
+        background-color: #31343f4d;
+        .hint-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            .hint-modal-wrapper {
+                position: absolute;
+                right: 43px;
+                bottom: 20px;
+
+                display: flex;
+                width: 281px;
+                padding: 16px 20px 20px 20px;
+                flex-direction: column;
+                gap: 16px;
+                border-radius: 8px;
+                background: linear-gradient(90deg, #fa931d 0%, #ef5b27 100%);
+                .modal-content {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    color: #ffffff;
+                    .content-style {
+                        font-size: 20px;
+                        font-weight: 600;
+                        line-height: 30px;
+                    }
+                    .subcontent-style {
+                        font-size: 14px;
+                        line-height: 20px;
+                    }
+                }
+                .modal-btn {
+                    width: 82px;
+                    height: 30px;
+                    display: inline-flex;
+                    padding: 4px 12px;
+                    align-items: center;
+                    gap: 4px;
+                    border-radius: 4px;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    background: rgba(255, 255, 255, 0.1);
+
+                    color: var(--color-gray-ffffff, #fff);
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 20px;
+                    cursor: pointer;
+                }
+            }
+            .hint-modal-arrow {
+                position: absolute;
+                right: 33px;
+                bottom: 40px;
+                width: 10px;
+                height: 20px;
+            }
+
+            .show-chat-icon-wrapper {
+                position: absolute;
+                bottom: 24px;
+                right: 0px;
+                width: 105px;
+                height: 43px;
+                transform: translateX(75px);
+                z-index: 99;
+            
+                img {
+                    width: 100%;
+                }
+            }
+        }
+    }
 }
 
 /** 弹窗是否置顶 **/

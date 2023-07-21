@@ -47,3 +47,11 @@
 .link-button-bfc-reload {
     padding: 4px 0;
 }
+
+.port-scan-upload-del{
+    margin-left: 12px;
+    cursor: pointer;
+}
+.port-scan-upload-del:hover{
+    color: red;
+}

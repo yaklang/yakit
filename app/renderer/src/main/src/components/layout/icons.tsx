@@ -711,7 +711,7 @@ const ArrowRightSvg = () => (
     <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
             d='M14.1667 6.66667L17.5 10M17.5 10L14.1667 13.3333M17.5 10L2.5 10'
-            stroke='white'
+            stroke='currentColor'
             strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
