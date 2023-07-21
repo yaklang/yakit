@@ -181,6 +181,7 @@ service Yak {
   rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
+  rpc HTTPFuzzerSequence(FuzzerRequests) returns (stream FuzzerSequenceResponse);
   rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
   rpc RenderVariables(RenderVariablesRequest) returns (RenderVariablesResponse);
   rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
@@ -2393,6 +2394,7 @@ message LastRecord {
 
 message RecordPortScanRequest {
   LastRecord LastRecord = 1;
+  StartBruteParams StartBruteParams = 3;
   PortScanRequest PortScanRequest = 2;
 }
 
@@ -2451,6 +2453,8 @@ message PortScanRequest {
   int64 SynConcurrent = 24;
 
   string TaskName = 25;
+
+  bool EnableBrute = 26;
 }
 
 message DeletePortsRequest {
@@ -2845,6 +2849,10 @@ message FuzzerParamItem {
   string Type = 3;
 }
 
+message FuzzerRequests {
+  repeated FuzzerRequest Requests = 1;
+}
+
 message FuzzerRequest {
   string Request = 1;
   bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
@@ -2917,6 +2925,9 @@ message FuzzerRequest {
   repeated HTTPResponseMatcher Matchers = 33;
   string MatchersCondition = 34;
   string HitColor = 36;
+
+  // 如果发包的时候，需要指定一两个插件，那么可以通过他来操作，并把流量一起返回
+  repeated string YamlPoCNames = 37;
 }
 
 message KVPair {
@@ -2955,6 +2966,11 @@ message RedirectRequestParams {
 
 message ExtractedUrl {
   string Url = 1;
+}
+
+message FuzzerSequenceResponse {
+  FuzzerRequest Request = 1;
+  FuzzerResponse Response = 2;
 }
 
 message FuzzerResponse {
