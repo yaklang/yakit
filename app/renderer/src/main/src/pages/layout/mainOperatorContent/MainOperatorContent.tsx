@@ -1518,6 +1518,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         [selectSubMenu],
         {wait: 200}
     )
+    const tabMenuSubRef = useRef<any>()
     useEffect(() => {
         // 新增的时候选中的item
         const multipleNodeLength = pageItem.multipleNode.length
@@ -1534,6 +1535,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSelectSubMenu(currentNode)
             // setCurrentSubIndex(multipleNodeLength - 1)
         }
+        setTimeout(() => {
+            //滚动到最后边
+            if (!tabMenuSubRef.current) {
+                const tabMenuSub = document.getElementById("tab-menu-sub")
+                tabMenuSubRef.current = tabMenuSub
+            }
+            if (!tabMenuSubRef.current) return
+            tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
+        }, 200)
     }, [pageItem.multipleLength])
     useEffect(() => {
         // 处理外部新增一个二级tab
@@ -2448,6 +2458,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSubDropType(droppableGroup)
         }
     })
+    // console.log('dropType,subDropType',dropType,subDropType)
     return (
         <div
             ref={tabsRef}
@@ -2476,6 +2487,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                     className={classNames(styles["tab-menu-sub"], {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
                                     })}
+                                    id='tab-menu-sub'
                                     {...provided.droppableProps}
                                     ref={provided.innerRef}
                                 >
