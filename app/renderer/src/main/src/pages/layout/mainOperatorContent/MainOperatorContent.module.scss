@@ -352,7 +352,6 @@ $keyColor: map-keys($colors);
             }
             .tab-menu-sub-item-dragging {
                 @extend .dragging;
-                z-index: 8;
                 background-color: #fff;
             }
         }
