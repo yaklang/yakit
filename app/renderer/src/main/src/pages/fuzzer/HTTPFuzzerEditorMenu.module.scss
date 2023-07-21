@@ -1,6 +1,5 @@
 .http-fuzzer-click-editor {
     width: 104px;
-    // height: 24px;
     position: relative;
     .http-fuzzer-click-editor-simple {
         box-sizing: content-box;
@@ -46,7 +45,7 @@
     position: absolute;
     margin-top: 2px;
     width: 360px;
-    height: 350px;
+    max-height: 350px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 0 0 6px 0;
@@ -90,6 +89,10 @@
             .add-icon {
                 padding-top: 2px;
             }
+            .reset-icon:hover {
+                border-radius: 4px;
+                background: #f0f1f3;
+            }
         }
     }
     .menu-list {
@@ -109,7 +112,7 @@
             &-info {
                 display: flex;
                 align-items: center;
-                max-width: 280px;
+                max-width: 260px;
                 .input {
                     margin-left: 12px;
                 }
@@ -143,15 +146,24 @@
             &-opt {
                 display: flex;
                 align-items: center;
-                gap: 4px;
+                gap: 8px;
                 .form-outlined {
-                    font-size: 12px;
                     color: var(--yakit-body-text-color);
                     display: none;
+                    padding: 4px;
+                    &:hover {
+                        background: #eaecf3;
+                        border-radius: 4px;
+                    }
                 }
                 .trash-icon {
                     color: var(--yakit-danger-5);
                     display: none;
+                    padding: 4px;
+                    &:hover {
+                        background: #eaecf3;
+                        border-radius: 4px;
+                    }
                 }
             }
             &:hover {
@@ -165,12 +177,33 @@
                 }
             }
         }
+        &-item-drag {
+            background: var(--yakit-primary-1) !important;
+            border: 1px solid var(--yakit-primary-3) !important;
+            border-radius: 4px;
+            color: var(--yakit-header-color) !important;
+
+            svg {
+                color: var(--yakit-primary-5) !important;
+            }
+        }
+    }
+}
+.http-fuzzer-click-editor-menu-middle {
+    width: 300px;
+    .menu-list-item-info {
+        max-width: 200px;
+    }
+}
+.http-fuzzer-click-editor-menu-small {
+    width: 220px;
+    .menu-list-item-info {
+        max-width: 120px;
     }
 }
 .http-fuzzer-range-editor {
     position: relative;
     width: 152px;
-    // height: 28px;
     .http-fuzzer-range-editor-simple {
         flex-shrink: 0;
         background-color: #ffffff;
@@ -237,6 +270,8 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
+    max-height: 360px;
+    overflow: auto;
     .menu-content {
         flex: 1;
         overflow: auto;
@@ -254,6 +289,10 @@
                     color: #31343f;
                     font-weight: 500;
                     line-height: 16px;
+                    flex: 1;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
                 .sub-title {
                     margin-left: 2px;
@@ -268,10 +307,15 @@
         }
     }
 }
+.http-fuzzer-range-editor-menu-middle {
+    width: 300px;
+}
+.http-fuzzer-range-editor-menu-small {
+    width: 220px;
+}
 .http-fuzzer-read-editor {
     position: relative;
     width: 68px;
-    // height: 28px;
     .http-fuzzer-read-editor-simple {
         flex-shrink: 0;
         background-color: #ffffff;
@@ -322,7 +366,7 @@
     position: absolute;
     margin-top: 2px;
     width: 360px;
-    height: 250px;
+    max-height: 250px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 8px 4px 6px 4px;
@@ -330,6 +374,12 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
+}
+.http-fuzzer-range-read-only-editor-menu-middle {
+    width: 300px;
+}
+.http-fuzzer-range-read-only-editor-menu-small {
+    width: 220px;
 }
 .decode-box {
     display: flex;
@@ -343,6 +393,9 @@
     }
     .decode-copy-replace {
         padding-top: 2px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
         .header {
             display: flex;
             flex-direction: row;
@@ -386,6 +439,8 @@
             padding: 6px 8px 6px 12px;
         }
         .content {
+            flex: 1;
+            overflow: auto;
             margin-top: 6px;
             font-size: 12px;
             color: var(--yakit-header-color);
@@ -393,6 +448,7 @@
             border-radius: 4px;
             border: 1px solid var(--yakit-border-color);
             background: var(--yakit-background-color);
+            word-wrap: break-word;
         }
         .content-solid {
             margin-top: 0px;
@@ -405,6 +461,8 @@
     }
     .only-one {
         padding: 0 12px;
+        flex: 1;
+        overflow: hidden;
     }
     .timeline-box {
         flex: 1;

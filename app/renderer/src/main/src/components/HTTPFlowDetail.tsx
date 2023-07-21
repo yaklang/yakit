@@ -324,9 +324,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
                                             rangeId='http.flow.detail.request.read.only.widget'
-                                            rangeNode={(close, direction) => (
+                                            rangeNode={(close, editorInfo) => (
                                                 <HTTPFuzzerRangeReadOnlyEditorMenu
-                                                    direction={direction}
+                                                    editorInfo={editorInfo}
                                                     rangeValue={
                                                         (requestEditor &&
                                                             requestEditor.getModel()?.getValueInRange(requestEditor.getSelection() as any)) ||
@@ -352,9 +352,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             // actions={[...actionFuzzer]}
                                             webFuzzerValue={new Buffer(flow.Request)}
                                             rangeId='http.flow.detail.response.read.only.widget'
-                                            rangeNode={(close, direction) => (
+                                            rangeNode={(close, editorInfo) => (
                                                 <HTTPFuzzerRangeReadOnlyEditorMenu
-                                                    direction={direction}
+                                                    editorInfo={editorInfo}
                                                     rangeValue={
                                                         (responseEditor &&
                                                             responseEditor.getModel()?.getValueInRange(responseEditor.getSelection() as any)) ||
@@ -638,6 +638,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             return new Uint8Array()
                                     }
                                 })()}
+                                editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
                             />
                         </Col>
                     )}
@@ -773,11 +774,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
                         defaultSearchKeyword={search}
+                        editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST'
                         onEditor={setReqFirstEditor}
                         rangeId='http.flow.detail.first.range.read.widget'
-                        rangeNode={(close, direction) => (
+                        rangeNode={(close, editorInfo) => (
                             <HTTPFuzzerRangeReadOnlyEditorMenu
-                                direction={direction}
+                                editorInfo={editorInfo}
                                 rangeValue={
                                     (reqFirstEditor &&
                                         reqFirstEditor.getModel()?.getValueInRange(reqFirstEditor.getSelection() as any)) ||
@@ -821,11 +823,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultSearchKeyword={props.search}
                         defaultHttps={props.defaultHttps}
                         webFuzzerValue={flow?.Request || new Uint8Array()}
+                        editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         onEditor={setReqSecondEditor}
                         rangeId='http.flow.detail.second.range.read.widget'
-                        rangeNode={(close, direction) => (
+                        rangeNode={(close, editorInfo) => (
                             <HTTPFuzzerRangeReadOnlyEditorMenu
-                                direction={direction}
+                                editorInfo={editorInfo}
                                 rangeValue={
                                     (reqSecondEditor &&
                                         reqSecondEditor.getModel()?.getValueInRange(reqSecondEditor.getSelection() as any)) ||

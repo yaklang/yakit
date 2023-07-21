@@ -2039,3 +2039,21 @@ const Polygon = () => (
 export const PolygonIcon = (props: Partial<IconProps>) => {
     return <Icon component={Polygon} {...props} />
 }
+
+const IconOutlinePencilAlt = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M7.33329 3.33334H3.99996C3.26358 3.33334 2.66663 3.93029 2.66663 4.66667V12C2.66663 12.7364 3.26358 13.3333 3.99996 13.3333H11.3333C12.0697 13.3333 12.6666 12.7364 12.6666 12V8.66667M11.7238 2.39052C12.2445 1.86983 13.0887 1.86983 13.6094 2.39052C14.1301 2.91122 14.1301 3.75544 13.6094 4.27614L7.88557 10H5.99996L5.99996 8.11438L11.7238 2.39052Z'
+            stroke='#85899E'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/pencil-alt
+ */
+export const IconOutlinePencilAltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={IconOutlinePencilAlt} {...props} />
+}

@@ -589,17 +589,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         isAddOverlayWidget={showResponseInfoSecondEditor}
                         contextMenu={responseEditorRightMenu}
                         rangeId='monaco.fizz.range.read.only.widget'
-                            rangeNode={(close, direction) => (
-                                <HTTPFuzzerRangeReadOnlyEditorMenu
-                                    direction={direction}
-                                    rangeValue={
-                                        (reqEditor &&
-                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                                        ""
-                                    }
-                                />
-                            )}
-                            onEditor={setReqEditor}
+                        rangeNode={(close, editorInfo) => (
+                            <HTTPFuzzerRangeReadOnlyEditorMenu
+                                editorInfo={editorInfo}
+                                rangeValue={
+                                    (reqEditor &&
+                                        reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
+                                    ""
+                                }
+                            />
+                        )}
+                        onEditor={setReqEditor}
+                        webFuzzerValue={currentSelectItem?.RequestRaw || new Buffer([])}
                     />
                 }
                 {...ResizeBoxProps}

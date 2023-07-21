@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Avatar, Space, Timeline} from "antd"
-import {FormOutlined, PlusOutlined} from "@ant-design/icons"
+import {PlusOutlined} from "@ant-design/icons"
 import styles from "./HTTPFuzzerEditorMenu.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -14,21 +14,26 @@ import {
     IconSolidSparklesIcon,
     IconSolidTagIcon,
     SolidTerminalIcon,
-    TerminalIcon,
+    IconOutlinePencilAltIcon,
     TrashIcon
 } from "@/assets/newIcon"
-import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {AutoDecodeResult} from "@/utils/encodec"
 import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
-import {CountDirectionProps} from "@/components/NewEditorSelectRange"
+import {EditorDetailInfoProps} from "@/components/NewEditorSelectRange"
+import {useThrottleFn} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
-const directionStyle = (direction) => {
+const directionStyle = (editorInfo) => {
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
+        if (direction.x === "middle") {
+            obj.transform = "translate(-38%, 0px)"
+        }
         if (direction.x === "right") {
             obj.right = 0
         }
@@ -41,7 +46,7 @@ const directionStyle = (direction) => {
 
 export interface HTTPFuzzerClickEditorMenuProps {
     close: () => void
-    direction?: CountDirectionProps
+    editorInfo?: EditorDetailInfoProps
     insert: (v: QueryFuzzerLabelResponseProps) => void
     addLabel: () => void
 }
@@ -107,11 +112,18 @@ export const defaultLabel: LabelDataProps[] = [
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
-    const {close, direction, insert, addLabel} = props
+    const {close, editorInfo, insert, addLabel} = props
+
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
     const [selectLabel, setSelectLabel] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
     const [isEnterSimple, setEnterSimple] = useState<boolean>(false)
+    const [destinationDrag, setDestinationDrag] = useState<string>("droppable-editor")
+    // 是否在拖拽中
+    const isDragging = useRef<boolean>(false)
+    // 菜单显示大小
+    const [menuSize, setMenuSize] = useState<"middle" | "small">()
     const getData = () => {
         ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -122,8 +134,14 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         })
     }
     useEffect(() => {
+        if (right - left < 570) {
+            setMenuSize("small")
+        } else if (right - left < 680) {
+            setMenuSize("middle")
+        }
         getData()
     }, [])
+
     const insertLabel = (item: QueryFuzzerLabelResponseProps) => {
         if (isSelect(item)) {
             // 复原修改项
@@ -151,7 +169,43 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         })
     }
     const isSelect = (item: QueryFuzzerLabelResponseProps) => selectLabel === item.Hash
-    
+
+    const dragList = (newItems) => {
+        // 重新排序
+        ipcRenderer.invoke("DeleteFuzzerLabel", {}).then(() => {
+            setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: newItems.length}))
+            ipcRenderer.invoke("SaveFuzzerLabel", {
+                Data: newItems
+            })
+        })
+    }
+
+    // 拖放完成后的回调函数
+    const onDragEnd = (result) => {
+        isDragging.current = false
+        if (!result.destination) return
+
+        const newItems = Array.from(labelData)
+        const [reorderedItem] = newItems.splice(result.source.index, 1)
+        newItems.splice(result.destination.index, 0, reorderedItem)
+
+        setLabelData(newItems)
+        dragList([...newItems].reverse())
+    }
+
+    /**
+     * @description: 计算移动的范围是否在目标范围类destinationDrag
+     */
+    const onDragUpdate = useThrottleFn(
+        (result) => {
+            if (!result.destination) {
+                setDestinationDrag("")
+                return
+            }
+            if (result.destination.droppableId !== destinationDrag) setDestinationDrag(result.destination.droppableId)
+        },
+        {wait: 200}
+    ).run
     return (
         <div className={styles["http-fuzzer-click-editor"]}>
             <div className={styles["http-fuzzer-click-editor-simple"]}>
@@ -172,9 +226,15 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             </div>
             {isEnterSimple && (
                 <div
-                    className={styles["http-fuzzer-click-editor-menu"]}
-                    onMouseLeave={() => setEnterSimple(false)}
-                    style={{...directionStyle(direction)}}
+                    className={classNames(styles["http-fuzzer-click-editor-menu"], {
+                        [styles["http-fuzzer-click-editor-menu-middle"]]: menuSize === "middle",
+                        [styles["http-fuzzer-click-editor-menu-small"]]: menuSize === "small"
+                    })}
+                    // 此处会引起拖拽卡死
+                    onMouseLeave={() => {
+                        if (!isDragging.current) setEnterSimple(false)
+                    }}
+                    style={{...directionStyle(editorInfo)}}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
@@ -186,85 +246,156 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                 添加 <PlusOutlined className={styles["add-icon"]} />
                             </YakitButton>
                             <div className={styles["line"]}></div>
-                            <YakitButton type='text' style={{color: "#85899E"}} onClick={() => reset()}>
+                            <YakitButton
+                                type='text'
+                                className={styles["reset-icon"]}
+                                style={{color: "#85899E"}}
+                                onClick={() => reset()}
+                            >
                                 复原
                             </YakitButton>
                         </div>
                     </div>
+
                     <div className={styles["menu-list"]}>
-                        {labelData.map((item, index) => (
-                            <div
-                                key={`${item?.Label}-${index}`}
-                                className={styles["menu-list-item"]}
-                                onClick={() => insertLabel(item)}
-                            >
-                                <div className={styles["menu-list-item-info"]}>
-                                    <DragSortIcon className={styles["drag-sort-icon"]} />
-                                    {isSelect(item) ? (
-                                        <YakitInput
-                                            defaultValue={item.Description}
-                                            className={styles["input"]}
-                                            size='small'
-                                            onChange={(e) => {
-                                                setInputValue(e.target.value)
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        />
-                                    ) : (
-                                        <>
-                                            <div className={styles["title"]}>{item.Description}</div>
-                                            <div
-                                                className={classNames(styles["sub-title"], {
-                                                    [styles["sub-title-left"]]: !!item.Description
-                                                })}
+                        <DragDropContext
+                            onDragEnd={onDragEnd}
+                            onDragUpdate={onDragUpdate}
+                            onBeforeDragStart={() => {
+                                isDragging.current = true
+                            }}
+                        >
+                            <Droppable droppableId='droppable-editor'>
+                                {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                                        {labelData.map((item, index) => (
+                                            <Draggable
+                                                key={item?.Description}
+                                                draggableId={item?.Description}
+                                                index={index}
                                             >
-                                                {item.Label}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                                <div className={styles["menu-list-item-opt"]}>
-                                    {isSelect(item) ? (
-                                        <YakitButton
-                                            type='text'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (inputValue) {
-                                                    ipcRenderer
-                                                        .invoke("SaveFuzzerLabel", {
-                                                            Data: [{...item, Description: inputValue}]
-                                                        })
-                                                        .then(() => {
-                                                            getData()
-                                                        })
-                                                }
-                                            }}
-                                        >
-                                            确认
-                                        </YakitButton>
-                                    ) : (
-                                        <>
-                                            <FormOutlined
-                                                className={styles["form-outlined"]}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setSelectLabel(item.Hash)
+                                                {(provided, snapshot) => {
+                                                    // console.log("provided", provided.draggableProps.style)
+                                                    return (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            style={{
+                                                                ...provided.draggableProps.style,
+                                                                top: provided.draggableProps.style?.top
+                                                                    ? provided.draggableProps.style?.top - top
+                                                                    : "none",
+                                                                left: provided.draggableProps.style?.top
+                                                                    ? provided.draggableProps.style?.left - left - 60
+                                                                    : "none"
+                                                            }}
+                                                        >
+                                                            <div
+                                                                className={classNames(styles["menu-list-item"], {
+                                                                    [styles["menu-list-item-drag"]]: snapshot.isDragging
+                                                                })}
+                                                                onClick={() => insertLabel(item)}
+                                                            >
+                                                                <div className={styles["menu-list-item-info"]}>
+                                                                    <DragSortIcon
+                                                                        className={styles["drag-sort-icon"]}
+                                                                    />
+                                                                    {isSelect(item) ? (
+                                                                        <YakitInput
+                                                                            defaultValue={item.Description}
+                                                                            className={styles["input"]}
+                                                                            size='small'
+                                                                            onChange={(e) => {
+                                                                                setInputValue(e.target.value)
+                                                                            }}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className={styles["title"]}>
+                                                                                {item.Description}
+                                                                            </div>
+                                                                            {menuSize !== "small" && (
+                                                                                <div
+                                                                                    className={classNames(
+                                                                                        styles["sub-title"],
+                                                                                        {
+                                                                                            [styles["sub-title-left"]]:
+                                                                                                !!item.Description
+                                                                                        }
+                                                                                    )}
+                                                                                >
+                                                                                    {item.Label}
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                                <div className={styles["menu-list-item-opt"]}>
+                                                                    {isSelect(item) ? (
+                                                                        <YakitButton
+                                                                            type='text'
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                if (inputValue) {
+                                                                                    ipcRenderer
+                                                                                        .invoke("SaveFuzzerLabel", {
+                                                                                            Data: [
+                                                                                                {
+                                                                                                    ...item,
+                                                                                                    Description:
+                                                                                                        inputValue
+                                                                                                }
+                                                                                            ]
+                                                                                        })
+                                                                                        .then(() => {
+                                                                                            getData()
+                                                                                        })
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            确认
+                                                                        </YakitButton>
+                                                                    ) : (
+                                                                        <>
+                                                                            <IconOutlinePencilAltIcon
+                                                                                className={classNames(
+                                                                                    styles["form-outlined"]
+                                                                                )}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    setSelectLabel(item.Hash)
+                                                                                    setInputValue(item.Description)
+                                                                                }}
+                                                                            />
+                                                                            <TrashIcon
+                                                                                className={classNames(
+                                                                                    styles["trash-icon"]
+                                                                                )}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    delLabel(item.Hash)
+                                                                                }}
+                                                                            />
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )
+                                                    // snapshot.isDragging 是否拖拽此项
                                                 }}
-                                            />
-                                            <TrashIcon
-                                                className={styles["trash-icon"]}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    delLabel(item.Hash)
-                                                }}
-                                            />
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
                     </div>
                 </div>
             )}
@@ -486,19 +617,27 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
 }
 
 export interface HTTPFuzzerRangeEditorMenuProps {
-    direction?: CountDirectionProps
+    editorInfo?: EditorDetailInfoProps
     insert: (v: any) => void
     rangeValue: string
     replace?: (v: string) => void
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {direction, insert, rangeValue, replace} = props
+    const {editorInfo, insert, rangeValue, replace} = props
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
+    // 菜单显示大小
+    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    useEffect(() => {
+        if (right - left < 570) {
+            setMenuSize("small")
+        } else if (right - left < 680) {
+            setMenuSize("middle")
+        }
+    }, [])
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
     return (
         <div className={styles["http-fuzzer-range-editor"]}>
-            <div
-                className={styles["http-fuzzer-range-editor-simple"]}
-            >
+            <div className={styles["http-fuzzer-range-editor-simple"]}>
                 <div className={styles["show-box"]}>
                     <div
                         className={styles["encode-box"]}
@@ -528,8 +667,11 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             </div>
             {segmentedType && (
                 <div
-                    style={{...directionStyle(direction)}}
-                    className={styles["http-fuzzer-range-editor-menu"]}
+                    style={{...directionStyle(editorInfo)}}
+                    className={classNames(styles["http-fuzzer-range-editor-menu"], {
+                        [styles["http-fuzzer-range-editor-menu-middle"]]: menuSize === "middle",
+                        [styles["http-fuzzer-range-editor-menu-small"]]: menuSize === "small"
+                    })}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
                     <div className={styles["menu-content"]}>
@@ -546,13 +688,23 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
 }
 
 interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
-    direction?: CountDirectionProps
+    editorInfo?: EditorDetailInfoProps
     rangeValue: string
 }
 
 export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
-    const {direction, rangeValue} = props
+    const {editorInfo, rangeValue} = props
     const [segmentedType, setSegmentedType] = useState<"decode">()
+    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
+    // 菜单显示大小
+    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    useEffect(() => {
+        if (right - left < 570) {
+            setMenuSize("small")
+        } else if (right - left < 680) {
+            setMenuSize("middle")
+        }
+    }, [])
     return (
         <div className={styles["http-fuzzer-read-editor"]}>
             <div className={styles["http-fuzzer-read-editor-simple"]}>
@@ -565,8 +717,11 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             </div>
             {segmentedType && (
                 <div
-                    style={directionStyle(direction)}
-                    className={styles["http-fuzzer-range-read-only-editor-menu"]}
+                    style={directionStyle(editorInfo)}
+                    className={classNames(styles["http-fuzzer-range-read-only-editor-menu"], {
+                        [styles["http-fuzzer-range-read-only-editor-menu-middle"]]: menuSize === "middle",
+                        [styles["http-fuzzer-range-read-only-editor-menu-small"]]: menuSize === "small"
+                    })}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
                     <DecodeComponent rangeValue={rangeValue} isReadOnly={true} />

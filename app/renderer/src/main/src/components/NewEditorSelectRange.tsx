@@ -8,15 +8,27 @@ export interface CountDirectionProps {
     x?: string
     y?: string
 }
+
+export interface EditorDetailInfoProps {
+    direction: CountDirectionProps
+    top: number
+    bottom: number
+    left: number
+    right: number
+    focusX: number
+    focusY: number
+    lineHeight: number
+}
+
 export interface NewEditorSelectRangeProps extends NewHTTPPacketEditorProp {
     // 编辑器点击弹窗的唯一Id
     selectId?: string
     // 点击弹窗内容
-    selectNode?: (close: () => void, direction?: CountDirectionProps, editorInfo?: any) => ReactElement
+    selectNode?: (close: () => void, editorInfo?: EditorDetailInfoProps) => ReactElement
     // 编辑器选中弹窗的唯一Id
     rangeId?: string
     // 选中弹窗内容
-    rangeNode?: (close: () => void, direction?: CountDirectionProps, editorInfo?: any) => ReactElement
+    rangeNode?: (close: () => void, editorInfo?: EditorDetailInfoProps) => ReactElement
     // 超出多少行将弹窗隐藏(默认三行)
     overLine?: number
 }
@@ -25,8 +37,6 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const downPosY = useRef<number>()
     const upPosY = useRef<number>()
-    // 焦点所在编辑器方位(上下左右)
-    const direction = useRef<CountDirectionProps>()
     // 编辑器信息(长宽等)
     const editorInfo = useRef<any>()
     useEffect(() => {
@@ -48,8 +58,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 const domNode = document.createElement("div")
                 // 解决弹窗内鼠标滑轮无法滚动的问题
                 domNode.onwheel = (e) => e.stopPropagation()
-                selectNode &&
-                    ReactDOM.render(selectNode(closeFizzSelectWidget, direction.current, editorInfo.current), domNode)
+                selectNode && ReactDOM.render(selectNode(closeFizzSelectWidget, editorInfo.current), domNode)
                 return domNode
             },
             getPosition: function () {
@@ -79,8 +88,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 const domNode = document.createElement("div")
                 // 解决弹窗内鼠标滑轮无法滚动的问题
                 domNode.onwheel = (e) => e.stopPropagation()
-                rangeNode &&
-                    ReactDOM.render(rangeNode(closeFizzRangeWidget, direction.current, editorInfo.current), domNode)
+                rangeNode && ReactDOM.render(rangeNode(closeFizzRangeWidget, editorInfo.current), domNode)
                 return domNode
             },
             getPosition: function () {
@@ -155,10 +163,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             closeFizzRangeWidget()
                         }
                         // 从下到上的选择范围
-                        else if(
+                        else if (
                             downPosY.current > upPosY.current &&
                             (posy < upPosY.current - overHeight || posy > downPosY.current + overHeight)
-                        ){
+                        ) {
                             closeFizzRangeWidget()
                         }
                     }
@@ -205,19 +213,21 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 const focusX = x + left
                 const focusY = y + top
 
-                if (leftButton) {
+                // 焦点与抬起坐标是否超出限制
+                const isOver: boolean = overLine * height < Math.abs(focusY - posy)
+                if (leftButton && !isOver) {
                     // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
                     const editorContainer = reqEditor.getDomNode()
                     if (editorContainer) {
                         const editorContainerInfo = editorContainer.getBoundingClientRect()
                         const {top, bottom, left, right} = editorContainerInfo
-                        editorInfo.current = editorContainerInfo
-
+                        // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
+                        const isShowByLimit = ((right-left)>250)&&((bottom-top)>200)
                         // 判断焦点位置
                         const isTopHalf = focusY < (top + bottom) / 2
                         const isLeftHalf = focusX < (left + right) / 2
                         // 行高
-                        const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
+                        // const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
 
                         let countDirection: CountDirectionProps = {}
                         if (isTopHalf) {
@@ -227,35 +237,51 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                             // 鼠标位于编辑器下半部分
                             countDirection.y = "bottom"
                         }
-                        if (isLeftHalf) {
+                        if (Math.abs(focusX - (left + right) / 2) < 50) {
+                            // 鼠标位于编辑器中间部分
+                            countDirection.x = "middle"
+                        } else if (isLeftHalf) {
                             // 鼠标位于编辑器左半部分
                             countDirection.x = "left"
                         } else {
                             // 鼠标位于编辑器右半部分
                             countDirection.x = "right"
                         }
-                        direction.current = countDirection
-                    }
+                        editorInfo.current = {
+                            direction: countDirection,
+                            top,
+                            bottom,
+                            left,
+                            right,
+                            focusX,
+                            focusY,
+                            lineHeight: height
+                        }
 
-                    upPosY.current = posy
-                    const selection = reqEditor.getSelection()
-                    if (selection) {
-                        const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
-                        if (fizzSelectWidget.isOpen && selectedText.length === 0) {
-                            // 更新点击菜单小部件的位置
-                            fizzSelectWidget.update()
-                        } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
-                            fizzRangeWidget.update()
-                        } else if (selectedText.length === 0) {
+                        upPosY.current = posy
+                        const selection = reqEditor.getSelection()
+                        if (selection&&isShowByLimit) {
+                            const selectedText = reqEditor.getModel()?.getValueInRange(selection) || ""
+                            if (fizzSelectWidget.isOpen && selectedText.length === 0) {
+                                // 更新点击菜单小部件的位置
+                                fizzSelectWidget.update()
+                            } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
+                                fizzRangeWidget.update()
+                            } else if (selectedText.length === 0) {
+                                closeFizzRangeWidget()
+                                // 展示点击的菜单
+                                selectId && reqEditor.addContentWidget(fizzSelectWidget)
+                                fizzSelectWidget.isOpen = true
+                            } else {
+                                closeFizzSelectWidget()
+                                // 展示选中的菜单
+                                rangeId && reqEditor.addContentWidget(fizzRangeWidget)
+                                fizzRangeWidget.isOpen = true
+                            }
+                        }
+                        else{
                             closeFizzRangeWidget()
-                            // 展示点击的菜单
-                            selectId && reqEditor.addContentWidget(fizzSelectWidget)
-                            fizzSelectWidget.isOpen = true
-                        } else {
                             closeFizzSelectWidget()
-                            // 展示选中的菜单
-                            rangeId && reqEditor.addContentWidget(fizzRangeWidget)
-                            fizzRangeWidget.isOpen = true
                         }
                     }
                 }
