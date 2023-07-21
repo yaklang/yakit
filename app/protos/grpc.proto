@@ -2928,6 +2928,10 @@ message FuzzerRequest {
 
   // 如果发包的时候，需要指定一两个插件，那么可以通过他来操作，并把流量一起返回
   repeated string YamlPoCNames = 37;
+
+  // 是否继承上一个 Workflow 的变量？（在 Sequence 中生效）
+  bool InheritVariables = 38;
+  bool ForceOnlyOneResponse = 39;
 }
 
 message KVPair {
