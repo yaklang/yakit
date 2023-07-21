@@ -270,11 +270,20 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     // 全局监听重命名事件是否被打断
     useEffect(() => {
         document.onmousedown = (e) => {
-            // @ts-ignore
-            if (e.path[0].id !== "rename-input" && renameFlag) {
-                renameCode(renameIndex)
-                setRenameFlag(false)
+            try {
+                if (!e) {
+                    return
+                }
+
+                // @ts-ignore
+                if (e.path[0].id !== "rename-input" && renameFlag) {
+                    renameCode(renameIndex)
+                    setRenameFlag(false)
+                }
+            } catch (e) {
+                failed(`rename error: ${e}`)
             }
+
         }
     }, [renameFlag])
 
