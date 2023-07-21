@@ -236,7 +236,7 @@ const getGroupLength = (subPage) => {
  */
 const getColor = (subPage) => {
     const groupLength = getGroupLength(subPage)
-    const randNum=groupLength%colorList.length
+    const randNum = groupLength % colorList.length
     return colorList[randNum] || "purple"
 }
 // 软件初始化时的默认打开页面数据
@@ -291,7 +291,6 @@ const getItemStyle = (isDragging, draggableStyle) => {
     }
     return {
         ...draggableStyle,
-        zIndex: isDragging ? 8 : undefined,
         transform
     }
 }
@@ -1380,29 +1379,35 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId='droppable1' direction='horizontal'>
-                {(provided, snapshot) => (
-                    <div className={styles["tab-menu-first"]} {...provided.droppableProps} ref={provided.innerRef}>
-                        {pageCache.map((item, index) => {
-                            return (
-                                <React.Fragment key={item.routeKey}>
-                                    <TabItem
-                                        item={item}
-                                        index={index}
-                                        currentTabKey={currentTabKey}
-                                        onSelect={(val, k) => {
-                                            setCurrentTabKey(k)
-                                        }}
-                                        onRemove={onRemove}
-                                        onContextMenu={(e) => {
-                                            onRightClickOperation(e, index)
-                                        }}
-                                    />
-                                </React.Fragment>
-                            )
-                        })}
-                        {provided.placeholder}
-                    </div>
-                )}
+                {(provided, snapshot) => {
+                    return (
+                        <div
+                            className={classNames(styles["tab-menu-first"])}
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                        >
+                            {pageCache.map((item, index) => {
+                                return (
+                                    <React.Fragment key={item.routeKey}>
+                                        <TabItem
+                                            item={item}
+                                            index={index}
+                                            currentTabKey={currentTabKey}
+                                            onSelect={(val, k) => {
+                                                setCurrentTabKey(k)
+                                            }}
+                                            onRemove={onRemove}
+                                            onContextMenu={(e) => {
+                                                onRightClickOperation(e, index)
+                                            }}
+                                        />
+                                    </React.Fragment>
+                                )
+                            })}
+                            {provided.placeholder}
+                        </div>
+                    )
+                }}
             </Droppable>
         </DragDropContext>
     )
@@ -1910,7 +1915,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 pluginName: pageItem.pluginName
             })
         }),
-        {wait: 200,leading:true}
+        {wait: 200, leading: true}
     ).run
     /** @description 删除item 更新选中的item*/
     const onUpdateSelectSubPage = useMemoizedFn((handleItem: MultipleNodeInfo) => {
@@ -2562,15 +2567,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 })
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {
-        subItem,
-        index,
-        selectSubMenu,
-        setSelectSubMenu,
-        onRemoveSub,
-        onContextMenu,
-        combineColor,
-    } = props
+    const {subItem, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
 
     return (
@@ -2668,7 +2665,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                         ref={providedGroup.innerRef}
                         {...providedGroup.draggableProps}
                         {...providedGroup.dragHandleProps}
-                        style={{...groupStyle, display: "flex"}}
+                        style={{...groupStyle}}
                         className={classNames(styles["tab-menu-sub-group"], styles[`tab-menu-sub-group-${color}`])}
                     >
                         <div

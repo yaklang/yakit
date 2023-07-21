@@ -113,24 +113,11 @@ $keyColor: map-keys($colors);
         position: relative;
         background-color: var(--yakit-card-background-color);
 
-        overflow-x: overlay;
+        overflow-x: auto;
         overflow-y: hidden;
         // 下面是滚动条的样式
         &::-webkit-scrollbar {
             display: none;
-        }
-        &::-webkit-scrollbar-thumb {
-            /*滚动条里面小方块*/
-            border-radius: 10px;
-            box-shadow: none;
-            border: 0;
-            background-color: rgba(204, 210, 222, 0.8);
-        }
-        &:hover{
-            &::-webkit-scrollbar {
-                display: flex;
-                height:4px;
-            }
         }
         &::before {
             @extend .grey-link;
@@ -233,25 +220,10 @@ $keyColor: map-keys($colors);
 
             max-width: calc(100% - 32px);
             overflow-y: hidden;
-            overflow-x: overlay;
-
+            overflow-x: auto;
             // 下面是滚动条的样式
             &::-webkit-scrollbar {
                 display: none;
-            }
-            &::-webkit-scrollbar-thumb {
-                /*滚动条里面小方块*/
-                border-radius: 10px;
-                box-shadow: none;
-                border: 0;
-                background-color: rgba(204, 210, 222, 0.8);
-            }
-            &:hover{
-                &::-webkit-scrollbar {
-                    display: flex;
-                    height:4px;
-                }
-                
             }
 
             .tab-menu-sub-group {
@@ -380,14 +352,26 @@ $keyColor: map-keys($colors);
             }
             .tab-menu-sub-item-dragging {
                 @extend .dragging;
+                z-index: 8;
                 background-color: #fff;
             }
         }
+
+        // .tab-menu-sub:has(.tab-menu-sub-item-dragging) {
+        //     overflow-x: auto;
+        //     background-color: red;
+        //     &:hover{
+        //         // overflow-x: auto;
+        //         &::-webkit-scrollbar {
+        //             display: none !important;
+        //         }
+        //     }
+        // }
+
         .tab-menu-sub-width {
             max-width: 100%;
         }
     }
-
     .outline-plus-icon {
         @extend .base-operate-icon;
         width: 32px;
