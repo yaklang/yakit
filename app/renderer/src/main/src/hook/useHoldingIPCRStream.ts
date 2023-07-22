@@ -36,7 +36,8 @@ export default function useHoldingIPCRStream(
     token: string,
     onEnd?: () => any,
     onListened?: () => any,
-    dataFilter?: (obj: ExecResultMessage, content: ExecResultLog) => boolean
+    dataFilter?: (obj: ExecResultMessage, content: ExecResultLog) => boolean,
+    onRuntimeId?: (runtimeId: string) => any
 ) {
     const [infoState, setInfoState] = useState<InfoState>({
         messageState: [],
@@ -125,7 +126,15 @@ export default function useHoldingIPCRStream(
             }
         }
 
+        let runtimeId = "";
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
+            if (runtimeId === "" && !!(data?.RuntimeID)) {
+                runtimeId = data.RuntimeID;
+                if (onRuntimeId) {
+                    onRuntimeId(runtimeId);
+                }
+            }
+
             if (data.IsMessage) {
                 try {
                     let obj: ExecResultMessage = JSON.parse(

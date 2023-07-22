@@ -147,6 +147,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                         </div>}
                         secondNode={<PluginDebuggerExec
                             pluginType={pluginType}
+                            pluginName={currentPluginName}
                             builder={builder} code={code} targets={targets}
                             onOperator={(obj) => {
                                 info("初始化插件调试成功")

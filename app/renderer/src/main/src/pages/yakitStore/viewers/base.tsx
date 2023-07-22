@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState, useMemo} from "react"
 import {YakScript} from "../../invoker/schema"
-import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip, Pagination} from "antd"
-import {LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
+import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip, Pagination, Tag} from "antd"
+import {HTTPFlowTable, LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
 import {randomString} from "../../../utils/randomUtil"
@@ -30,6 +30,8 @@ import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTP
 import {EngineLog} from "@/components/layout/EngineLog";
 import {EngineConsole} from "@/components/baseConsole/BaseConsole";
 import { isEnpriTrace } from "@/utils/envfile"
+import {HTTPHistory} from "@/components/HTTPHistory";
+import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -62,6 +64,8 @@ export interface PluginResultUIProp {
     debugMode?: boolean
 
     cardStyleType?: number
+    runtimeId?: string
+    fromPlugin?: string
 }
 
 export interface TooltipTitleProps {
@@ -338,7 +342,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     }
                 </Tabs.TabPane>
                 {!!props?.risks && props.risks.length > 0 && (
-                    <Tabs.TabPane tab={`漏洞与风险[${props.risks.length}]`} key={"risk"}>
+                    <Tabs.TabPane tab={<div>
+                        {`漏洞与风险`}
+                        <Tag style={{marginLeft: 4}} color={"red"}>{props.risks.length}</Tag>
+                    </div>} key={"risk"}>
                         <AutoCard bodyStyle={{overflowY: "auto"}}>
                             <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                 {props.risks.slice(0, 10).map((i) => {
@@ -359,6 +366,26 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <EngineConsole isMini={true}/>
                     </div>
                 </Tabs.TabPane>
+                {!!props.runtimeId && <Tabs.TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
+                    <div style={{width: "100%", height: "100%"}}>
+                        <HTTPFlowTable
+                            noHeader={true} inViewport={true}
+                            params={{
+                                RuntimeId: props.runtimeId,
+                                SourceType: "scan",
+                            }}
+                        />
+                    </div>
+                </Tabs.TabPane>}
+                {props.fromPlugin && <Tabs.TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>
+                    <div style={{width: "100%", height: "100%"}}>
+                        <HTTPFlowTable
+                            noHeader={true}
+                            params={{FromPlugin: props.fromPlugin}}
+                        />
+                    </div>
+                </Tabs.TabPane>}
+
                 {/*{!props.debugMode && props.onXtermRef ? (*/}
                 {/*    <Tabs.TabPane tab={"Console"} key={"console"}>*/}
                 {/*        <div style={{width: "100%", height: "100%"}}>*/}

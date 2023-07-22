@@ -162,4 +162,5 @@ export interface ExecResult {
     Message: Uint8Array
     Id?: number,
     Progress: number
+    RuntimeID?: string
 }

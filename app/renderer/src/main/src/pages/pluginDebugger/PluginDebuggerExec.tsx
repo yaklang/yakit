@@ -15,6 +15,7 @@ export interface PluginDebuggerExecProp {
     targets: string
     builder: HTTPRequestBuilderParams
     pluginType: string
+    pluginName?: string
 
     onOperator: (obj: { start: () => any, cancel: () => any }) => any
     onExecuting: (b: boolean) => any
@@ -23,12 +24,16 @@ export interface PluginDebuggerExecProp {
 export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
     const [_t, setToken, getToken] = useGetState(randomString(40));
     const [loading, setLoading] = useState(false)
+    const [runtimeId, setRuntimeId] = useState<string>("")
 
     const [infoState, {
         reset,
         setXtermRef
     }, xtermRef] = useHoldingIPCRStream("debug-plugin", "DebugPlugin", getToken(), () => {
         setTimeout(() => setLoading(false), 300)
+    }, undefined, undefined, rId => {
+        info(`调试任务启动成功，运行时 ID: ${rId}`)
+        setRuntimeId(rId)
     })
 
     const start = useMemoizedFn(() => {
@@ -67,6 +72,8 @@ export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
             featureType={infoState.featureTypeState}
             feature={infoState.featureMessageState}
             statusCards={infoState.statusState}
+            runtimeId={runtimeId}
+            fromPlugin={props.pluginName}
         />
     </AutoCard>
 };
