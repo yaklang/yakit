@@ -377,15 +377,14 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         />
                     </div>
                 </Tabs.TabPane>}
-                {props.fromPlugin && <Tabs.TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>
-                    <div style={{width: "100%", height: "100%"}}>
-                        <HTTPFlowTable
-                            noHeader={true}
-                            params={{FromPlugin: props.fromPlugin}}
-                        />
-                    </div>
-                </Tabs.TabPane>}
-
+                {/*{props.fromPlugin && <Tabs.TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
+                {/*    <div style={{width: "100%", height: "100%"}}>*/}
+                {/*        <HTTPFlowTable*/}
+                {/*            noHeader={true}*/}
+                {/*            params={{FromPlugin: props.fromPlugin}}*/}
+                {/*        />*/}
+                {/*    </div>*/}
+                {/*</Tabs.TabPane>}*/}
                 {/*{!props.debugMode && props.onXtermRef ? (*/}
                 {/*    <Tabs.TabPane tab={"Console"} key={"console"}>*/}
                 {/*        <div style={{width: "100%", height: "100%"}}>*/}
