@@ -52,29 +52,25 @@
         }
     }
 
-    .http-history-table-flex {
+    .refresh-button {
+        cursor: pointer;
+        border-radius: 4px;
+        width: 32px;
+        height: 24px;
         display: flex;
+        justify-content: center;
         align-items: center;
-        .refresh-button {
-            cursor: pointer;
-            border-radius: 4px;
-            width: 32px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            .refresh-icon {
-                color: var(--yakit-body-text-color);
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
+        .refresh-icon {
+            color: var(--yakit-body-text-color);
+            svg {
+                width: 16px;
+                height: 16px;
             }
-            &:hover {
-                background-color: var(--yakit-background-color);
-                .refresh-icon {
-                    color: var(--yakit-primary-5);
-                }
+        }
+        &:hover {
+            background-color: var(--yakit-background-color);
+            .refresh-icon {
+                color: var(--yakit-primary-5);
             }
         }
     }
@@ -83,13 +79,6 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-    }
-
-    .http-history-table-text {
-        font-weight: 600;
-        font-size: 16px;
-        color: var(--yakit-header-color);
-        margin-right: 16px;
     }
 
     .http-history-table-tip {
@@ -124,8 +113,9 @@
     }
 
     .empty-button {
-        margin: 0 8px;
-        height: 24px;
+        margin-left: 8px;
+        display: flex;
+        align-items: center;
     }
 
     .http-history-table-right {
@@ -145,33 +135,6 @@
             align-items: center;
         }
 
-        .http-history-table-right-filter-small {
-            display: none;
-            padding-right: 16px;
-
-            .filter-small-icon {
-                svg {
-                    color: var(--yakit-body-text-color);
-
-                    &:hover {
-                        color: var(--yakit-primary-5);
-                    }
-                }
-            }
-
-            .filter-small-icon-active {
-                svg {
-                    color: var(--yakit-primary-5);
-                }
-
-                :global {
-                    .ant-btn {
-                        border-color: var(--yakit-primary-5);
-                    }
-                }
-            }
-        }
-
         .http-history-table-right-filter-large {
             display: flex;
 
@@ -186,9 +149,6 @@
         }
 
         @media screen and (max-width: 1300px) {
-            .http-history-table-right-filter-small {
-                display: flex;
-            }
 
             .http-history-table-right-filter-large {
                 display: none;
@@ -197,7 +157,7 @@
 
         .http-history-table-color-swatch {
             color: var(--yakit-body-text-color);
-            margin-right: 16px;
+            margin:0 8px;
 
             .color-swatch-icon {
                 svg {
@@ -233,7 +193,7 @@
     }
 
     .http-history-table-badge {
-        margin-right: 4px;
+        margin-left: 4px;
         .refresh-icon {
             color: var(--yakit-body-text-color);
             cursor: pointer;

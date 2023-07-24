@@ -52,7 +52,6 @@ import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareData"
-import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import { YakitRoute } from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
@@ -854,6 +853,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (filter["Tags"]) {
                 setTagsQuery(filter["Tags"])
             }
+            if (filter["ContentType"]) {
+                setTagsQuery(filter["ContentType"].join(","))
+                filter["SearchContentType"] = filter["ContentType"].join(",")
+            }
             setParams({
                 ...params,
                 ...filter,
@@ -1364,6 +1367,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     }
                     return <div>{contentTypeFixed === "null" ? "" : contentTypeFixed}</div>
+                },
+                filterProps: {
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filterSearchInputProps: {
+                        size: "small"
+                    },
+                    filterIcon: <SearchIcon />,
+                    filters: contentType
                 }
             },
             {
@@ -1996,12 +2008,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ref={tableRef}
                     currentIndex={currentIndex}
                     query={params}
-                    titleHeight={85}
+                    titleHeight={38}
                     renderTitle={
                         <div className={style["http-history-table-title"]}>
-                            <div className={style["http-history-table-title-space-between"]}>
+                            <div
+                                className={classNames(
+                                    style["http-history-table-title-space-between"],
+                                    style["http-history-table-row"]
+                                )}
+                            >
                                 <div className={classNames(style["http-history-table-flex"])}>
-                                    <div className={style["http-history-table-text"]}>HTTP History</div>
                                     {SourceType.map((tag) => (
                                         <YakitCheckableTag
                                             key={tag.value}
@@ -2028,145 +2044,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         </YakitCheckableTag>
                                     ))}
                                 </div>
-                                <div className={style["http-history-table-flex"]}>
-                                    <YakitInput.Search
-                                        className={style["http-history-table-right-search"]}
-                                        placeholder='请输入关键词搜索'
-                                        value={params.Keyword}
-                                        onChange={(e) => {
-                                            setParams({...params, Keyword: e.target.value})
-                                        }}
-                                        onSearch={(v) => {
-                                            update(1)
-                                        }}
-                                        // 这个事件很关键哈，不要用 onChange
-                                        onBlur={(e) => {
-                                            if (props.onSearch) {
-                                                props.onSearch(e.target.value)
-                                            }
-                                        }}
-                                    />
-                                    <Divider type='vertical' />
-                                    <YakitButton
-                                        type='outline2'
-                                        icon={<SaveIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />}
-                                        onClick={() => onImportShare()}
-                                    >
-                                        导入分享数据
-                                    </YakitButton>
-                                    <div className={style["empty-button"]}>
-                                        <YakitDropdownMenu
-                                            menu={{
-                                                data: [
-                                                    {
-                                                        key: "resetId",
-                                                        label: "重置请求 ID"
-                                                    },
-                                                    {
-                                                        key: "noResetId",
-                                                        label: "不重置请求 ID"
-                                                    }
-                                                ],
-                                                onClick: ({key}) => {
-                                                    switch (key) {
-                                                        case "resetId":
-                                                            onRemoveHttpHistoryAllAndResetId()
-                                                            break
-                                                        case "noResetId":
-                                                            onRemoveHttpHistoryAll()
-                                                            break
-                                                        default:
-                                                            break
-                                                    }
-                                                }
-                                            }}
-                                            dropdown={{
-                                                trigger: ["click"],
-                                                placement: "bottom"
-                                            }}
-                                        >
-                                            <YakitButton
-                                                type='outline2'
-                                                className='button-text-danger'
-                                                icon={<TrashIcon style={{height: 16}} />}
-                                            >
-                                                清空
-                                            </YakitButton>
-                                        </YakitDropdownMenu>
-                                    </div>
-                                    <YakitDropdownMenu
-                                        menu={{
-                                            data: [
-                                                {
-                                                    key: "noResetRefresh",
-                                                    label: "仅刷新"
-                                                },
-                                                {
-                                                    key: "resetRefresh",
-                                                    label: "重置查询条件刷新"
-                                                }
-                                            ],
-                                            onClick: ({key}) => {
-                                                switch (key) {
-                                                    case "noResetRefresh":
-                                                        update(1)
-                                                        break
-                                                    case "resetRefresh":
-                                                        onResetRefresh()
-                                                        break
-                                                    default:
-                                                        break
-                                                }
-                                            }
-                                        }}
-                                        dropdown={{
-                                            trigger: ["hover"],
-                                            placement: "bottom"
-                                        }}
-                                    >
-                                        <Badge
-                                            dot={offsetData.length > 0}
-                                            offset={[1, 2]}
-                                            className={style["http-history-table-badge"]}
-                                        >
-                                            <div className={style["refresh-button"]}>
-                                                <RefreshIcon className={style["refresh-icon"]} />
-                                            </div>
-                                        </Badge>
-                                    </YakitDropdownMenu>
-                                    {/* <Badge
-                                        dot={offsetData.length > 0}
-                                        offset={[1, 2]}
-                                        className={style["http-history-table-badge"]}
-                                    >
-                                        <div
-                                            onClick={() => {
-                                                sortRef.current = defSort
-                                                const newParams: YakQueryHTTPFlowRequest = {
-                                                    ...(props.params || {SourceType: "mitm"}),
-                                                    SourceType: props.params?.SourceType || "mitm",
-                                                    ExcludeId: params.ExcludeId,
-                                                    ExcludeInUrl: params.ExcludeInUrl
-                                                }
-                                                setParams(newParams)
-                                                setIsReset(!isReset)
-                                                setTimeout(() => {
-                                                    update(1)
-                                                }, 100)
-                                            }}
-                                        >
-                                            <RefreshIcon className={style["refresh-icon"]} />
-                                        </div>
-                                    </Badge> */}
-                                </div>
-                            </div>
-                            <div className={style["http-history-table-line"]} />
-                            <div
-                                className={classNames(
-                                    style["http-history-table-title-space-between"],
-                                    style["http-history-table-row"]
-                                )}
-                            >
                                 <div className={style["http-history-table-flex"]}>
                                     {shieldData?.data.length > 0 && (
                                         <div style={{marginRight: 16}}>
@@ -2210,58 +2087,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
                                         </YakitSelect>
                                     </div>
-                                    <div className={style["http-history-table-right-filter-small"]}>
-                                        <Popover
-                                            overlayClassName={style["http-history-table-right-filter-popover"]}
-                                            content={
-                                                <TableFilter
-                                                    isVertical={true}
-                                                    tags={tags}
-                                                    setTags={(t) => {
-                                                        setTagsQuery(t)
-                                                    }}
-                                                    setContentType={(t) => {
-                                                        setContentTypeQuery(t.join(","))
-                                                    }}
-                                                    tagsValue={tagsQuery}
-                                                    contentTypeValue={
-                                                        contentTypeQuery ? contentTypeQuery?.split(",") : []
-                                                    }
-                                                    onSure={() => onFilterSure()}
-                                                />
+                                    <YakitInput.Search
+                                        className={style["http-history-table-right-search"]}
+                                        placeholder='请输入关键词搜索'
+                                        value={params.Keyword}
+                                        onChange={(e) => {
+                                            setParams({...params, Keyword: e.target.value})
+                                        }}
+                                        onSearch={(v) => {
+                                            update(1)
+                                        }}
+                                        // 这个事件很关键哈，不要用 onChange
+                                        onBlur={(e) => {
+                                            if (props.onSearch) {
+                                                props.onSearch(e.target.value)
                                             }
-                                            trigger='click'
-                                            placement='bottomLeft'
-                                        >
-                                            <div
-                                                className={classNames(style["filter-small-icon"], {
-                                                    [style["filter-small-icon-active"]]:
-                                                        tags.length > 0 || contentTypeQuery
-                                                })}
-                                            >
-                                                <Button size='small' icon={<FilterIcon />}></Button>
-                                            </div>
-                                        </Popover>
-                                    </div>
-                                    <TableFilter
-                                        tags={tags}
-                                        contentTypeValue={contentTypeQuery ? contentTypeQuery?.split(",") : []}
-                                        tagsValue={tagsQuery}
-                                        setTags={(t) => {
-                                            setTagsQuery(t)
-                                        }}
-                                        setContentType={(t) => {
-                                            setContentTypeQuery(t.join(","))
-                                        }}
-                                        onSure={() => {
-                                            setParams({
-                                                ...params,
-                                                Tags: tagsQuery,
-                                                SearchContentType: contentTypeQuery
-                                            })
-                                            setTimeout(() => {
-                                                update(1)
-                                            }, 50)
                                         }}
                                     />
                                     <div className={style["http-history-table-color-swatch"]}>
@@ -2412,6 +2252,86 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             </YakitButton>
                                         </YakitPopover>
                                     )}
+                                    <div className={style["empty-button"]}>
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: [
+                                                    {
+                                                        key: "resetId",
+                                                        label: "重置请求 ID"
+                                                    },
+                                                    {
+                                                        key: "noResetId",
+                                                        label: "不重置请求 ID"
+                                                    }
+                                                ],
+                                                onClick: ({key}) => {
+                                                    switch (key) {
+                                                        case "resetId":
+                                                            onRemoveHttpHistoryAllAndResetId()
+                                                            break
+                                                        case "noResetId":
+                                                            onRemoveHttpHistoryAll()
+                                                            break
+                                                        default:
+                                                            break
+                                                    }
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["click"],
+                                                placement: "bottom"
+                                            }}
+                                        >
+                                            <YakitButton
+                                                type='outline2'
+                                                className='button-text-danger'
+                                            >
+                                                清空
+                                            </YakitButton>
+                                        </YakitDropdownMenu>
+
+                                        <YakitDropdownMenu
+                                        menu={{
+                                            data: [
+                                                {
+                                                    key: "noResetRefresh",
+                                                    label: "仅刷新"
+                                                },
+                                                {
+                                                    key: "resetRefresh",
+                                                    label: "重置查询条件刷新"
+                                                }
+                                            ],
+                                            onClick: ({key}) => {
+                                                switch (key) {
+                                                    case "noResetRefresh":
+                                                        update(1)
+                                                        break
+                                                    case "resetRefresh":
+                                                        onResetRefresh()
+                                                        break
+                                                    default:
+                                                        break
+                                                }
+                                            }
+                                        }}
+                                        dropdown={{
+                                            trigger: ["hover"],
+                                            placement: "bottom"
+                                        }}
+                                    >
+                                        <Badge
+                                            dot={offsetData.length > 0}
+                                            offset={[1, 2]}
+                                            className={style["http-history-table-badge"]}
+                                        >
+                                            <div className={style["refresh-button"]}>
+                                                <RefreshIcon className={style["refresh-icon"]} />
+                                            </div>
+                                        </Badge>
+                                    </YakitDropdownMenu>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2609,51 +2529,6 @@ const contentType: FiltersItemProps[] = [
         label: "png"
     }
 ]
-
-interface TableFilterProps {
-    isVertical?: boolean
-    tags: FiltersItemProps[]
-    contentTypeValue: string[]
-    tagsValue: string[]
-    setTags: (v: string[]) => void
-    setContentType: (v: string[]) => void
-    onSure: () => void
-}
-
-const TableFilter: React.FC<TableFilterProps> = (props) => {
-    const {isVertical, tags, tagsValue, setTags, contentTypeValue, setContentType, onSure} = props
-    const onSelect = useMemoizedFn((values: string[]) => {
-        setTags([...values])
-    })
-    const onSelectType = useMemoizedFn((values: string[]) => {
-        setContentType([...values])
-    })
-    return (
-        <div className={classNames(style["http-history-table-right-filter-large"])}>
-            <div
-                className={classNames(style["http-history-table-right-filter-item"], {
-                    [style["http-history-table-filter-vertical"]]: isVertical
-                })}
-            >
-                <span className={style["http-history-table-right-label"]}>响应类型</span>
-                <MultipleSelect
-                    options={contentType}
-                    value={contentTypeValue}
-                    onSelect={onSelectType}
-                    onSure={onSure}
-                />
-            </div>
-            <div
-                className={classNames(style["http-history-table-right-filter-item"], {
-                    [style["http-history-table-filter-vertical"]]: isVertical
-                })}
-            >
-                <span className={style["http-history-table-right-label"]}>Tags</span>
-                <MultipleSelect options={tags} value={tagsValue} onSelect={onSelect} onSure={onSure} />
-            </div>
-        </div>
-    )
-}
 
 interface MultipleSelectProps {
     onSelect: (values: string[], option?: FiltersItemProps | FiltersItemProps[]) => void
