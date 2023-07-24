@@ -533,40 +533,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         setChatShow(true)
     })
 
-    const bars = (props: any, TabBarDefault: any) => {
-        return (
-            <TabBarDefault
-                {...props}
-                children={(barNode: React.ReactElement) => {
-                    return (
-                        <DropdownMenu
-                            menu={{
-                                data: [
-                                    {key: "all", title: "关闭所有Tabs"},
-                                    {key: "other", title: "关闭其他Tabs"}
-                                ]
-                            }}
-                            dropdown={{trigger: ["contextMenu"]}}
-                            onClick={(key) => {
-                                // switch (key) {
-                                //     case "all":
-                                //         closeAllCache()
-                                //         break
-                                //     case "other":
-                                //         closeOtherCache(`${barNode.key}`)
-                                //         break
-                                //     default:
-                                //         break
-                                // }
-                            }}
-                        >
-                            {barNode}
-                        </DropdownMenu>
-                    )
-                }}
-            />
-        )
-    }
     /** 通知软件打开页面 */
     const openMenu = (info: RouteToPageProps) => {
         ipcRenderer.invoke("open-route-page", info)
@@ -749,8 +715,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                         )}
                                     </div>
                                 </Content>
-
-                                {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
                             </Layout>
                         </Content> */}
                     </div>
@@ -769,7 +733,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 >
                     <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                 </Modal>
-
+                {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
                 {isCommunityEdition() && !chatShow && (
                     <div className='chat-icon-wrapper' onClick={onChatCS}>
                         <img src={yakitCattle} />
