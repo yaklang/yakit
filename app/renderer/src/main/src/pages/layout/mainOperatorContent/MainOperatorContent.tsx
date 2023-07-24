@@ -16,7 +16,8 @@ import {
     MainOperatorContextProps,
     SubTabGroupItemProps,
     GroupRightClickShowContentProps,
-    OperateGroup
+    OperateGroup,
+    DroppableCloneProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {
@@ -56,6 +57,7 @@ import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
@@ -600,7 +602,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
             if (pageCache.length === 0 || currentTabKey === YakitRoute.NewHome) return
-            setLoading(true)
             const data = KeyConvertRoute(currentTabKey)
             if (data) {
                 const info: OnlyPageCache = {
@@ -614,7 +615,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 removeMenuPage(info)
             }
-            setTimeout(() => setLoading(false), 300)
             return
         }
     })
@@ -971,7 +971,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             .catch((e) => {
                 console.info(e)
             })
-            .finally(() => setTimeout(() => setLoading(false), 300))
+            .finally(() => setTimeout(() => setLoading(false), 200))
     })
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */
@@ -1133,33 +1133,35 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- MainOperatorContext回调 end ---------- */
     return (
         <Content>
-            <MainOperatorContext.Provider
-                value={{
-                    pageCache,
-                    setPageCache,
-                    currentTabKey,
-                    setCurrentTabKey,
-                    tabMenuHeight,
-                    setTabMenuHeight,
-                    openMultipleMenuPage,
-                    afterDeleteFirstPage: onAfterDeleteFirstPage,
-                    afterDeleteSubPage: onAfterDeleteSubPage,
-                    afterUpdateSubPage: onAfterUpdateSubPage,
-                    afterDragEndSubPage: onAfterDragEndSubPage
-                }}
-            >
-                <TabContent
-                    onRemove={(tabItem) => {
-                        const removeItem: OnlyPageCache = {
-                            menuName: tabItem.menuName,
-                            route: tabItem.route,
-                            pluginId: tabItem.pluginId,
-                            pluginName: tabItem.pluginName
-                        }
-                        onBeforeRemovePage(removeItem)
+            <YakitSpin spinning={loading}>
+                <MainOperatorContext.Provider
+                    value={{
+                        pageCache,
+                        setPageCache,
+                        currentTabKey,
+                        setCurrentTabKey,
+                        tabMenuHeight,
+                        setTabMenuHeight,
+                        openMultipleMenuPage,
+                        afterDeleteFirstPage: onAfterDeleteFirstPage,
+                        afterDeleteSubPage: onAfterDeleteSubPage,
+                        afterUpdateSubPage: onAfterUpdateSubPage,
+                        afterDragEndSubPage: onAfterDragEndSubPage
                     }}
-                />
-            </MainOperatorContext.Provider>
+                >
+                    <TabContent
+                        onRemove={(tabItem) => {
+                            const removeItem: OnlyPageCache = {
+                                menuName: tabItem.menuName,
+                                route: tabItem.route,
+                                pluginId: tabItem.pluginId,
+                                pluginName: tabItem.pluginName
+                            }
+                            onBeforeRemovePage(removeItem)
+                        }}
+                    />
+                </MainOperatorContext.Provider>
+            </YakitSpin>
             <YakitModal
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
@@ -1490,7 +1492,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         verbose: "",
         sortFieId: 1
     }) // 选中的二级菜单
-    // const [currentSubIndex, setCurrentSubIndex] = useState<number>(0)
 
     //拖拽组件相关
     const [combineIds, setCombineIds] = useState<string[]>([]) //组合中的ids
@@ -1533,17 +1534,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 currentNode = currentNode.groupChildren[0]
             }
             setSelectSubMenu(currentNode)
-            // setCurrentSubIndex(multipleNodeLength - 1)
         }
-        setTimeout(() => {
-            //滚动到最后边
-            if (!tabMenuSubRef.current) {
-                const tabMenuSub = document.getElementById("tab-menu-sub")
-                tabMenuSubRef.current = tabMenuSub
-            }
-            if (!tabMenuSubRef.current) return
-            tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
-        }, 200)
+        // setTimeout(() => {
+        //     //滚动到最后边
+        //     if (!tabMenuSubRef.current) {
+        //         const tabMenuSub = document.getElementById("tab-menu-sub")
+        //         tabMenuSubRef.current = tabMenuSub
+        //     }
+        //     if (!tabMenuSubRef.current) return
+        //     tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
+        // }, 200)
     }, [pageItem.multipleLength])
     useEffect(() => {
         // 处理外部新增一个二级tab
@@ -1620,14 +1620,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 return
             }
         }
-        // if(result.destination){
-        //     if(result.destination.droppableId.includes('group')){
-        //         console.log("onDragUpdate", result)
-        //         setIsCombineEnabled(false)
-        //     }else{
-        //         setIsCombineEnabled(true)
-        //     }
-        // }
         setCombineIds([])
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
@@ -1930,7 +1922,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /** @description 删除item 更新选中的item*/
     const onUpdateSelectSubPage = useMemoizedFn((handleItem: MultipleNodeInfo) => {
         if (selectSubMenu.id === "0") return
-        // if (handleItem.id !== selectSubMenu.id) return
         // 先判断被删除的item是否是独立的，如果是独立的则不需要走组内的逻辑
         // 独立的item被删除 游离的/没有组的
         const itemIndex = subPage.findIndex((ele) => ele.id === handleItem.id)
@@ -2458,7 +2449,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSubDropType(droppableGroup)
         }
     })
-    // console.log('dropType,subDropType',dropType,subDropType)
     return (
         <div
             ref={tabsRef}
@@ -2496,12 +2486,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <SubTabGroupItem
+                                                        subPage={subPage}
                                                         subItem={item}
                                                         index={indexSub}
                                                         selectSubMenu={selectSubMenu}
                                                         setSelectSubMenu={(val) => {
                                                             setSelectSubMenu(val)
-                                                            // setCurrentSubIndex(0)
                                                         }}
                                                         onRemoveSub={(val) => {
                                                             onRemoveSubPage(val)
@@ -2527,7 +2517,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                                     selectSubMenu={selectSubMenu}
                                                     setSelectSubMenu={(val) => {
                                                         setSelectSubMenu(val)
-                                                        // setCurrentSubIndex(indexSub)
                                                     }}
                                                     onRemoveSub={(val) => {
                                                         onRemoveSubPage(val)
@@ -2654,8 +2643,20 @@ const getGroupItemStyle = (snapshotGroup, draggableStyle) => {
         transform
     }
 }
+const cloneItemStyle = (draggableStyle) => {
+    let transform: string = draggableStyle["transform"] || ""
+    if (transform) {
+        const index = transform.indexOf(",")
+        if (index !== -1) transform = transform.substring(0, index) + ",0px)"
+    }
+    return {
+        ...draggableStyle,
+        transform
+    }
+}
 const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const {
+        subPage,
         subItem,
         index,
         selectSubMenu,
@@ -2707,6 +2708,23 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                             direction='horizontal'
                             isCombineEnabled={false}
                             type={dropType}
+                            renderClone={(provided, snapshot, rubric) => {
+                                const cloneStyle = cloneItemStyle(provided.draggableProps.style)
+                                return (
+                                    <div
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        ref={provided.innerRef}
+                                        style={{...cloneStyle}}
+                                    >
+                                        <DroppableClone
+                                            subPage={subPage}
+                                            selectSubMenu={selectSubMenu}
+                                            draggableId={rubric.draggableId}
+                                        />
+                                    </div>
+                                )
+                            }}
                         >
                             {(provided, snapshot) => {
                                 return (
@@ -2826,6 +2844,61 @@ const CloseGroupContent: React.FC = React.memo(() => {
                 <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)} />
                 不再提示
             </label>
+        </div>
+    )
+})
+
+const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
+    const {subPage, selectSubMenu, draggableId} = props
+    const [groupItem, setGroupItem] = useState<MultipleNodeInfo>({
+        id: "0",
+        verbose: "",
+        sortFieId: 1
+    })
+    const [item, setItem] = useState<MultipleNodeInfo>({
+        id: "0",
+        verbose: "",
+        sortFieId: 1
+    })
+    useEffect(() => {
+        const {index, subIndex} = getPageItemById(subPage, draggableId)
+        if (subIndex === -1) return
+        let groupChildrenList = subPage[index].groupChildren || []
+        if (groupChildrenList.length === 0) return
+        let item: MultipleNodeInfo = groupChildrenList[subIndex]
+        setItem(item)
+        setGroupItem(subPage[index])
+    }, [draggableId])
+    const isActive = useMemo(() => item.id === selectSubMenu?.id, [item, selectSubMenu])
+    return (
+        <div
+            className={classNames(styles["tab-menu-sub-item"], {
+                [styles["tab-menu-sub-item-active"]]: isActive,
+                [styles["tab-menu-sub-item-dragging"]]: true,
+                [styles[`tab-menu-sub-item-combine-${groupItem.color}`]]: !!groupItem.color
+            })}
+        >
+            {isActive && (
+                <div
+                    className={classNames({
+                        [styles["tab-menu-sub-item-active-line"]]: isActive || !!groupItem.color
+                    })}
+                />
+            )}
+            <div className={styles["tab-menu-item-verbose-wrapper"]}>
+                <div className={styles["tab-menu-item-verbose"]}>
+                    <SolidDocumentTextIcon className={styles["document-text-icon"]} />
+                    <span className='content-ellipsis'>{item.verbose || ""}</span>
+                </div>
+                <RemoveIcon
+                    className={classNames(styles["remove-icon"], {
+                        [styles["remove-show-icon"]]: isActive
+                    })}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                    }}
+                />
+            </div>
         </div>
     )
 })
