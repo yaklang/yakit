@@ -545,7 +545,6 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             Usernames:usernamesValue?usernamesValue.split(/\n|,/):[],
             Passwords:passwordsValue?passwordsValue.split(/\n|,/):[],
         }
-        console.log("ppx",bruteParams);
         
         setBruteParams && setBruteParams({...bruteParams})
     }, [simpleParams,usernamesValue,passwordsValue])

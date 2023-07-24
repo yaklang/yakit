@@ -172,7 +172,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         PasswordFile: "",
         Passwords: [],
         PasswordsDict: [],
-        ReplaceDefaultPasswordDict: false,
+        ReplaceDefaultPasswordDict: true,
         PluginScriptName: "",
         Prefix: "",
         TargetFile: "",
@@ -182,7 +182,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         UsernameFile: "",
         Usernames: [],
         UsernamesDict: [],
-        ReplaceDefaultUsernameDict: false,
+        ReplaceDefaultUsernameDict: true,
 
         usernameValue: "",
         passwordValue: ""
