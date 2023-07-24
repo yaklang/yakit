@@ -151,6 +151,7 @@ export interface SubTabListProps {
  * @property index 在数组中的下标
  * @property selectSubMenu 选中的二级tab详情
  * @function setSelectSubMenu 选中二级tab
+ * @function onRemoveSub 删除
  * @function onContextMenu 右键操作
  * @property isCombine 是否在组合过程中
  * @property combineColor 当前组合的颜色
@@ -168,11 +169,13 @@ export interface SubTabItemProps {
  * @description 组
  * @function onUnfoldAndCollapse 收起和展开事件
  * @function onGroupContextMenu 组的右键操作
+ * @function subPage 
  */
 export interface SubTabGroupItemProps extends SubTabItemProps {
     onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
     onGroupContextMenu: (e: React.MouseEvent, ) => void
     dropType:string
+    subPage:MultipleNodeInfo[]
 }
 
 /**
@@ -213,4 +216,15 @@ export interface GroupRightClickShowContentProps {
     groupItem: MultipleNodeInfo
     onUpdateGroup: (m: MultipleNodeInfo) => void
     onOperateGroup: (type: OperateGroup, m: MultipleNodeInfo) => void
+}
+/**
+ * @description 组内拖拽克隆体
+ * @property draggableId  拖拽id
+ * @property subPage  
+ * @property selectSubMenu  选中的item
+ */
+export interface DroppableCloneProps{
+    draggableId:string
+    subPage:MultipleNodeInfo[]
+    selectSubMenu: MultipleNodeInfo
 }
