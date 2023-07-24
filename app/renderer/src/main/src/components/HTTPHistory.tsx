@@ -2,11 +2,11 @@ import React, {useEffect, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {ResizeBox} from "./ResizeBox"
 import {AutoCard} from "./AutoCard"
 import {useInViewport} from "ahooks"
 import {Spin} from "antd"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
+import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -24,6 +24,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [highlightSearch, setHighlightSearch] = useState("")
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
 
     useEffect(() => {
         console.info("HTTPFlowTable view state", inViewport)
@@ -31,7 +32,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     return (
         <AutoCard bodyStyle={{margin: 0, padding: 0, overflow: "hidden"}} bordered={false}>
-            <ResizeBox
+            <YakitResizeBox
                 firstNode={() => (
                     <HTTPFlowTable
                         noHeader={true}
@@ -45,26 +46,36 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         inViewport={inViewport}
                         // tableHeight={200}
                         // tableHeight={selected ? 164 : undefined}
-                        onSelected={(i) => setSelectedHTTPFlow(i)}
+                        onSelected={(i) => {
+                            setSelectedHTTPFlow(i)
+                        }}
                         paginationPosition={"topRight"}
                         onSearch={setHighlightSearch}
                         title={props?.title}
+                        onlyShowFirstNode={onlyShowFirstNode}
+                        setOnlyShowFirstNode={setOnlyShowFirstNode}
                     />
                 )}
                 firstMinSize={160}
                 isVer={true}
-                secondMinSize={50}
+                freeze={!onlyShowFirstNode}
+                firstRatio={onlyShowFirstNode ? "100%" : undefined}
+                secondMinSize={onlyShowFirstNode ? "0px" : 50}
                 secondNode={() => (
-                    <div style={{width: "100%", height: "100%"}} ref={ref}>
-                        <HTTPFlowDetailMini
-                            noHeader={true}
-                            search={highlightSearch}
-                            id={selected?.Id || 0}
-                            defaultHttps={selected?.IsHTTPS}
-                            sendToWebFuzzer={true}
-                            // defaultHeight={detailHeight}
-                        />
-                    </div>
+                    <>
+                        {!onlyShowFirstNode && (
+                            <div style={{width: "100%", height: "100%"}} ref={ref}>
+                                <HTTPFlowDetailMini
+                                    noHeader={true}
+                                    search={highlightSearch}
+                                    id={selected?.Id || 0}
+                                    defaultHttps={selected?.IsHTTPS}
+                                    sendToWebFuzzer={true}
+                                    // defaultHeight={detailHeight}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
             />
         </AutoCard>
