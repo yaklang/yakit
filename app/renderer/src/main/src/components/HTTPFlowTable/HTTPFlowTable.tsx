@@ -399,6 +399,8 @@ export interface HTTPFlowTableProp {
     inViewport?: boolean
     onSearch?: (i: string) => any
     title?: string
+    onlyShowFirstNode?: boolean
+    setOnlyShowFirstNode?:(i:boolean)=>void
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -698,6 +700,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 }
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
+    const { onlyShowFirstNode,setOnlyShowFirstNode } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -1096,12 +1099,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRows(newSelectedRows)
         }
     })
-    const onRowClick = useMemoizedFn((rowDate: HTTPFlow) => {
+    const onRowClick = useMemoizedFn((rowDate: HTTPFlow) => {  
         if (!rowDate.Hash) return
         if (rowDate.Hash !== selected?.Hash) {
             setSelected(rowDate)
+            setOnlyShowFirstNode&&setOnlyShowFirstNode(false)
         } else {
             // setSelected(undefined)
+            setOnlyShowFirstNode&&setOnlyShowFirstNode(!onlyShowFirstNode)
         }
     })
     const onSetCurrentRow = useDebounceFn(
@@ -2425,7 +2430,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     loading={loading}
                     enableDrag={true}
                     columns={columns}
-                    onRowClick={onRowClick}
+                    // onRowClick={(v)=>{
+                    // 此处onRowClick会调用onSetCurrentRow导致重复响应
+                    //     onRowClick(v)
+                    // }}
                     onRowContextMenu={onRowContextMenu}
                     pagination={{
                         page: pagination.Page,
