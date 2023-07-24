@@ -158,7 +158,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
             try {
-                setActiveKey(data ? JSON.parse(data) : "请求包配置")
+                setTimeout(() => {
+                    setActiveKey(data ? JSON.parse(data) : "请求包配置")
+                }, 100);
             } catch (error) {
                 yakitFailed("获取折叠面板的激活key失败:" + error)
             }
