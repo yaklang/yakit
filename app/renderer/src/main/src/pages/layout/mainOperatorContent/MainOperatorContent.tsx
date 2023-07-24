@@ -1631,12 +1631,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             console.log("onSubMenuDragEnd", result)
             const {droppableId: sourceDroppableId} = result.source
 
-            const {index,subIndex} = getPageItemById(subPage, result.draggableId)
-            if(index===-1)return
-            if(subIndex===-1){
-                setSelectSubMenu(subPage[index])
-            }else{
-                const groupChildrenList=subPage[index].groupChildren||[]
+            const {index, subIndex} = getPageItemById(subPage, result.draggableId)
+            if (index === -1) return
+            const groupChildrenList = subPage[index].groupChildren || []
+            if (subIndex === -1) {
+                if (groupChildrenList.length === 0) setSelectSubMenu(subPage[index])
+            } else {
                 setSelectSubMenu(groupChildrenList[subIndex])
             }
 
