@@ -443,7 +443,13 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         // 当为跳转带参
         else if (Array.isArray(openScriptNames)) {
             run(OnlineGroup, TaskName)
+        }
+        // 只勾选了爆破弱口令的选项
+        else if (OnlineGroup.length === 0){
+            setPortParams({...getPortParams()})
+            run(OnlineGroup, TaskName)
         } else {
+            console.log(OnlineGroup)
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {

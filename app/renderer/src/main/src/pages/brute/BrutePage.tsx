@@ -492,7 +492,7 @@ export const BruteParamsForm: React.FC<BruteParamsFormProp> = (props) => {
                     }}
                 ></Checkbox>
                 &nbsp;
-                <span style={{color: "rgb(100,100,100)"}}>同时使用默认用户字典</span>
+                <span style={{color: "rgb(100,100,100)"}}>同时使用默认密码字典</span>
             </Form.Item>
 
             <InputInteger
