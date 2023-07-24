@@ -1515,9 +1515,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         () => {
             // 多个二级批量新增时，控制渲染
             setRenderList(selectSubMenu.id, true)
+            if (selectSubMenu.id === subPage[subPage.length - 1].id) {
+                //滚动到最后边
+                scrollToRight()
+            }
         },
         [selectSubMenu],
-        {wait: 200}
+        {wait: 100, leading: true}
     )
     const tabMenuSubRef = useRef<any>()
     useEffect(() => {
@@ -1535,15 +1539,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
             setSelectSubMenu(currentNode)
         }
-        // setTimeout(() => {
-        //     //滚动到最后边
-        //     if (!tabMenuSubRef.current) {
-        //         const tabMenuSub = document.getElementById("tab-menu-sub")
-        //         tabMenuSubRef.current = tabMenuSub
-        //     }
-        //     if (!tabMenuSubRef.current) return
-        //     tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
-        // }, 200)
     }, [pageItem.multipleLength])
     useEffect(() => {
         // 处理外部新增一个二级tab
@@ -1575,6 +1570,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     useEffect(() => {
         onFocusPage()
     }, [selectSubMenu])
+    /**滚动到最后边 */
+    const scrollToRight = useMemoizedFn(() => {
+        if (!tabMenuSubRef.current) {
+            const tabMenuSub = document.getElementById("tab-menu-sub")
+            tabMenuSubRef.current = tabMenuSub
+        }
+        if (!tabMenuSubRef.current) return
+        tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
+    })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {
         setTimeout(() => {
@@ -1626,6 +1630,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         try {
             console.log("onSubMenuDragEnd", result)
             const {droppableId: sourceDroppableId} = result.source
+
+            const {index,subIndex} = getPageItemById(subPage, result.draggableId)
+            if(index===-1)return
+            if(subIndex===-1){
+                setSelectSubMenu(subPage[index])
+            }else{
+                const groupChildrenList=subPage[index].groupChildren||[]
+                setSelectSubMenu(groupChildrenList[subIndex])
+            }
+
             /** 合并组   ---------start--------- */
             if (result.combine) {
                 // 组外两个游离的标签页合成组
@@ -1909,16 +1923,23 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         } catch (error) {}
     })
-    const onAddSubPage = useDebounceFn(
-        useMemoizedFn(() => {
-            openMultipleMenuPage({
-                route: pageItem.route,
-                pluginId: pageItem.pluginId,
-                pluginName: pageItem.pluginName
-            })
-        }),
-        {wait: 200, leading: true}
-    ).run
+    // const onAddSubPage = useDebounceFn(
+    //     () => {
+    //         openMultipleMenuPage({
+    //             route: pageItem.route,
+    //             pluginId: pageItem.pluginId,
+    //             pluginName: pageItem.pluginName
+    //         })
+    //     },
+    //     {wait: 200,}
+    // ).run
+    const onAddSubPage = useMemoizedFn(() => {
+        openMultipleMenuPage({
+            route: pageItem.route,
+            pluginId: pageItem.pluginId,
+            pluginName: pageItem.pluginName
+        })
+    })
     /** @description 删除item 更新选中的item*/
     const onUpdateSelectSubPage = useMemoizedFn((handleItem: MultipleNodeInfo) => {
         if (selectSubMenu.id === "0") return

@@ -229,6 +229,7 @@ $keyColor: map-keys($colors);
             max-width: calc(100% - 32px);
             overflow-y: hidden;
             overflow-x: auto;
+            scroll-behavior: smooth;
             // 下面是滚动条的样式
             &::-webkit-scrollbar {
                 display: none;
