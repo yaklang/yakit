@@ -298,8 +298,10 @@ interface MutateHTTPRequestResponse {
 const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEditor) => {
     ipcRenderer.invoke("HTTPRequestMutate", params).then((result: MutateHTTPRequestResponse) => {
         if (editor) {
-            monacoEditorClear(editor)
-            monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"))
+           
+            // monacoEditorClear(editor)
+            // monacoEditorReplace(editor, )
+            monacoEditorWrite(editor, new Buffer(result.Result).toString("utf8"), editor.getModel()?.getFullModelRange())
             return
         }
     })
