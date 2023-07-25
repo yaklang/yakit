@@ -300,7 +300,7 @@ const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEdi
         if (editor) {
            
             // monacoEditorClear(editor)
-            // monacoEditorReplace(editor, )
+            // monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"))
             monacoEditorWrite(editor, new Buffer(result.Result).toString("utf8"), editor.getModel()?.getFullModelRange())
             return
         }
