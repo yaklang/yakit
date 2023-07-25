@@ -52,7 +52,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         if (noPacketModifier) {
             return []
         } else {
-            return ["http", "pretty"]
+            return ["http",  "customhttp", "pretty"]
         }
     }, [noPacketModifier])
 
