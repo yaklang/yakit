@@ -32,6 +32,10 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
 import "./StaticYakitEditor.scss"
+import { queryYakScriptList } from "@/pages/yakitStore/network"
+import { YakScript } from "@/pages/invoker/schema"
+import { CodecType } from "@/pages/codec/CodecPage"
+import { failed } from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -119,13 +123,59 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
     },[])
 
+    // 自定义HTTP数据包变形处理
+    const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
+    const searchForCodecFuzzerPlugin = useMemoizedFn(() => {
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    return
+                }
+                setCodecPlugin(i.map((script) => {
+                    return {
+                        key: script.ScriptName,
+                        verbose: "CODEC 社区插件: " + script.ScriptName,
+                        isYakScript: true,
+                    } as CodecType
+                } ))
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ["fuzzer"],
+        )
+    })
+    useEffect(() => {
+        searchForCodecFuzzerPlugin()
+    }, [])
+
     /**
      * 整理右键菜单的对应关系
      * 菜单组的key值对应的组内菜单项的key值数组
      */
     useEffect(() => {
+        // 往customhttp菜单组中注入codec插件
+        try {
+            (extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = codecPlugin.map((item) => {
+                return {
+                    key: item.key,
+                    label: item.key,
+                } as EditorMenuItemProps
+            } )
+        } catch (e) {
+            failed(`get custom mutate request failed: ${e}`)
+        }
+       
+
         const keyToRun: Record<string, string[]> = {}
         const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+        
+        
+        
         
         for (let key in allMenu) {
             const keys: string[] = []
