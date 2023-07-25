@@ -74,8 +74,8 @@ export const MainOperatorContext = createContext<MainOperatorContextProps>({
     openMultipleMenuPage: () => {},
     afterDeleteFirstPage: () => {},
     afterDeleteSubPage: () => {},
-    afterUpdateSubPage: () => {},
-    afterDragEndSubPage: () => {}
+    afterUpdateSubItem: () => {},
+    onUpdateSubPage: () => {}
 })
 
 /** web-fuzzer缓存数据对应键 */
@@ -132,57 +132,14 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         key: "removeOther"
     }
 ]
-const getWebFuzzerCacheToPage = (list) => {
-    try {
-        const l = list.length
-        const map: any = {},
-            dest: any = []
-        for (var i = 0; i < l; i++) {
-            var ai = list[i]
-            if (!map[ai.groupId]) {
-                dest.push({
-                    groupId: ai.groupId,
-                    sortFieId: ai.sortFieId,
-                    data: [ai]
-                })
-                map[ai.groupId] = ai
-            } else {
-                for (var j = 0; j < dest.length; j++) {
-                    var dj = dest[j]
-                    if (dj.groupId === ai.groupId) {
-                        if (ai.groupName !== undefined) {
-                            dj.sortFieId = ai.sortFieId
-                        }
-                        dj.data.push(ai)
-                        break
-                    }
-                }
-            }
-        }
-        return dest.sort((a, b) => compareAsc(a, b, "sortFieId")) || []
-    } catch (error) {
-        return []
-    }
-}
+
 /**
  * 生成组id
  * @returns {string} 生成的组id
  */
 const generateGroupId = (gIndex?: number) => {
     const time = (new Date().getTime() + (gIndex || 0)).toString()
-    const groupId = `[${randomString(6)}]-${time}`
-    return groupId
-}
-/**
- * 通过拖拽区域的 droppableId 获取组的id
- * @param droppableId
- * @returns {string} 组的id
- */
-const getGroupIdByDroppableId = (droppableId: string) => {
-    const groupId = droppableId
-        .split("-")
-        .filter((_, i) => i < 2)
-        .join("-")
+    const groupId = `[${randomString(6)}]-${time}-group`
     return groupId
 }
 
@@ -194,7 +151,8 @@ const getPageItemById = (subPage: MultipleNodeInfo[], id: string) => {
     let current: MultipleNodeInfo = {
         id: "0",
         verbose: "",
-        sortFieId: 1
+        sortFieId: 1,
+        groupId: "0"
     }
     let index = -1
     let subIndex = -1
@@ -688,8 +646,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         ...nodeParams?.params,
                         id: tabId
                     },
-                    groupId: generateGroupId(),
-                    // groupId:tabId,
+                    groupId: "0",
                     sortFieId: filterPage.length || 1
                 }
                 if (filterPage.length > 0) {
@@ -879,7 +836,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         fuzzerList.current.forEach((value) => {
             if ((value?.params?.request || "").length < 1000000) historys.push(value)
         })
-        // console.log("historys", historys)
+        console.log("historys", historys)
         setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
     }, 500)
     // 获取数据库中缓存的web-fuzzer页面信息
@@ -890,63 +847,57 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         getRemoteProjectValue(FuzzerCache)
             .then((res: any) => {
                 const cache = JSON.parse(res || "[]")
-                let multipleNodeList: MultipleNodeInfo[] = []
                 // 菜单在代码内的名字
                 const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
                 const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
                 const tabName = routeKeyToLabel.get(key) || menuName
-                const fuzeerArray = getWebFuzzerCacheToPage(cache)
-                const l = fuzeerArray.length
-                let multipleNodeListLength: number = 0
+           
                 fuzzerList.current.clear()
-                // 这里看看需要对其数量进行限制不
-                for (let index = 0; index < l; index++) {
-                    const itemObj = fuzeerArray[index]
-                    const groupChildrenList: MultipleNodeInfo[] = []
+                let multipleNodeListLength: number = 0
+                const multipleNodeList = cache.filter((ele) => ele.groupId === "0")
+                const pLength = multipleNodeList.length
+                for (let index = 0; index < pLength; index++) {
+                    const parentItem = multipleNodeList[index]
+                    const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
+                    const cLength = childrenList.length
                     const groupId = generateGroupId()
-                    let groupItem: MultipleNodeInfo = {
-                        id: "0",
-                        verbose: "",
-                        sortFieId: 1,
-                        groupId
-                    }
-                    itemObj.data.forEach((ele, number) => {
-                        const time = (new Date().getTime() + number).toString() // +index 唯一
-                        const verbose = ele.verbose || `${tabName}-[${(multipleNodeList.length || 0) + 1}]` // webFuzzer 保存的修改后的菜单二级tab名字
+                    const groupChildrenList: MultipleNodeInfo[] = []
+                    for (let j = 0; j < cLength; j++) {
+                        const childItem = childrenList[j]
+                        const time = (new Date().getTime() + j).toString() // +j 唯一
                         const tabId = `${key}-[${randomString(6)}]-${time}`
                         const nodeItem: MultipleNodeInfo = {
-                            ...ele,
-                            verbose,
+                            ...childItem,
                             id: tabId,
                             groupId,
                             time: time,
-                            sortFieId: index + 1, // 以1开始排序
                             params: {
-                                ...ele.params,
+                                ...childItem.params,
                                 id: tabId
                             }
                         }
-                        fuzzerList.current.set(tabId, {...nodeItem})
-                        if (ele.groupName !== undefined) {
-                            groupItem = {...nodeItem}
-                        } else {
-                            groupChildrenList.push({...nodeItem})
-                        }
-                    })
-                    if (groupItem.id !== "0") {
-                        multipleNodeListLength += groupChildrenList.length
-                        multipleNodeList.push({
-                            ...groupItem,
-                            groupChildren: groupChildrenList
-                        })
-                    } else {
-                        multipleNodeListLength++
-                        multipleNodeList.push({
-                            ...(groupChildrenList[0] || {})
-                        })
+                        fuzzerList.current.set(nodeItem.id, {...nodeItem})
+                        groupChildrenList.push({...nodeItem})
                     }
+                    if(cLength>0){
+                        multipleNodeListLength += cLength
+                        parentItem.id=groupId
+                    }else{
+                        multipleNodeListLength+=1
+                        const time = (new Date().getTime() + index).toString() // +index 唯一
+                        const tabId = `${key}-[${randomString(6)}]-${time}`
+                        parentItem.id=tabId
+                        parentItem.params={
+                            ...parentItem.params,
+                            id:tabId
+                        }
+                    }
+                    parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+                    fuzzerList.current.set(parentItem.id, {...parentItem,groupChildren:[]})
+                    
                 }
-                if (multipleNodeList.length === 0) return
+                const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+                if (newMultipleNodeList.length === 0) return
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,
@@ -1062,7 +1013,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     )
-    const onAfterUpdateSubPage = useMemoizedFn((page: PageCache, subItem: MultipleNodeInfo) => {
+    const onAfterUpdateSubItem = useMemoizedFn((page: PageCache, subItem: MultipleNodeInfo) => {
         switch (page.route) {
             case YakitRoute.HTTPFuzzer:
                 if (subItem.id) {
@@ -1075,7 +1026,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
         }
     })
-    const onAfterDragEndSubPage = useMemoizedFn((page: PageCache, subPage: MultipleNodeInfo[]) => {
+    const onUpdateSubPage = useMemoizedFn((page: PageCache, subPage: MultipleNodeInfo[]) => {
         switch (page.route) {
             case YakitRoute.HTTPFuzzer:
                 webFuzzerCache(subPage)
@@ -1103,9 +1054,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (!subItem.groupId) return
                 const newGroupItem: MultipleNodeInfo = {
                     id: subItem.id,
-                    verbose: subItem.groupName || "",
+                    verbose: subItem.verbose || "",
                     groupId: subItem.groupId,
-                    groupName: subItem.groupName,
                     expand: subItem.expand,
                     color: subItem.color,
                     sortFieId: subIndex + 1
@@ -1118,9 +1068,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     ...subItem,
                     params: haveItem?.params,
                     sortFieId: subIndex + 1,
-                    // groupId: undefined,
                     groupChildren: [],
-                    groupName: undefined,
                     expand: undefined,
                     color: undefined
                 }
@@ -1145,8 +1093,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         openMultipleMenuPage,
                         afterDeleteFirstPage: onAfterDeleteFirstPage,
                         afterDeleteSubPage: onAfterDeleteSubPage,
-                        afterUpdateSubPage: onAfterUpdateSubPage,
-                        afterDragEndSubPage: onAfterDragEndSubPage
+                        afterUpdateSubItem: onAfterUpdateSubItem,
+                        onUpdateSubPage: onUpdateSubPage
                     }}
                 >
                     <TabContent
@@ -1481,16 +1429,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         currentTabKey,
         setCurrentTabKey,
         afterDeleteSubPage,
-        afterUpdateSubPage,
-        afterDragEndSubPage
+        afterUpdateSubItem,
+        onUpdateSubPage
     } = useContext(MainOperatorContext)
     const {pageItem, index} = props
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
-    const [renderSubPage, setRenderSubPage] = useState<MultipleNodeInfo[]>([])
+    const [renderSubPage, setRenderSubPage] = useState<MultipleNodeInfo[]>([])// 只管渲染
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
         verbose: "",
-        sortFieId: 1
+        sortFieId: 1,
+        groupId: "0"
     }) // 选中的二级菜单
 
     //拖拽组件相关
@@ -1515,6 +1464,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         () => {
             // 多个二级批量新增时，控制渲染
             setRenderList(selectSubMenu.id, true)
+            if(subPage.length===0)return
             if (selectSubMenu.id === subPage[subPage.length - 1].id) {
                 //滚动到最后边
                 scrollToRight()
@@ -1558,6 +1508,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         setRenderSubPage(newData)
+        onUpdateSubPage(pageItem, subPage)
     }, [subPage])
     // 切换一级页面时聚焦
     useEffect(() => {
@@ -1597,9 +1548,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onDragUpdate = useMemoizedFn((result) => {
         const sourceIndex = result.source.index
         // console.log("onDragUpdate", result)
-        //  拖动的来源item是组时，不用合并
-        if ((subPage[sourceIndex]?.groupChildren?.length || 0) > 0) return
-
+        const {subIndex} = getPageItemById(subPage, result.draggableId)
+        if (subIndex === -1) {
+            // 拖动的来源item是组时，不用合并
+            if ((subPage[sourceIndex]?.groupChildren?.length || 0) > 0) return
+        }
         const {droppableId: sourceDroppableId} = result.source
         if (result.combine) {
             if (result.source.droppableId === "droppable2" && result.combine.droppableId === "droppable2") {
@@ -1615,8 +1568,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
 
             if (sourceDroppableId.includes("group") && result.combine.droppableId === "droppable2") {
-                const groupId = getGroupIdByDroppableId(result.draggableId)
-                const ids = [result.combine.draggableId, groupId]
+                const ids = [result.combine.draggableId, result.draggableId]
                 if (combineIds.length === 0 && !combineColorRef.current) {
                     combineColorRef.current = getColor(subPage)
                 }
@@ -1628,9 +1580,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
-            console.log("onSubMenuDragEnd", result)
+            console.log("onSubMenuDragEnd", result, subPage)
             const {droppableId: sourceDroppableId} = result.source
 
+            /**将拖拽item变为选中item ---------start---------*/
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
             const groupChildrenList = subPage[index].groupChildren || []
@@ -1639,7 +1592,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             } else {
                 setSelectSubMenu(groupChildrenList[subIndex])
             }
-
+            /**将拖拽item变为选中item ---------end---------*/
             /** 合并组   ---------start--------- */
             if (result.combine) {
                 // 组外两个游离的标签页合成组
@@ -1682,6 +1635,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (sourceDroppableId.includes("group") && destinationDroppableId === "droppable2") {
                 movingWithinAndOutsideGroup(result)
             }
+            // 组外向组内移动
             if (result.source.droppableId === "droppable2" && destinationDroppableId.includes("group")) {
                 moveOutOfGroupAndInGroup(result)
             }
@@ -1703,17 +1657,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
         // 拖动的来源item是组时目的地item是游离页面，不合并
         if (sourceGroupChildrenLength > 0 && combineGroupChildrenLength === 0) return
+        const groupId = generateGroupId()
         if (sourceGroupChildrenLength > 0 && combineGroupChildrenLength > 0) {
             // 拖动的来源item是组时目的地item也是组，合并
-            const groupList =
-                subPage[sourceIndex].groupChildren?.map((ele) => ({...ele, groupId: subPage[combineIndex].groupId})) ||
-                []
+            const groupList = subPage[sourceIndex].groupChildren?.map((ele) => ({...ele, groupId})) || []
             subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(groupList)
             subPage[combineIndex].expand = true
         } else {
             const dropItem: MultipleNodeInfo = {
                 ...subPage[sourceIndex],
-                groupId: subPage[combineIndex].groupId
+                groupId
             }
             if (subPage[combineIndex].groupChildren && (subPage[combineIndex].groupChildren || []).length > 0) {
                 if (dropItem.id === selectSubMenu.id) {
@@ -1721,18 +1674,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 }
                 subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(dropItem)
             } else {
-                const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
                 const groupLength = getGroupLength(subPage)
-                subPage[combineIndex].groupChildren = [{...subPage[combineIndex]}, dropItem]
-                subPage[combineIndex].groupName = `未命名[${groupLength}]`
+                subPage[combineIndex].groupChildren = [{...subPage[combineIndex], groupId}, dropItem]
+                subPage[combineIndex].verbose = `未命名[${groupLength}]`
                 subPage[combineIndex].color = combineColorRef.current
                 subPage[combineIndex].expand = true
-                subPage[combineIndex].id = id
+                subPage[combineIndex].id = groupId
             }
         }
+
         subPage.splice(sourceIndex, 1)
         onUpdatePageCache(subPage)
-        afterDragEndSubPage(pageItem, subPage)
     })
     /**@description 组内向组外合并 */
     const mergeWithinAndOutsideGroup = useMemoizedFn((result) => {
@@ -1743,31 +1695,31 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const {draggableId: combineDraggableId} = result.combine
         console.log("组内向组外合并", result, subPage)
         // 删除拖拽的组内标签页
-        const groupId = getGroupIdByDroppableId(droppableId)
-        const gIndex = subPage.findIndex((ele) => ele.groupId === groupId)
+        const gIndex = subPage.findIndex((ele) => ele.id === droppableId)
         if (gIndex === -1) return
         const sourceItem = subPage[gIndex].groupChildren?.splice(sourceIndex, 1)
         if (!sourceItem) return
         const combineIndex = subPage.findIndex((ele) => ele.id === combineDraggableId)
+
         if (combineIndex === -1) return
+        const newGroupId = generateGroupId()
         //将拖拽的item和组外的目的地item合并
         const dropItem: MultipleNodeInfo = {
             ...sourceItem[0],
-            groupId: subPage[combineIndex].groupId
+            groupId: newGroupId
         }
-        const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
         const groupLength = getGroupLength(subPage)
-        subPage[combineIndex].groupChildren = [{...subPage[combineIndex]}, dropItem]
-        subPage[combineIndex].groupName = `未命名[${groupLength}]`
-        subPage[combineIndex].color = subPage[sourceIndex].color || combineColorRef.current
+        subPage[combineIndex].groupChildren = [{...subPage[combineIndex], groupId: newGroupId}, dropItem]
+        subPage[combineIndex].verbose = `未命名[${groupLength}]`
+        subPage[combineIndex].color = combineColorRef.current || subPage[sourceIndex].color
         subPage[combineIndex].expand = true
-        subPage[combineIndex].id = id
+        subPage[combineIndex].id = newGroupId
 
         // 拖拽后组内item===0,则删除该组
         if (subPage[gIndex].groupChildren?.length === 0) {
             subPage.splice(gIndex, 1)
         }
-        afterDragEndSubPage(pageItem, subPage)
+        console.log("subPage", subPage)
         onUpdatePageCache(subPage)
     })
     /** @description 组外之间移动 */
@@ -1776,7 +1728,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         const subMenuList: MultipleNodeInfo[] = reorder(subPage, result.source.index, result.destination.index)
-        afterDragEndSubPage(pageItem, subPage)
         onUpdatePageCache(subMenuList)
     })
     /** @description 同一个组内之间移动 */
@@ -1787,13 +1738,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         console.log("同一个组内之间移动", result)
         const {index: sourceIndex} = result.source
         const {droppableId, index: destinationIndex} = result.destination
-        const groupId = getGroupIdByDroppableId(droppableId)
-        const gIndex = subPage.findIndex((ele) => ele.groupId === groupId)
+        const groupId = droppableId
+        const gIndex = subPage.findIndex((ele) => ele.id === groupId)
         if (gIndex === -1) return
         const groupChildrenList = subPage[gIndex].groupChildren || []
         const newGroupChildrenList: MultipleNodeInfo[] = reorder(groupChildrenList, sourceIndex, destinationIndex)
         subPage[gIndex].groupChildren = newGroupChildrenList
-        afterDragEndSubPage(pageItem, subPage)
         onUpdatePageCache(subPage)
     })
     /** @description 不同一个组间移动 从组A到组B */
@@ -1803,11 +1753,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         const {droppableId: dropSourceId, index: sourceIndex} = result.source
         const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
-        const sourceGroupId = getGroupIdByDroppableId(dropSourceId)
-        const destinationGroupId = getGroupIdByDroppableId(dropDestinationId)
+        const sourceGroupId = dropSourceId
+        const destinationGroupId = dropDestinationId
         console.log("从组A到组B", result)
         // 将拖拽的item从来源地中删除
-        const sourceNumber = subPage.findIndex((ele) => ele.groupId === sourceGroupId)
+        const sourceNumber = subPage.findIndex((ele) => ele.id === sourceGroupId)
         if (sourceNumber === -1) return
         const sourceGroupChildrenList = subPage[sourceNumber].groupChildren || []
         const sourceItem = sourceGroupChildrenList[sourceIndex] // 拖拽的item
@@ -1815,7 +1765,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         subPage[sourceNumber].groupChildren = sourceGroupChildrenList
 
         // 将拖拽的item添加到目的地的组内
-        const destinationNumber = subPage.findIndex((ele) => ele.groupId === destinationGroupId)
+        const destinationNumber = subPage.findIndex((ele) => ele.id === destinationGroupId)
         const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
         if (destinationGroupChildrenList.length === 0) return
         destinationGroupChildrenList.splice(destinationIndex, 0, {
@@ -1828,7 +1778,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             // 组内的标签页为0时,删除该组
             subPage.splice(sourceNumber, 1)
         }
-        afterDragEndSubPage(pageItem, subPage)
         onUpdatePageCache(subPage)
     })
     /** @description 组内向组外移动 */
@@ -1840,9 +1789,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const {droppableId: dropSourceId, index: sourceIndex} = result.source
         const {index: destinationIndex} = result.destination
 
-        const sourceGroupId = getGroupIdByDroppableId(dropSourceId)
+        const sourceGroupId = dropSourceId
         // 将拖拽的item从来源地中删除
-        const sourceNumber = subPage.findIndex((ele) => ele.groupId === sourceGroupId)
+        const sourceNumber = subPage.findIndex((ele) => ele.id === sourceGroupId)
         if (sourceNumber === -1) return
         const sourceGroupChildrenList = subPage[sourceNumber].groupChildren || []
         const sourceItem = sourceGroupChildrenList[sourceIndex] // 拖拽的item
@@ -1852,16 +1801,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 将拖拽的item添加到目的地的组内
         subPage.splice(destinationIndex, 0, {
             ...sourceItem,
-            groupId: generateGroupId()
+            groupId: "0"
         })
 
         // 如果组内的item为0 ,需要删除组
         if (sourceGroupChildrenList.length === 0) {
-            const number = subPage.findIndex((ele) => ele.groupId === sourceGroupId)
+            const number = subPage.findIndex((ele) => ele.id === sourceGroupId)
             subPage.splice(number, 1)
         }
 
-        afterDragEndSubPage(pageItem, [...subPage])
         onUpdatePageCache([...subPage])
     })
     /** @description 组外向组内移动 */
@@ -1877,9 +1825,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
         const sourceItem = subPage[sourceIndex] // 拖拽的item
 
-        const destinationGroupId = getGroupIdByDroppableId(dropDestinationId)
+        const destinationGroupId = dropDestinationId
 
-        const destinationNumber = subPage.findIndex((ele) => ele.groupId === destinationGroupId)
+        const destinationNumber = subPage.findIndex((ele) => ele.id === destinationGroupId)
         if (sourceItem.groupChildren && sourceItem.groupChildren.length > 0) {
             // 拖拽的item是一个组,两个组合并
             const pageList = sourceItem.groupChildren.map((ele) => ({
@@ -1901,7 +1849,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 将拖拽的item从来源地中删除
         subPage.splice(sourceIndex, 1)
 
-        afterDragEndSubPage(pageItem, subPage)
         onUpdatePageCache(subPage)
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
@@ -1909,11 +1856,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         try {
             if (subMenuList.length > 0) {
                 pageCache[index].multipleNode = subMenuList
-                setSubPage([...subMenuList])
-                setPageCache(pageCache)
+                // setSubPage([...subMenuList])
+                setPageCache([...pageCache])
             } else {
                 const newPage = pageCache.filter((_, i) => i !== index)
-                setSubPage([])
+                // setSubPage([])
                 setPageCache([...newPage])
                 if (newPage.length > 0) {
                     const activeTabItem = pageCache[index - 1]
@@ -2047,7 +1994,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         let menuData: YakitMenuItemType[] = _.cloneDeepWith(pageTabItemRightOperation)
         const groupList = subPage.filter((ele) => (ele.groupChildren?.length || 0) > 0)
         groupList.forEach((item) => {
-            let labelText = item.groupName
+            let labelText = item.verbose
             if (!labelText) {
                 const groupChildren = item.groupChildren || []
                 const gLength = groupChildren.length
@@ -2130,7 +2077,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                             if (subIndex === -1) {
                                 // 当前情况说明item是游离的页面,没有在其他组内
                                 subPage[index].verbose = val
-                                afterUpdateSubPage(pageItem, subPage[index])
+                                afterUpdateSubItem(pageItem, subPage[index])
                                 onUpdatePageCache(subPage)
                             }
                             if (subIndex !== -1) {
@@ -2138,7 +2085,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                 const groupChildrenList = subPage[index].groupChildren || []
                                 if (groupChildrenList.length > 0) {
                                     groupChildrenList[subIndex].verbose = val
-                                    afterUpdateSubPage(pageItem, subPage[index])
+                                    afterUpdateSubItem(pageItem, subPage[index])
                                     onUpdatePageCache(subPage)
                                 }
                             }
@@ -2153,16 +2100,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /**将页面添加到新建组 */
     const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
         const {index, subIndex} = getPageItemById(subPage, item.id)
-        const id = getIdByPageInfo(pageItem.route, pageItem.pluginName)
         const groupLength = getGroupLength(subPage)
         const groupId = generateGroupId()
         const newGroup: MultipleNodeInfo = {
-            id,
+            id: groupId,
+            groupId: "0",
             verbose: `未命名[${groupLength}]`,
             sortFieId: subPage.length,
-            // groupId: id,
-            groupId,
-            groupName: `未命名[${groupLength}]`,
             groupChildren: [{...item, groupId}],
             expand: true,
             color: getColor(subPage)
@@ -2183,7 +2127,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         }
         onUpdatePageCache([...subPage])
-        afterDragEndSubPage(pageItem, [...subPage])
     })
     /**将标签页添加到组 */
     const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo, key: string) => {
@@ -2191,7 +2134,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const {index: gIndex} = getPageItemById(subPage, key)
         if (subIndex === -1) {
             //游离页面移动到组内
-            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].groupId})
+            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].id})
             subPage.splice(index, 1)
         } else {
             // 组A移动到组B
@@ -2199,11 +2142,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (groupChildren.length > 0) {
                 groupChildren.splice(subIndex, 1)
             }
-            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].groupId})
+            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].id})
             if (groupChildren.length === 0) subPage.splice(index, 1)
         }
         onUpdatePageCache([...subPage])
-        afterDragEndSubPage(pageItem, [...subPage])
     })
     /**从组中移出 */
     const onRemoveFromGroup = useMemoizedFn((item: MultipleNodeInfo) => {
@@ -2213,11 +2155,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (groupChildren.length > 0) {
             groupChildren.splice(subIndex, 1)
         }
-        const newGroup = {
+        const newGroup: MultipleNodeInfo = {
             ...item,
-            groupId: generateGroupId(),
+            groupId: "0",
             groupChildren: [],
-            groupName: undefined,
             expand: undefined,
             color: undefined
         }
@@ -2227,7 +2168,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             subPage.splice(index + 1, 0, newGroup)
         }
         onUpdatePageCache([...subPage])
-        afterDragEndSubPage(pageItem, [...subPage])
     })
     /**关闭当前标签页 */
     const onRemove = useMemoizedFn((item: MultipleNodeInfo) => {
@@ -2268,7 +2208,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     subPage[index].groupChildren = [item]
                     onSetSelectSubMenu(item)
                     onUpdatePageCache(subPage)
-                    afterDragEndSubPage(pageItem, subPage)
                     m.destroy()
                 },
                 onCancel: () => {
@@ -2333,12 +2272,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const groupChildrenList = (subPage[index].groupChildren || []).map((g, gIndex) => {
             return {
                 ...g,
-                groupId: generateGroupId(gIndex)
+                groupId: "0"
             }
         })
         subPage.splice(index, 1, ...groupChildrenList)
         onUpdatePageCache([...subPage])
-        afterDragEndSubPage(pageItem, [...subPage])
     })
     /**@description 关闭组/删除组包括组里的页面,有一个弹窗不再提示的功能 */
     const onCloseGroupConfirm = useMemoizedFn((groupItem: MultipleNodeInfo) => {
@@ -2370,7 +2308,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdateSelectSubPage(groupItem)
         subPage.splice(index, 1)
         onUpdatePageCache([...subPage])
-        afterDragEndSubPage(pageItem, [...subPage])
     })
     /**@description 组的右键事件 关闭其他标签页 */
     const onCloseOtherTabs = useMemoizedFn((groupItem: MultipleNodeInfo) => {
@@ -2384,7 +2321,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 const newPage = [{...groupItem}]
                 onSetSelectSubMenu(groupItem)
                 onUpdatePageCache(newPage)
-                afterDragEndSubPage(pageItem, newPage)
                 m.destroy()
             },
             onCancel: () => {
@@ -2434,7 +2370,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (index === -1) return
         subPage[index] = {...groupItem}
         onUpdatePageCache([...subPage])
-        afterDragEndSubPage(pageItem, [...subPage])
     })
     const onDragStart = useMemoizedFn((result) => {
         if (!result.source) return
@@ -2688,7 +2623,6 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
         onGroupContextMenu,
         dropType
     } = props
-    const groupDroppableId = useMemo(() => `${subItem.groupId}-group`, [subItem.groupId])
     const color = useMemo(() => subItem.color || "purple", [subItem.color])
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
@@ -2713,7 +2647,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                             onClick={() => onUnfoldAndCollapse(subItem)}
                             onContextMenu={onGroupContextMenu}
                         >
-                            {subItem.groupName || ""}
+                            {subItem.verbose || ""}
                             <div
                                 className={classNames(
                                     styles["tab-menu-sub-group-number"],
@@ -2725,7 +2659,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                             </div>
                         </div>
                         <Droppable
-                            droppableId={groupDroppableId}
+                            droppableId={subItem.id}
                             direction='horizontal'
                             isCombineEnabled={false}
                             type={dropType}
@@ -2805,14 +2739,14 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
         >
             <YakitInput
                 style={{}}
-                value={group.groupName}
+                value={group.verbose}
                 onChange={(e) => {
                     const {value} = e.target
                     if (value.length > 50) {
                         yakitNotify("error", "不能超过50个字符")
                         return
                     }
-                    onUpdate("groupName", value)
+                    onUpdate("verbose", value)
                 }}
             />
             <div className={classNames(styles["color-list"])}>
@@ -2874,12 +2808,14 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
     const [groupItem, setGroupItem] = useState<MultipleNodeInfo>({
         id: "0",
         verbose: "",
-        sortFieId: 1
+        sortFieId: 1,
+        groupId: "0"
     })
     const [item, setItem] = useState<MultipleNodeInfo>({
         id: "0",
         verbose: "",
-        sortFieId: 1
+        sortFieId: 1,
+        groupId: "0"
     })
     useEffect(() => {
         const {index, subIndex} = getPageItemById(subPage, draggableId)

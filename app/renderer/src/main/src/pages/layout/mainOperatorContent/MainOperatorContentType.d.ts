@@ -23,7 +23,6 @@ export interface MultipleNodeInfo extends MultipleNodeGroup {
  * @name 组信息
  * @property expand 组是否展开
  * @property color 组的颜色
- * @property groupName 组的名称
  * @property params 页面传递参数
  * @property groupTime 组内的item与组的对应联系
  * @property groupChildren 组内的内容
@@ -31,9 +30,8 @@ export interface MultipleNodeInfo extends MultipleNodeGroup {
 export interface MultipleNodeGroup {
     expand?: boolean
     color?: string
-    groupName?: string
     /**@param 目前根据该字段分组 */
-    groupId?: string
+    groupId: string
     groupChildren?: MultipleNodeInfo[]
 }
 
@@ -43,7 +41,7 @@ export interface MultipleNodeGroup {
  * @property verbose-页面展示名称
  * @property menuName-页面菜单名称
  * @property route-页面的yakitRoute
- * @property singleNode-单开页面Node
+ * @property singleNode- 是否为单开页面
  * @property multipleNode-多开页面的Node合集
  * @property multipleLength-多开页面已打开过多少个
  * @property hideAdd-二级页面是否隐藏添加按钮
@@ -57,7 +55,6 @@ export interface PageCache {
     route: YakitRoute
     pluginId?: number
     pluginName?: string
-    // singleNode: ReactNode | any
     singleNode: boolean | undefined
     multipleNode: MultipleNodeInfo[] | any[]
     multipleLength?: number
@@ -153,7 +150,6 @@ export interface SubTabListProps {
  * @function setSelectSubMenu 选中二级tab
  * @function onRemoveSub 删除
  * @function onContextMenu 右键操作
- * @property isCombine 是否在组合过程中
  * @property combineColor 当前组合的颜色
  */
 export interface SubTabItemProps {
@@ -169,6 +165,7 @@ export interface SubTabItemProps {
  * @description 组
  * @function onUnfoldAndCollapse 收起和展开事件
  * @function onGroupContextMenu 组的右键操作
+ * @function dropType 组的拖拽Droppable的type
  * @function subPage 
  */
 export interface SubTabGroupItemProps extends SubTabItemProps {
@@ -189,8 +186,8 @@ export interface SubTabGroupItemProps extends SubTabItemProps {
  * @function openMultipleMenuPage 打开页面
  * @function afterDeleteFirstPage 删除一级页面的回调  'all'|'other'|'single' 
  * @function afterDeleteSubPage 删除二级页面的回调 'other'|'single'
- * @function afterUpdateSubPage 更新页面信息后的回调
- * @function afterDragEndSubPage 二级tab拖拽后的回调/关闭组的操作也是走的该方法
+ * @function afterUpdateSubItem 更新页面信息后的回调
+ * @function onUpdateSubPage 二级tab整体需要修改
  */
 export interface MainOperatorContextProps {
     pageCache: PageCache[]
@@ -202,8 +199,8 @@ export interface MainOperatorContextProps {
     openMultipleMenuPage: (route: RouteToPageProps) => void
     afterDeleteFirstPage: (type: 'all' | 'other' | 'single', page?: PageCache) => void
     afterDeleteSubPage: (type: 'other' | 'single', r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubPage: (page: PageCache, subItem: MultipleNodeInfo) => void
-    afterDragEndSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
+    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
+    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
 }
 export type OperateGroup = 'cancelGroup' | 'closeGroup' | 'closeOtherTabs'
 /**
