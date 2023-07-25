@@ -34,7 +34,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
 import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useSelections} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import styles from "./PortAssetPage.module.scss"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -674,7 +674,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             </YakitButton>
                                         </YakitPopconfirm>
 
-                                        <YakitDropdownMenu
+                                        {!isEnpriTraceAgent()&&<YakitDropdownMenu
                                             menu={{
                                                 data: [
                                                     {
@@ -715,7 +715,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             >
                                                 发送到...
                                             </YakitButton>
-                                        </YakitDropdownMenu>
+                                        </YakitDropdownMenu>}
                                     </div>
                                 }
                                 renderKey='Id'
