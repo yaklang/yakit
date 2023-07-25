@@ -11,11 +11,18 @@ const ContextMenuId = "yakit-right-context"
  * @name 生成一个鼠标所在坐标位置的展示框(props默认为菜单组件，也可自行传递自定义组件)
  * @description x和y参数为可选参数，填写时将以x-y坐标位展示内容
  */
-export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number, y?: number) => {
+export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number, y?: number,isForce?: boolean) => {
     /** body展示的高度和宽度；表示body在浏览器内显示的区域高度和宽度 */
     const clientHeight = document.body.clientHeight
     const clientWidth = document.body.clientWidth
-    const divExisted = document.getElementById(ContextMenuId)
+
+    let divExisted = document.getElementById(ContextMenuId)
+
+    if(isForce){
+        if(divExisted)divExisted.remove()
+        divExisted=null
+    }
+    
     const div: HTMLDivElement = divExisted ? (divExisted as HTMLDivElement) : document.createElement("div")
 
     let left = x || coordinate.clientX
