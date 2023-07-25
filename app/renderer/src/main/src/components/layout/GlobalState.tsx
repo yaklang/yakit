@@ -134,7 +134,13 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
                 })
                 .then((item: QueryYakScriptsResponse) => {
-                    setPluginTotal(+item.Total || 0)
+                    if(isEnpriTraceAgent()&&(+item.Total)<100){
+                        // 便携版由于引擎内置插件 因此判断依据为小于100个则为无插件
+                        setPluginTotal(0)
+                    }
+                    else{
+                        setPluginTotal(+item.Total || 0)
+                    }
                     resolve("plugin-total")
                 })
                 .catch((e) => {

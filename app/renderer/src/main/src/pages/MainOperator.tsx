@@ -954,7 +954,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 UserId: 0
             }
             ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
-                if (item.Data.length === 0) {
+                // 便携版由于引擎内置插件 因此判断依据为小于100个则为无插件
+                if (item.Data.length <100) {
                     const m = showModal({
                         title: "导入插件",
                         content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
