@@ -562,6 +562,13 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamStartVulinboxMap, token)
     })
 
+    const streamGenQualityInspectionReportMap = new Map();
+    ipcMain.handle("cancel-GenQualityInspectionReport", handlerHelper.cancelHandler(streamGenQualityInspectionReportMap));
+    ipcMain.handle("GenQualityInspectionReport", (e, params, token) => {
+        let stream = getClient().GenQualityInspectionReport(params);
+        handlerHelper.registerHandler(win, stream, streamGenQualityInspectionReportMap, token)
+    })
+
     const streamDiagnoseNetworkMap = new Map();
     ipcMain.handle("cancel-DiagnoseNetwork", handlerHelper.cancelHandler(streamDiagnoseNetworkMap));
     ipcMain.handle("DiagnoseNetwork", (e, params, token) => {

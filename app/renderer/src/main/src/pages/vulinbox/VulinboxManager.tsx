@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
 import {failed, info, success, yakitFailed, yakitNotify} from "@/utils/notification";
@@ -22,6 +22,18 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {getRemoteValue} from "@/utils/kv";
 import {WEB_FUZZ_PROXY_LIST} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig";
+import TableHeader from "@/alibaba/ali-react-table-dist/dist/base-table/header";
+import {TableResizableColumn} from "@/components/TableResizableColumn";
+import {RiskDetails, TitleColor} from "@/pages/risks/RiskTable";
+import {showModal} from "@/utils/showModal";
+import {Risk} from "@/pages/risks/schema";
+import {Empty} from "antd"
+import {useInViewport} from "ahooks"
+import {xtermClear} from "@/utils/xtermUtils";
+import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea";
+import {BruteParamsForm} from "@/pages/brute/BrutePage";
+import {ExtractExecResultMessageToYakitPort} from "@/components/yakitLogSchema";
+
 
 export interface VulinboxManagerProp {
 
@@ -32,13 +44,22 @@ const {ipcRenderer} = window.require("electron");
 export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
     const [available, setAvailable] = useState(false);
     const [started, setStarted] = useState(false);
+    const [checked, setChecked] = useState(false);
     const [token, setToken] = useState(randomString(60));
-    const [currentParams, setCurrentParams] = useState<StartVulinboxParams>({
+    const [repToken, setRepToken] = useState(randomString(30));
+    const [currentParams, setCurrentParams, getCurrentParams] = useGetState<StartVulinboxParams>({
         Host: "127.0.0.1",
         Port: 8787,
         NoHttps: true,
         SafeMode: false,
     });
+    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
+        "report", "GenQualityInspectionReport", repToken, () => {
+            setTimeout(() => setLoading(false), 300)
+        })
+    console.log("infoState  ", infoState)
+    const [loading, setLoading] = useState(false)
+
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
@@ -77,85 +98,88 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
     }, [])
 
     return <div style={{height: "100%", width: "100%", overflow: "hidden"}}>
-        <AutoCard size={"small"} bordered={true} title={<Space>
-            <div>Vulinbox 管理器</div>
-            {available ? <>
-                <Tag color={"green"}>安装成功</Tag>
-                {currentParams && <YakitButton type='outline2' onClick={() => {
-                    info("使用 Chrome 打开靶场")
-                    openExternalWebsite(`${currentParams?.NoHttps ? "http://" : "https//"}${currentParams?.Host}:${currentParams?.Port}`)
-                }}>
-                    <ChromeSvgIcon/>
-                </YakitButton>}
-            </> : <Tag color={"red"}>未安装</Tag>}
-            {available && (
-                <>
-                    {started ? (
-                        <>
-                            <Popconfirm title={"确定要关闭靶场进程吗？"} onConfirm={() => {
-                                ipcRenderer.invoke("cancel-StartVulinbox", token).then(() => {
-                                    setStarted(false)
-                                })
-                            }}>
+        <AutoCard size={"small"} bordered={true} title={
+            <Space>
+                <div>Vulinbox 管理器</div>
+                {available ? <>
+                    <Tag color={"green"}>安装成功</Tag>
+                    {currentParams && <YakitButton type='outline2' onClick={() => {
+                        info("使用 Chrome 打开靶场")
+                        openExternalWebsite(`${currentParams?.NoHttps ? "http://" : "https//"}${currentParams?.Host}:${currentParams?.Port}`)
+                    }}>
+                        <ChromeSvgIcon/>
+                    </YakitButton>}
+                </> : <Tag color={"red"}>未安装</Tag>}
+                {available && (
+                    <>
+                        {started ? (
+                            <>
+                                <Popconfirm title={"确定要关闭靶场进程吗？"} onConfirm={() => {
+                                    ipcRenderer.invoke("cancel-StartVulinbox", token).then(() => {
+                                        setStarted(false)
+                                    })
+                                }}>
                         <YakitButton colors="danger">关闭靶场</YakitButton>
                     </Popconfirm> :
-                                <YakitButton type={"danger"}>关闭靶场</YakitButton>
-                            </Popconfirm>
+                                    <YakitButton type={"danger"}>关闭靶场</YakitButton>
+                                </Popconfirm>
 
-                            <YakitButton type={"success"} onClick={() => {
+                                <YakitButton type={"success"} onClick={() => {
+                                    const m = showYakitModal({
+                                        title: "测试参数", width: "50%",
+                                        content: (
+                                            <div style={{marginTop: 20, marginLeft: 20}}>
+                                                <GenQualityInspectionReport onSubmit={params => {
+
+                                                    ipcRenderer.invoke("GenQualityInspectionReport", params, repToken).then(() => {
+                                                        info("开始测试")
+                                                        setChecked(true)
+                                                        m.destroy()
+                                                    }).catch((e) => {
+                                                        }
+                                                    )
+                                                }} params={{
+                                                    ScriptNames: [],
+                                                    TaskName: "xxxx"
+                                                }}
+                                                />
+                                            </div>
+                                        ),
+                                    })
+                                }}>
+                                    进行测试
+                                </YakitButton>
+
+
+                            </>
+                        ) : (
+                            <YakitButton type={"primary"} onClick={() => {
                                 const m = showYakitModal({
-                                    title: "测试参数", width: "50%",
+                                    title: "启动靶场参数", width: "50%",
                                     content: (
                                         <div style={{marginTop: 20, marginLeft: 20}}>
-                                            <GenQualityInspectionReport onSubmit={parmam => {
-                                                console.log(parmam)
-                                                // setFormData(parmam);
+                                            <VulinboxStart onSubmit={param => {
+                                                ipcRenderer.invoke("StartVulinbox", param, token).then(() => {
+                                                    setCurrentParams(param)
+                                                    info("启动靶场成功")
+                                                    setStarted(true)
+                                                    m.destroy()
+                                                }).catch((e) => {
+                                                    failed(`${e}`)
+                                                })
                                             }} params={{
-                                                ScriptNames: [],
-                                                TaskName: "xxxx"
-                                            }}
-                                            />
+                                                Host: "127.0.0.1",
+                                                Port: 8787, NoHttps: true,
+                                                SafeMode: false
+                                            }}/>
                                         </div>
-                                    ),
-                                    okButtonProps: {
-                                        onClick: (e,) => {
-                                            console.log('确定按钮被点击了')
-                                            // console.log('Form data:', formData);
-                                        }
-                                    }
+                                    )
                                 })
-                            }}>
-                                进行测试
-                            </YakitButton>
-                        </>
-                    ) : (
-                        <YakitButton type={"primary"} onClick={() => {
-                            const m = showYakitModal({
-                                title: "启动靶场参数", width: "50%",
-                                content: (
-                                    <div style={{marginTop: 20, marginLeft: 20}}>
-                                        <VulinboxStart onSubmit={param => {
-                                            ipcRenderer.invoke("StartVulinbox", param, token).then(() => {
-                                                setCurrentParams(param)
-                                                info("启动靶场成功")
-                                                setStarted(true)
-                                                m.destroy()
-                                            }).catch((e) => {
-                                                failed(`${e}`)
-                                            })
-                                        }} params={{
-                                            Host: "127.0.0.1",
-                                            Port: 8787, NoHttps: true,
-                                            SafeMode: false
-                                        }}/>
-                                    </div>
-                                )
-                            })
-                        }}>启动靶场</YakitButton>
-                    )}
-                </>
-            )}
-        </Space>} bodyStyle={{padding: 0}} extra={(
+                            }}>启动靶场</YakitButton>
+                        )}
+                    </>
+                )}
+            </Space>} bodyStyle={{padding: 0}} extra={(
             <Popconfirm title={"将从互联网下载靶场程序并安装"} onConfirm={() => {
                 const m = showYakitModal({
                     title: "安装靶场",
@@ -181,10 +205,64 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
 
         )}
         >
-            <EngineConsole/>
+
+
+            <div style={{flex: 1, overflow: "hidden"}}>
+                <AutoCard bodyStyle={{padding: 10, overflow: "hidden"}}>
+                    <PluginResultUI
+                        // script={script}
+                        loading={loading}
+                        risks={infoState.riskState}
+                        progress={infoState.processState}
+                        results={infoState.messageState}
+                        featureType={infoState.featureTypeState}
+                        feature={infoState.featureMessageState}
+                        statusCards={infoState.statusState}
+                        onXtermRef={setXtermRef}
+                    />
+                </AutoCard>
+            </div>
+            {/*<EngineConsole/>*/}
         </AutoCard>
     </div>
 };
+
+export interface ReportViewerProps {
+    taskToken: string
+}
+
+export const ReportViewer: React.FC<ReportViewerProps> = (props) => {
+    const [taskToken, setTaskToken] = useState(props.taskToken)
+
+    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
+        "report", "GenQualityInspectionReport", taskToken, () => {
+            setTimeout(() => setLoading(false), 300)
+        })
+    console.log(infoState)
+    const [loading, setLoading] = useState(false)
+
+
+    return <div style={{flex: 1, overflow: "hidden"}}>
+        <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
+            <div style={{flex: 1, overflow: "hidden"}}>
+                <AutoCard bodyStyle={{padding: 10, overflow: "hidden"}}>
+                    <PluginResultUI
+                        // script={script}
+                        loading={loading}
+                        risks={infoState.riskState}
+                        progress={infoState.processState}
+                        results={infoState.messageState}
+                        featureType={infoState.featureTypeState}
+                        feature={infoState.featureMessageState}
+                        statusCards={infoState.statusState}
+                        onXtermRef={setXtermRef}
+                    />
+                </AutoCard>
+            </div>
+        </div>
+    </div>
+
+}
 
 interface StartVulinboxParams {
     Host: string
