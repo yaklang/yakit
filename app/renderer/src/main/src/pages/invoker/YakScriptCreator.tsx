@@ -29,6 +29,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {SearchPluginDetailRequest} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import { YakitRoute } from "@/routes/newRoute"
+import { addTag, removeTag } from "../customizeMenu/utils"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -845,6 +846,18 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                             disabled={disabled}
                         />
                     )}
+                </>
+            )}
+             {params.Type === "codec" && (
+                <>
+                    <SwitchItem
+                        label='用于自定义HTTP数据包变形'
+                        value={  
+                            params.Tags && params.Tags.includes("allow-custom-http-packet-mutate") ? true : false
+                        }
+                        setValue={(enalbed) => setParams({...params, Tags: enalbed? addTag(params.Tags, "allow-custom-http-packet-mutate"): removeTag(params.Tags, "allow-custom-http-packet-mutate")})}
+                        disabled={disabled}
+                    />
                 </>
             )}
         </>
