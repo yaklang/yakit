@@ -841,7 +841,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         fuzzerList.current.forEach((value) => {
             if ((value?.params?.request || "").length < 1000000) historys.push(value)
         })
-        // console.log("historys", historys)
+        console.log("historys", historys)
         setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
     }, 500)
     // 获取数据库中缓存的web-fuzzer页面信息
@@ -1063,7 +1063,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     expand: subItem.expand,
                     color: subItem.color,
                     sortFieId: subIndex + 1,
-                    childrenWidth:subItem.childrenWidth
+                    childrenWidth: subItem.childrenWidth
                 }
                 newFuzzerList.set(subItem.id, newGroupItem)
             } else {
@@ -1599,7 +1599,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
             const {droppableId: sourceDroppableId} = result.source
-            console.log("onSubMenuDragEnd", result)
             /**将拖拽item变为选中item ---------start---------*/
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
@@ -1820,7 +1819,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             const number = subPage.findIndex((ele) => ele.id === sourceGroupId)
             subPage.splice(number, 1)
         }
-
         onUpdatePageCache([...subPage])
     })
     /** @description 组外向组内移动 */
@@ -1858,14 +1856,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         // 将拖拽的item从来源地中删除
         subPage.splice(sourceIndex, 1)
-
         onUpdatePageCache(subPage)
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
     const onUpdatePageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[]) => {
         try {
             if (subMenuList.length > 0) {
-                pageCache[index].multipleNode = subMenuList
+                pageCache[index].multipleNode = [...subMenuList]
                 // setSubPage([...subMenuList])
                 setPageCache([...pageCache])
             } else {
@@ -2352,33 +2349,35 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const newItem = {...item}
         newItem.expand = !newItem.expand
         onUpdateGroup(newItem)
-        const number = (newItem.groupChildren || []).findIndex((ele) => ele.id === selectSubMenu.id)
-        if (number !== -1 && !newItem.expand) {
-            const total = getSubPageTotal(subPage)
-            // 关闭时, 选中的item在该组内时,将选中的item变为后面可以选中的item
-            const {index} = getPageItemById(subPage, newItem.id)
-            const sLength = subPage.length
-            const initIndex = total >= 100 ? index - 1 : index + 1
-            // 因为限制100个，如果该组为最后一个，就选中上一个可选item
-            for (let i = initIndex; total >= 100 ? i > 0 : i < sLength + 1; total >= 100 ? i-- : i++) {
-                const element: MultipleNodeInfo | undefined = subPage[i]
-                if (!element) {
-                    // element不存在时,新建一个tab选中
-                    onAddSubPage()
-                    break
-                }
-                if (element.expand && element.groupChildren && element.groupChildren.length > 0) {
-                    //下一个为组时,选中组内的第一个
-                    onSetSelectSubMenu(element.groupChildren[0])
-                    break
-                }
-                if (element && element.groupChildren?.length === 0) {
-                    // 下一个为游离的tab页面时,选中该tab
-                    onSetSelectSubMenu(element)
-                    break
+        setTimeout(() => {
+            const number = (newItem.groupChildren || []).findIndex((ele) => ele.id === selectSubMenu.id)
+            if (number !== -1 && !newItem.expand) {
+                const total = getSubPageTotal(subPage)
+                // 关闭时, 选中的item在该组内时,将选中的item变为后面可以选中的item
+                const {index} = getPageItemById(subPage, newItem.id)
+                const sLength = subPage.length
+                const initIndex = total >= 100 ? index - 1 : index + 1
+                // 因为限制100个，如果该组为最后一个，就选中上一个可选item
+                for (let i = initIndex; total >= 100 ? i > 0 : i < sLength + 1; total >= 100 ? i-- : i++) {
+                    const element: MultipleNodeInfo | undefined = subPage[i]
+                    if (!element) {
+                        // element不存在时,新建一个tab选中
+                        onAddSubPage()
+                        break
+                    }
+                    if (element.expand && element.groupChildren && element.groupChildren.length > 0) {
+                        //下一个为组时,选中组内的第一个
+                        onSetSelectSubMenu(element.groupChildren[0])
+                        break
+                    }
+                    if (element && element.groupChildren?.length === 0) {
+                        // 下一个为游离的tab页面时,选中该tab
+                        onSetSelectSubMenu(element)
+                        break
+                    }
                 }
             }
-        }
+        }, 300)
     })
     /**
      * @description 更新组
@@ -2388,7 +2387,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (index === -1) return
         subPage[index] = {...groupItem}
         onUpdatePageCache([...subPage])
-        onUpdateSubPage(pageItem,[...subPage])
     })
     const onDragStart = useMemoizedFn((result) => {
         if (!result.source) return
@@ -2648,9 +2646,9 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     useEffect(() => {
         let element = document.getElementById(subItem.id)
         if (!element) return
-        if (subItem.expand&&element.style.width==='0px') {
-            element.style.opacity='1';
-            element.style.width=`${subItem.childrenWidth}px`;
+        
+        if (subItem.expand&&(!element.style.maxWidth||element.style.maxWidth==='0px')) {
+            element.style.maxWidth = `${subItem.childrenWidth}px`
         }
     }, [subItem.expand])
     return (
@@ -2676,19 +2674,18 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                 }
                             )}
                             onClick={(e) => {
-                                console.log('subItem.childrenWidth',subItem.childrenWidth)
                                 const clickedElement = e.target as any
                                 // // 获取点击元素的下一个兄弟元素
                                 const nextSiblingElement = clickedElement.nextElementSibling
-                                if(nextSiblingElement){
+                                if (nextSiblingElement) {
                                     const width = nextSiblingElement.clientWidth
                                     if (subItem.expand) {
                                         subItem.childrenWidth = width
                                         // 收
-                                        nextSiblingElement.style = "width:0px;opacity: 0;"
+                                        nextSiblingElement.style = "max-width:0px;"
                                     } else {
                                         // 展开
-                                        nextSiblingElement.style = `opacity: 1;width:${subItem.childrenWidth}px;`
+                                        nextSiblingElement.style = `max-width:${subItem.childrenWidth}px;`
                                     }
                                 }
                                 onUnfoldAndCollapse(subItem)
