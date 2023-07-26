@@ -912,6 +912,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleNode: multipleNodeList,
                     multipleLength: multipleNodeListLength
                 }
+                console.log('multipleNodeList',multipleNodeList)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {
@@ -1061,7 +1062,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     groupId: subItem.groupId,
                     expand: subItem.expand,
                     color: subItem.color,
-                    sortFieId: subIndex + 1
+                    sortFieId: subIndex + 1,
+                    childrenWidth:subItem.childrenWidth
                 }
                 newFuzzerList.set(subItem.id, newGroupItem)
             } else {
@@ -1597,7 +1599,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
             const {droppableId: sourceDroppableId} = result.source
-
+            console.log("onSubMenuDragEnd", result)
             /**将拖拽item变为选中item ---------start---------*/
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
@@ -1979,7 +1981,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /** 关闭当前标签页 */
     const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
         //  先更改当前选择item,在删除
-        onUpdateSelectSubPage(removeItem)
+        if (removeItem.id === selectSubMenu.id) onUpdateSelectSubPage(removeItem)
         const {index, subIndex} = getPageItemById(subPage, removeItem.id)
         if (subIndex === -1) {
             // 删除游离页面
@@ -2350,13 +2352,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const newItem = {...item}
         newItem.expand = !newItem.expand
         onUpdateGroup(newItem)
-        const number = (item.groupChildren || []).findIndex((ele) => ele.id === selectSubMenu.id)
+        const number = (newItem.groupChildren || []).findIndex((ele) => ele.id === selectSubMenu.id)
         if (number !== -1 && !newItem.expand) {
             const total = getSubPageTotal(subPage)
             // 关闭时, 选中的item在该组内时,将选中的item变为后面可以选中的item
             const {index} = getPageItemById(subPage, newItem.id)
             const sLength = subPage.length
-            const initIndex = total>=100?index-1:index + 1
+            const initIndex = total >= 100 ? index - 1 : index + 1
             // 因为限制100个，如果该组为最后一个，就选中上一个可选item
             for (let i = initIndex; total >= 100 ? i > 0 : i < sLength + 1; total >= 100 ? i-- : i++) {
                 const element: MultipleNodeInfo | undefined = subPage[i]
@@ -2386,6 +2388,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (index === -1) return
         subPage[index] = {...groupItem}
         onUpdatePageCache([...subPage])
+        onUpdateSubPage(pageItem,[...subPage])
     })
     const onDragStart = useMemoizedFn((result) => {
         if (!result.source) return
@@ -2471,7 +2474,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                                         onContextMenu={(e, groupItem) => {
                                                             onRightClickOperation(e, groupItem)
                                                         }}
-                                                        onUnfoldAndCollapse={onUnfoldAndCollapse}
+                                                        onUnfoldAndCollapse={(val) => {
+                                                            onUnfoldAndCollapse(val)
+                                                        }}
                                                         onGroupContextMenu={(e) =>
                                                             onGroupRightClickOperation(e, indexSub)
                                                         }
@@ -2640,6 +2645,14 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
         dropType
     } = props
     const color = useMemo(() => subItem.color || "purple", [subItem.color])
+    useEffect(() => {
+        let element = document.getElementById(subItem.id)
+        if (!element) return
+        if (subItem.expand&&element.style.width==='0px') {
+            element.style.opacity='1';
+            element.style.width=`${subItem.childrenWidth}px`;
+        }
+    }, [subItem.expand])
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {
@@ -2650,7 +2663,9 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                         {...providedGroup.draggableProps}
                         {...providedGroup.dragHandleProps}
                         style={{...groupStyle}}
-                        className={classNames(styles["tab-menu-sub-group"], styles[`tab-menu-sub-group-${color}`])}
+                        className={classNames(styles["tab-menu-sub-group"], styles["tab-menu-sub-group-hidden"], {
+                            [styles[`tab-menu-sub-group-${color}`]]: subItem.expand
+                        })}
                     >
                         <div
                             className={classNames(
@@ -2660,7 +2675,24 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                     [styles["tab-menu-sub-group-name-retract"]]: !subItem.expand
                                 }
                             )}
-                            onClick={() => onUnfoldAndCollapse(subItem)}
+                            onClick={(e) => {
+                                console.log('subItem.childrenWidth',subItem.childrenWidth)
+                                const clickedElement = e.target as any
+                                // // 获取点击元素的下一个兄弟元素
+                                const nextSiblingElement = clickedElement.nextElementSibling
+                                if(nextSiblingElement){
+                                    const width = nextSiblingElement.clientWidth
+                                    if (subItem.expand) {
+                                        subItem.childrenWidth = width
+                                        // 收
+                                        nextSiblingElement.style = "width:0px;opacity: 0;"
+                                    } else {
+                                        // 展开
+                                        nextSiblingElement.style = `opacity: 1;width:${subItem.childrenWidth}px;`
+                                    }
+                                }
+                                onUnfoldAndCollapse(subItem)
+                            }}
                             onContextMenu={onGroupContextMenu}
                         >
                             {subItem.verbose || ""}
@@ -2703,8 +2735,14 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        className={classNames(styles["tab-menu-sub-group-children"])}
-                                        style={{display: subItem.expand ? "flex" : "none"}}
+                                        className={classNames(
+                                            styles["tab-menu-sub-group-children"],
+                                            styles["tab-menu-sub-group-children-motion"],
+                                            {
+                                                [styles["tab-menu-sub-group-children-hidden"]]: !subItem.expand
+                                            }
+                                        )}
+                                        id={subItem.id}
                                     >
                                         {subItem.groupChildren?.map((groupItem, index) => (
                                             <React.Fragment key={groupItem.id}>
