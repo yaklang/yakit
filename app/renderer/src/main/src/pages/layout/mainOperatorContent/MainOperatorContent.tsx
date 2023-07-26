@@ -842,7 +842,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if ((value?.params?.request || "").length < 1000000) historys.push(value)
         })
         console.log("historys", historys)
-        setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
+        // 简易版不设置webFuzzer缓存
+        if (!isEnpriTraceAgent()) {
+            setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
+        }
     }, 500)
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
@@ -912,7 +915,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleNode: multipleNodeList,
                     multipleLength: multipleNodeListLength
                 }
-                console.log('multipleNodeList',multipleNodeList)
+                console.log("multipleNodeList", multipleNodeList)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {
@@ -969,8 +972,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 yakitNotify("error", "webFuzzer数据缓存失败：" + error)
             }
         })
-        // 触发获取web-fuzzer的缓存
-        fetchFuzzerList()
+        // 简易版不获取webFuzzer缓存
+        if (!isEnpriTraceAgent()) {
+            // 触发获取web-fuzzer的缓存
+            fetchFuzzerList()
+        }
 
         return () => {
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
@@ -2646,14 +2652,14 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     useEffect(() => {
         let element = document.getElementById(subItem.id)
         if (!element) return
-        if (subItem.expand&&(!element.style.width||element.style.width==='0px')) {
+        if (subItem.expand && (!element.style.width || element.style.width === "0px")) {
             element.style.width = `${subItem.childrenWidth}px`
         }
         setTimeout(() => {
             if (!element) return
-            element.style.width=''
-        }, 200);
-    }, [subItem.expand,subItem.groupChildren])
+            element.style.width = ""
+        }, 200)
+    }, [subItem.expand, subItem.groupChildren])
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {
