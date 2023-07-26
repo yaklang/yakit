@@ -446,7 +446,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
         // 只勾选了爆破弱口令的选项
         else if (OnlineGroup.length === 0){
-            setPortParams({...getPortParams()})
+            setPortParams({...getPortParams(),ScriptNames:[]})
             run(OnlineGroup, TaskName)
         } else {
             console.log(OnlineGroup)
