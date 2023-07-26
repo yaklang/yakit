@@ -99,3 +99,23 @@ const filterMenus = (menus: SendDatabaseFirstMenuProps[], local: PublicRouteMenu
     }
     return filterNames
 }
+
+export const addTag = (tags: string, tag: string) => {
+    if (tags == "") {
+        return tag
+    }
+    const tagList = tags.split(",")
+    const tagSet = new Set(tagList)
+    tagSet.add(tag)
+    return Array.from(tagSet).join(",")
+}
+
+export const removeTag = (tags: string, tag: string) => {
+    if (tags == "") {
+        return ""
+    }
+    const tagList = tags.split(",")
+    const tagSet = new Set(tagList)
+    tagSet.delete(tag)
+    return Array.from(tagSet).join(",")
+}

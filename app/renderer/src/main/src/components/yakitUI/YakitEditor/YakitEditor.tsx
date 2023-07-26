@@ -146,7 +146,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             undefined,
             undefined,
             undefined,
-            ["fuzzer"],
+            ["allow-custom-http-packet-mutate"],
         )
     })
     useEffect(() => {
