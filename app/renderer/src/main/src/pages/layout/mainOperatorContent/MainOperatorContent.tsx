@@ -2646,11 +2646,14 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     useEffect(() => {
         let element = document.getElementById(subItem.id)
         if (!element) return
-        
-        if (subItem.expand&&(!element.style.maxWidth||element.style.maxWidth==='0px')) {
-            element.style.maxWidth = `${subItem.childrenWidth}px`
+        if (subItem.expand&&(!element.style.width||element.style.width==='0px')) {
+            element.style.width = `${subItem.childrenWidth}px`
         }
-    }, [subItem.expand])
+        setTimeout(() => {
+            if (!element) return
+            element.style.width=''
+        }, 200);
+    }, [subItem.expand,subItem.groupChildren])
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {
@@ -2682,10 +2685,10 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                     if (subItem.expand) {
                                         subItem.childrenWidth = width
                                         // 收
-                                        nextSiblingElement.style = "max-width:0px;"
+                                        nextSiblingElement.style = "width:0px;"
                                     } else {
                                         // 展开
-                                        nextSiblingElement.style = `max-width:${subItem.childrenWidth}px;`
+                                        nextSiblingElement.style = `width:${subItem.childrenWidth}px;`
                                     }
                                 }
                                 onUnfoldAndCollapse(subItem)
