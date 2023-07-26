@@ -282,13 +282,14 @@ $keyColor: map-keys($colors);
                 .tab-menu-sub-group-children {
                     display: flex;
                     // flex: 1;
-                    max-width: none;
+                    // max-width: none;
+                    width: none;
                 }
                 .tab-menu-sub-group-children-motion {
-                    transition: max-width .2s linear;
+                    transition: width .2s linear;
                 }
                 .tab-menu-sub-group-children-hidden {
-                    max-width: 0;
+                    width: 0;
 
                     .tab-menu-sub-item {
                         min-width: initial;
