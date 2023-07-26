@@ -26,6 +26,7 @@ export interface MultipleNodeInfo extends MultipleNodeGroup {
  * @property params 页面传递参数
  * @property groupTime 组内的item与组的对应联系
  * @property groupChildren 组内的内容
+ * @property childrenWidth 组内最大宽度
  */
 export interface MultipleNodeGroup {
     expand?: boolean
@@ -33,6 +34,7 @@ export interface MultipleNodeGroup {
     /**@param 目前根据该字段分组 */
     groupId: string
     groupChildren?: MultipleNodeInfo[]
+    childrenWidth?:number
 }
 
 /**
