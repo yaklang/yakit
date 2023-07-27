@@ -1058,7 +1058,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /**更新排序和内容缓存 */
     const webFuzzerCache = useMemoizedFn((subPage: MultipleNodeInfo[]) => {
-        if (subPage.length <= 0) return
+        if (subPage.length <= 0) {
+            delFuzzerList(1)
+            return
+        }
         const newFuzzerList = new Map<string, MultipleNodeInfo>()
         subPage.forEach((subItem, subIndex) => {
             if (subItem.groupChildren && subItem.groupChildren.length > 0) {
@@ -1753,7 +1756,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 subPage[combineIndex].id = groupId
             }
         }
-
         subPage.splice(sourceIndex, 1)
         onUpdatePageCache(subPage)
     })
@@ -1961,7 +1963,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 先判断被删除的item是否是独立的，如果是独立的则不需要走组内的逻辑
         // 独立的item被删除 游离的/没有组的
         const itemIndex = subPage.findIndex((ele) => ele.id === handleItem.id)
-        
+        console.log('itemIndex',itemIndex)
         if (itemIndex !== -1) {
             let currentNode: MultipleNodeInfo = subPage[itemIndex + 1]
             if (!currentNode) currentNode = subPage[itemIndex - 1]
@@ -1987,6 +1989,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         // 删除组内的
         const groupIndex = subPage.findIndex((ele) => ele.id === handleItem.groupId)
+        console.log('groupIndex',groupIndex,handleItem)
         if (groupIndex !== -1) {
             const groupList: MultipleNodeInfo = subPage[groupIndex] || {
                 id: "0",
@@ -1995,6 +1998,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
             if (!groupList.groupChildren) groupList.groupChildren = []
             const groupChildrenIndex = groupList.groupChildren.findIndex((ele) => ele.id === handleItem.id)
+            console.log('groupChildrenIndex',groupChildrenIndex)
             if (groupChildrenIndex === -1) return
             // 选中组内的前一个或者后一个
             let currentChildrenNode: MultipleNodeInfo = groupList.groupChildren[groupChildrenIndex + 1]
@@ -2021,6 +2025,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     currentChildrenNode = currentChildrenNode.groupChildren[0]
                 }
             }
+            console.log('currentChildrenNode',currentChildrenNode)
             setSelectSubMenu(currentChildrenNode)
         }
     })
@@ -2054,7 +2059,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         }
         onUpdatePageCache([...subPage])
-        afterDeleteSubPage("single", pageItem.route, removeItem)
+        if(subPage.length===0){
+            onUpdateSubPage(pageItem, subPage)
+        }else{
+            afterDeleteSubPage("single", pageItem.route, removeItem)
+        }
+        // afterDeleteSubPage("single", pageItem.route, removeItem)
     })
     /**
      * @description 页面节点的右键点击事件
