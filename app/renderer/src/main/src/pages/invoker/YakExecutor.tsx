@@ -889,7 +889,10 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                         disabled={
                                                             tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
                                                         }
-                                                        onClick={() => onRunYak()}
+                                                        onClick={() => {
+                                                            onRunYak()
+                                                            xtermClear(xtermRef)
+                                                        }}
                                                     />
                                                 )}
                                             </Space>
