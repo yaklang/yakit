@@ -83,7 +83,7 @@ const FuzzerCache = "fuzzer-list-cache"
 /** 关闭组的提示缓存字段 */
 const Close_Group_Tip = "close-group_tip"
 
-const colorList = ["purple", "blue", "cyan", "green", "red", "orange", "bluePurple", "grey"]
+const colorList = ["purple", "blue", "lakeBlue", "green", "red", "orange", "bluePurple", "grey"]
 const droppable = "droppable"
 const droppableGroup = "droppableGroup"
 const pageTabItemRightOperation: YakitMenuItemType[] = [
@@ -915,7 +915,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleNode: multipleNodeList,
                     multipleLength: multipleNodeListLength
                 }
-                console.log("multipleNodeList", multipleNodeList)
+                // console.log("multipleNodeList", multipleNodeList)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {
@@ -1570,7 +1570,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
 
     const onDragUpdate = useMemoizedFn((result) => {
-        console.log('onDragUpdate,dropType,subDropType',result,dropType,subDropType,isCombineEnabled)
         const sourceIndex = result.source.index
         const {subIndex} = getPageItemById(subPage, result.draggableId)
         if (subIndex === -1) {
@@ -1605,7 +1604,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
             const {droppableId: sourceDroppableId} = result.source
-            console.log('onSubMenuDragEnd,dropType',result,dropType,subDropType)
             /**将拖拽item变为选中item ---------start---------*/
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
@@ -1897,7 +1895,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     // ).run
     const onAddSubPage = useMemoizedFn(() => {
         if (getSubPageTotal(subPage) >= 100) {
-            yakitNotify("error", "已达打开最高100个标签页限制")
+            yakitNotify("error", "超过标签页数量限制")
             return
         }
         openMultipleMenuPage({
@@ -2233,7 +2231,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 onCancel: () => {
                     m.destroy()
                 },
-                content: "是否保留当前标签页，关闭组内其他标签页"
+                content: "是否仅保留当前标签页，关闭组内其他标签页"
             })
         }
     })
@@ -2397,7 +2395,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdatePageCache([...subPage])
     })
     const onDragStart = useMemoizedFn((result) => {
-        console.log('onDragStart',result)
         if (!result.source) return
         const {index, subIndex} = getPageItemById(subPage, result.draggableId)
         if (index === -1) return
@@ -2413,7 +2410,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     })
     const onBeforeCapture = useMemoizedFn((result) => {
-        console.log('onBeforeCapture',result)
         const {index, subIndex} = getPageItemById(subPage, result.draggableId)
         if (index === -1) return
         // subIndex === -1 没有在组内
@@ -2424,13 +2420,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 // setDropType(droppable)
                 // setSubDropType(droppableGroup)
             } else {
-                console.log('没有在组内-droppableGroup',droppableGroup)
                 //如果拖拽的是一个item,可以排序也可以组合
                 setDropType(droppableGroup)
                 setSubDropType(droppableGroup)
             }
         } else {
-            console.log('在组内-droppableGroup',droppableGroup)
             setDropType(droppableGroup)
             setSubDropType(droppableGroup)
         }
@@ -2747,7 +2741,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
+                                        // {...provided.dragHandleProps}
                                         className={classNames(
                                             styles["tab-menu-sub-group-children"],
                                             styles["tab-menu-sub-group-children-motion"],
