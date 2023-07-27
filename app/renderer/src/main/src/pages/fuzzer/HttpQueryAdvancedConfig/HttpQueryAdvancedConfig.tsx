@@ -160,7 +160,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             try {
                 setTimeout(() => {
                     setActiveKey(data ? JSON.parse(data) : "请求包配置")
-                }, 50);
+                }, 100);
             } catch (error) {
                 yakitFailed("获取折叠面板的激活key失败:" + error)
             }
