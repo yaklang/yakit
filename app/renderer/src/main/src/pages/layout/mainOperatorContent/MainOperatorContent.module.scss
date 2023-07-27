@@ -16,7 +16,7 @@ $keyColor: map-keys($colors);
             left: 0;
             background-color: map-get($currentColor, "backgroundColor") !important;
             z-index: 1;
-            transition: width .2s linear;
+            transition: width 0.2s linear;
         }
     }
     .tab-menu-sub-group-#{"" + $name} {
@@ -43,7 +43,7 @@ $keyColor: map-keys($colors);
     &::before {
         content: "";
         width: 0;
-        transition: width .2s linear;
+        transition: width 0.2s linear;
     }
 }
 
@@ -211,7 +211,7 @@ $keyColor: map-keys($colors);
         .tab-menu-first-item-dragging {
             @extend .dragging;
         }
-        .tab-menu-item-new-home{
+        .tab-menu-item-new-home {
             padding-left: 8px;
             max-width: 60px;
             min-width: 40px;
@@ -291,7 +291,7 @@ $keyColor: map-keys($colors);
                     max-width: 100%;
                 }
                 .tab-menu-sub-group-children-motion {
-                    transition: width .2s linear;
+                    transition: width 0.2s linear;
                 }
                 .tab-menu-sub-group-children-hidden {
                     width: 0;
@@ -300,9 +300,9 @@ $keyColor: map-keys($colors);
                         min-width: initial;
                         padding: 0;
                     }
-                    .tab-menu-item-verbose-wrapper{
-                        padding-left:0;
-                        gap:0;
+                    .tab-menu-item-verbose-wrapper {
+                        padding-left: 0;
+                        gap: 0;
                     }
                 }
             }
@@ -324,6 +324,56 @@ $keyColor: map-keys($colors);
             height: 16px;
         }
     }
+    .outline-chevron-double-left {
+        @extend .base-operate-icon;
+        background-color: var(--yakit-card-background-color);
+        width: 20px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+        position: fixed;
+        left: 0;
+        // box-shadow: 8px 0px 16px 4px rgb(133 137 158 / 15%);
+        z-index: 11;
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+        &::after {
+            @extend .grey-link;
+            height: 1px;
+            bottom: 0px;
+            z-index: 2;
+        }
+    }
+    .outline-chevron-double-right {
+        @extend .base-operate-icon;
+        background-color: var(--yakit-card-background-color);
+        width: 20px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+
+        position: absolute;
+        right: 32px;
+        // box-shadow: -8px 0px 16px -4px rgb(133 137 158 / 15%);
+        z-index: 11;
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+        &::after {
+            @extend .grey-link;
+            height: 1px;
+            bottom: 0px;
+            z-index: 2;
+        }
+    }
+    .outline-chevron-double-display-none {
+        display: none;
+    }
 }
 .tab-menu-sub-item {
     display: flex;
@@ -343,7 +393,7 @@ $keyColor: map-keys($colors);
     justify-content: space-between;
     background-color: var(--yakit-card-background-color);
     font-size: 12px;
-    transition:min-width .1s linear, padding .1s linear;
+    transition: min-width 0.1s linear, padding 0.1s linear;
     &:hover {
         @extend .dragging;
     }
@@ -367,7 +417,7 @@ $keyColor: map-keys($colors);
         overflow: hidden;
         padding-left: 8px;
         flex: 1;
-        transition:padding-left .1s linear;
+        transition: padding-left 0.1s linear;
         .tab-menu-item-verbose {
             @extend .flex-align-center;
             overflow: hidden;
@@ -458,10 +508,14 @@ $keyColor: map-keys($colors);
 }
 .group-right-click-show-content {
     display: inline-flex;
-    // padding: 12px 4px 6px 4px;
-    padding: 8px 12px 2px 12px;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: center;
+    padding-bottom: 2px;
+    width: 232px;
+    .show-content-heard {
+        padding: 8px 8px 0px 8px;
+    }
     .color-list {
         @extend .flex-align-center;
         padding: 8px 0;

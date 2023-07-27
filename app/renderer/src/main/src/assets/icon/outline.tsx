@@ -4,6 +4,7 @@ import React from "react"
 
 interface IconProps extends CustomIconComponentProps {
     onClick: (e: React.MouseEvent) => void
+    ref?:any
 }
 
 const OutlineChrome = () => (

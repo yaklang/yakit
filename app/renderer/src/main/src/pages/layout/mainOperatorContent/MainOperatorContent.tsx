@@ -29,7 +29,16 @@ import {
     ComponentParams
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useDebounceEffect, useDebounceFn, useGetState, useMap, useMemoizedFn} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useLongPress,
+    useMap,
+    useMemoizedFn,
+    useThrottleEffect,
+    useThrottleFn
+} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -58,6 +67,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
@@ -129,7 +140,7 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
     },
     {
         label: "关闭其他标签页",
-        key: "removeOther"
+        key: "removeOtherItems"
     }
 ]
 
@@ -841,7 +852,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         fuzzerList.current.forEach((value) => {
             if ((value?.params?.request || "").length < 1000000) historys.push(value)
         })
-        console.log("historys", historys)
+        // console.log("historys", historys)
         // 简易版不设置webFuzzer缓存
         if (!isEnpriTraceAgent()) {
             setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
@@ -1380,7 +1391,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
         <>
             {item.verbose === "首页" ? (
                 <div
-                    className={classNames(styles["tab-menu-first-item"],styles["tab-menu-item-new-home"], {
+                    className={classNames(styles["tab-menu-first-item"], styles["tab-menu-item-new-home"], {
                         [styles["tab-menu-first-item-active"]]: item.routeKey === currentTabKey
                     })}
                     key={item.routeKey}
@@ -1459,6 +1470,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const [dropType, setDropType] = useState<string>(droppable)
     const [subDropType, setSubDropType] = useState<string>(droppableGroup)
 
+    const [scroll, setScroll] = useState<ScrollProps>({
+        scrollLeft: 0,
+        scrollBottom: 0,
+        scrollRight: 0 //初始值要大于1
+    })
+
     const [closeGroupTip, setCloseGroupTip] = useState<boolean>(true) // 关闭组的时候是否还需要弹窗提示,默认是要弹窗的;如果用户选择了不再提示,后续则就不需要再弹出提示框
 
     const [alreadyRenderList, {set: setRenderList, get: getRenderList}] = useMap<string, boolean>(
@@ -1467,6 +1484,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const tabsRef = useRef(null)
     const combineColorRef = useRef<string>("")
+    const scrollLeftIconRef = useRef<any>()
+    const scrollRightIconRef = useRef<any>()
 
     useEffect(() => {
         getIsCloseGroupTip()
@@ -1475,11 +1494,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         () => {
             // 多个二级批量新增时，控制渲染
             setRenderList(selectSubMenu.id, true)
-            // if(subPage.length===0)return
-            // if (selectSubMenu.id === subPage[subPage.length - 1].id) {
-            //     //滚动到最后边
-            //     scrollToRight()
-            // }
         },
         [selectSubMenu],
         {wait: 100, leading: true}
@@ -1488,7 +1502,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (subPage.length === 0) return
         if (selectSubMenu.id === subPage[subPage.length - 1].id) {
             //滚动到最后边
-            scrollToRight()
+            scrollToRightMost()
         }
     }, [selectSubMenu])
     const tabMenuSubRef = useRef<any>()
@@ -1539,8 +1553,45 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     useEffect(() => {
         onFocusPage()
     }, [selectSubMenu])
+
+    useLongPress(
+        () => {
+            if (!tabMenuSubRef.current) return
+            if (!scrollLeftIconRef.current) return
+            tabMenuSubRef.current.scrollLeft = 0
+        },
+        scrollLeftIconRef,
+        {
+            delay: 100,
+            onClick: () => {
+                if (!tabMenuSubRef.current) return
+                tabMenuSubRef.current.scrollLeft -= 100
+            },
+            onLongPressEnd: () => {
+                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft + 1
+            }
+        }
+    )
+    useLongPress(
+        () => {
+            if (!tabMenuSubRef.current) return
+            if (!scrollRightIconRef.current) return
+            tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
+        },
+        scrollRightIconRef,
+        {
+            delay: 100,
+            onClick: () => {
+                if (!tabMenuSubRef.current) return
+                tabMenuSubRef.current.scrollLeft += 100
+            },
+            onLongPressEnd: () => {
+                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft - 1
+            }
+        }
+    )
     /**滚动到最后边 */
-    const scrollToRight = useMemoizedFn(() => {
+    const scrollToRightMost = useMemoizedFn(() => {
         if (!tabMenuSubRef.current) {
             const tabMenuSub = document.getElementById("tab-menu-sub")
             tabMenuSubRef.current = tabMenuSub
@@ -1550,7 +1601,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
         } else {
             setTimeout(() => {
-                scrollToRight()
+                scrollToRightMost()
             }, 200)
         }
     })
@@ -1910,6 +1961,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 先判断被删除的item是否是独立的，如果是独立的则不需要走组内的逻辑
         // 独立的item被删除 游离的/没有组的
         const itemIndex = subPage.findIndex((ele) => ele.id === handleItem.id)
+        
         if (itemIndex !== -1) {
             let currentNode: MultipleNodeInfo = subPage[itemIndex + 1]
             if (!currentNode) currentNode = subPage[itemIndex - 1]
@@ -1934,7 +1986,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         // 删除组内的
-        const groupIndex = subPage.findIndex((ele) => ele.groupId === handleItem.groupId)
+        const groupIndex = subPage.findIndex((ele) => ele.id === handleItem.groupId)
         if (groupIndex !== -1) {
             const groupList: MultipleNodeInfo = subPage[groupIndex] || {
                 id: "0",
@@ -2010,10 +2062,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, item: MultipleNodeInfo) => {
         let menuData: YakitMenuItemType[] = _.cloneDeepWith(pageTabItemRightOperation)
         const groupList = subPage.filter((ele) => (ele.groupChildren?.length || 0) > 0)
-        groupList.forEach((item) => {
-            let labelText = item.verbose
+        groupList.forEach((groupItem) => {
+            let labelText = groupItem.verbose
             if (!labelText) {
-                const groupChildren = item.groupChildren || []
+                const groupChildren = groupItem.groupChildren || []
                 const gLength = groupChildren.length
                 if (gLength > 0) {
                     labelText = `“${groupChildren[0].verbose}”和另外 ${gLength - 1} 个标签页`
@@ -2021,12 +2073,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
             const node = {
                 label: (
-                    <div className={styles["right-menu-item"]}>
-                        <div className={classNames(styles["item-color-block"], `color-bg-${item.color}`)} />
+                    <div className={styles["right-menu-item"]} key={groupItem.id}>
+                        <div className={classNames(styles["item-color-block"], `color-bg-${groupItem.color}`)} />
                         <span>{labelText}</span>
                     </div>
                 ),
-                key: item.id
+                key:groupItem.id
             }
             const i = menuData[1] as YakitMenuItemProps
             i.children?.push(node)
@@ -2054,7 +2106,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         case "remove":
                             onRemove(item)
                             break
-                        case "removeOther":
+                        case "removeOtherItems":
                             onRemoveOther(item)
                             break
                         case "newGroup":
@@ -2398,7 +2450,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.source) return
         const {index, subIndex} = getPageItemById(subPage, result.draggableId)
         if (index === -1) return
-        
+
         if (subIndex === -1) {
             // 拖动的不是组内的item
             const groupChildrenList = subPage[index].groupChildren || []
@@ -2429,6 +2481,21 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSubDropType(droppableGroup)
         }
     })
+    const onScrollTabMenu = useThrottleFn(
+        () => {
+            if (tabMenuSubRef.current) {
+                const {scrollWidth, scrollLeft, clientWidth} = tabMenuSubRef.current
+                const scrollRight = scrollWidth - scrollLeft - clientWidth
+                setScroll({
+                    ...scroll,
+                    scrollLeft: scrollLeft,
+                    scrollRight: scrollRight
+                })
+            }
+        },
+        {wait: 200}
+    ).run
+
     return (
         <div
             ref={tabsRef}
@@ -2454,12 +2521,21 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         return (
                             <div className={styles["tab-menu-sub-body"]}>
                                 <div
+                                    className={classNames(styles["outline-chevron-double-left"], {
+                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollLeft <= 0
+                                    })}
+                                    ref={scrollLeftIconRef}
+                                >
+                                    <OutlineChevrondoubleleftIcon />
+                                </div>
+                                <div
                                     className={classNames(styles["tab-menu-sub"], {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
                                     })}
                                     id='tab-menu-sub'
                                     {...provided.droppableProps}
                                     ref={provided.innerRef}
+                                    onScroll={onScrollTabMenu}
                                 >
                                     {subPage.map((item, indexSub) => {
                                         if (item.groupChildren && item.groupChildren.length > 0) {
@@ -2512,6 +2588,14 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                         )
                                     })}
                                     {provided.placeholder}
+                                </div>
+                                <div
+                                    className={classNames(styles["outline-chevron-double-right"], {
+                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollRight <= 0
+                                    })}
+                                    ref={scrollRightIconRef}
+                                >
+                                    <OutlineChevrondoublerightIcon />
                                 </div>
                                 {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -2782,15 +2866,27 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
         </Draggable>
     )
 })
-
+/**验证组名是否超过50个字符 */
+const onVerifyGroupName = (val: string) => {
+    if (val.length > 50) {
+        yakitNotify("error", "不能超过50个字符")
+        return false
+    }
+    return true
+}
 const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = React.memo((props) => {
     const {groupItem, onOperateGroup, onUpdateGroup} = props
     const [group, setGroup] = useState<MultipleNodeInfo>({...groupItem})
+    const [name, setName] = useState<string>(group.verbose)
+    useEffect(() => {
+        setName(group.verbose)
+    }, [group.verbose])
     const onUpdate = useMemoizedFn((text, value) => {
         group[text] = value
         setGroup({...group})
         onUpdateGroup({...group})
     })
+
     return (
         <div
             className={styles["group-right-click-show-content"]}
@@ -2798,29 +2894,40 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                 e.stopPropagation()
             }}
         >
-            <YakitInput
-                style={{}}
-                value={group.verbose}
-                onChange={(e) => {
-                    const {value} = e.target
-                    if (value.length > 50) {
-                        yakitNotify("error", "不能超过50个字符")
-                        return
-                    }
-                    onUpdate("verbose", value)
-                }}
-            />
-            <div className={classNames(styles["color-list"])}>
-                {colorList.map((color) => (
-                    <div
-                        className={classNames(styles["color-list-item"], `color-bg-${color}`)}
-                        onClick={(e) => {
-                            onUpdate("color", color)
-                        }}
-                    >
-                        {group.color === color && <CheckIcon className={styles["check-icon"]} />}
-                    </div>
-                ))}
+            <div className={styles["show-content-heard"]}>
+                <YakitInput
+                    value={name}
+                    onChange={(e) => {
+                        const {value} = e.target
+                        if (onVerifyGroupName(value)) {
+                            setName(value)
+                        }
+                    }}
+                    onPressEnter={() => {
+                        if (onVerifyGroupName(name)) {
+                            onUpdate("verbose", name)
+                        }
+                    }}
+                    onBlur={(e) => {
+                        const {value} = e.target
+                        if (onVerifyGroupName(value)) {
+                            onUpdate("verbose", value)
+                        }
+                    }}
+                />
+                <div className={classNames(styles["color-list"])}>
+                    {colorList.map((color) => (
+                        <div
+                            className={classNames(styles["color-list-item"], `color-bg-${color}`)}
+                            onClick={(e) => {
+                                onUpdate("color", color)
+                            }}
+                            key={color}
+                        >
+                            {group.color === color && <CheckIcon className={styles["check-icon"]} />}
+                        </div>
+                    ))}
+                </div>
             </div>
             <YakitMenu
                 type='grey'
