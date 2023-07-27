@@ -27,11 +27,11 @@ import {EditorDetailInfoProps} from "@/components/NewEditorSelectRange"
 import {useThrottleFn} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
-const directionStyle = (editorInfo) => {
+const directionStyle = (editorInfo,isCenter=true) => {
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
-        if (direction.x === "middle") {
+        if (direction.x === "middle"&&isCenter) {
             obj.transform = "translate(-38%, 0px)"
         }
         if (direction.x === "right") {
@@ -234,7 +234,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     onMouseLeave={() => {
                         if (!isDragging.current) setEnterSimple(false)
                     }}
-                    style={{...directionStyle(editorInfo)}}
+                    style={{...directionStyle(editorInfo,false)}}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
