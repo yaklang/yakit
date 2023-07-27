@@ -282,8 +282,8 @@ $keyColor: map-keys($colors);
                 .tab-menu-sub-group-children {
                     display: flex;
                     // flex: 1;
-                    // max-width: none;
-                    width: none;
+                    width: auto;
+                    max-width: 100%;
                 }
                 .tab-menu-sub-group-children-motion {
                     transition: width .2s linear;
