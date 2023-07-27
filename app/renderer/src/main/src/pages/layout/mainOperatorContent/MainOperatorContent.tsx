@@ -1380,14 +1380,13 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
         <>
             {item.verbose === "首页" ? (
                 <div
-                    className={classNames(styles["tab-menu-first-item"], {
+                    className={classNames(styles["tab-menu-first-item"],styles["tab-menu-item-new-home"], {
                         [styles["tab-menu-first-item-active"]]: item.routeKey === currentTabKey
                     })}
                     key={item.routeKey}
                     onClick={() => {
                         onSelect(item, item.routeKey)
                     }}
-                    style={{maxWidth: 60, minWidth: 40}}
                 >
                     <span>{item.verbose || ""}</span>
                 </div>
@@ -1747,6 +1746,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         const subMenuList: MultipleNodeInfo[] = reorder(subPage, result.source.index, result.destination.index)
+        setSubPage([...subMenuList])
         onUpdatePageCache(subMenuList)
     })
     /** @description 同一个组内之间移动 */
@@ -2231,7 +2231,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 onCancel: () => {
                     m.destroy()
                 },
-                content: "是否保留组内的当前标签页，关闭组内的其他标签页"
+                content: "是否保留当前标签页，关闭组内其他标签页"
             })
         }
     })
