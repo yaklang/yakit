@@ -159,6 +159,7 @@ service Yak {
   rpc QueryYakScriptByOnlineGroup(QueryYakScriptByOnlineGroupRequest) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptByNames(QueryYakScriptByNamesRequest) returns (QueryYakScriptByNamesResponse);
+  rpc QueryYakScriptByIsCore(QueryYakScriptByIsCoreRequest) returns (QueryYakScriptByIsCoreResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -502,6 +503,7 @@ service Yak {
   rpc IsVulinboxReady(IsVulinboxReadyRequest) returns (IsVulinboxReadyResponse);
   rpc InstallVulinbox(InstallVulinboxRequest) returns (stream ExecResult);
   rpc StartVulinbox(StartVulinboxRequest) returns (stream ExecResult);
+  rpc GenQualityInspectionReport(GenQualityInspectionReportRequest) returns (stream ExecResult);
 
   // 通过他可以构造一个 HTTP 请求
   // 这个请求可能是一个，也可能是一系列
@@ -512,6 +514,38 @@ service Yak {
   rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
   rpc SmokingEvaluatePlugin(SmokingEvaluatePluginRequest) returns (SmokingEvaluatePluginResponse);
   rpc GetSystemDefaultDnsServers(Empty) returns (DefaultDnsServerResponse);
+
+  // 诊断网络发生的问题
+  rpc DiagnoseNetwork(DiagnoseNetworkRequest) returns (stream DiagnoseNetworkResponse);
+}
+
+message DiagnoseNetworkRequest {
+  double NetworkTimeout = 1;
+
+  // 想要连接或扫描的目标是否都可达？
+  // 网络是否可达？网管是什么
+  // 如果是一个主机的话，他的 TCP 是否开放？
+  // 如果包含域名的话，他的解析结果是什么？不存在？还是本地解析？
+  // 多个服务器解析到同一个 IP？
+  string ConnectTarget = 2;
+
+  // 代理是否配置正确？
+  string Proxy = 3;
+  string ProxyAuthUsername = 4;
+  string ProxyAuthPassword = 5;
+  string ProxyToAddr = 8;
+
+  string Domain = 6;
+  repeated string DNSServers = 7;
+}
+
+message DiagnoseNetworkResponse {
+  string Title = 1;
+  string DiagnoseType = 2;
+  string DiagnoseResult = 3;
+  // info/verbose
+  // warning
+  string LogLevel = 5;
 }
 
 message DisconnectVulinboxAgentRequest {
@@ -569,6 +603,11 @@ message StartVulinboxRequest {
   bool NoHttps = 3;
   // 安全模式：不启用命令执行靶场
   bool SafeMode = 4;
+}
+
+message GenQualityInspectionReportRequest {
+  repeated string ScriptNames = 1;
+  string TaskName = 2;
 }
 
 message DebugPluginRequest {
@@ -1452,7 +1491,15 @@ message QueryYakScriptByNamesRequest {
   repeated string YakScriptName = 1;
 }
 
+message QueryYakScriptByIsCoreRequest {
+  bool IsCorePlugin = 1;
+}
+
 message QueryYakScriptByNamesResponse {
+  repeated YakScript Data = 1;
+}
+
+message QueryYakScriptByIsCoreResponse {
   repeated YakScript Data = 1;
 }
 
@@ -2669,6 +2716,7 @@ message YakScript {
   int64  BaseOnlineId = 27;
   bool OnlineOfficial = 28;
   string OnlineGroup = 29;
+  bool IsCorePlugin = 30;
 }
 
 message GetYakScriptTagsAndTypeResponse {
@@ -2851,6 +2899,8 @@ message FuzzerParamItem {
 
 message FuzzerRequests {
   repeated FuzzerRequest Requests = 1;
+  // concurrent flow
+  int64 Concurrent = 2;
 }
 
 message FuzzerRequest {
@@ -2932,6 +2982,7 @@ message FuzzerRequest {
   // 是否继承上一个 Workflow 的变量？（在 Sequence 中生效）
   bool InheritVariables = 38;
   bool ForceOnlyOneResponse = 39;
+  bool InheritCookies = 40; // 上一个 Request 一般来说是单个请求，他的响应信息中 Cookie 也应该被妥善处理
 }
 
 message KVPair {
@@ -3032,6 +3083,13 @@ message FuzzerResponse {
   repeated KVPair ExtractedResults = 45;
   bool MatchedByMatcher = 46;
   string HitColor = 47;
+  repeated RedirectHTTPFlow RedirectFlows = 48;
+}
+
+message RedirectHTTPFlow {
+  bool IsHttps = 1;
+  bytes Request = 2;
+  bytes Response = 3;
 }
 
 message Paging {
