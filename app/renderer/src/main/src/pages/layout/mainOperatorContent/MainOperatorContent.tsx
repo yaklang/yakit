@@ -266,11 +266,26 @@ const getItemStyle = (isDragging, draggableStyle) => {
     }
 }
 
-const reorder = (list: any[], startIndex: number, endIndex: number) => {
-    const result = Array.from(list)
-    const [removed] = result.splice(startIndex, 1)
-    result.splice(endIndex, 0, removed)
-    return result
+// const reorder = (list: any[], startIndex: number, endIndex: number) => {
+//     const result = Array.from(list)
+//     const [removed] = result.splice(startIndex, 1)
+//     result.splice(endIndex, 0, removed)
+//     return result
+// }
+/**数组元素交换位置 */
+const reorder = (arr, index1, index2) => {
+    // 检查索引是否有效
+    if (index1 < 0 || index1 >= arr.length || index2 < 0 || index2 >= arr.length) {
+        // console.error("索引无效")
+        return
+    }
+
+    // 交换元素位置
+    var temp = arr[index1]
+    arr[index1] = arr[index2]
+    arr[index2] = temp
+
+    return arr
 }
 /**
  * 获取二级菜单所有打开的tab标签页个数
@@ -1551,6 +1566,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         setRenderSubPage(newData)
+        console.log("subPage", subPage)
         onUpdateSubPage(pageItem, subPage)
     }, [subPage])
     // 切换一级页面时聚焦
@@ -2653,43 +2669,41 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
-    const [visible, setVisible] = useState<boolean>(false)
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
             {(provided, snapshot) => {
                 const itemStyle = getItemStyle(snapshot.isDragging, provided.draggableProps.style)
                 return (
-                    <Tooltip
-                        title={subItem.verbose || ""}
-                        overlayClassName={styles["toolTip-overlay"]}
-                        destroyTooltipOnHide={true}
-                        placement='top'
+                    <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={{
+                            ...itemStyle
+                        }}
+                        className={classNames(styles["tab-menu-sub-item"], {
+                            [styles["tab-menu-sub-item-active"]]: isActive,
+                            [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
+                            [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor
+                        })}
+                        onClick={() => {
+                            setSelectSubMenu(subItem)
+                        }}
+                        onContextMenu={(e) => onContextMenu(e, subItem)}
                     >
-                        <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                                ...itemStyle
-                            }}
-                            className={classNames(styles["tab-menu-sub-item"], {
-                                [styles["tab-menu-sub-item-active"]]: isActive,
-                                [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
-                                [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor
-                            })}
-                            onClick={() => {
-                                setSelectSubMenu(subItem)
-                            }}
-                            onContextMenu={(e) => onContextMenu(e, subItem)}
+                        {(isActive || snapshot.isDragging) && (
+                            <div
+                                className={classNames({
+                                    [styles["tab-menu-sub-item-line"]]: isActive || !!combineColor
+                                })}
+                            />
+                        )}
+                        <Tooltip
+                            title={subItem.verbose || ""}
+                            overlayClassName={styles["toolTip-overlay"]}
+                            destroyTooltipOnHide={true}
+                            placement='top'
                         >
-                            {(isActive || snapshot.isDragging || visible) && (
-                                <div
-                                    className={classNames({
-                                        [styles["tab-menu-sub-item-line"]]: isActive || !!combineColor
-                                    })}
-                                />
-                            )}
-
                             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                                 <div className={styles["tab-menu-item-verbose"]}>
                                     <SolidDocumentTextIcon className={styles["document-text-icon"]} />
@@ -2705,10 +2719,9 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                     }}
                                 />
                             </div>
-
-                            {provided.placeholder}
-                        </div>
-                    </Tooltip>
+                        </Tooltip>
+                        {provided.placeholder}
+                    </div>
                 )
             }}
         </Draggable>
