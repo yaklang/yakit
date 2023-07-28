@@ -1573,13 +1573,14 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         },
         scrollLeftIconRef,
         {
-            delay: 100,
+            delay: 300,
             onClick: () => {
                 if (!tabMenuSubRef.current) return
                 tabMenuSubRef.current.scrollLeft -= 100
             },
             onLongPressEnd: () => {
-                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft + 1
+                console.log('left')
+                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft + 0
             }
         }
     )
@@ -1591,16 +1592,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         },
         scrollRightIconRef,
         {
-            delay: 100,
+            delay: 300,
             onClick: () => {
                 if (!tabMenuSubRef.current) return
                 tabMenuSubRef.current.scrollLeft += 100
             },
             onLongPressEnd: () => {
-                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft - 1
+                console.log('right')
+                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft - 0
             }
         }
     )
+    console.log('scroll',scroll)
     /**滚动到最后边 */
     const scrollToRightMost = useMemoizedFn(() => {
         if (!tabMenuSubRef.current) {
@@ -1665,6 +1668,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
+            console.log('onSubMenuDragEnd',result)
             const {droppableId: sourceDroppableId} = result.source
             /**将拖拽item变为选中item ---------start---------*/
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
@@ -1751,9 +1755,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 groupId
             }
             if (subPage[combineIndex].groupChildren && (subPage[combineIndex].groupChildren || []).length > 0) {
-                if (dropItem.id === selectSubMenu.id) {
-                    subPage[combineIndex].expand = true
-                }
+                subPage[combineIndex].expand = true
                 subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(dropItem)
             } else {
                 const groupLength = getGroupLength(subPage)
@@ -1942,6 +1944,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     setCurrentTabKey(key)
                 }
             }
+            setTimeout(() => {
+                onScrollTabMenu()
+            }, 200);
         } catch (error) {}
     })
     // const onAddSubPage = useDebounceFn(
@@ -2449,6 +2454,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     }
                 }
             }
+            onScrollTabMenu()
         }, 300)
     })
     /**
@@ -2944,7 +2950,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
             </div>
             <YakitMenu
                 type='grey'
-                width={244}
+                width={232}
                 data={[
                     {
                         label: "取消组合",
