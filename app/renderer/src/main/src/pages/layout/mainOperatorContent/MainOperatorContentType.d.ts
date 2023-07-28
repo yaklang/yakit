@@ -162,6 +162,7 @@ export interface SubTabItemProps {
     onRemoveSub: (m: MultipleNodeInfo) => void
     onContextMenu: (e: React.MouseEvent,subItem: MultipleNodeInfo) => void
     combineColor?: string
+    dropType:string
 }
 /**
  * @description 组
@@ -173,7 +174,7 @@ export interface SubTabItemProps {
 export interface SubTabGroupItemProps extends SubTabItemProps {
     onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
     onGroupContextMenu: (e: React.MouseEvent, ) => void
-    dropType:string
+    
     subPage:MultipleNodeInfo[]
 }
 
