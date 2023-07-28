@@ -267,7 +267,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             setSelected(rowDate)
             getHTTPFlowById(rowDate.Id)
         } else {
-            // setSelected(undefined)
+            setSelected(undefined)
+            setFlow(undefined)
+            setFirstFull(true)
         }
     })
 
@@ -533,7 +535,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                         loading={loading}
                         enableDrag={true}
                         columns={columns}
-                        onRowClick={onRowClick}
+                        // onRowClick={onRowClick}
                         onRowContextMenu={onRowContextMenu}
                         onChange={onTableChange}
                         onSetCurrentRow={onSetCurrentRow}
