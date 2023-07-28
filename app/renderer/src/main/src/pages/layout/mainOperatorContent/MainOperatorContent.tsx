@@ -1963,7 +1963,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 先判断被删除的item是否是独立的，如果是独立的则不需要走组内的逻辑
         // 独立的item被删除 游离的/没有组的
         const itemIndex = subPage.findIndex((ele) => ele.id === handleItem.id)
-        console.log('itemIndex',itemIndex)
         if (itemIndex !== -1) {
             let currentNode: MultipleNodeInfo = subPage[itemIndex + 1]
             if (!currentNode) currentNode = subPage[itemIndex - 1]
@@ -1989,7 +1988,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         // 删除组内的
         const groupIndex = subPage.findIndex((ele) => ele.id === handleItem.groupId)
-        console.log('groupIndex',groupIndex,handleItem)
         if (groupIndex !== -1) {
             const groupList: MultipleNodeInfo = subPage[groupIndex] || {
                 id: "0",
@@ -1998,7 +1996,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
             if (!groupList.groupChildren) groupList.groupChildren = []
             const groupChildrenIndex = groupList.groupChildren.findIndex((ele) => ele.id === handleItem.id)
-            console.log('groupChildrenIndex',groupChildrenIndex)
             if (groupChildrenIndex === -1) return
             // 选中组内的前一个或者后一个
             let currentChildrenNode: MultipleNodeInfo = groupList.groupChildren[groupChildrenIndex + 1]
@@ -2025,7 +2022,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     currentChildrenNode = currentChildrenNode.groupChildren[0]
                 }
             }
-            console.log('currentChildrenNode',currentChildrenNode)
             setSelectSubMenu(currentChildrenNode)
         }
     })
