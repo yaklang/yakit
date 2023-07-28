@@ -1579,7 +1579,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 tabMenuSubRef.current.scrollLeft -= 100
             },
             onLongPressEnd: () => {
-                console.log('left')
                 tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft + 0
             }
         }
@@ -1598,12 +1597,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 tabMenuSubRef.current.scrollLeft += 100
             },
             onLongPressEnd: () => {
-                console.log('right')
                 tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft - 0
             }
         }
     )
-    console.log('scroll',scroll)
     /**滚动到最后边 */
     const scrollToRightMost = useMemoizedFn(() => {
         if (!tabMenuSubRef.current) {
@@ -1668,7 +1665,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
-            console.log('onSubMenuDragEnd',result)
+            // console.log("onSubMenuDragEnd", result)
             const {droppableId: sourceDroppableId} = result.source
             /**将拖拽item变为选中item ---------start---------*/
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
@@ -1946,7 +1943,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
             setTimeout(() => {
                 onScrollTabMenu()
-            }, 200);
+            }, 200)
         } catch (error) {}
     })
     // const onAddSubPage = useDebounceFn(
@@ -2552,7 +2549,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
                                     })}
                                     id='tab-menu-sub'
-                                    {...provided.droppableProps}
+                                    // {...provided.droppableProps}
                                     ref={provided.innerRef}
                                     onScroll={onScrollTabMenu}
                                 >
@@ -2590,6 +2587,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                             <React.Fragment key={item.id}>
                                                 <SubTabItem
                                                     subItem={item}
+                                                    dropType={dropType}
                                                     index={indexSub}
                                                     selectSubMenu={selectSubMenu}
                                                     setSelectSubMenu={(val) => {
@@ -2653,44 +2651,45 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 })
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {subItem, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
+    const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
-
+    const [visible, setVisible] = useState<boolean>(false)
     return (
-        <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
+        <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
             {(provided, snapshot) => {
                 const itemStyle = getItemStyle(snapshot.isDragging, provided.draggableProps.style)
                 return (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        style={{
-                            ...itemStyle
-                        }}
-                        className={classNames(styles["tab-menu-sub-item"], {
-                            [styles["tab-menu-sub-item-active"]]: isActive,
-                            [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
-                            [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor
-                        })}
-                        onClick={() => {
-                            setSelectSubMenu(subItem)
-                        }}
-                        onContextMenu={(e) => onContextMenu(e, subItem)}
+                    <Tooltip
+                        title={subItem.verbose || ""}
+                        overlayClassName={styles["toolTip-overlay"]}
+                        destroyTooltipOnHide={true}
+                        placement='top'
                     >
-                        {(isActive || snapshot.isDragging) && (
-                            <div
-                                className={classNames({
-                                    [styles["tab-menu-sub-item-active-line"]]: isActive || !!combineColor
-                                })}
-                            />
-                        )}
-                        <Tooltip
-                            title={subItem.verbose || ""}
-                            overlayClassName={styles["toolTip-overlay"]}
-                            destroyTooltipOnHide={true}
-                            placement='top'
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={{
+                                ...itemStyle
+                            }}
+                            className={classNames(styles["tab-menu-sub-item"], {
+                                [styles["tab-menu-sub-item-active"]]: isActive,
+                                [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
+                                [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor
+                            })}
+                            onClick={() => {
+                                setSelectSubMenu(subItem)
+                            }}
+                            onContextMenu={(e) => onContextMenu(e, subItem)}
                         >
+                            {(isActive || snapshot.isDragging || visible) && (
+                                <div
+                                    className={classNames({
+                                        [styles["tab-menu-sub-item-line"]]: isActive || !!combineColor
+                                    })}
+                                />
+                            )}
+
                             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                                 <div className={styles["tab-menu-item-verbose"]}>
                                     <SolidDocumentTextIcon className={styles["document-text-icon"]} />
@@ -2706,10 +2705,10 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                     }}
                                 />
                             </div>
-                        </Tooltip>
 
-                        {provided.placeholder}
-                    </div>
+                            {provided.placeholder}
+                        </div>
+                    </Tooltip>
                 )
             }}
         </Draggable>
@@ -2772,13 +2771,13 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                     <div
                         ref={providedGroup.innerRef}
                         {...providedGroup.draggableProps}
-                        {...providedGroup.dragHandleProps}
                         style={{...groupStyle}}
                         className={classNames(styles["tab-menu-sub-group"], styles["tab-menu-sub-group-hidden"], {
                             [styles[`tab-menu-sub-group-${color}`]]: subItem.expand
                         })}
                     >
                         <div
+                            {...providedGroup.dragHandleProps}
                             className={classNames(
                                 styles["tab-menu-sub-group-name"],
                                 styles[`tab-menu-sub-group-name-${color}`],
@@ -2858,6 +2857,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                             <React.Fragment key={groupItem.id}>
                                                 <SubTabItem
                                                     subItem={groupItem}
+                                                    dropType={dropType}
                                                     index={index}
                                                     selectSubMenu={selectSubMenu}
                                                     setSelectSubMenu={(val) => {
