@@ -1901,7 +1901,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                         }
                     })
                     .catch((err) => {
-                        failed(err)
+                        failed(`下载yakit安装包失败${err}`)
                     })
                 })
                 

@@ -1577,6 +1577,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             } catch (error) {}
                         })
                         .catch((err) => {
+                            setYakitLastVersion("")
                             // console.log("err", err)
                         })
                 }

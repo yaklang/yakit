@@ -351,6 +351,19 @@ module.exports = {
             return await asyncDownloadLatestYak(version)
         })
 
+        // 正则匹配url 将url中的中文项进行编码
+        function encodeChineseCharacters(str) {
+            const pattern = /[\u4e00-\u9fa5]/g; // 匹配中文字符的正则表达式
+            const matches = str.match(pattern); // 找到所有中文字符的匹配项
+            if (matches) {
+              for (const match of matches) {
+                const encodedMatch = encodeURIComponent(match);
+                str = str.replace(match, encodedMatch);
+              }
+            }
+            return str;
+        }
+
         const downloadYakitByDownloadUrl = (resolve,reject,downloadUrl) => {
             const dest = path.join(yakEngineDir, path.basename(downloadUrl));
             try {
@@ -362,7 +375,7 @@ module.exports = {
             // https://github.com/IndigoUnited/node-request-progress
             // The options argument is optional so you can omit it
             requestProgress(
-                request(downloadUrl), {
+                request(encodeChineseCharacters(downloadUrl)), {
                     // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
                     // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
                     // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
