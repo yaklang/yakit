@@ -1503,6 +1503,14 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     )
     useEffect(() => {
         if (subPage.length === 0) return
+        const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
+        if (groupChildrenList.length > 0) {
+            // 二级tab最后一个是组
+            const index = groupChildrenList.findIndex((ele) => ele.id === selectSubMenu.id)
+            if (index !== -1) {
+                scrollToRightMost()
+            }
+        }
         if (selectSubMenu.id === subPage[subPage.length - 1].id) {
             //滚动到最后边
             scrollToRightMost()
@@ -2055,9 +2063,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         }
         onUpdatePageCache([...subPage])
-        if(subPage.length===0){
+        if (subPage.length === 0) {
             onUpdateSubPage(pageItem, subPage)
-        }else{
+        } else {
             afterDeleteSubPage("single", pageItem.route, removeItem)
         }
         // afterDeleteSubPage("single", pageItem.route, removeItem)
@@ -2084,7 +2092,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         <span>{labelText}</span>
                     </div>
                 ),
-                key:groupItem.id
+                key: groupItem.id
             }
             const i = menuData[1] as YakitMenuItemProps
             i.children?.push(node)
@@ -2501,7 +2509,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         },
         {wait: 200}
     ).run
-
     return (
         <div
             ref={tabsRef}
