@@ -10,25 +10,23 @@ $keyColor: map-keys($colors);
         &::before {
             content: "";
             width: 100%;
-            height: 2px;
             position: absolute;
             top: 0;
             left: 0;
-            background-color: map-get($currentColor, "backgroundColor") !important;
             z-index: 1;
             transition: width 0.2s linear;
+            border-top: 2px solid map-get($currentColor, "backgroundColor") !important;
         }
     }
     .tab-menu-sub-group-#{"" + $name} {
         &::before {
             content: "";
             width: calc(100% - 6px) !important;
-            height: 2px;
             position: absolute;
             top: 0;
             left: 4px;
-            background-color: map-get($currentColor, "backgroundColor");
             z-index: 9;
+            border-top: 2px solid map-get($currentColor, "backgroundColor");
         }
     }
     .tab-menu-sub-group-name-#{"" + $name} {
@@ -55,23 +53,23 @@ $keyColor: map-keys($colors);
 .fake-content {
     content: "";
     width: 100%;
-    height: 1px;
+    border-top: 1px solid;
     left: 0;
     position: absolute;
 }
 .white-link {
     @extend .fake-content;
-    background-color: #fff;
+    border-color: #fff;
 }
 
 .grey-link {
     @extend .fake-content;
-    background-color: var(--yakit-border-color);
+    border-color: var(--yakit-border-color);
 }
 
 .primary-link {
     @extend .fake-content;
-    background-color: var(--yakit-primary-5) !important;
+    border-color: var(--yakit-primary-5) !important;
 }
 
 .dragging {
@@ -79,8 +77,7 @@ $keyColor: map-keys($colors);
     &::before {
         @extend .white-link;
         bottom: -1px;
-        z-index: 10;
-        height: 2px;
+        border-width: 2px;
     }
 }
 
@@ -231,7 +228,7 @@ $keyColor: map-keys($colors);
             &::after {
                 @extend .fake-content;
                 bottom: 0;
-                background-color: var(--yakit-border-color);
+                border-color: var(--yakit-border-color);
             }
         }
         .tab-menu-sub {
@@ -269,6 +266,7 @@ $keyColor: map-keys($colors);
                     word-break: keep-all;
                     white-space: nowrap;
                     flex-shrink: 0;
+                    z-index: 1;
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;
@@ -334,7 +332,6 @@ $keyColor: map-keys($colors);
         user-select: none;
         position: fixed;
         left: 0;
-        // box-shadow: 8px 0px 16px 4px rgb(133 137 158 / 15%);
         z-index: 11;
         svg {
             width: 12px;
@@ -358,7 +355,6 @@ $keyColor: map-keys($colors);
 
         position: absolute;
         right: 32px;
-        // box-shadow: -8px 0px 16px -4px rgb(133 137 158 / 15%);
         z-index: 11;
         svg {
             width: 12px;
