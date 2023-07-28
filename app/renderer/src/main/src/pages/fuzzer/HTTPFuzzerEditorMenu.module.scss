@@ -138,6 +138,10 @@
                     color: #b4bbca;
                     font-size: 12px;
                     line-height: 16px;
+                    max-width: 128px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
                 .sub-title-left {
                     margin-left: 2px;
