@@ -1,7 +1,8 @@
 import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from "axios"
 
 const service = axios.create({
-    baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"
+    // baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"
+    baseURL: "http://8.140.192.177:6006/"
 })
 
 service.interceptors.request.use(
@@ -28,11 +29,12 @@ interface YakChatOptions {
     prompt: string
     intell_type: string
     token: string
+    history: {role: string; content: string}[]
     signal?: GenericAbortSignal
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void
 }
 
-function http({prompt, intell_type, token, signal, onDownloadProgress}: YakChatOptions) {
+function http({prompt, intell_type, token, history, signal, onDownloadProgress}: YakChatOptions) {
     return service({
         url: "chat-process",
         method: "POST",
@@ -44,7 +46,8 @@ function http({prompt, intell_type, token, signal, onDownloadProgress}: YakChatO
             exp_length: 3,
             attribute: "precise",
             intell_type: intell_type,
-            user_token: token
+            user_token: token,
+            history: history
         },
         signal: signal,
         // 浏览器专属
@@ -52,8 +55,8 @@ function http({prompt, intell_type, token, signal, onDownloadProgress}: YakChatO
     })
 }
 
-export const chatCS = ({prompt, intell_type, token, signal, onDownloadProgress}: YakChatOptions) => {
-    return http({prompt, intell_type, token, signal, onDownloadProgress})
+export const chatCS = ({prompt, intell_type, token, history, signal, onDownloadProgress}: YakChatOptions) => {
+    return http({prompt, intell_type, token, history, signal, onDownloadProgress})
 }
 
 export const chatGrade = (params: {uid: string; grade: "good" | "bad"}) => {
