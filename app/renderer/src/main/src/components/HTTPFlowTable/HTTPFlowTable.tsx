@@ -699,7 +699,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 }
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const { onlyShowFirstNode,setOnlyShowFirstNode } = props
+    const { onlyShowFirstNode,setOnlyShowFirstNode,inViewport = true } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -810,7 +810,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [shieldData])
     useEffect(() => {
         getShieldList()
-    }, [props.inViewport])
+    }, [inViewport])
     useEffect(() => {
         getNewData()
         getHTTPFlowsFieldGroup(true)
@@ -1043,12 +1043,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     )
     // 设置是否自动刷新
     useEffect(() => {
-        if (props.inViewport) {
+        if (inViewport) {
             scrollUpdateTop()
             let id = setInterval(scrollUpdateTop, 1000)
             return () => clearInterval(id)
         }
-    }, [props.inViewport])
+    }, [inViewport])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))

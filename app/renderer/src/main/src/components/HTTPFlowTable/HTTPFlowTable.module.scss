@@ -52,6 +52,33 @@
         }
     }
 
+    .http-history-table-flex {
+        display: flex;
+        align-items: center;
+        .refresh-button {
+            cursor: pointer;
+            border-radius: 4px;
+            width: 32px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .refresh-icon {
+                color: var(--yakit-body-text-color);
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+            &:hover {
+                background-color: var(--yakit-background-color);
+                .refresh-icon {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+    }
+
     .refresh-button {
         cursor: pointer;
         border-radius: 4px;
@@ -193,7 +220,7 @@
     }
 
     .http-history-table-badge {
-        margin-left: 4px;
+        margin: 2px 5px;
         .refresh-icon {
             color: var(--yakit-body-text-color);
             cursor: pointer;
