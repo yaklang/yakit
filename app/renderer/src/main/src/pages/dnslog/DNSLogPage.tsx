@@ -1,14 +1,18 @@
 import React, {useEffect, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Alert, Button, Form, Space, Table, Tag} from "antd"
+import {Alert, Button, Select, Form, Space, Table, Tag, Spin} from "antd"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {failed} from "../../utils/notification"
 import {CopyableField, SwitchItem} from "../../utils/inputUtil"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {YakEditor} from "../../utils/editors"
-import { getReleaseEditionName } from "@/utils/envfile";
+import {getReleaseEditionName} from "@/utils/envfile";
+import {SelectItem} from "@/utils/SelectItem";
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
+import {ProjectDescription} from "@/pages/softwareSettings/ProjectManage";
 
-export interface DNSLogPageProp {}
+export interface DNSLogPageProp {
+}
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,6 +40,9 @@ export interface DNSLogEvent {
     Index?: number
 }
 
+const {Option} = Select
+
+
 export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [token, setToken, getToken] = useGetState("")
     const [domain, setDomain, getDomain] = useGetState("")
@@ -51,7 +58,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         // 获取菜单发送的配置参数
         ipcRenderer.on(
             "dnslog-menu-to-page-callback",
-            (e, data: {token: string; domain: string; onlyARecord: boolean}) => {
+            (e, data: { token: string; domain: string; onlyARecord: boolean }) => {
                 setOnlyARecord(data.onlyARecord)
                 if (getToken() !== data.token || getDomain() !== data.domain) {
                     setToken(data.token || "")
@@ -75,15 +82,17 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     }, [])
 
     // 同步给菜单里dnslog新的参数
-    const sendMenuDnslog = useMemoizedFn((data: {token: string; domain: string; onlyARecord: boolean}) => {
+    const sendMenuDnslog = useMemoizedFn((data: { token: string; domain: string; onlyARecord: boolean }) => {
         ipcRenderer.invoke("dnslog-page-change-menu", data)
     })
+    const [selectedMode, setSelectedMode] = useState(""); // 在组件状态中保存选中的值
 
     const updateToken = useMemoizedFn(() => {
         setLoading(true)
+        console.log("updateToken selectedMode ", selectedMode)
         ipcRenderer
-            .invoke("RequireDNSLogDomain", {Addr: ""})
-            .then((rsp: {Domain: string; Token: string}) => {
+            .invoke("RequireDNSLogDomain", {Addr: "", DNSMode: selectedMode})
+            .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 sendMenuDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord: onlyARecord})
@@ -103,7 +112,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         setRecords([])
 
         const id = setInterval(() => {
-            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token}).then((rsp: {Events: DNSLogEvent[]}) => {
+            console.log("QueryDNSLogByToken ", token, selectedMode)
+            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token, DNSMode: selectedMode}).then((rsp: {
+                Events: DNSLogEvent[]
+            }) => {
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -117,13 +129,25 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         .reverse()
                 )
             })
-        }, 1000)
+        }, 2000)
+        console.log("asdf1 ", id)
         return () => {
+            console.log("clearInterval ", id)
             clearInterval(id)
         }
     }, [token])
 
     const tokenDomain = `${domain}`
+    const [selectLoading, setSelectLoading] = useState<boolean>(true)
+
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+        return (
+            <div>
+                <Spin spinning={selectLoading}>{originNode}</Spin>
+            </div>
+        )
+    })
+    const [projectList, setProjectList] = useState(["dnslog.cn", "-"])
 
     return (
         <AutoCard
@@ -143,16 +167,31 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         size={"small"}
                     >
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                            <Select
+                                showSearch
+                                placeholder='生成一个可用域名'
+                                optionFilterProp='children'
+                                onChange={value => setSelectedMode(value)} // 保存选中的值
+
+                            >
+                                {projectList.map((item, index) => (
+                                    <Option key={index} value={item}>
+                                        {item}
+                                    </Option>
+                                ))}
+                            </Select>
                             <Button type='primary' htmlType='submit'>
                                 {" "}
                                 生成一个可用域名{" "}
                             </Button>
+
+
                         </Form.Item>
                     </Form>
                 </Space>
             }
             bordered={false}
-            style={{overflowY:'auto'}}
+            style={{overflowY: 'auto'}}
         >
             <Space direction={"vertical"} style={{width: "100%"}}>
                 {token !== "" && (
@@ -160,7 +199,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         type={"success"}
                         message={
                             <div>
-                                当前激活域名为 <CopyableField noCopy={false} text={tokenDomain} />
+                                当前激活域名为 <CopyableField noCopy={false} text={tokenDomain}/>
                             </div>
                         }
                     />
@@ -192,7 +231,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             return (
                                 <div style={{width: "100%", height: 300}}>
                                     <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                                        <YakEditor readOnly={true} valueBytes={i.Raw} bytes={true} />
+                                        <YakEditor readOnly={true} valueBytes={i.Raw} bytes={true}/>
                                     </AutoCard>
                                 </div>
                             )
