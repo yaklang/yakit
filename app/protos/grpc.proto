@@ -1923,11 +1923,13 @@ message ExecuteBatchPacketYakScriptParams {
 message YakDNSLogBridgeAddr {
   string DNSLogAddr = 1;
   string DNSLogAddrSecret = 2;
+  string DNSMode = 3;
 }
 
 message QueryDNSLogByTokenRequest {
   string Token = 1;
   string DNSLogAddr = 2;
+  string DNSMode = 3;
 }
 
 message QueryDNSLogByTokenResponse {
