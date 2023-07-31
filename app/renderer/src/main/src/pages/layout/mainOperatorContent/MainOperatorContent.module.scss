@@ -209,7 +209,7 @@ $keyColor: map-keys($colors);
         .tab-menu-first-item-dragging {
             @extend .dragging;
         }
-        .tab-menu-item-new-home {
+        .tab-menu-item-fixed {
             padding-left: 8px;
             max-width: 60px;
             min-width: 40px;

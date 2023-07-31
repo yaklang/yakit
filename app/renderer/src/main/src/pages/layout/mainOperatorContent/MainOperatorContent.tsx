@@ -237,9 +237,20 @@ export const getInitPageCache: () => PageCache[] = () => {
             route: YakitRoute.NewHome,
             singleNode: true,
             multipleNode: []
-        }
+        },
+        {
+            routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+            verbose: "History",
+            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+            route: YakitRoute.DB_HTTPHistory,
+            singleNode: true,
+            multipleNode: []
+        },
     ]
 }
+
+/**一级tab固定展示额tab */
+const defaultFixedTabs=[YakitRoute.NewHome,YakitRoute.DB_HTTPHistory]
 
 // 软件初始化时的默认当前打开页面的key
 export const getInitActiveTabKey = () => {
@@ -1329,10 +1340,11 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             onOkText: "关闭所有",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
-                if (!!newPage) {
-                    const key = newPage.routeKey
-                    setPageCache([newPage])
+                // const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
+                const fixedTabs=pageCache.filter(ele=>defaultFixedTabs.includes(ele.route))
+                if (fixedTabs.length>0) {
+                    const key = fixedTabs[fixedTabs.length-1].routeKey
+                    setPageCache([...fixedTabs])
                     setCurrentTabKey(key)
                 } else {
                     setPageCache([])
@@ -1356,7 +1368,8 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 if (pageCache.length <= 0) return
-                const newPage: PageCache[] = [{...pageCache[0]}, item]
+                const fixedTabs=pageCache.filter(ele=>defaultFixedTabs.includes(ele.route))
+                const newPage: PageCache[] = [...fixedTabs, item]
                 setPageCache(newPage)
                 afterDeleteFirstPage("other", item)
                 m.destroy()
@@ -1407,9 +1420,9 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
     const {index, item, currentTabKey, onSelect, onRemove, onContextMenu} = props
     return (
         <>
-            {item.verbose === "首页" ? (
+            {defaultFixedTabs.includes(item.route) ? (
                 <div
-                    className={classNames(styles["tab-menu-first-item"], styles["tab-menu-item-new-home"], {
+                    className={classNames(styles["tab-menu-first-item"], styles["tab-menu-item-fixed"], {
                         [styles["tab-menu-first-item-active"]]: item.routeKey === currentTabKey
                     })}
                     key={item.routeKey}
@@ -1417,7 +1430,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                         onSelect(item, item.routeKey)
                     }}
                 >
-                    <span>{item.verbose || ""}</span>
+                    <span className='content-ellipsis'>{item.verbose || ""}</span>
                 </div>
             ) : (
                 <Draggable key={item.routeKey} draggableId={item.routeKey} index={index}>
@@ -1566,7 +1579,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         setRenderSubPage(newData)
-        console.log("subPage", subPage)
         onUpdateSubPage(pageItem, subPage)
     }, [subPage])
     // 切换一级页面时聚焦
