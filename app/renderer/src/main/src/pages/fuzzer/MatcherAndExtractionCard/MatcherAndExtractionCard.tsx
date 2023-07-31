@@ -864,12 +864,10 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
             })}
             style={{paddingTop: 8}}
         >
-            <Collapse
+            <YakitCollapse
                 activeKey={activeKey}
                 onChange={(key) => setActiveKey(key as string)}
                 accordion
-                ghost
-                expandIcon={(e) => (e.isActive ? <ChevronDownIcon/> : <ChevronRightIcon/>)}
                 className={styles["matcher-extraction-collapse"]}
             >
                 {extractor.extractorList.map((extractorItem, index) => (
@@ -961,7 +959,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                         />
                     </YakitPanel>
                 ))}
-            </Collapse>
+            </YakitCollapse>
         </div>
     )
 })

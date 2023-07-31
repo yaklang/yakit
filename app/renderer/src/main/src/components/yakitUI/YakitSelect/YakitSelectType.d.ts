@@ -5,7 +5,7 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
  * @description: YakitSelectProps
- * @augments SwitchProps 继承antd的 SelectProps 默认属性
+ * @augments YakitSelectProps 继承antd的 SelectProps 默认属性
  * @param {string} wrapperClassName Switch装饰div的className
  * @param {CSSProperties} wrapperStyle Switch装饰div的style
  */
