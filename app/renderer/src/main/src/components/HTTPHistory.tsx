@@ -22,13 +22,7 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
     const [highlightSearch, setHighlightSearch] = useState("")
-    const ref = useRef(null)
-    const [inViewport] = useInViewport(ref)
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
-
-    useEffect(() => {
-        console.info("HTTPFlowTable view state", inViewport)
-    }, [inViewport])
 
     return (
         <AutoCard bodyStyle={{margin: 0, padding: 0, overflow: "hidden"}} bordered={false}>
@@ -43,7 +37,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                   } as YakQueryHTTPFlowRequest)
                                 : undefined
                         }
-                        inViewport={inViewport}
                         // tableHeight={200}
                         // tableHeight={selected ? 164 : undefined}
                         onSelected={(i) => {
@@ -64,7 +57,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 secondNode={() => (
                     <>
                         {!onlyShowFirstNode && (
-                            <div style={{width: "100%", height: "100%"}} ref={ref}>
+                            <div style={{width: "100%", height: "100%"}}>
                                 <HTTPFlowDetailMini
                                     noHeader={true}
                                     search={highlightSearch}
