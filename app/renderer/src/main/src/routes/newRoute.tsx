@@ -311,7 +311,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.PayloadGenerater_New,
     YakitRoute.DataCompare,
     YakitRoute.YakScript,
-    YakitRoute.HTTPHacker,
+    // YakitRoute.HTTPHacker,
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,

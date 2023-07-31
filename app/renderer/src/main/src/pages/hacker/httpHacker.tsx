@@ -37,45 +37,7 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
     }, [])
     return (
         <div style={{margin: 0, height: "100%"}}>
-            <Tabs
-                className={"httphacker-tabs"}
-                activeKey={activeTab}
-                onChange={setActiveTag}
-                type={"editable-card"}
-                hideAdd={true}
-                onTabClick={(key, e) => {
-                    const divExisted = document.getElementById("yakit-cursor-menu")
-                    if (divExisted) {
-                        const div: HTMLDivElement = divExisted as HTMLDivElement
-                        const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                        if (unmountResult && div.parentNode) {
-                            div.parentNode.removeChild(div)
-                        }
-                    }
-                }}
-            >
-                <Tabs.TabPane tab={"MITM：中间人代理与劫持"} key={"mitm"} closable={false}>
-                    <MITMPage />
-                </Tabs.TabPane>
-                <Tabs.TabPane tab={"HTTP History"} key={"history"} closable={false} forceRender={false}>
-                    <div style={{height: "100%"}}>
-                        <HTTPHistory />
-                    </div>
-                </Tabs.TabPane>
-                {/*<Tabs.TabPane tab={"Websocket History"} key={"wshistory"} closable={false} forceRender={false}>*/}
-                {/*    <div style={{height: "100%"}}>*/}
-                {/*        <WebsocketFlowHistory/>*/}
-                {/*    </div>*/}
-                {/*</Tabs.TabPane>*/}
-                {/* <Tabs.TabPane tab={"插件输出"} key={"plugin"} closable={false}>
-                    <YakScriptExecResultTable />
-                </Tabs.TabPane> */}
-                {/* <Tabs.TabPane tab={"网站树视角"} key={"website-tree"} closable={false}>
-                    <div style={{height: "100%"}}>
-                        <WebsiteTreeViewer />
-                    </div>
-                </Tabs.TabPane> */}
-            </Tabs>
+            <MITMPage />
         </div>
     )
 }
