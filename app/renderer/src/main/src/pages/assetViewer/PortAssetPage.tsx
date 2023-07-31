@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from "react"
+import React, {useEffect, useState, useMemo, useRef} from "react"
 import {
     Button,
     Checkbox,
@@ -32,7 +32,7 @@ import {OutputAsset} from "./outputAssetYakCode"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
 import {ExportExcel} from "../../components/DataExport/DataExport"
-import {useCreation, useDebounceFn, useGetState, useMemoizedFn, useSelections} from "ahooks"
+import {useCreation, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useSelections} from "ahooks"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {isCommunityEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import styles from "./PortAssetPage.module.scss"
@@ -173,6 +173,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
     const [scrollToIndex, setScrollToIndex] = useState<number>()
 
+    const portAssetRef = useRef(null)
+    const [inViewport] = useInViewport(portAssetRef)
+    
     const selectedId = useCreation<string[]>(() => {
         return allResponse.Data.map((i) => `${i.Id}`)
     }, [allResponse.Data])
@@ -204,10 +207,16 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         update(1)
     }, [queryList, advancedConfig])
     useEffect(() => {
-        getAllData()
+        // getAllData()
         update(1)
         getPortsGroup()
     }, [])
+    useEffect(()=>{
+        if(inViewport){
+            getAllData()
+            update(1)
+        }
+    },[inViewport])
     const getPortsGroup = useMemoizedFn(() => {
         setAdvancedQueryLoading(true)
         ipcRenderer
@@ -428,6 +437,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 update(1)
                 setCheckedURL([])
                 unSelectAll()
+                getAllData()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -572,7 +582,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         return p
     }, [currentSelectItem])
     return (
-        <div className={styles["portAsset-content"]} style={{display:"flex",flexDirection:"row"}}>
+        <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display:"flex",flexDirection:"row"}}>
             <div style={{flex:1,overflow:"hidden"}}>
                 <YakitResizeBox
                 isVer={true}
