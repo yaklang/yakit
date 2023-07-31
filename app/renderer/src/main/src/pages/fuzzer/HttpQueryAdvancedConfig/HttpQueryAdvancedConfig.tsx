@@ -352,6 +352,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     activeKey={activeKey}
                     onChange={(key) => onSwitchCollapse(key)}
                     destroyInactivePanel={true}
+                    type='grey'
                 >
                     <YakitPanel
                         header='请求包配置'

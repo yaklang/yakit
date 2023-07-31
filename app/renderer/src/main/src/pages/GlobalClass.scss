@@ -303,15 +303,15 @@ $keyColor: map-keys($colors);
 .button-text-danger {
     --button-wave-shadow-color: var(--yakit-danger-2);
 
-    --button-background: #fff;
+    --button-background: transparent;
     --button-color: var(--yakit-danger-5);
     --button-border-color: var(--yakit-danger-5);
 
-    --button-hover-background: #fff;
+    --button-hover-background: transparent;
     --button-hover-color: var(--yakit-danger-4);
     --button-hover-border-color: var(--yakit-danger-4);
 
-    --button-press-background: #fff;
+    --button-press-background: transparent;
     --button-press-color: var(--yakit-danger-6);
     --button-press-border-color: var(--yakit-danger-6);
 }
