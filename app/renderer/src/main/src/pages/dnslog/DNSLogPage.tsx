@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
 import {Alert, Button, Select, Form, Space, Table, Tag, Spin} from "antd"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {failed} from "../../utils/notification"
+import {failed, info} from "../../utils/notification"
 import {CopyableField, SwitchItem} from "../../utils/inputUtil"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {YakEditor} from "../../utils/editors"
@@ -49,7 +49,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [records, setRecords, getRecords] = useGetState<DNSLogEvent[]>([])
     const [loading, setLoading] = useState(false)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
-
+    const [autoQuery, setAutoQuery] = useState(false);
     const [expandRows, setExpandRows] = useState<string[]>([])
 
     useEffect(() => {
@@ -105,37 +105,41 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
+    const queryDNSLogByToken = () => {
+        console.log("QueryDNSLogByToken ", token, selectedMode);
+        ipcRenderer.invoke("QueryDNSLogByToken", {Token: token, DNSMode: selectedMode}).then((rsp: {
+            Events: DNSLogEvent[]
+        }) => {
+            setRecords(
+                rsp.Events.filter((i) => {
+                    if (getOnlyARecord()) {
+                        return i.DNSType === "A";
+                    }
+                    return true;
+                })
+                    .map((i, index) => {
+                        return {...i, Index: index};
+                    })
+                    .reverse()
+            );
+        });
+    };
+
     useEffect(() => {
-        if (!token) {
-            return
+        if (!token || !autoQuery) {
+            return;
         }
-        setRecords([])
+        setRecords([]);
 
         const id = setInterval(() => {
-            console.log("QueryDNSLogByToken ", token, selectedMode)
-            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token, DNSMode: selectedMode}).then((rsp: {
-                Events: DNSLogEvent[]
-            }) => {
-                setRecords(
-                    rsp.Events.filter((i) => {
-                        if (getOnlyARecord()) {
-                            return i.DNSType === "A"
-                        }
-                        return true
-                    })
-                        .map((i, index) => {
-                            return {...i, Index: index}
-                        })
-                        .reverse()
-                )
-            })
-        }, 2000)
-        console.log("asdf1 ", id)
+            queryDNSLogByToken();
+        }, 5000);
+
         return () => {
-            console.log("clearInterval ", id)
-            clearInterval(id)
-        }
-    }, [token])
+            console.log("clearInterval ", id);
+            clearInterval(id);
+        };
+    }, [token, autoQuery]);
 
     const tokenDomain = `${domain}`
     const [selectLoading, setSelectLoading] = useState<boolean>(true)
@@ -147,7 +151,23 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             </div>
         )
     })
-    const [projectList, setProjectList] = useState(["dnslog.cn", "-"])
+    const [platforms, setPlatforms] = useState<string[]>([]);
+
+    const querySupportedDnsLogPlatforms = () => {
+        // 调用后端API获取支持的平台
+        ipcRenderer.invoke("QuerySupportedDnsLogPlatforms", {}).then((rsp) => {
+            if (rsp && rsp.Platforms) {
+                setPlatforms(["dnstunnel.run", ...rsp.Platforms]);
+            }
+        }).catch((err) => {
+            failed(err);
+        });
+    };
+
+    // 您可以在组件加载时调用此函数
+    useEffect(() => {
+        querySupportedDnsLogPlatforms();
+    }, []);
 
     return (
         <AutoCard
@@ -174,7 +194,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 onChange={value => setSelectedMode(value)} // 保存选中的值
 
                             >
-                                {projectList.map((item, index) => (
+                                {platforms.map((item, index) => (
                                     <Option key={index} value={item}>
                                         {item}
                                     </Option>
@@ -205,10 +225,11 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     />
                 )}
                 <Space>
-                    <Form size={"small"}>
+                    <Form size={"small"} style={{display: 'flex', alignItems: 'center'}}>
                         <SwitchItem
                             formItemStyle={{
-                                marginBottom: 0
+                                marginBottom: 0,
+                                marginRight: 10 // 添加右侧间隔
                             }}
                             label={"只看A记录"}
                             value={onlyARecord}
@@ -217,6 +238,17 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 sendMenuDnslog({token, domain, onlyARecord: flag})
                             }}
                         />
+                        <SwitchItem
+                            formItemStyle={{
+                                marginBottom: 0,
+                                marginRight: 10 // 添加右侧间隔
+
+                            }}
+                            label={"自动刷新记录"}
+                            value={autoQuery}
+                            setValue={setAutoQuery}
+                        />
+                        <Button type='primary' onClick={queryDNSLogByToken}>刷新记录</Button> {/* 这里添加了新按钮 */}
                     </Form>
                 </Space>
                 <Table<DNSLogEvent>
