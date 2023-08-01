@@ -85,6 +85,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         SaveClosedPorts: false,
         SaveToDB: true,
         Proxy: [],
+        EnableBrute: false,
         ProbeTimeout: 7,
         ScriptNames: [],
         ProbeMax: 3,

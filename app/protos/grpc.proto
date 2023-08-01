@@ -354,6 +354,7 @@ service Yak {
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
   rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
   rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+  rpc QuerySupportedDnsLogPlatforms(Empty) returns (QuerySupportedDnsLogPlatformsResponse);
 
   // 获取 Tags
   rpc GetAvailableYakScriptTags(Empty) returns (Fields);
@@ -1791,6 +1792,10 @@ message QueryICMPTriggerRequest {
 
 message QueryICMPTriggerResponse {
   repeated ICMPTriggerNotification Notification = 1;
+}
+
+message QuerySupportedDnsLogPlatformsResponse{
+  repeated string Platforms = 1;
 }
 
 message ICMPTriggerNotification {

@@ -18,6 +18,23 @@ module.exports = {
             return await asyncRequireDNSLogDomain(params)
         })
 
+        // asyncQuerySupportedDnsLogPlatforms wrapper
+        const asyncQuerySupportedDnsLogPlatforms = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().QuerySupportedDnsLogPlatforms(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("QuerySupportedDnsLogPlatforms", async (e, params) => {
+            return await asyncQuerySupportedDnsLogPlatforms(params)
+        })
+
+
         // asyncQueryDNSLogByToken wrapper
         const asyncQueryDNSLogByToken = (params) => {
             return new Promise((resolve, reject) => {
