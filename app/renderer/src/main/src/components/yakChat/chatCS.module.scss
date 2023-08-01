@@ -44,6 +44,13 @@
                 width: 32px;
                 height: 32px;
             }
+            .info-hint {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: #b4bbca;
+                }
+            }
         }
         .header-extra {
             height: 24px;
@@ -188,6 +195,20 @@
                             color: #f28b44;
                         }
                     }
+                    .info-hint-wrapper {
+                        width: fit-content;
+                        padding: 4px 0px;
+                        display: flex;
+                        gap: 8px;
+                        color: #b4bbca;
+                        font-size: 12px;
+                        line-height: 16px;
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: #b4bbca;
+                        }
+                    }
                 }
             }
         }
@@ -201,6 +222,7 @@
             display: inline-flex;
             border-radius: 20px;
             border: 1.5px solid #fbc6a1;
+            background: rgba(255, 255, 255, 0.95);
             box-shadow: 0px 8px 16px 0px rgba(133, 137, 158, 0.1);
             cursor: pointer;
             svg {
@@ -210,6 +232,7 @@
             }
         }
         .body-to-bottom:hover {
+            border: 1.5px solid #f28b44;
             background: #f28b44;
             svg {
                 color: #ffffff;
@@ -648,6 +671,13 @@
             font-size: 12px;
             line-height: 16px;
             cursor: text;
+        }
+    }
+}
+.info-hint-popover {
+    :global {
+        .ant-tooltip-arrow {
+            margin-top: 1px;
         }
     }
 }

@@ -45,6 +45,7 @@ import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 
 import moment from "moment"
 import classNames from "classnames"
@@ -746,6 +747,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     <div className={styles["header-title"]}>
                         <YakitChatCSIcon />
                         ChatCS
+                        <Tooltip
+                            overlayClassName={classNames(styles["tooltip-wrapper"], styles["info-hint-popover"])}
+                            overlayStyle={{paddingTop: 4}}
+                            title={"ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力"}
+                        >
+                            <OutlineInformationcircleIcon className={styles["info-hint"]} />
+                        </Tooltip>
                     </div>
                     <div className={styles["header-extra"]}>
                         {history.length !== 0 && (
@@ -837,6 +845,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 </div>
                                             )
                                         })}
+                                        <div className={styles["info-hint-wrapper"]}>
+                                            <OutlineInformationcircleIcon />
+                                            ChatCS模型参数：6.5b，训练Token: 1.5T
+                                            显卡资源：A40*4，使用文心增强知识推理能力
+                                        </div>
                                     </div>
                                 </div>
                             </>
