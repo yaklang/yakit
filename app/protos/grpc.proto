@@ -517,6 +517,33 @@ service Yak {
 
   // 诊断网络发生的问题
   rpc DiagnoseNetwork(DiagnoseNetworkRequest) returns (stream DiagnoseNetworkResponse);
+  rpc DiagnoseNetworkDNS(DiagnoseNetworkDNSRequest) returns (stream DiagnoseNetworkResponse);
+
+  // Global Network Config
+  rpc GetGlobalNetworkConfig(GetGlobalNetworkConfigRequest) returns (GlobalNetworkConfig);
+  rpc SetGlobalNetworkConfig(GlobalNetworkConfig) returns (Empty);
+  rpc ResetGlobalNetworkConfig(ResetGlobalNetworkConfigRequest) returns (Empty);
+}
+
+message DiagnoseNetworkDNSRequest {
+  string Domain = 1;
+}
+
+message ResetGlobalNetworkConfigRequest {
+
+}
+
+message GetGlobalNetworkConfigRequest {
+
+}
+
+message GlobalNetworkConfig {
+  // Config DNS
+  bool DisableSystemDNS = 1;
+  repeated string CustomDNSServers = 2;
+  bool DNSFallbackTCP = 3;
+  bool DNSFallbackDoH = 4;
+  repeated string CustomDoHServers = 5;
 }
 
 message DiagnoseNetworkRequest {
@@ -2983,6 +3010,13 @@ message FuzzerRequest {
   bool InheritVariables = 38;
   bool ForceOnlyOneResponse = 39;
   bool InheritCookies = 40; // 上一个 Request 一般来说是单个请求，他的响应信息中 Cookie 也应该被妥善处理
+
+  // web fuzzer task id
+  // 需要配合前端的 Index
+  // 这两个 Index 如果有的话，后端在执行 HTTP Fuzzer Sequence 的时候，就可以只传递这两个了
+  // 如果没有的话，直接把整个 Request 传回去
+  string FuzzerIndex = 41;
+  string FuzzerTabIndex = 42;
 }
 
 message KVPair {
