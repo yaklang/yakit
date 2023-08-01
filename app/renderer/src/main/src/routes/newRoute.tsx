@@ -13,7 +13,6 @@ import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage"
 import {RiskPage} from "../pages/risks/RiskPage"
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage"
-import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage"
 import {fuzzerInfoProp} from "../pages/MainOperator"
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
@@ -115,6 +114,7 @@ import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
 import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager";
 import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage";
 import {ConfigNetworkPage} from "@/pages/configNetwork/ConfigNetworkPage";
+import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -391,7 +391,7 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             )
         case YakitRoute.HTTPFuzzer:
             return (
-                <HTTPFuzzerPage
+                <WebFuzzerPage
                     isHttps={params?.isHttps}
                     isGmTLS={params?.isGmTLS}
                     request={params?.request}

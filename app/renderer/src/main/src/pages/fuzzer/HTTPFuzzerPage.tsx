@@ -347,7 +347,7 @@ export interface SelectOptionProps {
     value: string
 }
 
-export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
+const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>({
         // 请求包配置
         forceFuzz: true,
@@ -1683,7 +1683,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </div>
     )
 }
-
+export default HTTPFuzzerPage
 interface SecondNodeExtraProps {
     rsp: FuzzerResponse
     onlyOneResponse: boolean

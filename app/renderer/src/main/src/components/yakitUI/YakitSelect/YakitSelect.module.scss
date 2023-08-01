@@ -96,9 +96,6 @@
     border-radius: 4px;
 
     :global {
-        .ant-select-item-option-content:hover {
-            color: var(--select-primary-font-color);
-        }
 
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
             background-color: transparent;

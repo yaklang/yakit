@@ -1,0 +1,48 @@
+@use '../HTTPFuzzerPageShare.module.scss';
+// --------------------- start-----------------------
+.web-fuzzer {
+    @extend .display-flex-center;
+    flex: 1;
+    overflow: hidden;
+    .web-fuzzer-tab {
+        border-right: 1px solid var(--yakit-border-color);
+        background: #f0f1f3;
+        width: 24px;
+        height: 100%;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-body-text-color);
+        }
+        &-item {
+            @extend .display-column-center;
+            padding: 12px 4px;
+            align-items: flex-start;
+            gap: 4px;
+            color: var(--yakit-header-color);
+            cursor: pointer;
+            background-color: #f0f1f3;
+        }
+        &-item-active {
+            color: #fff;
+            background-color: var(--yakit-primary-5);
+            svg {
+                color: #fff;
+            }
+        }
+        &-label {
+            font-weight: 600;
+            line-height: 16px;
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: sideways-right;
+            transform: rotate(180deg);
+        }
+    }
+    .web-fuzzer-tab-content{
+        @extend .display-column-center;
+        flex: 1;
+        overflow: hidden;
+        height: 100%;
+    }
+}

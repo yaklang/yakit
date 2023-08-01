@@ -1,4 +1,21 @@
 // webFuzzer该页面的一些公用样式
+.display-flex-center {
+    display: flex;
+    align-items: center;
+    opacity: 1;
+}
+
+.display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 1;
+}
+
+.display-none {
+    display: none !important;
+    opacity: 0 !important;
+}
 %base-icon {
     width: 24px;
     height: 24px;

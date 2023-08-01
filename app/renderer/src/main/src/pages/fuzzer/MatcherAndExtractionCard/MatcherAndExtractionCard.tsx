@@ -1049,15 +1049,19 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
     )
 })
 
-const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) => {
+export const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) => {
     const {column} = props
     return (
         <div
-            className={classNames(styles["label-node"], {
-                [styles["label-node-column"]]: column
-            })}
+            className={classNames(
+                styles["label-node"],
+                {
+                    [styles["label-node-column"]]: column
+                },
+                props.className
+            )}
         >
-            <span className={styles["label"]}>{props.label}</span>
+            <span className={classNames(styles["label"], props.labelClassName)}>{props.label}</span>
             {props.children}
         </div>
     )
