@@ -235,7 +235,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 "SimpleDetect",
                                                 {
                                                     LastRecord: {},
-                                                    PortScanRequest
+                                                    StartBruteParams:{},
+                                                    PortScanRequest,
                                                 },
                                                 token
                                             )
