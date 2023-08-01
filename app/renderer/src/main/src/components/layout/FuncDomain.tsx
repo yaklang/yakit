@@ -873,7 +873,11 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "vulinbox-manager",
                     label: "(靶场)Vulinbox"
-                }
+                },
+                {
+                    key: "diagnose-network",
+                    label: "本地网络异常诊断"
+                },
             ]
         },
         {
@@ -1056,6 +1060,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "vulinbox-manager":
                 addToTab("**vulinbox-manager")
+                return
+            case "diagnose-network":
+                addToTab("**diagnose-network")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()

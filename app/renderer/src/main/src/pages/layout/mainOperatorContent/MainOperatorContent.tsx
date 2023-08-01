@@ -24,7 +24,7 @@ import {
     YakitRouteToPageInfo,
     YakitRoute,
     RouteToPage,
-    SinglePageRoute,
+    SingletonPageRoute,
     NoPaddingRoute,
     ComponentParams
 } from "@/routes/newRoute"
@@ -356,6 +356,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
+            if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
@@ -649,7 +650,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
             const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
             // 单开页面
-            if (SinglePageRoute.includes(route)) {
+            if (SingletonPageRoute.includes(route)) {
                 const key = routeConvertKey(route, pluginName)
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
@@ -742,7 +743,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** @name 判断页面是否打开，打开则定位该页面，未打开则打开页面 */
     const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
-        if (SinglePageRoute.includes(routeInfo.route)) {
+        if (SingletonPageRoute.includes(routeInfo.route)) {
             const flag =
                 pageCache.filter(
                     (item) => item.route === routeInfo.route && (item.pluginName || "") === (routeInfo.pluginName || "")

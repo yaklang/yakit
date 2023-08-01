@@ -13,6 +13,10 @@ export const info = (msg: React.ReactNode) => {
     // notification["info"]({message: msg, placement: "bottomRight"})
 }
 
+export const yakitInfo = msg => {
+    yakitNotify("info", msg)
+}
+
 export const success = (msg: React.ReactNode) => {
     // yakitNotify("info", msg)
     yakitNotify("success", msg)
