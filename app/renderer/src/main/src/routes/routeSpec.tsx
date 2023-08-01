@@ -208,6 +208,8 @@ export enum Route {
 
     Beta_VulinboxManager = "beta-vulinbox-manager",
 
+    Beta_DiagnoseNetwork = "beta-diagnose-network",
+
     // 首页
     NewHome = "new-home"
 }

@@ -31,6 +31,40 @@ const {ipcRenderer} = window.require("electron")
 export interface EngineConsoleProp {
     isMini:boolean
 }
+
+export const defaultXTermOptions = {
+    convertEol: true,
+    theme: {
+        foreground: "#536870",
+        background: "#E8E9E8",
+        cursor: "#536870",
+
+        black: "#002831",
+        brightBlack: "#001e27",
+
+        red: "#d11c24",
+        brightRed: "#bd3613",
+
+        green: "#738a05",
+        brightGreen: "#475b62",
+
+        yellow: "#a57706",
+        brightYellow: "#536870",
+
+        blue: "#2176c7",
+        brightBlue: "#708284",
+
+        magenta: "#c61c6f",
+        brightMagenta: "#5956ba",
+
+        cyan: "#259286",
+        brightCyan: "#819090",
+
+        white: "#eae3cb",
+        brightWhite: "#fcf4dc"
+    }
+};
+
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     const {isMini} = props
     const xtermRef = useRef<any>(null)
@@ -98,38 +132,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
             />
             <XTerm
                 ref={xtermRef}
-                options={{
-                    convertEol: true,
-                    theme: {
-                        foreground: "#536870",
-                        background: "#E8E9E8",
-                        cursor: "#536870",
-
-                        black: "#002831",
-                        brightBlack: "#001e27",
-
-                        red: "#d11c24",
-                        brightRed: "#bd3613",
-
-                        green: "#738a05",
-                        brightGreen: "#475b62",
-
-                        yellow: "#a57706",
-                        brightYellow: "#536870",
-
-                        blue: "#2176c7",
-                        brightBlue: "#708284",
-
-                        magenta: "#c61c6f",
-                        brightMagenta: "#5956ba",
-
-                        cyan: "#259286",
-                        brightCyan: "#819090",
-
-                        white: "#eae3cb",
-                        brightWhite: "#fcf4dc"
-                    }
-                }}
+                options={defaultXTermOptions}
             />
         </div>
     )

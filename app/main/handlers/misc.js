@@ -1,5 +1,4 @@
 const {ipcMain} = require("electron")
-const fs = require("fs")
 
 module.exports = (win, getClient) => {
     // asyncYsoDump wrapper
@@ -561,5 +560,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("StartVulinbox", (e, params, token) => {
         let stream = getClient().StartVulinbox(params);
         handlerHelper.registerHandler(win, stream, streamStartVulinboxMap, token)
+    })
+
+    const streamDiagnoseNetworkMap = new Map();
+    ipcMain.handle("cancel-DiagnoseNetwork", handlerHelper.cancelHandler(streamDiagnoseNetworkMap));
+    ipcMain.handle("DiagnoseNetwork", (e, params, token) => {
+        let stream = getClient().DiagnoseNetwork(params);
+        handlerHelper.registerHandler(win, stream, streamDiagnoseNetworkMap, token)
+    })
+
+    const streamDiagnoseNetworkDNSMap = new Map();
+    ipcMain.handle("cancel-DiagnoseNetworkDNS", handlerHelper.cancelHandler(streamDiagnoseNetworkDNSMap));
+    ipcMain.handle("DiagnoseNetworkDNS", (e, params, token) => {
+        let stream = getClient().DiagnoseNetworkDNS(params);
+        handlerHelper.registerHandler(win, stream, streamDiagnoseNetworkDNSMap, token)
     })
 }

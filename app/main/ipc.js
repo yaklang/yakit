@@ -215,6 +215,9 @@ module.exports = {
 
         require("./handlers/version")(win, getClient)
 
+        // global config
+        require("./handlers/configNetwork")(win, getClient)
+
         // misc
         require("./handlers/misc")(win, getClient)
 

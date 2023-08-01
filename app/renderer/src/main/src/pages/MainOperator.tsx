@@ -61,7 +61,7 @@ import {
     NoPaddingRoute,
     NoScrollRoutes,
     RouteToPage,
-    SinglePageRoute,
+    SingletonPageRoute,
     YakitRoute,
     YakitRouteToPageInfo
 } from "@/routes/newRoute"
