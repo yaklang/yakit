@@ -34,6 +34,7 @@ export interface MultipleNodeGroup {
     /**@param 目前根据该字段分组 */
     groupId: string
     groupChildren?: MultipleNodeInfo[]
+    /**@private */
     childrenWidth?:number
 }
 

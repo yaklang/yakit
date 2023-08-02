@@ -1,4 +1,4 @@
-@use '../HTTPFuzzerPageShare.module.scss';
+@use "../HTTPFuzzerPageShare.module.scss" as HTTPFuzzerPageShare;
 // --------------------- start-----------------------
 .web-fuzzer {
     @extend .display-flex-center;
@@ -39,10 +39,62 @@
             transform: rotate(180deg);
         }
     }
-    .web-fuzzer-tab-content{
+    .web-fuzzer-tab-content {
         @extend .display-column-center;
         flex: 1;
         overflow: hidden;
         height: 100%;
+    }
+}
+
+.yakit-modal-content {
+    @extend .display-column-center;
+    gap: 24px;
+    padding: 24px;
+    &-heard {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        &-body {
+            @extend .display-column-center;
+            gap: 8px;
+            &-title {
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 20px;
+                color: var(--yakit-header-color);
+            }
+            &-subTitle {
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+                color: var(--yakit-body-text-color);
+                &-tip {
+                    color: var(--yakit-helper-text-color);
+                }
+            }
+        }
+    }
+    .yakit-modal-content-body {
+        display: flex;
+        flex: 1;
+        border-radius: 8px;
+        video{
+            object-fit: cover;
+        }
+        &-video {
+            width: 100%;
+            position: relative;
+        }
+    }
+    .remove-icon {
+        @include HTTPFuzzerPageShare.base-icon-card;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: var(--yakit-body-text-color);
     }
 }

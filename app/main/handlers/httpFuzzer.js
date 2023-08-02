@@ -99,6 +99,22 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerMap, token)
     })
 
+    const streamHTTPFuzzerSequenceMap = new Map();
+    ipcMain.handle("cancel-HTTPFuzzerSequence", handlerHelper.cancelHandler(streamHTTPFuzzerSequenceMap));
+    ipcMain.handle("HTTPFuzzerSequence", (e, params, token) => {
+        let stream = getClient().HTTPFuzzerSequence(params);
+        stream.on("data", data => {
+            if (win && data) win.webContents.send(`fuzzer-sequence-data-${token}`, data)
+        });
+        stream.on("error", err => {
+            if (win && err) win.webContents.send(`fuzzer-sequence-error-${token}`, err.details)
+        })
+        stream.on("end", data => {
+            if (win && data) win.webContents.send(`fuzzer-sequence-end-${token}`)
+        })
+        handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
+    })
+
     // asyncExtractUrl wrapper
     const asyncExtractUrl = (params) => {
         return new Promise((resolve, reject) => {

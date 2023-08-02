@@ -1,13 +1,15 @@
-export interface FuzzerSequenceProps {
+import { WebFuzzerPageInfoProps } from "../../../store/pageNodeInfo";
 
+export interface FuzzerSequenceProps {
+    pageId: string
 }
 
 export interface SequenceProps extends ExtraSettingProps {
     id: string
     pageId: string
+    pageGroupId: string
     pageName: string
-    pageParams: PageParams
-
+    pageParams: WebFuzzerPageInfoProps
 }
 
 export interface ExtraSettingProps {
@@ -15,18 +17,14 @@ export interface ExtraSettingProps {
     inheritVariables: boolean
 }
 
-interface PageParams {
-    advancedConfigValue: AdvancedConfigValueProps
-    request: string
-}
-
 export interface SequenceItemProps {
     item: SequenceProps
     index: number
+    errorIndex: number
     disabled: boolean
     isDragging: boolean
     pageNodeList: SequenceProps[]
     onUpdateItem: (s: SequenceProps) => void
     onApplyOtherNodes: (e: ExtraSettingProps) => void
-    onRemove:(s:SequenceProps) => void
+    onRemove: (s: SequenceProps) => void
 }

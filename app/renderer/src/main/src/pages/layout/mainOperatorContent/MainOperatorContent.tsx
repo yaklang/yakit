@@ -30,6 +30,7 @@ import {
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {
+    useCreation,
     useDebounceEffect,
     useDebounceFn,
     useGetState,
@@ -69,6 +70,14 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
+import {PageInfoProps, PageNodeItemProps, usePageNode} from "@/store/pageNodeInfo"
+import {
+    WEB_FUZZ_DNS_Hosts_Config,
+    WEB_FUZZ_DNS_Server_Config,
+    WEB_FUZZ_PROXY,
+    defaultAdvancedConfigValue
+} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
@@ -883,6 +892,63 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
+    const proxyRef = useRef<string[]>()
+    const dnsServersRef = useRef<string[]>()
+    const etcHostsRef = useRef<KVPair[]>()
+    const isFetchFuzzerList = useCreation<boolean>(() => {
+        return !!(proxyRef.current && dnsServersRef.current && etcHostsRef.current)
+    }, [proxyRef.current, dnsServersRef.current, etcHostsRef.current])
+    useEffect(() => {
+        // web-fuzzer页面更新缓存数据
+        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
+            try {
+                const haveItem = fuzzerList.current.get(res.key || "")
+                if (!haveItem) return
+                const params = JSON.parse(res.param)
+                updateFuzzerList(res.key, {...haveItem, params})
+            } catch (error) {
+                yakitNotify("error", "webFuzzer数据缓存失败：" + error)
+            }
+        })
+        getFuzzerDefaultCache()
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
+        }
+    }, [])
+    useEffect(() => {
+        if (!isFetchFuzzerList) return
+        // 简易版不获取webFuzzer缓存
+        if (!isEnpriTraceAgent()) {
+            // 触发获取web-fuzzer的缓存
+            fetchFuzzerList()
+        }
+    }, [isFetchFuzzerList])
+    /**@description 获取Fuzzer默认缓存 */
+    const getFuzzerDefaultCache = useMemoizedFn(() => {
+        getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
+            if (!e) {
+                return
+            }
+            proxyRef.current = e ? e.split(",") : []
+        })
+        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
+            if (!e) {
+                return
+            }
+            try {
+                dnsServersRef.current = JSON.parse(e)
+            } catch (error) {}
+        })
+        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
+            if (!e) {
+                return
+            }
+            try {
+                etcHostsRef.current = JSON.parse(e)
+            } catch (error) {}
+        })
+    })
+
     // 定时向数据库保存web-fuzzer缓存数据
     const saveFuzzerList = debounce(() => {
         const historys: MultipleNodeInfo[] = []
@@ -895,6 +961,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
         }
     }, 500)
+    const {setPageNode} = usePageNode()
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
         // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -908,15 +975,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
                 const tabName = routeKeyToLabel.get(key) || menuName
                 fuzzerList.current.clear()
+                let pageNodeInfo: PageInfoProps = {
+                    pageNodeList: [],
+                    routeKey: YakitRoute.HTTPFuzzer,
+                    singleNode: false
+                }
                 let multipleNodeListLength: number = 0
                 const multipleNodeList = cache.filter((ele) => ele.groupId === "0")
                 const pLength = multipleNodeList.length
+                const defaultCache = {
+                    proxy: proxyRef.current || [],
+                    dnsServers: dnsServersRef.current || [],
+                    etcHosts: etcHostsRef.current || []
+                }
                 for (let index = 0; index < pLength; index++) {
                     const parentItem = multipleNodeList[index]
                     const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
                     const cLength = childrenList.length
                     const groupId = generateGroupId()
                     const groupChildrenList: MultipleNodeInfo[] = []
+
+                    const pageNodeChildrenList: PageNodeItemProps[] = []
                     for (let j = 0; j < cLength; j++) {
                         const childItem = childrenList[j]
                         const time = (new Date().getTime() + j).toString() // +j 唯一
@@ -933,6 +1012,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                         fuzzerList.current.set(nodeItem.id, {...nodeItem})
                         groupChildrenList.push({...nodeItem})
+                        pageNodeChildrenList.push({
+                            routeKey: YakitRoute.HTTPFuzzer,
+                            pageGroupId: nodeItem.groupId,
+                            pageId: nodeItem.id,
+                            pageName: nodeItem.verbose,
+                            pageParamsInfo: {
+                                webFuzzerPageInfo: {
+                                    advancedConfigValue: {
+                                        ...defaultAdvancedConfigValue,
+                                        ...defaultCache,
+                                        ...nodeItem.params
+                                    },
+                                    request: nodeItem.params?.request || ""
+                                }
+                            },
+                            pageChildrenList: []
+                        })
                     }
                     if (cLength > 0) {
                         multipleNodeListLength += cLength
@@ -948,6 +1044,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     }
                     parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+
+                    pageNodeInfo.pageNodeList.push({
+                        routeKey: YakitRoute.HTTPFuzzer,
+                        pageGroupId: parentItem.groupId,
+                        pageId: parentItem.id,
+                        pageName: parentItem.verbose,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
+                                advancedConfigValue: {
+                                    ...defaultAdvancedConfigValue,
+                                    ...defaultCache,
+                                    ...parentItem.params
+                                },
+                                request: parentItem.params?.request || ""
+                            }
+                        },
+                        pageChildrenList: pageNodeChildrenList
+                    })
                     fuzzerList.current.set(parentItem.id, {...parentItem, groupChildren: []})
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
@@ -963,7 +1077,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleNode: multipleNodeList,
                     multipleLength: multipleNodeListLength
                 }
-                // console.log("multipleNodeList", multipleNodeList)
+                console.log("multipleNodeList", multipleNodeList)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {
@@ -973,6 +1087,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 setPageCache(oldPageCache)
                 setCurrentTabKey(key)
+                setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
             })
             .catch((e) => {
                 console.info(e)
@@ -1008,28 +1123,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         saveFuzzerList()
     }
 
-    useEffect(() => {
-        // web-fuzzer页面更新缓存数据
-        ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
-            try {
-                const haveItem = fuzzerList.current.get(res.key || "")
-                if (!haveItem) return
-                const params = JSON.parse(res.param)
-                updateFuzzerList(res.key, {...haveItem, params})
-            } catch (error) {
-                yakitNotify("error", "webFuzzer数据缓存失败：" + error)
-            }
-        })
-        // 简易版不获取webFuzzer缓存
-        if (!isEnpriTraceAgent()) {
-            // 触发获取web-fuzzer的缓存
-            fetchFuzzerList()
-        }
-
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
-        }
-    }, [])
     /** ---------- web-fuzzer 缓存逻辑 end ---------- */
 
     // 新增数据对比页面
