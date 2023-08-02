@@ -104,8 +104,6 @@ import {
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker";
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage";
 import {CVEViewer} from "@/pages/cve/CVEViewer";
-import {YakScriptExecResultTable} from "@/components/YakScriptExecResultTable";
-import {MatcherExtractorPage} from "@/pages/matcherextractor/MatcherExtractorPage";
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage";
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage";
 
@@ -196,9 +194,6 @@ export enum Route {
 
     // 录屏管理器
     ScreenRecorderPage = "screen-recorder-page",
-
-    // 匹配提取功能
-    Beta_MatcherExtractorPage = "beta-matcher-extractor-page",
 
     // 调试插件的功能
     Beta_DebugPlugin = "beta-debug-plugin",
@@ -475,8 +470,6 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
             return <ScreenRecorderPage />
         case Route.DB_CVE:
             return <CVEViewer />
-        case Route.Beta_MatcherExtractorPage:
-            return <MatcherExtractorPage/>
         case Route.Beta_DebugPlugin:
             return <PluginDebuggerPage />
         case Route.Beta_DebugMonacoEditor:
