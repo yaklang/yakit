@@ -114,6 +114,7 @@ import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
 import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
 import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager";
 import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage";
+import {ConfigNetworkPage} from "@/pages/configNetwork/ConfigNetworkPage";
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -193,6 +194,8 @@ export enum YakitRoute {
     Beta_VulinboxManager = "beta-vulinbox-manager",
     // 网络调试
     Beta_DiagnoseNetwork = "beta-diagnose-network",
+    // 配置全局
+    Beta_ConfigNetwork = "beta-config-network",
 }
 /**
  * @description 页面路由对应的页面信息
@@ -269,6 +272,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器",},
     "beta-diagnose-network": {label: "网络异常诊断"},
+    "beta-config-network": {label: "全局网络配置"},
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -305,6 +309,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ControlAdminPage,
     YakitRoute.Beta_VulinboxManager,
     YakitRoute.Beta_DiagnoseNetwork,
+    YakitRoute.Beta_ConfigNetwork,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -506,6 +511,8 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <VulinboxManager/>
         case YakitRoute.Beta_DiagnoseNetwork:
             return <DiagnoseNetworkPage/>
+        case YakitRoute.Beta_ConfigNetwork:
+            return <ConfigNetworkPage/>
         default:
             return <div />
     }
