@@ -8,6 +8,8 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {yakitInfo} from "@/utils/notification";
 import {AutoSpin} from "@/components/AutoSpin";
 import {setTimeout} from "timers";
+import {useMemoizedFn} from "ahooks";
+import {setLogger} from "@grpc/grpc-js";
 
 export interface ConfigNetworkPageProp {
 
@@ -26,14 +28,20 @@ const {ipcRenderer} = window.require("electron");
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const [mode, setMode] = useState<"dns" | "network">("dns");
     const [params, setParams] = useState<GlobalNetworkConfig>();
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
+    const update = useMemoizedFn(()=>{
+        setLoading(true)
+        setParams(undefined)
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
-            debugYakitModal(rsp)
             setTimeout(() => {
                 setParams(rsp)
+                setLoading(false)
             }, 500)
         })
+    })
+    useEffect(() => {
+        update()
     }, [])
 
     return <AutoCard title={<div>
@@ -46,6 +54,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             onSubmitCapture={e => {
                 e.preventDefault()
 
+                ipcRenderer.invoke("SetGlobalNetworkConfig", params).then(() => {
+                    yakitInfo("更新配置成功")
+                    update()
+                })
             }}
         >
             <Divider orientation={"left"}>DNS 配置</Divider>
@@ -58,7 +70,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 label={"备用 DNS"}
                 setValue={CustomDNSServers => setParams({...params, CustomDNSServers: CustomDNSServers.split(",")})}
                 value={params.CustomDNSServers.join(",")}
-                data={[]}
+                data={[]} mode={"tags"}
             />
             <SwitchItem
                 label={"启用 TCP DNS"}
@@ -73,7 +85,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             {params.DNSFallbackDoH && <ManyMultiSelectForString
                 label={"备用 DoH"} setValue={data => setParams({...params, CustomDoHServers: data.split(",")})}
                 value={params.CustomDoHServers.join(",")}
-                data={[]}
+                data={[]} mode={"tags"}
             />}
             <Form.Item colon={false} label={" "}>
                 <Space>
