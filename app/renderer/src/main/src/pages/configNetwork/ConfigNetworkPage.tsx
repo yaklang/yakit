@@ -64,7 +64,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             <SwitchItem
                 label={"禁用系统 DNS"} setValue={DisableSystemDNS => setParams({...params, DisableSystemDNS})}
                 value={params.DisableSystemDNS}
-                oldTheme={true}
+                oldTheme={false}
             />
             <ManyMultiSelectForString
                 label={"备用 DNS"}
@@ -80,7 +80,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             <SwitchItem
                 label={"启用 DoH 抗污染"}
                 setValue={DNSFallbackDoH => setParams({...params, DNSFallbackDoH})} value={params.DNSFallbackDoH}
-                oldTheme={true}
+                oldTheme={false}
             />
             {params.DNSFallbackDoH && <ManyMultiSelectForString
                 label={"备用 DoH"} setValue={data => setParams({...params, CustomDoHServers: data.split(",")})}
