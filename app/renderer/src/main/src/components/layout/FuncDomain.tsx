@@ -850,18 +850,10 @@ const GetUIOpSettingMenu = () => {
             key: "explab",
             label: "试验性功能",
             children: [
-                // {
-                //     key: "screen-recorder",
-                //     label: "录屏管理器"
-                // },
                 {
                     key: "bas-chaosmaker",
                     label: "BAS实验室"
                 },
-                // {
-                //     key: "matcher-extractor",
-                //     label: "匹配与提取配置"
-                // },
                 {
                     key: "debug-plugin",
                     label: "插件调试功能"
@@ -877,6 +869,10 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "diagnose-network",
                     label: "本地网络异常诊断"
+                },
+                {
+                    key: "config-network",
+                    label: "全局网络配置"
                 },
             ]
         },
@@ -1063,6 +1059,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "diagnose-network":
                 addToTab("**diagnose-network")
+                return
+            case "config-network":
+                addToTab("**config-network")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()

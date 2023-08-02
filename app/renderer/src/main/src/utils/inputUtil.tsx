@@ -550,6 +550,7 @@ export interface SwitchItemProps extends InputBase {
     help?: string
     disabled?: boolean
 
+    oldTheme?: boolean
     setValue(b: boolean): any
 }
 
@@ -624,7 +625,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
 }
 
 export const SwitchItem: React.FC<SwitchItemProps> = p => {
-    return <Item className="old-theme-html" label={p.label} help={p.help} style={p.formItemStyle}>
+    return <Item className={p.oldTheme === undefined ? "old-theme-html" : undefined} label={p.label} help={p.help} style={p.formItemStyle}>
         <YakitSwitch checked={p.value} onChange={e => p.setValue(e)} disabled={p.disabled}/>
     </Item>
 }
