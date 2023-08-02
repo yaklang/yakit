@@ -43,7 +43,6 @@ import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
-import {MatcherExtractorPage} from "@/pages/matcherextractor/MatcherExtractorPage"
 import {PageLoading} from "./PageLoading"
 import {
     PrivateOutlineBasicCrawlerIcon,
@@ -186,8 +185,6 @@ export enum YakitRoute {
     ScreenRecorderPage = "screen-recorder-page",
     // 全局功能-试验性功能-BAS实验室
     DB_ChaosMaker = "db-chaosmaker",
-    // 全局功能-试验性功能-匹配与提取配置
-    Beta_MatcherExtractorPage = "beta-matcher-extractor-page",
     // 调试插件的功能
     Beta_DebugPlugin = "beta-debug-plugin",
     // 调试插件编辑器
@@ -268,7 +265,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     simpleDetect: {label: "安全检测"},
     "screen-recorder-page": {label: "录屏管理"},
     "db-chaosmaker": {label: "BAS实验室"},
-    "beta-matcher-extractor-page": {label: "匹配与提取配置"},
     "beta-debug-plugin": {label: "插件调试"},
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器",},
@@ -305,7 +301,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.AddYakitScript,
     YakitRoute.OnlinePluginRecycleBin,
     YakitRoute.DB_ChaosMaker,
-    YakitRoute.Beta_MatcherExtractorPage,
     YakitRoute.ScreenRecorderPage,
     YakitRoute.ControlAdminPage,
     YakitRoute.Beta_VulinboxManager,
@@ -503,8 +498,6 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <ScreenRecorderPage />
         case YakitRoute.DB_ChaosMaker:
             return <ChaosMakerPage />
-        case YakitRoute.Beta_MatcherExtractorPage:
-            return <MatcherExtractorPage />
         case YakitRoute.Beta_DebugPlugin:
             return <PluginDebuggerPage />
         case YakitRoute.Beta_DebugMonacoEditor:

@@ -352,7 +352,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "add-yak-running") addYakRunning(data)
             if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
             if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
-            if (type === "**matcher-extractor") openMenuPage({route: YakitRoute.Beta_MatcherExtractorPage})
+            // if (type === "**matcher-extractor") openMenuPage({route: YakitRoute.Beta_MatcherExtractorPage})
             if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
