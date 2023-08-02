@@ -1867,12 +1867,16 @@ message YakDNSLogBridgeAddr {
   string DNSLogAddr = 1;
   string DNSLogAddrSecret = 2;
   string DNSMode = 3;
+  bool UseLocal = 4;
+  bool UseRemote = 5;
 }
 
 message QueryDNSLogByTokenRequest {
   string Token = 1;
   string DNSLogAddr = 2;
   string DNSMode = 3;
+  bool UseLocal = 4;
+  bool UseRemote = 5;
 }
 
 message QueryDNSLogByTokenResponse {

@@ -50,6 +50,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
     const [autoQuery, setAutoQuery] = useState(false);
+    const [isLocal, setIsLocal] = useState(false);
     const [expandRows, setExpandRows] = useState<string[]>([])
 
     useEffect(() => {
@@ -91,7 +92,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         setLoading(true)
         console.log("updateToken selectedMode ", selectedMode)
         ipcRenderer
-            .invoke("RequireDNSLogDomain", {Addr: "", DNSMode: selectedMode})
+            .invoke("RequireDNSLogDomain", {Addr: "", DNSMode: selectedMode, UseLocal: isLocal})
             .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
@@ -107,7 +108,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
     const queryDNSLogByToken = () => {
         console.log("QueryDNSLogByToken ", token, selectedMode);
-        ipcRenderer.invoke("QueryDNSLogByToken", {Token: token, DNSMode: selectedMode}).then((rsp: {
+        ipcRenderer.invoke("QueryDNSLogByToken", {Token: token, DNSMode: selectedMode, UseLocal: isLocal}).then((rsp: {
             Events: DNSLogEvent[]
         }) => {
             setRecords(
@@ -186,7 +187,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         layout={"inline"}
                         size={"small"}
                     >
-                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                        <Form.Item colon={false} label={" "} style={
+                            {
+                                marginBottom: 0,display: 'flex', alignItems: 'center',
+                                justifyContent: 'space-between', // 这里可以确保组件在一行上
+                                flexWrap: 'nowrap'
+                            }}>
                             <Select
                                 showSearch
                                 placeholder='生成一个可用域名'
@@ -204,8 +210,16 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 {" "}
                                 生成一个可用域名{" "}
                             </Button>
+                            <SwitchItem
+                                formItemStyle={{
+                                    marginBottom: 0,
+                                    marginLeft: 10
 
-
+                                }}
+                                label={"Use Local"}
+                                value={isLocal}
+                                setValue={setIsLocal}
+                            />
                         </Form.Item>
                     </Form>
                 </Space>
