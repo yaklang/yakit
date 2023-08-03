@@ -150,13 +150,6 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const tokenDomain = `${domain}`
     const [selectLoading, setSelectLoading] = useState<boolean>(true)
 
-    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
-        return (
-            <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
-            </div>
-        )
-    })
     const [platforms, setPlatforms] = useState<string[]>([]);
 
     const querySupportedDnsLogPlatforms = () => {
@@ -174,18 +167,24 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     useEffect(() => {
         querySupportedDnsLogPlatforms();
     }, []);
-    const [params, setParams] = useState();
+    const [params, setParams] = useState<string>("");
     const [scriptNamesList, setScriptNamesList] = useState<SelectOptionProps[]>([]) // 代理代表
     useEffect(() => {
         queryYakScriptList(
-            "codec",
+            "yak",
             (i: YakScript[], total) => {
+                console.log(i)
                 if (!total || total == 0) {
                     return
                 }
-                i.map((script) => {
-                    script.ScriptName
-                } )
+                const scriptNames = i.map(item => (
+                        {label: item.ScriptName, value: item.ScriptName}
+                    )
+                );
+                console.log(scriptNames)
+                setScriptNamesList(scriptNames);
+                setParams(i[0].ScriptName);
+
             },
             undefined,
             10,
@@ -193,10 +192,67 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             undefined,
             undefined,
             undefined,
-            ["allow-custom-http-packet-mutate"],
+            ["custom-dnslog-platform"],
         )
 
     }, [])
+
+
+
+    const updateTokenByScript = useMemoizedFn(() => {
+        setLoading(true)
+        console.log("updateToken selectedMode ", selectedMode)
+        ipcRenderer
+            .invoke("RequireDNSLogDomainByScript", {ScriptName: params,})
+            .then((rsp: { Domain: string; Token: string }) => {
+                setToken(rsp.Token)
+                setDomain(rsp.Domain)
+                sendMenuDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord: onlyARecord})
+            })
+            .catch((e) => {
+                failed(`error: ${e}`)
+                setToken("")
+                setDomain("")
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+
+
+    const queryDNSLogTokenByScript = () => {
+        console.log("QueryDNSLogByToken ", token, selectedMode);
+        ipcRenderer.invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params}).then((rsp: {
+            Events: DNSLogEvent[]
+        }) => {
+            setRecords(
+                rsp.Events.filter((i) => {
+                    if (getOnlyARecord()) {
+                        return i.DNSType === "A";
+                    }
+                    return true;
+                })
+                    .map((i, index) => {
+                        return {...i, Index: index};
+                    })
+                    .reverse()
+            );
+        });
+    };
+    console.log("autoQuery ", autoQuery)
+    useEffect(() => {
+        if (!token || !autoQuery) {
+            return;
+        }
+        setRecords([]);
+
+        const id = setInterval(() => {
+            queryDNSLogTokenByScript();
+        }, 5000);
+
+        return () => {
+            console.log("clearInterval ", id);
+            clearInterval(id);
+        };
+    }, [token, autoQuery]);
     return (
         <AutoCard
             title={
@@ -260,7 +316,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     onSubmitCapture={e => {
                         e.preventDefault()
 
-                        updateToken()
+                        updateTokenByScript()
                     }}
                     size={"small"}
                 >
@@ -279,8 +335,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             placeholder='请选择...'
                             mode='tags'
                             size='small'
-                            value={"aaaaa"}
-                            // onChange={ScriptNames => setParams({...params, ScriptNames})}
+                            value={scriptNamesList[0]}
+                            onChange={ScriptNames => setParams(ScriptNames)}
                             maxTagCount={10}
                         />
                     </Form.Item>
@@ -323,6 +379,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             setValue={setAutoQuery}
                         />
                         <Button type='primary' onClick={queryDNSLogByToken}>刷新记录</Button> {/* 这里添加了新按钮 */}
+                        <><div>  </div></>
+                        <Button type='primary' onClick={queryDNSLogTokenByScript}>刷新自定义记录</Button> {/* 这里添加了新按钮 */}
                     </Form>
                 </Space>
                 <Table<DNSLogEvent>
