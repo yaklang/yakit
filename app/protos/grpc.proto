@@ -349,7 +349,9 @@ service Yak {
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
   rpc GetCurrentYakBridgeLogServer(Empty) returns (YakDNSLogBridgeAddr);
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
+  rpc RequireDNSLogDomainByScript(RequireDNSLogDomainByScriptRequest) returns (DNSLogRootDomain);
   rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+  rpc QueryDNSLogTokenByScript(RequireDNSLogDomainByScriptRequest) returns (QueryDNSLogByTokenResponse);
   rpc RequireICMPRandomLength(Empty) returns (RequireICMPRandomLengthResponse);
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
   rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
@@ -1931,6 +1933,11 @@ message YakDNSLogBridgeAddr {
   string DNSMode = 3;
   bool UseLocal = 4;
   bool UseRemote = 5;
+}
+
+message RequireDNSLogDomainByScriptRequest {
+  string Token = 1;
+  string ScriptName = 2;
 }
 
 message QueryDNSLogByTokenRequest {
