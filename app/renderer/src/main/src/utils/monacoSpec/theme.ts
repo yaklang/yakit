@@ -6,6 +6,14 @@ monaco.editor.defineTheme("kurior", {
     "inherit": true,
     "rules": [
         {
+            "foreground":"#bb73ea",
+            "token": "operator"
+        },
+        {
+            "foreground": "#c4652f",
+            "token": "globals"
+        },
+        {
             "foreground": "#ff0000", "background": "#cc7c22",
             "token": "fuzz.tag.inner", fontStyle: "bold underline",
         },

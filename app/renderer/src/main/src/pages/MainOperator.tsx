@@ -9,6 +9,7 @@ import {
     setYaklangBuildInMethodCompletion,
     setYaklangCompletions
 } from "../utils/monacoSpec/yakCompletionSchema"
+import {setUpYaklangMonaco} from '../utils/monacoSpec/yakEditor'
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {QueryYakScriptsResponse} from "./invoker/schema"
@@ -426,13 +427,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 const completionJson = Buffer.from(data.RawJson).toString("utf8")
                 const total = JSON.parse(completionJson) as CompletionTotal
                 setYaklangCompletions(total)
+                setUpYaklangMonaco()
             } catch (e) {
                 console.info(e)
             }
 
             // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
         })
-
         //
         ipcRenderer.invoke("GetYakVMBuildInMethodCompletion", {}).then((data: {Suggestions: MethodSuggestion[]}) => {
             try {
