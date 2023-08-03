@@ -170,10 +170,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     {
                         key: "new-web-fuzzer-tab",
                         label: "新建 WebFuzzer",
-                        keybindings: [
-                            system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_R
-                        ]
+                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
