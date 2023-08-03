@@ -13,3 +13,8 @@ handle = func(origin /*string*/) {
     return origin
 }
 `
+
+
+export const CustomDnsLogPlatformTemplate = `
+
+`
