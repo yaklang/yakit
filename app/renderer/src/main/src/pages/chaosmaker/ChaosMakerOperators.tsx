@@ -251,8 +251,10 @@ export const AddBASAgent: React.FC<AddBASAgentProp> = (props) => {
             }).finally(() => setTimeout(() => setLoading(false), 300))
         }}
     >
-        <InputItem label={"需要导入的地址"} required={true} setValue={Addr => setParams({...params, Addr})}
-                   value={params.Addr} disable={loading}/>
+        <InputItem
+            label={"需要导入的地址"} required={true} setValue={Addr => setParams({...params, Addr})}
+            value={params.Addr} disable={loading} autoComplete={["127.0.0.1:8787"]}
+        />
         <InputInteger label={"连接超时"} setValue={Timeout => setParams({...params, Timeout})} value={params.Timeout}
                       disable={loading}/>
         <Form.Item colon={false} label={" "}>
