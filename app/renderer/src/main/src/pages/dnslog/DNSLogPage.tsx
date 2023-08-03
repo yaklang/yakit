@@ -2,14 +2,19 @@ import React, {useEffect, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
 import {Alert, Button, Select, Form, Space, Table, Tag, Spin} from "antd"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {failed, info} from "../../utils/notification"
+import {failed, info, yakitFailed} from "../../utils/notification"
 import {CopyableField, SwitchItem} from "../../utils/inputUtil"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {YakEditor} from "../../utils/editors"
-import {getReleaseEditionName} from "@/utils/envfile";
+import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile";
 import {SelectItem} from "@/utils/SelectItem";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {ProjectDescription} from "@/pages/softwareSettings/ProjectManage";
+import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema";
+import {queryYakScriptList} from "@/pages/yakitStore/network";
+import {CodecType} from "@/utils/encodec";
 
 export interface DNSLogPageProp {
 }
@@ -169,7 +174,29 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     useEffect(() => {
         querySupportedDnsLogPlatforms();
     }, []);
+    const [params, setParams] = useState();
+    const [scriptNamesList, setScriptNamesList] = useState<SelectOptionProps[]>([]) // 代理代表
+    useEffect(() => {
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    return
+                }
+                i.map((script) => {
+                    script.ScriptName
+                } )
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ["allow-custom-http-packet-mutate"],
+        )
 
+    }, [])
     return (
         <AutoCard
             title={
@@ -189,7 +216,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     >
                         <Form.Item colon={false} label={" "} style={
                             {
-                                marginBottom: 0,display: 'flex', alignItems: 'center',
+                                marginBottom: 0, display: 'flex', alignItems: 'center',
                                 justifyContent: 'space-between', // 这里可以确保组件在一行上
                                 flexWrap: 'nowrap'
                             }}>
@@ -228,6 +255,39 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             style={{overflowY: 'auto'}}
         >
             <Space direction={"vertical"} style={{width: "100%"}}>
+                <Form
+                    labelCol={{span: 5}} wrapperCol={{span: 14}}
+                    onSubmitCapture={e => {
+                        e.preventDefault()
+
+                        updateToken()
+                    }}
+                    size={"small"}
+                >
+                    <Form.Item
+                        label={
+                            <span>
+                                DNSLOG插件
+                            </span>
+                        }
+                        name='ScriptNames'
+
+                    >
+                        <YakitSelect
+                            allowClear
+                            options={scriptNamesList}
+                            placeholder='请选择...'
+                            mode='tags'
+                            size='small'
+                            value={"aaaaa"}
+                            // onChange={ScriptNames => setParams({...params, ScriptNames})}
+                            maxTagCount={10}
+                        />
+                    </Form.Item>
+                    <Form.Item colon={false} label={" "}>
+                        <YakitButton type="primary" htmlType="submit"> 执行检测 </YakitButton>
+                    </Form.Item>
+                </Form>
                 {token !== "" && (
                     <Alert
                         type={"success"}
