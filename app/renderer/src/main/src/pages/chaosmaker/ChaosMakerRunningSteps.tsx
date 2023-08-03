@@ -96,7 +96,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
         >
             <InputInteger label={"并发模拟数"} setValue={Concurrent => setParams({...params, Concurrent})}
                           value={params.Concurrent} help={"并发数越高，模拟攻击速度越快"}/>
-            <SelectOne label={"重复模拟"} data={[
+            <SelectOne oldTheme={false} label={"重复模拟"} data={[
                 {text: "无限重复", value: -1},
                 {text: "不重复", value: 0},
                 {text: "重复10次", value: 10},
