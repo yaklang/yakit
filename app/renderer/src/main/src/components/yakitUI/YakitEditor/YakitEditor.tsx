@@ -652,7 +652,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         minimap: noMiniMap ? {enabled: false} : undefined,
                         lineNumbersMinChars: lineNumbersMinChars || 5,
                         contextmenu: false,
-                        renderWhitespace: "all"
+                        renderWhitespace: "all",
+                        bracketPairColorization: {
+                            enabled: true,
+                            independentColorPoolPerBracketType: true
+                        },
                     }}
                 />
             </div>

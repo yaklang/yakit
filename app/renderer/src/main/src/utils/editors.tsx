@@ -380,7 +380,11 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     lineNumbers: props.noLineNumber ? "off" : "on",
                                     minimap: props.noMiniMap ? {enabled: false} : undefined,
                                     lineNumbersMinChars: props.lineNumbersMinChars || 5,
-                                    renderWhitespace: "all"
+                                    renderWhitespace: "all",
+                                    bracketPairColorization: {
+                                        enabled: true,
+                                        independentColorPoolPerBracketType: true
+                                    },
                                 }}
                             />
                         </div>
@@ -857,7 +861,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                                monaco.KeyCode.KEY_R
+                                                monaco.KeyCode.KeyR
                                         ],
                                         id: "new-web-fuzzer-tab",
                                         run: (e) => {

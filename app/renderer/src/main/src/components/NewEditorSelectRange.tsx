@@ -140,8 +140,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 // }
 
                 const {target, event} = e
-                const {detail} = target
                 const {posy} = event
+                const detail = target.type === editor.MouseTargetType.CONTENT_WIDGET || 
+                               target.type === editor.MouseTargetType.OVERLAY_WIDGET ?
+                               target.detail : undefined
                 const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
                 if (
                     detail !== "monaco.fizz.select.widget" &&
