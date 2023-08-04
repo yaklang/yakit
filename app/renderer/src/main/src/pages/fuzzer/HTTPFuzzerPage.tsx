@@ -178,6 +178,7 @@ export interface FuzzerResponse {
     RemoteAddr?: string
     ExtractedResults: KVPair[]
     MatchedByMatcher: boolean
+    HitColor: string
     /**@name 仅作用于前端表格背景色样式 */
     cellClassName?: string
 }
@@ -247,6 +248,8 @@ export interface FuzzerRequestProps {
     HitColor?: string
     InheritVariables?: boolean
     InheritCookies?: boolean
+    FuzzerIndex?: string
+    FuzzerTabIndex?: string
 }
 
 export const showDictsAndSelect = (res: (i: string) => any) => {
@@ -349,7 +352,7 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
-const emptyFuzzer: FuzzerResponse = {
+export const emptyFuzzer: FuzzerResponse = {
     BodyLength: 0,
     BodySimilarity: 0,
     ContentType: "",
@@ -370,11 +373,11 @@ const emptyFuzzer: FuzzerResponse = {
     Timestamp: 0,
     UUID: "",
 
-    // 6.16
     DNSDurationMs: 0,
     TotalDurationMs: 0,
     ExtractedResults: [],
-    MatchedByMatcher: false
+    MatchedByMatcher: false,
+    HitColor: ""
 }
 
 export interface SelectOptionProps {
@@ -1739,7 +1742,7 @@ interface SecondNodeExtraProps {
 /**
  * @description 右边的返回内容 头部 extra
  */
-const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
+export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
     const {
         rsp,
         onlyOneResponse,
@@ -2031,7 +2034,7 @@ interface SecondNodeTitleProps {
 /**
  * @description 右边的返回内容 头部left内容
  */
-const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
+export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
     const { cachedTotal, rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess } =
         props
     if (onlyOneResponse) {
@@ -2130,7 +2133,7 @@ interface ResponseViewerProps {
     webFuzzerValue?: Uint8Array
 }
 
-const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
+export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {
             fuzzerResponse,

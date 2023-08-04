@@ -22,7 +22,7 @@ export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
                 {
                     [styles["yakit-collapse-grey-wrapper"]]: type === "grey"
                 },
-                wrapperClassName 
+                wrapperClassName
             )}
             style={wrapperStyle}
         >

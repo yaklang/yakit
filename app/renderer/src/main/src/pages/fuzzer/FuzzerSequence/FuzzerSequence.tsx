@@ -1,30 +1,54 @@
 import React, {useEffect, useRef, useState} from "react"
-import {ExtraSettingProps, FuzzerSequenceProps, SequenceItemProps, SequenceProps} from "./FuzzerSequenceType"
+import {
+    ExtraSettingProps,
+    FuzzerSequenceProps,
+    FuzzerSequenceResponse,
+    ResponseProps,
+    SequenceItemProps,
+    SequenceProps,
+    SequenceResponseProps
+} from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon} from "@/assets/icon/solid"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
-import {useCreation, useHover, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useHover, useInViewport, useMap, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import {OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon} from "@/assets/icon/outline"
-import {Divider, Form} from "antd"
+import {Divider, Form, Result} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
-import {LabelNodeItem} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {
+    LabelNodeItem,
+    defaultExtractorItem,
+    defaultMatcherItem
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitNotify} from "@/utils/notification"
 import {NodeInfoProps, PageInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {YakitRoute} from "@/routes/newRoute"
 import {
     FuzzerRequestProps,
+    FuzzerResponse,
+    ResponseViewer,
+    SecondNodeExtra,
+    SecondNodeTitle,
     WEB_FUZZ_HOTPATCH_CODE,
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
     advancedConfigValueToFuzzerRequests,
     defaultAdvancedConfigValue,
-    defaultPostTemplate
+    defaultPostTemplate,
+    emptyFuzzer
 } from "../HTTPFuzzerPage"
 import {randomString} from "@/utils/randomUtil"
 import {getLocalValue, getRemoteValue} from "@/utils/kv"
+import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox"
+import {NewHTTPPacketEditor} from "@/utils/editors"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {StringToUint8Array} from "@/utils/str"
+import {MatcherValueProps, ExtractorValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -72,11 +96,18 @@ const defaultPageParams: WebFuzzerPageInfoProps = {
 const isEmptySequence = (list: SequenceProps[]) => {
     return list.findIndex((ele) => !ele.pageId) !== -1
 }
+
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const [sequenceList, setSequenceList] = useState<SequenceProps[]>([])
     const [errorIndex, setErrorIndex] = useState<number>(-1)
+
+    // Response
+    const [currentSequenceItem, setCurrentSequenceItem] = useState<SequenceProps>()
+    const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
+    const [currentSelectResponse, setCurrentSelectResponse] = useState<ResponseProps>()
+    const [responseMap, {set: setResponse, get: getResponse, reset: resetResponse}] = useMap<string, ResponseProps>()
 
     const originSequenceListRef = useRef<SequenceProps[]>([])
     const fuzzTokenRef = useRef<string>(randomString(60))
@@ -90,8 +121,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     useEffect(() => {
         getPageNodeInfoByRoute()
-    }, [])
-    useEffect(() => {
         getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
             if (!remoteData) {
                 return
@@ -103,30 +132,192 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 hotPatchCodeWithParamGetterRef.current = `${remoteData}`
             }
         })
-    }, [])
+    }, [inViewport])
+
+    const successCountRef = useRef<Map<string, number>>(new Map())
+    const failedCountRef = useRef<Map<string, number>>(new Map())
+    const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
+    const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
+
+    useEffect(()=>{
+        if(currentSequenceItem){
+            setCurrentSelectRequest(currentSequenceItem.pageParams)
+        }else{
+            setCurrentSelectRequest(undefined)
+            setCurrentSelectResponse(undefined)
+        }
+    },[currentSequenceItem])
     useEffect(() => {
         const token = fuzzTokenRef.current
         const dataToken = `${token}-data`
         const errToken = `${token}-error`
         const endToken = `${token}-end`
 
-        ipcRenderer.on(dataToken, (e: any, data: any) => {
+        ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             console.log("data", data)
+            const {Response, Request} = data
+            const {FuzzerIndex = ""} = Request
+            if (Response.Ok) {
+                // successCount++
+                let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
+                if (currentSuccessCount) {
+                    currentSuccessCount++
+                    successCountRef.current.set(FuzzerIndex, currentSuccessCount)
+                } else {
+                    successCountRef.current.set(FuzzerIndex, 1)
+                }
+            } else {
+                // failedCount++
+                let currentFailedCount = failedCountRef.current.get(FuzzerIndex)
+                if (currentFailedCount) {
+                    currentFailedCount++
+                    failedCountRef.current.set(FuzzerIndex, currentFailedCount)
+                } else {
+                    failedCountRef.current.set(FuzzerIndex, 1)
+                }
+            }
+            if (onIsDropped(Response, FuzzerIndex)) return
+            const r = {
+                ...Response,
+                Headers: Response.Headers || [],
+                UUID: Response.UUID,
+                cellClassName: Response.MatchedByMatcher ? `color-opacity-bg-${Response.HitColor}` : ""
+            } as FuzzerResponse
+
+            if (Response.Ok) {
+                let successList = successBufferRef.current.get(FuzzerIndex)
+                if (successList) {
+                    successList.push(r)
+                    successBufferRef.current.set(FuzzerIndex, successList)
+                } else {
+                    successBufferRef.current.set(FuzzerIndex, [r])
+                }
+            } else {
+                let failedList = failedBufferRef.current.get(FuzzerIndex)
+                if (failedList) {
+                    failedList.push(r)
+                    failedBufferRef.current.set(FuzzerIndex, failedList)
+                } else {
+                    failedBufferRef.current.set(FuzzerIndex, [r])
+                }
+            }
+            updateData(FuzzerIndex)
         })
-        ipcRenderer.on(endToken, () => {})
+        ipcRenderer.on(endToken, () => {
+            updateData("-1")
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
         ipcRenderer.on(errToken, (e, details) => {
             yakitNotify("error", `提交模糊测试请求失败 ${details}`)
         })
 
         return () => {
+            resetResponse()
             ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
-
             ipcRenderer.removeAllListeners(errToken)
             ipcRenderer.removeAllListeners(dataToken)
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
+    useEffect(() => {
+        if (responseMap.size === 1 && !currentSequenceItem) {
+            // 获取迭代器对象
+            const iterator = responseMap.entries()
+            // 使用迭代器的next()方法获取第一个键值对
+            const firstEntry = iterator.next().value
+            const key = firstEntry[0]
+            const value = firstEntry[1]
+            const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === key)
+            if (current) {
+                setCurrentSequenceItem(current)
+            }
+            setCurrentSelectResponse(value)
+        }
+    }, [responseMap])
+    const updateData = useThrottleFn(
+        (fuzzerIndex: string) => {
+            if (fuzzerIndex === "-1") {
+                successCountRef.current.clear()
+                failedCountRef.current.clear()
+                successBufferRef.current.clear()
+                failedBufferRef.current.clear()
+            }
 
+            const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
+            const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
+            // console.log("successBufferRef.current", successBufferRef.current)
+            // console.log("failedBufferRef.current", failedBufferRef.current)
+            if (failedBuffer.length + successBuffer.length === 0) {
+                return
+            }
+            const newSequenceList = sequenceList.map((item) => ({
+                ...item,
+                disable: item.id === fuzzerIndex ? false : true
+            }))
+            setSequenceList([...newSequenceList])
+
+            let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+            let currentFailedCount = successCountRef.current.get(fuzzerIndex) || 0
+
+            if (successBuffer.length === 1 && failedBuffer.length === 0) {
+                // 设置第一个 response
+                setResponse(fuzzerIndex, {
+                    onlyOneResponse: successBuffer[0],
+                    successCount: currentSuccessCount,
+                    failedCount: currentFailedCount,
+                    successFuzzer: successBuffer,
+                    failedFuzzer: failedBuffer
+                })
+                return
+            }
+            const currentResponse = getResponse(fuzzerIndex)
+            setResponse(fuzzerIndex, {
+                onlyOneResponse: emptyFuzzer,
+                ...currentResponse,
+                successCount: currentSuccessCount,
+                failedCount: currentFailedCount,
+                successFuzzer: successBuffer,
+                failedFuzzer: failedBuffer
+            })
+
+            // if (lastUpdateCount <= 0 || lastUpdateCount != count || count === 1) {
+            //     // setContent([...buffer])
+            //     setSuccessFuzzer([...successBuffer])
+            //     setFailedFuzzer([...failedBuffer])
+            //     setFailedCount(failedCount)
+            //     setSuccessCount(successCount)
+            //     lastUpdateCount = count
+            // }
+        },
+        {wait: 200}
+    ).run
+    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
+    const onIsDropped = useMemoizedFn((data, fuzzerIndex) => {
+        const currentRequest = sequenceList.find((ele) => ele.id === fuzzerIndex)
+        if (!currentRequest) return
+        const advancedConfigValue: AdvancedConfigValueProps = {
+            ...defaultAdvancedConfigValue,
+            ...advancedConfigValueToFuzzerRequests(currentRequest.pageParams.advancedConfigValue)
+        }
+        if (advancedConfigValue.matchers?.length > 0) {
+            // 设置了 matchers
+            const hit = data["MatchedByMatcher"] === true
+            // 丢包的条件：
+            //   1. 命中过滤器，同时过滤模式设置为丢弃
+            //   2. 未命中过滤器，过滤模式设置为保留
+            if (
+                (hit && advancedConfigValue.filterMode === "drop") ||
+                (!hit && advancedConfigValue.filterMode === "match")
+            ) {
+                // 丢弃不匹配的内容
+                return true
+            }
+            return false
+        }
+        return false
+    })
     const getPageNodeInfoByRoute = useMemoizedFn(() => {
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(YakitRoute.HTTPFuzzer, props.pageId)
         if (!nodeInfo) return
@@ -158,6 +349,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             return
         }
         if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
+            const current: SequenceProps | undefined = sequenceList[result.source.index]
+            if (current) {
+                setCurrentSequenceItem(current)
+                setCurrentSelectRequest(current.pageParams)
+            }
             const newSequenceList: SequenceProps[] = reorder(
                 sequenceList,
                 result.source.index,
@@ -187,6 +383,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             return
         }
         console.log("sequenceList", sequenceList)
+
         setLoading(true)
         const httpParams: FuzzerRequestProps[] = sequenceList.map((item) => ({
             ...advancedConfigValueToFuzzerRequests(item.pageParams.advancedConfigValue),
@@ -194,10 +391,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             HotPatchCode: hotPatchCodeRef.current,
             // HotPatchCodeWithParamGetter: item.pageParams.request
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
-            inheritCookies: item.inheritCookies,
-            inheritVariables: item.inheritVariables
+            InheritCookies: item.inheritCookies,
+            InheritVariables: item.inheritVariables,
+            FuzzerIndex: item.id
         }))
         console.log("httpParams", httpParams)
+        setSequenceList(sequenceList.map((item) => ({...item, disable: true})))
         ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
     })
     const onForcedStop = useMemoizedFn(() => {
@@ -230,6 +429,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         if (index === errorIndex) {
             setErrorIndex(-1)
         }
+        setCurrentSequenceItem(undefined)
         if (sequenceList.length <= 1) {
             const newItem: SequenceProps = {
                 id: "1",
@@ -246,6 +446,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setSequenceList([...sequenceList])
         }
     })
+    console.log("currentSelectRequest", currentSelectRequest, currentSelectResponse)
     return (
         <div className={styles["fuzzer-sequence"]} ref={fuzzerSequenceRef}>
             <div className={styles["fuzzer-sequence-left"]}>
@@ -307,13 +508,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                         <SequenceItem
                                                             pageNodeList={originSequenceListRef.current}
                                                             item={sequenceItem}
+                                                            isSelect={currentSequenceItem?.id === sequenceItem.id}
                                                             index={index}
                                                             errorIndex={errorIndex}
-                                                            disabled={loading}
                                                             isDragging={snapshotItem.isDragging}
                                                             onApplyOtherNodes={onApplyOtherNodes}
                                                             onUpdateItem={(item) => onUpdateItem(item, index)}
-                                                            onRemove={() => onRemoveNode(index)}
+                                                            onRemove={() => {
+                                                                onRemoveNode(index)
+                                                            }}
+                                                            onSelect={setCurrentSequenceItem}
                                                         />
                                                     </div>
                                                 )}
@@ -331,6 +535,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     <div className={styles["to-end"]}>已经到底啦～</div>
                 </div>
             </div>
+            <div className={styles["fuzzer-sequence-content"]}>
+                {currentSequenceItem && currentSequenceItem.id ? (
+                    <SequenceResponse
+                        requestInfo={currentSelectRequest}
+                        responseInfo={currentSelectResponse}
+                        loading={loading}
+                    />
+                ) : (
+                    <YakitEmpty title='请选择 Web Fuzzer' />
+                )}
+            </div>
         </div>
     )
 })
@@ -338,8 +553,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 export default FuzzerSequence
 
 const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
-    const {item, pageNodeList, index, disabled, isDragging, errorIndex, onUpdateItem, onApplyOtherNodes, onRemove} =
-        props
+    const {
+        item,
+        pageNodeList,
+        index,
+        isDragging,
+        errorIndex,
+        isSelect,
+        onUpdateItem,
+        onApplyOtherNodes,
+        onRemove,
+        onSelect
+    } = props
     const [visible, setVisible] = useState<boolean>(false)
 
     const selectRef = useRef(null)
@@ -352,13 +577,14 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         }))
     }, [pageNodeList])
     return (
-        <div className={styles["fuzzer-sequence-list-item-body"]}>
+        <div className={styles["fuzzer-sequence-list-item-body"]} onClick={() => onSelect(item)}>
             <div
                 className={classNames(styles["fuzzer-sequence-list-item"], {
                     [styles["fuzzer-sequence-list-item-hover"]]: visible,
-                    [styles["fuzzer-sequence-list-item-hover-none"]]: disabled || isHovering,
-                    [styles["fuzzer-sequence-list-item-disabled"]]: disabled,
+                    [styles["fuzzer-sequence-list-item-hover-none"]]: item.disabled || isHovering,
+                    [styles["fuzzer-sequence-list-item-disabled"]]: item.disabled,
                     [styles["fuzzer-sequence-list-item-isDragging"]]: isDragging,
+                    [styles["fuzzer-sequence-list-item-isSelect"]]: isSelect,
                     [styles["fuzzer-sequence-list-item-errorIndex"]]: errorIndex === index
                 })}
             >
@@ -366,7 +592,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                     <div className={styles["fuzzer-sequence-list-item-heard-title"]}>
                         <SolidDragsortIcon
                             className={classNames(styles["drag-sort-icon"], {
-                                [styles["drag-sort-disabled-icon"]]: disabled
+                                [styles["drag-sort-disabled-icon"]]: item.disabled
                             })}
                         />
                         Step [{index}]
@@ -374,9 +600,12 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                     <div className={styles["fuzzer-sequence-list-item-heard-extra"]}>
                         <OutlineTrashIcon
                             className={classNames(styles["trash-icon"], {
-                                [styles["item-disabled-icon"]]: disabled
+                                [styles["item-disabled-icon"]]: item.disabled
                             })}
-                            onClick={() => onRemove(item)}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onRemove(item)
+                            }}
                         />
                         {index > 0 && (
                             <>
@@ -426,7 +655,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                     }
                                     visible={visible}
                                     onVisibleChange={(v) => {
-                                        if (disabled) return
+                                        if (item.disabled) return
                                         setVisible(v)
                                     }}
                                     overlayClassName={styles["cog-popover"]}
@@ -434,7 +663,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                     <OutlineCogIcon
                                         className={classNames(styles["cog-icon"], {
                                             [styles["cog-icon-hover"]]: visible,
-                                            [styles["item-disabled-icon"]]: disabled
+                                            [styles["item-disabled-icon"]]: item.disabled
                                         })}
                                     />
                                 </YakitPopover>
@@ -442,7 +671,12 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         )}
                     </div>
                 </div>
-                <div ref={selectRef}>
+                <div
+                    ref={selectRef}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                    }}
+                >
                     <YakitSelect
                         value={item.pageId}
                         labelInValue={true}
@@ -451,10 +685,181 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                             onUpdateItem({...item, pageId: v.value, pageName: v.label})
                         }}
                         getPopupContainer={(dom) => dom}
-                        disabled={disabled}
+                        disabled={item.disabled}
                     />
                 </div>
             </div>
         </div>
+    )
+})
+
+const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => {
+    const {requestInfo, responseInfo, loading} = props
+    const {
+        onlyOneResponse: httpResponse,
+        successFuzzer,
+        failedFuzzer,
+        successCount,
+        failedCount
+    } = responseInfo || {
+        onlyOneResponse: {...emptyFuzzer},
+        successFuzzer: [],
+        failedFuzzer: [],
+        successCount: 0,
+        failedCount: 0
+    }
+    const {request, advancedConfigValue} = requestInfo || {
+        request: "",
+        advancedConfigValue: {...defaultAdvancedConfigValue}
+    }
+
+    const [showSuccess, setShowSuccess] = useState(true)
+    const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
+    const [affixSearch, setAffixSearch] = useState<string>("")
+    const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>("")
+
+    const secondNodeRef = useRef(null)
+    const secondNodeSize = useSize(secondNodeRef)
+
+    const cachedTotal: number = useCreation(() => {
+        return failedCount + successCount
+    }, [failedCount, successCount])
+    const onlyOneResponse: boolean = useCreation(() => {
+        return cachedTotal === 1
+    }, [cachedTotal])
+    const [extractedMap, {setAll, reset}] = useMap<string, string>()
+    useEffect(() => {
+        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: {extractedMap: Map<string, string>}) => {
+            setAll(data.extractedMap)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-extracted-to-table")
+        }
+    }, [])
+    const sendToFuzzer = useMemoizedFn((isHttps: boolean, requestValue: string) => {
+        ipcRenderer.invoke("send-to-tab", {
+            type: "fuzzer",
+            data: {isHttps: isHttps, isGmTLS: advancedConfigValue.isGmTLS, request: requestValue}
+        })
+    })
+    return (
+        <ResizeCardBox
+            firstMinSize={380}
+            secondMinSize={480}
+            isShowDefaultLineStyle={false}
+            style={{overflow: "hidden"}}
+            firstNodeProps={{
+                title: "Request"
+            }}
+            secondNodeProps={{
+                title: (
+                    <>
+                        <span style={{marginRight: 8}}>Responses</span>
+                        <SecondNodeTitle
+                            cachedTotal={cachedTotal}
+                            onlyOneResponse={cachedTotal <= 1}
+                            rsp={httpResponse}
+                            successFuzzerLength={(successFuzzer || []).length}
+                            failedFuzzerLength={(failedFuzzer || []).length}
+                            showSuccess={showSuccess}
+                            setShowSuccess={(v) => {
+                                setShowSuccess(v)
+                                setQuery(undefined)
+                            }}
+                        />
+                    </>
+                ),
+                extra: (
+                    <div className={styles["fuzzer-secondNode-extra"]}>
+                        <SecondNodeExtra
+                            onlyOneResponse={onlyOneResponse}
+                            cachedTotal={cachedTotal}
+                            rsp={httpResponse}
+                            valueSearch={affixSearch}
+                            onSearchValueChange={(value) => {
+                                setAffixSearch(value)
+                                if (value === "" && defaultResponseSearch !== "") {
+                                    setDefaultResponseSearch("")
+                                }
+                            }}
+                            onSearch={() => {
+                                setDefaultResponseSearch(affixSearch)
+                            }}
+                            successFuzzer={successFuzzer}
+                            secondNodeSize={secondNodeSize}
+                            query={query}
+                            setQuery={(q) => setQuery({...q})}
+                        />
+                    </div>
+                )
+            }}
+            firstNode={
+                <NewHTTPPacketEditor
+                    noHex={true}
+                    noHeader={true}
+                    hideSearch={true}
+                    bordered={false}
+                    noMinimap={true}
+                    utf8={true}
+                    originValue={StringToUint8Array(request)}
+                    // onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                />
+            }
+            secondNode={
+                <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
+                    {onlyOneResponse ? (
+                        <ResponseViewer
+                            fuzzerResponse={httpResponse}
+                            defaultResponseSearch={defaultResponseSearch}
+                            webFuzzerValue={httpResponse.ResponseRaw}
+                            showMatcherAndExtraction={false}
+                            setShowMatcherAndExtraction={() => {}}
+                            matcherValue={{
+                                filterMode: "matchers",
+                                hitColor: "",
+                                matchersCondition: "and",
+                                matchersList: []
+                            }}
+                            extractorValue={{
+                                extractorList: []
+                            }}
+                            defActiveKey={""}
+                            defActiveType={"matchers"}
+                            onSaveMatcherAndExtraction={() => {}}
+                        />
+                    ) : (
+                        <>
+                            {cachedTotal > 1 ? (
+                                <>
+                                    {showSuccess && (
+                                        <HTTPFuzzerPageTable
+                                            onSendToWebFuzzer={sendToFuzzer}
+                                            success={showSuccess}
+                                            data={successFuzzer}
+                                            query={query}
+                                            setQuery={setQuery}
+                                            extractedMap={extractedMap}
+                                            isEnd={loading}
+                                        />
+                                    )}
+                                    {!showSuccess && (
+                                        <HTTPFuzzerPageTable
+                                            success={showSuccess}
+                                            data={failedFuzzer}
+                                            query={query}
+                                            setQuery={setQuery}
+                                            isEnd={loading}
+                                            extractedMap={extractedMap}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <Result status={"warning"} title={"请执行序列后进行查看"} />
+                            )}
+                        </>
+                    )}
+                </div>
+            }
+        />
     )
 })

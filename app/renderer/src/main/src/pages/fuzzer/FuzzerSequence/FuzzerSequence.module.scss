@@ -178,6 +178,18 @@
                 }
             }
         }
+        &-item-isSelect {
+            &::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                width: 0;
+                height: 100%;
+                border-left: 3px solid var(--yakit-warning-5);
+                top: 0;
+                border-radius: 4px 0 0 4px;
+            }
+        }
         &-item-errorIndex {
             border-color: var(--yakit-danger-5) !important;
             box-shadow: 0 0 2px 2px var(--yakit-danger-2) !important;
@@ -190,6 +202,15 @@
         line-height: 14px;
         padding-top: 24px;
         padding-bottom: 24px;
+    }
+    &-content {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 12px;
+        overflow: hidden;
     }
 }
 

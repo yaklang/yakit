@@ -927,12 +927,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const getFuzzerDefaultCache = useMemoizedFn(() => {
         getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
             if (!e) {
+                proxyRef.current =[]
                 return
             }
             proxyRef.current = e ? e.split(",") : []
         })
         getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
             if (!e) {
+                dnsServersRef.current=[]
                 return
             }
             try {
@@ -941,6 +943,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
         getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
             if (!e) {
+                etcHostsRef.current=[]
                 return
             }
             try {
