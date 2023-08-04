@@ -51,10 +51,11 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 
 const {ipcRenderer} = window.require("electron")
 
-const {Panel} = Collapse
+const {YakitPanel} = YakitCollapse
 /**@name 过滤器模式 */
 export const filterModeOptions = [
     {
@@ -214,7 +215,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         }, [extractorValue, defActiveType])
         const isEffectiveMatcher: boolean = useMemo(() => {
             return (
-                matcher?.matchersList?.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
+                matcher?.matchersList?.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <=
+                0
             )
         }, [matcher.matchersList])
         const isEffectiveExtractor: boolean = useMemo(() => {
@@ -582,7 +584,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
     })
     return (
         <div
-            className={classNames("yakit-collapse", styles["matching-extraction-content"], {
+            className={classNames(styles["matching-extraction-content"], {
                 [styles["matching-extraction-content-hidden"]]: type !== "matchers"
             })}
         >
@@ -629,16 +631,14 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
                     />
                 </div>
             </div>
-            <Collapse
+            <YakitCollapse
                 activeKey={activeKey}
                 onChange={(key) => setActiveKey(key as string)}
                 accordion
-                ghost
-                expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                 className={styles["matcher-extraction-collapse"]}
             >
                 {matcher.matchersList.map((matcherItem, index) => (
-                    <Panel
+                    <YakitPanel
                         header={
                             <div className={styles["collapse-panel-header"]}>
                                 <span className={styles["header-id"]}>ID&nbsp;{index}</span>
@@ -681,9 +681,9 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props
                             httpResponse={httpResponse}
                             isSmallMode={isSmallMode}
                         />
-                    </Panel>
+                    </YakitPanel>
                 ))}
-            </Collapse>
+            </YakitCollapse>
         </div>
     )
 })
@@ -858,7 +858,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
     })
     return (
         <div
-            className={classNames("yakit-collapse", styles["matching-extraction-content"], {
+            className={classNames(styles["matching-extraction-content"], {
                 [styles["matching-extraction-content-hidden"]]: type !== "extractors"
             })}
             style={{paddingTop: 8}}
@@ -872,7 +872,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                 className={styles["matcher-extraction-collapse"]}
             >
                 {extractor.extractorList.map((extractorItem, index) => (
-                    <Panel
+                    <YakitPanel
                         header={
                             <div className={styles["collapse-panel-header"]}>
                                 <span className={classNames(styles["header-id"])}>
@@ -958,7 +958,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                             httpResponse={httpResponse}
                             isSmallMode={isSmallMode}
                         />
-                    </Panel>
+                    </YakitPanel>
                 ))}
             </Collapse>
         </div>

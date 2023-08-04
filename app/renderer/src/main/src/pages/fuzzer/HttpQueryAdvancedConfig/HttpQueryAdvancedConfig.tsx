@@ -51,9 +51,10 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import {MainOperatorContext} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 
 const {ipcRenderer} = window.require("electron")
-const {Panel} = Collapse
+const {YakitPanel} = YakitCollapse
 
 export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
@@ -303,7 +304,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 initialValues={{
                     ...advancedConfigValue
                 }}
-                className='yakit-collapse'
             >
                 <div className={styles["advanced-config-extra-formItem"]}>
                     <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
@@ -342,14 +342,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <YakitSwitch />
                     </Form.Item>
                 </div>
-                <Collapse
+                <YakitCollapse
                     activeKey={activeKey}
                     onChange={(key) => onSwitchCollapse(key)}
-                    ghost
-                    expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
                     destroyInactivePanel={true}
                 >
-                    <Panel
+                    <YakitPanel
                         header='请求包配置'
                         key='请求包配置'
                         extra={
@@ -405,8 +403,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Form.Item label='超时时长' name='timeout'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header='并发配置'
                         key='发包配置'
                         extra={
@@ -470,8 +468,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </Form.Item>
                             </div>
                         </Form.Item>
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header='重试配置'
                         key='重试配置'
                         extra={
@@ -511,7 +509,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
                             destroyInactivePanel={true}
                         >
-                            <Panel
+                            <YakitPanel
                                 header={
                                     <Form.Item name='retry' noStyle valuePropName='checked'>
                                         <YakitCheckbox>
@@ -525,8 +523,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
                                     <YakitInput placeholder='200,300-399' size='small' disabled={!retry} />
                                 </Form.Item>
-                            </Panel>
-                            <Panel
+                            </YakitPanel>
+                            <YakitPanel
                                 header={
                                     <Form.Item name='noRetry' noStyle valuePropName='checked'>
                                         <YakitCheckbox>
@@ -540,10 +538,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Form.Item label='状态码' name={["noRetryConfiguration", "statusCode"]}>
                                     <YakitInput placeholder='200,300-399' size='small' disabled={!noRetry} />
                                 </Form.Item>
-                            </Panel>
+                            </YakitPanel>
                         </Collapse>
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header='重定向配置'
                         key='重定向配置'
                         extra={
@@ -580,8 +578,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Form.Item label='JS 重定向' name='followJSRedirect' valuePropName={"checked"}>
                             <YakitSwitch />
                         </Form.Item>
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header={"DNS配置"}
                         key={"DNS配置"}
                         extra={
@@ -647,8 +645,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </YakitButton>
                             </Space>
                         </Form.Item>
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header={
                             <div className={styles["matchers-panel"]}>
                                 匹配器<div className={styles["matchers-number"]}>{matchersList?.length}</div>
@@ -718,8 +716,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onRemove={onRemoveMatcher}
                             onEdit={onEditMatcher}
                         />
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header={
                             <div className={styles["matchers-panel"]}>
                                 数据提取器<div className={styles["matchers-number"]}>{extractorList?.length}</div>
@@ -767,8 +765,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onRemove={onRemoveExtractors}
                             onEdit={onEditExtractors}
                         />
-                    </Panel>
-                    <Panel
+                    </YakitPanel>
+                    <YakitPanel
                         header='设置变量'
                         key='设置变量'
                         extra={
@@ -855,7 +853,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         destroyInactivePanel={true}
                                     >
                                         {fields.map(({key, name}, i) => (
-                                            <Panel
+                                            <YakitPanel
                                                 key={`${key}`}
                                                 header={`变量${name}`}
                                                 className={styles["variable-list-panel"]}
@@ -881,7 +879,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 }
                                             >
                                                 <SetVariableItem name={name} />
-                                            </Panel>
+                                            </YakitPanel>
                                         ))}
                                         {fields?.length === 0 && (
                                             <Form.Item wrapperCol={{span: 24}}>
@@ -907,8 +905,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 )
                             }}
                         </Form.List>
-                    </Panel>
-                </Collapse>
+                    </YakitPanel>
+                </YakitCollapse>
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
             <YakitDrawer
@@ -1130,7 +1128,6 @@ const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
         <YakitPopover
             placement='right'
             overlayClassName={classNames(
-                "yakit-collapse",
                 styles["matching-extraction-content"],
                 styles["terminal-popover"]
             )}
