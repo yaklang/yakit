@@ -258,6 +258,7 @@ module.exports = (win, getClient) => {
                     win.webContents.send("client-mitm-filter", {...data})
                     return
                 }
+                if (data.id == "0" && data.responseId == "0") return
                 win.webContents.send("client-mitm-hijacked", {...data})
             }
         })
@@ -404,8 +405,6 @@ module.exports = (win, getClient) => {
                     return
                 }
 
-
-
                 resolve(data)
             })
         })
@@ -425,7 +424,6 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-
 
                 resolve(data)
             })
