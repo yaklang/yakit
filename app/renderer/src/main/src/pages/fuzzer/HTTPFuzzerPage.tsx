@@ -1543,27 +1543,25 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </>
                         ),
                         extra: (
-                            <div className={styles["fuzzer-secondNode-extra"]}>
-                                <SecondNodeExtra
-                                    onlyOneResponse={onlyOneResponse}
-                                    cachedTotal={cachedTotal}
-                                    rsp={httpResponse}
-                                    valueSearch={affixSearch}
-                                    onSearchValueChange={(value) => {
-                                        setAffixSearch(value)
-                                        if (value === "" && defaultResponseSearch !== "") {
-                                            setDefaultResponseSearch("")
-                                        }
-                                    }}
-                                    onSearch={() => {
-                                        setDefaultResponseSearch(affixSearch)
-                                    }}
-                                    successFuzzer={exportData}
-                                    secondNodeSize={secondNodeSize}
-                                    query={query}
-                                    setQuery={(q) => setQuery({ ...q })}
-                                />
-                            </div>
+                            <SecondNodeExtra
+                                onlyOneResponse={onlyOneResponse}
+                                cachedTotal={cachedTotal}
+                                rsp={httpResponse}
+                                valueSearch={affixSearch}
+                                onSearchValueChange={(value) => {
+                                    setAffixSearch(value)
+                                    if (value === "" && defaultResponseSearch !== "") {
+                                        setDefaultResponseSearch("")
+                                    }
+                                }}
+                                onSearch={() => {
+                                    setDefaultResponseSearch(affixSearch)
+                                }}
+                                successFuzzer={successFuzzer}
+                                secondNodeSize={secondNodeSize}
+                                query={query}
+                                setQuery={(q) => setQuery({ ...q })}
+                            />
                         )
                     }}
                     firstNode={
@@ -1805,7 +1803,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             />
         )
         return (
-            <>
+            <div className={styles["fuzzer-secondNode-extra"]}>
                 {+(secondNodeSize?.width || 0) > 620 && searchNode}
                 {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover content={searchNode}>
@@ -1837,7 +1835,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 >
                     详情
                 </YakitButton>
-            </>
+            </div>
         )
     }
     if (!onlyOneResponse && cachedTotal > 1) {
@@ -1867,7 +1865,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             />
         )
         return (
-            <>
+            <div className={styles["fuzzer-secondNode-extra"]}>
                 {+(secondNodeSize?.width || 0) > 620 && searchNode}
                 {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover
@@ -2015,7 +2013,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 >
                     <WebFuzzerResponseExtractor responses={successFuzzer} />
                 </YakitModal>
-            </>
+            </div>
         )
     }
     return <></>

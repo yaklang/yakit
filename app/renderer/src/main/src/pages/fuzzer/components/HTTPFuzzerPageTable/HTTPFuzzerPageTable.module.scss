@@ -1,27 +1,16 @@
-.flex-align-center {
-    display: flex;
-    align-items: center;
-}
-
-.ellipsis-1 {
-    max-width: 100%;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: break-all;
-}
+@use "../../HTTPFuzzerPageShare.module.scss";
 
 .table-container {
     border: 0 !important;
     .table-item-extracted-results {
-        @extend .flex-align-center;
+        @extend .display-flex-center;
         overflow: hidden;
         .extracted-results-text {
             @extend .ellipsis-1;
         }
     }
     .operate-icons {
-        @extend .flex-align-center;
+        @extend .display-flex-center;
         gap: 12px;
         color: var(--yakit-body-text-color);
 
@@ -81,7 +70,7 @@
 }
 .filter-icon {
     color: var(--yakit-helper-text-color);
-    @extend .flex-align-center;
+    @extend .display-flex-center;
 }
 .active-icon {
     color: var(--yakit-primary-5);
@@ -112,5 +101,20 @@
 
     .tip {
         margin-left: 4px;
+    }
+}
+
+.second-node-title-wrapper {
+    @extend .display-flex-center;
+    gap: 8px;
+    .second-node-title-text {
+        font-weight: 500;
+        font-size: 12px;
+        color: var(--yakit-header-color);
+        line-height: 16px;
+    }
+    .second-node-title-btns {
+        display: inline-flex;
+        align-items: center;
     }
 }

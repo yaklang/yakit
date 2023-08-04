@@ -12,7 +12,16 @@ import styles from "./FuzzerSequence.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon} from "@/assets/icon/solid"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
-import {useCreation, useHover, useInViewport, useMap, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
+import {
+    useCreation,
+    useHover,
+    useInViewport,
+    useMap,
+    useMemoizedFn,
+    useSize,
+    useThrottleEffect,
+    useThrottleFn
+} from "ahooks"
 import {OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Divider, Form, Result} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -139,14 +148,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
     const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
 
-    useEffect(()=>{
-        if(currentSequenceItem){
+    useEffect(() => {
+        if (currentSequenceItem) {
             setCurrentSelectRequest(currentSequenceItem.pageParams)
-        }else{
+        } else {
             setCurrentSelectRequest(undefined)
             setCurrentSelectResponse(undefined)
         }
-    },[currentSequenceItem])
+    }, [currentSequenceItem])
     useEffect(() => {
         const token = fuzzTokenRef.current
         const dataToken = `${token}-data`
@@ -221,21 +230,31 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-    useEffect(() => {
-        if (responseMap.size === 1 && !currentSequenceItem) {
-            // 获取迭代器对象
-            const iterator = responseMap.entries()
-            // 使用迭代器的next()方法获取第一个键值对
-            const firstEntry = iterator.next().value
-            const key = firstEntry[0]
-            const value = firstEntry[1]
-            const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === key)
-            if (current) {
-                setCurrentSequenceItem(current)
+    useThrottleEffect(
+        () => {
+            if (responseMap.size === 1 && !currentSequenceItem) {
+                // 获取迭代器对象
+                const iterator = responseMap.entries()
+                // 使用迭代器的next()方法获取第一个键值对
+                const firstEntry = iterator.next().value
+                const key = firstEntry[0]
+                const value = firstEntry[1]
+                const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === key)
+                if (current) {
+                    setCurrentSequenceItem(current)
+                }
+                setCurrentSelectResponse(value)
             }
-            setCurrentSelectResponse(value)
+            if (currentSequenceItem) {
+                const currentResponse = responseMap.get(currentSequenceItem.id)
+                if (currentResponse) setCurrentSelectResponse({...currentResponse})
+            }
+        },
+        [responseMap],
+        {
+            wait: 200
         }
-    }, [responseMap])
+    )
     const updateData = useThrottleFn(
         (fuzzerIndex: string) => {
             if (fuzzerIndex === "-1") {
@@ -244,11 +263,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 successBufferRef.current.clear()
                 failedBufferRef.current.clear()
             }
-
             const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
             const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
-            // console.log("successBufferRef.current", successBufferRef.current)
-            // console.log("failedBufferRef.current", failedBufferRef.current)
             if (failedBuffer.length + successBuffer.length === 0) {
                 return
             }
@@ -259,8 +275,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setSequenceList([...newSequenceList])
 
             let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-            let currentFailedCount = successCountRef.current.get(fuzzerIndex) || 0
-
+            let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
             if (successBuffer.length === 1 && failedBuffer.length === 0) {
                 // 设置第一个 response
                 setResponse(fuzzerIndex, {
@@ -273,23 +288,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 return
             }
             const currentResponse = getResponse(fuzzerIndex)
-            setResponse(fuzzerIndex, {
+            const newResponse: ResponseProps = {
                 onlyOneResponse: emptyFuzzer,
                 ...currentResponse,
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
                 successFuzzer: successBuffer,
                 failedFuzzer: failedBuffer
-            })
-
-            // if (lastUpdateCount <= 0 || lastUpdateCount != count || count === 1) {
-            //     // setContent([...buffer])
-            //     setSuccessFuzzer([...successBuffer])
-            //     setFailedFuzzer([...failedBuffer])
-            //     setFailedCount(failedCount)
-            //     setSuccessCount(successCount)
-            //     lastUpdateCount = count
-            // }
+            }
+            setResponse(fuzzerIndex, newResponse)
         },
         {wait: 200}
     ).run
@@ -446,7 +453,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setSequenceList([...sequenceList])
         }
     })
-    console.log("currentSelectRequest", currentSelectRequest, currentSelectResponse)
+    // console.log("currentSelectResponse", currentSelectResponse)
     return (
         <div className={styles["fuzzer-sequence"]} ref={fuzzerSequenceRef}>
             <div className={styles["fuzzer-sequence-left"]}>
@@ -535,7 +542,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     <div className={styles["to-end"]}>已经到底啦～</div>
                 </div>
             </div>
-            <div className={styles["fuzzer-sequence-content"]}>
+            <div className={classNames(styles["fuzzer-sequence-content"])}>
                 {currentSequenceItem && currentSequenceItem.id ? (
                     <SequenceResponse
                         requestInfo={currentSelectRequest}
@@ -757,7 +764,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         <span style={{marginRight: 8}}>Responses</span>
                         <SecondNodeTitle
                             cachedTotal={cachedTotal}
-                            onlyOneResponse={cachedTotal <= 1}
+                            onlyOneResponse={onlyOneResponse}
                             rsp={httpResponse}
                             successFuzzerLength={(successFuzzer || []).length}
                             failedFuzzerLength={(failedFuzzer || []).length}
@@ -770,27 +777,25 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                     </>
                 ),
                 extra: (
-                    <div className={styles["fuzzer-secondNode-extra"]}>
-                        <SecondNodeExtra
-                            onlyOneResponse={onlyOneResponse}
-                            cachedTotal={cachedTotal}
-                            rsp={httpResponse}
-                            valueSearch={affixSearch}
-                            onSearchValueChange={(value) => {
-                                setAffixSearch(value)
-                                if (value === "" && defaultResponseSearch !== "") {
-                                    setDefaultResponseSearch("")
-                                }
-                            }}
-                            onSearch={() => {
-                                setDefaultResponseSearch(affixSearch)
-                            }}
-                            successFuzzer={successFuzzer}
-                            secondNodeSize={secondNodeSize}
-                            query={query}
-                            setQuery={(q) => setQuery({...q})}
-                        />
-                    </div>
+                    <SecondNodeExtra
+                        onlyOneResponse={onlyOneResponse}
+                        cachedTotal={cachedTotal}
+                        rsp={httpResponse}
+                        valueSearch={affixSearch}
+                        onSearchValueChange={(value) => {
+                            setAffixSearch(value)
+                            if (value === "" && defaultResponseSearch !== "") {
+                                setDefaultResponseSearch("")
+                            }
+                        }}
+                        onSearch={() => {
+                            setDefaultResponseSearch(affixSearch)
+                        }}
+                        successFuzzer={successFuzzer}
+                        secondNodeSize={secondNodeSize}
+                        query={query}
+                        setQuery={(q) => setQuery({...q})}
+                    />
                 )
             }}
             firstNode={
@@ -802,6 +807,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                     noMinimap={true}
                     utf8={true}
                     originValue={StringToUint8Array(request)}
+                    readOnly={true}
                     // onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
                 />
             }
@@ -840,6 +846,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                             setQuery={setQuery}
                                             extractedMap={extractedMap}
                                             isEnd={loading}
+                                            isDebug={false}
                                         />
                                     )}
                                     {!showSuccess && (

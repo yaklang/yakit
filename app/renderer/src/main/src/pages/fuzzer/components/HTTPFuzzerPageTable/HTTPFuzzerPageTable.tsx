@@ -1,36 +1,39 @@
-import {ArrowCircleRightSvgIcon, FilterIcon} from "@/assets/newIcon"
-import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {ResizeBox} from "@/components/ResizeBox"
-import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {Uint8ArrayToString} from "@/utils/str"
-import {formatTimestamp} from "@/utils/timeUtil"
-import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
+import { ArrowCircleRightSvgIcon, FilterIcon } from "@/assets/newIcon"
+import { DurationMsToColor, RangeInputNumberTable, StatusCodeToColor } from "@/components/HTTPFlowTable/HTTPFlowTable"
+import { ResizeBox } from "@/components/ResizeBox"
+import { TableVirtualResize } from "@/components/TableVirtualResize/TableVirtualResize"
+import { ColumnsTypeProps, FiltersItemProps, SortProps } from "@/components/TableVirtualResize/TableVirtualResizeType"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { CopyComponents, YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { compareAsc, compareDesc } from "@/pages/yakitStore/viewers/base"
+import { HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor } from "@/utils/editors"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { yakitFailed, yakitNotify } from "@/utils/notification"
+import { Uint8ArrayToString } from "@/utils/str"
+import { formatTimestamp } from "@/utils/timeUtil"
+import { useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect } from "ahooks"
 import classNames from "classnames"
 import moment from "moment"
-import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import { analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget } from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
-import {ArrowRightSvgIcon} from "@/components/layout/icons"
-import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {Divider, Space, Tooltip} from "antd"
-import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {HTTPFuzzerRangeReadOnlyEditorMenu} from "../../HTTPFuzzerEditorMenu"
-import {NewEditorSelectRange} from "@/components/NewEditorSelectRange"
-import {AutoCard} from "@/components/AutoCard";
-import {SelectOne} from "@/utils/inputUtil";
+import { ArrowRightSvgIcon } from "@/components/layout/icons"
+import { HollowLightningBoltIcon } from "@/assets/newIcon"
+import { Divider, Space, Tooltip } from "antd"
+import { ExtractionResultsContent } from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { HTTPFuzzerRangeReadOnlyEditorMenu } from "../../HTTPFuzzerEditorMenu"
+import { NewEditorSelectRange } from "@/components/NewEditorSelectRange"
+import { AutoCard } from "@/components/AutoCard"
+import { SelectOne } from "@/utils/inputUtil"
+import { YakitCard } from "@/components/yakitUI/YakitCard/YakitCard"
+import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 interface HTTPFuzzerPageTableProps {
     query?: HTTPFuzzerPageTableQuery
@@ -43,7 +46,9 @@ interface HTTPFuzzerPageTableProps {
     extractedMap: Map<string, string>
     /**@name 数据是否传输完成 */
     isEnd: boolean
-    setExportData?:(v:FuzzerResponse[])=>void
+    setExportData?: (v: FuzzerResponse[]) => void
+    /**@name 是否可以调试匹配器或提取器 */
+    isDebug?: boolean
 }
 
 /**
@@ -94,7 +99,7 @@ export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd,setExportData} = props
+    const { data, success, query, setQuery, isRefresh, extractedMap, isEnd, setExportData, isDebug } = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -117,8 +122,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             ? [
                 {
                     title: "请求",
-                    dataKey: "Count",
-                    render: (v) => v + 1,
+                    dataKey: "UUID",
+                    render: (v, _, index) => index + 1,
                     width: 80,
                     sorterProps: {
                         sorter: true
@@ -136,7 +141,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 {
                     title: "状态",
                     dataKey: "StatusCode",
-                    render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
+                    render: (v) => (v ? <div style={{ color: StatusCodeToColor(v) }}>{`${v}`}</div> : "-"),
                     width: 90,
                     sorterProps: {
                         sorter: true
@@ -215,7 +220,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     width: 300,
                     beforeIconExtra: (
                         <div className={classNames(styles["extracted-checkbox"])}>
-                            <YakitCheckbox checked={isHaveData} onChange={(e) => setIsHaveData(e.target.checked)}/>
+                            <YakitCheckbox checked={isHaveData} onChange={(e) => setIsHaveData(e.target.checked)} />
                             <span className={styles["tip"]}>不为空</span>
                         </div>
                     ),
@@ -224,9 +229,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             extractedMap.get(record["UUID"]) || "-"
                         ) : item?.length > 0 ? (
                             <div className={styles["table-item-extracted-results"]}>
-                                  <span className={styles["extracted-results-text"]}>
-                                      {item.map((i) => `${i.Key}: ${i.Value} `)}
-                                  </span>
+                                <span className={styles["extracted-results-text"]}>
+                                    {item.map((i) => `${i.Key}: ${i.Value} `)}
+                                </span>
                                 {item?.length > 1 && (
                                     <YakitButton
                                         type='text'
@@ -251,7 +256,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     render: (v) => {
                         const text = parseFloat(`${v}`).toFixed(3)
                         return text ? (
-                            <div style={{color: text.startsWith("1.00") ? "var(--yakit-success-5)" : undefined}}>
+                            <div style={{ color: text.startsWith("1.00") ? "var(--yakit-success-5)" : undefined }}>
                                 {text}
                             </div>
                         ) : (
@@ -279,7 +284,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     sorterProps: {
                         sorter: true
                     },
-                    render: (v) => (v ? <div style={{color: DurationMsToColor(v)}}>{`${v}`}</div> : "-")
+                    render: (v) => (v ? <div style={{ color: DurationMsToColor(v) }}>{`${v}`}</div> : "-")
                 },
                 {
                     title: "Content-Type",
@@ -299,21 +304,26 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     title: "操作",
                     dataKey: "UUID",
                     fixed: "right",
-                    width: 85,
+                    width: isDebug !== false ? 85 : 40,
                     render: (_, record, index: number) => {
                         return (
                             <div className={styles["operate-icons"]}>
-                                <Tooltip title='调试'>
-                                    <HollowLightningBoltIcon
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            ipcRenderer.invoke("send-open-matcher-and-extraction", {
-                                                httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
-                                            })
-                                        }}
-                                    />
-                                </Tooltip>
-                                <Divider type='vertical' style={{margin: 0}}/>
+                                {isDebug !== false && (
+                                    <>
+                                        <Tooltip title='调试'>
+                                            <HollowLightningBoltIcon
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    ipcRenderer.invoke("send-open-matcher-and-extraction", {
+                                                        httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
+                                                    })
+                                                }}
+                                            />
+                                        </Tooltip>
+                                        <Divider type='vertical' style={{ margin: 0 }} />
+                                    </>
+                                )}
+
                                 <ArrowCircleRightSvgIcon
                                     onClick={(e) => {
                                         e.stopPropagation()
@@ -339,9 +349,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     dataKey: "Reason",
                     render: (v) => {
                         return v ? (
-                            <YakitTag color='danger' style={{maxWidth: "100%"}}>
+                            <YakitTag color='danger' style={{ maxWidth: "100%" }}>
                                 <span className={styles["fail-reason"]}>{v}</span>
-                                <CopyComponents copyText={v}/>
+                                <CopyComponents copyText={v} />
                             </YakitTag>
                         ) : (
                             "-"
@@ -354,7 +364,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     render: (v) => v.join(",")
                 }
             ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData, isDebug])
 
     useThrottleEffect(
         () => {
@@ -368,7 +378,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         },
         [data, isEnd],
-        {wait: 200}
+        { wait: 200 }
     )
 
     useEffect(() => {
@@ -391,7 +401,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             title: "提取结果",
             width: "60%",
             footer: <></>,
-            content: <ExtractionResultsContent list={list}/>
+            content: <ExtractionResultsContent list={list} />
         })
     })
     const onDetails = useMemoizedFn((record, index: number) => {
@@ -507,11 +517,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         searchList.push(record)
                     }
                 }
-                setExportData&&setExportData([...searchList])
+                setExportData && setExportData([...searchList])
                 setListTable([...searchList])
             } else {
                 const newData = sorterFunction(data, sorterTable) || []
-                setExportData&&setExportData([...newData])
+                setExportData && setExportData([...newData])
                 setListTable([...newData])
             }
             // ------------  搜索 结束  ------------
@@ -563,11 +573,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
     }, [currentSelectItem, showResponseInfoSecondEditor])
     return (
-        <div style={{overflowY: "hidden", height: "100%"}}>
-            <ResizeBox
+        <div style={{ overflowY: "hidden", height: "100%" }}>
+            <YakitResizeBox
                 isVer={true}
-                lineStyle={{display: firstFull ? "none" : ""}}
-                firstNodeStyle={{padding: firstFull ? 0 : undefined}}
+                lineDirection='bottom'
+                lineStyle={{ display: firstFull ? "none" : "" }}
+                secondNodeStyle={{ padding: firstFull ? 0 : undefined, display: firstFull ? "none" : "" }}
                 firstNode={
                     <TableVirtualResize<FuzzerResponse>
                         ref={tableRef}
@@ -589,20 +600,34 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     />
                 }
                 secondNode={
-                    <AutoCard
-                        title={<Space style={{marginLeft: 12}}>
-                            <span>快速预览</span>
-                            <YakitButton
-                                type={currentSelectShowType !== "request" ? "outline2" : "primary"} onClick={() => {
-                                setCurrentSelectShowType("request")
-                            }}>请求</YakitButton>
-                            <YakitButton
-                                type={currentSelectShowType !== "response" ? "outline2" : "primary"} onClick={() => {
-                                setCurrentSelectShowType("response")
-                            }}>响应</YakitButton>
-                        </Space>} size={"small"} bordered={true}
-                        bodyStyle={{padding: 0, height: "100%", overflowY: "hidden"}}
-                        headStyle={{margin: 0, padding: 0}}
+                    <YakitCard
+                        title={
+                            <div className={styles["second-node-title-wrapper"]}>
+                                <span className={styles["second-node-title-text"]}>快速预览</span>
+                                <div className={styles["second-node-title-btns"]}>
+                                    <YakitRadioButtons
+                                        size='small'
+                                        value={currentSelectShowType}
+                                        onChange={(e) => {
+                                            setCurrentSelectShowType(e.target.value)
+                                        }}
+                                        buttonStyle='solid'
+                                        options={[
+                                            {
+                                                value: "request",
+                                                label: "请求"
+                                            },
+                                            {
+                                                value: "response",
+                                                label: "响应"
+                                            }
+                                        ]}
+                                    />
+                                </div>
+                            </div>
+                        }
+                        bordered={false}
+                        bodyStyle={{ padding: 0 }}
                     >
                         <NewEditorSelectRange
                             isResponse={true}
@@ -610,7 +635,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             hideSearch={true}
                             noHex={true}
                             noHeader={true}
-                            originValue={(currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw) || new Buffer([])}
+                            originValue={
+                                (currentSelectShowType === "request"
+                                    ? currentSelectItem?.RequestRaw
+                                    : currentSelectItem?.ResponseRaw) || new Buffer([])
+                            }
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}
@@ -630,7 +659,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             onEditor={setReqEditor}
                             webFuzzerValue={currentSelectItem?.RequestRaw || new Buffer([])}
                         />
-                    </AutoCard>
+                    </YakitCard>
                 }
                 {...ResizeBoxProps}
             />
@@ -648,7 +677,7 @@ interface BodyLengthInputNumberProps {
 
 export const BodyLengthInputNumber: React.FC<BodyLengthInputNumberProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {query, setQuery, showFooter} = props
+        const { query, setQuery, showFooter } = props
         // 响应大小
         const [afterBodyLength, setAfterBodyLength] = useState<number>()
         const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
