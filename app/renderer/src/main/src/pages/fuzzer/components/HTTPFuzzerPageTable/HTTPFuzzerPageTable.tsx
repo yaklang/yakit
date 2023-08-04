@@ -27,8 +27,6 @@ import { ExtractionResultsContent } from "../../MatcherAndExtractionCard/Matcher
 import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { HTTPFuzzerRangeReadOnlyEditorMenu } from "../../HTTPFuzzerEditorMenu"
 import { NewEditorSelectRange } from "@/components/NewEditorSelectRange"
-import { AutoCard } from "@/components/AutoCard"
-import { SelectOne } from "@/utils/inputUtil"
 import { YakitCard } from "@/components/yakitUI/YakitCard/YakitCard"
 import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
