@@ -1,0 +1,57 @@
+.yakit-collapse-default-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    width: 100%;
+    :global {
+        .ant-collapse {
+            overflow-y: auto;
+            width: 100%;
+        }
+        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+            padding: 8px 12px;
+            align-items: center;
+            line-height: 16px;
+        }
+        .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow svg {
+            color: var(--yakit-body-text-color);
+        }
+        .ant-collapse-header-text {
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 16px;
+            color: var(--yakit-header-color);
+            margin-left: 4px;
+        }
+        .ant-collapse-content > .ant-collapse-content-box {
+            padding: 12px;
+        }
+        .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+            padding-top: 0;
+        }
+        .ant-collapse-expand-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-body-text-color);
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .ant-collapse-ghost > .ant-collapse-item {
+            border-bottom: 1px solid var(--yakit-border-color);
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+        .ant-form-item {
+            margin-bottom: 12px;
+        }
+        .ant-select.ant-select-in-form-item {
+            height: auto;
+        }
+    }
+}
+.yakit-collapse-grey-wrapper {
+    background-color: var(--yakit-card-background-color);
+}

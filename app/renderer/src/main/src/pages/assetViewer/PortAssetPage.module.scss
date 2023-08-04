@@ -147,7 +147,7 @@
         color: var(--yakit-header-color);
     }
     .query-collapse {
-        overflow-y: auto;
+        height: calc(100% - 44px);
         :global {
             .ant-collapse-content-box {
                 padding: 0 4px 12px !important;

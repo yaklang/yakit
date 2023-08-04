@@ -71,9 +71,10 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 
 const {ipcRenderer} = window.require("electron")
-const {Panel} = Collapse
+const {YakitPanel} = YakitCollapse
 export interface PortAssetTableProp {
     closed?: boolean
     onClicked?: (i: PortAsset) => any
@@ -852,15 +853,13 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                 <YakitSwitch checked={visible} onChange={setVisible} />
             </div>
             <YakitSpin spinning={loading}>
-                <Collapse
+                <YakitCollapse
                     activeKey={activeKey}
                     onChange={(key) => setActiveKey(key as string[])}
-                    ghost
-                    expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
                     className={styles["query-collapse"]}
                 >
                     {portsGroupList.map((item, i) => (
-                        <Panel
+                        <YakitPanel
                             header={item.GroupName}
                             key={item.GroupName}
                             extra={
@@ -899,9 +898,9 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                                     </label>
                                 )
                             })}
-                        </Panel>
+                        </YakitPanel>
                     ))}
-                </Collapse>
+                </YakitCollapse>
                 {portsGroupList.length === 0 && <YakitEmpty style={{paddingTop: 48}} title='暂无指纹信息' />}
             </YakitSpin>
         </div>
