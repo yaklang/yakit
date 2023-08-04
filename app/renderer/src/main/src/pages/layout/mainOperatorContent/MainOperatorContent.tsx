@@ -245,12 +245,12 @@ export const getInitPageCache: () => PageCache[] = () => {
             route: YakitRoute.DB_HTTPHistory,
             singleNode: true,
             multipleNode: []
-        },
+        }
     ]
 }
 
 /**一级tab固定展示额tab */
-const defaultFixedTabs=[YakitRoute.NewHome,YakitRoute.DB_HTTPHistory]
+const defaultFixedTabs = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 
 // 软件初始化时的默认当前打开页面的key
 export const getInitActiveTabKey = () => {
@@ -602,7 +602,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         e.stopPropagation()
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-            if (pageCache.length === 0 || currentTabKey === YakitRoute.NewHome) return
+            if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
             const data = KeyConvertRoute(currentTabKey)
             if (data) {
                 const info: OnlyPageCache = {
@@ -674,13 +674,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             } else {
                 // 多开页面
                 const key = routeConvertKey(route, pluginName)
-                const tabName = routeKeyToLabel.get(key) || menuName
+                let tabName = routeKeyToLabel.get(key) || menuName
+
                 const time = new Date().getTime().toString()
                 const tabId = `${key}-[${randomString(6)}]-${time}`
 
-                const verbose =
+                let verbose =
                     nodeParams?.verbose ||
                     `${tabName}-[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
+                if (route === YakitRoute.HTTPFuzzer) {
+                    // webFuzzer页面二级tab名称改为WF，特殊
+                    verbose =
+                        nodeParams?.verbose ||
+                        `WF-[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
+                }
                 const node: MultipleNodeInfo = {
                     id: tabId,
                     verbose,
@@ -1342,9 +1349,9 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 // const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
-                const fixedTabs=pageCache.filter(ele=>defaultFixedTabs.includes(ele.route))
-                if (fixedTabs.length>0) {
-                    const key = fixedTabs[fixedTabs.length-1].routeKey
+                const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
+                if (fixedTabs.length > 0) {
+                    const key = fixedTabs[fixedTabs.length - 1].routeKey
                     setPageCache([...fixedTabs])
                     setCurrentTabKey(key)
                 } else {
@@ -1369,7 +1376,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 if (pageCache.length <= 0) return
-                const fixedTabs=pageCache.filter(ele=>defaultFixedTabs.includes(ele.route))
+                const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
                 const newPage: PageCache[] = [...fixedTabs, item]
                 setPageCache(newPage)
                 afterDeleteFirstPage("other", item)
