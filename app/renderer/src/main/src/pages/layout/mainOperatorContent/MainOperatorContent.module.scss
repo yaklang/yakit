@@ -391,6 +391,7 @@ $keyColor: map-keys($colors);
     background-color: var(--yakit-card-background-color);
     font-size: 12px;
     transition: min-width 0.1s linear, padding 0.1s linear;
+    flex-basis: fit-content;
     &:hover {
         @extend .dragging;
     }
