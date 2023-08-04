@@ -845,7 +845,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
     })
     return (
         <div
-            className={classNames("yakit-collapse", styles["portAsset-query"])}
+            className={classNames(styles["portAsset-query"])}
             style={{display: visible ? "" : "none"}}
         >
             <div className={styles["query-head"]}>

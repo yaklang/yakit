@@ -37,8 +37,8 @@ import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
-import { OtherMenuListProps, YakitEditorProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import { HTTPPacketYakitEditor } from "@/components/yakitUI/YakitEditor/extraYakitEditor"
+import {OtherMenuListProps, YakitEditorProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -384,7 +384,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     bracketPairColorization: {
                                         enabled: true,
                                         independentColorPoolPerBracketType: true
-                                    },
+                                    }
                                 }}
                             />
                         </div>
@@ -1021,9 +1021,9 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     noLineNumber?: boolean
     lineNumbersMinChars?: number
     noMinimap?: boolean
-    onAddOverlayWidget?: (editor: IMonacoEditor,isShow?:boolean) => any
+    onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
     extraEditorProps?: YakitEditorProps | any
-    
+
     /** 扩展属性 */
     originValue: Uint8Array
     defaultStringValue?: string
@@ -1053,7 +1053,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     system?: string
     isResponse?: boolean
     utf8?: boolean
-    theme?:string
+    theme?: string
 
     defaultSearchKeyword?: string
 
@@ -1451,7 +1451,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             editorOperationRecord={props.editorOperationRecord}
                             defaultHttps={props.defaultHttps}
                             webFuzzerValue={
-                                props.webFuzzerValue&&new Buffer(props.webFuzzerValue).toString(getEncoding())
+                                props.webFuzzerValue && new Buffer(props.webFuzzerValue).toString(getEncoding())
                             }
                             {...props.extraEditorProps}
                         />
