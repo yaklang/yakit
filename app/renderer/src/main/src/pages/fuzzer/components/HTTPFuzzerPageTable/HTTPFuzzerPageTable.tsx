@@ -22,13 +22,16 @@ import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../H
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {ArrowRightSvgIcon} from "@/components/layout/icons"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {Divider, Tooltip} from "antd"
+import {Divider, Space, Tooltip} from "antd"
 import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { HTTPFuzzerRangeReadOnlyEditorMenu } from "../../HTTPFuzzerEditorMenu"
-import { NewEditorSelectRange } from "@/components/NewEditorSelectRange"
+import {HTTPFuzzerRangeReadOnlyEditorMenu} from "../../HTTPFuzzerEditorMenu"
+import {NewEditorSelectRange} from "@/components/NewEditorSelectRange"
+import {AutoCard} from "@/components/AutoCard";
+import {SelectOne} from "@/utils/inputUtil";
 
 const {ipcRenderer} = window.require("electron")
+
 interface HTTPFuzzerPageTableProps {
     query?: HTTPFuzzerPageTableQuery
     data: FuzzerResponse[]
@@ -97,6 +100,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
     const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
+    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("response") //选中的表格项
 
     const [isHaveData, setIsHaveData] = useState<boolean>(false) // 查询提取数据不为空
 
@@ -110,246 +114,247 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return success
             ? [
-                  {
-                      title: "请求",
-                      dataKey: "Count",
-                      render: (v) => v + 1,
-                      width: 80,
-                      sorterProps: {
-                          sorter: true
-                      },
-                      fixed: "left"
-                  },
-                  {
-                      title: "Method",
-                      dataKey: "Method",
-                      width: 100,
-                      sorterProps: {
-                          sorter: true
-                      }
-                  },
-                  {
-                      title: "状态",
-                      dataKey: "StatusCode",
-                      render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
-                      width: 90,
-                      sorterProps: {
-                          sorter: true
-                      },
-                      filterProps: {
-                          filterMultiple: true,
-                          filtersType: "select",
-                          filters: [
-                              {
-                                  value: "100-200",
-                                  label: "100-200"
-                              },
-                              {
-                                  value: "200-300",
-                                  label: "200-300"
-                              },
-                              {
-                                  value: "300-400",
-                                  label: "300-400"
-                              },
-                              {
-                                  value: "400-500",
-                                  label: "400-500"
-                              },
-                              {
-                                  value: "500-600",
-                                  label: "500-600"
-                              }
-                          ]
-                      }
-                  },
-                  {
-                      title: "响应大小",
-                      dataKey: "BodyLength",
-                      width: 120,
-                      sorterProps: {
-                          sorter: true
-                      },
-                      filterProps: {
-                          filterKey: "bodyLength",
-                          filterIcon: (
-                              <FilterIcon
-                                  className={classNames(styles["filter-icon"], {
-                                      [styles["active-icon"]]: query?.afterBodyLength || query?.beforeBodyLength
-                                  })}
-                              />
-                          ),
-                          filterRender: () => (
-                              <BodyLengthInputNumber
-                                  ref={bodyLengthRef}
-                                  query={query}
-                                  setQuery={(q) => {
-                                      setQuery({
-                                          ...q
-                                      })
-                                  }}
-                                  onSure={() => {
-                                      setTimeout(() => {
-                                          update()
-                                      }, 100)
-                                  }}
-                                  showFooter={true}
-                              />
-                          )
-                      }
-                  },
-                  {
-                      title: "Payloads",
-                      dataKey: "Payloads",
-                      width: 300,
-                      render: (v) => (v ? v.join(",") : "-")
-                  },
-                  {
-                      title: "提取数据",
-                      dataKey: "ExtractedResults",
-                      width: 300,
-                      beforeIconExtra: (
-                          <div className={classNames(styles["extracted-checkbox"])}>
-                              <YakitCheckbox checked={isHaveData} onChange={(e) => setIsHaveData(e.target.checked)} />
-                              <span className={styles["tip"]}>不为空</span>
-                          </div>
-                      ),
-                      render: (item, record) =>
-                          extractedMap.size > 0 ? (
-                              extractedMap.get(record["UUID"]) || "-"
-                          ) : item?.length > 0 ? (
-                              <div className={styles["table-item-extracted-results"]}>
+                {
+                    title: "请求",
+                    dataKey: "Count",
+                    render: (v) => v + 1,
+                    width: 80,
+                    sorterProps: {
+                        sorter: true
+                    },
+                    fixed: "left"
+                },
+                {
+                    title: "Method",
+                    dataKey: "Method",
+                    width: 100,
+                    sorterProps: {
+                        sorter: true
+                    }
+                },
+                {
+                    title: "状态",
+                    dataKey: "StatusCode",
+                    render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
+                    width: 90,
+                    sorterProps: {
+                        sorter: true
+                    },
+                    filterProps: {
+                        filterMultiple: true,
+                        filtersType: "select",
+                        filters: [
+                            {
+                                value: "100-200",
+                                label: "100-200"
+                            },
+                            {
+                                value: "200-300",
+                                label: "200-300"
+                            },
+                            {
+                                value: "300-400",
+                                label: "300-400"
+                            },
+                            {
+                                value: "400-500",
+                                label: "400-500"
+                            },
+                            {
+                                value: "500-600",
+                                label: "500-600"
+                            }
+                        ]
+                    }
+                },
+                {
+                    title: "响应大小",
+                    dataKey: "BodyLength",
+                    width: 120,
+                    sorterProps: {
+                        sorter: true
+                    },
+                    filterProps: {
+                        filterKey: "bodyLength",
+                        filterIcon: (
+                            <FilterIcon
+                                className={classNames(styles["filter-icon"], {
+                                    [styles["active-icon"]]: query?.afterBodyLength || query?.beforeBodyLength
+                                })}
+                            />
+                        ),
+                        filterRender: () => (
+                            <BodyLengthInputNumber
+                                ref={bodyLengthRef}
+                                query={query}
+                                setQuery={(q) => {
+                                    setQuery({
+                                        ...q
+                                    })
+                                }}
+                                onSure={() => {
+                                    setTimeout(() => {
+                                        update()
+                                    }, 100)
+                                }}
+                                showFooter={true}
+                            />
+                        )
+                    }
+                },
+                {
+                    title: "Payloads",
+                    dataKey: "Payloads",
+                    width: 300,
+                    render: (v) => (v ? v.join(",") : "-")
+                },
+                {
+                    title: "提取数据",
+                    dataKey: "ExtractedResults",
+                    width: 300,
+                    beforeIconExtra: (
+                        <div className={classNames(styles["extracted-checkbox"])}>
+                            <YakitCheckbox checked={isHaveData} onChange={(e) => setIsHaveData(e.target.checked)}/>
+                            <span className={styles["tip"]}>不为空</span>
+                        </div>
+                    ),
+                    render: (item, record) =>
+                        extractedMap.size > 0 ? (
+                            extractedMap.get(record["UUID"]) || "-"
+                        ) : item?.length > 0 ? (
+                            <div className={styles["table-item-extracted-results"]}>
                                   <span className={styles["extracted-results-text"]}>
                                       {item.map((i) => `${i.Key}: ${i.Value} `)}
                                   </span>
-                                  {item?.length > 1 && (
-                                      <YakitButton
-                                          type='text'
-                                          size='small'
-                                          onClick={(e) => {
-                                              e.stopPropagation()
-                                              onViewExecResults(item)
-                                          }}
-                                      >
-                                          详情
-                                      </YakitButton>
-                                  )}
-                              </div>
-                          ) : (
-                              "-"
-                          )
-                  },
-                  {
-                      title: "响应相似度",
-                      dataKey: "BodySimilarity",
-                      width: 120,
-                      render: (v) => {
-                          const text = parseFloat(`${v}`).toFixed(3)
-                          return text ? (
-                              <div style={{color: text.startsWith("1.00") ? "var(--yakit-success-5)" : undefined}}>
-                                  {text}
-                              </div>
-                          ) : (
-                              "-"
-                          )
-                      },
-                      sorterProps: {
-                          sorter: true
-                      }
-                  },
-                  {
-                      title: "HTTP头相似度",
-                      dataKey: "HeaderSimilarity",
-                      render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
-                      width: 120,
-                      sorterProps: {
-                          sorter: true
-                      }
-                  },
+                                {item?.length > 1 && (
+                                    <YakitButton
+                                        type='text'
+                                        size='small'
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onViewExecResults(item)
+                                        }}
+                                    >
+                                        详情
+                                    </YakitButton>
+                                )}
+                            </div>
+                        ) : (
+                            "-"
+                        )
+                },
+                {
+                    title: "响应相似度",
+                    dataKey: "BodySimilarity",
+                    width: 120,
+                    render: (v) => {
+                        const text = parseFloat(`${v}`).toFixed(3)
+                        return text ? (
+                            <div style={{color: text.startsWith("1.00") ? "var(--yakit-success-5)" : undefined}}>
+                                {text}
+                            </div>
+                        ) : (
+                            "-"
+                        )
+                    },
+                    sorterProps: {
+                        sorter: true
+                    }
+                },
+                {
+                    title: "HTTP头相似度",
+                    dataKey: "HeaderSimilarity",
+                    render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
+                    width: 120,
+                    sorterProps: {
+                        sorter: true
+                    }
+                },
 
-                  {
-                      title: "延迟(ms)",
-                      dataKey: "DurationMs",
-                      width: 100,
-                      sorterProps: {
-                          sorter: true
-                      },
-                      render: (v) => (v ? <div style={{color: DurationMsToColor(v)}}>{`${v}`}</div> : "-")
-                  },
-                  {
-                      title: "Content-Type",
-                      dataKey: "ContentType",
-                      width: 300
-                  },
-                  {
-                      title: "time",
-                      dataKey: "Timestamp",
-                      width: 165,
-                      render: (text) => (text ? formatTimestamp(text) : "-"),
-                      sorterProps: {
-                          sorter: true
-                      }
-                  },
-                  {
-                      title: "操作",
-                      dataKey: "UUID",
-                      fixed: "right",
-                      width: 85,
-                      render: (_, record, index: number) => {
-                          return (
-                              <div className={styles["operate-icons"]}>
-                                  <Tooltip title='调试'>
-                                      <HollowLightningBoltIcon
-                                          onClick={(e) => {
-                                              e.stopPropagation()
-                                              ipcRenderer.invoke("send-open-matcher-and-extraction", {
-                                                  httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
-                                              })
-                                          }}
-                                      />
-                                  </Tooltip>
-                                  <Divider type='vertical' style={{margin: 0}} />
-                                  <ArrowCircleRightSvgIcon
-                                      onClick={(e) => {
-                                          e.stopPropagation()
-                                          onDetails(record, index)
-                                      }}
-                                  />
-                              </div>
-                          )
-                      }
-                  }
-              ]
+                {
+                    title: "延迟(ms)",
+                    dataKey: "DurationMs",
+                    width: 100,
+                    sorterProps: {
+                        sorter: true
+                    },
+                    render: (v) => (v ? <div style={{color: DurationMsToColor(v)}}>{`${v}`}</div> : "-")
+                },
+                {
+                    title: "Content-Type",
+                    dataKey: "ContentType",
+                    width: 300
+                },
+                {
+                    title: "time",
+                    dataKey: "Timestamp",
+                    width: 165,
+                    render: (text) => (text ? formatTimestamp(text) : "-"),
+                    sorterProps: {
+                        sorter: true
+                    }
+                },
+                {
+                    title: "操作",
+                    dataKey: "UUID",
+                    fixed: "right",
+                    width: 85,
+                    render: (_, record, index: number) => {
+                        return (
+                            <div className={styles["operate-icons"]}>
+                                <Tooltip title='调试'>
+                                    <HollowLightningBoltIcon
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            ipcRenderer.invoke("send-open-matcher-and-extraction", {
+                                                httpResponseCode: Uint8ArrayToString(record.ResponseRaw)
+                                            })
+                                        }}
+                                    />
+                                </Tooltip>
+                                <Divider type='vertical' style={{margin: 0}}/>
+                                <ArrowCircleRightSvgIcon
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDetails(record, index)
+                                    }}
+                                />
+                            </div>
+                        )
+                    }
+                }
+            ]
             : [
-                  {
-                      title: "Method",
-                      dataKey: "Method",
-                      width: 100,
-                      sorterProps: {
-                          sorter: true
-                      }
-                  },
-                  {
-                      title: "失败原因",
-                      dataKey: "Reason",
-                      render: (v) => {
-                          return v ? (
-                              <YakitTag color='danger' style={{maxWidth: "100%"}}>
-                                  <span className={styles["fail-reason"]}>{v}</span>
-                                  <CopyComponents copyText={v} />
-                              </YakitTag>
-                          ) : (
-                              "-"
-                          )
-                      }
-                  },
-                  {
-                      title: "Payloads",
-                      dataKey: "Payloads",
-                      render: (v) => v.join(",")
-                  }
-              ]
+                {
+                    title: "Method",
+                    dataKey: "Method",
+                    width: 100,
+                    sorterProps: {
+                        sorter: true
+                    }
+                },
+                {
+                    title: "失败原因",
+                    dataKey: "Reason",
+                    render: (v) => {
+                        return v ? (
+                            <YakitTag color='danger' style={{maxWidth: "100%"}}>
+                                <span className={styles["fail-reason"]}>{v}</span>
+                                <CopyComponents copyText={v}/>
+                            </YakitTag>
+                        ) : (
+                            "-"
+                        )
+                    }
+                },
+                {
+                    title: "Payloads",
+                    dataKey: "Payloads",
+                    render: (v) => v.join(",")
+                }
+            ]
     }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData])
+
     useThrottleEffect(
         () => {
             if (isEnd && sorterTable) {
@@ -385,7 +390,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             title: "提取结果",
             width: "60%",
             footer: <></>,
-            content: <ExtractionResultsContent list={list} />
+            content: <ExtractionResultsContent list={list}/>
         })
     })
     const onDetails = useMemoizedFn((record, index: number) => {
@@ -513,12 +518,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     })
 
     const onRowClick = useMemoizedFn((val) => {
-        if(val?.UUID===currentSelectItem?.UUID){
+        if (val?.UUID === currentSelectItem?.UUID) {
             setCurrentSelectItem(undefined)
-            setFirstFull(true) 
-        }else{
-           setCurrentSelectItem(val)
-            setFirstFull(false) 
+            setFirstFull(true)
+        } else {
+            setCurrentSelectItem(val)
+            setFirstFull(false)
         }
     })
 
@@ -581,32 +586,48 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     />
                 }
                 secondNode={
-                    <NewEditorSelectRange
-                        isResponse={true}
-                        readOnly={true}
-                        hideSearch={true}
-                        noHex={true}
-                        noHeader={true}
-                        originValue={currentSelectItem?.ResponseRaw || new Buffer([])}
-                        onAddOverlayWidget={(editor) => {
-                            setEditor(editor)
-                        }}
-                        isAddOverlayWidget={showResponseInfoSecondEditor}
-                        contextMenu={responseEditorRightMenu}
-                        rangeId='monaco.fizz.range.read.only.widget'
-                        rangeNode={(close, editorInfo) => (
-                            <HTTPFuzzerRangeReadOnlyEditorMenu
-                                editorInfo={editorInfo}
-                                rangeValue={
-                                    (reqEditor &&
-                                        reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                                    ""
-                                }
-                            />
-                        )}
-                        onEditor={setReqEditor}
-                        webFuzzerValue={currentSelectItem?.RequestRaw || new Buffer([])}
-                    />
+                    <AutoCard
+                        title={<Space style={{marginLeft: 12}}>
+                            <span>快速预览</span>
+                            <YakitButton
+                                type={currentSelectShowType !== "request" ? "secondary1" : "primary"} onClick={() => {
+                                setCurrentSelectShowType("request")
+                            }}>请求</YakitButton>
+                            <YakitButton
+                                type={currentSelectShowType !== "response" ? "secondary1" : "primary"} onClick={() => {
+                                setCurrentSelectShowType("response")
+                            }}>响应</YakitButton>
+                        </Space>} size={"small"} bordered={true}
+                        bodyStyle={{padding: 0, height: "100%", overflowY: "hidden"}}
+                        headStyle={{margin: 0, padding: 0}}
+                    >
+                        <NewEditorSelectRange
+                            isResponse={true}
+                            readOnly={true}
+                            hideSearch={true}
+                            noHex={true}
+                            noHeader={true}
+                            originValue={(currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw) || new Buffer([])}
+                            onAddOverlayWidget={(editor) => {
+                                setEditor(editor)
+                            }}
+                            isAddOverlayWidget={showResponseInfoSecondEditor}
+                            contextMenu={responseEditorRightMenu}
+                            rangeId='monaco.fizz.range.read.only.widget'
+                            rangeNode={(close, editorInfo) => (
+                                <HTTPFuzzerRangeReadOnlyEditorMenu
+                                    editorInfo={editorInfo}
+                                    rangeValue={
+                                        (reqEditor &&
+                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
+                                        ""
+                                    }
+                                />
+                            )}
+                            onEditor={setReqEditor}
+                            webFuzzerValue={currentSelectItem?.RequestRaw || new Buffer([])}
+                        />
+                    </AutoCard>
                 }
                 {...ResizeBoxProps}
             />
@@ -621,6 +642,7 @@ interface BodyLengthInputNumberProps {
     showFooter?: boolean
     ref?: any
 }
+
 export const BodyLengthInputNumber: React.FC<BodyLengthInputNumberProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {query, setQuery, showFooter} = props
