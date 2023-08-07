@@ -220,6 +220,7 @@ service Yak {
 
   // 编码解码
   rpc Codec(CodecRequest) returns (CodecResponse);
+  rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
 
   // Payload 相关接口
   rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse);
@@ -523,6 +524,23 @@ service Yak {
   rpc GetGlobalNetworkConfig(GetGlobalNetworkConfigRequest) returns (GlobalNetworkConfig);
   rpc SetGlobalNetworkConfig(GlobalNetworkConfig) returns (Empty);
   rpc ResetGlobalNetworkConfig(ResetGlobalNetworkConfigRequest) returns (Empty);
+}
+
+message PacketPrettifyHelperRequest {
+  bytes Packet = 1;
+
+  // SetReplaceBody: replace body for prettier
+  bool SetReplaceBody = 2;
+  bytes Body = 3;
+}
+
+message PacketPrettifyHelperResponse {
+  // 处理后的 Packet
+  bytes Packet = 1;
+  string ContentType = 2;
+  bool IsImage = 3;
+  bytes ImageHtmlTag = 4;
+  bytes Body = 5;
 }
 
 message DiagnoseNetworkDNSRequest {
