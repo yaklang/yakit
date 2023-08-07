@@ -319,8 +319,11 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         updateTokenByScript()
                     }}
                     size={"small"}
+                    style={{ display: 'flex', justifyContent: 'space-between' }}
+
                 >
                     <Form.Item
+                        style={{ width: '48%' }}
                         label={
                             <span>
                                 DNSLOG插件
@@ -340,8 +343,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             maxTagCount={10}
                         />
                     </Form.Item>
-                    <Form.Item colon={false} label={" "}>
-                        <YakitButton type="primary" htmlType="submit"> 执行检测 </YakitButton>
+                    <Form.Item colon={false} style={{ width: '68%' }}>
+                        <YakitButton type="primary" htmlType="submit"> 生成域名 </YakitButton>
                     </Form.Item>
                 </Form>
                 {token !== "" && (
