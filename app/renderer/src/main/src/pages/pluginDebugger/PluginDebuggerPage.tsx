@@ -1,7 +1,7 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
-import {Space, Tag} from "antd";
+import {Form, Space, Tag} from "antd";
 import {YakEditor} from "@/utils/editors";
 import {
     getDefaultHTTPRequestBuilderParams,
@@ -11,14 +11,14 @@ import {
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {debugYakitModal, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer";
-import {YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage";
-import {PluginList} from "@/components/PluginList";
 import {SimplePluginList} from "@/components/SimplePluginList";
 import {YakScript} from "@/pages/invoker/schema";
 import {failed, info} from "@/utils/notification";
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec";
 import {execSmokingEvaluateCode} from "@/pages/pluginDebugger/SmokingEvaluate";
+import {SelectOne} from "@/utils/inputUtil";
+import {MITMPluginTemplate, NucleiPluginTemplate, PortScanPluginTemplate} from "@/pages/pluginDebugger/defaultData";
 
 export interface PluginDebuggerPageProp {
 
@@ -34,8 +34,46 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
     const [pluginType, setPluginType] = useState<"port-scan" | "mitm" | "nuclei">("port-scan");
     const [currentPluginName, setCurrentPluginName] = useState("");
 
-    const [operator, setOperator] = useState<{start: ()=>any, cancel: ()=>any}>();
+    const [operator, setOperator] = useState<{ start: () => any, cancel: () => any }>();
     const [pluginExecuting, setPluginExecuting] = useState(false);
+
+    useEffect(() => {
+        if (!!code) {
+            const m = showYakitModal({
+                title: "切换类型将导致当前代码丢失",
+                onOk: () => {
+                    switch (pluginType) {
+                        case "mitm":
+                            setCode(MITMPluginTemplate)
+                            break;
+                        case "nuclei":
+                            setCode(NucleiPluginTemplate)
+                            break
+                        case "port-scan":
+                            setCode(PortScanPluginTemplate)
+                            break
+                    }
+                    m.destroy()
+                },
+                content: (
+                    <div style={{margin: 24}}>确认插件类型切换？</div>
+                )
+            })
+        } else {
+            switch (pluginType) {
+                case "port-scan":
+                    setCode(PortScanPluginTemplate)
+                    break
+                case "mitm":
+                    setCode(MITMPluginTemplate)
+                    break
+                case "nuclei":
+                    setCode(NucleiPluginTemplate)
+                    break
+            }
+        }
+
+    }, [pluginType])
 
     return <div style={{width: "100%", height: "100%"}}>
         <AutoCard
@@ -55,7 +93,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                         {!pluginExecuting && <YakitButton onClick={() => {
                             if (operator?.start) {
                                 operator.start()
-                            }else{
+                            } else {
                                 failed("初始化调试失败")
                             }
                         }}>执行插件</YakitButton>}
@@ -83,7 +121,12 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                 firstRatio={"450px"}
                 secondNode={<AutoCard
                     size={"small"} bordered={true} title={<Space>
-                    <div>插件代码配置</div>
+                    <Form.Item label={"插件代码"} style={{margin: 0, padding: 0}}/>
+                    {!currentPluginName && <SelectOne formItemStyle={{margin: 0, padding: 0}} label={""} data={[
+                        {text: "端口扫描", value: "port-scan"},
+                        {text: "MITM", value: "mitm"},
+                        {text: "Yaml-PoC", value: "nuclei"},
+                    ]} value={pluginType} setValue={setPluginType} oldTheme={false}/>}
                     {code !== "" && <Tag color={"purple"}>{pluginType.toUpperCase()}</Tag>}
                     {code !== "" && <Tag color={"orange"}>{currentPluginName}</Tag>}
                 </Space>}
@@ -92,7 +135,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                         <Space>
                             <YakitPopconfirm
                                 title={"执行自动打分评估？"}
-                                onConfirm={()=>{
+                                onConfirm={() => {
                                     execSmokingEvaluateCode(pluginType, code)
                                 }}
                             >
@@ -113,7 +156,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                                                     autoSelectAll={false}
                                                     pluginTypes={"port-scan,mitm,nuclei"}
                                                     singleSelectMode={true}
-                                                    onPluginClick={(script: YakScript)=>{
+                                                    onPluginClick={(script: YakScript) => {
                                                         switch (script.Type) {
                                                             case "mitm":
                                                             case "nuclei":
