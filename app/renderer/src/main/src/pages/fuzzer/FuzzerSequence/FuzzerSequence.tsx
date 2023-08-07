@@ -168,6 +168,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setCurrentSelectRequest(undefined)
             setCurrentSelectResponse(undefined)
         }
+      
     }, [currentSequenceItem])
     useEffect(() => {
         const token = fuzzTokenRef.current
@@ -237,8 +238,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         })
 
         return () => {
-            resetResponse()
-            onClearRef()
+            // resetResponse()
+            // onClearRef()
             ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
             ipcRenderer.removeAllListeners(errToken)
             ipcRenderer.removeAllListeners(dataToken)
@@ -365,17 +366,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             inheritCookies: false,
             inheritVariables: false
         }))
-        const item = {
-            id: `${randomString(8)}-1`,
-            pageId: "",
-            pageGroupId: currentItem.pageGroupId,
-            pageName: "",
-            pageParams: defaultPageParams,
-            inheritCookies: false,
-            inheritVariables: false
-        }
+
         originSequenceListRef.current = [...newSequence]
-        setSequenceList([item])
+        if (sequenceList.length === 0) {
+            const item = {
+                id: `${randomString(8)}-1`,
+                pageId: "",
+                pageGroupId: currentItem.pageGroupId,
+                pageName: "",
+                pageParams: defaultPageParams,
+                inheritCookies: false,
+                inheritVariables: false
+            }
+            setSequenceList([item])
+        }
     })
 
     const onDragEnd = useMemoizedFn((result) => {
