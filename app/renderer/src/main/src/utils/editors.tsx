@@ -282,25 +282,27 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     const yakSyntaxChecking = useDebounceFn(
         useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
             const allContent = model.getValue()
-            ipcRenderer
-                .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                    if (e && e.Result.length > 0) {
-                        const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                        // console.info(markers)
-                        // markers.push({
-                        //     endColumn: 14,
-                        //     endLineNumber: 4,
-                        //     message: "test",
-                        //     severity: MarkerSeverity.Error,
-                        //     startColumn: 12,
-                        //     startLineNumber: 5,
-                        // })
-                        monaco.editor.setModelMarkers(model, "owner", markers)
-                    } else {
-                        monaco.editor.setModelMarkers(model, "owner", [])
-                    }
-                })
+            if (props.type === "yak") {
+                ipcRenderer
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
+                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                        if (e && e.Result.length > 0) {
+                            const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
+                            // console.info(markers)
+                            // markers.push({
+                            //     endColumn: 14,
+                            //     endLineNumber: 4,
+                            //     message: "test",
+                            //     severity: MarkerSeverity.Error,
+                            //     startColumn: 12,
+                            //     startLineNumber: 5,
+                            // })
+                            monaco.editor.setModelMarkers(model, "owner", markers)
+                        } else {
+                            monaco.editor.setModelMarkers(model, "owner", [])
+                        }
+                    })
+            }
         }),
         {wait: 300}
     )
