@@ -1016,6 +1016,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         fuzzerList.current.set(nodeItem.id, {...nodeItem})
                         groupChildrenList.push({...nodeItem})
                         pageNodeChildrenList.push({
+                            id: `${randomString(8)}-${j + 1}`,
                             routeKey: YakitRoute.HTTPFuzzer,
                             pageGroupId: nodeItem.groupId,
                             pageId: nodeItem.id,
@@ -1049,6 +1050,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
 
                     pageNodeInfo.pageNodeList.push({
+                        id: `${randomString(8)}-${index + 1}`,
                         routeKey: YakitRoute.HTTPFuzzer,
                         pageGroupId: parentItem.groupId,
                         pageId: parentItem.id,
@@ -1080,7 +1082,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleNode: multipleNodeList,
                     multipleLength: multipleNodeListLength
                 }
-                console.log("multipleNodeList", multipleNodeList)
+                // console.log("multipleNodeList", multipleNodeList)
+                console.log("pageNodeInfo", pageNodeInfo)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {

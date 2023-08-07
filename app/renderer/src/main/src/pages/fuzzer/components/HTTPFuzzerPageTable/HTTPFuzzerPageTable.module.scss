@@ -11,6 +11,7 @@
     }
     .operate-icons {
         @extend .display-flex-center;
+        justify-content: center;
         gap: 12px;
         color: var(--yakit-body-text-color);
 

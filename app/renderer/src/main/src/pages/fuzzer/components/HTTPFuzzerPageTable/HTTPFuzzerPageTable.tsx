@@ -34,6 +34,7 @@ import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeB
 const { ipcRenderer } = window.require("electron")
 
 interface HTTPFuzzerPageTableProps {
+    ref?: any
     query?: HTTPFuzzerPageTableQuery
     data: FuzzerResponse[]
     success?: boolean
@@ -46,7 +47,7 @@ interface HTTPFuzzerPageTableProps {
     isEnd: boolean
     setExportData?: (v: FuzzerResponse[]) => void
     /**@name 是否可以调试匹配器或提取器 */
-    isDebug?: boolean
+    isShowDebug?: boolean
 }
 
 /**
@@ -96,8 +97,8 @@ export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
     return newList
 }
 
-export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const { data, success, query, setQuery, isRefresh, extractedMap, isEnd, setExportData, isDebug } = props
+export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo(React.forwardRef((props, ref) => {
+    const { data, success, query, setQuery, isRefresh, extractedMap, isEnd, setExportData, isShowDebug } = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -115,12 +116,19 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     const bodyLengthRef = useRef<any>()
     const tableRef = useRef<any>(null)
+
+    useImperativeHandle(ref, () => ({
+        // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
+        setCurrentSelectItem,
+        setFirstFull
+    }), []);
+
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return success
             ? [
                 {
                     title: "请求",
-                    dataKey: "UUID",
+                    dataKey: "Count",
                     render: (v, _, index) => index + 1,
                     width: 80,
                     sorterProps: {
@@ -302,11 +310,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     title: "操作",
                     dataKey: "UUID",
                     fixed: "right",
-                    width: isDebug !== false ? 85 : 40,
+                    width: isShowDebug !== false ? 85 : 60,
                     render: (_, record, index: number) => {
                         return (
                             <div className={styles["operate-icons"]}>
-                                {isDebug !== false && (
+                                {isShowDebug !== false && (
                                     <>
                                         <Tooltip title='调试'>
                                             <HollowLightningBoltIcon
@@ -362,7 +370,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     render: (v) => v.join(",")
                 }
             ]
-    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData, isDebug])
+    }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData, isShowDebug])
 
     useThrottleEffect(
         () => {
@@ -663,7 +671,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             />
         </div>
     )
-})
+}))
 
 interface BodyLengthInputNumberProps {
     query?: HTTPFuzzerPageTableQuery

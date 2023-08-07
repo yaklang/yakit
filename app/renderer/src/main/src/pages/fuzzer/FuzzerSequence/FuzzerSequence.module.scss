@@ -195,6 +195,11 @@
             border-color: var(--yakit-danger-5) !important;
             box-shadow: 0 0 2px 2px var(--yakit-danger-2) !important;
         }
+        &-item-no-line {
+            &::after{
+                border-right:0;
+            }
+        }
     }
     .to-end {
         text-align: center;

@@ -18,6 +18,7 @@ export interface PageInfoProps {
     singleNode: boolean
 }
 export interface PageNodeItemProps {
+    id:string
     routeKey: string
     pageGroupId: string
     pageId: string
@@ -46,6 +47,7 @@ export interface NodeInfoProps {
  * */
 const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
     let parentItem: PageNodeItemProps = {
+        id:'',
         routeKey: "",
         pageGroupId: "",
         pageId: "0",
@@ -54,6 +56,7 @@ const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
         pageChildrenList: [],
     }
     let currentItem: PageNodeItemProps = {
+        id:'',
         routeKey: "",
         pageGroupId: "",
         pageId: "0",

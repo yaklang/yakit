@@ -40,6 +40,8 @@ export interface ExtraSettingProps {
  * @property {number} index 下标
  * @property {number} errorIndex 当前错误状态的index
  * @property {boolean} isDragging 是否在拖拽中
+ * @property {boolean} isShowLine 是否显示线
+ * @property {boolean} disabled 
  * @property {SequenceProps} pageNodeList 原始的页面节点list，用来做下拉选中选择
  * @function onUpdateItem 更新序列item
  * @function onApplyOtherNodes 应用到其他节点事件
@@ -52,6 +54,8 @@ export interface SequenceItemProps {
     errorIndex: number
     isSelect: boolean
     isDragging: boolean
+    isShowLine: boolean
+    disabled?: boolean
     pageNodeList: SequenceProps[]
     onUpdateItem: (s: SequenceProps) => void
     onApplyOtherNodes: (e: ExtraSettingProps) => void
@@ -60,6 +64,7 @@ export interface SequenceItemProps {
 }
 /**
  * @description 返回参数
+ * @property {string} id fuzzerIndex
  * @property {number} successCount 成功的数量
  * @property {number} failedCount 失败的数量
  * @property {FuzzerResponse} onlyOneResponse 只有一条返回记录
@@ -67,6 +72,7 @@ export interface SequenceItemProps {
  * @property {FuzzerResponse[]} failedFuzzer 成功数据list
  */
 export interface ResponseProps {
+    id:string
     successCount: number
     failedCount: number
     onlyOneResponse: FuzzerResponse
