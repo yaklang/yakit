@@ -6,6 +6,8 @@ import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../page
 import {failed} from "./notification";
 import {AutoCard} from "../components/AutoCard";
 import {Buffer} from "buffer";
+import {StringToUint8Array} from "@/utils/str";
+import {prettifyPacket} from "@/utils/prettifyPacket";
 
 export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"
@@ -115,7 +117,10 @@ export const MonacoEditorFullCodecActions: MonacoEditorActions[] = [
         id: i.id,
         label: i.label,
         contextMenuGroupId: "pretty",
-        run: editorFullCodecHandlerFactory(i.id as CodecType)
+        run: (e => {
+            prettifyPacket(e)
+            // old editorFullCodecHandlerFactory(i.id as CodecType)(e)
+        })
     }
 })
 
@@ -124,7 +129,11 @@ export const MonacoEditorMutateHTTPRequestActions: {
     contextMenuGroupId: "codec" | string,
     run: (editor: IMonacoCodeEditor) => any
 }[] = [
-    {id: "mutate-http-method-get", label: "改变 HTTP 方法成 GET", params: {FuzzMethods: ["GET"]} as MutateHTTPRequestParams},
+    {
+        id: "mutate-http-method-get",
+        label: "改变 HTTP 方法成 GET",
+        params: {FuzzMethods: ["GET"]} as MutateHTTPRequestParams
+    },
     {
         id: "mutate-http-method-post",
         label: "改变 HTTP 方法成 POST",
@@ -205,8 +214,13 @@ export const execAutoDecode = async (text: string) => {
     })
 }
 
-export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean, extraParams?: {Key: string, Value: string}[]) => {
-    return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr, Params: extraParams}).then((result: { Result: string }) => {
+export const execCodec = async (typeStr: CodecType, text: string, noPrompt?: boolean, replaceEditor?: IMonacoCodeEditor, clear?: boolean, extraParams?: {
+    Key: string,
+    Value: string
+}[]) => {
+    return ipcRenderer.invoke("Codec", {Text: text, Type: typeStr, Params: extraParams}).then((result: {
+        Result: string
+    }) => {
         if (replaceEditor) {
             let m = showModal({
                 width: "50%",

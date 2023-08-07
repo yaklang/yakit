@@ -32,4 +32,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("AutoDecode", async (e, params) => {
         return await asyncAutoDecode(params)
     })
+
+    // asyncPacketPrettifyHelper wrapper
+    const asyncPacketPrettifyHelper = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().PacketPrettifyHelper(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("PacketPrettifyHelper", async (e, params) => {
+        return await asyncPacketPrettifyHelper(params)
+    })
 }

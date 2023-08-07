@@ -13,6 +13,7 @@ import { CodecType } from "@/pages/codec/CodecPage"
 import { useMemoizedFn } from "ahooks"
 import { YakScript } from "@/pages/invoker/schema"
 import { useEffect, useState } from "react"
+import {prettifyPacket} from "@/utils/prettifyPacket";
 
 
 const { ipcRenderer } = window.require("electron")
@@ -198,19 +199,20 @@ export const extraMenuLists: OtherMenuListProps = {
     pretty: {
         menu: [...prettySubmenu] as any as EditorMenuItemType[],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
-            try {
-                // @ts-ignore
-                const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ""
-                if (!!text) {
-                    execCodec("pretty-packet", text, false, editor)
-                } else {
-                    const model = editor.getModel()
-                    const fullText = model?.getValue()
-                    execCodec("pretty-packet", fullText || "", false, editor, true)
-                }
-            } catch (e) {
-                failed(`editor exec pretty failed ${e}`)
-            }
+            prettifyPacket(editor)
+            // try {
+            //     // @ts-ignore
+            //     const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ""
+            //     if (!!text) {
+            //         execCodec("pretty-packet", text, false, editor)
+            //     } else {
+            //         const model = editor.getModel()
+            //         const fullText = model?.getValue()
+            //         execCodec("pretty-packet", fullText || "", false, editor, true)
+            //     }
+            // } catch (e) {
+            //     failed(`editor exec pretty failed ${e}`)
+            // }
         }
     },
     http: {

@@ -41,6 +41,7 @@
         "monaco-editor": "^0.40.0",
         "monaco-editor-webpack-plugin": "^7.1.0",
         "monaco-themes": "^0.4.4",
+        "prettier": "^3.0.1",
         "re-resizable": "^6.9.9",
         "react": "^17.0.2",
         "react-app-rewired": "^2.1.8",
@@ -120,7 +121,6 @@
     ],
     "devDependencies": {
         "env-cmd": "^10.1.0",
-        "prettier": "^2.4.1",
         "sass": "^1.54.8",
         "sass-loader": "^12.6.0"
     },
