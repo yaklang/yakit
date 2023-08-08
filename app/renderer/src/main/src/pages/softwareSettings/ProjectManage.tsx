@@ -984,7 +984,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 </div>
                             </div>
 
-                            {engineMode !== "remote" && (
+                            {(true || engineMode !== "remote") && (
                                 <div className={styles["icon-wrapper"]} onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu
                                         dropdown={{
@@ -1092,7 +1092,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         </div>
                     </div>
 
-                    {engineMode !== "remote" && (
+                    {(true || engineMode !== "remote") && (
                         <div
                             className={classNames(styles["btn-wrapper"], styles["import-wrapper"])}
                             onClick={() => operateFunc("import")}
@@ -1187,7 +1187,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         })}
                                     </div>
                                 </div>
-                                {engineMode !== "remote" && <div style={{width: 120}}>操作</div>}
+                                {(true || engineMode !== "remote") && <div style={{width: 120}}>操作</div>}
                             </div>
 
                             <div className={styles["table-content-wrapper"]}>
@@ -1313,7 +1313,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                 })}
                                                             </div>
                                                         </div>
-                                                        {engineMode !== "remote" && (
+                                                        {(true || engineMode !== "remote") && (
                                                             <div style={{width: 120}} className={styles["opt-operate"]}>
                                                                 {projectOperate(i.data)}
                                                             </div>
