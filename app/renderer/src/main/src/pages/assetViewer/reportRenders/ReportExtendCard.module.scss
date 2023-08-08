@@ -1,0 +1,90 @@
+.fold-hole {
+    font-size: 16px;
+    .fold-hole-title {
+        cursor: pointer;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0px 0px 10px;
+        user-select: none;
+        :global {
+            .wmde-markdown {
+                overflow: hidden;
+                .anchor {
+                    .octicon-link {
+                        display: none;
+                    }
+                }
+                h4 {
+                    margin: 0;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+            }
+            svg {
+                height: 14px;
+                width: 14px;
+            }
+        }
+    }
+    .fold-hole-item {
+        margin-left: 24px;
+        display: flex;
+        .content {
+            flex: 1;
+            overflow: hidden;
+            :global {
+                .wmde-markdown {
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+    .fold-hole-code {
+        margin-left: 24px;
+        .content {
+            margin-left: 40px;
+            margin-top: 10px;
+        }
+    }
+}
+.rule-risk {
+    .rule-risk-title {
+        cursor: pointer;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0px 0px 10px;
+        user-select: none;
+        :global {
+            .wmde-markdown {
+                overflow: hidden;
+                .anchor {
+                    .octicon-link {
+                        display: none;
+                    }
+                }
+                h4 {
+                    margin: 0;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+            }
+        }
+    }
+    .rule-risk-content {
+        margin-left: 24px;
+        .card-content {
+            background-color: rgb(243, 243, 243);
+            padding: 10px;
+            font-size: 14px;
+            :global {
+                .markdown-body {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+}
