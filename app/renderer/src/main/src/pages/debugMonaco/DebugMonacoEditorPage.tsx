@@ -11,8 +11,10 @@ export interface DebugMonacoEditorPageProp {
 export const DebugMonacoEditorPage: React.FC<DebugMonacoEditorPageProp> = (props) => {
     const [value, setValue] = useState(`GET / HTTP/1.1
 Host: www.baidu.com
+Content-Length: 123
 
-a=1&b=2
+
+a=1&b=2 Content-Length: a
 
 {"a": 123}
 

@@ -1,22 +1,64 @@
 .yakit-editor-code {
-    .crlf::before {
-        content: "↵";
+    .content-length::after {
+        content: 'auto';
+        margin-left: 2px;
+        padding: 1px 4px;
         background-color: #808080; /* 灰色背景 */
-        margin: 4px;
-        padding: 2px; /* 根据需要添加内边距 */
+
         border-radius: 3px; /* 添加圆角以使样式更好看 */
         color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
         opacity: 0.3;
     }
 
+    .content-length:hover::after {
+        content: "发包时自动修复，一般无需指定";
+        background-color: #f9f9f9;
+        color: #333;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        opacity: 0.8;
+    }
+
+    .host::after {
+        content: '?';
+        margin-left: 2px;
+        padding: 1px 4px;
+        background-color: #808080;
+        border-radius: 3px;
+        color: #ffffff;
+        opacity: 0.3;
+    }
+
+    .host:hover::after {
+        content: " 如需 Host 碰撞请配置 - 高级配置->真实Host";
+        background-color: #f9f9f9;
+        margin-left: 6px;
+        color: #333;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        opacity: 0.8;
+    }
+
+    .crlf::before {
+        content: "↵";
+        background-color: rgba(255, 255, 255, 0.5);
+        margin: 4px;
+        padding: 1px 4px; /* 根据需要添加内边距 */
+        border-radius: 3px; /* 添加圆角以使样式更好看 */
+        color: #000000; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        opacity: 0.2;
+    }
+
     .lf::before {
         content: "↓";
-        background-color: #808080; /* 灰色背景 */
+      background-color: rgba(255, 255, 255, 0.5);
         margin: 4px;
-        padding: 2px; /* 根据需要添加内边距 */
+        padding: 1px 4px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-        opacity: 0.3;
+        color: #000000; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        opacity: 0.2;
     }
 }
 .yakit-editor-wrap-style {

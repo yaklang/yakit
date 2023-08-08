@@ -9,9 +9,7 @@ import {showModal} from "../utils/showModal"
 import {InputInteger, OneLine} from "../utils/inputUtil"
 import {YakFilterModuleList} from "@/pages/yakitStore/YakitStorePage"
 import "./PluginList.css"
-import {YakEditor} from "../utils/editors"
-
-const {Text} = Typography
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 
 export interface PluginListProp extends AutoCardProps {
     loading: boolean
@@ -103,7 +101,7 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                                 width: "60%",
                                 content: (
                                     <div style={{height: 400}}>
-                                        <YakEditor
+                                        <YakitEditor
                                             type={info.Type === "nuclei" ? "yaml" : "yak"}
                                             readOnly={true}
                                             value={info.Content}
