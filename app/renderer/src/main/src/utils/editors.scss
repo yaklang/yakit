@@ -20,6 +20,26 @@
     opacity: 0.3;
 }
 
+.content-length::after {
+    content: 'auto';
+    margin-left: 2px;
+    padding: 1px;
+    background-color: #808080; /* 灰色背景 */
+
+    border-radius: 3px; /* 添加圆角以使样式更好看 */
+    color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+    opacity: 0.3;
+}
+
+.content-length:hover::after {
+    content: "发包时自动修复，一般无需指定";
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
 .lf::before {
     content: "↓";
     background-color: #808080; /* 灰色背景 */

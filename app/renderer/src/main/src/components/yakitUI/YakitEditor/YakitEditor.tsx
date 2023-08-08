@@ -32,10 +32,12 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
 import "./StaticYakitEditor.scss"
-import { queryYakScriptList } from "@/pages/yakitStore/network"
-import { YakScript } from "@/pages/invoker/schema"
-import { CodecType } from "@/pages/codec/CodecPage"
-import { failed } from "@/utils/notification"
+import {queryYakScriptList} from "@/pages/yakitStore/network"
+import {YakScript} from "@/pages/invoker/schema"
+import {CodecType} from "@/pages/codec/CodecPage"
+import {failed} from "@/utils/notification"
+import {editor} from "monaco-editor";
+import IModelDecoration = editor.IModelDecoration;
 
 const {ipcRenderer} = window.require("electron")
 
@@ -88,7 +90,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         showLineBreaks = false,
         editorOperationRecord
     } = props
-    
+
     const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
@@ -98,7 +100,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const preHeightRef = useRef<number>(0)
 
     /** @name 记录右键菜单组信息 */
-    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop,...DefaultMenuBottom])
+    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop, ...DefaultMenuBottom])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
     const keyBindingRef = useRef<KeyboardToFuncProps>({})
     /** @name 记录右键菜单关系[菜单组key值-菜单组内菜单项key值数组] */
@@ -108,20 +110,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [fontsize, setFontsize] = useState<number>(fontSize)
 
     // 读取上次选择的字体大小/换行符 
-    useEffect(()=>{
-        if(editorOperationRecord){
+    useEffect(() => {
+        if (editorOperationRecord) {
             getRemoteValue(editorOperationRecord).then((data) => {
                 if (!data) return
-                let obj:OperationRecordRes = JSON.parse(data)
-                if(obj?.fontSize){
+                let obj: OperationRecordRes = JSON.parse(data)
+                if (obj?.fontSize) {
                     setFontsize(obj?.fontSize)
                 }
-                if(typeof obj?.showBreak === "boolean"){
+                if (typeof obj?.showBreak === "boolean") {
                     setShowBreak(obj?.showBreak)
                 }
             })
         }
-    },[])
+    }, [])
 
     // 自定义HTTP数据包变形处理
     const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
@@ -138,7 +140,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         verbose: "CODEC 社区插件: " + script.ScriptName,
                         isYakScript: true,
                     } as CodecType
-                } ))
+                }))
             },
             undefined,
             10,
@@ -165,18 +167,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     key: item.key,
                     label: item.key,
                 } as EditorMenuItemProps
-            } )
+            })
         } catch (e) {
             failed(`get custom mutate request failed: ${e}`)
         }
-       
+
 
         const keyToRun: Record<string, string[]> = {}
         const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
-        
-        
-        
-        
+
+
         for (let key in allMenu) {
             const keys: string[] = []
             for (let item of allMenu[key].menu) {
@@ -227,19 +227,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         {wait: 300}
     )
     /** 操作记录存储 */
-    const onOperationRecord = (type:"fontSize"|"showBreak",value:number|boolean) => {
-        if(editorOperationRecord){
+    const onOperationRecord = (type: "fontSize" | "showBreak", value: number | boolean) => {
+        if (editorOperationRecord) {
             getRemoteValue(editorOperationRecord).then((data) => {
                 if (!data) {
-                    let obj:OperationRecord = {
-                        [type]:value
+                    let obj: OperationRecord = {
+                        [type]: value
                     }
-                    setRemoteValue(editorOperationRecord,JSON.stringify(obj))
-                }
-                else{
-                    let obj:OperationRecord = JSON.parse(data)
+                    setRemoteValue(editorOperationRecord, JSON.stringify(obj))
+                } else {
+                    let obj: OperationRecord = JSON.parse(data)
                     obj[type] = value
-                    setRemoteValue(editorOperationRecord,JSON.stringify(obj))
+                    setRemoteValue(editorOperationRecord, JSON.stringify(obj))
                 }
             })
         }
@@ -256,12 +255,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             case "font-size-large":
                 if (editor?.updateOptions) {
                     setFontsize(keyToFontSize[key] || 12)
-                    onOperationRecord("fontSize",keyToFontSize[key] || 12)
+                    onOperationRecord("fontSize", keyToFontSize[key] || 12)
                 }
                 return
             case "http-show-break":
                 setShowBreak(!getShowBreak())
-                onOperationRecord("showBreak",getShowBreak())
+                onOperationRecord("showBreak", getShowBreak())
                 return
             case "yak-formatter":
                 if (!model) return
@@ -357,16 +356,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         return menus
     })
 
-    const sortMenuFun = useMemoizedFn((dataSource,sortData) => {
+    const sortMenuFun = useMemoizedFn((dataSource, sortData) => {
         const result = sortData.reduce((acc, item) => {
-            if(item.order>=0){
+            if (item.order >= 0) {
                 acc.splice(item.order, 0, ...item.menu)
-            }
-            else{
+            } else {
                 acc.push(...item.menu)
             }
             return acc;
-        }, [...dataSource]);   
+        }, [...dataSource]);
         return result
     })
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
@@ -403,14 +401,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
 
             // 缓存需要排序的自定义菜单
-            let sortContextMenu:OtherMenuListProps[] = []
+            let sortContextMenu: OtherMenuListProps[] = []
             for (let menus in contextMenu) {
                 /* 需要排序项 */
-                if(typeof contextMenu[menus].order === "number"){
+                if (typeof contextMenu[menus].order === "number") {
                     sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]))
-                }
-                else{
-                    /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */  
+                } else {
+                    /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
                     rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
                 }
             }
@@ -419,10 +416,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottom])
 
             // 当存在order项则需要排序
-            if(sortContextMenu.length>0){
-                rightContextMenu.current = sortMenuFun(rightContextMenu.current,sortContextMenu)
+            if (sortContextMenu.length > 0) {
+                rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
             }
-            
+
             rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
 
             if (!forceRenderMenu) isInitRef.current = true
@@ -440,12 +437,49 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 return
             }
             let current: string[] = []
-            const applyKeywordDecoration = () => {
+
+            const applyContentLength = (): YakitIModelDecoration[] => {
+                const text = model.getValue();
+                const match = /\nContent-Length:\s*?\d+/.exec(text);
+                if (!match) {
+                    return []
+                }
+                const start = model.getPositionAt(match.index)
+                const end = model.getPositionAt(match.index + match[0].indexOf(":"))
+                return [
+                    {
+                        id: "content-length" + match.index,
+                        ownerId: 1,
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                        options: {afterContentClassName: "content-length"}
+                    } as YakitIModelDecoration
+                ]
+            }
+            const applyHost = (): YakitIModelDecoration[] => {
+                const text = model.getValue();
+                console.info(text)
+                const match = /\nHost:/.exec(text);
+                if (!match) {
+                    return []
+                }
+                console.info(match)
+                const start = model.getPositionAt(match.index)
+                const end = model.getPositionAt(match.index + match[0].indexOf(":"))
+                return [
+                    {
+                        id: "header-host" + match.index,
+                        ownerId: 1,
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                        options: {afterContentClassName: "host"}
+                    } as YakitIModelDecoration
+                ]
+            }
+
+            const applyKeywordDecoration = (): YakitIModelDecoration[] => {
                 const text = model.getValue()
                 const keywordRegExp = /\r?\n/g
                 const decorations: YakitIModelDecoration[] = []
                 let match
-
                 while ((match = keywordRegExp.exec(text)) !== null) {
                     const start = model.getPositionAt(match.index)
                     const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
@@ -458,12 +492,21 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     } as YakitIModelDecoration)
                 }
                 // 使用 deltaDecorations 应用装饰
-                current = model.deltaDecorations(current, decorations)
+                // current = model.deltaDecorations(current, decorations)
+                return decorations;
             }
             model.onDidChangeContent((e) => {
-                applyKeywordDecoration()
+                current = model.deltaDecorations(current, [
+                    ...applyKeywordDecoration(),
+                    ...applyContentLength(),
+                    ...applyHost(),
+                ])
             })
-            applyKeywordDecoration()
+            current = model.deltaDecorations(current, [
+                ...applyKeywordDecoration(),
+                ...applyContentLength(),
+                ...applyHost(),
+            ])
         }
     }, [editor])
 
@@ -552,7 +595,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("YaklangCompileAndFormat", {Code: allContent})
-                .then((e: {Errors: YakStaticAnalyzeErrorResult[]; Code: string}) => {
+                .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
                     if (e.Code !== "") {
                         model.setValue(e.Code)
                     }
@@ -577,7 +620,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
                     if (e && e.Result.length > 0) {
                         const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                         monaco.editor.setModelMarkers(model, "owner", markers)
