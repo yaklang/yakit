@@ -39,6 +39,7 @@ import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
 import {OtherMenuListProps, YakitEditorProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -718,7 +719,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                         <Space size={2}>
                             {props.extra}
                             {props.sendToWebFuzzer && props.readOnly && (
-                                <Button
+                                <YakitButton
                                     size={"small"}
                                     type={"primary"}
                                     icon={<ThunderboltFilled />}
@@ -736,12 +737,12 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     }}
                                 >
                                     FUZZ
-                                </Button>
+                                </YakitButton>
                             )}
                             <Tooltip title={"不自动换行"}>
-                                <Button
+                                <YakitButton
                                     size={"small"}
-                                    type={noWordwrap ? "link" : "primary"}
+                                    type={noWordwrap ? "text" : "primary"}
                                     icon={<EnterOutlined />}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
@@ -771,6 +772,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                             {text: "中", value: 16},
                                                             {text: "大", value: 20}
                                                         ]}
+                                                        oldTheme={false}
                                                         value={fontSize}
                                                         setValue={(size) => {
                                                             setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
@@ -779,9 +781,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     />
                                                 )}
                                                 <Form.Item label={"全屏"} style={{marginBottom: 4}}>
-                                                    <Button
+                                                    <YakitButton
                                                         size={"small"}
-                                                        type={"link"}
+                                                        type={"text"}
                                                         icon={<FullscreenOutlined />}
                                                         onClick={() => {
                                                             showDrawer({
@@ -827,7 +829,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
-                                    <Button icon={<SettingOutlined />} type={"link"} size={"small"} />
+                                    <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
                                 </Popover>
                             )}
                         </Space>
