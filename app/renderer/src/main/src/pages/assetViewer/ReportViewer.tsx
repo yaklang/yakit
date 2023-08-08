@@ -142,6 +142,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 }
             })
     }
+
     return (
         <div className={styles["report-viewer"]}>
             <Spin spinning={SpinLoading}>
@@ -198,7 +199,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     >
                         <Space direction={"vertical"} style={{width: "100%"}}>
                             {renderReportItems.map((i, index) => {
-                                return <ReportItemRender item={i} key={index} />
+                                return <ReportItemRender item={i} key={index}/>
                             })}
                         </Space>
                     </div>
