@@ -3,12 +3,10 @@
  */
 
 import { AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { YakitRoute } from "@/routes/newRoute"
+import { YakitRoute } from "../routes/newRoute"
 import create, { useStore } from "zustand"
 import { subscribeWithSelector } from 'zustand/middleware'
 
-
-export const hTTPFuzzerRoute = YakitRoute.HTTPFuzzer  //'httpFuzzer'
 
 /**
  * @description 页面暂存数据

@@ -70,7 +70,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
-import {NodeInfoProps,PageInfoProps, PageNodeItemProps, WebFuzzerPageInfoProps, hTTPFuzzerRoute, usePageNode} from "@/store/pageNodeInfo"
+import {NodeInfoProps,PageInfoProps, PageNodeItemProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {
     WEB_FUZZ_DNS_Hosts_Config,
     WEB_FUZZ_DNS_Server_Config,
@@ -258,8 +258,7 @@ export const getInitPageCache: () => PageCache[] = () => {
     ]
 }
 
-/**一级tab固定展示额tab */
-const defaultFixedTabs = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
+
 
 // 软件初始化时的默认当前打开页面的key
 export const getInitActiveTabKey = () => {
@@ -322,7 +321,8 @@ const getSubPageTotal = (subPage) => {
     })
     return total
 }
-
+/**一级tab固定展示额tab */
+const defaultFixedTabs = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
     const {routeKeyToLabel} = props
 
@@ -934,11 +934,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * 组内的才有序列化
      */ 
     const onUpdateFuzzerSequence=useMemoizedFn((key: string, param: WebFuzzerPageInfoProps)=>{
-        const fuzzerPage=pageCache.find(ele=>ele.route===hTTPFuzzerRoute)
+        const fuzzerPage=pageCache.find(ele=>ele.route===YakitRoute.HTTPFuzzer)
         if(!fuzzerPage)return
         const {subIndex}=getPageItemById(fuzzerPage?.multipleNode,key)
         if(subIndex===-1)return
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(hTTPFuzzerRoute, key)
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(YakitRoute.HTTPFuzzer, key)
         if (!nodeInfo) return
         const {currentItem} = nodeInfo
        
@@ -951,7 +951,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
         }
-        setPageNodeInfo(hTTPFuzzerRoute,currentItem.pageId,{...newCurrentItem})
+        setPageNodeInfo(YakitRoute.HTTPFuzzer,currentItem.pageId,{...newCurrentItem})
     })
     /**@description 获取Fuzzer默认缓存 */
     const getFuzzerDefaultCache = useMemoizedFn(() => {

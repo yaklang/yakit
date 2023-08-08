@@ -41,7 +41,6 @@ import {
     PageInfoProps,
     PageNodeItemProps,
     WebFuzzerPageInfoProps,
-    hTTPFuzzerRoute,
     usePageNode
 } from "@/store/pageNodeInfo"
 import {YakitRoute} from "@/routes/newRoute"
@@ -139,7 +138,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     useEffect(() => {
         const unSubPageNode = usePageNode.subscribe(
-            (state) => state.pageNode.get(hTTPFuzzerRoute),
+            (state) => state.pageNode.get(YakitRoute.HTTPFuzzer),
             () => {
                 onUpdateSequence()
             }
@@ -199,7 +198,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
-            // console.log("data",Request, Response)
+            console.log("data",Request, Response)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -319,11 +318,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
             let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
             let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
-            if (successBuffer.length === 1 && failedBuffer.length === 0) {
+            if (successBuffer.length + failedBuffer.length === 1) {
+                const onlyOneResponse=successBuffer.length===1?successBuffer[0]:failedBuffer[0]
                 // 设置第一个 response
                 setResponse(fuzzerIndex, {
                     id: fuzzerIndex,
-                    onlyOneResponse: successBuffer[0],
+                    onlyOneResponse,
                     successCount: currentSuccessCount,
                     failedCount: currentFailedCount,
                     successFuzzer: successBuffer,
@@ -485,7 +485,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             InheritVariables: item.inheritVariables,
             FuzzerIndex: item.id
         }))
-        // console.log("httpParams", httpParams)
+        console.log("httpParams", httpParams)
         const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
         ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
