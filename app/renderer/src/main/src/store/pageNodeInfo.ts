@@ -3,8 +3,12 @@
  */
 
 import { AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { YakitRoute } from "@/routes/newRoute"
 import create, { useStore } from "zustand"
+import { subscribeWithSelector } from 'zustand/middleware'
 
+
+export const hTTPFuzzerRoute = YakitRoute.HTTPFuzzer  //'httpFuzzer'
 
 /**
  * @description 页面暂存数据
@@ -18,7 +22,7 @@ export interface PageInfoProps {
     singleNode: boolean
 }
 export interface PageNodeItemProps {
-    id:string
+    id: string
     routeKey: string
     pageGroupId: string
     pageId: string
@@ -47,7 +51,7 @@ export interface NodeInfoProps {
  * */
 const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
     let parentItem: PageNodeItemProps = {
-        id:'',
+        id: '',
         routeKey: "",
         pageGroupId: "",
         pageId: "0",
@@ -56,7 +60,7 @@ const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
         pageChildrenList: [],
     }
     let currentItem: PageNodeItemProps = {
-        id:'',
+        id: '',
         routeKey: "",
         pageGroupId: "",
         pageId: "0",
@@ -103,7 +107,7 @@ interface PageNodeInfoProps {
     clearPageNode: () => void
 }
 
-export const usePageNode = create<PageNodeInfoProps>()((set, get) => ({
+export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((set, get) => ({
     pageNode: new Map(),
     getPageNodeInfo: (key, pageId) => {
         const node = get().pageNode.get(key);
@@ -116,13 +120,21 @@ export const usePageNode = create<PageNodeInfoProps>()((set, get) => ({
         const node = get().pageNode.get(key);
         if (!node) return
         const { pageNodeList } = node
-        const {currentItem} = getPageNodeInfoById(pageNodeList, pageId)
+        const item = getPageNodeInfoById(pageNodeList, pageId)
+        const { index, subIndex } = item;
+        if (index === -1 && subIndex === -1) return
+        pageNodeList[index].pageChildrenList[subIndex] = { ...val }
+        const newNode = new Map().set(key, {
+            ...node,
+        })
+        set({
+            pageNode: newNode
+        })
     },
     getPageNode: (key) => get().pageNode.get(key),
     setPageNode: (key, ev) => {
         const newVal = get().pageNode
         newVal.set(key, ev)
-        console.log('newVal',newVal)
         set({
             pageNode: newVal
         })
@@ -141,5 +153,5 @@ export const usePageNode = create<PageNodeInfoProps>()((set, get) => ({
             pageNode: newVal
         })
     }
-}))
+})))
 

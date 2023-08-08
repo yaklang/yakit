@@ -1315,7 +1315,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
         >
             {list.map((item, number) => {
                 return (
-                    <>
+                    <React.Fragment key={`${item.data[renderKey]}-${colIndex}` || number}>
                         {(colIndex === 0 && (
                             <CellRenderDrop
                                 colIndex={colIndex}
@@ -1363,7 +1363,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                 size={size}
                             />
                         )}
-                    </>
+                    </React.Fragment>
                 )
             })}
         </div>

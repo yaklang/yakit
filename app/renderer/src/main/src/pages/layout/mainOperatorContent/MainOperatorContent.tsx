@@ -70,7 +70,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
-import {PageInfoProps, PageNodeItemProps, usePageNode} from "@/store/pageNodeInfo"
+import {NodeInfoProps,PageInfoProps, PageNodeItemProps, WebFuzzerPageInfoProps, hTTPFuzzerRoute, usePageNode} from "@/store/pageNodeInfo"
 import {
     WEB_FUZZ_DNS_Hosts_Config,
     WEB_FUZZ_DNS_Server_Config,
@@ -890,6 +890,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
+    const {setPageNode,getPageNodeInfo,setPageNodeInfo} = usePageNode()
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
     const proxyRef = useRef<string[]>()
@@ -902,10 +903,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         // web-fuzzer页面更新缓存数据
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
             try {
+                // 缓存
                 const haveItem = fuzzerList.current.get(res.key || "")
                 if (!haveItem) return
                 const params = JSON.parse(res.param)
                 updateFuzzerList(res.key, {...haveItem, params})
+
+                // 序列化
+                const webFuzzerPageInfo = JSON.parse(res.webFuzzerPageInfo)
+                onUpdateFuzzerSequence(res.key,webFuzzerPageInfo)
             } catch (error) {
                 yakitNotify("error", "webFuzzer数据缓存失败：" + error)
             }
@@ -923,6 +929,30 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             fetchFuzzerList()
         }
     }, [isFetchFuzzerList])
+    /**
+     * 更新序列化的数据 
+     * 组内的才有序列化
+     */ 
+    const onUpdateFuzzerSequence=useMemoizedFn((key: string, param: WebFuzzerPageInfoProps)=>{
+        const fuzzerPage=pageCache.find(ele=>ele.route===hTTPFuzzerRoute)
+        if(!fuzzerPage)return
+        const {subIndex}=getPageItemById(fuzzerPage?.multipleNode,key)
+        if(subIndex===-1)return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(hTTPFuzzerRoute, key)
+        if (!nodeInfo) return
+        const {currentItem} = nodeInfo
+       
+        const newCurrentItem:PageNodeItemProps={
+            ...currentItem,
+            pageParamsInfo:{
+                webFuzzerPageInfo:{
+                    advancedConfigValue:{...param.advancedConfigValue},
+                    request:param.request
+                }
+            }
+        }
+        setPageNodeInfo(hTTPFuzzerRoute,currentItem.pageId,{...newCurrentItem})
+    })
     /**@description 获取Fuzzer默认缓存 */
     const getFuzzerDefaultCache = useMemoizedFn(() => {
         getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
@@ -964,7 +994,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
         }
     }, 500)
-    const {setPageNode} = usePageNode()
+   
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
         // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -1083,7 +1113,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleLength: multipleNodeListLength
                 }
                 // console.log("multipleNodeList", multipleNodeList)
-                console.log("pageNodeInfo", pageNodeInfo)
+                // console.log("pageNodeInfo", pageNodeInfo)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {

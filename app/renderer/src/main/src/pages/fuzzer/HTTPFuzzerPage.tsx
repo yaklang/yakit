@@ -7,7 +7,17 @@ import { QueryFuzzerLabelResponseProps, StringFuzzer } from "./StringFuzzer"
 import { FuzzerResponseToHTTPFlowDetail } from "../../components/HTTPFlowDetail"
 import { randomString } from "../../utils/randomUtil"
 import { failed, info, yakitFailed, yakitNotify } from "../../utils/notification"
-import { useCreation, useGetState, useInViewport, useMap, useMemoizedFn, useSize, useUpdateEffect } from "ahooks"
+import {
+    useCreation,
+    useDebounceFn,
+    useGetState,
+    useInViewport,
+    useMap,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import { getRemoteValue, getLocalValue, setLocalValue, setRemoteValue } from "../../utils/kv"
 import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from "./HTTPFuzzerHistory"
 import { PayloadManagerPage } from "../payloadManager/PayloadManager"
@@ -92,6 +102,7 @@ import {
 } from "./HTTPFuzzerEditorMenu"
 import { NewEditorSelectRange } from "../../components/NewEditorSelectRange"
 import { execCodec } from "@/utils/encodec"
+import { WebFuzzerPageInfoProps } from "@/store/pageNodeInfo"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -965,36 +976,32 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return false
     })
 
-    const sendFuzzerSettingInfo = useMemoizedFn(() => {
-        // 23.7.10 最新只保存 isHttps、actualHost和request
-        const info: fuzzerInfoProp = {
-            time: new Date().getTime().toString(),
-            isHttps: advancedConfigValue.isHttps,
-            // forceFuzz: advancedConfigValue.forceFuzz,
-            // concurrent: advancedConfigValue.concurrent,
-            // proxy: advancedConfigValue.proxy.join(","),
-            actualHost: advancedConfigValue.actualHost,
-            // timeout: advancedConfigValue.timeout,
-            request: getRequest(),
-            id: props.id
-        }
-        if (sendTimer.current) {
-            clearTimeout(sendTimer.current)
-            sendTimer.current = null
-        }
-        sendTimer.current = setTimeout(() => {
-            ipcRenderer.invoke("send-fuzzer-setting-data", { key: props.id || "", param: JSON.stringify(info) })
-        }, 1000)
-    })
+    const sendFuzzerSettingInfo = useDebounceFn(
+        () => {
+            // 23.7.10 最新只保存 isHttps、actualHost和request
+            const info: fuzzerInfoProp = {
+                time: new Date().getTime().toString(),
+                isHttps: advancedConfigValue.isHttps,
+                actualHost: advancedConfigValue.actualHost,
+                request: getRequest(),
+                id: props.id
+            }
+            const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
+                advancedConfigValue,
+                request: getRequest()
+            }
+            ipcRenderer.invoke("send-fuzzer-setting-data", {
+                key: props.id || "",
+                param: JSON.stringify(info),
+                webFuzzerPageInfo: JSON.stringify(webFuzzerPageInfo)
+            })
+        },
+        { wait: 1000 }
+    ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()
     }, [
-        advancedConfigValue.isHttps,
-        // advancedConfigValue.forceFuzz,
-        // advancedConfigValue.concurrent,
-        // advancedConfigValue.proxy,
-        advancedConfigValue.actualHost,
-        // advancedConfigValue.timeout,
+        advancedConfigValue,
         request
     ])
 
