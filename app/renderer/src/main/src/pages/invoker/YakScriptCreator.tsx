@@ -539,7 +539,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                         <div style={{height: 400}}>
                             <YakEditor
                                 type={params.Type==="nuclei"?"yaml":"yak"}
-                                setValue={(Content) => setParams({...params, Content})}
+                                setValue={(Content) => setParams({...getParams(), Content})}
                                 value={params.Content}
                             />
                         </div>
