@@ -122,6 +122,10 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-editor")
     // 是否在拖拽中
     const isDragging = useRef<boolean>(false)
+    // 鼠标是否进入main
+    const isMainEnter = useRef<boolean>(false)
+    // 鼠标是否进入simple
+    const isSimpleEnter = useRef<boolean>(false)
     // 菜单显示大小
     const [menuSize, setMenuSize] = useState<"middle" | "small">()
     const getData = () => {
@@ -207,11 +211,19 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         {wait: 200}
     ).run
     return (
-        <div className={styles["http-fuzzer-click-editor"]}>
+        <div className={styles["http-fuzzer-click-editor"]} onMouseLeave={()=>{
+            isMainEnter.current = false
+            setTimeout(()=>{
+                if(!isSimpleEnter.current&&!isDragging.current){
+                    setEnterSimple(false)
+                }
+            },100)
+        }}>
             <div className={styles["http-fuzzer-click-editor-simple"]}>
                 <div
                     className={styles["show-box"]}
                     onMouseEnter={() => {
+                        isMainEnter.current = true
                         setEnterSimple(true)
                     }}
                 >
@@ -232,7 +244,14 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     })}
                     // 此处会引起拖拽卡死
                     onMouseLeave={() => {
-                        if (!isDragging.current) setEnterSimple(false)
+                        isSimpleEnter.current = false
+                        setTimeout(()=>{
+                          if (!isDragging.current&&!isMainEnter.current) setEnterSimple(false)  
+                        },100)
+                        
+                    }}
+                    onMouseEnter={()=>{
+                        isSimpleEnter.current = true
                     }}
                     style={{...directionStyle(editorInfo,false)}}
                 >
@@ -635,6 +654,10 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
         }
     }, [])
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
+    // 鼠标是否进入main
+    const isMainEnter = useRef<boolean>(false)
+    // 鼠标是否进入simple
+    const isSimpleEnter = useRef<boolean>(false)
     return (
         <div className={styles["http-fuzzer-range-editor"]}>
             <div className={styles["http-fuzzer-range-editor-simple"]}>
@@ -642,7 +665,16 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                     <div
                         className={styles["encode-box"]}
                         onMouseEnter={() => {
+                            isMainEnter.current = true
                             setSegmentedType("encode")
+                        }}
+                        onMouseLeave={()=>{
+                            isMainEnter.current = false
+                            setTimeout(()=>{
+                                if(!isSimpleEnter.current){
+                                    setSegmentedType(undefined)
+                                }
+                            },100)
                         }}
                     >
                         <IconSolidCodeIcon className={styles["tag"]} />
@@ -672,7 +704,15 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                         [styles["http-fuzzer-range-editor-menu-middle"]]: menuSize === "middle",
                         [styles["http-fuzzer-range-editor-menu-small"]]: menuSize === "small"
                     })}
-                    onMouseLeave={() => setSegmentedType(undefined)}
+                    onMouseLeave={() => {
+                        isSimpleEnter.current = false
+                        setTimeout(()=>{
+                          if (!isMainEnter.current) setSegmentedType(undefined)
+                        },100)
+                    }}
+                    onMouseEnter={()=>{
+                        isSimpleEnter.current = true
+                    }}
                 >
                     <div className={styles["menu-content"]}>
                         {segmentedType === "encode" ? (
