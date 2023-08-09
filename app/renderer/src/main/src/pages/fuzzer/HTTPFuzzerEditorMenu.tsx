@@ -290,7 +290,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                         {labelData.map((item, index) => (
                                             <Draggable
                                                 key={item?.Description}
-                                                draggableId={item?.Description}
+                                                draggableId={item.Id}
                                                 index={index}
                                             >
                                                 {(provided, snapshot) => {
