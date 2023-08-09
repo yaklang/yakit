@@ -343,7 +343,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
 
-    const {pushPageNode} = usePageNode()
+    const {addPageNode} = usePageNode()
 
     // 打开tab页面
     useEffect(() => {
@@ -942,12 +942,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const onUpdateFuzzerSequenceDueToDataChanges = useMemoizedFn((key: string, param: WebFuzzerPageInfoProps) => {
         const fuzzerPage = pageCache.find((ele) => ele.route === YakitRoute.HTTPFuzzer)
         if (!fuzzerPage) return
-        const {subIndex} = getPageItemById(fuzzerPage?.multipleNode, key)
-        if (subIndex === -1) return
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, key)
         if (!nodeInfo) return
         const {currentItem} = nodeInfo
-
         const newCurrentItem: PageNodeItemProps = {
             ...currentItem,
             pageParamsInfo: {
@@ -1159,7 +1156,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             },
             pageChildrenList: []
         }
-        pushPageNode(YakitRoute.HTTPFuzzer, newPageNode)
+        addPageNode(YakitRoute.HTTPFuzzer, newPageNode)
     }
     /**
      * 删除web-fuzzer页面缓存数据
@@ -1686,7 +1683,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const {
         getPageNodeInfoByPageId,
-        pushPageNode,
+        addPageNode,
         addPageNodeInfoByPageGroupId,
         removePageNodeInfoByPageId,
         flatPageChildrenListAndRemoveGroupByPageGroupId,
@@ -2018,10 +2015,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            // 删除 source的item所在序列化中的数据，生成新组的时候push新的序列化数据
-            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem[0].id)
             // push新组的序列表数据
             pushSequenceByGroupChildren(combineItem)
+            // 删除 source的item所在序列化中的数据，生成新组的时候push新的序列化数据
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem[0].id)
         }
     })
     /** @description 组外之间移动 */
@@ -2081,32 +2078,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            // 删除组A中的序列化数据，向组B新增序列化数据
+            // 删除组A中的序列化数据,向组B新增序列化数据,
             removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
             addSequenceByPageGroupId(sourceItem, destinationGroupId)
         }
     })
-    /** 向组B新增序列化数据 */
-    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string) => {
-        const addNodeInfo: PageNodeItemProps = {
-            id: "",
-            routeKey: YakitRoute.HTTPFuzzer,
-            pageGroupId: destinationGroupId,
-            pageId: sourceItem.id,
-            pageName: sourceItem.verbose,
-            pageParamsInfo: {
-                webFuzzerPageInfo: {
-                    advancedConfigValue: {
-                        ...defaultAdvancedConfigValue,
-                        ...sourceItem.params
-                    },
-                    request: sourceItem.params?.request || ""
-                }
-            },
-            pageChildrenList: []
-        }
-        addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, addNodeInfo)
-    })
+
     /** @description 组内向组外移动 */
     const movingWithinAndOutsideGroup = useMemoizedFn((result) => {
         if (!result.destination) {
@@ -2180,9 +2157,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         subPage.splice(sourceIndex, 1)
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            // 删除游离的数据，向组B新增序列化数据
-            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
+            // 向组B新增序列化数据,删除游离的数据，
             addSequenceByPageGroupId(sourceItem, destinationGroupId)
+            removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, sourceItem.id)
         }
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
@@ -2537,30 +2514,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             onRemoveGroupAndPushPageNode(newGroup)
         }
     })
-    /**
-     * @description 从组内移除序列数据，并将移除的item变为游离的
-     */
-    const onRemoveGroupAndPushPageNode=useMemoizedFn((item:MultipleNodeInfo)=>{
-        removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id)
-        const newPageNode: PageNodeItemProps = {
-            id: "",
-            routeKey: YakitRoute.HTTPFuzzer,
-            pageGroupId: item.groupId,
-            pageId: item.id,
-            pageName: item.verbose,
-            pageParamsInfo: {
-                webFuzzerPageInfo: {
-                    advancedConfigValue: {
-                        ...defaultAdvancedConfigValue,
-                        ...item.params
-                    },
-                    request: item.params?.request || ""
-                }
-            },
-            pageChildrenList: []
-        }
-        pushPageNode(YakitRoute.HTTPFuzzer, newPageNode)
-    })
+
     /**关闭当前标签页 */
     const onRemove = useMemoizedFn((item: MultipleNodeInfo) => {
         onRemoveSubPage(item)
@@ -2754,16 +2708,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 onUpdatePageCache(newPage)
                 m.destroy()
                 if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                    const pageNodeList: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+                    const pageNodeList: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(
+                        YakitRoute.HTTPFuzzer,
+                        groupItem.id
+                    )
                     if (!pageNodeList) return
                     let pageNodeInfo: PageInfoProps = {
                         pageNodeList: [pageNodeList],
                         routeKey: YakitRoute.HTTPFuzzer,
                         singleNode: false
                     }
-                    setPageNode(YakitRoute.HTTPFuzzer,pageNodeInfo)
+                    setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
                 }
-              
             },
             onCancel: () => {
                 m.destroy()
@@ -2874,24 +2830,22 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
      * @param groupItem
      */
     const pushSequenceByGroupChildren = useMemoizedFn((groupItem: MultipleNodeInfo) => {
+        const sequenceList: PageNodeItemProps[] = []
         const groupChildrenList = groupItem.groupChildren || []
-        const sequenceList = groupChildrenList.map((nodeItem, j) => ({
-            id: `${randomString(8)}-${j + 1}`,
-            routeKey: YakitRoute.HTTPFuzzer,
-            pageGroupId: nodeItem.groupId,
-            pageId: nodeItem.id,
-            pageName: nodeItem.verbose,
-            pageParamsInfo: {
-                webFuzzerPageInfo: {
-                    advancedConfigValue: {
-                        ...defaultAdvancedConfigValue,
-                        ...nodeItem.params
-                    },
-                    request: nodeItem.params?.request || ""
-                }
-            },
-            pageChildrenList: []
-        }))
+        groupChildrenList.forEach((nodeItem, j) => {
+            const nodeInfo = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, nodeItem.id)
+            if (!nodeInfo) return
+            const {currentItem} = nodeInfo
+            sequenceList.push({
+                id: `${randomString(8)}-${j + 1}`,
+                routeKey: YakitRoute.HTTPFuzzer,
+                pageGroupId: nodeItem.groupId,
+                pageId: nodeItem.id,
+                pageName: nodeItem.verbose,
+                pageParamsInfo: currentItem.pageParamsInfo,
+                pageChildrenList: []
+            })
+        })
         const newPageNodeList: PageNodeItemProps = {
             // id: `${randomString(8)}-${index + 1}`,
             id: "",
@@ -2909,7 +2863,49 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             },
             pageChildrenList: sequenceList
         }
-        pushPageNode(YakitRoute.HTTPFuzzer, newPageNodeList)
+        addPageNode(YakitRoute.HTTPFuzzer, newPageNodeList)
+    })
+    /** 向组B新增序列化数据 */
+    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string) => {
+        const nodeInfo = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
+        if (!nodeInfo) return
+        const {currentItem} = nodeInfo
+        const addNodeInfo: PageNodeItemProps = {
+            id: "",
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: destinationGroupId,
+            pageId: sourceItem.id,
+            pageName: sourceItem.verbose,
+            pageParamsInfo: currentItem.pageParamsInfo,
+            pageChildrenList: []
+        }
+        console.log('nodeInfo',nodeInfo)
+        console.log('addNodeInfo',addNodeInfo)
+        addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, addNodeInfo)
+    })
+    /**
+     * @description 从组内移除序列数据，并将移除的item变为游离的
+     */
+    const onRemoveGroupAndPushPageNode = useMemoizedFn((item: MultipleNodeInfo) => {
+        removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id)
+        const newPageNode: PageNodeItemProps = {
+            id: "",
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: item.groupId,
+            pageId: item.id,
+            pageName: item.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue,
+                        ...item.params
+                    },
+                    request: item.params?.request || ""
+                }
+            },
+            pageChildrenList: []
+        }
+        addPageNode(YakitRoute.HTTPFuzzer, newPageNode)
     })
     // ------------------- 序列化相关 end -------------------
     return (

@@ -118,7 +118,7 @@ interface PageNodeInfoProps {
 
 
     /**@name 新增二级tab数据(包括游离和组两种类型的数据增加) */
-    pushPageNode: (key, list: PageNodeItemProps) => void
+    addPageNode: (key, list: PageNodeItemProps) => void
     getPageNode: (key) => PageInfoProps | undefined
     setPageNode: (key, v) => void
     removePageNode: (key: string) => void
@@ -148,8 +148,12 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const { pageNodeList } = node
         const item = getPageNodeInfoById(pageNodeList, pageId)
         const { index, subIndex } = item;
-        if (index === -1 && subIndex === -1) return
-        pageNodeList[index].pageChildrenList[subIndex] = { ...val }
+        if (index === -1) return
+        if(subIndex===-1){
+            pageNodeList[index]={...val}
+        }else{
+            pageNodeList[index].pageChildrenList[subIndex] = { ...val }
+        }
         const newNode = new Map().set(key, {
             ...node,
         })
@@ -255,11 +259,10 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
             pageNode: newVal
         })
     },
-    pushPageNode: (key, list) => {
+    addPageNode: (key, list) => {
         const newVal = get().pageNode
         const current: PageInfoProps | undefined = newVal.get(key)
         if (!current) return
-        console.log('current', current)
         const { pageNodeList } = current
         const { pageChildrenList } = list
         const newPageNodeList: PageNodeItemProps[] = pageNodeList.filter(ele => pageChildrenList.findIndex(l => l.pageId === ele.pageId) === -1)
@@ -269,7 +272,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         })
         current.pageNodeList = [...newPageNodeList]
         newVal.set(key, current)
-        console.log('pushPageNode', newVal)
+        console.log('addPageNode', newVal)
         set({
             pageNode: newVal
         })
