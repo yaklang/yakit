@@ -100,19 +100,25 @@ interface PageNodeInfoProps {
 
     getPageNodeInfoByPageId: (key, pageId: string) => NodeInfoProps | undefined
     updatePageNodeInfoByPageId: (key, pageId: string, val: PageNodeItemProps) => void
+    /**@name 通过pageId删除该页面的数据 */
+    removePageNodeInfoByPageId: (key, pageId: string) => void
 
+
+    getPageNodeInfoByPageGroupId: (key, pageGroupId: string) => PageNodeItemProps | undefined
     /**@name 设置组内的数据 */
     setPageNodeInfoByPageGroupId: (key, pageGroupId: string, list: PageNodeItemProps[]) => void
     /**@name 通过pageGroupId找到对应的组数据,向该组内新增数据 */
     addPageNodeInfoByPageGroupId: (key, pageGroupId: string, val: PageNodeItemProps) => void
-    /**@name 通过pageId删除该页面的数据 */
-    removePageNodeInfoByPageId: (key, pageId: string) => void
 
-    /**@name 组才应该调用这个方法;1.通过tab组的pageGroupId删除该组下的所有数据;2.将组内的数据从pageChildrenList扁平 */
+
+    /**@name 通过tab组的pageGroupId删除该组下的所有数据 */
     removePageNodeByPageGroupId: (key, pageGroupId: string) => void
+    /**@name 1.通过tab组的pageGroupId删除该组下的所有数据2.将组(pageGroupId)内的数据从pageChildrenList扁平/游离状态 */
+    flatPageChildrenListAndRemoveGroupByPageGroupId: (key, pageGroupId: string) => void
+
+
     /**@name 新增二级tab数据(包括游离和组两种类型的数据增加) */
     pushPageNode: (key, list: PageNodeItemProps) => void
-
     getPageNode: (key) => PageInfoProps | undefined
     setPageNode: (key, v) => void
     removePageNode: (key: string) => void
@@ -126,6 +132,14 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         if (!node) return
         const { pageNodeList } = node
         const item = getPageNodeInfoById(pageNodeList, pageId)
+        return item
+    },
+    getPageNodeInfoByPageGroupId: (key, pageGroupId) => {
+        const node = get().pageNode.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        console.log('pageNodeList', pageNodeList)
+        const item = pageNodeList.find(ele => ele.pageId === pageGroupId)
         return item
     },
     updatePageNodeInfoByPageId: (key, pageId, val) => {
@@ -152,10 +166,10 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const itemNodeInfo = getPageNodeInfoById(pageNodeList, pageId)
         const { index, subIndex, parentItem } = itemNodeInfo;
         console.log('index, subIndex,', index, subIndex, itemNodeInfo)
-        if (subIndex === -1) {
+        const newPageChildrenList = parentItem.pageChildrenList.filter(ele => ele.pageId !== pageId)
+        if (newPageChildrenList.length === 0) {
             pageNodeList.splice(index, 1)
         } else {
-            const newPageChildrenList = parentItem.pageChildrenList.filter(ele => ele.pageId !== pageId)
             pageNodeList[index].pageChildrenList = newPageChildrenList
         }
         node.pageNodeList = [...pageNodeList];
@@ -171,8 +185,8 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         if (!node) return
         const { pageNodeList } = node
         const index = pageNodeList.findIndex(ele => ele.pageId === pageGroupId)
-        console.log('pageNodeList',pageNodeList,index,pageGroupId)
-        if(index===-1)return
+        console.log('pageNodeList', pageNodeList, index, pageGroupId)
+        if (index === -1) return
         pageNodeList[index].pageChildrenList = list
         node.pageNodeList = [...pageNodeList];
 
@@ -186,6 +200,18 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const newVal = get().pageNode
         const node: PageInfoProps | undefined = newVal.get(key);
         if (!node) return
+        const newPageNodeList: PageNodeItemProps[] = node.pageNodeList.filter(ele => ele.pageId !== pageGroupId)
+        node.pageNodeList = [...newPageNodeList];
+        newVal.set(key, { ...node })
+        console.log('removePageNodeByPageGroupId', newVal)
+        set({
+            pageNode: newVal
+        })
+    },
+    flatPageChildrenListAndRemoveGroupByPageGroupId: (key, pageGroupId) => {
+        const newVal = get().pageNode
+        const node: PageInfoProps | undefined = newVal.get(key);
+        if (!node) return
         let newPageNodeList: PageNodeItemProps[] = []
         const l = node.pageNodeList.length
         for (let index = 0; index < l; index++) {
@@ -193,7 +219,10 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
             if (element.pageId === pageGroupId) {
                 const childrenList: PageNodeItemProps[] = []
                 element.pageChildrenList.forEach((ele) => {
-                    childrenList.push(ele)
+                    childrenList.push({
+                        ...ele,
+                        pageGroupId: '0'
+                    })
                 })
                 newPageNodeList = [
                     ...newPageNodeList,
@@ -205,7 +234,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         }
         node.pageNodeList = [...newPageNodeList];
         newVal.set(key, { ...node })
-        console.log('removePageNodeByPageGroupId', newVal)
+        console.log('flatPageChildrenListAndRemoveGroupByPageGroupId', newVal)
         set({
             pageNode: newVal
         })
@@ -230,6 +259,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const newVal = get().pageNode
         const current: PageInfoProps | undefined = newVal.get(key)
         if (!current) return
+        console.log('current', current)
         const { pageNodeList } = current
         const { pageChildrenList } = list
         const newPageNodeList: PageNodeItemProps[] = pageNodeList.filter(ele => pageChildrenList.findIndex(l => l.pageId === ele.pageId) === -1)
@@ -248,6 +278,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
     setPageNode: (key, ev) => {
         const newVal = get().pageNode
         newVal.set(key, ev)
+        console.log('setPageNode', newVal)
         set({
             pageNode: newVal
         })

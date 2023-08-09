@@ -1689,9 +1689,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         pushPageNode,
         addPageNodeInfoByPageGroupId,
         removePageNodeInfoByPageId,
-        removePageNodeByPageGroupId,
+        flatPageChildrenListAndRemoveGroupByPageGroupId,
         setPageNodeInfoByPageGroupId,
-        updatePageNodeInfoByPageId
+        updatePageNodeInfoByPageId,
+        removePageNodeByPageGroupId,
+        setPageNode,
+        getPageNodeInfoByPageGroupId
     } = usePageNode()
 
     useEffect(() => {
@@ -2133,6 +2136,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             subPage.splice(number, 1)
         }
         onUpdatePageCache([...subPage])
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            onRemoveGroupAndPushPageNode({
+                ...sourceItem,
+                groupId: "0"
+            })
+        }
     })
     /** @description 组外向组内移动 */
     const moveOutOfGroupAndInGroup = useMemoizedFn((result) => {
@@ -2525,26 +2534,32 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         onUpdatePageCache([...subPage])
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, newGroup.id)
-            const newPageNode: PageNodeItemProps = {
-                id: "",
-                routeKey: YakitRoute.HTTPFuzzer,
-                pageGroupId: newGroup.groupId,
-                pageId: newGroup.id,
-                pageName: newGroup.verbose,
-                pageParamsInfo: {
-                    webFuzzerPageInfo: {
-                        advancedConfigValue: {
-                            ...defaultAdvancedConfigValue,
-                            ...newGroup.params
-                        },
-                        request: newGroup.params?.request || ""
-                    }
-                },
-                pageChildrenList: []
-            }
-            pushPageNode(YakitRoute.HTTPFuzzer, newPageNode)
+            onRemoveGroupAndPushPageNode(newGroup)
         }
+    })
+    /**
+     * @description 从组内移除序列数据，并将移除的item变为游离的
+     */
+    const onRemoveGroupAndPushPageNode=useMemoizedFn((item:MultipleNodeInfo)=>{
+        removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id)
+        const newPageNode: PageNodeItemProps = {
+            id: "",
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: item.groupId,
+            pageId: item.id,
+            pageName: item.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue,
+                        ...item.params
+                    },
+                    request: item.params?.request || ""
+                }
+            },
+            pageChildrenList: []
+        }
+        pushPageNode(YakitRoute.HTTPFuzzer, newPageNode)
     })
     /**关闭当前标签页 */
     const onRemove = useMemoizedFn((item: MultipleNodeInfo) => {
@@ -2566,6 +2581,14 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     onSetSelectSubMenu(item)
                     onUpdatePageCache(newSubPage)
                     afterDeleteSubPage("other", pageItem.route, item)
+                    if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                        let pageNodeInfo: PageInfoProps = {
+                            pageNodeList: [],
+                            routeKey: YakitRoute.HTTPFuzzer,
+                            singleNode: false
+                        }
+                        setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
+                    }
                     m.destroy()
                 },
                 onCancel: () => {
@@ -2678,7 +2701,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         subPage.splice(index, 1, ...groupChildrenList)
         onUpdatePageCache([...subPage])
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+            flatPageChildrenListAndRemoveGroupByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
         }
     })
     /**@description 关闭组/删除组包括组里的页面,有一个弹窗不再提示的功能 */
@@ -2711,6 +2734,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdateSelectSubPage(groupItem)
         subPage.splice(index, 1)
         onUpdatePageCache([...subPage])
+
+        // 序列
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+        }
     })
     /**@description 组的右键事件 关闭其他标签页 */
     const onCloseOtherTabs = useMemoizedFn((groupItem: MultipleNodeInfo) => {
@@ -2725,6 +2753,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 onSetSelectSubMenu(groupItem)
                 onUpdatePageCache(newPage)
                 m.destroy()
+                if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                    const pageNodeList: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+                    if (!pageNodeList) return
+                    let pageNodeInfo: PageInfoProps = {
+                        pageNodeList: [pageNodeList],
+                        routeKey: YakitRoute.HTTPFuzzer,
+                        singleNode: false
+                    }
+                    setPageNode(YakitRoute.HTTPFuzzer,pageNodeInfo)
+                }
+              
             },
             onCancel: () => {
                 m.destroy()

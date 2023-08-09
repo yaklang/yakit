@@ -115,7 +115,7 @@ const isEmptySequence = (list: SequenceProps[]) => {
 }
 
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
-    const {setType}=props;
+    const {setType} = props
     const [loading, setLoading] = useState<boolean>(false)
 
     const [sequenceList, setSequenceList] = useState<SequenceProps[]>([])
@@ -261,6 +261,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         ipcRenderer.on(errToken, (e, details) => {
             yakitNotify("error", `提交模糊测试请求失败 ${details}`)
             onUpdateSequence()
+            const newSequenceList = sequenceList.map((item) => ({
+                ...item,
+                disabled: false
+            }))
+            setSequenceList([...newSequenceList])
         })
 
         return () => {
@@ -364,18 +369,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (loading || !inViewport) return
             const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.pageId)
             if (!nodeInfo) return
-            const {parentItem,subIndex} = nodeInfo
-            if(subIndex===-1){
-                setType('config')
+            const {parentItem, subIndex} = nodeInfo
+            if (subIndex === -1) {
+                setType("config")
                 return
             }
             onSetOriginSequence(parentItem)
             const newSequenceList: SequenceProps[] = []
             sequenceList.forEach((item) => {
                 const current = parentItem.pageChildrenList.find((ele) => ele.pageId === item.pageId)
-                if(!item.pageId){
+                if (!item.pageId) {
                     newSequenceList.push({
-                        ...item,
+                        ...item
                     })
                 }
                 if (current) {
@@ -494,7 +499,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ...advancedConfigValueToFuzzerRequests(item.pageParams.advancedConfigValue),
             RequestRaw: Buffer.from(item.pageParams.request, "utf8"), // StringToUint8Array(request, "utf8"),
             HotPatchCode: hotPatchCodeRef.current,
-            // HotPatchCodeWithParamGetter: item.pageParams.request
+            // HotPatchCodeWithParamGetter: item.pageParams.request,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
             InheritCookies: item.inheritCookies,
             InheritVariables: item.inheritVariables,
