@@ -378,6 +378,7 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
+    overflow: hidden;
 }
 .http-fuzzer-range-read-only-editor-menu-middle {
     width: 300px;
@@ -389,6 +390,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
     .title {
         padding: 0px 12px 6px;
         font-size: 12px;
@@ -466,11 +468,12 @@
     .only-one {
         padding: 0 12px;
         flex: 1;
-        overflow: hidden;
+        overflow: auto;
     }
     .timeline-box {
         flex: 1;
         padding: 6px 12px;
+        overflow: auto;
         .timeline-item {
             margin: 10px 0px 0px 10px;
             padding-bottom: 10px;
