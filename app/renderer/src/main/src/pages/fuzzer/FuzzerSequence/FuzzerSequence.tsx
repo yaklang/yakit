@@ -115,6 +115,7 @@ const isEmptySequence = (list: SequenceProps[]) => {
 }
 
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
+    const {setType}=props;
     const [loading, setLoading] = useState<boolean>(false)
 
     const [sequenceList, setSequenceList] = useState<SequenceProps[]>([])
@@ -134,7 +135,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const {getPageNodeInfo} = usePageNode()
+    const {getPageNodeInfoByPageId} = usePageNode()
 
     useEffect(() => {
         const unSubPageNode = usePageNode.subscribe(
@@ -148,8 +149,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     }, [])
 
+    useUpdateEffect(() => {
+        if (inViewport) onUpdateSequence()
+    }, [inViewport])
+    useUpdateEffect(() => {
+        if (!loading) onUpdateSequence()
+    }, [loading])
     useEffect(() => {
-        getPageNodeInfoByRoute()
+        getPageNodeInfoByPageIdByRoute()
     }, [])
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
@@ -195,10 +202,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const endToken = `${token}-end`
 
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
-          
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
-            console.log("data",Request, Response)
+            // console.log("data", Request, Response)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -266,9 +272,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-    useEffect(() => {
-        if (!loading) onUpdateSequence()
-    }, [loading])
+
     useThrottleEffect(
         () => {
             if (responseMap.size === 1 && !currentSequenceItem) {
@@ -319,7 +323,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
             let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
             if (successBuffer.length + failedBuffer.length === 1) {
-                const onlyOneResponse=successBuffer.length===1?successBuffer[0]:failedBuffer[0]
+                const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
                 // 设置第一个 response
                 setResponse(fuzzerIndex, {
                     id: fuzzerIndex,
@@ -357,16 +361,28 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
      */
     const onUpdateSequence = useDebounceFn(
         useMemoizedFn(() => {
-            if (loading) return
-            const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(YakitRoute.HTTPFuzzer, props.pageId)
+            if (loading || !inViewport) return
+            const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.pageId)
             if (!nodeInfo) return
-            const {parentItem} = nodeInfo
+            const {parentItem,subIndex} = nodeInfo
+            if(subIndex===-1){
+                setType('config')
+                return
+            }
             onSetOriginSequence(parentItem)
-            const newSequenceList = sequenceList.map((item) => {
+            const newSequenceList: SequenceProps[] = []
+            sequenceList.forEach((item) => {
                 const current = parentItem.pageChildrenList.find((ele) => ele.pageId === item.pageId)
-                return {
-                    ...item,
-                    pageParams: current?.pageParamsInfo.webFuzzerPageInfo || defaultPageParams
+                if(!item.pageId){
+                    newSequenceList.push({
+                        ...item,
+                    })
+                }
+                if (current) {
+                    newSequenceList.push({
+                        ...item,
+                        pageParams: current?.pageParamsInfo.webFuzzerPageInfo || defaultPageParams
+                    })
                 }
             })
             if (currentSequenceItem) {
@@ -402,8 +418,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         return false
     })
-    const getPageNodeInfoByRoute = useMemoizedFn(() => {
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(YakitRoute.HTTPFuzzer, props.pageId)
+    const getPageNodeInfoByPageIdByRoute = useMemoizedFn(() => {
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.pageId)
         if (!nodeInfo) return
         const {parentItem, currentItem} = nodeInfo
         onSetOriginSequence(parentItem)
@@ -424,7 +440,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     /**设置原始序列 */
     const onSetOriginSequence = useMemoizedFn((parentItem: PageNodeItemProps) => {
         const newSequence: SequenceProps[] = parentItem.pageChildrenList?.map((item, index) => ({
-            // id: `${randomString(8)}-${index + 1}`,/
             id: item.id,
             pageId: item.pageId,
             pageGroupId: item.pageGroupId,

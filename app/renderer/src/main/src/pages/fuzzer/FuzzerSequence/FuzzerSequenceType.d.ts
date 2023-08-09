@@ -1,12 +1,14 @@
 import { WebFuzzerPageInfoProps } from "../../../store/pageNodeInfo";
 import { FuzzerResponse, FuzzerRequestProps } from "../HTTPFuzzerPage";
-
+import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
 /**
  * @description 序列props
  * @property {string} pageId页面节点id
+ * @function setType
  */
 export interface FuzzerSequenceProps {
     pageId: string
+    setType:(s:WebFuzzerType)=>void
 }
 
 /**
@@ -72,7 +74,7 @@ export interface SequenceItemProps {
  * @property {FuzzerResponse[]} failedFuzzer 成功数据list
  */
 export interface ResponseProps {
-    id:string
+    id: string
     successCount: number
     failedCount: number
     onlyOneResponse: FuzzerResponse
@@ -95,7 +97,7 @@ export interface FuzzerSequenceResponse {
  * @property {ResponseProps} responseInfo
  */
 export interface SequenceResponseProps {
-    loading:boolean
+    loading: boolean
     requestInfo?: WebFuzzerPageInfoProps
     responseInfo?: ResponseProps
 }

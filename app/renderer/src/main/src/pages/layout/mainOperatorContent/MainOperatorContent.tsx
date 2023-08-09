@@ -70,7 +70,13 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
-import {NodeInfoProps,PageInfoProps, PageNodeItemProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
+import {
+    NodeInfoProps,
+    PageInfoProps,
+    PageNodeItemProps,
+    WebFuzzerPageInfoProps,
+    usePageNode
+} from "@/store/pageNodeInfo"
 import {
     WEB_FUZZ_DNS_Hosts_Config,
     WEB_FUZZ_DNS_Server_Config,
@@ -258,8 +264,6 @@ export const getInitPageCache: () => PageCache[] = () => {
     ]
 }
 
-
-
 // 软件初始化时的默认当前打开页面的key
 export const getInitActiveTabKey = () => {
     if (isEnpriTraceAgent()) {
@@ -338,6 +342,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugList, setBugList] = useState<BugInfoProps[]>([])
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
+
+    const {pushPageNode} = usePageNode()
 
     // 打开tab页面
     useEffect(() => {
@@ -890,7 +896,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode,getPageNodeInfo,setPageNodeInfo} = usePageNode()
+    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
     const proxyRef = useRef<string[]>()
@@ -911,7 +917,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
                 // 序列化
                 const webFuzzerPageInfo = JSON.parse(res.webFuzzerPageInfo)
-                onUpdateFuzzerSequence(res.key,webFuzzerPageInfo)
+                onUpdateFuzzerSequenceDueToDataChanges(res.key, webFuzzerPageInfo)
             } catch (error) {
                 yakitNotify("error", "webFuzzer数据缓存失败：" + error)
             }
@@ -930,41 +936,42 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [isFetchFuzzerList])
     /**
-     * 更新序列化的数据 
+     * 因为页面数据变化更新fuzzer序列化
      * 组内的才有序列化
-     */ 
-    const onUpdateFuzzerSequence=useMemoizedFn((key: string, param: WebFuzzerPageInfoProps)=>{
-        const fuzzerPage=pageCache.find(ele=>ele.route===YakitRoute.HTTPFuzzer)
-        if(!fuzzerPage)return
-        const {subIndex}=getPageItemById(fuzzerPage?.multipleNode,key)
-        if(subIndex===-1)return
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(YakitRoute.HTTPFuzzer, key)
+     */
+    const onUpdateFuzzerSequenceDueToDataChanges = useMemoizedFn((key: string, param: WebFuzzerPageInfoProps) => {
+        const fuzzerPage = pageCache.find((ele) => ele.route === YakitRoute.HTTPFuzzer)
+        if (!fuzzerPage) return
+        const {subIndex} = getPageItemById(fuzzerPage?.multipleNode, key)
+        if (subIndex === -1) return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, key)
         if (!nodeInfo) return
         const {currentItem} = nodeInfo
-       
-        const newCurrentItem:PageNodeItemProps={
+
+        const newCurrentItem: PageNodeItemProps = {
             ...currentItem,
-            pageParamsInfo:{
-                webFuzzerPageInfo:{
-                    advancedConfigValue:{...param.advancedConfigValue},
-                    request:param.request
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {...param.advancedConfigValue},
+                    request: param.request
                 }
             }
         }
-        setPageNodeInfo(YakitRoute.HTTPFuzzer,currentItem.pageId,{...newCurrentItem})
+        updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, currentItem.pageId, {...newCurrentItem})
     })
+
     /**@description 获取Fuzzer默认缓存 */
     const getFuzzerDefaultCache = useMemoizedFn(() => {
         getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
             if (!e) {
-                proxyRef.current =[]
+                proxyRef.current = []
                 return
             }
             proxyRef.current = e ? e.split(",") : []
         })
         getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
             if (!e) {
-                dnsServersRef.current=[]
+                dnsServersRef.current = []
                 return
             }
             try {
@@ -973,7 +980,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
         getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
             if (!e) {
-                etcHostsRef.current=[]
+                etcHostsRef.current = []
                 return
             }
             try {
@@ -994,7 +1001,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             setRemoteProjectValue(FuzzerCache, JSON.stringify(historys))
         }
     }, 500)
-   
+
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
         // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -1134,6 +1141,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */
     const addFuzzerList = (key: string, node: MultipleNodeInfo) => {
         fuzzerList.current.set(key, node)
+
+        const newPageNode: PageNodeItemProps = {
+            id: "",
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue,
+                        ...node.params
+                    },
+                    request: node.params?.request || ""
+                }
+            },
+            pageChildrenList: []
+        }
+        pushPageNode(YakitRoute.HTTPFuzzer, newPageNode)
     }
     /**
      * 删除web-fuzzer页面缓存数据
@@ -1158,7 +1184,53 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         fuzzerList.current.set(key, param)
         saveFuzzerList()
     }
-
+    /**更新排序和内容缓存 */
+    const webFuzzerCache = useMemoizedFn((subPage: MultipleNodeInfo[]) => {
+        if (subPage.length <= 0) {
+            delFuzzerList(1)
+            return
+        }
+        const newFuzzerList = new Map<string, MultipleNodeInfo>()
+        subPage.forEach((subItem, subIndex) => {
+            if (subItem.groupChildren && subItem.groupChildren.length > 0) {
+                subItem.groupChildren.forEach((groupChildrenItem, groupIndex) => {
+                    const haveGroupChildrenItem = fuzzerList.current.get(groupChildrenItem.id)
+                    const newGroupChildrenItem: MultipleNodeInfo = {
+                        ...haveGroupChildrenItem,
+                        ...groupChildrenItem,
+                        params: haveGroupChildrenItem?.params,
+                        sortFieId: groupIndex + 1
+                    }
+                    newFuzzerList.set(groupChildrenItem.id, newGroupChildrenItem)
+                })
+                if (!subItem.groupId) return
+                const newGroupItem: MultipleNodeInfo = {
+                    id: subItem.id,
+                    verbose: subItem.verbose || "",
+                    groupId: subItem.groupId,
+                    expand: subItem.expand,
+                    color: subItem.color,
+                    sortFieId: subIndex + 1,
+                    childrenWidth: subItem.childrenWidth
+                }
+                newFuzzerList.set(subItem.id, newGroupItem)
+            } else {
+                const haveItem = fuzzerList.current.get(subItem.id)
+                const newItem: MultipleNodeInfo = {
+                    ...haveItem,
+                    ...subItem,
+                    params: haveItem?.params,
+                    sortFieId: subIndex + 1,
+                    groupChildren: [],
+                    expand: undefined,
+                    color: undefined
+                }
+                newFuzzerList.set(subItem.id, newItem)
+            }
+        })
+        fuzzerList.current = new Map<string, MultipleNodeInfo>(newFuzzerList)
+        saveFuzzerList()
+    })
     /** ---------- web-fuzzer 缓存逻辑 end ---------- */
 
     // 新增数据对比页面
@@ -1222,53 +1294,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
         }
     })
-    /**更新排序和内容缓存 */
-    const webFuzzerCache = useMemoizedFn((subPage: MultipleNodeInfo[]) => {
-        if (subPage.length <= 0) {
-            delFuzzerList(1)
-            return
-        }
-        const newFuzzerList = new Map<string, MultipleNodeInfo>()
-        subPage.forEach((subItem, subIndex) => {
-            if (subItem.groupChildren && subItem.groupChildren.length > 0) {
-                subItem.groupChildren.forEach((groupChildrenItem, groupIndex) => {
-                    const haveGroupChildrenItem = fuzzerList.current.get(groupChildrenItem.id)
-                    const newGroupChildrenItem: MultipleNodeInfo = {
-                        ...haveGroupChildrenItem,
-                        ...groupChildrenItem,
-                        params: haveGroupChildrenItem?.params,
-                        sortFieId: groupIndex + 1
-                    }
-                    newFuzzerList.set(groupChildrenItem.id, newGroupChildrenItem)
-                })
-                if (!subItem.groupId) return
-                const newGroupItem: MultipleNodeInfo = {
-                    id: subItem.id,
-                    verbose: subItem.verbose || "",
-                    groupId: subItem.groupId,
-                    expand: subItem.expand,
-                    color: subItem.color,
-                    sortFieId: subIndex + 1,
-                    childrenWidth: subItem.childrenWidth
-                }
-                newFuzzerList.set(subItem.id, newGroupItem)
-            } else {
-                const haveItem = fuzzerList.current.get(subItem.id)
-                const newItem: MultipleNodeInfo = {
-                    ...haveItem,
-                    ...subItem,
-                    params: haveItem?.params,
-                    sortFieId: subIndex + 1,
-                    groupChildren: [],
-                    expand: undefined,
-                    color: undefined
-                }
-                newFuzzerList.set(subItem.id, newItem)
-            }
-        })
-        fuzzerList.current = new Map<string, MultipleNodeInfo>(newFuzzerList)
-        saveFuzzerList()
-    })
+
     /** ---------- MainOperatorContext回调 end ---------- */
     return (
         <Content>
@@ -1658,6 +1684,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const scrollLeftIconRef = useRef<any>()
     const scrollRightIconRef = useRef<any>()
 
+    const {
+        getPageNodeInfoByPageId,
+        pushPageNode,
+        addPageNodeInfoByPageGroupId,
+        removePageNodeInfoByPageId,
+        removePageNodeByPageGroupId,
+        setPageNodeInfoByPageGroupId,
+        updatePageNodeInfoByPageId
+    } = usePageNode()
+
     useEffect(() => {
         getIsCloseGroupTip()
     }, [])
@@ -1704,6 +1740,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     useEffect(() => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
+        onUpdateSubPage(pageItem, pageItem.multipleNode || [])
     }, [pageItem.multipleNode])
 
     useEffect(() => {
@@ -1719,7 +1756,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         setRenderSubPage(newData)
-        onUpdateSubPage(pageItem, subPage)
+        // onUpdateSubPage(pageItem, subPage)
     }, [subPage])
     // 切换一级页面时聚焦
     useEffect(() => {
@@ -1903,6 +1940,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const combineId = result.combine.draggableId
         const combineIndex = subPage.findIndex((ele) => ele.id === combineId)
         if (combineIndex === -1 || !subPage[combineIndex]) return
+
         const sourceGroupChildrenLength = subPage[sourceIndex]?.groupChildren?.length || 0
         const combineGroupChildrenLength = subPage[combineIndex]?.groupChildren?.length || 0
 
@@ -1931,9 +1969,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 subPage[combineIndex].id = groupId
             }
         }
+        const combineItem = subPage[combineIndex]
         subPage.splice(sourceIndex, 1)
         onUpdatePageCache(subPage)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            // push新的序列表数据
+            pushSequenceByGroupChildren(combineItem)
+        }
     })
+
     /**@description 组内向组外合并 */
     const mergeWithinAndOutsideGroup = useMemoizedFn((result) => {
         if (!result.combine) {
@@ -1944,6 +1988,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 删除拖拽的组内标签页
         const gIndex = subPage.findIndex((ele) => ele.id === droppableId)
         if (gIndex === -1) return
+
         const sourceItem = subPage[gIndex].groupChildren?.splice(sourceIndex, 1)
         if (!sourceItem) return
         const combineIndex = subPage.findIndex((ele) => ele.id === combineDraggableId)
@@ -1962,11 +2007,19 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         subPage[combineIndex].expand = true
         subPage[combineIndex].id = newGroupId
 
+        const combineItem = subPage[combineIndex]
+
         // 拖拽后组内item===0,则删除该组
         if (subPage[gIndex].groupChildren?.length === 0) {
             subPage.splice(gIndex, 1)
         }
         onUpdatePageCache(subPage)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            // 删除 source的item所在序列化中的数据，生成新组的时候push新的序列化数据
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem[0].id)
+            // push新组的序列表数据
+            pushSequenceByGroupChildren(combineItem)
+        }
     })
     /** @description 组外之间移动 */
     const movingBetweenOutsideGroups = useMemoizedFn((result) => {
@@ -2024,6 +2077,32 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             subPage.splice(sourceNumber, 1)
         }
         onUpdatePageCache(subPage)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            // 删除组A中的序列化数据，向组B新增序列化数据
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
+            addSequenceByPageGroupId(sourceItem, destinationGroupId)
+        }
+    })
+    /** 向组B新增序列化数据 */
+    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string) => {
+        const addNodeInfo: PageNodeItemProps = {
+            id: "",
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: destinationGroupId,
+            pageId: sourceItem.id,
+            pageName: sourceItem.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue,
+                        ...sourceItem.params
+                    },
+                    request: sourceItem.params?.request || ""
+                }
+            },
+            pageChildrenList: []
+        }
+        addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, addNodeInfo)
     })
     /** @description 组内向组外移动 */
     const movingWithinAndOutsideGroup = useMemoizedFn((result) => {
@@ -2091,6 +2170,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 将拖拽的item从来源地中删除
         subPage.splice(sourceIndex, 1)
         onUpdatePageCache(subPage)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            // 删除游离的数据，向组B新增序列化数据
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
+            addSequenceByPageGroupId(sourceItem, destinationGroupId)
+        }
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
     const onUpdatePageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[]) => {
@@ -2114,16 +2198,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }, 200)
         } catch (error) {}
     })
-    // const onAddSubPage = useDebounceFn(
-    //     () => {
-    //         openMultipleMenuPage({
-    //             route: pageItem.route,
-    //             pluginId: pageItem.pluginId,
-    //             pluginName: pageItem.pluginName
-    //         })
-    //     },
-    //     {wait: 200,}
-    // ).run
     const onAddSubPage = useMemoizedFn(() => {
         if (getSubPageTotal(subPage) >= 100) {
             yakitNotify("error", "超过标签页数量限制")
@@ -2238,7 +2312,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         } else {
             afterDeleteSubPage("single", pageItem.route, removeItem)
         }
-        // afterDeleteSubPage("single", pageItem.route, removeItem)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, removeItem.id)
+        }
     })
     /**
      * @description 页面节点的右键点击事件
@@ -2341,6 +2417,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                     groupChildrenList[subIndex].verbose = val
                                     afterUpdateSubItem(pageItem, subPage[index])
                                     onUpdatePageCache(subPage)
+                                    if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                                        // 更新序列化数据
+                                        const updateItem = groupChildrenList[subIndex]
+                                        onUpdateFuzzerSequence(updateItem.id, updateItem)
+                                    }
                                 }
                             }
 
@@ -2350,6 +2431,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 </React.Suspense>
             )
         })
+    })
+    const onUpdateFuzzerSequence = useMemoizedFn((key: string, param: MultipleNodeInfo) => {
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, key)
+        if (!nodeInfo) return
+        const {index, subIndex, parentItem} = nodeInfo
+        if (index === -1 || subIndex === -1) return
+        const updateSequence = parentItem.pageChildrenList[subIndex]
+        updateSequence.pageName = param.verbose
+        updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, param.id, updateSequence)
     })
     /**将页面添加到新建组 */
     const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
@@ -2368,6 +2458,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (subIndex === -1) {
             // 游离页面移动到新建组
             subPage.splice(index, 1, newGroup)
+            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                // push新的序列表数据
+                pushSequenceByGroupChildren(newGroup)
+            }
         } else {
             // 组A移动到新建组
             const groupChildren = subPage[index].groupChildren || []
@@ -2379,13 +2473,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             } else {
                 subPage.splice(index + 1, 0, newGroup)
             }
+            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id) // 删除组A中的序列
+                pushSequenceByGroupChildren(newGroup) // 新建序列数据
+            }
         }
         onUpdatePageCache([...subPage])
     })
     /**将标签页添加到组 */
     const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo, key: string) => {
         const {index, subIndex} = getPageItemById(subPage, item.id)
-        const {index: gIndex} = getPageItemById(subPage, key)
+        const {index: gIndex, current: currentGroup} = getPageItemById(subPage, key)
         if (subIndex === -1) {
             //游离页面移动到组内
             subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].id})
@@ -2400,6 +2498,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (groupChildren.length === 0) subPage.splice(index, 1)
         }
         onUpdatePageCache([...subPage])
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id)
+            addSequenceByPageGroupId(item, currentGroup.id)
+        }
     })
     /**从组中移出 */
     const onRemoveFromGroup = useMemoizedFn((item: MultipleNodeInfo) => {
@@ -2422,6 +2524,27 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             subPage.splice(index + 1, 0, newGroup)
         }
         onUpdatePageCache([...subPage])
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, newGroup.id)
+            const newPageNode: PageNodeItemProps = {
+                id: "",
+                routeKey: YakitRoute.HTTPFuzzer,
+                pageGroupId: newGroup.groupId,
+                pageId: newGroup.id,
+                pageName: newGroup.verbose,
+                pageParamsInfo: {
+                    webFuzzerPageInfo: {
+                        advancedConfigValue: {
+                            ...defaultAdvancedConfigValue,
+                            ...newGroup.params
+                        },
+                        request: newGroup.params?.request || ""
+                    }
+                },
+                pageChildrenList: []
+            }
+            pushPageNode(YakitRoute.HTTPFuzzer, newPageNode)
+        }
     })
     /**关闭当前标签页 */
     const onRemove = useMemoizedFn((item: MultipleNodeInfo) => {
@@ -2462,6 +2585,28 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     subPage[index].groupChildren = [item]
                     onSetSelectSubMenu(item)
                     onUpdatePageCache(subPage)
+                    if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                        const groupList = [
+                            {
+                                id: "",
+                                routeKey: YakitRoute.HTTPFuzzer,
+                                pageGroupId: item.groupId,
+                                pageId: item.id,
+                                pageName: item.verbose,
+                                pageParamsInfo: {
+                                    webFuzzerPageInfo: {
+                                        advancedConfigValue: {
+                                            ...defaultAdvancedConfigValue,
+                                            ...item.params
+                                        },
+                                        request: item.params?.request || ""
+                                    }
+                                },
+                                pageChildrenList: []
+                            }
+                        ]
+                        setPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, item.groupId, groupList)
+                    }
                     m.destroy()
                 },
                 onCancel: () => {
@@ -2532,6 +2677,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         subPage.splice(index, 1, ...groupChildrenList)
         onUpdatePageCache([...subPage])
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+        }
     })
     /**@description 关闭组/删除组包括组里的页面,有一个弹窗不再提示的功能 */
     const onCloseGroupConfirm = useMemoizedFn((groupItem: MultipleNodeInfo) => {
@@ -2680,6 +2828,51 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         },
         {wait: 200}
     ).run
+
+    // ------------------- 序列化相关 start -------------------
+    /**
+     * @description 新建组时， 传入 groupItem ，新增序列化数据
+     * @param groupItem
+     */
+    const pushSequenceByGroupChildren = useMemoizedFn((groupItem: MultipleNodeInfo) => {
+        const groupChildrenList = groupItem.groupChildren || []
+        const sequenceList = groupChildrenList.map((nodeItem, j) => ({
+            id: `${randomString(8)}-${j + 1}`,
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: nodeItem.groupId,
+            pageId: nodeItem.id,
+            pageName: nodeItem.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue,
+                        ...nodeItem.params
+                    },
+                    request: nodeItem.params?.request || ""
+                }
+            },
+            pageChildrenList: []
+        }))
+        const newPageNodeList: PageNodeItemProps = {
+            // id: `${randomString(8)}-${index + 1}`,
+            id: "",
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: groupItem.groupId,
+            pageId: groupItem.id,
+            pageName: groupItem.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue
+                    },
+                    request: ""
+                }
+            },
+            pageChildrenList: sequenceList
+        }
+        pushPageNode(YakitRoute.HTTPFuzzer, newPageNodeList)
+    })
+    // ------------------- 序列化相关 end -------------------
     return (
         <div
             ref={tabsRef}

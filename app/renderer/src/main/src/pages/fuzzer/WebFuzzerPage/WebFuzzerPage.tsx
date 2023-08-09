@@ -1,9 +1,9 @@
-import React, {Suspense, useEffect, useRef, useState} from "react"
+import React, {Suspense, useEffect, useMemo, useRef, useState} from "react"
 import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
 import {OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {NodeInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {YakitRoute} from "@/routes/newRoute"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -29,10 +29,10 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
     const [type, setType] = useState<WebFuzzerType>("config")
     const renderMap = useRef<Map<string, boolean>>(new Map().set("config", true))
 
-    const {getPageNodeInfo} = usePageNode()
+    const {getPageNodeInfoByPageId} = usePageNode()
 
     const onSwitchType = useMemoizedFn((key) => {
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfo(YakitRoute.HTTPFuzzer, props.id)
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
         if (!nodeInfo) {
             return
         }
@@ -80,7 +80,7 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
             setType(key)
         }
     })
-    const tabContent = useCreation(() => {
+    const tabContent = useMemo(() => {
         return [
             {
                 key: "config",
@@ -88,7 +88,7 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
             },
             {
                 key: "sequence",
-                node: <FuzzerSequence pageId={props.id} />
+                node: <FuzzerSequence setType={setType} pageId={props.id} />
             }
         ]
     }, [props])

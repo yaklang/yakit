@@ -6,6 +6,7 @@ import { AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig
 import { YakitRoute } from "../routes/newRoute"
 import create, { useStore } from "zustand"
 import { subscribeWithSelector } from 'zustand/middleware'
+import { randomString } from "@/utils/randomUtil"
 
 
 /**
@@ -96,25 +97,38 @@ const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
 }
 interface PageNodeInfoProps {
     pageNode: Map<string, PageInfoProps>
-    getPageNodeInfo: (key, pageId: string) => NodeInfoProps | undefined
-    setPageNodeInfo: (key, pageId: string, val) => void
+
+    getPageNodeInfoByPageId: (key, pageId: string) => NodeInfoProps | undefined
+    updatePageNodeInfoByPageId: (key, pageId: string, val: PageNodeItemProps) => void
+
+    /**@name 设置组内的数据 */
+    setPageNodeInfoByPageGroupId: (key, pageGroupId: string, list: PageNodeItemProps[]) => void
+    /**@name 通过pageGroupId找到对应的组数据,向该组内新增数据 */
+    addPageNodeInfoByPageGroupId: (key, pageGroupId: string, val: PageNodeItemProps) => void
+    /**@name 通过pageId删除该页面的数据 */
+    removePageNodeInfoByPageId: (key, pageId: string) => void
+
+    /**@name 组才应该调用这个方法;1.通过tab组的pageGroupId删除该组下的所有数据;2.将组内的数据从pageChildrenList扁平 */
+    removePageNodeByPageGroupId: (key, pageGroupId: string) => void
+    /**@name 新增二级tab数据(包括游离和组两种类型的数据增加) */
+    pushPageNode: (key, list: PageNodeItemProps) => void
+
     getPageNode: (key) => PageInfoProps | undefined
     setPageNode: (key, v) => void
     removePageNode: (key: string) => void
-
     clearPageNode: () => void
 }
 
 export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((set, get) => ({
     pageNode: new Map(),
-    getPageNodeInfo: (key, pageId) => {
+    getPageNodeInfoByPageId: (key, pageId) => {
         const node = get().pageNode.get(key);
         if (!node) return
         const { pageNodeList } = node
         const item = getPageNodeInfoById(pageNodeList, pageId)
         return item
     },
-    setPageNodeInfo: (key, pageId, val) => {
+    updatePageNodeInfoByPageId: (key, pageId, val) => {
         const node = get().pageNode.get(key);
         if (!node) return
         const { pageNodeList } = node
@@ -125,8 +139,109 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const newNode = new Map().set(key, {
             ...node,
         })
+        console.log('updatePageNodeInfoByPageId', newNode)
         set({
             pageNode: newNode
+        })
+    },
+    removePageNodeInfoByPageId: (key, pageId) => {
+        const newVal = get().pageNode
+        const node: PageInfoProps | undefined = newVal.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        const itemNodeInfo = getPageNodeInfoById(pageNodeList, pageId)
+        const { index, subIndex, parentItem } = itemNodeInfo;
+        console.log('index, subIndex,', index, subIndex, itemNodeInfo)
+        if (subIndex === -1) {
+            pageNodeList.splice(index, 1)
+        } else {
+            const newPageChildrenList = parentItem.pageChildrenList.filter(ele => ele.pageId !== pageId)
+            pageNodeList[index].pageChildrenList = newPageChildrenList
+        }
+        node.pageNodeList = [...pageNodeList];
+        newVal.set(key, { ...node })
+        console.log('removePageNodeInfoByPageId', newVal)
+        set({
+            pageNode: newVal
+        })
+    },
+    setPageNodeInfoByPageGroupId: (key, pageGroupId, list) => {
+        const newVal = get().pageNode
+        const node = newVal.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        const index = pageNodeList.findIndex(ele => ele.pageId === pageGroupId)
+        console.log('pageNodeList',pageNodeList,index,pageGroupId)
+        if(index===-1)return
+        pageNodeList[index].pageChildrenList = list
+        node.pageNodeList = [...pageNodeList];
+
+        newVal.set(key, { ...node })
+        console.log('setPageNodeInfoByPageGroupId', newVal)
+        set({
+            pageNode: newVal
+        })
+    },
+    removePageNodeByPageGroupId: (key, pageGroupId) => {
+        const newVal = get().pageNode
+        const node: PageInfoProps | undefined = newVal.get(key);
+        if (!node) return
+        let newPageNodeList: PageNodeItemProps[] = []
+        const l = node.pageNodeList.length
+        for (let index = 0; index < l; index++) {
+            const element = node.pageNodeList[index];
+            if (element.pageId === pageGroupId) {
+                const childrenList: PageNodeItemProps[] = []
+                element.pageChildrenList.forEach((ele) => {
+                    childrenList.push(ele)
+                })
+                newPageNodeList = [
+                    ...newPageNodeList,
+                    ...childrenList,
+                ]
+            } else {
+                newPageNodeList.push(element)
+            }
+        }
+        node.pageNodeList = [...newPageNodeList];
+        newVal.set(key, { ...node })
+        console.log('removePageNodeByPageGroupId', newVal)
+        set({
+            pageNode: newVal
+        })
+    },
+    addPageNodeInfoByPageGroupId: (key, pageGroupId, val) => {
+        const newVal = get().pageNode
+        const node: PageInfoProps | undefined = newVal.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        const index = pageNodeList.findIndex(ele => ele.pageId === pageGroupId)
+        console.log('index', index, pageNodeList, pageGroupId)
+        if (index === -1) return
+        const length = pageNodeList[index].pageChildrenList.length
+        pageNodeList[index].pageChildrenList.push({ ...val, id: `${randomString(8)}-${length}` })
+        newVal.set(key, { ...node })
+        console.log('addPageNodeInfoByPageGroupId', newVal, val)
+        set({
+            pageNode: newVal
+        })
+    },
+    pushPageNode: (key, list) => {
+        const newVal = get().pageNode
+        const current: PageInfoProps | undefined = newVal.get(key)
+        if (!current) return
+        const { pageNodeList } = current
+        const { pageChildrenList } = list
+        const newPageNodeList: PageNodeItemProps[] = pageNodeList.filter(ele => pageChildrenList.findIndex(l => l.pageId === ele.pageId) === -1)
+        newPageNodeList.push({
+            ...list,
+            id: `${randomString(8)}-${newPageNodeList.length}`,
+        })
+        current.pageNodeList = [...newPageNodeList]
+        newVal.set(key, current)
+        console.log('pushPageNode', newVal)
+        set({
+            pageNode: newVal
         })
     },
     getPageNode: (key) => get().pageNode.get(key),
