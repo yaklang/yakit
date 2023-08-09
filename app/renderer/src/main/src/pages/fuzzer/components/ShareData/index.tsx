@@ -174,7 +174,7 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
     })
     const onShare = useMemoizedFn(() => {
         switch (module) {
-            case YakitRoute.HTTPHacker:
+            case YakitRoute.DB_HTTPHistory:
                 onShareHttpHistory()
                 break
             default:
