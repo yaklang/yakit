@@ -1980,7 +1980,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const m = showYakitModal({
             title: "导入分享数据",
-            content: <ShareModal module={YakitRoute.HTTPHacker} shareContent={JSON.stringify(ids)} />,
+            content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)} />,
             onCancel:()=>{
                 m.destroy()
                 setSelectedRowKeys([])
