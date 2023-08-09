@@ -1192,6 +1192,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
         return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
     }, [successFuzzer])
+
+    const [exportData,setExportData] = useState<FuzzerResponse[]>([])
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1512,7 +1514,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     onSearch={() => {
                                         setDefaultResponseSearch(affixSearch)
                                     }}
-                                    successFuzzer={successFuzzer}
+                                    successFuzzer={exportData}
                                     secondNodeSize={secondNodeSize}
                                     query={query}
                                     setQuery={(q) => setQuery({...q})}
@@ -1643,6 +1645,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     onSendToWebFuzzer={sendToFuzzer}
                                                     success={showSuccess}
                                                     data={successFuzzer}
+                                                    setExportData={setExportData}
                                                     query={query}
                                                     setQuery={setQuery}
                                                     extractedMap={extractedMap}

@@ -43,6 +43,7 @@ interface HTTPFuzzerPageTableProps {
     extractedMap: Map<string, string>
     /**@name 数据是否传输完成 */
     isEnd: boolean
+    setExportData?:(v:FuzzerResponse[])=>void
 }
 
 /**
@@ -93,7 +94,7 @@ export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo((props) => {
-    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd} = props
+    const {data, success, query, setQuery, isRefresh, extractedMap, isEnd,setExportData} = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -506,9 +507,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         searchList.push(record)
                     }
                 }
+                setExportData&&setExportData([...searchList])
                 setListTable([...searchList])
             } else {
                 const newData = sorterFunction(data, sorterTable) || []
+                setExportData&&setExportData([...newData])
                 setListTable([...newData])
             }
             // ------------  搜索 结束  ------------
