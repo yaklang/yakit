@@ -100,8 +100,11 @@ interface PageNodeInfoProps {
 
     getPageNodeInfoByPageId: (key, pageId: string) => NodeInfoProps | undefined
     updatePageNodeInfoByPageId: (key, pageId: string, val: PageNodeItemProps) => void
-    /**@name 通过pageId删除该页面的数据 */
-    removePageNodeInfoByPageId: (key, pageId: string) => void
+    /**
+     * @name 通过pageId删除该页面的数据 
+     * @returns {PageNodeItemProps} 返回被删除的页面数据
+    */
+    removePageNodeInfoByPageId: (key, pageId: string) => PageNodeItemProps|undefined
 
 
     getPageNodeInfoByPageGroupId: (key, pageGroupId: string) => PageNodeItemProps | undefined
@@ -149,9 +152,9 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const item = getPageNodeInfoById(pageNodeList, pageId)
         const { index, subIndex } = item;
         if (index === -1) return
-        if(subIndex===-1){
-            pageNodeList[index]={...val}
-        }else{
+        if (subIndex === -1) {
+            pageNodeList[index] = { ...val }
+        } else {
             pageNodeList[index].pageChildrenList[subIndex] = { ...val }
         }
         const newNode = new Map().set(key, {
@@ -168,7 +171,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         if (!node) return
         const { pageNodeList } = node
         const itemNodeInfo = getPageNodeInfoById(pageNodeList, pageId)
-        const { index, subIndex, parentItem } = itemNodeInfo;
+        const { index, subIndex, parentItem,currentItem} = itemNodeInfo;
         console.log('index, subIndex,', index, subIndex, itemNodeInfo)
         const newPageChildrenList = parentItem.pageChildrenList.filter(ele => ele.pageId !== pageId)
         if (newPageChildrenList.length === 0) {
@@ -182,6 +185,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         set({
             pageNode: newVal
         })
+        return currentItem
     },
     setPageNodeInfoByPageGroupId: (key, pageGroupId, list) => {
         const newVal = get().pageNode
