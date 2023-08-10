@@ -2460,8 +2460,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 subPage.splice(index + 1, 0, newGroup)
             }
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id) // 删除组A中的序列
                 pushSequenceByGroupChildren(newGroup) // 新建序列数据
+                removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id) // 删除组A中的序列
             }
         }
         onUpdatePageCache([...subPage])
@@ -2485,12 +2485,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
         onUpdatePageCache([...subPage])
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            // const removePageNode = removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id)
-            // console.log('removePageNode',item,removePageNode)
-            // if (removePageNode) addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, currentGroup.id, {
-            //     ...removePageNode,
-            //     pageGroupId:currentGroup.id
-            // })
             addSequenceByPageGroupId(item, currentGroup.id)
         }
     })
@@ -2873,28 +2867,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /** 删除组A中的序列化数据,向组B新增序列化数据 */
     const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string) => {
         const removePageNode = removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
-        console.log('sourceItem',sourceItem)
-        console.log("removePageNode", removePageNode)
         if (removePageNode)
             addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, {
                 ...removePageNode,
                 pageGroupId: destinationGroupId
             })
-        // const nodeInfo = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
-        // if (!nodeInfo) return
-        // console.log("nodeInfo", nodeInfo)
-        // const {index, currentItem} = nodeInfo
-        // if (index === -1) return
-        // const addNodeInfo: PageNodeItemProps = {
-        //     id: "",
-        //     routeKey: YakitRoute.HTTPFuzzer,
-        //     pageGroupId: destinationGroupId,
-        //     pageId: sourceItem.id,
-        //     pageName: sourceItem.verbose,
-        //     pageParamsInfo: currentItem.pageParamsInfo,
-        //     pageChildrenList: []
-        // }
-        // addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, addNodeInfo)
     })
     /**
      * @description 从组内移除序列数据，并将移除的item变为游离的

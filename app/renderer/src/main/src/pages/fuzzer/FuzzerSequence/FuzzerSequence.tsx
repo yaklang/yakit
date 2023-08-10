@@ -66,6 +66,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {StringToUint8Array} from "@/utils/str"
 import {MatcherValueProps, ExtractorValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -126,6 +127,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
     const [currentSelectResponse, setCurrentSelectResponse] = useState<ResponseProps>()
     const [responseMap, {set: setResponse, get: getResponse, reset: resetResponse}] = useMap<string, ResponseProps>()
+    const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
+        string,
+        number
+    >(new Map())
 
     const originSequenceListRef = useRef<SequenceProps[]>([])
     const fuzzTokenRef = useRef<string>(randomString(60))
@@ -195,6 +200,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setCurrentSelectResponse(undefined)
         }
     }, [currentSequenceItem])
+    useThrottleEffect(
+        () => {
+            if (currentSequenceItem) {
+                const currentResponse = responseMap.get(currentSequenceItem.id)
+                if (currentResponse) setCurrentSelectResponse({...currentResponse})
+            }
+        },
+        [responseMap],
+        {
+            wait: 200
+        }
+    )
     useEffect(() => {
         const token = fuzzTokenRef.current
         const dataToken = `${token}-data`
@@ -202,9 +219,35 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const endToken = `${token}-end`
 
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
+            onHandleHTTPFuzzerSequenceResponse(data)
+        })
+        ipcRenderer.on(endToken, () => {
+            updateData("-1")
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
+        ipcRenderer.on(errToken, (e, details) => {
+            yakitNotify("error", `提交模糊测试请求失败 ${details}`)
+            updateData("-1")
+            setTimeout(() => {
+                onUpdateSequence()
+            }, 200)
+        })
+
+        return () => {
+            ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
+            ipcRenderer.removeAllListeners(errToken)
+            ipcRenderer.removeAllListeners(dataToken)
+            ipcRenderer.removeAllListeners(endToken)
+        }
+    }, [])
+
+    const onHandleHTTPFuzzerSequenceResponse = useThrottleFn(
+        useMemoizedFn((data: FuzzerSequenceResponse) => {
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
-            // console.log("data", Request, Response)
+            console.log("data", Request, Response)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -224,6 +267,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     failedCountRef.current.set(FuzzerIndex, 1)
                 }
             }
+            onSetFirstAsSelected(FuzzerIndex)
             if (onIsDropped(Response, FuzzerIndex)) return
             const r = {
                 ...Response,
@@ -251,109 +295,70 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
             }
             updateData(FuzzerIndex)
-        })
-        ipcRenderer.on(endToken, () => {
-            updateData("-1")
-            setTimeout(() => {
-                setLoading(false)
-            }, 200)
-        })
-        ipcRenderer.on(errToken, (e, details) => {
-            yakitNotify("error", `提交模糊测试请求失败 ${details}`)
-            onUpdateSequence()
+        }),
+        {wait: 200}
+    ).run
+    /**点击开始执行后，如果没有选中项，则设置返回的第一个为选中item */
+    const onSetFirstAsSelected = useMemoizedFn((fuzzerIndex: string) => {
+        if (!currentSequenceItem) {
+            const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === fuzzerIndex)
+            if (current) setCurrentSequenceItem(current)
+        }
+    })
+    const updateData = useMemoizedFn((fuzzerIndex: string) => {
+        if (fuzzerIndex === "-1") {
+            onClearRef()
             const newSequenceList = sequenceList.map((item) => ({
                 ...item,
                 disabled: false
             }))
             setSequenceList([...newSequenceList])
+            return
+        }
+        const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
+        const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
+        if (failedBuffer.length + successBuffer.length === 0) {
+            return
+        }
+        const newSequenceList = sequenceList.map((item) => {
+            if (item.disabled) {
+                return {
+                    ...item,
+                    disabled: item.id === fuzzerIndex ? false : true
+                }
+            } else {
+                return item
+            }
         })
+        setSequenceList([...newSequenceList])
 
-        return () => {
-            // resetResponse()
-            // onClearRef()
-            ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
-            ipcRenderer.removeAllListeners(errToken)
-            ipcRenderer.removeAllListeners(dataToken)
-            ipcRenderer.removeAllListeners(endToken)
-        }
-    }, [])
-
-    useThrottleEffect(
-        () => {
-            if (responseMap.size === 1 && !currentSequenceItem) {
-                // 获取迭代器对象
-                const iterator = responseMap.entries()
-                // 使用迭代器的next()方法获取第一个键值对
-                const firstEntry = iterator.next().value
-                const key = firstEntry[0]
-                const value = firstEntry[1]
-                const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === key)
-                if (current) {
-                    setCurrentSequenceItem(current)
-                }
-                setCurrentSelectResponse(value)
-            }
-            if (currentSequenceItem) {
-                const currentResponse = responseMap.get(currentSequenceItem.id)
-                if (currentResponse) setCurrentSelectResponse({...currentResponse})
-            }
-        },
-        [responseMap],
-        {
-            wait: 200
-        }
-    )
-    const updateData = useThrottleFn(
-        (fuzzerIndex: string) => {
-            if (fuzzerIndex === "-1") {
-                onClearRef()
-            }
-            const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
-            const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
-            if (failedBuffer.length + successBuffer.length === 0) {
-                return
-            }
-            const newSequenceList = sequenceList.map((item) => {
-                if (item.disabled) {
-                    return {
-                        ...item,
-                        disabled: item.id === fuzzerIndex ? false : true
-                    }
-                } else {
-                    return item
-                }
-            })
-            setSequenceList([...newSequenceList])
-
-            let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-            let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
-            if (successBuffer.length + failedBuffer.length === 1) {
-                const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
-                // 设置第一个 response
-                setResponse(fuzzerIndex, {
-                    id: fuzzerIndex,
-                    onlyOneResponse,
-                    successCount: currentSuccessCount,
-                    failedCount: currentFailedCount,
-                    successFuzzer: successBuffer,
-                    failedFuzzer: failedBuffer
-                })
-                return
-            }
-            const currentResponse = getResponse(fuzzerIndex)
-            const newResponse: ResponseProps = {
+        let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+        let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+        if (successBuffer.length + failedBuffer.length === 1) {
+            const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
+            // 设置第一个 response
+            setResponse(fuzzerIndex, {
                 id: fuzzerIndex,
-                onlyOneResponse: emptyFuzzer,
-                ...currentResponse,
+                onlyOneResponse,
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
                 successFuzzer: successBuffer,
                 failedFuzzer: failedBuffer
-            }
-            setResponse(fuzzerIndex, newResponse)
-        },
-        {wait: 200}
-    ).run
+            })
+            return
+        }
+        const currentResponse = getResponse(fuzzerIndex)
+        const newResponse: ResponseProps = {
+            id: fuzzerIndex,
+            onlyOneResponse: emptyFuzzer,
+            ...currentResponse,
+            successCount: currentSuccessCount,
+            failedCount: currentFailedCount,
+            successFuzzer: successBuffer,
+            failedFuzzer: failedBuffer
+        }
+        setResponse(fuzzerIndex, newResponse)
+    })
     const onClearRef = useMemoizedFn(() => {
         successCountRef.current.clear()
         failedCountRef.current.clear()
@@ -398,14 +403,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }),
         {wait: 200}
     ).run
+
     /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
     const onIsDropped = useMemoizedFn((data, fuzzerIndex) => {
         const currentRequest = sequenceList.find((ele) => ele.id === fuzzerIndex)
         if (!currentRequest) return
         const advancedConfigValue: AdvancedConfigValueProps = {
             ...defaultAdvancedConfigValue,
-            ...advancedConfigValueToFuzzerRequests(currentRequest.pageParams.advancedConfigValue)
+            ...currentRequest.pageParams.advancedConfigValue
         }
+
         if (advancedConfigValue.matchers?.length > 0) {
             // 设置了 matchers
             const hit = data["MatchedByMatcher"] === true
@@ -417,6 +424,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 (!hit && advancedConfigValue.filterMode === "match")
             ) {
                 // 丢弃不匹配的内容
+                let dropCount = getDroppedCount(fuzzerIndex)
+                if (dropCount) {
+                    dropCount++
+                } else {
+                    dropCount = 1
+                }
+                setDroppedCount(fuzzerIndex, dropCount)
                 return true
             }
             return false
@@ -495,6 +509,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             return
         }
         setLoading(true)
+        onClearRef()
+        resetResponse()
+        resetDroppedCount()
+        setCurrentSelectResponse(undefined)
         const httpParams: FuzzerRequestProps[] = sequenceList.map((item) => ({
             ...advancedConfigValueToFuzzerRequests(item.pageParams.advancedConfigValue),
             RequestRaw: Buffer.from(item.pageParams.request, "utf8"), // StringToUint8Array(request, "utf8"),
@@ -626,6 +644,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                             )}
                                                         >
                                                             <SequenceItem
+                                                                dropCount={getDroppedCount(sequenceItem.id)}
                                                                 pageNodeList={originSequenceListRef.current}
                                                                 item={sequenceItem}
                                                                 isSelect={currentSequenceItem?.id === sequenceItem.id}
@@ -689,6 +708,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         isShowLine,
         errorIndex,
         isSelect,
+        dropCount,
         onUpdateItem,
         onApplyOtherNodes,
         onRemove,
@@ -827,6 +847,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         disabled={disabled}
                     />
                 </div>
+                <div>{dropCount ? <YakitTag color='danger'>已丢弃[{dropCount}]个响应</YakitTag> : null}</div>
             </div>
         </div>
     )

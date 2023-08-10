@@ -86,12 +86,13 @@
         }
         &-item {
             @extend .display-column-center;
-            padding: 8px 8px 16px;
+            padding: 8px;
             background-color: #fff;
             border-radius: 4px;
             border: 1px solid var(--yakit-border-color);
             position: relative;
             margin-bottom: 16px;
+            gap: 8px;
             &:hover {
                 border-color: var(--yakit-primary-5);
                 box-shadow: 0 0 2px 2px var(--yakit-primary-2);
@@ -114,7 +115,6 @@
                 @extend .display-flex-center;
                 justify-content: space-between;
                 color: var(--yakit-helper-text-color);
-                padding-bottom: 8px;
 
                 .drag-sort-icon {
                     @extend .icon;
