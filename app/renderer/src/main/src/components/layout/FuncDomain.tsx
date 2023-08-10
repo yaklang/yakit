@@ -771,7 +771,7 @@ const GetUIOpSettingMenu = () => {
             },
             {
                 key: "diagnose-network",
-                label: "网络检测"
+                label: "网络诊断"
             }
         ]
     }
@@ -876,7 +876,7 @@ const GetUIOpSettingMenu = () => {
         },
         {
             key: "diagnose-network",
-            label: "网络检测"
+            label: "网络诊断"
         }
     ]
 }
