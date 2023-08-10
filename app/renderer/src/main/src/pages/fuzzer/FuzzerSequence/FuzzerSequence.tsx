@@ -548,6 +548,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ...extraSetting
         }))
         setSequenceList([...newSequenceList])
+        yakitNotify('success','应用成功')
     })
     const onRemoveNode = useMemoizedFn((index: number) => {
         if (index === errorIndex) {
@@ -766,12 +767,13 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                             <span className={styles["cog-popover-heard-title"]}>节点配置</span>
                                             <span
                                                 className={styles["cog-popover-heard-extra"]}
-                                                onClick={() =>
+                                                onClick={(e) =>{
+                                                    e.stopPropagation()
                                                     onApplyOtherNodes({
                                                         inheritVariables: item.inheritVariables,
                                                         inheritCookies: item.inheritCookies
                                                     })
-                                                }
+                                                }}
                                             >
                                                 应用到其他节点
                                             </span>
@@ -806,6 +808,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                     visible={visible}
                                     onVisibleChange={(v) => {
                                         if (disabled) return
+                                        if(!item.pageId)return
                                         setVisible(v)
                                     }}
                                     overlayClassName={styles["cog-popover"]}

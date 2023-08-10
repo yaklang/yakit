@@ -82,8 +82,10 @@
         display: flex;
         flex: 1;
         border-radius: 8px;
+        border: 1px solid var(--yakit-border-color);
         video{
             object-fit: cover;
+            border-radius: 8px;
         }
         &-video {
             width: 100%;
