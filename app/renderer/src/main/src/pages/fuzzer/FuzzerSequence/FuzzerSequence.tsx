@@ -219,35 +219,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const endToken = `${token}-end`
 
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
-            onHandleHTTPFuzzerSequenceResponse(data)
-        })
-        ipcRenderer.on(endToken, () => {
-            updateData("-1")
-            setTimeout(() => {
-                setLoading(false)
-            }, 200)
-        })
-        ipcRenderer.on(errToken, (e, details) => {
-            yakitNotify("error", `提交模糊测试请求失败 ${details}`)
-            updateData("-1")
-            setTimeout(() => {
-                onUpdateSequence()
-            }, 200)
-        })
-
-        return () => {
-            ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
-            ipcRenderer.removeAllListeners(errToken)
-            ipcRenderer.removeAllListeners(dataToken)
-            ipcRenderer.removeAllListeners(endToken)
-        }
-    }, [])
-
-    const onHandleHTTPFuzzerSequenceResponse = useThrottleFn(
-        useMemoizedFn((data: FuzzerSequenceResponse) => {
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
-            console.log("data", Request, Response)
+            console.log("data",FuzzerIndex, Request, Response)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -276,7 +250,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 Count: 0,
                 cellClassName: Response.MatchedByMatcher ? `color-opacity-bg-${Response.HitColor}` : ""
             } as FuzzerResponse
-
+    
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
                 if (successList) {
@@ -295,9 +269,29 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
             }
             updateData(FuzzerIndex)
-        }),
-        {wait: 200}
-    ).run
+        })
+        ipcRenderer.on(endToken, () => {
+            updateData("-1")
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
+        ipcRenderer.on(errToken, (e, details) => {
+            yakitNotify("error", `提交模糊测试请求失败 ${details}`)
+            updateData("-1")
+            setTimeout(() => {
+                onUpdateSequence()
+            }, 200)
+        })
+
+        return () => {
+            // ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
+            ipcRenderer.removeAllListeners(errToken)
+            ipcRenderer.removeAllListeners(dataToken)
+            ipcRenderer.removeAllListeners(endToken)
+        }
+    }, [])
+
     /**点击开始执行后，如果没有选中项，则设置返回的第一个为选中item */
     const onSetFirstAsSelected = useMemoizedFn((fuzzerIndex: string) => {
         if (!currentSequenceItem) {
@@ -305,7 +299,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (current) setCurrentSequenceItem(current)
         }
     })
-    const updateData = useMemoizedFn((fuzzerIndex: string) => {
+    const updateData = useThrottleFn((fuzzerIndex: string) => {
         if (fuzzerIndex === "-1") {
             onClearRef()
             const newSequenceList = sequenceList.map((item) => ({
@@ -358,7 +352,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             failedFuzzer: failedBuffer
         }
         setResponse(fuzzerIndex, newResponse)
-    })
+    },{wait:200}).run
     const onClearRef = useMemoizedFn(() => {
         successCountRef.current.clear()
         failedCountRef.current.clear()
@@ -530,7 +524,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
-        ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
+        // ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
     })
     const onAddSequenceNode = useMemoizedFn(() => {
         if (isEmptySequence(sequenceList)) {
