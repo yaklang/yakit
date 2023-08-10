@@ -745,7 +745,10 @@ const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
                 let str: string = value ? "网络连接正常" : "网络无法连接"
                 setResult(str)
             })
-            .catch(() => {})
+            .catch((e) => {
+                yakitFailed(`${e}`)
+                setResult(`无法检测: ${e}`)
+            })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
     const layout = {

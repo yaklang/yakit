@@ -48,6 +48,7 @@ export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any
 
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     id: number
+    payloads?: string[]
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
@@ -119,7 +120,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     return (
         <HTTPFlowDetail
             onClose={rsp.onClosed}
-            id={id}
+            id={id} payloads={rsp?.response ? rsp.response.Payloads : undefined}
             isFront={index === undefined ? undefined : index === 0}
             isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
             fetchRequest={fetchInfo}
@@ -132,46 +133,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [requestEditor, setRequestEditor] = useState<IMonacoEditor>()
     const [responseEditor, setResponseEditor] = useState<IMonacoEditor>()
-    const actionFuzzer = [
-        {
-            id: "send-fuzzer-info",
-            label: "发送到Fuzzer",
-            contextMenuGroupId: "send-fuzzer-info",
-            run: () => {
-                ipcRenderer.invoke("send-to-tab", {
-                    type: "fuzzer",
-                    data: {
-                        isHttps: flow?.IsHTTPS,
-                        request: Uint8ArrayToString(flow?.Request || new Uint8Array(), "utf8")
-                    }
-                })
-                if (props.onClose) props.onClose()
-            }
-        }
-        // {
-        //     id: 'send-to-plugin',
-        //     label: '发送到数据包扫描',
-        //     contextMenuGroupId: 'send-fuzzer-info',
-        //     run: () => ipcRenderer.invoke("send-to-packet-hack", {
-        //         request: flow?.Request,
-        //         ishttps: flow?.IsHTTPS,
-        //         response: flow?.Response
-        //     })
-        // }
-    ]
 
     useEffect(() => {
         if (props.id <= 0) {
             return
         }
-        // ipcRenderer.on(props.hash, (e: any, data: HTTPFlow) => {
-        //     setFlow(data)
-        //     setTimeout(() => setLoading(false), 300)
-        // })
-        // ipcRenderer.on(`ERROR:${props.hash}`, (e: any, details: any) => {
-        //     failed(`查询该请求失败[${props.hash}]: ` + details)
-        // })
-
         setLoading(true)
         ipcRenderer
             .invoke("GetHTTPFlowById", {Id: props.id})
@@ -185,8 +151,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         // ipcRenderer.invoke("get-http-flow", props.hash)
 
         return () => {
-            // ipcRenderer.removeAllListeners(props.hash)
-            // ipcRenderer.removeAllListeners(`ERROR:${props.hash}`)
         }
     }, [props.id])
 
@@ -210,7 +174,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     {props.noHeader ? undefined : (
                         <PageHeader
                             title={`请求详情`}
-                            subTitle={props.id}
+                            subTitle={`${props.id}${(props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""}`}
                             extra={
                                 props.fetchRequest ? (
                                     <Space>
@@ -253,6 +217,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     {flow.Url}
                                 </Text>
                             </Descriptions.Item>
+                            {(props?.payloads || []).length > 0 && <Descriptions.Item key={"payloads"} span={4} label={"Payloads"}>
+                                <Text style={{maxWidth: 500}} copyable={true}>
+                                    {props.payloads?.join(",")}
+                                </Text>
+                            </Descriptions.Item>}
                             <Descriptions.Item key={"https"} span={1} label={"HTTPS"}>
                                 <Tag color={"geekblue"}>
                                     <div style={{maxWidth: 500}}>{flow.IsHTTPS ? "True" : "False"}</div>
