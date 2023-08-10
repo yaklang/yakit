@@ -104,21 +104,22 @@ interface PageNodeInfoProps {
      * @name 通过pageId删除该页面的数据 
      * @returns {PageNodeItemProps} 返回被删除的页面数据
     */
-    removePageNodeInfoByPageId: (key, pageId: string) => PageNodeItemProps|undefined
+    removePageNodeInfoByPageId: (key, pageId: string) => PageNodeItemProps | undefined
 
 
     getPageNodeInfoByPageGroupId: (key, pageGroupId: string) => PageNodeItemProps | undefined
     /**@name 设置组内的数据 */
     setPageNodeInfoByPageGroupId: (key, pageGroupId: string, list: PageNodeItemProps[]) => void
     /**@name 通过pageGroupId找到对应的组数据,向该组内新增数据 */
-    addPageNodeInfoByPageGroupId: (key, pageGroupId: string, val: PageNodeItemProps) => void
+    addPageNodeInfoByPageGroupId: (key, pageGroupId: string, val: PageNodeItemProps, destinationIndex?: number) => void
 
 
     /**@name 通过tab组的pageGroupId删除该组下的所有数据 */
     removePageNodeByPageGroupId: (key, pageGroupId: string) => void
     /**@name 1.通过tab组的pageGroupId删除该组下的所有数据2.将组(pageGroupId)内的数据从pageChildrenList扁平/游离状态 */
     flatPageChildrenListAndRemoveGroupByPageGroupId: (key, pageGroupId: string) => void
-
+    /**@name 组内交换顺序 */
+    exchangeOrderPageNodeByPageGroupId: (key, pageGroupId: string, sourceIndex: number, destinationIndex: number) => void
 
     /**@name 新增二级tab数据(包括游离和组两种类型的数据增加) */
     addPageNode: (key, list: PageNodeItemProps) => void
@@ -171,7 +172,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         if (!node) return
         const { pageNodeList } = node
         const itemNodeInfo = getPageNodeInfoById(pageNodeList, pageId)
-        const { index, subIndex, parentItem,currentItem} = itemNodeInfo;
+        const { index, subIndex, parentItem, currentItem } = itemNodeInfo;
         console.log('index, subIndex,', index, subIndex, itemNodeInfo)
         const newPageChildrenList = parentItem.pageChildrenList.filter(ele => ele.pageId !== pageId)
         if (newPageChildrenList.length === 0) {
@@ -247,7 +248,27 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
             pageNode: newVal
         })
     },
-    addPageNodeInfoByPageGroupId: (key, pageGroupId, val) => {
+    exchangeOrderPageNodeByPageGroupId: (key, pageGroupId, sourceIndex, destinationIndex) => {
+        const newVal = get().pageNode
+        const node: PageInfoProps | undefined = newVal.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        const index = pageNodeList.findIndex(ele => ele.pageId === pageGroupId)
+        if (index === -1) return
+        const currentGroup = pageNodeList[index]
+        // 交换元素位置
+        let temp = currentGroup.pageChildrenList[sourceIndex]
+        currentGroup.pageChildrenList[sourceIndex] = currentGroup.pageChildrenList[destinationIndex]
+        currentGroup.pageChildrenList[destinationIndex] = temp
+
+        pageNodeList[index] = currentGroup
+        newVal.set(key, { ...node })
+        console.log('exchangeOrderPageNodeByPageGroupId', newVal)
+        set({
+            pageNode: newVal
+        })
+    },
+    addPageNodeInfoByPageGroupId: (key, pageGroupId, val, destinationIndex) => {
         const newVal = get().pageNode
         const node: PageInfoProps | undefined = newVal.get(key);
         if (!node) return
@@ -256,9 +277,15 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         console.log('index', index, pageNodeList, pageGroupId)
         if (index === -1) return
         const length = pageNodeList[index].pageChildrenList.length
-        pageNodeList[index].pageChildrenList.push({ ...val, id: `${randomString(8)}-${length}` })
+
+        const addItem = { ...val, id: `${randomString(8)}-${length}` }
+        if (destinationIndex === undefined) {
+            pageNodeList[index].pageChildrenList.push(addItem)
+        } else {
+            pageNodeList[index].pageChildrenList.splice(destinationIndex, 0, addItem)
+        }
         newVal.set(key, { ...node })
-        console.log('addPageNodeInfoByPageGroupId', newVal, val)
+        console.log('addPageNodeInfoByPageGroupId', newVal)
         set({
             pageNode: newVal
         })

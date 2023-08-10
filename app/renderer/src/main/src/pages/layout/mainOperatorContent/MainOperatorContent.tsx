@@ -304,7 +304,7 @@ const reorder = (arr, index1, index2) => {
     }
 
     // 交换元素位置
-    var temp = arr[index1]
+    let temp = arr[index1]
     arr[index1] = arr[index2]
     arr[index2] = temp
 
@@ -1130,7 +1130,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
             })
             .catch((e) => {
-                console.info(e)
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
@@ -1691,7 +1690,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         updatePageNodeInfoByPageId,
         removePageNodeByPageGroupId,
         setPageNode,
-        getPageNodeInfoByPageGroupId
+        getPageNodeInfoByPageGroupId,
+        exchangeOrderPageNodeByPageGroupId
     } = usePageNode()
 
     useEffect(() => {
@@ -2044,6 +2044,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const newGroupChildrenList: MultipleNodeInfo[] = reorder(groupChildrenList, sourceIndex, destinationIndex)
         subPage[gIndex].groupChildren = newGroupChildrenList
         onUpdatePageCache(subPage)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+           // 序列排序
+           exchangeOrderPageNodeByPageGroupId(YakitRoute.HTTPFuzzer,groupId,sourceIndex, destinationIndex)
+        }
     })
     /** @description 不同一个组间移动 从组A到组B */
     const movingBetweenDifferentGroups = useMemoizedFn((result) => {
@@ -2079,8 +2083,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             // 删除组A中的序列化数据,向组B新增序列化数据,
-            // removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
-            addSequenceByPageGroupId(sourceItem, destinationGroupId)
+            addSequenceByPageGroupId(sourceItem, destinationGroupId,destinationIndex)
         }
     })
 
@@ -2158,8 +2161,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             // 向组B新增序列化数据,删除游离的数据，
-            addSequenceByPageGroupId(sourceItem, destinationGroupId)
-            // removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, sourceItem.id)
+            addSequenceByPageGroupId(sourceItem, destinationGroupId,destinationIndex)
         }
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
@@ -2865,13 +2867,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         addPageNode(YakitRoute.HTTPFuzzer, newPageNodeList)
     })
     /** 删除组A中的序列化数据,向组B新增序列化数据 */
-    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string) => {
+    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string,destinationIndex?:number) => {
         const removePageNode = removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
         if (removePageNode)
             addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, {
                 ...removePageNode,
                 pageGroupId: destinationGroupId
-            })
+            },destinationIndex)
     })
     /**
      * @description 从组内移除序列数据，并将移除的item变为游离的
