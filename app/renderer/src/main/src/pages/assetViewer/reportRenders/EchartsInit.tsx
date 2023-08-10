@@ -215,16 +215,16 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
       })
     useEffect(() => {
             const { name_verbose, name, data } = content;
-            let CRITICAL:number[] = [];
-            let MEDIUM:number[] = [];
-            let HIGH:number[] = [];
-            let LOW:number[] = [];
+            let CRITICAL:(number|null)[] = [];
+            let MEDIUM:(number|null)[] = [];
+            let HIGH:(number|null)[] = [];
+            let LOW:(number|null)[] = [];
             let xAxisData = data.map((item) => {
               const list = item.data || [];
-              let critical = 0;
-              let medium = 0;
-              let high = 0;
-              let low = 0;
+              let critical = null;
+              let medium = null;
+              let high = null;
+              let low = null;
               list.map((itemIn) => {
                 switch (itemIn.key) {
                   case "CRITICAL":
