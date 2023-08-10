@@ -119,6 +119,155 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
     )
 }
 
+// 堆叠柱状图
+export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
+    const {content} = props
+    const chartRef = useRef(null)
+    const optionRef = useRef<any>({
+        title: {
+          left: "center",
+          text: "柱状图标题",
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow",
+          },
+        },
+        legend: {
+          orient: "vertical", // 垂直方向
+          y: "center",
+          right: 0,
+          data: ["严重", "高危", "中危", "低危"],
+        },
+        grid: {
+          left: "6%",
+          right: "14%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        },
+        yAxis: {
+          name: "风险数(个)",
+          type: "value",
+        },
+        series: [
+          {
+            name: "低危",
+            type: "bar",
+            stack: "total",
+            label: {
+              show: true,
+            },
+            emphasis: {
+              focus: "series",
+            },
+            data: [320, 302, 301, 334, 390, 330, 320],
+            color: ["rgb(165,215,112)"],
+            barMaxWidth: 120, // 设置柱状图的最大宽度
+          },
+          {
+            name: "中危",
+            type: "bar",
+            stack: "total",
+            label: {
+              show: true,
+            },
+            emphasis: {
+              focus: "series",
+            },
+            data: [120, 132, 101, 134, 90, 230, 210],
+            color: ["rgb(252,203,44)"],
+            barMaxWidth: 120,
+          },
+          {
+            name: "高危",
+            type: "bar",
+            stack: "total",
+            label: {
+              show: true,
+            },
+            emphasis: {
+              focus: "series",
+            },
+            data: [220, 182, 191, 234, 290, 330, 310],
+            color: ["rgb(255,120,82)"],
+            barMaxWidth: 120,
+          },
+          {
+            name: "严重",
+            type: "bar",
+            stack: "total",
+            label: {
+              show: true,
+            },
+            emphasis: {
+              focus: "series",
+            },
+            data: [220, 182, 191, 234, 290, 330, 310],
+            color: ["red"],
+            barMaxWidth: 120,
+          },
+        ],
+      })
+    useEffect(() => {
+            const { name_verbose, name, data } = content;
+            let CRITICAL:number[] = [];
+            let MEDIUM:number[] = [];
+            let HIGH:number[] = [];
+            let LOW:number[] = [];
+            let xAxisData = data.map((item) => {
+              const list = item.data || [];
+              let critical = 0;
+              let medium = 0;
+              let high = 0;
+              let low = 0;
+              list.map((itemIn) => {
+                switch (itemIn.key) {
+                  case "CRITICAL":
+                    critical = itemIn.value;
+                    break;
+                  case "MEDIUM":
+                    medium = itemIn.value;
+                    break;
+                  case "HIGH":
+                    high = itemIn.value;
+                    break;
+                  case "LOW":
+                    low = itemIn.value;
+                    break;
+                }
+              });
+              CRITICAL.push(critical);
+              MEDIUM.push(medium);
+              HIGH.push(high);
+              LOW.push(low);
+              return item.key_verbose || item.key;
+            });
+            optionRef.current.title.text = name_verbose || name;
+            optionRef.current.xAxis.data = xAxisData;
+            optionRef.current.series[0].data = LOW;
+            optionRef.current.series[1].data = MEDIUM;
+            optionRef.current.series[2].data = HIGH;
+            optionRef.current.series[3].data = CRITICAL;
+        
+        // @ts-ignore
+        const myChart = echarts.init(chartRef.current)
+        myChart.setOption(optionRef.current)
+        return () => {
+            myChart.dispose()
+        }
+    }, [])
+    return (
+        <div className={styles["echarts-box"]}>
+            <div className={classNames(styles["echart-item"], styles["echart-item-stacked-vertical-bar"])} ref={chartRef}></div>
+        </div>
+    )
+}
+
 interface HollowPieProps {
     data: {name: any; value: any; direction?: string}[]
     color?: string[]
