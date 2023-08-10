@@ -95,13 +95,7 @@ module.exports = (win, getClient) => {
     /** 网络检测 */
     ipcMain.handle("try-network-detection", async (e, ip) => {
         return await new Promise((resolve, reject) => {
-            exec(`ping ${ip}`, (error, stdout, stderr) => {
-                if (error) {
-                    resolve(false)
-                } else {
-                    resolve(true)
-                }
-            })
+            reject("Unimplemented - use advanced network diagnose")
         })
     })
 
