@@ -72,7 +72,8 @@ export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((prop
                 if (props.autoSelectAll) {
                     setListNames(data.map((i) => i.ScriptName))
                 } else {
-                    setListNames([...(data || []).filter((i) => i.IsGeneralModule).map((i) => i.ScriptName)])
+                    // setListNames([...(data || []).filter((i) => i.IsGeneralModule).map((i) => i.ScriptName)])
+                    setListNames([])
                 }
             },
             () => setTimeout(() => setPluginLoading(false), 300),
