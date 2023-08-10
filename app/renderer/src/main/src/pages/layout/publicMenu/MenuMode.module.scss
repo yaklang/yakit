@@ -9,6 +9,12 @@
         background-color: #eaecf3;
     }
 
+    .menu-icon-wrapper {
+        flex: 1 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
     .icon-wrapper {
         display: flex;
         border-radius: 4px;
@@ -69,7 +75,10 @@
         cursor: pointer;
 
         .childs-menu-wrapper {
+            flex: 1 0 0;
             display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 4px 0;
             gap: 4px;
         }

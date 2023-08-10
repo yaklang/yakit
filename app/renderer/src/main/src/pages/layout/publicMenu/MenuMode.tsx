@@ -68,8 +68,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             {mode === "渗透测试" && (
                 <>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.HTTPHacker)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicMitmIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicMitmIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>MITM</div>
                     </div>
@@ -124,15 +126,19 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             {mode === "安全工具" && (
                 <>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Mod_ScanPort)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicScanPortIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicScanPortIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>端口/指纹扫描</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.PoC)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicPocIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicPocIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>专项漏洞检测</div>
                     </div>
@@ -149,8 +155,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             )
                         }
                     >
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicSubDomainCollectionIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicSubDomainCollectionIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>子域名收集</div>
                     </div>
@@ -231,22 +239,28 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             {mode === "插件" && (
                 <>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Plugin_Store)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicPluginStoreIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicPluginStoreIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>插件商店</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Plugin_Owner)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicPluginOwnerIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicPluginOwnerIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>我的</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Plugin_Local)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicPluginLocalIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicPluginLocalIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>本地</div>
                     </div>
@@ -255,8 +269,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                         className={styles["vertical-menu-wrapper"]}
                         onClick={() => onMenu(YakitRoute.BatchExecutorPage)}
                     >
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicBatchPluginIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicBatchPluginIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>批量执行</div>
                     </div>
@@ -341,8 +357,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.ShellReceiver)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicShellReceiverIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicShellReceiverIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>端口监听器</div>
                     </div>
@@ -351,48 +369,62 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             {mode === "数据库" && (
                 <>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_HTTPHistory)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicHTTPHistoryIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicHTTPHistoryIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>History</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["multiple-vertical-menu-wrapper"]}>
                         <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Report)}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicReportIcon />
+                            <div className={styles["menu-icon-wrapper"]}>
+                                <div className={styles["icon-wrapper"]}>
+                                    <PublicReportIcon />
+                                </div>
                             </div>
                             <div className={styles["title-style"]}>报告</div>
                         </div>
                         <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Risk)}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicRiskIcon />
+                            <div className={styles["menu-icon-wrapper"]}>
+                                <div className={styles["icon-wrapper"]}>
+                                    <PublicRiskIcon />
+                                </div>
                             </div>
                             <div className={styles["title-style"]}>漏洞</div>
                         </div>
                         <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Ports)}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicPortsIcon />
+                            <div className={styles["menu-icon-wrapper"]}>
+                                <div className={styles["icon-wrapper"]}>
+                                    <PublicPortsIcon />
+                                </div>
                             </div>
                             <div className={styles["title-style"]}>端口</div>
                         </div>
                         <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Domain)}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicDomainIcon />
+                            <div className={styles["menu-icon-wrapper"]}>
+                                <div className={styles["icon-wrapper"]}>
+                                    <PublicDomainIcon />
+                                </div>
                             </div>
                             <div className={styles["title-style"]}>域名</div>
                         </div>
                         <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.WebsiteTree)}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicWebsiteTreeIcon />
+                            <div className={styles["menu-icon-wrapper"]}>
+                                <div className={styles["icon-wrapper"]}>
+                                    <PublicWebsiteTreeIcon />
+                                </div>
                             </div>
                             <div className={styles["title-style"]}>网站树</div>
                         </div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_CVE)}>
-                        <div className={styles["icon-wrapper"]}>
-                            <PublicCVEIcon />
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicCVEIcon />
+                            </div>
                         </div>
                         <div className={styles["title-style"]}>CVE 管理</div>
                     </div>

@@ -652,7 +652,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 refreshMode={"debounce"}
                 refreshRate={30}
             />
-            <div ref={wrapperRef} className={styles["yakit-editor-container"]} onContextMenu={showContextMenu}>
+            <div ref={wrapperRef} className={styles["yakit-editor-container"]} onContextMenu={(e)=>{
+                e.stopPropagation()
+                e.preventDefault()
+                showContextMenu()
+            }}>
                 <MonacoEditor
                     // height={100}
                     theme={theme || "kurior"}
