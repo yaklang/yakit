@@ -7,7 +7,7 @@ import {Tag} from "antd"
 import {JSONTableRender, ReportMergeTable, RiskTable} from "./jsonTableRender"
 import {PieGraph} from "../../graph/PieGraph"
 import {BarGraph} from "../../graph/BarGraph"
-import {EchartsCard, HollowPie, MultiPie, NightingleRose, VerticalOptionBar} from "./EchartsInit"
+import {EchartsCard, HollowPie, MultiPie, NightingleRose, StackedVerticalBar, VerticalOptionBar} from "./EchartsInit"
 import {FoldHoleCard, FoldRuleCard} from "./ReportExtendCard"
 
 export interface ReportItemRenderProp {
@@ -16,7 +16,7 @@ export interface ReportItemRenderProp {
 
 export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
     const {type, content} = props.item
-    switch (props.item.type) {
+    switch (type) {
         case "markdown":
             return <ReportMarkdownBlock item={props.item} />
         case "json-table":
@@ -91,6 +91,8 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                             case "general":
                                 // kv图展示柱状图
                                 return <VerticalOptionBar content={content} />
+                            case "year-cve":
+                                return <StackedVerticalBar content={content}/>
                             case "card":
                                 const dataTitle = content?.name_verbose || content?.name || ""
                                 return <EchartsCard dataTitle={dataTitle} dataSource={data} />
