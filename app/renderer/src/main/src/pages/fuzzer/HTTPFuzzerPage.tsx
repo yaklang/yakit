@@ -1259,15 +1259,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }
                         />
                     </div>
-                    <div className={styles["fuzzer-heard-force"]}>
-                        <span className={styles["fuzzer-heard-https"]}>国密TLS</span>
-                        <YakitCheckbox
-                            checked={advancedConfigValue.isGmTLS}
-                            onChange={(e) =>
-                                setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})
-                            }
-                        />
-                    </div>
+                    {/*<div className={styles["fuzzer-heard-force"]}>*/}
+                    {/*    <span className={styles["fuzzer-heard-https"]}>国密TLS</span>*/}
+                    {/*    <YakitCheckbox*/}
+                    {/*        checked={advancedConfigValue.isGmTLS}*/}
+                    {/*        onChange={(e) =>*/}
+                    {/*            setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})*/}
+                    {/*        }*/}
+                    {/*    />*/}
+                    {/*</div>*/}
                     <Divider type='vertical' style={{margin: 0, top: 1}}/>
                     <div className={styles["display-flex"]}>
                         <ShareData module='fuzzer' getShareContent={getShareContent}/>
