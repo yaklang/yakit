@@ -515,9 +515,7 @@ if len(potentialRisks) != 0 {
 
 showWeakPassWordLine = []
 for _, riskIns := range weakPassWordRisks {
-    if riskIns.IP == "" {
-        continue
-    }
+
     level = "-"
     if str.Contains(riskIns.Severity, "critical") { level = "严重" }
     if str.Contains(riskIns.Severity, "high") { level = "高危" }
@@ -543,10 +541,10 @@ for _, riskIns := range weakPassWordRisks {
 }
 
 if len(weakPassWordRisks) != 0 {
-    reportInstance.Markdown(sprintf("### 3.3.5 弱口令风险列表"))
-    reportInstance.Markdown(\`对资产进行弱口令检测，检测到 %v 个弱口令，请尽快修复\`, len(weakPassWordRisks))
-    showWeakPassWordFormLine = []
-    for k, riskIns := range weakPassWordRisks {
+     reportInstance.Markdown(sprintf("### 3.3.5 弱口令风险列表"))
+     reportInstance.Markdown(sprintf(\`对资产进行弱口令检测，检测到 %v 个弱口令，请尽快修复\`, len(weakPassWordRisks)))
+     showWeakPassWordFormLine = []
+     for k, riskIns := range weakPassWordRisks {
          level = "-"
          if str.Contains(riskIns.Severity, "critical") {
              level = "严重"
@@ -568,11 +566,12 @@ if len(weakPassWordRisks) != 0 {
              showWeakPassWordFormLine,
              [k+1, riskIns.IP, riskIns.TitleVerbose, level],
          )
-    }
-    reportInstance.Table(
-        ["序号", "网站地址", "漏洞标题", "威胁风险"],
-        showWeakPassWordFormLine...,
-    )
+     }
+
+     reportInstance.Table(
+         ["序号", "网站地址", "漏洞标题", "威胁风险"],
+         showWeakPassWordFormLine...,
+     )
 } else {
     reportInstance.Markdown(sprintf("### 3.3.5 弱口令风险列表"))
     reportInstance.Markdown("对资产进行弱口令检测，检测到 0 个弱口令，暂无弱口令风险")
@@ -642,7 +641,9 @@ func showReport(risks) {
                 "value": response,
                 "type": "code"
             }
+            
           }
+         
         })
     }
 }
