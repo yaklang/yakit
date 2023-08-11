@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useKeyPress, useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 // 编辑器 注册
@@ -430,7 +430,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
      * editor编辑器的额外渲染功能:
      * 1、每行的换行符进行可视字符展示
      */
-    useEffect(() => {
+    useDebounceEffect(() => {
         if (props.type === "http") {
             const model = editor?.getModel()
             if (!model) {
@@ -507,7 +507,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 ...applyHost(),
             ])
         }
-    }, [editor])
+    }, 
+    [editor],
+    {
+        wait: 500
+    })
 
     /** 右键菜单-重渲染换行符功能是否显示的开关文字内容 */
     useEffect(() => {
