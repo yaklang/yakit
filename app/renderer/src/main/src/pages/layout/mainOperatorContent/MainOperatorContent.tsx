@@ -1649,7 +1649,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     } = useContext(MainOperatorContext)
     const {pageItem, index} = props
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
-    const [renderSubPage, setRenderSubPage] = useState<MultipleNodeInfo[]>([]) // 只管渲染
+    // const [renderSubPage, setRenderSubPage] = useState<MultipleNodeInfo[]>([]) // 只管渲染
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
         verbose: "",
@@ -1743,21 +1743,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdateSubPage(pageItem, pageItem.multipleNode || [])
     }, [pageItem.multipleNode])
 
-    useEffect(() => {
-        // 扁平化 只管渲染
-        const newData: MultipleNodeInfo[] = []
-        subPage.forEach((ele) => {
-            if (ele.groupChildren && ele.groupChildren.length > 0) {
-                ele.groupChildren.forEach((groupItem) => {
-                    newData.push({...groupItem})
-                })
-            } else {
-                newData.push({...ele})
-            }
-        })
-        setRenderSubPage(newData)
-        // onUpdateSubPage(pageItem, subPage)
-    }, [subPage])
     // 切换一级页面时聚焦
     useEffect(() => {
         const key = routeConvertKey(pageItem.route, pageItem.pluginName)
@@ -2900,6 +2885,19 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         addPageNode(YakitRoute.HTTPFuzzer, newPageNode)
     })
     // ------------------- 序列化相关 end -------------------
+    const renderSubPage=useMemo(()=>{
+        const newData: MultipleNodeInfo[] = []
+        subPage.forEach((ele) => {
+            if (ele.groupChildren && ele.groupChildren.length > 0) {
+                ele.groupChildren.forEach((groupItem) => {
+                    newData.push({...groupItem})
+                })
+            } else {
+                newData.push({...ele})
+            }
+        })
+        return newData
+    },[subPage])
     return (
         <div
             ref={tabsRef}

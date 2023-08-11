@@ -524,7 +524,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
-        // ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
+        ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
     })
     const onAddSequenceNode = useMemoizedFn(() => {
         if (isEmptySequence(sequenceList)) {
