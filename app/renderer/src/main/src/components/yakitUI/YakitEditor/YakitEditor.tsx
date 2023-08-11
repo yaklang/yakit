@@ -457,7 +457,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
             const applyHost = (): YakitIModelDecoration[] => {
                 const text = model.getValue();
-                console.info(text)
                 const match = /\nHost:/.exec(text);
                 if (!match) {
                     return []
