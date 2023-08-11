@@ -3207,6 +3207,7 @@ message QueryHTTPFlowRequest {
 
   string RuntimeId = 31;
   string FromPlugin = 32;
+  bool  Full = 33;
 }
 
 message DeleteHTTPFlowRequest {
