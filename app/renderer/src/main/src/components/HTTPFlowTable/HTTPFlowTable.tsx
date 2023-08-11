@@ -1909,13 +1909,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "导出数据",
             label: "导出数据",
             onClickBatch: (list, n) => {
-                const titleValue = columns.filter((item)=>!["操作"].includes(item.title)).map((item)=>item.title)
+                const titleValue = columns.filter((item)=>!["序号","操作"].includes(item.title)).map((item)=>item.title)
                 const exportValue = [...titleValue,"请求包","响应包"]
                 const m = showYakitModal({
                     title: "导出字段",
                     content: <ExportSelect 
                                 exportValue={exportValue}
-                                setExportTitle={setExportTitle}
+                                setExportTitle={(v:string[])=>setExportTitle(["序号",...v])}
                                 exportKey="MITM-HTTP-HISTORY-EXPORT-KEY"
                                 fileName="History"
                                 getData={(pagination)=>getExcelData(pagination,list)}
