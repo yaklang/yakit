@@ -204,16 +204,24 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
     const [checkValue,setCheckValue] = useState<CheckboxValueType[]>([])
     useEffect(()=>{
         getRemoteValue(exportKey).then((setting) => {
-            if (!setting) return
-            const values = JSON.parse(setting)
-            setCheckValue(values?.checkedValues)
-            setExportTitle(values?.checkedValues as string[])
+            if (!setting) {
+                // 第一次进入 默认勾选所有导出字段
+                setExportTitle(exportValue as string[])
+                setCheckValue(exportValue)
+            }
+            else{
+                const values = JSON.parse(setting)
+                setCheckValue(values?.checkedValues)
+                setExportTitle(values?.checkedValues as string[])  
+            }
+            
         })
     },[])
     const onChange = (checkedValues: CheckboxValueType[]) => {
-        setExportTitle(checkedValues as string[])
-        setCheckValue(checkedValues)
-        setRemoteValue(exportKey, JSON.stringify({checkedValues}))
+        const orderCheckedValues = exportValue.filter((item)=>checkedValues.includes(item))
+        setExportTitle(orderCheckedValues)
+        setCheckValue(orderCheckedValues)
+        setRemoteValue(exportKey, JSON.stringify({checkedValues:orderCheckedValues}))
     }
     return (
         <div className={styles["export-select"]}>

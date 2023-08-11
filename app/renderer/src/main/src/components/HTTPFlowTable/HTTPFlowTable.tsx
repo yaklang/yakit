@@ -1623,9 +1623,40 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if(["Request","Response"].includes(j)){
                     return new Buffer(v[j]).toString("utf8")
                 }
+                if(j === "UpdatedAt"){
+                    return formatTimestamp(v[j])
+                }
                 return v[j]
             })
         )
+    }
+
+    // 数据导出
+    const initExcelData = (resolve,newExportData: HTTPFlow[],rsp) => {
+        let exportData: any = []
+        const header: string[] = []
+        const filterVal: string[] = []
+        exportTitle.map((item)=>{
+            if(item==="请求包"){
+                header.push(item)
+                filterVal.push("Request")
+            }
+            else if(item==="响应包"){
+                header.push(item)
+                filterVal.push("Response")
+            }
+            else{
+                const itemData = columns.filter((itemIn)=>itemIn.title===item)[0]
+                header.push(item)
+                filterVal.push(itemData.dataKey)
+            }
+        })
+        exportData = formatJson(filterVal, newExportData)
+        resolve({
+            header,
+            exportData,
+            response: rsp
+        })
     }
 
     const getExcelData = useMemoizedFn((pagination,list:HTTPFlow[]) => {
@@ -1644,57 +1675,43 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     : undefined,
                 BeforeBodyLength: params.BeforeBodyLength
                     ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                    : undefined
+                    : undefined,
+                Full: true
             }
 
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-
-            ipcRenderer
+            if (isAllSelect) {
+                ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
                     const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
-                    const newExportData = isAllSelect?newData:list
-                    //    数据导出
-                    let exportData: any = []
-                    const header: string[] = []
-                    const filterVal: string[] = []
-                    exportTitle.map((item)=>{
-                        if(item==="请求包"){
-                            header.push(item)
-                            filterVal.push("Request")
-                        }
-                        else if(item==="响应包"){
-                            header.push(item)
-                            filterVal.push("Response")
-                        }
-                        else{
-                           const itemData = columns.filter((itemIn)=>itemIn.title===item)[0]
-                           header.push(item)
-                           filterVal.push(itemData.dataKey)
-                        }
-                    })
-                    exportData = formatJson(filterVal, newExportData)
-                    resolve({
-                        header:exportTitle,
-                        exportData,
-                        response: isAllSelect?rsp:{
-                            Data:newExportData,
-                            Total:newExportData.length,
-                            Pagination:{
-                                Limit: "100000",
-                                Order: "",
-                                OrderBy: "",
-                                Page: "1"
-                            }
-                        }
-                    })
+                    initExcelData(resolve,newData,rsp)
                 })
                 .catch((e: any) => {
                     yakitNotify("error", `query HTTP Flow failed: ${e}`)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 100))
+            }
+            else{
+                const Ids:number[] = list.map((item)=>parseInt(item.Id+""))
+                ipcRenderer
+                .invoke("GetHTTPFlowByIds", {Ids})
+                .then((rsp: {Data:HTTPFlow[]}) => {
+                    initExcelData(resolve,rsp.Data,{
+                        Data:rsp.Data,
+                        Total:rsp.Data.length,
+                        Pagination:{
+                            Limit: "100000",
+                            Order: "",
+                            OrderBy: "",
+                            Page: "1"
+                        }
+                    })
+                })
+            }
+            
             })
     })
     const menuData = [
@@ -1892,7 +1909,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "导出数据",
             label: "导出数据",
             onClickBatch: (list, n) => {
-                const titleValue = columns.filter((item)=>!["操作","序号"].includes(item.title)).map((item)=>item.title)
+                const titleValue = columns.filter((item)=>!["操作"].includes(item.title)).map((item)=>item.title)
                 const exportValue = [...titleValue,"请求包","响应包"]
                 const m = showYakitModal({
                     title: "导出字段",

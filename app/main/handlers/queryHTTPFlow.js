@@ -98,6 +98,22 @@ module.exports = (win, getClient) => {
         return await asyncGetHTTPFlowById(params)
     })
 
+    // asyncGetHTTPFlowByIds wrapper
+    const asyncGetHTTPFlowByIds = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetHTTPFlowByIds(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetHTTPFlowByIds", async (e, params) => {
+        return await asyncGetHTTPFlowByIds(params)
+    })
+
     // asyncGetAvailableYakScriptTags wrapper
     const asyncGetAvailableYakScriptTags = (params) => {
         return new Promise((resolve, reject) => {
