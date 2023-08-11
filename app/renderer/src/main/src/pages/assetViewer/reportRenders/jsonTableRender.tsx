@@ -53,6 +53,21 @@ export interface ReportTableProp {
 export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
     const { data: datas } = props;
     const { data, header } = JSON.parse(datas);
+    let newData:string[][] = []
+    const result = data.reduce((acc, item) => {
+      const key = item[0];
+      if (!acc[key]) {
+          acc[key] = [];
+      }
+      acc[key].push(item);
+      return acc;
+  }, {});
+  const sortedArr = Object.values(result);
+  sortedArr.map((item)=>{
+    if(Array.isArray(item)){
+      newData = [...newData,...item]
+    }
+  })
   
     const columns: { title: string; dataIndex: string; key: string }[] = (
       header as string[]
@@ -63,11 +78,11 @@ export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
           dataIndex: `name-${index}`,
           key: `name-${index}`,
           render: (text: any, record: any, index: number) => {
-            const firstRowIndex = data.findIndex(
+            const firstRowIndex = newData.findIndex(
               (item: string[]) => item[0] === text
             );
             if (index === firstRowIndex) {
-              const count = data.filter(
+              const count = newData.filter(
                 (item: string[]) => item[0] === text
               ).length;
               return {
@@ -92,7 +107,7 @@ export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
         key: `name-${index}`,
       };
     });
-    const dataSource = (data as string[][]).map((item, index) => {
+    const dataSource = (newData as string[][]).map((item, index) => {
       const info: { [key: string]: any } = {
         key: `${index}`,
       };
