@@ -98,3 +98,12 @@
         }
     }
 }
+.render-html-box{
+    height: 100%;
+    overflow: auto;
+    :global {
+        img{
+            max-width: 100%;
+        }
+    }
+}

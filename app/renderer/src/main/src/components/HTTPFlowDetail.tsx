@@ -7,6 +7,7 @@ import {
     Descriptions,
     Empty,
     PageHeader,
+    Radio,
     Row,
     Space,
     Spin,
@@ -38,9 +39,11 @@ import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import { NewEditorSelectRange } from "./NewEditorSelectRange"
-import { HTTPFuzzerRangeReadOnlyEditorMenu } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {NewEditorSelectRange} from "./NewEditorSelectRange"
+import {HTTPFuzzerRangeReadOnlyEditorMenu} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
+import {YakitRadioButtons} from "./yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -120,7 +123,8 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     return (
         <HTTPFlowDetail
             onClose={rsp.onClosed}
-            id={id} payloads={rsp?.response ? rsp.response.Payloads : undefined}
+            id={id}
+            payloads={rsp?.response ? rsp.response.Payloads : undefined}
             isFront={index === undefined ? undefined : index === 0}
             isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
             fetchRequest={fetchInfo}
@@ -150,8 +154,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
         // ipcRenderer.invoke("get-http-flow", props.hash)
 
-        return () => {
-        }
+        return () => {}
     }, [props.id])
 
     const onCloseDetails = useMemoizedFn(() => {
@@ -174,7 +177,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     {props.noHeader ? undefined : (
                         <PageHeader
                             title={`请求详情`}
-                            subTitle={`${props.id}${(props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""}`}
+                            subTitle={`${props.id}${
+                                (props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""
+                            }`}
                             extra={
                                 props.fetchRequest ? (
                                     <Space>
@@ -217,11 +222,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     {flow.Url}
                                 </Text>
                             </Descriptions.Item>
-                            {(props?.payloads || []).length > 0 && <Descriptions.Item key={"payloads"} span={4} label={"Payloads"}>
-                                <Text style={{maxWidth: 500}} copyable={true}>
-                                    {props.payloads?.join(",")}
-                                </Text>
-                            </Descriptions.Item>}
+                            {(props?.payloads || []).length > 0 && (
+                                <Descriptions.Item key={"payloads"} span={4} label={"Payloads"}>
+                                    <Text style={{maxWidth: 500}} copyable={true}>
+                                        {props.payloads?.join(",")}
+                                    </Text>
+                                </Descriptions.Item>
+                            )}
                             <Descriptions.Item key={"https"} span={1} label={"HTTPS"}>
                                 <Tag color={"geekblue"}>
                                     <div style={{maxWidth: 500}}>{flow.IsHTTPS ? "True" : "False"}</div>
@@ -298,7 +305,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     editorInfo={editorInfo}
                                                     rangeValue={
                                                         (requestEditor &&
-                                                            requestEditor.getModel()?.getValueInRange(requestEditor.getSelection() as any)) ||
+                                                            requestEditor
+                                                                .getModel()
+                                                                ?.getValueInRange(
+                                                                    requestEditor.getSelection() as any
+                                                                )) ||
                                                         ""
                                                     }
                                                 />
@@ -326,7 +337,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     editorInfo={editorInfo}
                                                     rangeValue={
                                                         (responseEditor &&
-                                                            responseEditor.getModel()?.getValueInRange(responseEditor.getSelection() as any)) ||
+                                                            responseEditor
+                                                                .getModel()
+                                                                ?.getValueInRange(
+                                                                    responseEditor.getSelection() as any
+                                                                )) ||
                                                         ""
                                                     }
                                                 />
@@ -450,9 +465,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const { id } = props
+    const {id} = props
     const [flow, setFlow] = useState<HTTPFlow>()
-    const [isSelect,setIsSelect] = useState<boolean>(false)
+    const [isSelect, setIsSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
@@ -468,7 +483,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             if (!data) {
                 return
             }
-            const is:boolean = JSON.parse(data).is
+            const is: boolean = JSON.parse(data).is
             setFold(is)
         })
         setFlow(undefined)
@@ -584,7 +599,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is:true}))
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
                                                         setFold(true)
                                                     }}
                                                 />
@@ -616,37 +631,36 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             <HTTPFlowExtractedDataTable
                                 httpFlowHash={flow?.Hash || ""}
                                 title={
-                                    <div className={styles['table-header']}>
+                                    <div className={styles["table-header"]}>
                                         <Button.Group size={"small"}>
-                                        {existedInfoType.map((i) => {
-                                            return (
-                                                <Button
-                                                    type={infoType === i ? "primary" : "default"}
-                                                    onClick={() => {
-                                                        setInfoType(i)
-                                                    }}
-                                                    key={i}
-                                                >
-                                                    {infoTypeVerbose(i)}
-                                                </Button>
-                                            )
-                                        })}
-                                    </Button.Group>
-                                    <div className={classNames(styles["http-history-fold-box"])}>
-                                        <div className={styles["http-history-icon-box"]}>
-                                            <Tooltip placement='top' title='向右收起'>
-                                                <SideBarOpenIcon
-                                                    className={styles["fold-icon"]}
-                                                    onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is:true}))
-                                                        setFold(true)
-                                                    }}
-                                                />
-                                            </Tooltip>
+                                            {existedInfoType.map((i) => {
+                                                return (
+                                                    <Button
+                                                        type={infoType === i ? "primary" : "default"}
+                                                        onClick={() => {
+                                                            setInfoType(i)
+                                                        }}
+                                                        key={i}
+                                                    >
+                                                        {infoTypeVerbose(i)}
+                                                    </Button>
+                                                )
+                                            })}
+                                        </Button.Group>
+                                        <div className={classNames(styles["http-history-fold-box"])}>
+                                            <div className={styles["http-history-icon-box"]}>
+                                                <Tooltip placement='top' title='向右收起'>
+                                                    <SideBarOpenIcon
+                                                        className={styles["fold-icon"]}
+                                                        onClick={() => {
+                                                            setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                            setFold(true)
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            </div>
                                         </div>
                                     </div>
-                                    </div>
-                                    
                                 }
                             />
                         </Col>
@@ -663,10 +677,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             )}
                         >
                             <Tooltip placement='top' title='向左展开'>
-                                <SideBarCloseIcon className={styles["fold-icon"]} onClick={() => {
-                                        setRemoteValue("IsFoldValue", JSON.stringify({is:false}))
+                                <SideBarCloseIcon
+                                    className={styles["fold-icon"]}
+                                    onClick={() => {
+                                        setRemoteValue("IsFoldValue", JSON.stringify({is: false}))
                                         setFold(false)
-                                    }} />
+                                    }}
+                                />
                             </Tooltip>
                         </div>
                     </div>
@@ -682,8 +699,76 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flow?: HTTPFlow
     loading: boolean
 }
+
+interface TypeOptionsProps {
+    value: string
+    label: string
+}
+
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
     const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading} = props
+    const [type, setType] = useState<"response" | "beautify" | "render">("response")
+    const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
+    const [originValue, setOriginValue] = useState<Uint8Array>(new Uint8Array())
+    const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
+    useEffect(() => {
+        setType("response")
+        if (flow?.Response) {
+            formatPacketRender(flow.Response, (packet) => {
+                if (packet) {
+                    setTypeOptions([
+                        {
+                            value: "response",
+                            label: "响应"
+                        },
+                        {
+                            value: "beautify",
+                            label: "美化"
+                        },
+                        {
+                            value: "render",
+                            label: "渲染"
+                        }
+                    ])
+                } else {
+                    setTypeOptions([
+                        {
+                            value: "response",
+                            label: "响应"
+                        },
+                        {
+                            value: "beautify",
+                            label: "美化"
+                        }
+                    ])
+                }
+            })
+        }
+    }, [flow?.Response])
+    useEffect(() => {
+        if (flow?.Response && type === "response") {
+            setOriginValue(flow.Response)
+        } else if (flow?.Response && type === "beautify") {
+            ;(async () => {
+                let beautifyValue = await prettifyPacketCode(new Buffer(flow.Response).toString("utf8"))
+                setOriginValue(beautifyValue as Uint8Array)
+            })()
+        } else if (flow?.Response && type === "render") {
+            ;(async () => {
+                let renderValue = await prettifyPacketRender(flow.Response)
+                setRenderHTML(
+                    <div
+                        className={styles["render-html-box"]}
+                        dangerouslySetInnerHTML={{__html: renderValue as string}}
+                    />
+                )
+                setOriginValue(new Uint8Array())
+            })()
+        } else {
+            setOriginValue(new Uint8Array())
+        }
+    }, [flow?.Response, type])
+
     const requestEditorRightMenu: OtherMenuListProps = useMemo(() => {
         return {
             copyRequestBase64Body: {
@@ -751,7 +836,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 editorInfo={editorInfo}
                                 rangeValue={
                                     (reqFirstEditor &&
-                                        reqFirstEditor.getModel()?.getValueInRange(reqFirstEditor.getSelection() as any)) ||
+                                        reqFirstEditor
+                                            .getModel()
+                                            ?.getValueInRange(reqFirstEditor.getSelection() as any)) ||
                                     ""
                                 }
                             />
@@ -770,6 +857,18 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 return (
                     <NewEditorSelectRange
                         contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
+                        title={
+                            <Radio.Group
+                                buttonStyle='solid'
+                                optionType='button'
+                                size='small'
+                                value={type}
+                                onChange={(e) => {
+                                    setType(e.target.value)
+                                }}
+                                options={typeOptions}
+                            />
+                        }
                         extra={[
                             <Button
                                 className={styles["extra-chrome-btn"]}
@@ -785,7 +884,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noHex={true}
                         noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
                         loading={loading}
-                        originValue={flow?.Response || new Uint8Array()}
+                        originValue={originValue}
+                        emptyOr={renderHtml}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
@@ -800,12 +900,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 editorInfo={editorInfo}
                                 rangeValue={
                                     (reqSecondEditor &&
-                                        reqSecondEditor.getModel()?.getValueInRange(reqSecondEditor.getSelection() as any)) ||
+                                        reqSecondEditor
+                                            .getModel()
+                                            ?.getValueInRange(reqSecondEditor.getSelection() as any)) ||
                                     ""
                                 }
                             />
                         )}
                     />
+                    // {
+                    //     type==="render"&&prettifyPacketCode(new Buffer((flow?.Response || new Uint8Array())).toString("utf8"))
+                    // }
                 )
             }}
             secondMinSize={300}
