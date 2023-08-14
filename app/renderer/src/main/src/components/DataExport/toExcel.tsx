@@ -104,11 +104,11 @@ export function export_json_to_excel({
                 } else if (val.toString().charCodeAt(0) > 255) {
                     /*再判断是否为中文*/
                     return {
-                        wch: val.toString().length * 2
+                        wch: val.toString().length * 2>60?60:val.toString().length * 2
                     }
                 } else {
                     return {
-                        wch: val.toString().length
+                        wch: val.toString().length>60?60:val.toString().length
                     }
                 }
             })
