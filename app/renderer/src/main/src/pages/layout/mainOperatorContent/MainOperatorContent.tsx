@@ -1,6 +1,6 @@
-import React, {useState, useEffect, useRef, useMemo, useContext, createContext} from "react"
-import {Layout, Form, Tooltip} from "antd"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
+import React, { useState, useEffect, useRef, useMemo, useContext, createContext, ReactNode } from "react"
+import { Layout, Form, Tooltip } from "antd"
+import { ExclamationCircleOutlined } from "@ant-design/icons"
 import {
     MainOperatorContentProps,
     OnlyPageCache,
@@ -28,7 +28,7 @@ import {
     NoPaddingRoute,
     ComponentParams
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import { isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin } from "@/utils/envfile"
 import {
     useCreation,
     useDebounceEffect,
@@ -38,38 +38,41 @@ import {
     useMap,
     useMemoizedFn,
     useThrottleEffect,
-    useThrottleFn
+    useThrottleFn,
+    useTrackedEffect,
+    useUpdateEffect,
+    useWhyDidYouUpdate
 } from "ahooks"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
-import {KeyConvertRoute, routeConvertKey} from "../publicMenu/utils"
-import {CheckIcon, OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
-import {RouteToPageProps} from "../publicMenu/PublicMenu"
-import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
-import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {defaultUserInfo} from "@/pages/MainOperator"
-import {useStore} from "@/store"
-import {getLocalValue, getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
-import {BugInfoProps, BugList, CustomBugList} from "@/pages/invoker/batch/YakBatchExecutors"
-import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
-import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {showModal} from "@/utils/showModal"
-import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {yakitNotify} from "@/utils/notification"
-import {randomString} from "@/utils/randomUtil"
+import { KeyConvertRoute, routeConvertKey } from "../publicMenu/utils"
+import { CheckIcon, OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon } from "@/assets/newIcon"
+import { RouteToPageProps } from "../publicMenu/PublicMenu"
+import { YakitSecondaryConfirmProps, useSubscribeClose } from "@/store/tabSubscribe"
+import { YakitModalConfirm, showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { defaultUserInfo } from "@/pages/MainOperator"
+import { useStore } from "@/store"
+import { getLocalValue, getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue } from "@/utils/kv"
+import { BugInfoProps, BugList, CustomBugList } from "@/pages/invoker/batch/YakBatchExecutors"
+import { UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask } from "@/pages/invoker/batch/UnfinishedBatchTaskList"
+import { QueryYakScriptsResponse } from "@/pages/invoker/schema"
+import { showModal } from "@/utils/showModal"
+import { DownloadAllPlugin } from "@/pages/simpleDetect/SimpleDetect"
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { yakitNotify } from "@/utils/notification"
+import { randomString } from "@/utils/randomUtil"
 import debounce from "lodash/debounce"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import { showByRightContext } from "@/components/yakitUI/YakitMenu/showByRightContext"
 import ReactResizeDetector from "react-resize-detector"
-import {compareAsc} from "@/pages/yakitStore/viewers/base"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
+import { compareAsc } from "@/pages/yakitStore/viewers/base"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { YakitMenu, YakitMenuItemProps, YakitMenuItemType } from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { ScrollProps } from "@/components/TableVirtualResize/TableVirtualResizeType"
+import { OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon } from "@/assets/icon/outline"
 import {
     NodeInfoProps,
     PageInfoProps,
@@ -77,31 +80,32 @@ import {
     WebFuzzerPageInfoProps,
     usePageNode
 } from "@/store/pageNodeInfo"
-import {
+import HTTPFuzzerPage, {
     WEB_FUZZ_DNS_Hosts_Config,
     WEB_FUZZ_DNS_Server_Config,
     WEB_FUZZ_PROXY,
     defaultAdvancedConfigValue
 } from "@/pages/fuzzer/HTTPFuzzerPage"
-import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { KVPair } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 
-const {Content} = Layout
-const {ipcRenderer} = window.require("electron")
+const { Content } = Layout
+const { ipcRenderer } = window.require("electron")
 
 export const MainOperatorContext = createContext<MainOperatorContextProps>({
     pageCache: [],
-    setPageCache: () => {},
+    setPageCache: () => { },
     currentTabKey: "",
-    setCurrentTabKey: () => {},
+    setCurrentTabKey: () => { },
     tabMenuHeight: 0,
-    setTabMenuHeight: () => {},
-    openMultipleMenuPage: () => {},
-    afterDeleteFirstPage: () => {},
-    afterDeleteSubPage: () => {},
-    afterUpdateSubItem: () => {},
-    onUpdateSubPage: () => {}
+    setTabMenuHeight: () => { },
+    openMultipleMenuPage: () => { },
+    afterDeleteFirstPage: () => { },
+    afterDeleteSubPage: () => { },
+    afterUpdateSubItem: () => { },
+    onUpdateSubPage: () => { }
 })
 
 /** web-fuzzer缓存数据对应键 */
@@ -186,7 +190,7 @@ const getPageItemById = (subPage: MultipleNodeInfo[], id: string) => {
     for (let i = 0; i < l; i++) {
         const element = subPage[i]
         if (element.id === id) {
-            current = {...element}
+            current = { ...element }
             index = i
             break
         }
@@ -196,7 +200,7 @@ const getPageItemById = (subPage: MultipleNodeInfo[], id: string) => {
         for (let j = 0; j < gLength; j++) {
             const children = groupChildrenList[j]
             if (children.id === id) {
-                current = {...children}
+                current = { ...children }
                 isBreak = true
                 index = i
                 subIndex = j
@@ -205,7 +209,7 @@ const getPageItemById = (subPage: MultipleNodeInfo[], id: string) => {
         }
         if (isBreak) break
     }
-    return {current, index, subIndex}
+    return { current, index, subIndex }
 }
 /**
  * @description 获取组的个数
@@ -328,7 +332,7 @@ const getSubPageTotal = (subPage) => {
 /**一级tab固定展示额tab */
 const defaultFixedTabs = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
-    const {routeKeyToLabel} = props
+    const { routeKeyToLabel } = props
 
     const [loading, setLoading] = useState(false)
     const [tabMenuHeight, setTabMenuHeight] = useState<number>(0)
@@ -343,13 +347,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
 
-    const {addPageNode} = usePageNode()
+    const { addPageNode } = usePageNode()
 
     // 打开tab页面
     useEffect(() => {
         // 写成HOC是否好点呢，现在一个页面启动就是一个函数
         ipcRenderer.on("fetch-send-to-tab", (e, res: any) => {
-            const {type, data = {}} = res
+            const { type, data = {} } = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
             if (type === "scan-port") addScanPort(data)
@@ -365,34 +369,34 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
-            if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
-            if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
-            if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
-            if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
-            if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
-            if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
-            if (type === "**config-network") openMenuPage({route: YakitRoute.Beta_ConfigNetwork})
+            if (type === "**screen-recorder") openMenuPage({ route: YakitRoute.ScreenRecorderPage })
+            if (type === "**chaos-maker") openMenuPage({ route: YakitRoute.DB_ChaosMaker })
+            if (type === "**debug-plugin") openMenuPage({ route: YakitRoute.Beta_DebugPlugin })
+            if (type === "**debug-monaco-editor") openMenuPage({ route: YakitRoute.Beta_DebugMonacoEditor })
+            if (type === "**vulinbox-manager") openMenuPage({ route: YakitRoute.Beta_VulinboxManager })
+            if (type === "**diagnose-network") openMenuPage({ route: YakitRoute.Beta_DiagnoseNetwork })
+            if (type === "**config-network") openMenuPage({ route: YakitRoute.Beta_ConfigNetwork })
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
-                    openMenuPage({route: YakitRoute.Plugin_Store})
+                    openMenuPage({ route: YakitRoute.Plugin_Store })
                 } else {
                     // 该方法在能保证route不是YakitRoute.Plugin_OP时,menuName可以传空字符
-                    removeMenuPage({route: YakitRoute.AddYakitScript, menuName: ""})
+                    removeMenuPage({ route: YakitRoute.AddYakitScript, menuName: "" })
                     setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
                 }
             }
             if (type === YakitRoute.HTTPHacker) {
-                openMenuPage({route: YakitRoute.HTTPHacker})
+                openMenuPage({ route: YakitRoute.HTTPHacker })
             }
             if (type === YakitRoute.DB_HTTPHistory) {
-                openMenuPage({route: YakitRoute.DB_HTTPHistory})
+                openMenuPage({ route: YakitRoute.DB_HTTPHistory })
             }
             if (type === YakitRoute.DB_Risk) {
-                openMenuPage({route: YakitRoute.DB_Risk})
+                openMenuPage({ route: YakitRoute.DB_Risk })
             }
             if (type === YakitRoute.DNSLog) {
-                openMenuPage({route: YakitRoute.DNSLog})
+                openMenuPage({ route: YakitRoute.DNSLog })
             }
             console.info("send to tab: ", type)
         })
@@ -404,10 +408,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, isGmTLS, request} = res || {}
+        const { isHttps, isGmTLS, request } = res || {}
         if (request) {
             openMenuPage(
-                {route: YakitRoute.HTTPFuzzer},
+                { route: YakitRoute.HTTPFuzzer },
                 {
                     params: {
                         isHttps: isHttps || false,
@@ -421,9 +425,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
-    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
         openMenuPage(
-            {route: YakitRoute.WebsocketFuzzer},
+            { route: YakitRoute.WebsocketFuzzer },
             {
                 params: {
                     wsRequest: res.request,
@@ -433,10 +437,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
     const addScanPort = useMemoizedFn((res: any) => {
-        const {URL = ""} = res || {}
+        const { URL = "" } = res || {}
         if (URL) {
             openMenuPage(
-                {route: YakitRoute.Mod_ScanPort},
+                { route: YakitRoute.Mod_ScanPort },
                 {
                     params: {
                         scanportParams: URL
@@ -446,10 +450,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const addBrute = useMemoizedFn((res: any) => {
-        const {URL = ""} = res || {}
+        const { URL = "" } = res || {}
         if (URL) {
             openMenuPage(
-                {route: YakitRoute.Mod_Brute},
+                { route: YakitRoute.Mod_Brute },
                 {
                     params: {
                         bruteParams: URL
@@ -459,7 +463,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const addBugTest = useMemoizedFn((type: number, res?: any) => {
-        const {URL = ""} = res || {}
+        const { URL = "" } = res || {}
         if (type === 1 && URL) {
             setBugUrl(URL)
             getLocalValue(CustomBugList)
@@ -467,19 +471,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch(() => { })
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === YakitRoute.PoC)
             if (filter.length === 0) {
-                openMenuPage({route: YakitRoute.PoC})
+                openMenuPage({ route: YakitRoute.PoC })
                 setTimeout(() => {
-                    ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
+                    ipcRenderer.invoke("send-to-bug-test", { type: bugTestValue, data: bugUrl })
                     setBugTestValue([])
                     setBugUrl("")
                 }, 300)
             } else {
-                ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
+                ipcRenderer.invoke("send-to-bug-test", { type: bugTestValue, data: bugUrl })
                 setCurrentTabKey(YakitRoute.PoC)
                 setBugTestValue([])
                 setBugUrl("")
@@ -487,24 +491,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const addYakRunning = useMemoizedFn((res: any) => {
-        const {name = "", code = ""} = res || {}
+        const { name = "", code = "" } = res || {}
         const filter = pageCache.filter((item) => item.route === YakitRoute.YakScript)
 
         if (!name || !code) return false
 
         if ((filter || []).length === 0) {
-            openMenuPage({route: YakitRoute.YakScript})
+            openMenuPage({ route: YakitRoute.YakScript })
             setTimeout(() => {
-                ipcRenderer.invoke("send-to-yak-running", {name, code})
+                ipcRenderer.invoke("send-to-yak-running", { name, code })
             }, 300)
         } else {
-            ipcRenderer.invoke("send-to-yak-running", {name, code})
+            ipcRenderer.invoke("send-to-yak-running", { name, code })
             setCurrentTabKey(YakitRoute.YakScript)
         }
     })
     const addBatchExecRecover = useMemoizedFn((task: UnfinishedBatchTask) => {
         openMenuPage(
-            {route: YakitRoute.BatchExecutorRecover},
+            { route: YakitRoute.BatchExecutorRecover },
             {
                 params: {
                     recoverUid: task.Uid,
@@ -516,7 +520,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     const addSimpleBatchExecRecover = useMemoizedFn((task: UnfinishedSimpleDetectBatchTask) => {
         openMenuPage(
-            {route: YakitRoute.SimpleDetect},
+            { route: YakitRoute.SimpleDetect },
             {
                 params: {
                     recoverUid: task.Uid,
@@ -531,7 +535,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const addPacketScan = useMemoizedFn(
         (httpFlows: number[], https: boolean, request?: Uint8Array, keyword?: string) => {
             openMenuPage(
-                {route: YakitRoute.PacketScanPage},
+                { route: YakitRoute.PacketScanPage },
                 {
                     params: {
                         packetScan_FlowIds: httpFlows,
@@ -546,13 +550,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
     /** ---------- 新建插件 ---------- */
     const addYakScript = useMemoizedFn((res: any) => {
-        openMenuPage({route: YakitRoute.AddYakitScript})
+        openMenuPage({ route: YakitRoute.AddYakitScript })
     })
     /** ---------- 插件修改历史详情 ---------- */
     const addYakPluginJournalDetails = useMemoizedFn((res: any) => {
         const time = new Date().getTime().toString()
         openMenuPage(
-            {route: YakitRoute.YakitPluginJournalDetails},
+            { route: YakitRoute.YakitPluginJournalDetails },
             {
                 params: {
                     YakScriptJournalDetailsId: res.YakScriptJournalDetailsId
@@ -563,13 +567,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** ---------- 插件回收站 ---------- */
     const addOnlinePluginRecycleBin = useMemoizedFn((res: any) => {
-        openMenuPage({route: YakitRoute.OnlinePluginRecycleBin})
+        openMenuPage({ route: YakitRoute.OnlinePluginRecycleBin })
     })
     const addFacadeServer = useMemoizedFn((res: any) => {
-        const {facadeParams, classParam, classType} = res || {}
+        const { facadeParams, classParam, classType } = res || {}
         if (facadeParams && classParam && classType) {
             openMenuPage(
-                {route: YakitRoute.ReverseServer_New},
+                { route: YakitRoute.ReverseServer_New },
                 {
                     params: {
                         facadeServerParams: facadeParams,
@@ -597,8 +601,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 没看过逻辑
     useEffect(() => {
         ipcRenderer.on("fetch-close-tab", (e, res: any) => {
-            const {router, name} = res
-            removeMenuPage({route: router, menuName: name || ""})
+            const { router, name } = res
+            removeMenuPage({ route: router, menuName: name || "" })
         })
         ipcRenderer.on("fetch-close-all-tab", () => {
             delFuzzerList(1)
@@ -661,7 +665,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 params?: ComponentParams
             }
         ) => {
-            const {route, pluginId = 0, pluginName = ""} = routeInfo
+            const { route, pluginId = 0, pluginName = "" } = routeInfo
             // 菜单在代码内的名字
             const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""
             if (!menuName) return
@@ -712,7 +716,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     time,
                     params: {
                         ...nodeParams?.params,
-                        id: tabId
+                        id: tabId,
+                        groupId: "0",
                     },
                     groupId: "0",
                     sortFieId: filterPage.length || 1
@@ -720,13 +725,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (filterPage.length > 0) {
                     const pages: PageCache[] = []
                     pageCache.forEach((item, i) => {
-                        const eleItem: PageCache = {...item, multipleNode: [...item.multipleNode]}
+                        const eleItem: PageCache = { ...item, multipleNode: [...item.multipleNode] }
                         if (eleItem.route === route && eleItem.menuName === menuName) {
                             eleItem.pluginId = pluginId
-                            eleItem.multipleNode.push({...node})
+                            eleItem.multipleNode.push({ ...node })
                             eleItem.multipleLength = (eleItem.multipleLength || 0) + 1
                         }
-                        pages.push({...eleItem})
+                        pages.push({ ...eleItem })
                     })
                     setPageCache([...pages])
                     setCurrentTabKey(key)
@@ -741,7 +746,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             pluginId: pluginId,
                             pluginName: route === YakitRoute.Plugin_OP ? pluginName || "" : undefined,
                             singleNode: undefined,
-                            multipleNode: [{...node}],
+                            multipleNode: [{ ...node }],
                             multipleLength: 1,
                             hideAdd: nodeParams?.hideAdd
                         }
@@ -785,7 +790,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMultipleMenuPage(routeInfo)
         }
     })
-    const {getSubscribeClose, removeSubscribeClose} = useSubscribeClose()
+    const { getSubscribeClose, removeSubscribeClose } = useSubscribeClose()
     /** @description 多开页面的一级页面关闭事件 */
     const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
         switch (data.route) {
@@ -814,7 +819,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         let newIndex = 0
         if (index > 0 && getPageCache()[index - 1]) newIndex = index - 1
         if (index === 0 && getPageCache()[index + 1]) newIndex = index + 1
-        const {route, pluginId = 0, pluginName = ""} = getPageCache()[newIndex]
+        const { route, pluginId = 0, pluginName = "" } = getPageCache()[newIndex]
         const key = routeConvertKey(route, pluginName)
         if (currentTabKey === routeConvertKey(data.route, data.pluginName)) {
             setCurrentTabKey(key)
@@ -841,7 +846,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 一级页面的逻辑 end ---------- */
 
     /** ---------- 登录状态变化的逻辑 start ---------- */
-    const {userInfo, setStoreUserInfo} = useStore()
+    const { userInfo, setStoreUserInfo } = useStore()
     const IsEnpriTrace = shouldVerifyEnpriTraceLogin()
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
@@ -849,15 +854,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (IsEnpriTrace) {
                 ipcRenderer.invoke("update-judge-license", true)
                 // 只要路由不是Plugin_OP,可以把menuName设置为空字符
-                removeMenuPage({route: YakitRoute.AccountAdminPage, menuName: ""})
-                removeMenuPage({route: YakitRoute.RoleAdminPage, menuName: ""})
-                removeMenuPage({route: YakitRoute.HoleCollectPage, menuName: ""})
-                removeMenuPage({route: YakitRoute.ControlAdminPage, menuName: ""})
+                removeMenuPage({ route: YakitRoute.AccountAdminPage, menuName: "" })
+                removeMenuPage({ route: YakitRoute.RoleAdminPage, menuName: "" })
+                removeMenuPage({ route: YakitRoute.HoleCollectPage, menuName: "" })
+                removeMenuPage({ route: YakitRoute.ControlAdminPage, menuName: "" })
             } else {
                 // 只要路由不是Plugin_OP,可以把menuName设置为空字符
-                removeMenuPage({route: YakitRoute.LicenseAdminPage, menuName: ""})
-                removeMenuPage({route: YakitRoute.TrustListPage, menuName: ""})
-                removeMenuPage({route: YakitRoute.PlugInAdminPage, menuName: ""})
+                removeMenuPage({ route: YakitRoute.LicenseAdminPage, menuName: "" })
+                removeMenuPage({ route: YakitRoute.TrustListPage, menuName: "" })
+                removeMenuPage({ route: YakitRoute.PlugInAdminPage, menuName: "" })
             }
             IsEnpriTrace ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
@@ -870,12 +875,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     useEffect(() => {
         if (isEnpriTraceAgent()) {
             // 简易企业版页面控制
-            extraOpenMenuPage({route: YakitRoute.SimpleDetect})
+            extraOpenMenuPage({ route: YakitRoute.SimpleDetect })
             // 简易企业版判断本地插件数-导入弹窗
             const newParams = {
                 Type: "yak,mitm,codec,packet-hack,port-scan",
                 Keyword: "",
-                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                Pagination: { Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at" },
                 UserId: 0
             }
             ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
@@ -890,13 +895,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
 
         if (isBreachTrace()) {
-            extraOpenMenuPage({route: YakitRoute.DB_ChaosMaker})
+            extraOpenMenuPage({ route: YakitRoute.DB_ChaosMaker })
         }
     }, [])
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
+    const { setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId } = usePageNode()
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
     const proxyRef = useRef<string[]>()
@@ -913,7 +918,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const haveItem = fuzzerList.current.get(res.key || "")
                 if (!haveItem) return
                 const params = JSON.parse(res.param)
-                updateFuzzerList(res.key, {...haveItem, params})
+                updateFuzzerList(res.key, { ...haveItem, params })
 
                 // 序列化
                 const webFuzzerPageInfo = JSON.parse(res.webFuzzerPageInfo)
@@ -944,17 +949,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (!fuzzerPage) return
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, key)
         if (!nodeInfo) return
-        const {currentItem} = nodeInfo
+        const { currentItem } = nodeInfo
         const newCurrentItem: PageNodeItemProps = {
             ...currentItem,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
-                    advancedConfigValue: {...param.advancedConfigValue},
+                    advancedConfigValue: { ...param.advancedConfigValue },
                     request: param.request
                 }
             }
         }
-        updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, currentItem.pageId, {...newCurrentItem})
+        updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, currentItem.pageId, { ...newCurrentItem })
     })
 
     /**@description 获取Fuzzer默认缓存 */
@@ -973,7 +978,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             try {
                 dnsServersRef.current = JSON.parse(e)
-            } catch (error) {}
+            } catch (error) { }
         })
         getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
             if (!e) {
@@ -982,7 +987,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             try {
                 etcHostsRef.current = JSON.parse(e)
-            } catch (error) {}
+            } catch (error) { }
         })
     })
 
@@ -1047,8 +1052,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 id: tabId
                             }
                         }
-                        fuzzerList.current.set(nodeItem.id, {...nodeItem})
-                        groupChildrenList.push({...nodeItem})
+                        fuzzerList.current.set(nodeItem.id, { ...nodeItem })
+                        groupChildrenList.push({ ...nodeItem })
                         pageNodeChildrenList.push({
                             id: `${randomString(8)}-${j + 1}`,
                             routeKey: YakitRoute.HTTPFuzzer,
@@ -1101,7 +1106,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         },
                         pageChildrenList: pageNodeChildrenList
                     })
-                    fuzzerList.current.set(parentItem.id, {...parentItem, groupChildren: []})
+                    fuzzerList.current.set(parentItem.id, { ...parentItem, groupChildren: [] })
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
@@ -1232,7 +1237,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 新增数据对比页面
     useEffect(() => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
-            openMenuPage({route: YakitRoute.DataCompare})
+            openMenuPage({ route: YakitRoute.DataCompare })
 
             // 区分新建对比页面还是别的页面请求对比的情况
             ipcRenderer.invoke("created-data-compare")
@@ -1273,7 +1278,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.HTTPFuzzer:
                 if (subItem.id) {
                     const haveItem = fuzzerList.current.get(subItem.id)
-                    updateFuzzerList(subItem.id, {...haveItem, ...subItem, params: haveItem?.params})
+                    updateFuzzerList(subItem.id, { ...haveItem, ...subItem, params: haveItem?.params })
                 }
                 break
 
@@ -1335,21 +1340,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 title={<></>}
                 closable={true}
             >
-                <div style={{padding: "0 24px"}}>
+                <div style={{ padding: "0 24px" }}>
                     <Form.Item label='专项漏洞类型'>
                         <YakitSelect
                             allowClear={true}
                             onChange={(value, option: any) => {
-                                const {record} = option
+                                const { record } = option
                                 setBugTestValue(
                                     value
                                         ? [
-                                              {
-                                                  filter: record?.filter,
-                                                  key: record?.key,
-                                                  title: record?.title
-                                              }
-                                          ]
+                                            {
+                                                filter: record?.filter,
+                                                key: record?.key,
+                                                title: record?.title
+                                            }
+                                        ]
                                         : []
                                 )
                             }}
@@ -1369,8 +1374,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 })
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
-    const {pageCache, setPageCache, setTabMenuHeight} = useContext(MainOperatorContext)
-    const {onRemove} = props
+    const { pageCache, setPageCache, setTabMenuHeight } = useContext(MainOperatorContext)
+    const { onRemove } = props
 
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result) => {
@@ -1403,7 +1408,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
 })
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
-    const {pageCache, currentTabKey} = useContext(MainOperatorContext)
+    const { pageCache, currentTabKey } = useContext(MainOperatorContext)
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -1434,7 +1439,17 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
 
 const PageItem: React.FC<PageItemProps> = React.memo(
     (props) => {
-        return <>{RouteToPage(props.routeKey, props.yakScriptId, props.params)}</>
+        const { routeKey, yakScriptId, params } = props
+        // const pageNode:ReactNode = useMemo(() => {
+        //     const Node:ReactNode=RouteToPage(routeKey,yakScriptId,params)
+        //     // if(routeKey===YakitRoute.HTTPFuzzer){
+        //     //    return <Node>
+        //     //         4564
+        //     //     </Node>
+        //     // }
+        //     return Node
+        // }, [routeKey,yakScriptId,params])
+        return <>{RouteToPage(routeKey, yakScriptId, params)}</>
     },
     (preProps, nextProps) => {
         if (preProps.routeKey === nextProps.routeKey) {
@@ -1445,9 +1460,9 @@ const PageItem: React.FC<PageItemProps> = React.memo(
 )
 
 const TabList: React.FC<TabListProps> = React.memo((props) => {
-    const {pageCache, setPageCache, currentTabKey, setCurrentTabKey, afterDeleteFirstPage} =
+    const { pageCache, setPageCache, currentTabKey, setCurrentTabKey, afterDeleteFirstPage } =
         useContext(MainOperatorContext)
-    const {onDragEnd, onRemove} = props
+    const { onDragEnd, onRemove } = props
     const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, index: number) => {
         const currentPageItem: PageCache = pageCache[index]
         showByRightContext(
@@ -1468,7 +1483,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                         key: "removeOther"
                     }
                 ],
-                onClick: ({key, keyPath}) => {
+                onClick: ({ key, keyPath }) => {
                     switch (key) {
                         case "removeCurrent":
                             onRemoveCurrentTabs(currentPageItem)
@@ -1579,7 +1594,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     )
 })
 const TabItem: React.FC<TabItemProps> = React.memo((props) => {
-    const {index, item, currentTabKey, onSelect, onRemove, onContextMenu} = props
+    const { index, item, currentTabKey, onSelect, onRemove, onContextMenu } = props
     return (
         <>
             {defaultFixedTabs.includes(item.route) ? (
@@ -1636,6 +1651,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
         </>
     )
 })
+
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const {
         openMultipleMenuPage,
@@ -1647,7 +1663,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         afterUpdateSubItem,
         onUpdateSubPage
     } = useContext(MainOperatorContext)
-    const {pageItem, index} = props
+    const { pageItem, index } = props
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     // const [renderSubPage, setRenderSubPage] = useState<MultipleNodeInfo[]>([]) // 只管渲染
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
@@ -1671,9 +1687,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const [closeGroupTip, setCloseGroupTip] = useState<boolean>(true) // 关闭组的时候是否还需要弹窗提示,默认是要弹窗的;如果用户选择了不再提示,后续则就不需要再弹出提示框
 
-    const [alreadyRenderList, {set: setRenderList, get: getRenderList}] = useMap<string, boolean>(
-        new Map<string, boolean>()
-    )
+
 
     const tabsRef = useRef(null)
     const combineColorRef = useRef<string>("")
@@ -1694,17 +1708,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         exchangeOrderPageNodeByPageGroupId
     } = usePageNode()
 
+
+
     useEffect(() => {
         getIsCloseGroupTip()
     }, [])
-    useDebounceEffect(
-        () => {
-            // 多个二级批量新增时，控制渲染
-            setRenderList(selectSubMenu.id, true)
-        },
-        [selectSubMenu],
-        {wait: 100, leading: true}
-    )
+
     useEffect(() => {
         if (subPage.length === 0) return
         const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
@@ -1712,13 +1721,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             // 二级tab最后一个是组
             const index = groupChildrenList.findIndex((ele) => ele.id === selectSubMenu.id)
             if (index !== -1) {
-                scrollToRightMost()
+                setTimeout(() => {
+                    scrollToRightMost()
+                }, 200)
             }
         }
         if (selectSubMenu.id === subPage[subPage.length - 1].id) {
             //滚动到最后边
-            scrollToRightMost()
+            setTimeout(() => {
+                scrollToRightMost()
+            }, 200)
         }
+
     }, [selectSubMenu])
     const tabMenuSubRef = useRef<any>()
     useEffect(() => {
@@ -1794,10 +1808,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /**滚动到最后边 */
     const scrollToRightMost = useMemoizedFn(() => {
         if (!tabMenuSubRef.current) {
-            const tabMenuSub = document.getElementById("tab-menu-sub")
+            const tabMenuSub = document.getElementById(`tab-menu-sub-${pageItem.route}`)
             tabMenuSubRef.current = tabMenuSub
         }
         if (!tabMenuSubRef.current) return
+
         if (tabMenuSubRef.current.scrollWidth > 0) {
             tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
         } else {
@@ -1823,15 +1838,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const onDragUpdate = useMemoizedFn((result) => {
         const sourceIndex = result.source.index
-        const {subIndex} = getPageItemById(subPage, result.draggableId)
+        const { subIndex } = getPageItemById(subPage, result.draggableId)
         if (subIndex === -1) {
             // 拖动的来源item是组时，不用合并
             if ((subPage[sourceIndex]?.groupChildren?.length || 0) > 0) return
         }
-        const {droppableId: sourceDroppableId} = result.source
+        const { droppableId: sourceDroppableId } = result.source
         if (result.combine) {
             if (result.source.droppableId === "droppable2" && result.combine.droppableId === "droppable2") {
-                const {index} = getPageItemById(subPage, result.combine.draggableId)
+                const { index } = getPageItemById(subPage, result.combine.draggableId)
                 const groupChildrenList = subPage[index].groupChildren || []
                 if (groupChildrenList.length > 0) return
                 const ids = [result.combine.draggableId, result.draggableId]
@@ -1856,15 +1871,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSubMenuDragEnd = useMemoizedFn((result) => {
         try {
             // console.log("onSubMenuDragEnd", result)
-            const {droppableId: sourceDroppableId} = result.source
+            const { droppableId: sourceDroppableId } = result.source
             /**将拖拽item变为选中item ---------start---------*/
-            const {index, subIndex} = getPageItemById(subPage, result.draggableId)
+            const { index, subIndex } = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
             const groupChildrenList = subPage[index].groupChildren || []
             if (subIndex === -1) {
-                if (groupChildrenList.length === 0) setSelectSubMenu(subPage[index])
+                if (groupChildrenList.length === 0) setSelectSubMenu(() => subPage[index])
             } else {
-                setSelectSubMenu(groupChildrenList[subIndex])
+                setSelectSubMenu(() => groupChildrenList[subIndex])
             }
             /**将拖拽item变为选中item ---------end---------*/
             /** 合并组   ---------start--------- */
@@ -1875,7 +1890,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 }
                 // 组内的标签页拖拽到组外并和组外的一个标签页合成组(组内向组外合并)
                 if (sourceDroppableId.includes("group") && result.combine.droppableId === "droppable2") {
-                    mergeWithinAndOutsideGroup(result)
+                    mergeWithinAndOutsideGroup(result) //bug
                 }
             }
             setIsCombineEnabled(true)
@@ -1889,7 +1904,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 return
             }
 
-            const {droppableId: destinationDroppableId} = result.destination || {droppableId: "0"}
+            const { droppableId: destinationDroppableId } = result.destination || { droppableId: "0" }
             // 组外之间移动
             if (sourceDroppableId === "droppable2" && destinationDroppableId === "droppable2") {
                 movingBetweenOutsideGroups(result)
@@ -1914,7 +1929,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 moveOutOfGroupAndInGroup(result)
             }
             /** 移动排序 ---------end--------- */
-        } catch (error) {}
+        } catch (error) { }
     })
     /** @description 组外向组内移动合并 */
     const mergingGroup = useMemoizedFn((result) => {
@@ -1933,10 +1948,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (sourceGroupChildrenLength > 0 && combineGroupChildrenLength === 0) return
         const groupId = generateGroupId()
         if (sourceGroupChildrenLength > 0 && combineGroupChildrenLength > 0) {
-            // 拖动的来源item是组时目的地item也是组，合并
-            const groupList = subPage[sourceIndex].groupChildren?.map((ele) => ({...ele, groupId})) || []
-            subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(groupList)
-            subPage[combineIndex].expand = true
+            // 拖动的来源item是组时目的地item也是组，合并  已经废弃
+            // const groupList = subPage[sourceIndex].groupChildren?.map((ele) => ({ ...ele, groupId })) || []
+            // subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(groupList)
+            // subPage[combineIndex].expand = true
         } else {
             const dropItem: MultipleNodeInfo = {
                 ...subPage[sourceIndex],
@@ -1947,12 +1962,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(dropItem)
             } else {
                 const groupLength = getGroupLength(subPage)
-                subPage[combineIndex].groupChildren = [{...subPage[combineIndex], groupId}, dropItem]
+                subPage[combineIndex].groupChildren = [{ ...subPage[combineIndex], groupId }, dropItem]
                 subPage[combineIndex].verbose = `未命名[${groupLength}]`
                 subPage[combineIndex].color = combineColorRef.current
                 subPage[combineIndex].expand = true
                 subPage[combineIndex].id = groupId
             }
+            setSelectSubMenu((s) => ({ ...s, groupId }))
         }
         const combineItem = subPage[combineIndex]
         subPage.splice(sourceIndex, 1)
@@ -1968,8 +1984,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.combine) {
             return
         }
-        const {index: sourceIndex, droppableId} = result.source
-        const {draggableId: combineDraggableId} = result.combine
+        const { index: sourceIndex, droppableId } = result.source
+        const { draggableId: combineDraggableId } = result.combine
         // 删除拖拽的组内标签页
         const gIndex = subPage.findIndex((ele) => ele.id === droppableId)
         if (gIndex === -1) return
@@ -1986,13 +2002,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             groupId: newGroupId
         }
         const groupLength = getGroupLength(subPage)
-        subPage[combineIndex].groupChildren = [{...subPage[combineIndex], groupId: newGroupId}, dropItem]
+        subPage[combineIndex].groupChildren = [{ ...subPage[combineIndex], groupId: newGroupId }, dropItem]
         subPage[combineIndex].verbose = `未命名[${groupLength}]`
         subPage[combineIndex].color = combineColorRef.current || subPage[sourceIndex].color
         subPage[combineIndex].expand = true
         subPage[combineIndex].id = newGroupId
 
         const combineItem = subPage[combineIndex]
+
+        setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
 
         // 拖拽后组内item===0,则删除该组
         if (subPage[gIndex].groupChildren?.length === 0) {
@@ -2011,6 +2029,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
+        // setSelectSubMenu(subPage[result.source.index])
         const subMenuList: MultipleNodeInfo[] = reorder(subPage, result.source.index, result.destination.index)
         setSubPage([...subMenuList])
         onUpdatePageCache(subMenuList)
@@ -2020,18 +2039,19 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
-        const {index: sourceIndex} = result.source
-        const {droppableId, index: destinationIndex} = result.destination
+        const { index: sourceIndex } = result.source
+        const { droppableId, index: destinationIndex } = result.destination
         const groupId = droppableId
         const gIndex = subPage.findIndex((ele) => ele.id === groupId)
         if (gIndex === -1) return
         const groupChildrenList = subPage[gIndex].groupChildren || []
+        // setSelectSubMenu(groupChildrenList[sourceIndex])
         const newGroupChildrenList: MultipleNodeInfo[] = reorder(groupChildrenList, sourceIndex, destinationIndex)
         subPage[gIndex].groupChildren = newGroupChildrenList
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-           // 序列排序
-           exchangeOrderPageNodeByPageGroupId(YakitRoute.HTTPFuzzer,groupId,sourceIndex, destinationIndex)
+            // 序列排序
+            exchangeOrderPageNodeByPageGroupId(YakitRoute.HTTPFuzzer, groupId, sourceIndex, destinationIndex)
         }
     })
     /** @description 不同一个组间移动 从组A到组B */
@@ -2039,8 +2059,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
-        const {droppableId: dropSourceId, index: sourceIndex} = result.source
-        const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
+        const { droppableId: dropSourceId, index: sourceIndex } = result.source
+        const { droppableId: dropDestinationId, index: destinationIndex } = result.destination
         const sourceGroupId = dropSourceId
         const destinationGroupId = dropDestinationId
         // 将拖拽的item从来源地中删除
@@ -2055,10 +2075,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const destinationNumber = subPage.findIndex((ele) => ele.id === destinationGroupId)
         const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
         if (destinationGroupChildrenList.length === 0) return
-        destinationGroupChildrenList.splice(destinationIndex, 0, {
+        const newSourceItem: MultipleNodeInfo = {
             ...sourceItem,
             groupId: destinationGroupId
-        }) // 按顺序将拖拽的item放进目的地中并修改组的id
+        }
+
+        // setSelectSubMenu(newSourceItem)
+        setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+
+        destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
         subPage[destinationNumber].groupChildren = destinationGroupChildrenList
 
         if (sourceGroupChildrenList.length === 0) {
@@ -2068,7 +2093,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             // 删除组A中的序列化数据,向组B新增序列化数据,
-            addSequenceByPageGroupId(sourceItem, destinationGroupId,destinationIndex)
+            addSequenceByPageGroupId(sourceItem, destinationGroupId, destinationIndex)
         }
     })
 
@@ -2077,8 +2102,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
-        const {droppableId: dropSourceId, index: sourceIndex} = result.source
-        const {index: destinationIndex} = result.destination
+        const { droppableId: dropSourceId, index: sourceIndex } = result.source
+        const { index: destinationIndex } = result.destination
 
         const sourceGroupId = dropSourceId
         // 将拖拽的item从来源地中删除
@@ -2089,11 +2114,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         sourceGroupChildrenList.splice(sourceIndex, 1)
         subPage[sourceNumber].groupChildren = sourceGroupChildrenList
 
-        // 将拖拽的item添加到目的地的组内
-        subPage.splice(destinationIndex, 0, {
+        const newSourceItem: MultipleNodeInfo = {
             ...sourceItem,
             groupId: "0"
-        })
+        }
+
+        // setSelectSubMenu(newSourceItem)
+        setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
+
+        // 将拖拽的item添加到目的地的组内
+        subPage.splice(destinationIndex, 0, newSourceItem)
 
         // 如果组内的item为0 ,需要删除组
         if (sourceGroupChildrenList.length === 0) {
@@ -2113,32 +2143,35 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (!result.destination) {
             return
         }
-        const {index} = getPageItemById(subPage, result.draggableId)
+        const { index } = getPageItemById(subPage, result.draggableId)
         //拖动的是组
         if ((subPage[index].groupChildren?.length || 0) > 0) return
-        const {index: sourceIndex} = result.source
-        const {droppableId: dropDestinationId, index: destinationIndex} = result.destination
+        const { index: sourceIndex } = result.source
+        const { droppableId: dropDestinationId, index: destinationIndex } = result.destination
         const sourceItem = subPage[sourceIndex] // 拖拽的item
 
         const destinationGroupId = dropDestinationId
 
         const destinationNumber = subPage.findIndex((ele) => ele.id === destinationGroupId)
         if (sourceItem.groupChildren && sourceItem.groupChildren.length > 0) {
-            // 拖拽的item是一个组,两个组合并
-            const pageList = sourceItem.groupChildren.map((ele) => ({
-                ...ele,
-                groupId: destinationGroupId
-            }))
-            subPage[destinationNumber].groupChildren?.splice(destinationIndex, 0, ...pageList)
+            // 拖拽的item是一个组,两个组合并 已废弃
+            // const pageList = sourceItem.groupChildren.map((ele) => ({
+            //     ...ele,
+            //     groupId: destinationGroupId
+            // }))
+            // subPage[destinationNumber].groupChildren?.splice(destinationIndex, 0, ...pageList)
         } else {
             // 将拖拽的item添加到目的地的组内
 
             const destinationGroupChildrenList = subPage[destinationNumber].groupChildren || []
             if (destinationGroupChildrenList.length === 0) return
-            destinationGroupChildrenList.splice(destinationIndex, 0, {
+            const newSourceItem: MultipleNodeInfo = {
                 ...sourceItem,
                 groupId: destinationGroupId
-            }) // 按顺序将拖拽的item放进目的地中并修改组的id
+            }
+            // setSelectSubMenu(newSourceItem)
+            setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+            destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
             subPage[destinationNumber].groupChildren = destinationGroupChildrenList
         }
         // 将拖拽的item从来源地中删除
@@ -2146,7 +2179,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         onUpdatePageCache(subPage)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             // 向组B新增序列化数据,删除游离的数据，
-            addSequenceByPageGroupId(sourceItem, destinationGroupId,destinationIndex)
+            addSequenceByPageGroupId(sourceItem, destinationGroupId, destinationIndex)
         }
     })
     /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
@@ -2169,7 +2202,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setTimeout(() => {
                 onScrollTabMenu()
             }, 200)
-        } catch (error) {}
+        } catch (error) { }
     })
     const onAddSubPage = useMemoizedFn(() => {
         if (getSubPageTotal(subPage) >= 100) {
@@ -2263,7 +2296,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
         //  先更改当前选择item,在删除
         if (removeItem.id === selectSubMenu.id) onUpdateSelectSubPage(removeItem)
-        const {index, subIndex} = getPageItemById(subPage, removeItem.id)
+        const { index, subIndex } = getPageItemById(subPage, removeItem.id)
         if (subIndex === -1) {
             // 删除游离页面
             subPage.splice(index, 1)
@@ -2316,7 +2349,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             const i = menuData[1] as YakitMenuItemProps
             i.children?.push(node)
         })
-        const {subIndex} = getPageItemById(subPage, item.id)
+        const { subIndex } = getPageItemById(subPage, item.id)
         if (subIndex !== -1) {
             menuData.splice(2, 0, {
                 label: "从组中移出",
@@ -2328,7 +2361,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 width: 180,
                 type: "grey",
                 data: menuData,
-                onClick: ({key, keyPath}) => {
+                onClick: ({ key, keyPath }) => {
                     switch (key) {
                         case "rename":
                             onRename(item)
@@ -2375,7 +2408,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                 yakitNotify("error", "不能超过50个字符")
                                 return
                             }
-                            const {index, subIndex} = getPageItemById(subPage, item.id)
+                            const { index, subIndex } = getPageItemById(subPage, item.id)
                             if (index === -1) return
                             if (subIndex === -1) {
                                 // 当前情况说明item是游离的页面,没有在其他组内
@@ -2408,7 +2441,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onUpdateFuzzerSequence = useMemoizedFn((key: string, param: MultipleNodeInfo) => {
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, key)
         if (!nodeInfo) return
-        const {index, subIndex, parentItem} = nodeInfo
+        const { index, subIndex, parentItem } = nodeInfo
         if (index === -1 || subIndex === -1) return
         const updateSequence = parentItem.pageChildrenList[subIndex]
         updateSequence.pageName = param.verbose
@@ -2416,7 +2449,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     /**将页面添加到新建组 */
     const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
-        const {index, subIndex} = getPageItemById(subPage, item.id)
+        const { index, subIndex } = getPageItemById(subPage, item.id)
         const groupLength = getGroupLength(subPage)
         const groupId = generateGroupId()
         const newGroup: MultipleNodeInfo = {
@@ -2424,10 +2457,14 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             groupId: "0",
             verbose: `未命名[${groupLength}]`,
             sortFieId: subPage.length,
-            groupChildren: [{...item, groupId}],
+            groupChildren: [{ ...item, groupId }],
             expand: true,
             color: getColor(subPage)
         }
+        if (selectSubMenu.id === item.id) {
+            setSelectSubMenu({ ...item, groupId })
+        }
+
         if (subIndex === -1) {
             // 游离页面移动到新建组
             subPage.splice(index, 1, newGroup)
@@ -2441,6 +2478,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (groupChildren.length > 0) {
                 groupChildren.splice(subIndex, 1)
             }
+
             if (groupChildren.length === 0) {
                 subPage.splice(index, 1, newGroup)
             } else {
@@ -2455,11 +2493,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     /**将标签页添加到组 */
     const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo, key: string) => {
-        const {index, subIndex} = getPageItemById(subPage, item.id)
-        const {index: gIndex, current: currentGroup} = getPageItemById(subPage, key)
+        const { index, subIndex } = getPageItemById(subPage, item.id)
+        const { index: gIndex, current: currentGroup } = getPageItemById(subPage, key)
+
         if (subIndex === -1) {
             //游离页面移动到组内
-            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].id})
+            subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
             subPage.splice(index, 1)
         } else {
             // 组A移动到组B
@@ -2467,9 +2506,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (groupChildren.length > 0) {
                 groupChildren.splice(subIndex, 1)
             }
-            subPage[gIndex].groupChildren?.push({...item, groupId: subPage[gIndex].id})
+            subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
             if (groupChildren.length === 0) subPage.splice(index, 1)
         }
+        if (selectSubMenu.id === item.id) {
+            setSelectSubMenu({ ...item, groupId: subPage[gIndex].id })
+        }
+
         onUpdatePageCache([...subPage])
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             addSequenceByPageGroupId(item, currentGroup.id)
@@ -2477,7 +2520,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     /**从组中移出 */
     const onRemoveFromGroup = useMemoizedFn((item: MultipleNodeInfo) => {
-        const {index, subIndex} = getPageItemById(subPage, item.id)
+        const { index, subIndex } = getPageItemById(subPage, item.id)
         if (subIndex === -1) return
         const groupChildren = subPage[index].groupChildren || []
         if (groupChildren.length > 0) {
@@ -2489,6 +2532,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             groupChildren: [],
             expand: undefined,
             color: undefined
+        }
+        if (selectSubMenu.id === item.id) {
+            setSelectSubMenu(newGroup)
         }
         if (groupChildren.length === 0) {
             subPage.splice(index, 1, newGroup)
@@ -2507,7 +2553,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     /**二级游离页面/未分组的页面 关闭其他标签页 */
     const onRemoveOther = useMemoizedFn((item: MultipleNodeInfo) => {
-        const {index, subIndex} = getPageItemById(subPage, item.id)
+        const { index, subIndex } = getPageItemById(subPage, item.id)
         if (subIndex === -1) {
             // 游离页面的关闭其他tabs
             const m = YakitModalConfirm({
@@ -2689,7 +2735,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             onOkText: "关闭其他",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                const newPage = [{...groupItem}]
+                const newPage = [{ ...groupItem }]
                 onSetSelectSubMenu(groupItem)
                 onUpdatePageCache(newPage)
                 m.destroy()
@@ -2717,7 +2763,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
      * @description 组的右键事件 收起和展开事件
      */
     const onUnfoldAndCollapse = useMemoizedFn((item: MultipleNodeInfo) => {
-        const newItem = {...item}
+        const newItem = { ...item }
         newItem.expand = !newItem.expand
         onUpdateGroup(newItem)
         setTimeout(() => {
@@ -2725,7 +2771,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if (number !== -1 && !newItem.expand) {
                 const total = getSubPageTotal(subPage)
                 // 关闭时, 选中的item在该组内时,将选中的item变为后面可以选中的item
-                const {index} = getPageItemById(subPage, newItem.id)
+                const { index } = getPageItemById(subPage, newItem.id)
                 const sLength = subPage.length
                 const initIndex = total >= 100 ? index - 1 : index + 1
                 // 因为限制100个，如果该组为最后一个，就选中上一个可选item
@@ -2757,12 +2803,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onUpdateGroup = useMemoizedFn((groupItem: MultipleNodeInfo) => {
         const index = subPage.findIndex((ele) => ele.id === groupItem.id)
         if (index === -1) return
-        subPage[index] = {...groupItem}
+        subPage[index] = { ...groupItem }
         onUpdatePageCache([...subPage])
     })
     const onDragStart = useMemoizedFn((result) => {
         if (!result.source) return
-        const {index, subIndex} = getPageItemById(subPage, result.draggableId)
+        const { index, subIndex } = getPageItemById(subPage, result.draggableId)
         if (index === -1) return
 
         if (subIndex === -1) {
@@ -2776,7 +2822,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     })
     const onBeforeCapture = useMemoizedFn((result) => {
-        const {index, subIndex} = getPageItemById(subPage, result.draggableId)
+        const { index, subIndex } = getPageItemById(subPage, result.draggableId)
         if (index === -1) return
         // subIndex === -1 没有在组内
         if (subIndex === -1) {
@@ -2796,9 +2842,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     })
     const onScrollTabMenu = useThrottleFn(
-        () => {
+        (e) => {
             if (tabMenuSubRef.current) {
-                const {scrollWidth, scrollLeft, clientWidth} = tabMenuSubRef.current
+                const { scrollWidth, scrollLeft, clientWidth } = tabMenuSubRef.current
                 const scrollRight = scrollWidth - scrollLeft - clientWidth
                 setScroll({
                     ...scroll,
@@ -2807,7 +2853,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 })
             }
         },
-        {wait: 200}
+        { wait: 200 }
     ).run
 
     // ------------------- 序列化相关 start -------------------
@@ -2821,7 +2867,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         groupChildrenList.forEach((nodeItem, j) => {
             const nodeInfo = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, nodeItem.id)
             if (!nodeInfo) return
-            const {currentItem} = nodeInfo
+            const { currentItem } = nodeInfo
             sequenceList.push({
                 id: `${randomString(8)}-${j + 1}`,
                 routeKey: YakitRoute.HTTPFuzzer,
@@ -2852,13 +2898,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         addPageNode(YakitRoute.HTTPFuzzer, newPageNodeList)
     })
     /** 删除组A中的序列化数据,向组B新增序列化数据 */
-    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string,destinationIndex?:number) => {
+    const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string, destinationIndex?: number) => {
         const removePageNode = removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
         if (removePageNode)
             addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, {
                 ...removePageNode,
                 pageGroupId: destinationGroupId
-            },destinationIndex)
+            }, destinationIndex)
     })
     /**
      * @description 从组内移除序列数据，并将移除的item变为游离的
@@ -2885,19 +2931,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         addPageNode(YakitRoute.HTTPFuzzer, newPageNode)
     })
     // ------------------- 序列化相关 end -------------------
-    const renderSubPage=useMemo(()=>{
-        const newData: MultipleNodeInfo[] = []
-        subPage.forEach((ele) => {
-            if (ele.groupChildren && ele.groupChildren.length > 0) {
-                ele.groupChildren.forEach((groupItem) => {
-                    newData.push({...groupItem})
-                })
-            } else {
-                newData.push({...ele})
-            }
-        })
-        return newData
-    },[subPage])
+
     return (
         <div
             ref={tabsRef}
@@ -2934,8 +2968,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                                     className={classNames(styles["tab-menu-sub"], {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
                                     })}
-                                    id='tab-menu-sub'
-                                    // {...provided.droppableProps}
+                                    id={`tab-menu-sub-${pageItem.route}`}
                                     ref={provided.innerRef}
                                     onScroll={onScrollTabMenu}
                                 >
@@ -3011,33 +3044,19 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     }}
                 </Droppable>
             </DragDropContext>
-            {renderSubPage.map((subItem, numberSub) => {
-                return (
-                    getRenderList(subItem.id) && (
-                        <div
-                            key={subItem.id}
-                            tabIndex={selectSubMenu.id === subItem.id ? 1 : -1}
-                            style={{
-                                display: selectSubMenu.id === subItem.id ? "" : "none",
-                                padding: NoPaddingRoute.includes(pageItem.route) ? 0 : "8px 16px 13px 16px"
-                            }}
-                            className={styles["page-body"]}
-                        >
-                            <PageItem
-                                routeKey={pageItem.route}
-                                yakScriptId={+(pageItem.pluginId || 0)}
-                                params={subItem.params}
-                            />
-                        </div>
-                    )
-                )
-            })}
+
+            <RenderSubPage
+                subPage={subPage}
+                route={pageItem.route}
+                pluginId={pageItem.pluginId}
+                selectSubMenu={selectSubMenu}
+            />
         </div>
     )
 })
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
+    const { subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor } = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
@@ -3154,7 +3173,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                     <div
                         ref={providedGroup.innerRef}
                         {...providedGroup.draggableProps}
-                        style={{...groupStyle}}
+                        style={{ ...groupStyle }}
                         className={classNames(styles["tab-menu-sub-group"], styles["tab-menu-sub-group-hidden"], {
                             [styles[`tab-menu-sub-group-${color}`]]: subItem.expand
                         })}
@@ -3193,7 +3212,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                     styles["tab-menu-sub-group-number"],
                                     styles[`tab-menu-sub-group-number-${color}`]
                                 )}
-                                style={{display: subItem.expand ? "none" : "flex"}}
+                                style={{ display: subItem.expand ? "none" : "flex" }}
                             >
                                 {subItem.groupChildren?.length || 0}
                             </div>
@@ -3210,7 +3229,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
                                         ref={provided.innerRef}
-                                        style={{...cloneStyle}}
+                                        style={{ ...cloneStyle }}
                                     >
                                         <DroppableClone
                                             subPage={subPage}
@@ -3277,16 +3296,16 @@ const onVerifyGroupName = (val: string) => {
     return true
 }
 const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = React.memo((props) => {
-    const {groupItem, onOperateGroup, onUpdateGroup} = props
-    const [group, setGroup] = useState<MultipleNodeInfo>({...groupItem})
+    const { groupItem, onOperateGroup, onUpdateGroup } = props
+    const [group, setGroup] = useState<MultipleNodeInfo>({ ...groupItem })
     const [name, setName] = useState<string>(group.verbose)
     useEffect(() => {
         setName(group.verbose)
     }, [group.verbose])
     const onUpdate = useMemoizedFn((text, value) => {
         group[text] = value
-        setGroup({...group})
-        onUpdateGroup({...group})
+        setGroup({ ...group })
+        onUpdateGroup({ ...group })
     })
 
     return (
@@ -3300,7 +3319,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                 <YakitInput
                     value={name}
                     onChange={(e) => {
-                        const {value} = e.target
+                        const { value } = e.target
                         if (onVerifyGroupName(value)) {
                             setName(value)
                         }
@@ -3311,7 +3330,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                         }
                     }}
                     onBlur={(e) => {
-                        const {value} = e.target
+                        const { value } = e.target
                         if (onVerifyGroupName(value)) {
                             onUpdate("verbose", value)
                         }
@@ -3348,7 +3367,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                         key: "closeOtherTabs"
                     }
                 ]}
-                onClick={({key}) => {
+                onClick={({ key }) => {
                     onOperateGroup(key as OperateGroup, group)
                 }}
             />
@@ -3374,7 +3393,7 @@ const CloseGroupContent: React.FC = React.memo(() => {
 })
 
 const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
-    const {subPage, selectSubMenu, draggableId} = props
+    const { subPage, selectSubMenu, draggableId } = props
     const [groupItem, setGroupItem] = useState<MultipleNodeInfo>({
         id: "0",
         verbose: "",
@@ -3388,7 +3407,7 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
         groupId: "0"
     })
     useEffect(() => {
-        const {index, subIndex} = getPageItemById(subPage, draggableId)
+        const { index, subIndex } = getPageItemById(subPage, draggableId)
         if (subIndex === -1) return
         let groupChildrenList = subPage[index].groupChildren || []
         if (groupChildrenList.length === 0) return
@@ -3429,6 +3448,221 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
         </div>
     )
 })
+interface RenderSubPageProps {
+    subPage: MultipleNodeInfo[]
+    route: YakitRoute
+    pluginId?: number
+    selectSubMenu: MultipleNodeInfo
+}
+
+const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) => {
+    const { subPage, route, pluginId, selectSubMenu } = props;
+    const [pageRenderList, { set: setPageRenderList, get: getPageRenderList }] = useMap<string, boolean>(
+        new Map<string, boolean>()
+    )
+    const selectId = useMemo(() => selectSubMenu.id, [selectSubMenu.id])
+    const groupId = useMemo(() => selectSubMenu.groupId, [selectSubMenu.groupId])
+    useDebounceEffect(
+        () => {
+            // console.log('selectSubMenu', selectSubMenu)
+            // 控制渲染
+            setPageRenderList(selectSubMenu.id, true)
+            if (selectSubMenu.groupId !== '0') {
+                setPageRenderList(selectSubMenu.groupId, true)
+            }
+        },
+        [selectSubMenu.id, selectSubMenu.groupId],
+        { wait: 100, leading: true }
+    )
+    return (<>
+        {
+            subPage.map((subItem, numberSub) => {
+                if (subItem.groupChildren && subItem.groupChildren.length > 0) {
+                    if (route === YakitRoute.HTTPFuzzer) {
+                        return getPageRenderList(subItem.id) && <React.Fragment key={subItem.id}><WebFuzzerGroup subItem={subItem} selectId={selectId} groupId={groupId} /></React.Fragment>
+                    }
+                    return getPageRenderList(subItem.id) && <React.Fragment key={subItem.id}><SubPageGroup subItem={subItem} selectId={selectId} groupId={groupId} route={route} pluginId={pluginId || 0} /></React.Fragment>
+                }
+                return (
+                    getPageRenderList(subItem.id) ? (
+                        <div
+                            key={subItem.id}
+                            tabIndex={selectId === subItem.id ? 1 : -1}
+                            style={{
+                                display: selectId === subItem.id ? "" : "none",
+                                padding: NoPaddingRoute.includes(route) ? 0 : "8px 16px 13px 16px"
+                            }}
+                            className={styles["page-body"]}
+                        >
+                            <PageItem
+                                routeKey={route}
+                                yakScriptId={+(pluginId || 0)}
+                                params={{
+                                    ...subItem.params,
+                                    groupId: subItem.id
+                                }}
+                            />
+                        </div>
+                    ) : <></>
+                )
+            }
+            )
+        }
+    </>)
+})
+
+interface SubPageGroupProps {
+    subItem: MultipleNodeInfo
+    selectId: string
+    groupId: string
+    route: string
+    pluginId: number
+}
+const SubPageGroup: React.FC<SubPageGroupProps> = React.memo((props) => {
+    const { subItem, selectId, groupId, route, pluginId } = props
+    const [renderList, { set: setRenderList, get: getRenderList }] = useMap<string, boolean>(
+        new Map<string, boolean>().set(selectId, true)
+    )
+    const isGroupSelect = useMemo(() => {
+        return subItem.id === groupId && subItem.groupChildren?.findIndex(ele => ele.id === selectId) !== -1
+    }, [subItem, selectId, groupId])
+
+    return (<div
+        key={subItem.id}
+        id={subItem.id}
+        tabIndex={isGroupSelect ? 1 : -1}
+        style={{
+            display: isGroupSelect ? "" : "none",
+        }}
+        className={styles["page-body"]}
+    >
+        {
+            subItem.groupChildren?.map((groupItem, groupIndex) => getRenderList(groupItem.id) && (
+                <PageItem
+                    routeKey={route}
+                    yakScriptId={+(pluginId || 0)}
+                    params={subItem.params}
+                />
+            ))
+        }
+    </div>)
+}, (preProps, nextProps) => {
+    const preSelectId = preProps.subItem.groupChildren?.find(ele => ele.id === preProps.selectId)?.id
+    const nextSelectId = nextProps.subItem.groupChildren?.find(ele => ele.id === nextProps.selectId)?.id
+    if (preProps.groupId !== nextProps.groupId && (preProps.groupId === preProps.subItem.id || nextProps.groupId === nextProps.subItem.id)) {
+        return false
+    }
+    if (preSelectId !== nextSelectId) {
+        return false
+    }
+    if (preProps.subItem.groupChildren?.length !== nextProps.subItem.groupChildren?.length) {
+        return false
+    }
+    return true
+})
+interface WebFuzzerGroupProps {
+    subItem: MultipleNodeInfo
+    selectId: string
+    groupId: string
+}
+const WebFuzzerGroup: React.FC<WebFuzzerGroupProps> = React.memo((props) => {
+    const { subItem, selectId, groupId } = props
+    const [renderList, { set: setRenderList, get: getRenderList }] = useMap<string, boolean>(
+        new Map<string, boolean>().set(selectId, true)
+    )
+    const isGroupSelect = useMemo(() => {
+        return subItem.id === groupId && subItem.groupChildren?.findIndex(ele => ele.id === selectId) !== -1
+    }, [subItem, selectId, groupId])
+
+    useUpdateEffect(() => {
+        if (getRenderList(selectId)) return
+        setRenderList(selectId, true)
+    }, [subItem.groupChildren, selectId])
+
+    // useTrackedEffect(
+    //     (changes) => {
+    //         console.log('WebFuzzerGroup', changes);
+    //     },
+    //     [subItem, selectId, groupId],
+    // );
+    useWhyDidYouUpdate(props.subItem.verbose, { ...props });
+    return (<div
+        key={subItem.id}
+        id={subItem.id}
+        tabIndex={isGroupSelect ? 1 : -1}
+        style={{
+            display: isGroupSelect ? "" : "none",
+        }}
+        className={styles["page-body"]}
+    >
+        <WebFuzzerPage
+            isHttps={subItem.params?.isHttps}
+            isGmTLS={subItem.params?.isGmTLS}
+            request={subItem.params?.request}
+            system={subItem.params?.system}
+            id={subItem.params?.id || ""}
+            groupId={"34" || subItem.id}
+            fuzzerParams={subItem.params?.fuzzerParams}
+            shareContent={subItem.params?.shareContent}
+        >
+            {
+                subItem.groupChildren?.map((groupItem, groupIndex) => getRenderList(groupItem.id) && (
+                    <WebFuzzerGroupItem groupItem={groupItem} selectId={selectId} />
+                ))
+            }
+        </WebFuzzerPage>
+    </div>)
+}, (preProps, nextProps) => {
+    const preSelectId = preProps.subItem.groupChildren?.find(ele => ele.id === preProps.selectId)?.id
+    const nextSelectId = nextProps.subItem.groupChildren?.find(ele => ele.id === nextProps.selectId)?.id
+    if (preProps.groupId === preProps.subItem.id && preProps.groupId !== nextProps.groupId) {
+        console.log('111', nextProps.subItem.verbose)
+        return false
+    }
+    if (nextProps.groupId === nextProps.subItem.id && preProps.groupId !== nextProps.groupId) {
+        console.log('222', nextProps.subItem.verbose)
+        return false
+    }
+    if (preSelectId !== nextSelectId) {
+        console.log('333', nextProps.subItem.verbose)
+        return false
+    }
+    if (preProps.subItem.groupChildren?.length !== nextProps.subItem.groupChildren?.length) {
+        console.log('444', nextProps.subItem.verbose)
+        return false
+    }
+    return true
+}
+)
+
+interface WebFuzzerGroupItemProps {
+    groupItem: MultipleNodeInfo
+    selectId: string
+}
+const WebFuzzerGroupItem: React.FC<WebFuzzerGroupItemProps> = React.memo((props) => {
+    const { groupItem, selectId } = props
+    const isSelect = useMemo(() => {
+        return selectId === groupItem.id
+    }, [selectId])
+    return (<div
+        key={groupItem.id}
+        tabIndex={isSelect ? 1 : -1}
+        style={{
+            display: isSelect ? "" : "none",
+        }}
+        className={styles["page-body"]}
+    >
+        <HTTPFuzzerPage
+            isHttps={groupItem.params?.isHttps}
+            isGmTLS={groupItem.params?.isGmTLS}
+            request={groupItem.params?.request}
+            system={groupItem.params?.system}
+            id={groupItem?.id || ""}
+            fuzzerParams={groupItem.params?.fuzzerParams}
+            shareContent={groupItem.params?.shareContent}
+        />
+    </div>)
+})
 
 // 多开页面的一级页面关闭的确认弹窗
 const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
@@ -3457,7 +3691,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
                 <RemoveIcon />
             </div>
         ),
-        content: <div style={{paddingTop: 8}}>{props?.content}</div>
+        content: <div style={{ paddingTop: 8 }}>{props?.content}</div>
     })
     return m
 }

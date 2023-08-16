@@ -7,6 +7,7 @@ import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
  * @function setType
  */
 export interface FuzzerSequenceProps {
+    groupId: string
     pageId: string
     setType:(s:WebFuzzerType)=>void
 }

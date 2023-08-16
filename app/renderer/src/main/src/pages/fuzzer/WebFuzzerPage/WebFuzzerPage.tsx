@@ -1,13 +1,13 @@
-import React, {Suspense, useEffect, useMemo, useRef, useState} from "react"
-import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react"
+import { WebFuzzerPageProps, WebFuzzerType } from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
-import {OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon} from "@/assets/icon/outline"
+import { OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon } from "@/assets/icon/outline"
 import classNames from "classnames"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {NodeInfoProps, usePageNode} from "@/store/pageNodeInfo"
-import {YakitRoute} from "@/routes/newRoute"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {Player} from "video-react"
+import { useCreation, useInViewport, useMemoizedFn } from "ahooks"
+import { NodeInfoProps, PageNodeItemProps, usePageNode } from "@/store/pageNodeInfo"
+import { YakitRoute } from "@/routes/newRoute"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { Player } from "video-react"
 import "video-react/dist/video-react.css" // import css
 
 const FuzzerSequence = React.lazy(() => import("../FuzzerSequence/FuzzerSequence"))
@@ -29,19 +29,24 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
     const [type, setType] = useState<WebFuzzerType>("config")
     const renderMap = useRef<Map<string, boolean>>(new Map().set("config", true))
 
-    const {getPageNodeInfoByPageId} = usePageNode()
+    const { getPageNodeInfoByPageId, getPageNodeInfoByPageGroupId } = usePageNode()
 
     const onSwitchType = useMemoizedFn((key) => {
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
+        // const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
+        const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
+
         if (!nodeInfo) {
             return
         }
-        const {currentItem} = nodeInfo
-        if (!currentItem.pageGroupId || currentItem.pageGroupId === "0") {
+        // console.log('nodeInfo', nodeInfo)
+        // const { currentItem } = nodeInfo
+
+        // if (!currentItem.pageGroupId || currentItem.pageGroupId === "0") {
+        if (nodeInfo.pageChildrenList.length === 0) {
             let m = showYakitModal({
                 width: "40%",
                 centered: true,
-                style: {minWidth: 520},
+                style: { minWidth: 520 },
                 content: (
                     <div className={styles["yakit-modal-content"]}>
                         <div className={styles["yakit-modal-content-heard"]}>
@@ -67,7 +72,7 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
                                 src={require("@/assets/group_presentation.mp4").default}
                                 autoPlay
                                 loop
-                                // controls
+                            // controls
                             />
                         </div>
                     </div>
@@ -80,18 +85,6 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
             setType(key)
         }
     })
-    const tabContent = useMemo(() => {
-        return [
-            {
-                key: "config",
-                node: <HTTPFuzzerPage {...props} />
-            },
-            {
-                key: "sequence",
-                node: <FuzzerSequence setType={setType} pageId={props.id} />
-            }
-        ]
-    }, [props])
     return (
         <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>
@@ -115,19 +108,28 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
                     </div>
                 ))}
             </div>
-            {tabContent.map(
-                (tabItem) =>
-                    renderMap.current?.get(tabItem.key) && (
-                        <div
-                            className={classNames(styles["web-fuzzer-tab-content"], {
-                                [styles["display-none"]]: type !== tabItem.key
-                            })}
-                            key={tabItem.key}
-                        >
-                            <Suspense fallback={<div>Loading Main</div>}>{tabItem.node}</Suspense>
-                        </div>
-                    )
-            )}
+            {
+                renderMap.current?.get('config') &&
+                <div
+                    className={classNames(styles["web-fuzzer-tab-content"], {
+                        [styles["display-none"]]: type !== 'config'
+                    })}
+                >
+                    {props.children}
+                </div>
+            }
+            {
+                renderMap.current?.get('sequence') &&
+                <div
+                    className={classNames(styles["web-fuzzer-tab-content"], {
+                        [styles["display-none"]]: type !== 'sequence'
+                    })}
+                >
+                    <FuzzerSequence setType={setType} pageId={props.id} groupId={props.groupId} />
+                </div>
+            }
         </div>
     )
+},()=>{
+    return true
 })

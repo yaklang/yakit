@@ -1,6 +1,9 @@
-export type WebFuzzerType="config" | "sequence"
+import { ReactNode } from "react"
 
-export interface WebFuzzerPageProps{
+export type WebFuzzerType = "config" | "sequence"
+
+export interface WebFuzzerPageProps {
+    children?: ReactNode
     isHttps?: boolean
     isGmTLS?: boolean
     request?: string
@@ -8,5 +11,6 @@ export interface WebFuzzerPageProps{
     fuzzerParams?: fuzzerInfoProp
     shareContent?: string
     id: string
+    groupId: string
 }
 
