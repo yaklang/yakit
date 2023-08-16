@@ -34,7 +34,7 @@ import {
 } from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Collapse} from "antd"
+import {Collapse, Descriptions} from "antd"
 import classNames from "classnames"
 import {useCreation, useMemoizedFn, useSize} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
@@ -52,6 +52,7 @@ import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {CopyableField} from "@/utils/inputUtil";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -165,7 +166,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                 }
                 secondMinSize={530}
                 firstMinSize={300}
-                secondNode={<MatcherAndExtraction {...restProps} httpResponse={codeValue} />}
+                secondNode={<MatcherAndExtraction {...restProps} httpResponse={codeValue}/>}
                 secondNodeStyle={{paddingLeft: 0}}
                 lineDirection='right'
             />
@@ -247,7 +248,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         type: "white",
                         onCancelText: "不应用",
                         onOkText: "应用",
-                        icon: <ExclamationCircleOutlined />,
+                        icon: <ExclamationCircleOutlined/>,
                         onOk: () => {
                             resolve(data)
                             m.destroy()
@@ -292,7 +293,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 ...extractor,
                 extractorList: [
                     ...extractor.extractorList,
-                    _.cloneDeepWith({...defaultExtractorItem, Name: `ID ${extractor.extractorList.length}`})
+                    _.cloneDeepWith({...defaultExtractorItem, Name: `data_${extractor.extractorList.length}`})
                 ]
             })
         })
@@ -321,7 +322,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             setExecuteLoading(true)
             ipcRenderer
                 .invoke("MatchHTTPResponse", matchHTTPResponseParams)
-                .then((data: {Matched: boolean}) => {
+                .then((data: { Matched: boolean }) => {
                     if (data.Matched) {
                         yakitNotify("success", "匹配成功")
                     } else {
@@ -348,7 +349,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     HTTPResponse: httpResponse,
                     Extractors: extractor.extractorList
                 })
-                .then((obj: {Values: {Key: string; Value: string}[]}) => {
+                .then((obj: { Values: { Key: string; Value: string }[] }) => {
                     if (!obj) {
                         yakitNotify("error", "匹配不到有效结果")
                         return
@@ -361,7 +362,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         title: "提取结果",
                         width: "60%",
                         footer: <></>,
-                        content: <ExtractionResultsContent list={obj.Values || []} />
+                        content: <ExtractionResultsContent list={obj.Values || []}/>
                     })
                 })
                 .catch((err) => {
@@ -452,7 +453,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     type: "white",
                     onCancelText: "不应用",
                     onOkText: "应用",
-                    icon: <ExclamationCircleOutlined />,
+                    icon: <ExclamationCircleOutlined/>,
                     onOk: () => {
                         onApplyConfirm()
                         m.destroy()
@@ -519,7 +520,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         <div className={styles["matching-extraction-extra"]}>
                             <YakitButton
                                 type='outline1'
-                                icon={<PlusIcon />}
+                                icon={<PlusIcon/>}
                                 onClick={() => onAddCondition()}
                                 size={isSmallMode ? "small" : undefined}
                             >
@@ -539,7 +540,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                             >
                                 应用
                             </YakitButton>
-                            <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()} />
+                            <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()}/>
                         </div>
                     </div>
                     <MatcherCollapse
@@ -737,7 +738,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
                     />
                 </LabelNodeItem>
                 <LabelNodeItem label='不匹配(取反)' column={isSmallMode}>
-                    <YakitSwitch checked={matcherItem.Negative} onChange={(checked) => onEdit("Negative", checked)} />
+                    <YakitSwitch checked={matcherItem.Negative} onChange={(checked) => onEdit("Negative", checked)}/>
                 </LabelNodeItem>
             </div>
             <MatcherAndExtractionValueList
@@ -771,7 +772,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
     return (
         <div className={styles["matching-extraction-list-value"]}>
             {group.map((groupItem, number) => (
-                <LabelNodeItem label={`Data_${number}`} key={`Data_${number}`}>
+                <LabelNodeItem label={`${!showRegex ? number : "Regexp"}`} key={`Data_${number}`}>
                     <div className={styles["matcher-item-textarea-body"]}>
                         {notEditable ? (
                             <div className={styles["matcher-item-text"]}>{groupItem}</div>
@@ -785,7 +786,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                                     placeholder='请输入...'
                                     className={styles["matcher-item-textarea"]}
                                 />
-                                <ResizerIcon className={styles["resizer-icon"]} />
+                                <ResizerIcon className={styles["resizer-icon"]}/>
                             </>
                         )}
                     </div>
@@ -798,7 +799,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                                     }}
                                     defaultCode={httpResponse}
                                 >
-                                    <AdjustmentsIcon className={styles["adjustments-icon"]} />
+                                    <AdjustmentsIcon className={styles["adjustments-icon"]}/>
                                 </RuleContent>
                             )}
                             <TrashIcon
@@ -812,11 +813,11 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                     )}
                 </LabelNodeItem>
             ))}
-            {!notEditable && (
+            {!notEditable && !showRegex && (
                 <LabelNodeItem label={""}>
                     <div className={styles["add-matcher"]}>
-                        <div className={styles["divider"]} />
-                        <YakitButton type='text' icon={<PlusIcon style={{height: 16}} />} onClick={() => onAddGroup()}>
+                        <div className={styles["divider"]}/>
+                        <YakitButton type='text' icon={<PlusIcon style={{height: 16}}/>} onClick={() => onAddGroup()}>
                             添加匹配内容
                         </YakitButton>
                     </div>
@@ -854,7 +855,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
             yakitNotify("error", "字符长度不超过20")
             return
         }
-        onEdit("Name", value || `ID ${index}`, index)
+        onEdit("Name", value || `data_${index}`, index)
     })
     return (
         <div
@@ -868,7 +869,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                 onChange={(key) => setActiveKey(key as string)}
                 accordion
                 ghost
-                expandIcon={(e) => (e.isActive ? <ChevronDownIcon /> : <ChevronRightIcon />)}
+                expandIcon={(e) => (e.isActive ? <ChevronDownIcon/> : <ChevronRightIcon/>)}
                 className={styles["matcher-extraction-collapse"]}
             >
                 {extractor.extractorList.map((extractorItem, index) => (
@@ -876,7 +877,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                         header={
                             <div className={styles["collapse-panel-header"]}>
                                 <span className={classNames(styles["header-id"])}>
-                                    <span>{extractorItem.Name || `ID ${index}`}</span>
+                                    <span>{extractorItem.Name || `data_${index}`}</span>
                                     <YakitPopover
                                         overlayClassName={styles["edit-name-popover"]}
                                         content={
@@ -1119,7 +1120,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                                     setIsShowColor(false)
                                 }}
                             >
-                                <div className={classNames(styles["color-chunk"], `color-bg-${colorItem.color}`)} />
+                                <div className={classNames(styles["color-chunk"], `color-bg-${colorItem.color}`)}/>
                                 <span>{colorItem.title}</span>
                             </div>
                         ))}
@@ -1137,7 +1138,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                     [`color-bg-${value}`]: !!value
                 })}
             >
-                {!value && <ColorSwatchIcon />}
+                {!value && <ColorSwatchIcon/>}
             </div>
         </YakitPopover>
     )
@@ -1147,9 +1148,16 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
     const {list = []} = props
     return (
         <div className={styles["extract-results"]}>
-            {list.map((i) => {
-                return <p key={i.Key}>{`${i.Key}: ${i.Value}`}</p>
-            })}
+            <Descriptions size={"small"} bordered={true} column={1}>
+                {list.map((i) => {
+                    return <Descriptions.Item
+                        key={`${i.Key}-${i.Value}`} label={<CopyableField maxWidth={150} text={i.Key}/>}
+                    >
+                        <CopyableField maxWidth={400} text={i.Value}/>
+                    </Descriptions.Item>
+                    // return <p key={i.Key}>{`${i.Key}: ${i.Value}`}</p>
+                })}
+            </Descriptions>
         </div>
     )
 })
