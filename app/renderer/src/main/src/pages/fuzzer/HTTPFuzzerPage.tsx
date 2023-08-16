@@ -395,7 +395,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 设置变量
         params: [{Key: "", Value: ""}],
         // 匹配器
-        filterMode: "drop",
+        filterMode: "onlyMatch",
         matchers: [],
         matchersCondition: "and",
         hitColor: "red",
@@ -851,6 +851,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             if (data.Ok) {
+                if (r.MatchedByMatcher) {
+                    yakitNotify("success", `匹配成功: ${r.Url}`)
+                }
                 successBuffer.push(r)
             } else {
                 failedBuffer.push(r)
@@ -1780,7 +1783,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         showResponseViaResponseRaw(rsp.ResponseRaw || "")
                     }}
                 />
-                {rsp.ExtractedResults.length > 0 && (
+                {rsp.ExtractedResults.filter(i => (i.Key !== "" || i.Value !== "")).length > 0 && (
                     <YakitButton type='outline2' size='small' onClick={() => onViewExecResults()}>
                         查看提取结果
                     </YakitButton>
