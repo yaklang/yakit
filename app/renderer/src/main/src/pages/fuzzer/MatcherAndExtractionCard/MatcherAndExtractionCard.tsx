@@ -103,7 +103,7 @@ export const defaultExtractorItem: HTTPResponseExtractor = {
     Scope: "raw",
     Groups: [""],
     // ---------
-    Name: "ID 0",
+    Name: "data_0",
     RegexpMatchGroup: [],
     XPathAttribute: ""
 }
