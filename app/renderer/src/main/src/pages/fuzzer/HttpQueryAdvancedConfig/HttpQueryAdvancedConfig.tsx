@@ -50,9 +50,9 @@ import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
-import {MainOperatorContext} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil";
+import { MainOperatorContext } from "@/pages/layout/MainContext"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse

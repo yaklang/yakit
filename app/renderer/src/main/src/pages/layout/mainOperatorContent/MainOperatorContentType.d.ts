@@ -35,7 +35,7 @@ export interface MultipleNodeGroup {
     groupId: string
     groupChildren?: MultipleNodeInfo[]
     /**@private */
-    childrenWidth?:number
+    childrenWidth?: number
 }
 
 /**
@@ -97,18 +97,6 @@ export interface TabChildrenProps {
 }
 
 /**
- * @description 页面渲染
- * @property routeKey 路由key
- * @property yakScriptId 
- * @property {ComponentParams} params 页面初始渲染的参数
- */
-export interface PageItemProps {
-    routeKey: YakitRoute | string
-    yakScriptId?: number
-    params?: ComponentParams
-}
-
-/**
  * @description 二级Tab展示
  * @property item 一级tab详情
  * @property index 在数组中的下标
@@ -145,6 +133,17 @@ export interface SubTabListProps {
     pageItem: PageCache
     index: number
 }
+
+export interface SubTabsProps {
+    ref: ?any
+    pageItem: PageCache
+    index: number
+    // subPage: MultipleNodeInfo[]
+    // selectSubMenu: MultipleNodeInfo
+    // setSubPage: (m: MultipleNodeInfo[]) => void
+    // setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
+    onFocusPage:()=>void
+}
 /**
  * @description 二级tab item
  * @property subItem  二级详情
@@ -161,9 +160,9 @@ export interface SubTabItemProps {
     selectSubMenu: MultipleNodeInfo
     setSelectSubMenu: (m: MultipleNodeInfo) => void
     onRemoveSub: (m: MultipleNodeInfo) => void
-    onContextMenu: (e: React.MouseEvent,subItem: MultipleNodeInfo) => void
+    onContextMenu: (e: React.MouseEvent, subItem: MultipleNodeInfo) => void
     combineColor?: string
-    dropType:string
+    dropType: string
 }
 /**
  * @description 组
@@ -174,38 +173,12 @@ export interface SubTabItemProps {
  */
 export interface SubTabGroupItemProps extends SubTabItemProps {
     onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
-    onGroupContextMenu: (e: React.MouseEvent, ) => void
-    
-    subPage:MultipleNodeInfo[]
+    onGroupContextMenu: (e: React.MouseEvent,index:number) => void
+    selectMenuGroupId:string
+    // subPage: MultipleNodeInfo[]
 }
 
-/**
- * @description MainOperatorContextProps
- * @property pageCache  路由数据
- * @function setPageCache 修改路由
- * @property currentTabKey 一级选中的tab
- * @function setCurrentTabKey 设置选中tab
- * @property TabMenuHeight tab-menu内容高度
- * @function setTabMenuHeight 设置tab-menu的内容高度
- * @function openMultipleMenuPage 打开页面
- * @function afterDeleteFirstPage 删除一级页面的回调  'all'|'other'|'single' 
- * @function afterDeleteSubPage 删除二级页面的回调 'other'|'single'
- * @function afterUpdateSubItem 更新页面信息后的回调
- * @function onUpdateSubPage 二级tab整体需要修改
- */
-export interface MainOperatorContextProps {
-    pageCache: PageCache[]
-    setPageCache: (p: PageCache[]) => void
-    currentTabKey: string
-    setCurrentTabKey: (s: YakitRoute | string) => void
-    tabMenuHeight: number
-    setTabMenuHeight: (n: number) => void
-    openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteFirstPage: (type: 'all' | 'other' | 'single', page?: PageCache) => void
-    afterDeleteSubPage: (type: 'other' | 'single', r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
-}
+
 export type OperateGroup = 'cancelGroup' | 'closeGroup' | 'closeOtherTabs'
 /**
  * @description 组的右键点击展示内容
@@ -224,8 +197,8 @@ export interface GroupRightClickShowContentProps {
  * @property subPage  
  * @property selectSubMenu  选中的item
  */
-export interface DroppableCloneProps{
-    draggableId:string
-    subPage:MultipleNodeInfo[]
-    selectSubMenu: MultipleNodeInfo
+export interface DroppableCloneProps {
+    draggableId: string
+    // subPage: MultipleNodeInfo[]
+    // selectSubMenu: MultipleNodeInfo
 }

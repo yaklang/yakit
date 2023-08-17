@@ -8,8 +8,8 @@ import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
  */
 export interface FuzzerSequenceProps {
     groupId: string
-    pageId: string
-    setType:(s:WebFuzzerType)=>void
+    pageId?: string
+    setType?:(s:WebFuzzerType)=>void
 }
 
 /**

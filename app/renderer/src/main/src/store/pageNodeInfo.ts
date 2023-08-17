@@ -97,6 +97,10 @@ const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
 }
 interface PageNodeInfoProps {
     pageNode: Map<string, PageInfoProps>
+    currentSelectGroup: Map<string, PageNodeItemProps>
+
+    getCurrentSelectGroup: (key, pageGroupId: string) =>  PageNodeItemProps | undefined
+    setCurrentSelectGroup: (key, pageGroupId: string) => void
 
     getPageNodeInfoByPageId: (key, pageId: string) => NodeInfoProps | undefined
     updatePageNodeInfoByPageId: (key, pageId: string, val: PageNodeItemProps) => void
@@ -131,10 +135,34 @@ interface PageNodeInfoProps {
 
 export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((set, get) => ({
     pageNode: new Map(),
+    currentSelectGroup: new Map(),
+    getCurrentSelectGroup: (key, groupId) => {
+        const node = get().pageNode.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        const item = getPageNodeInfoById(pageNodeList, groupId)
+        // console.log('getCurrentSelectGroup',item.currentItem)
+        return item.currentItem
+    },
+    setCurrentSelectGroup: (key, groupId) => {
+        const node = get().pageNode.get(key);
+        if (!node) return
+        const { pageNodeList } = node
+        const selectGroup = get().currentSelectGroup
+        const item = getPageNodeInfoById(pageNodeList, groupId)
+        if (!item) return
+        // console.log('setCurrentSelectGroup', item.currentItem)
+        selectGroup.set(key, item.currentItem)
+        set({
+            ...get(),
+            currentSelectGroup: selectGroup
+        })
+    },
     getPageNodeInfoByPageId: (key, pageId) => {
         const node = get().pageNode.get(key);
         if (!node) return
         const { pageNodeList } = node
+        // console.log('getPageNodeInfoByPageId',pageNodeList)
         const item = getPageNodeInfoById(pageNodeList, pageId)
         return item
     },
@@ -163,6 +191,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         })
         // console.log('updatePageNodeInfoByPageId', newNode)
         set({
+            ...get(),
             pageNode: newNode
         })
     },
@@ -183,6 +212,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, { ...node })
         // console.log('removePageNodeInfoByPageId', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
         return currentItem
@@ -193,7 +223,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         if (!node) return
         const { pageNodeList } = node
         const index = pageNodeList.findIndex(ele => ele.pageId === pageGroupId)
-        console.log('pageNodeList', pageNodeList, index, pageGroupId)
+        // console.log('pageNodeList', pageNodeList, index, pageGroupId)
         if (index === -1) return
         pageNodeList[index].pageChildrenList = list
         node.pageNodeList = [...pageNodeList];
@@ -201,6 +231,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, { ...node })
         // console.log('setPageNodeInfoByPageGroupId', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -213,6 +244,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, { ...node })
         // console.log('removePageNodeByPageGroupId', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -244,6 +276,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, { ...node })
         // console.log('flatPageChildrenListAndRemoveGroupByPageGroupId', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -264,6 +297,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, { ...node })
         // console.log('exchangeOrderPageNodeByPageGroupId', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -285,6 +319,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, { ...node })
         // console.log('addPageNodeInfoByPageGroupId', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -303,6 +338,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, current)
         // console.log('addPageNode', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -312,6 +348,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         newVal.set(key, ev)
         // console.log('setPageNode', newVal)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -319,6 +356,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const newVal = get().pageNode
         newVal.delete(key)
         set({
+            ...get(),
             pageNode: newVal
         })
     },
@@ -326,6 +364,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const newVal = get().pageNode
         newVal.clear()
         set({
+            ...get(),
             pageNode: newVal
         })
     }

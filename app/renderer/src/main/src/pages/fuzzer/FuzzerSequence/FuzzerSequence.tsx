@@ -22,7 +22,8 @@ import {
     useSize,
     useThrottleEffect,
     useThrottleFn,
-    useUpdateEffect
+    useUpdateEffect,
+    useWhyDidYouUpdate
 } from "ahooks"
 import { OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
 import { Divider, Form, Result } from "antd"
@@ -144,7 +145,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     useEffect(() => {
         const unSubPageNode = usePageNode.subscribe(
-            (state) => state.pageNode.get(YakitRoute.HTTPFuzzer),
+            (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer,props.groupId),
             () => {
                 onUpdateSequence()
             }
@@ -153,7 +154,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             unSubPageNode()
         }
     }, [])
-
+    useWhyDidYouUpdate('FuzzerSequence', { ...props,sequenceList,originSequenceListRef });
     useUpdateEffect(() => {
         if (inViewport) onUpdateSequence()
     }, [inViewport])
@@ -370,7 +371,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (!nodeInfo) return
             const { pageChildrenList } = nodeInfo
             if (pageChildrenList.length === 0) {
-                setType("config")
+                if (setType) setType("config")
                 return
             }
             onSetOriginSequence(nodeInfo)
@@ -432,15 +433,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         return false
     })
     const getPageNodeInfoByPageIdByRoute = useMemoizedFn(() => {
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.pageId)
-        if (!nodeInfo) return
-        const { parentItem, currentItem } = nodeInfo
-        onSetOriginSequence(parentItem)
+        // const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.pageId)
+        const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
+        console.log('getPageNodeInfoByPageIdByRoute', nodeInfo)
+        if (!nodeInfo) {
+            return
+        }
+        onSetOriginSequence(nodeInfo)
         if (sequenceList.length === 0) {
             const item = {
                 id: `${randomString(8)}-1`,
                 pageId: "",
-                pageGroupId: currentItem.pageGroupId,
+                pageGroupId: nodeInfo.pageId,
                 pageName: "",
                 pageParams: defaultPageParams,
                 inheritCookies: false,
@@ -448,6 +452,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
             setSequenceList([item])
         }
+        // const { parentItem, currentItem } = nodeInfo
+        // onSetOriginSequence(parentItem)
+        // if (sequenceList.length === 0) {
+        //     const item = {
+        //         id: `${randomString(8)}-1`,
+        //         pageId: "",
+        //         pageGroupId: currentItem.pageGroupId,
+        //         pageName: "",
+        //         pageParams: defaultPageParams,
+        //         inheritCookies: false,
+        //         inheritVariables: false
+        //     }
+        //     setSequenceList([item])
+        // }
     })
 
     /**设置原始序列 */

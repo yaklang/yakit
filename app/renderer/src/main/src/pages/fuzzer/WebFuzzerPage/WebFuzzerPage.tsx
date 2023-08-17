@@ -1,17 +1,15 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { WebFuzzerPageProps, WebFuzzerType } from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
 import { OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon } from "@/assets/icon/outline"
 import classNames from "classnames"
-import { useCreation, useInViewport, useMemoizedFn } from "ahooks"
+import { useCreation, useInViewport, useMemoizedFn, useWhyDidYouUpdate } from "ahooks"
 import { NodeInfoProps, PageNodeItemProps, usePageNode } from "@/store/pageNodeInfo"
 import { YakitRoute } from "@/routes/newRoute"
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { Player } from "video-react"
 import "video-react/dist/video-react.css" // import css
+import { SubPageContext } from "@/pages/layout/MainContext"
+import { yakitNotify } from "@/utils/notification"
 
-const FuzzerSequence = React.lazy(() => import("../FuzzerSequence/FuzzerSequence"))
-const HTTPFuzzerPage = React.lazy(() => import("../HTTPFuzzerPage"))
 
 const webFuzzerTabs = [
     {
@@ -26,65 +24,24 @@ const webFuzzerTabs = [
     }
 ]
 export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
-    const [type, setType] = useState<WebFuzzerType>("config")
-    const renderMap = useRef<Map<string, boolean>>(new Map().set("config", true))
+    const { setType, onAddGroup } = useContext(SubPageContext)
 
-    const { getPageNodeInfoByPageId, getPageNodeInfoByPageGroupId } = usePageNode()
+    const { getPageNodeInfoByPageId } = usePageNode()
 
     const onSwitchType = useMemoizedFn((key) => {
-        // const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
-        const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
-
-        if (!nodeInfo) {
-            return
-        }
-        // console.log('nodeInfo', nodeInfo)
-        // const { currentItem } = nodeInfo
-
-        // if (!currentItem.pageGroupId || currentItem.pageGroupId === "0") {
-        if (nodeInfo.pageChildrenList.length === 0) {
-            let m = showYakitModal({
-                width: "40%",
-                centered: true,
-                style: { minWidth: 520 },
-                content: (
-                    <div className={styles["yakit-modal-content"]}>
-                        <div className={styles["yakit-modal-content-heard"]}>
-                            <div className={styles["yakit-modal-content-heard-body"]}>
-                                <div className={styles["yakit-modal-content-heard-body-title"]}>温馨提示</div>
-                                <div className={styles["yakit-modal-content-heard-body-subTitle"]}>
-                                    <span>请先将 Fuzzer 标签页打组，再配置序列</span>
-                                    <span className={styles["yakit-modal-content-heard-body-subTitle-tip"]}>
-                                        （下图为打组操作示例）
-                                    </span>
-                                </div>
-                            </div>
-                            <OutlineXIcon
-                                onClick={() => {
-                                    m.destroy()
-                                }}
-                                className={styles["remove-icon"]}
-                            />
-                        </div>
-                        <div className={styles["yakit-modal-content-body"]}>
-                            <video
-                                className={styles["yakit-modal-content-body-video"]}
-                                src={require("@/assets/group_presentation.mp4").default}
-                                autoPlay
-                                loop
-                            // controls
-                            />
-                        </div>
-                    </div>
-                ),
-                closable: false,
-                footer: null
-            })
+        if (!props.id) return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
+        if (!nodeInfo) return
+        const { currentItem, subIndex } = nodeInfo
+        if (subIndex === -1) {
+            // 新建组
+            onAddGroup(currentItem.pageId)
+            yakitNotify('info', '如需使用序列，请将其他标签页拖入该分组')
         } else {
-            renderMap.current?.set(key, true)
-            setType(key)
+            if (setType) setType(key)
         }
     })
+    // useWhyDidYouUpdate('WebFuzzerPage', { ...props, });
     return (
         <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>
@@ -92,14 +49,13 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
                     <div
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {
-                            [styles["web-fuzzer-tab-item-active"]]: type === item.key
+                            [styles["web-fuzzer-tab-item-active"]]: props.type === item.key
                         })}
                         onClick={() => {
                             if (item.key === "sequence") {
                                 onSwitchType(item.key)
                             } else {
-                                renderMap.current?.set(item.key, true)
-                                setType(item.key as WebFuzzerType)
+                                if (setType) setType(item.key as WebFuzzerType)
                             }
                         }}
                     >
@@ -108,28 +64,11 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
                     </div>
                 ))}
             </div>
-            {
-                renderMap.current?.get('config') &&
-                <div
-                    className={classNames(styles["web-fuzzer-tab-content"], {
-                        [styles["display-none"]]: type !== 'config'
-                    })}
-                >
-                    {props.children}
-                </div>
-            }
-            {
-                renderMap.current?.get('sequence') &&
-                <div
-                    className={classNames(styles["web-fuzzer-tab-content"], {
-                        [styles["display-none"]]: type !== 'sequence'
-                    })}
-                >
-                    <FuzzerSequence setType={setType} pageId={props.id} groupId={props.groupId} />
-                </div>
-            }
+            <div
+                className={classNames(styles["web-fuzzer-tab-content"],)}
+            >
+                {props.children}
+            </div>
         </div>
     )
-},()=>{
-    return true
 })

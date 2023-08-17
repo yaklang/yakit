@@ -395,14 +395,8 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
         case YakitRoute.HTTPFuzzer:
             return (
                 <WebFuzzerPage
-                    isHttps={params?.isHttps}
-                    isGmTLS={params?.isGmTLS}
-                    request={params?.request}
-                    system={params?.system}
+                    type='config'
                     id={params?.id || ""}
-                    fuzzerParams={params?.fuzzerParams}
-                    shareContent={params?.shareContent}
-                    groupId={params?.groupId || '0'}
                 >
                     <HTTPFuzzerPage
                         isHttps={params?.isHttps}

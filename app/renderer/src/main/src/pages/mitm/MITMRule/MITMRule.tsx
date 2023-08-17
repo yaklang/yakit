@@ -44,7 +44,7 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import {MainOperatorContext} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
+import { MainOperatorContext } from "@/pages/layout/MainContext"
 
 const {ipcRenderer} = window.require("electron")
 
