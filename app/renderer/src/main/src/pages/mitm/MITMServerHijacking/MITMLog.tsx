@@ -1,4 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
+import emiter from "@/utils/eventBus";
 import styles from "./MITMServerHijacking.module.scss"
 import {
     availableColors,
@@ -228,6 +229,21 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         1000,
         {immediate: true}
     )
+
+    useEffect(() => {
+        /**
+         * 清空log表格数据
+         */
+        const cleanLogTableData = () => {
+            setLoading(true)
+            setData([])
+        }
+        emiter.on('cleanMitmLogEvent', cleanLogTableData)
+        return () => {
+            emiter.off('cleanMitmLogEvent', cleanLogTableData)
+        }
+    }, [])
+
     useEffect(() => {
         getHTTPFlowsFieldGroup(true)
     }, [])
