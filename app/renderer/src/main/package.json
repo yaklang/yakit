@@ -39,6 +39,7 @@
         "isomorphic-dompurify": "^1.8.0",
         "lodash": "^4.17.21",
         "mermaid": "^10.2.4",
+        "mitt": "^3.0.1",
         "moment": "^2.29.1",
         "monaco-editor": "^0.40.0",
         "monaco-editor-webpack-plugin": "^7.1.0",
