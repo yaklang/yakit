@@ -54,7 +54,7 @@ interface SubPageContextProps {
     selectSubMenu: MultipleNodeInfo
     type: WebFuzzerType
     setSubPage: (m: MultipleNodeInfo[]) => void
-    setSelectSubMenu: (m: MultipleNodeInfo) => void
+    setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
     setType: (w: WebFuzzerType) => void
     onAddGroup: (pageId: string) => void
 }

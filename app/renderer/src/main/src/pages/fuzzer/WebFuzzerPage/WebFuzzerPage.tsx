@@ -36,10 +36,8 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
         if (subIndex === -1) {
             // 新建组
             onAddGroup(currentItem.pageId)
-            yakitNotify('info', '如需使用序列，请将其他标签页拖入该分组')
-        } else {
-            if (setType) setType(key)
         }
+        if (setType) setType(key)
     })
     // useWhyDidYouUpdate('WebFuzzerPage', { ...props, });
     return (

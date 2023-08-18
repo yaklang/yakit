@@ -10,7 +10,6 @@ import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
 import { WebFuzzerType } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import { FuzzerSequenceListProps, useFuzzerSequence } from "@/store/fuzzerSequence"
 
-
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) => {
     const { renderSubPage, route, pluginId, selectSubMenuId } = props;
 
@@ -89,43 +88,43 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
     const [fuzzerSequenceList, setFuzzerSequenceList] = useState<FuzzerSequenceListProps[]>([])
     const [selectGroupId, setSelectGroupId] = useState<string>('')
 
-
     const [pageSequenceRenderList, { set: setPageSequenceRenderList, get: getPageSequenceRenderList }] = useMap<string, boolean>(
         new Map<string, boolean>()
     )
     useEffect(() => {
-        const unSubPageNode = useFuzzerSequence.subscribe(
+        const unFuzzerSequenceList = useFuzzerSequence.subscribe(
             (state) => state.fuzzerSequenceList,
             (val) => {
-                console.log('fuzzerSequenceList', val)
                 setFuzzerSequenceList(val)
             }
         )
         return () => {
-            unSubPageNode()
+            unFuzzerSequenceList()
         }
     }, [])
     useEffect(() => {
-        const unSubPageNode = useFuzzerSequence.subscribe(
+        const unSelectGroupId = useFuzzerSequence.subscribe(
             (state) => state.selectGroupId,
             (val) => {
-                console.log('selectGroupId', val)
-                // setFuzzerSequenceList()
-                updateRender()
+                updateRender(val)
+                setSelectGroupId(val)
             }
         )
         return () => {
-            unSubPageNode()
+            unSelectGroupId()
         }
     }, [])
-    const updateRender = useMemoizedFn(() => {
-        // // 控制渲染
-        // if (getPageSequenceRenderList(selectGroupId)) return
-        // if (type === 'sequence' && selectGroupId !== '0') {
-        //     setPageSequenceRenderList(selectGroupId, true)
-        // }
+    useEffect(() => {
+        updateRender(selectGroupId)
+    }, [type])
+    const updateRender = useMemoizedFn((id: string) => {
+        // 控制渲染
+        if (getPageSequenceRenderList(id)) return
+        if (type === 'sequence' && id !== '0') {
+            setPageSequenceRenderList(id, true)
+        }
     })
-    return (<>
+    return (<div className={styles['fuzzer-sequence-list']} tabIndex={type === 'sequence' ? 1 : -1} style={{ display: type === 'sequence' ? '' : 'none' }}>
         {
             route === YakitRoute.HTTPFuzzer && <>
                 {
@@ -142,7 +141,7 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
                 }
             </>
         }
-    </>)
+    </div>)
 })
 
 const PageItem: React.FC<PageItemProps> = React.memo(

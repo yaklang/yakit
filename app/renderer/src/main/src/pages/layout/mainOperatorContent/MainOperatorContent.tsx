@@ -33,6 +33,7 @@ import {
     useLongPress,
     useMemoizedFn,
     useThrottleFn,
+    useWhyDidYouUpdate,
 } from "ahooks"
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import classNames from "classnames"
@@ -1738,9 +1739,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         pluginId={pageItem.pluginId}
                         selectSubMenuId={selectSubMenu.id}
                     />
-                    <div className={styles['fuzzer-sequence-list']} tabIndex={type === 'sequence' ? 1 : -1} style={{ display: type === 'sequence' ? '' : 'none' }}>
-                        <RenderFuzzerSequence route={pageItem.route} />
-                    </div>
+                    <RenderFuzzerSequence route={pageItem.route} />
                 </div>
             </SubPageContext.Provider>
         </div>
@@ -1814,7 +1813,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
     }, [])
 
     const tabMenuSubRef = useRef<any>()
-    const preGroupId = useRef<string>()
 
     useEffect(() => {
         // 切换选中页面时聚焦
@@ -1834,20 +1832,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             //滚动到最后边
             scrollToRightMost()
         }
-        if (currentTabKey === YakitRoute.HTTPFuzzer && selectSubMenu.groupId !== '0') {
-            setCurrentSelectGroup(YakitRoute.HTTPFuzzer, selectSubMenu.groupId)
-
-            addFuzzerSequenceList({
-                groupId: selectSubMenu.groupId
-            })
-            if (preGroupId.current !== selectSubMenu.groupId) {
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            if (selectSubMenu.groupId === '0') {
                 setType('config')
-                preGroupId.current = selectSubMenu.groupId
             } else {
-                setType('sequence')
-            }
+                setCurrentSelectGroup(YakitRoute.HTTPFuzzer, selectSubMenu.groupId)
 
-            if (selectSubMenu.groupId !== '0') {
+                addFuzzerSequenceList({
+                    groupId: selectSubMenu.groupId
+                })
                 setSelectGroupId(selectSubMenu.groupId)
             }
         }
@@ -1950,14 +1943,14 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             // console.log("onSubMenuDragEnd", result)
             const { droppableId: sourceDroppableId } = result.source
             /**将拖拽item变为选中item ---------start---------  0817,暂时取消拖拽选中*/
-            // const { index, subIndex } = getPageItemById(subPage, result.draggableId)
-            // if (index === -1) return
-            // const groupChildrenList = subPage[index].groupChildren || []
-            // if (subIndex === -1) {
-            //     if (groupChildrenList.length === 0) setSelectSubMenu(() => subPage[index])
-            // } else {
-            //     setSelectSubMenu(() => groupChildrenList[subIndex])
-            // }
+            const { index, subIndex } = getPageItemById(subPage, result.draggableId)
+            if (index === -1) return
+            const groupChildrenList = subPage[index].groupChildren || []
+            if (subIndex === -1) {
+                if (groupChildrenList.length === 0) setSelectSubMenu(subPage[index])
+            } else {
+                setSelectSubMenu(groupChildrenList[subIndex])
+            }
             /**将拖拽item变为选中item ---------end---------*/
             /** 合并组   ---------start--------- */
             if (result.combine) {
@@ -2045,7 +2038,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 subPage[combineIndex].expand = true
                 subPage[combineIndex].id = groupId
             }
-            // setSelectSubMenu((s) => ({ ...s, groupId }))
+            setSelectSubMenu((s) => ({ ...s, groupId }))
         }
         const combineItem = subPage[combineIndex]
         subPage.splice(sourceIndex, 1)
@@ -2087,7 +2080,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
 
         const combineItem = subPage[combineIndex]
 
-        // setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
+        setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
 
         // 拖拽后组内item===0,则删除该组
         if (subPage[gIndex].groupChildren?.length === 0) {
@@ -2158,7 +2151,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
 
         // setSelectSubMenu(newSourceItem)
-        // setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+        setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
 
         destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
         subPage[destinationNumber].groupChildren = destinationGroupChildrenList
@@ -2197,7 +2190,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
 
         // setSelectSubMenu(newSourceItem)
-        // setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
+        setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
 
         // 将拖拽的item添加到目的地的组内
         subPage.splice(destinationIndex, 0, newSourceItem)
@@ -2247,7 +2240,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 groupId: destinationGroupId
             }
             // setSelectSubMenu(newSourceItem)
-            // setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+            setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
             destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
             subPage[destinationNumber].groupChildren = destinationGroupChildrenList
         }
@@ -3201,6 +3194,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const groupChildrenList = useMemo(() => {
         return subItem.groupChildren || []
     }, [subItem.groupChildren])
+    useWhyDidYouUpdate('SubTabGroupItem', { ...props });
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {

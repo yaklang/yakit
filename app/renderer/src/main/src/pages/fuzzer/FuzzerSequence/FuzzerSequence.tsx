@@ -702,7 +702,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         loading={loading}
                     />
                 ) : (
-                    <YakitEmpty title='请选择 Web Fuzzer' />
+                    <YakitEmpty title='请选择 Web Fuzzer(如需使用序列，请将其他标签页拖入该分组)' />
                 )}
             </div>
         </div>
