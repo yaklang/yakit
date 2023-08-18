@@ -558,7 +558,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }
     return (
         <>
-            <WaterMark content={waterMarkStr()} style={{overflow:"hidden"}}>
+            <WaterMark content={waterMarkStr()} style={{overflow:"hidden",height:"100%"}}>
                 <Layout
                     className='yakit-main-layout main-content-tabs yakit-layout-tabs'
                     style={controlShow ? {display: "none"} : {}}
