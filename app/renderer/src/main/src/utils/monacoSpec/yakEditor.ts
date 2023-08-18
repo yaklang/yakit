@@ -174,15 +174,16 @@ export const setUpYaklangMonaco = () => {
                 // delimiter: after number because of .\d floats
                 [/[;,.]/, 'delimiter'],
 
-                // strings
-                [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
-                [/"/, 'string', '@string'],
-                [/`/, 'string', '@rawstring'],
-
                 // characters
                 [/'[^\\']'/, 'string'],
                 [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
-                [/'/, 'string.invalid']
+
+                // strings
+                [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+                [/"/, 'string.quoted.double.js', '@string'],
+                [/'/, 'string.quoted.single.js','@string2'],
+                [/`/, 'string', '@rawstring'],
+                [/'/, 'string.invalid'],
             ],
             whitespace: [
                 [/[ \t\r\n]+/, ''],
@@ -216,8 +217,14 @@ export const setUpYaklangMonaco = () => {
                 [/"/, 'string', '@pop']
             ],
 
+            string2: [
+                [/[^\\']/, 'string'],
+                [/@escapes/, 'string.escape'],
+                [/'/, 'string', '@pop']
+            ],
+
             rawstring: [
-                [/[^\`]/, 'string'],
+                [/[^`]/, 'string'],
                 [/`/, 'string', '@pop']
             ]
         }
