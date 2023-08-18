@@ -274,6 +274,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     ])
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
+    /** 是否允许密码框关闭 */
+    const [passwordClose,setPasswordClose] = useState<boolean>(true)
     /** 上传数据弹框 */
     const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
@@ -456,6 +458,17 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
     }, [])
 
+    useEffect(() => {
+        // 强制修改密码
+        ipcRenderer.on("reset-password-callback", async (e) => {
+            setPasswordShow(true)
+            setPasswordClose(false)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("reset-password-callback")
+        }
+    }, [])
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
@@ -570,7 +583,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             if (key === "trust-list") {
                                                 openMenu({route: YakitRoute.TrustListPage})
                                             }
-                                            if (key === "set-password") setPasswordShow(true)
+                                            if (key === "set-password") {
+                                                setPasswordClose(true)
+                                                setPasswordShow(true)
+                                            }
                                             if (key === "upload-data") setUploadModalShow(true)
                                             if (key === "upload-yakit-ee") {
                                                 const m = showYakitModal({
@@ -651,6 +667,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)}/>}
             <Modal
                 visible={passwordShow}
+                closable={passwordClose}
                 title={"修改密码"}
                 destroyOnClose={true}
                 maskClosable={false}

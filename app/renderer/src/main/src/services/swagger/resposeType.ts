@@ -126,6 +126,7 @@ export declare namespace API {
      * 是否显示审核状态筛选
      */
     showStatusSearch?: boolean;
+    loginTime?: number;
   }
   export interface UserAuthorityRequest {
     userIds: number[];
