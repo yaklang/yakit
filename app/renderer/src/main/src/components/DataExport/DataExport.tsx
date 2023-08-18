@@ -1,11 +1,15 @@
-import React, {useRef, useState} from "react"
-import {Button, ButtonProps, Modal, Space, Tag, Pagination} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Button, ButtonProps, Modal, Space, Tag, Pagination, Checkbox, Row, Col} from "antd"
 import {export_json_to_excel, CellSetting} from "./toExcel"
 import {failed} from "../../utils/notification"
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "../../pages/invoker/schema"
 import {useMemoizedFn} from "ahooks"
-import "./DataExport.css"
-import {YakitButton,YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import {CheckboxValueType} from "antd/lib/checkbox/Group"
+import styles from "./DataExport.module.scss"
+import classNames from "classnames"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 interface ExportExcelProps {
     btnProps?: ButtonProps
     newBtnProps?: YakitButtonProp
@@ -16,6 +20,17 @@ interface ExportExcelProps {
     text?: string
     openModal?: boolean
     newUI?: boolean
+    newUIType?:
+        | "outline1"
+        | "outline2"
+        | "text"
+        | "primary"
+        | "secondary1"
+        | "secondary2"
+        | "success"
+        | "warning"
+        | "danger"
+        | "serious"
 }
 
 interface resProps {
@@ -42,7 +57,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         showButton = true,
         text,
         openModal = false,
-        newUI = false
+        newUI = false,
+        newUIType = "outline2"
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
@@ -125,7 +141,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
             {showButton ? (
                 <>
                     {newUI ? (
-                        <YakitButton loading={loading} type='outline2' onClick={() => toExcel()} {...newBtnProps}>
+                        <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...newBtnProps}>
                             {text || "导出Excel"}
                         </YakitButton>
                     ) : (
@@ -135,7 +151,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     )}
                 </>
             ) : newUI ? (
-                <YakitButton loading={loading} type='outline2' onClick={() => toExcel()} {...newBtnProps}>
+                <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...newBtnProps}>
                     {text || "导出Excel"}
                 </YakitButton>
             ) : (
@@ -154,7 +170,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         </Button>
                     ))}
                 </Space>
-                <div className='pagination'>
+                <div className={styles["pagination"]}>
                     <Pagination
                         size='small'
                         total={pagination.Total}
@@ -167,5 +183,69 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 </div>
             </Modal>
         </>
+    )
+}
+
+interface ExportSelectProps {
+    /* 导出字段 */
+    exportValue: string[]
+    /* 传出导出字段 */
+    setExportTitle:(v:string[])=>void
+    /* 导出Key 用于缓存 */
+    exportKey: string
+    /* 导出数据方法 */
+    getData: (query: PaginationSchema) => Promise<any>
+    /* 导出文件名称 */
+    fileName?: string
+}
+// 导出字段选择
+export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
+    const {exportValue,fileName,setExportTitle,exportKey,getData} = props
+    const [checkValue,setCheckValue] = useState<CheckboxValueType[]>([])
+    useEffect(()=>{
+        getRemoteValue(exportKey).then((setting) => {
+            if (!setting) {
+                // 第一次进入 默认勾选所有导出字段
+                setExportTitle(exportValue as string[])
+                setCheckValue(exportValue)
+            }
+            else{
+                const values = JSON.parse(setting)
+                setCheckValue(values?.checkedValues)
+                setExportTitle(values?.checkedValues as string[])  
+            }
+            
+        })
+    },[])
+    const onChange = (checkedValues: CheckboxValueType[]) => {
+        const orderCheckedValues = exportValue.filter((item)=>checkedValues.includes(item))
+        setExportTitle(orderCheckedValues)
+        setCheckValue(orderCheckedValues)
+        setRemoteValue(exportKey, JSON.stringify({checkedValues:orderCheckedValues}))
+    }
+    return (
+        <div className={styles["export-select"]}>
+            <Checkbox.Group style={{width: "100%"}} value={checkValue} onChange={onChange}>
+                <Row>
+                    {exportValue.map((item) => (
+                        <Col span={6} className={styles["item"]}>
+                            <YakitCheckbox value={item}>{item}</YakitCheckbox>
+                        </Col>
+                    ))}
+                </Row>
+            </Checkbox.Group>
+            <div className={styles["button-box"]}>
+                <ExportExcel
+                    newBtnProps={{
+                        className:"button"
+                    }}
+                    newUI={true}
+                    newUIType='primary'
+                    getData={getData}
+                    fileName={fileName}
+                    text="导出"
+                />
+            </div>
+        </div>
     )
 }

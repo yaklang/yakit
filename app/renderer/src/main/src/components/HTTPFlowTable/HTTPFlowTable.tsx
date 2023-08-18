@@ -53,6 +53,7 @@ import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareData"
 import { YakitRoute } from "@/routes/newRoute"
+import { ExportSelect } from "../DataExport/DataExport"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -747,6 +748,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
 
     const [batchVisible, setBatchVisible] = useState<boolean>(false)
+
+    const [exportTitle,setExportTitle] = useState<string[]>([])
 
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
@@ -1613,6 +1616,104 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
     })
+
+    const formatJson = (filterVal, jsonData) => {
+        return jsonData.map((v, index) =>
+            filterVal.map((j) => {
+                if(["Request","Response"].includes(j)){
+                    return new Buffer(v[j]).toString("utf8")
+                }
+                if(j === "UpdatedAt"){
+                    return formatTimestamp(v[j])
+                }
+                return v[j]
+            })
+        )
+    }
+
+    // 数据导出
+    const initExcelData = (resolve,newExportData: HTTPFlow[],rsp) => {
+        let exportData: any = []
+        const header: string[] = []
+        const filterVal: string[] = []
+        exportTitle.map((item)=>{
+            if(item==="请求包"){
+                header.push(item)
+                filterVal.push("Request")
+            }
+            else if(item==="响应包"){
+                header.push(item)
+                filterVal.push("Response")
+            }
+            else{
+                const itemData = columns.filter((itemIn)=>itemIn.title===item)[0]
+                header.push(item)
+                filterVal.push(itemData.dataKey)
+            }
+        })
+        exportData = formatJson(filterVal, newExportData)
+        resolve({
+            header,
+            exportData,
+            response: rsp
+        })
+    }
+
+    const getExcelData = useMemoizedFn((pagination,list:HTTPFlow[]) => {
+        return new Promise((resolve) => {
+        const l = data.length
+            const query = {
+                ...params,
+                Tags: params.Tags,
+                Pagination: {...pagination},
+                OffsetId:
+                    pagination.Page == 1
+                        ? undefined
+                        : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
+                AfterBodyLength: params.AfterBodyLength
+                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                    : undefined,
+                BeforeBodyLength: params.BeforeBodyLength
+                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                    : undefined,
+                Full: true
+            }
+
+            if (checkBodyLength && !query.AfterBodyLength) {
+                query.AfterBodyLength = 1
+            }
+            if (isAllSelect) {
+                ipcRenderer
+                .invoke("QueryHTTPFlows", query)
+                .then((rsp: YakQueryHTTPFlowResponse) => {
+                    const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
+                    initExcelData(resolve,newData,rsp)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", `query HTTP Flow failed: ${e}`)
+                })
+                .finally(() => setTimeout(() => setLoading(false), 100))
+            }
+            else{
+                const Ids:number[] = list.map((item)=>parseInt(item.Id+""))
+                ipcRenderer
+                .invoke("GetHTTPFlowByIds", {Ids})
+                .then((rsp: {Data:HTTPFlow[]}) => {
+                    initExcelData(resolve,rsp.Data,{
+                        Data:rsp.Data,
+                        Total:rsp.Data.length,
+                        Pagination:{
+                            Limit: "100000",
+                            Order: "",
+                            OrderBy: "",
+                            Page: "1"
+                        }
+                    })
+                })
+            }
+            
+            })
+    })
     const menuData = [
         {
             key: "发送到 Web Fuzzer",
@@ -1802,6 +1903,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
                 onShareData(ids, n)
+            }
+        },
+        {
+            key: "导出数据",
+            label: "导出数据",
+            onClickBatch: (list, n) => {
+                const titleValue = columns.filter((item)=>!["序号","操作"].includes(item.title)).map((item)=>item.title)
+                const exportValue = [...titleValue,"请求包","响应包"]
+                const m = showYakitModal({
+                    title: "导出字段",
+                    content: <ExportSelect 
+                                exportValue={exportValue}
+                                setExportTitle={(v:string[])=>setExportTitle(["序号",...v])}
+                                exportKey="MITM-HTTP-HISTORY-EXPORT-KEY"
+                                fileName="History"
+                                getData={(pagination)=>getExcelData(pagination,list)}
+                            />,
+                    onCancel:()=>{
+                        m.destroy()
+                        setSelectedRowKeys([])
+                        setSelectedRows([])
+                    },
+                    width:650,
+                    footer: null
+                })
             }
         }
     ]
