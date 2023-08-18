@@ -191,7 +191,7 @@ export const prettifyPacketCode = (text: string) => {
     return new Promise((resolve, reject) => {
         try {
             formatPacket(text, (packet, body) => {
-                resolve(packet)
+                resolve(StringToUint8Array(body))
             })
         } catch (error) {
             failed("editor exec codec failed")
