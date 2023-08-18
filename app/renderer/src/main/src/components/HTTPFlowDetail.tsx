@@ -711,6 +711,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [originValue, setOriginValue] = useState<Uint8Array>(new Uint8Array())
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
+    const [beautifyLoading,setBeautifyLoading] = useState<boolean>(false)
     useEffect(() => {
         setType("response")
         if (flow?.Response) {
@@ -745,14 +746,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             })
         }
     }, [flow?.Response])
+
+    const beautifyCode = async(flow: HTTPFlow) => {
+        setBeautifyLoading(true)
+        let beautifyValue = await prettifyPacketCode(new Buffer(flow.Response).toString("utf8"))
+        setBeautifyLoading(false)
+        setOriginValue(beautifyValue as Uint8Array)
+    }
+
     useEffect(() => {
         if (flow?.Response && type === "response") {
             setOriginValue(flow.Response)
         } else if (flow?.Response && type === "beautify") {
-            ;(async () => {
-                let beautifyValue = await prettifyPacketCode(new Buffer(flow.Response).toString("utf8"))
-                setOriginValue(beautifyValue as Uint8Array)
-            })()
+            beautifyCode(flow)
         } else if (flow?.Response && type === "render") {
             ;(async () => {
                 let renderValue = await prettifyPacketRender(flow.Response)
@@ -883,7 +889,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
-                        loading={loading}
+                        loading={beautifyLoading||loading}
                         originValue={originValue}
                         emptyOr={renderHtml}
                         readOnly={true}
