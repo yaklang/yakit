@@ -711,7 +711,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [originValue, setOriginValue] = useState<Uint8Array>(new Uint8Array())
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
-    const [beautifyLoading,setBeautifyLoading] = useState<boolean>(false)
+    const [responseLoading,setResponseLoading] = useState<boolean>(false)
     useEffect(() => {
         setType("response")
         if (flow?.Response) {
@@ -748,10 +748,23 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }, [flow?.Response])
 
     const beautifyCode = async(flow: HTTPFlow) => {
-        setBeautifyLoading(true)
+        setResponseLoading(true)
         let beautifyValue = await prettifyPacketCode(new Buffer(flow.Response).toString("utf8"))
-        setBeautifyLoading(false)
+        setResponseLoading(false)
         setOriginValue(beautifyValue as Uint8Array)
+    }
+
+    const renderCode = async(flow: HTTPFlow) => {
+        setResponseLoading(true)
+        let renderValue = await prettifyPacketRender(flow.Response)
+        setResponseLoading(false)
+        setRenderHTML(
+            <div
+                className={styles["render-html-box"]}
+                dangerouslySetInnerHTML={{__html: renderValue as string}}
+            />
+        )
+        setOriginValue(new Uint8Array())
     }
 
     useEffect(() => {
@@ -760,16 +773,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         } else if (flow?.Response && type === "beautify") {
             beautifyCode(flow)
         } else if (flow?.Response && type === "render") {
-            ;(async () => {
-                let renderValue = await prettifyPacketRender(flow.Response)
-                setRenderHTML(
-                    <div
-                        className={styles["render-html-box"]}
-                        dangerouslySetInnerHTML={{__html: renderValue as string}}
-                    />
-                )
-                setOriginValue(new Uint8Array())
-            })()
+            renderCode(flow)
         } else {
             setOriginValue(new Uint8Array())
         }
@@ -889,7 +893,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
-                        loading={beautifyLoading||loading}
+                        loading={responseLoading||loading}
                         originValue={originValue}
                         emptyOr={renderHtml}
                         readOnly={true}
