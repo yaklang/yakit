@@ -48,13 +48,6 @@
             display: inline-block;
             line-height: 16px;
         }
-        .stop-icon {
-            height: 16px;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
     }
     .fuzzer-firstNode-extra {
         display: flex;
@@ -186,34 +179,6 @@
     }
 }
 
-.editor-cog-icon {
-    padding: 0;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    justify-content: center;
-    svg {
-        color: var(--yakit-body-text-color);
-        &:hover {
-            color: var(--yakit-primary-4);
-        }
-        &:active {
-            color: var(--yakit-primary-6);
-        }
-    }
-}
-.active-icon {
-    border-color: var(--yakit-primary-4);
-    svg {
-        color: var(--yakit-primary-5);
-        &:hover {
-            color: var(--yakit-primary-4);
-        }
-        &:active {
-            color: var(--yakit-primary-6);
-        }
-    }
-}
 .editor-wrap-icon {
     svg {
         color: #fff;

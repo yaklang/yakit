@@ -271,8 +271,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                     }}
                                                 >
 
-                                                    <YakitButton type='outline2' disabled={isLocal && +i.port === port}
-                                                                 themeClass={styles["success-btn-coloc"]}>
+                                                    <YakitButton type="outline1" colors="success" disabled={isLocal && +i.port === port}>
                                                         切换引擎
                                                     </YakitButton>
                                                 </Popconfirm>
@@ -301,7 +300,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                         .finally(fetchPSList)
                                                 }}
                                             >
-                                                <YakitButton type='outline2' themeClass={styles["del-btn-coloc"]}>
+                                                <YakitButton type='outline1' colors="danger">
                                                     关闭引擎
                                                 </YakitButton>
                                             </Popconfirm>

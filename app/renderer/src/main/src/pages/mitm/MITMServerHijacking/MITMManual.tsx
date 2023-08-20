@@ -79,9 +79,9 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     />
                 </div>
                 <YakitButton
-                    type='outline2'
+                    type='outline1'
+                    colors="danger"
                     disabled={status === "hijacking"}
-                    className='button-text-danger'
                     onClick={() => onDiscardRequest()}
                 >
                     丢弃请求

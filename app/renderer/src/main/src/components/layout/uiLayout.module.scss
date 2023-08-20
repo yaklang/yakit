@@ -115,6 +115,7 @@
                 .header-left {
                     height: 100%;
                     display: flex;
+                    align-items: center;
                 }
 
                 .header-title {
@@ -831,6 +832,7 @@
 
     .stop-icon {
         display: flex;
+        justify-content: center;
         align-items: center;
         margin-right: 8px;
         position: relative;

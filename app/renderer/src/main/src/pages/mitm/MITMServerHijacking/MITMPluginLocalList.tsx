@@ -737,7 +737,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                     setVisibleRemove(false)
                 }}
                 okButtonText='确认删除'
-                okButtonProps={{type: "danger"}}
+                okButtonProps={{colors: "danger"}}
                 onOk={() => {
                     if (deletePlugin) {
                         onDeletePlugin(deletePlugin)

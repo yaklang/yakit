@@ -30,14 +30,6 @@
         padding: 12px 0 8px 0;
         height: 34px;
     }
-    .empty-button-disable {
-        cursor: not-allowed;
-        --button-color: var(--yakit-disable-text-color);
-        --button-hover-color: var(--yakit-disable-text-color);
-        --button-hover-border-color: var(--yakit-disable-text-color);
-        --button-press-color: var(--yakit-disable-text-color);
-        --button-press-border-color: var(--yakit-disable-text-color);
-    }
 
     .mitm-server-start-pre-line {
         width: 1px;

@@ -52,7 +52,6 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                     {packetScanDefaultValue.map((i,n) => {
                         return (
                             <YakitButton
-                                themeClass={styles["yakit-button-theme"]}
                                 className={styles["yakit-button-theme"]}
                                 type='outline2'
                                 onClick={() => {

@@ -266,8 +266,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                             </YakitButton>
                             <div className={styles["line"]}></div>
                             <YakitButton
-                                type='text'
-                                className={styles["reset-icon"]}
+                                type='text2'
                                 style={{color: "#85899E"}}
                                 onClick={() => reset()}
                             >

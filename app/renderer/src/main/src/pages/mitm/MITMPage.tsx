@@ -527,12 +527,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             />
                             <YakitButton
                                 type='text'
+                                colors="danger"
                                 onClick={() => {
                                     if (checkList.length > 0) onSelectAll(false)
                                 }}
-                                className={classNames("button-text-danger", style["empty-button"], {
-                                    [style["empty-button-disable"]]: checkList.length === 0
-                                })}
+                                disabled={checkList.length === 0}
+                                className={style["empty-button"]}
                             >
                                 清空
                             </YakitButton>

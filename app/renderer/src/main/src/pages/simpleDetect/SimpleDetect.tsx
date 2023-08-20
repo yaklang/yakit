@@ -1178,7 +1178,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     cancelText='No'
                     placement={"left"}
                 >
-                    <YakitButton type='text' className={styles["clean-local-plugin"]}>
+                    <YakitButton type='text' colors="danger" className={styles["clean-local-plugin"]}>
                         一键清除插件
                     </YakitButton>
                 </Popconfirm>

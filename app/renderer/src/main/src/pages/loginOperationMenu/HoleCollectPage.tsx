@@ -249,7 +249,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                 delItem(i.hash)
                             }}
                         >
-                            <YakitButton type={"text"} danger style={{color: "red"}}>
+                            <YakitButton type={"text"} colors="danger">
                                 删除
                             </YakitButton>
                         </YakitPopconfirm>
@@ -368,7 +368,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                         }
                                         onConfirm={onRemove}
                                     >
-                                        <YakitButton danger={true} type='danger'>
+                                        <YakitButton type="primary" colors="danger">
                                             删除数据
                                         </YakitButton>
                                     </YakitPopconfirm>

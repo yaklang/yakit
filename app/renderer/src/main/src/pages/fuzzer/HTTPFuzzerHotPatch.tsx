@@ -230,7 +230,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                         setParams({...params, HotPatchCodeWithParamGetter: HotPatchParamsGetterDefault})
                                     }}
                                 >
-                                    <YakitButton icon={<RefreshIcon className={styles["icon-16"]} />} type='text' />
+                                    <YakitButton icon={<RefreshIcon />} type='text' />
                                 </YakitPopconfirm>
                                 <YakitPopover
                                     title={"扩大编辑器"}
@@ -261,7 +261,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                     }
                                 >
                                     <YakitButton
-                                        icon={<FullscreenOutlined className={styles["icon-16"]} />}
+                                        icon={<FullscreenOutlined />}
                                         type='text'
                                     />
                                 </YakitPopover>
@@ -301,7 +301,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                     setParams({...params, HotPatchCode: HotPatchDefaultContent})
                                 }}
                             >
-                                <YakitButton icon={<RefreshIcon className={styles["icon-16"]} />} type='text' />
+                                <YakitButton icon={<RefreshIcon />} type='text' />
                             </YakitPopconfirm>
                             <YakitPopover
                                 title={"扩大编辑器"}
@@ -331,7 +331,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                     </>
                                 }
                             >
-                                <YakitButton icon={<FullscreenOutlined className={styles["icon-16"]} />} type='text' />
+                                <YakitButton icon={<FullscreenOutlined />} type='text' />
                             </YakitPopover>
                         </div>
                     </Space>

@@ -57,12 +57,6 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            .new-chat-btn {
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
 
             .extra-base-btn {
                 display: flex;
@@ -454,12 +448,6 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            .btn-style {
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
         }
     }
 

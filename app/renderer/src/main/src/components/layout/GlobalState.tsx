@@ -512,8 +512,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                             {systemProxy.CurrentProxy}
                                             <YakitButton
                                                 type='text'
+                                                colors="danger"
                                                 className={styles["btn-style"]}
-                                                style={{color: "var(--yakit-danger-5)"}}
                                                 onClick={() => {
                                                     setShow(false)
                                                     showConfigSystemProxyForm()

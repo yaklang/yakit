@@ -1,374 +1,405 @@
-.yakit-button-wrapper {
-    display: inline-block;
+@import "../../../theme/themeify.scss";
+
+@mixin generatePrimary($type) {
+    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+
+    background: fetch-color($type, "color-5");
+    color: var(--ui-text-inverse-color);
+    border-color: fetch-color($type, "color-5");
+
+    &.yakit-hover-button {
+        background: fetch-color($type, "color-4");
+        color: var(--ui-text-inverse-color);
+        border-color: fetch-color($type, "color-4");
+    }
+
+    &:focus {
+        background: fetch-color($type, "color-5");
+        color: var(--ui-text-inverse-color);
+        border-color: fetch-color($type, "color-5");
+    }
+    &:hover {
+        background: fetch-color($type, "color-4");
+        color: var(--ui-text-inverse-color);
+        border-color: fetch-color($type, "color-4");
+    }
+    &:active {
+        background: fetch-color($type, "color-6");
+        color: var(--ui-text-inverse-color);
+        border-color: fetch-color($type, "color-6");
+    }
+    &[disabled] {
+        background: var(--yakit-disable-text-color);
+        color: var(--ui-text-inverse-color);
+        border-color: var(--yakit-disable-text-color);
+    }
 }
 
-.yakit-button {
-    display: flex;
-    align-items: center;
-    box-shadow: none;
+@mixin generateSecondary2($type) {
+    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+
+    background: var(--yakit-background-color);
+    color: var(---ui-text-color);
+    border-color: var(--yakit-background-color);
+    svg {
+        color: var(--ui-icon-color);
+    }
+
+    &.yakit-hover-button {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-4");
+        border-color: fetch-color($type, "color-1");
+        svg {
+            color: fetch-color($type, "color-4");
+        }
+    }
+
+    &:focus {
+        background: var(--yakit-background-color);
+        color: var(--ui-text-color);
+        border-color: var(--yakit-background-color);
+        svg {
+            color: var(--ui-icon-color);
+        }
+    }
+    &:hover {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-4");
+        border-color: fetch-color($type, "color-1");
+        svg {
+            color: fetch-color($type, "color-4");
+        }
+    }
+    &:active {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-1");
+        svg {
+            color: fetch-color($type, "color-6");
+        }
+    }
+    &[disabled] {
+        background: var(--yakit-background-color);
+        color: var(--yakit-disable-text-color);
+        border-color: var(--yakit-background-color);
+        svg {
+            color: var(--yakit-disable-text-color);
+        }
+    }
+}
+
+@mixin generateOutline1($type) {
+    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+
+    background: fetch-color($type, "color-1");
+    color: fetch-color($type, "color-5");
+    border-color: fetch-color($type, "color-3");
+
+    &.yakit-hover-button {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-4");
+        border-color: fetch-color($type, "color-4");
+    }
+
+    &:focus {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-3");
+    }
+    &:hover {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-4");
+        border-color: fetch-color($type, "color-4");
+    }
+    &:active {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-6");
+    }
+    &[disabled] {
+        background: var(--yakit-background-color);
+        color: var(--yakit-disable-text-color);
+        border-color: var(--yakit-border-color);
+    }
+}
+
+@mixin generateOutline2($type) {
+    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+
+    background: var(--ui-background-color);
+    color: var(--ui-text-color);
+    border-color: var(--yakit-border-color);
+    svg {
+        color: var(--ui-icon-color);
+    }
+
+    &.yakit-hover-button {
+        background: var(--ui-background-color);
+        color: fetch-color($type, "color-4");
+        border-color: fetch-color($type, "color-4");
+        svg {
+            color: fetch-color($type, "color-4");
+        }
+    }
+
+    &:focus {
+        background: var(--ui-background-color);
+        color: var(--ui-text-color);
+        border-color: var(--yakit-border-color);
+        svg {
+            color: var(--ui-icon-color);
+        }
+    }
+    &:hover {
+        background: var(--ui-background-color);
+        color: fetch-color($type, "color-4");
+        border-color: fetch-color($type, "color-4");
+        svg {
+            color: fetch-color($type, "color-4");
+        }
+    }
+    &:active {
+        background: var(--ui-background-color);
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-6");
+        svg {
+            color: fetch-color($type, "color-6");
+        }
+    }
+    &[disabled] {
+        background: var(--ui-background-color);
+        color: var(--yakit-disable-text-color);
+        border-color: var(--yakit-border-color);
+        svg {
+            color: var(--yakit-disable-text-color);
+        }
+    }
+}
+
+@mixin generateText($type) {
+    --button-wave-shadow-color: transparent;
+
+    background: transparent;
+    color: fetch-color($type, "color-5");
+    border-color: transparent;
+
+    &.yakit-hover-button {
+        background: transparent;
+        color: fetch-color($type, "color-4");
+        border-color: transparent;
+    }
+
+    &:focus {
+        background: transparent;
+        color: fetch-color($type, "color-5");
+        border-color: transparent;
+    }
+    &:hover {
+        background: transparent;
+        color: fetch-color($type, "color-4");
+        border-color: transparent;
+    }
+    &:active {
+        background: transparent;
+        color: fetch-color($type, "color-6");
+        border-color: transparent;
+    }
+    &[disabled] {
+        background: transparent;
+        color: var(--yakit-disable-text-color);
+        border-color: transparent;
+    }
+}
+
+@mixin generateText2($type) {
+    --button-wave-shadow-color: transparent;
+
+    background: transparent;
+    color: var(--ui-text-color);
+    border-color: transparent;
+    svg {
+        color: var(--ui-icon-color);
+    }
+
+    &.yakit-hover-button {
+        background: var(--yakit-background-color);
+        color: var(--ui-text-color);
+        border-color: var(--yakit-background-color);
+        svg {
+            color: var(--ui-icon-color);
+        }
+    }
+
+    &:focus {
+        background: transparent;
+        color: var(--ui-text-color);
+        border-color: transparent;
+        svg {
+            color: var(--ui-icon-color);
+        }
+    }
+    &:hover {
+        background: var(--yakit-background-color);
+        color: var(--ui-text-color);
+        border-color: var(--yakit-background-color);
+        svg {
+            color: var(--ui-icon-color);
+        }
+    }
+    &:active {
+        background: var(--yakit-background-color);
+        color: fetch-color($type, "color-5");
+        border-color: var(--yakit-background-color);
+        svg {
+            color: fetch-color($type, "color-5");
+        }
+    }
+    &[disabled] {
+        background: transparent;
+        color: var(--yakit-disable-text-color);
+        border-color: transparent;
+        svg {
+            color: var(--yakit-disable-text-color);
+        }
+    }
 }
 
 .yakit-button-small-size {
     height: 20px;
     padding: 3px 6px;
-    border-radius: 4px;
     font-weight: 500;
     font-size: 11px;
-    line-height: 14px;
-    display: flex;
-    align-items: center;
-    :global {
-        .anticon + span,
-        span + .anticon {
-            margin-left: 2px;
-        }
+    .anticon + span,
+    span + .anticon {
+        margin-left: 2px;
+    }
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    &:global(.ant-btn-icon-only) {
+        padding: 4px;
     }
 }
 .yakit-button-size {
     height: 24px;
     padding: 4px 8px;
-    border-radius: 4px;
     font-weight: 500;
     font-size: 12px;
-    line-height: 16px;
-    display: flex;
-    align-items: center;
-    :global {
-        .anticon + span,
-        span + .anticon {
-            margin-left: 4px;
-        }
+    .anticon + span,
+    span + .anticon {
+        margin-left: 4px;
+    }
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    &:global(.ant-btn-icon-only) {
+        padding: 4px;
     }
 }
 .yakit-button-large-size {
     height: 28px;
     padding: 4px 12px;
-    border-radius: 4px;
     font-weight: 600;
     font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
+    .anticon + span,
+    span + .anticon {
+        margin-left: 4px;
+    }
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    &:global(.ant-btn-icon-only) {
+        padding: 6px;
+    }
 }
 .yakit-button-max-size {
     height: 32px;
     padding: 6px 12px;
-    border-radius: 4px;
     font-weight: 500;
     font-size: 14px;
-    line-height: 20px;
+    .anticon + span,
+    span + .anticon {
+        margin-left: 4px;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    &:global(.ant-btn-icon-only) {
+        padding: 6px;
+    }
+}
+.yakit-button {
     display: flex;
+    justify-content: center;
     align-items: center;
+    box-shadow: none;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    &:global(.ant-btn-icon-only) {
+        width: unset;
+    }
+    &:global([ant-click-animating-without-extra-node="true"]::after) {
+        box-shadow: none;
+        opacity: 1;
+        animation:
+            fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1),
+            waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+    }
 }
 
 .yakit-button-primary {
-    --button-wave-shadow-color: var(--yakit-primary-2);
-
-    --button-background: var(--yakit-primary-5);
-    --button-color: var(--yakit-neutral10-color);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-primary-4);
-    --button-hover-color: var(--yakit-neutral10-color);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-primary-6);
-    --button-press-color: var(--yakit-neutral10-color);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
+    @include generatePrimary("primary");
+    &.yakit-button-success {
+        @include generatePrimary("success");
+    }
+    &.yakit-button-danger {
+        @include generatePrimary("danger");
     }
 }
-.yakit-button-outline-1 {
-    --button-wave-shadow-color: var(--yakit-primary-2);
-
-    --button-background: var(--yakit-primary-1);
-    --button-color: var(--yakit-primary-5);
-    --button-border-color: var(--yakit-primary-3);
-
-    --button-hover-background: var(--yakit-primary-1);
-    --button-hover-color: var(--yakit-primary-4);
-    --button-hover-border-color: var(--yakit-primary-4);
-
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: var(--yakit-border-color);
-
-    --button-press-background: var(--yakit-primary-1);
-    --button-press-color: var(--yakit-primary-6);
-    --button-press-border-color: var(--yakit-primary-6);
-
-    .yakit-button-small-size {
-        line-height: 12px;
+.yakit-button-secondary2 {
+    @include generateSecondary2("primary");
+    &.yakit-button-success {
+        @include generateSecondary2("success");
     }
-
-    .yakit-button-size {
-        line-height: 14px;
+    &.yakit-button-danger {
+        @include generateSecondary2("danger");
     }
-
-    .yakit-button-large-size {
-        line-height: 18px;
+}
+.yakit-button-outline1 {
+    @include generateOutline1("primary");
+    &.yakit-button-success {
+        @include generateOutline1("success");
     }
-
-    .yakit-button-max-size {
-        line-height: 18px;
+    &.yakit-button-danger {
+        @include generateOutline1("danger");
     }
+}
+.yakit-button-outline2 {
+    @include generateOutline2("primary");
 }
 .yakit-button-text {
-    --button-wave-shadow-color: transparent;
-
-    --button-background: transparent;
-    --button-color: var(--yakit-primary-5);
-    --button-border-color: transparent;
-
-    --button-hover-background: transparent;
-    --button-hover-color: var(--yakit-primary-4);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: transparent;
-    --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: transparent;
-    --button-press-color: var(--yakit-primary-6);
-    --button-press-border-color: transparent;
-
-    [ant-click-animating-without-extra-node="true"]::after {
-        box-shadow: none;
-        opacity: 1;
-        animation: none;
+    @include generateText("primary");
+    &.yakit-button-success {
+        @include generateText("success");
     }
-
-    :global {
-        .ant-btn {
-            box-shadow: none;
-            border: 0px;
-        }
+    &.yakit-button-danger {
+        @include generateText("danger");
     }
 }
-.yakit-button-outline-2 {
-    --button-wave-shadow-color: var(--yakit-primary-2);
-
-    --button-background: var(--yakit-neutral10-color);
-    --button-color: var(--yakit-header-color);
-    --button-border-color: var(--yakit-border-color);
-
-    --button-hover-background: var(--yakit-neutral10-color);
-    --button-hover-color: var(--yakit-primary-4);
-    --button-hover-border-color: var(--yakit-primary-4);
-
-    --button-disable-background: var(--yakit-neutral10-color);
-    --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: var(--yakit-border-color);
-
-    --button-press-background: var(--yakit-neutral10-color);
-    --button-press-color: var(--yakit-primary-6);
-    --button-press-border-color: var(--yakit-primary-6);
-}
-.yakit-button-secondary-1 {
-    --button-wave-shadow-color: var(--yakit-primary-2);
-
-    --button-background: var(--yakit-primary-1);
-    --button-color: var(--yakit-primary-5);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-primary-1);
-    --button-hover-color: var(--yakit-primary-4);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-primary-1);
-    --button-press-color: var(--yakit-primary-6);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
-    }
-}
-.yakit-button-secondary-2 {
-    --button-wave-shadow-color: var(--yakit-primary-2);
-
-    --button-background: var(--yakit-background-color);
-    --button-color: var(--yakit-header-color);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-primary-1);
-    --button-hover-color: var(--yakit-primary-4);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-background-color);
-    --button-disable-color: var(--yakit-disable-text-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-primary-1);
-    --button-press-color: var(--yakit-primary-6);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
-    }
-}
-.yakit-button-success {
-    --button-wave-shadow-color: var(--yakit-success-2);
-
-    --button-background: var(--yakit-success-5);
-    --button-color: var(--yakit-neutral10-color);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-success-4);
-    --button-hover-color: var(--yakit-neutral10-color);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-disable-text-color);
-    --button-disable-color: var(--yakit-neutral10-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-success-6);
-    --button-press-color: var(--yakit-neutral10-color);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
-    }
-}
-.yakit-button-warning {
-    --button-wave-shadow-color: var(--yakit-warning-2);
-
-    --button-background: var(--yakit-warning-5);
-    --button-color: var(--yakit-neutral10-color);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-warning-4);
-    --button-hover-color: var(--yakit-neutral10-color);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-disable-text-color);
-    --button-disable-color: var(--yakit-neutral10-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-warning-6);
-    --button-press-color: var(--yakit-neutral10-color);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
-    }
-}
-.yakit-button-danger {
-    --button-wave-shadow-color: var(--yakit-danger-2);
-
-    --button-background: var(--yakit-danger-5);
-    --button-color: var(--yakit-neutral10-color);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-danger-4);
-    --button-hover-color: var(--yakit-neutral10-color);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-disable-text-color);
-    --button-disable-color: var(--yakit-neutral10-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-danger-6);
-    --button-press-color: var(--yakit-neutral10-color);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
-    }
-}
-.yakit-button-serious {
-    --button-wave-shadow-color: var(--yakit-serious-2);
-
-    --button-background: var(--yakit-serious-5);
-    --button-color: var(--yakit-neutral10-color);
-    --button-border-color: transparent;
-
-    --button-hover-background: var(--yakit-serious-4);
-    --button-hover-color: var(--yakit-neutral10-color);
-    --button-hover-border-color: transparent;
-
-    --button-disable-background: var(--yakit-disable-text-color);
-    --button-disable-color: var(--yakit-neutral10-color);
-    --button-disable-border-color: transparent;
-
-    --button-press-background: var(--yakit-serious-6);
-    --button-press-color: var(--yakit-neutral10-color);
-    --button-press-border-color: transparent;
-
-    :global {
-        .ant-btn {
-            border: 0px;
-        }
-    }
-}
-
-.yakit-button-type {
-    background: var(--button-background);
-    color: var(--button-color);
-    border-color: var(--button-border-color);
-}
-
-.yakit-button-type:focus {
-    background: var(--button-background);
-    color: var(--button-color);
-    border-color: var(--button-border-color);
-}
-
-.yakit-button-type:hover {
-    background: var(--button-hover-background);
-    color: var(--button-hover-color);
-    border-color: var(--button-hover-border-color);
-
-    svg {
-        color: var(--button-hover-color) !important;
-    }
-}
-
-.yakit-button-type:active {
-    background: var(--button-press-background);
-    color: var(--button-press-color);
-    border-color: var(--button-press-border-color);
-
-    svg {
-        color: var(--button-press-color) !important;
-    }
-}
-
-.yakit-button-type[disabled] {
-    color: var(--button-disable-color) !important;
-    border-color: var(--button-disable-border-color) !important;
-    background: var(--button-disable-background) !important;
-
-    svg {
-        color: var(--button-disable-color) !important;
-    }
-}
-
-[ant-click-animating-without-extra-node="true"]::after {
-    box-shadow: none;
-    opacity: 1;
-    animation: fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1), waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+.yakit-button-text2 {
+    @include generateText2("primary");
 }
 
 @keyframes fadeEffect {
@@ -376,7 +407,6 @@
         opacity: 0;
     }
 }
-
 @keyframes waveEffect {
     100% {
         box-shadow: 0 0 0 4px var(--button-wave-shadow-color);

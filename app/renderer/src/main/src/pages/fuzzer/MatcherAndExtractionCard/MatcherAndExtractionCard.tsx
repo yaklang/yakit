@@ -817,7 +817,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                 <LabelNodeItem label={""}>
                     <div className={styles["add-matcher"]}>
                         <div className={styles["divider"]}/>
-                        <YakitButton type='text' icon={<PlusIcon style={{height: 16}}/>} onClick={() => onAddGroup()}>
+                        <YakitButton type='text' icon={<PlusIcon />} onClick={() => onAddGroup()}>
                             添加匹配内容
                         </YakitButton>
                     </div>

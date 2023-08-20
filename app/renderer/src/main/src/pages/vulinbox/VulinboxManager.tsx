@@ -90,7 +90,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                             setStarted(false)
                         })
                     }}>
-                        <YakitButton type={"danger"}>关闭靶场</YakitButton>
+                        <YakitButton colors="danger">关闭靶场</YakitButton>
                     </Popconfirm> :
                     <YakitButton type={"primary"} onClick={() => {
                         const m = showYakitModal({

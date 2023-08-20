@@ -296,7 +296,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <Form.Item label={" "} colon={false} className='form-item-submit'>
                         {skipShow && (
                             <YakitButton
-                                style={{width: 165, marginRight: 12, display: "flex", justifyContent: "center"}}
+                                style={{width: 165, marginRight: 12}}
                                 onClick={() => {
                                     onSuccee && onSuccee()
                                 }}
@@ -309,7 +309,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             size='large'
                             type='primary'
                             htmlType='submit'
-                            style={{width: 165, display: "flex", justifyContent: "center",marginLeft:skipShow?0:43}}
+                            style={{width: 165, marginLeft:skipShow?0:43}}
                             loading={loading}
                         >
                             登录

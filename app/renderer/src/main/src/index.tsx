@@ -5,6 +5,7 @@ import "./index.css"
 import NewApp from "./NewApp"
 
 import "./yakitUI.scss"
+import "./theme/yakit.scss"
 import "./assets/global.scss"
 
 ReactDOM.render(

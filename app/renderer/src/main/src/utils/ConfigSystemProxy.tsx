@@ -105,7 +105,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
                             取消
                         </YakitButton>
                         <YakitButton
-                            type={enable ? "danger" : "primary"}
+                            colors={enable ? "danger" : "primary"}
                             size='large'
                             onClick={() => onSetSystemProxy()}
                         >

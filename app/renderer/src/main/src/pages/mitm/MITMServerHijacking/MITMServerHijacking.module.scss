@@ -219,16 +219,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    .filter-small-icon {
-        color: var(--yakit-helper-text-color);
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
-    .filter-small-icon-primary {
-        color: var(--yakit-primary-5);
-    }
     .mitm-plugin-hijack-heard {
         display: flex;
         align-items: center;

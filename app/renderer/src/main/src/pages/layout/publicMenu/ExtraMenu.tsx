@@ -77,7 +77,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             </YakitPopover>
             <YakitButton
                 type='secondary2'
-                className={styles["extra-menu-gray"]}
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.Codec})
                 }}
@@ -87,7 +86,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             </YakitButton>
             <YakitButton
                 type='secondary2'
-                className={styles["extra-menu-gray"]}
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.PayloadManager})
                 }}
@@ -97,7 +95,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             </YakitButton>
             <YakitButton
                 type='secondary2'
-                className={styles["extra-menu-gray"]}
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.YakScript})
                 }}

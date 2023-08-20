@@ -153,8 +153,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                     </div>
 
                     <YakitButton
-                        themeClass={styles["navbar-footer"]}
-                        className={styles["btn-style"]}
+                        className={styles["navbar-footer"]}
                         size='max'
                         type='outline2'
                         onClick={() => onEngineModeChange("remote")}

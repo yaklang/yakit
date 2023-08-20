@@ -65,7 +65,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
             <YakitButton
                 style={{padding: "4px 0px"}}
                 type='text'
-                icon={<ShareIcon className={styles["share-icon"]} />}
+                icon={<ShareIcon />}
                 onClick={rightClick}
                 onContextMenuCapture={rightClick}
             >

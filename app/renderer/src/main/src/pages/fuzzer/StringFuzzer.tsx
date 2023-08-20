@@ -240,8 +240,8 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                                 size={"small"}
                                 extra={[
                                     <YakitButton
-                                        type='outline2'
-                                        className='button-outline2-danger'
+                                        type='outline1'
+                                        colors="danger"
                                         onClick={() => {
                                             removeBuildTemplateTag()
                                         }}

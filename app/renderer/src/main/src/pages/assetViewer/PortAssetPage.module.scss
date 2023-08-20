@@ -87,14 +87,6 @@
             align-items: center;
             gap: 8px;
         }
-        .table-head-icon {
-            color: var(--yakit-body-text-color);
-            height: 16px;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
         .table-host {
             display: flex;
             justify-content: space-between;

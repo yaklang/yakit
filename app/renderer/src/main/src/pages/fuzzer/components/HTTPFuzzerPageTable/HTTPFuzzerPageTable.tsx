@@ -593,11 +593,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         title={<Space style={{marginLeft: 12}}>
                             <span>快速预览</span>
                             <YakitButton
-                                type={currentSelectShowType !== "request" ? "secondary1" : "primary"} onClick={() => {
+                                type={currentSelectShowType !== "request" ? "outline2" : "primary"} onClick={() => {
                                 setCurrentSelectShowType("request")
                             }}>请求</YakitButton>
                             <YakitButton
-                                type={currentSelectShowType !== "response" ? "secondary1" : "primary"} onClick={() => {
+                                type={currentSelectShowType !== "response" ? "outline2" : "primary"} onClick={() => {
                                 setCurrentSelectShowType("response")
                             }}>响应</YakitButton>
                         </Space>} size={"small"} bordered={true}

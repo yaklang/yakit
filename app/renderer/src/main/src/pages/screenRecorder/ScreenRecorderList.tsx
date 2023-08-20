@@ -317,10 +317,10 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     }, 1000)
                                 }}
                                 type='primary'
-                                className='button-primary-danger'
+                                colors="danger"
                                 size='large'
                             >
-                                <StopIcon className={styles["stop-icon"]} />
+                                <StopIcon />
                                 停止录屏
                             </YakitButton>
                         ) : (
@@ -400,9 +400,9 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                                 }}
                                 type='primary'
-                                className='button-primary-danger'
+                                colors="danger"
                             >
-                                <StopIcon className={styles["stop-icon"]} />
+                                <StopIcon />
                                 停止录屏
                             </YakitButton>
                         ) : (
@@ -491,7 +491,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 </YakitPopover>
                             ) : (
                                 <YakitButton
-                                    type='danger'
+                                    colors='danger'
                                     disabled={selected.length === 0}
                                     className={classNames(styles["button-batch-remove"])}
                                     onClick={() => setDelShow(true)}
@@ -500,8 +500,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 </YakitButton>
                             )}
                             <YakitButton
-                                type='outline2'
-                                className={classNames("button-outline2-danger")}
+                                type='outline1'
+                                colors="danger"
                                 onClick={() => setDelShow(true)}
                             >
                                 清空

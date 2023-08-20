@@ -1226,10 +1226,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onClick={() => {
                                 cancelCurrentHTTPFuzzer()
                             }}
-                            icon={<StopIcon className={styles["stop-icon"]}/>}
-                            className='button-primary-danger'
-                            danger={true}
+                            icon={<StopIcon />}
                             type={"primary"}
+                            colors="danger"
                             size='large'
                         >
                             强制停止
@@ -1242,7 +1241,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onValidateHTTPFuzzer()
                                 setCurrentPage(1)
                             }}
-                            icon={<PaperAirplaneIcon style={{height: 16}}/>}
+                            icon={<PaperAirplaneIcon />}
                             type={"primary"}
                             size='large'
                         >
@@ -1772,7 +1771,6 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                             icon={<SearchIcon/>}
                             size='small'
                             type='outline2'
-                            className={styles["editor-cog-icon"]}
                         />
                     </YakitPopover>
                 )}
@@ -1846,9 +1844,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                             icon={<SearchIcon/>}
                             size='small'
                             type='outline2'
-                            className={classNames(styles["editor-cog-icon"], {
-                                [styles["active-icon"]]: query?.keyWord
-                            })}
+                            isHover={!!query?.keyWord}
                         />
                     </YakitPopover>
                 )}
@@ -1914,12 +1910,11 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         icon={<FilterIcon/>}
                         size='small'
                         type='outline2'
-                        className={classNames(styles["editor-cog-icon"], {
-                            [styles["active-icon"]]:
-                            (query?.StatusCode?.length || 0) > 0 ||
+                        isHover={
+                            !!((query?.StatusCode?.length || 0) > 0 ||
                             query?.afterBodyLength ||
-                            query?.beforeBodyLength
-                        })}
+                            query?.beforeBodyLength)
+                        }
                     />
                 </YakitPopover>
 

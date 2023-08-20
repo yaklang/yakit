@@ -700,8 +700,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 type='outline2'
                                 className={styles["button-question"]}
                                 onClick={() => openExternalWebsite("https://www.yaklang.com/")}
-                            >
-                                <QuestionMarkCircleIcon />
+                                icon={<QuestionMarkCircleIcon />}
+                            > 
                             </YakitButton>
                         </Tooltip>
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>

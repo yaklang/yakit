@@ -2250,19 +2250,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }}
                                         >
                                             <YakitButton
-                                                className={classNames({
-                                                    "button-text-primary": isShowColor
-                                                })}
                                                 type='outline2'
+                                                isHover={isShowColor}
                                                 style={{padding: 4}}
                                                 onClick={() => setIsShowColor(true)}
                                             >
-                                                <ColorSwatchIcon
-                                                    className={classNames(style["color-swatch-icon"], {
-                                                        [style["color-swatch-icon-active"]]:
-                                                            color.length > 0 || isShowColor
-                                                    })}
-                                                />
+                                                <ColorSwatchIcon />
                                             </YakitButton>
                                         </YakitPopover>
                                     </div>
@@ -2374,7 +2367,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 }}
                                             >
                                                 批量操作
-                                                <ChevronDownIcon style={{color: "#85899E"}} />
+                                                <ChevronDownIcon />
                                             </YakitButton>
                                         </YakitPopover>
                                     )}
@@ -2410,8 +2403,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             }}
                                         >
                                             <YakitButton
-                                                type='outline2'
-                                                className='button-text-danger'
+                                                type='outline1'
+                                                colors="danger"
                                             >
                                                 清空
                                             </YakitButton>

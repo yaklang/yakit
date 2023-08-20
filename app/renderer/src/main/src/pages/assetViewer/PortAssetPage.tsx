@@ -679,7 +679,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         >
                                             <YakitButton
                                                 type='outline2'
-                                                icon={<TrashIcon className={styles["table-head-icon"]} />}
+                                                icon={<TrashIcon />}
                                             >
                                                 {selected.length > 0 ? "删除" : "清空"}
                                             </YakitButton>
@@ -720,7 +720,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         >
                                             <YakitButton
                                                 onClick={() => {}}
-                                                icon={<PaperAirplaneIcon style={{height: 16}} />}
+                                                icon={<PaperAirplaneIcon />}
                                                 type={"primary"}
                                                 disabled={selected.length === 0}
                                             >
@@ -865,7 +865,8 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                             extra={
                                 <YakitButton
                                     type='text'
-                                    className={classNames('button-text-danger',styles['port-group-remove'])}
+                                    colors="danger"
+                                    className={styles['port-group-remove']}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         queryList[item.GroupName] = []

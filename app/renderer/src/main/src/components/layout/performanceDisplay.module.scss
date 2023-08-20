@@ -135,38 +135,6 @@
                         display: flex;
                         align-items: center;
                         gap: 8px;
-
-                        .del-btn-coloc {
-                            --button-wave-shadow-color: var(--yakit-danger-2) !important;
-
-                            --button-background: var(--yakit-neutral10-color) !important;
-                            --button-color: var(--yakit-danger-5) !important;
-                            --button-border-color: var(--yakit-danger-3) !important;
-
-                            --button-hover-background: var(--yakit-neutral10-color) !important;
-                            --button-hover-color: var(--yakit-danger-4) !important;
-                            --button-hover-border-color: var(--yakit-danger-4) !important;
-
-                            --button-press-background: var(--yakit-neutral10-color) !important;
-                            --button-press-color: var(--yakit-danger-6) !important;
-                            --button-press-border-color: var(--yakit-danger-6) !important;
-                        }
-
-                        .success-btn-coloc {
-                            --button-wave-shadow-color: var(--yakit-success-2) !important;
-
-                            --button-background: var(--yakit-neutral10-color) !important;
-                            --button-color: var(--yakit-success-5) !important;
-                            --button-border-color: var(--yakit-success-3) !important;
-
-                            --button-hover-background: var(--yakit-neutral10-color) !important;
-                            --button-hover-color: var(--yakit-success-4) !important;
-                            --button-hover-border-color: var(--yakit-success-4) !important;
-
-                            --button-press-background: var(--yakit-neutral10-color) !important;
-                            --button-press-color: var(--yakit-success-6) !important;
-                            --button-press-border-color: var(--yakit-success-6) !important;
-                        }
                     }
                 }
 
