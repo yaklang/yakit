@@ -17,6 +17,7 @@ const secretDir = path.join(homeDir, "auth");
 const yakEngineDir = path.join(homeDir, "yak-engine")
 const codeDir = path.join(homeDir, "code");
 const cacheDir = path.join(homeDir, "base");
+const userChromeDataDir = path.join(homeDir, "chrome-profile");
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 
@@ -43,6 +44,7 @@ const initMkbaseDir = async () => {
         try {
             fs.mkdirSync(secretDir, {recursive: true})
             fs.mkdirSync(cacheDir, {recursive: true})
+            fs.mkdirSync(userChromeDataDir, {recursive: true})
             fs.mkdirSync(yakEngineDir, {recursive: true})
             fs.mkdirSync(codeDir, {recursive: true})
 
