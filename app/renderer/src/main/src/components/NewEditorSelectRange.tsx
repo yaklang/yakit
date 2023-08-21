@@ -46,7 +46,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
     }, [reqEditor])
 
     // 编辑器菜单
-    const editerMenuFun = (reqEditor: IMonacoEditor) => {
+    const editerMenuFun = (reqEditor: IMonacoEditor) => { 
         // 编辑器点击显示的菜单
         const fizzSelectWidget = {
             isOpen: false,
@@ -124,6 +124,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
             fizzRangeWidget.isOpen = false
             reqEditor.removeContentWidget(fizzRangeWidget)
         }
+
+        // 编辑器更新 关闭之前展示
+        closeFizzSelectWidget()
+        closeFizzRangeWidget()
 
         reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
         reqEditor.onMouseMove((e) => {
