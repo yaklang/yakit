@@ -8,4 +8,5 @@ export interface GraphProps extends GraphData {
     height?: number | string | any
     color?: string[]
     direction?: boolean
+    title?: string
 }

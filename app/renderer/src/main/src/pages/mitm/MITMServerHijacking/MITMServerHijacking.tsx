@@ -70,9 +70,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 notification["error"]({message: `停止中间人劫持失败：${e}`})
             })
             .finally(() =>
-                setTimeout(() => {
+                    ipcRenderer
+                    .invoke("StopAllChrome")
+                    .then(() => {})
+                    .catch((e) => {
+                        failed(`关闭所有 Chrome 失败: ${e}`)
+                    })
                     // setLoading(false)
-                }, 300)
             )
     })
     return (

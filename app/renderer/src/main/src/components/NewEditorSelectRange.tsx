@@ -179,10 +179,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
         })
 
         // 移出编辑器时触发
-        reqEditor.onMouseLeave(() => {
-            closeFizzSelectWidget()
-            closeFizzRangeWidget()
-        })
+        // reqEditor.onMouseLeave(() => {
+        //     closeFizzSelectWidget()
+        //     closeFizzRangeWidget()
+        // })
 
         reqEditor.onMouseDown((e) => {
             const {leftButton, posy} = e.event

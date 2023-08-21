@@ -28,6 +28,7 @@ import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
 import {convertKeyboard, keySortHandle} from "./editorUtils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import debounce from "lodash/debounce"
 
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
@@ -439,7 +440,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             let current: string[] = []
 
             const applyContentLength = (): YakitIModelDecoration[] => {
-                const text = model.getValue();
+                // const text = model.getValue();
+                const endsp = model.getPositionAt(1000)
+                const text =
+                    endsp.lineNumber === 1
+                        ? model.getValueInRange({
+                              startLineNumber: 1,
+                              startColumn: 1,
+                              endLineNumber: 1,
+                              endColumn: endsp.column
+                          })
+                        : model.getValueInRange({
+                              startLineNumber: 1,
+                              startColumn: 1,
+                              endLineNumber: endsp.lineNumber,
+                              endColumn: endsp.column
+                          })
                 const match = /\nContent-Length:\s*?\d+/.exec(text);
                 if (!match) {
                     return []
@@ -456,13 +472,26 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 ]
             }
             const applyHost = (): YakitIModelDecoration[] => {
-                const text = model.getValue();
-                console.info(text)
+                // const text = model.getValue();
+                const endsp = model.getPositionAt(1000)
+                const text =
+                    endsp.lineNumber === 1
+                        ? model.getValueInRange({
+                              startLineNumber: 1,
+                              startColumn: 1,
+                              endLineNumber: 1,
+                              endColumn: endsp.column
+                          })
+                        : model.getValueInRange({
+                              startLineNumber: 1,
+                              startColumn: 1,
+                              endLineNumber: endsp.lineNumber,
+                              endColumn: endsp.column
+                          })
                 const match = /\nHost:/.exec(text);
                 if (!match) {
                     return []
                 }
-                console.info(match)
                 const start = model.getPositionAt(match.index)
                 const end = model.getPositionAt(match.index + match[0].indexOf(":"))
                 return [
@@ -476,7 +505,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
 
             const applyKeywordDecoration = (): YakitIModelDecoration[] => {
-                const text = model.getValue()
+                // const text = model.getValue().substring(0,1000)
+                const endsp = model.getPositionAt(1000)
+                const text =
+                    endsp.lineNumber === 1
+                        ? model.getValueInRange({
+                              startLineNumber: 1,
+                              startColumn: 1,
+                              endLineNumber: 1,
+                              endColumn: endsp.column
+                          })
+                        : model.getValueInRange({
+                              startLineNumber: 1,
+                              startColumn: 1,
+                              endLineNumber: endsp.lineNumber,
+                              endColumn: endsp.column
+                          })
                 const keywordRegExp = /\r?\n/g
                 const decorations: YakitIModelDecoration[] = []
                 let match
@@ -495,13 +539,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 // current = model.deltaDecorations(current, decorations)
                 return decorations;
             }
-            model.onDidChangeContent((e) => {
+            model.onDidChangeContent(debounce(((e) => {
                 current = model.deltaDecorations(current, [
                     ...applyKeywordDecoration(),
                     ...applyContentLength(),
                     ...applyHost(),
                 ])
-            })
+            }), 500))
             current = model.deltaDecorations(current, [
                 ...applyKeywordDecoration(),
                 ...applyContentLength(),

@@ -5,6 +5,7 @@
     "dependencies": {
         "@ant-design/compatible": "^1.0.8",
         "@ant-design/icons": "latest",
+        "@ant-design/pro-layout": "^6.19.7",
         "@ant-design/pro-card": "^1.18.1",
         "@ant-design/pro-table": "^2.57.1",
         "@dnd-kit/core": "^4.0.1",
@@ -30,7 +31,7 @@
         "codemirror": "^5.63.3",
         "cross-env": "7.0.3",
         "customize-cra": "^1.0.0",
-        "echarts": "^5.4.1",
+        "echarts": "^5.4.2",
         "file-saver": "^2.0.5",
         "hint.css": "^2.7.0",
         "html2pdf.js": "^0.10.1",

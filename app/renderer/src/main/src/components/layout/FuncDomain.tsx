@@ -725,66 +725,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     )
 })
 
-interface NetworkDetectionProp {
-    onClose: () => void
-}
-
-const NetworkDetection: React.FC<NetworkDetectionProp> = React.memo((props) => {
-    const [form] = Form.useForm()
-    const {onClose} = props
-    const [loading, setLoading] = useState<boolean>(false)
-    const [result, setResult] = useState<string>()
-    const onFinish = useMemoizedFn((values) => {
-        setLoading(true)
-        const {url} = values
-        setResult(undefined)
-        ipcRenderer
-            .invoke("try-network-detection", url)
-            .then((value: boolean) => {
-                // console.log("value",value)
-                let str: string = value ? "网络连接正常" : "网络无法连接"
-                setResult(str)
-            })
-            .catch((e) => {
-                yakitFailed(`${e}`)
-                setResult(`无法检测: ${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    })
-    const layout = {
-        labelCol: {span: 5},
-        wrapperCol: {span: 16}
-    }
-    // 判断是否为网址
-    const judgeUrl = () => [
-        {
-            validator: (_, value) => {
-                let re = /([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
-                if (re.test(value)) {
-                    return Promise.resolve()
-                } else {
-                    return Promise.reject("请输入符合要求的地址")
-                }
-            }
-        }
-    ]
-    return (
-        <div>
-            <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='url' label='地址' rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}>
-                    <Input placeholder='请输入地址' allowClear />
-                </Form.Item>
-                <div style={{textAlign: "center"}}>
-                    <Button type='primary' htmlType='submit' loading={loading}>
-                        确认
-                    </Button>
-                    {result && <div style={{marginTop: 10}}>检测结果：{result}</div>}
-                </div>
-            </Form>
-        </div>
-    )
-})
-
 interface UIOpSettingProp {
     /** 当前引擎模式 */
     engineMode: YaklangEngineMode
@@ -830,8 +770,8 @@ const GetUIOpSettingMenu = () => {
                 children: [{key: "invalidCache", label: "删除缓存数据"}]
             },
             {
-                key: "network-detection",
-                label: "网络检测"
+                key: "diagnose-network",
+                label: "网络诊断"
             }
         ]
     }
@@ -868,10 +808,6 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "vulinbox-manager",
                     label: "(靶场)Vulinbox"
-                },
-                {
-                    key: "diagnose-network",
-                    label: "本地网络异常诊断"
                 },
                 {
                     key: "config-network",
@@ -939,8 +875,8 @@ const GetUIOpSettingMenu = () => {
             ]
         },
         {
-            key: "network-detection",
-            label: "网络检测"
+            key: "diagnose-network",
+            label: "网络诊断"
         }
     ]
 }
@@ -1083,12 +1019,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "plaintextProject":
                 typeCallback(type)
                 return
-            case "network-detection":
-                const n = showModal({
-                    title: "网络检测",
-                    content: <NetworkDetection onClose={() => n.destroy()} />
-                })
-                return n
             default:
                 return
         }

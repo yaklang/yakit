@@ -370,6 +370,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === YakitRoute.HTTPHacker) {
                 openMenuPage({route: YakitRoute.HTTPHacker})
             }
+            if (type === YakitRoute.DB_HTTPHistory) {
+                openMenuPage({route: YakitRoute.DB_HTTPHistory})
+            }
             if (type === YakitRoute.DB_Risk) {
                 openMenuPage({route: YakitRoute.DB_Risk})
             }

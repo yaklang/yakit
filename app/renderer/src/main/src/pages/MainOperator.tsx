@@ -9,7 +9,7 @@ import {
     setYaklangBuildInMethodCompletion,
     setYaklangCompletions
 } from "../utils/monacoSpec/yakCompletionSchema"
-import {setUpYaklangMonaco} from '../utils/monacoSpec/yakEditor'
+import {setUpYaklangMonaco} from "../utils/monacoSpec/yakEditor"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {QueryYakScriptsResponse} from "./invoker/schema"
@@ -38,8 +38,9 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
     globalUserLogin,
-    isBreachTrace,
+    isEnterpriseEdition,
     isCommunityEdition,
+    isEnpriTrace,
     isEnpriTraceAgent,
     shouldVerifyEnpriTraceLogin
 } from "@/utils/envfile"
@@ -78,7 +79,7 @@ import {
     getInitPageCache
 } from "./layout/mainOperatorContent/MainOperatorContent"
 import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContentType"
-
+import {WaterMark} from "@ant-design/pro-layout"
 const {ipcRenderer} = window.require("electron")
 const {Content} = Layout
 
@@ -538,42 +539,66 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const openMenu = (info: RouteToPageProps) => {
         ipcRenderer.invoke("open-route-page", info)
     }
+
+    const waterMarkStr= ():string  => {
+        // 社区版无水印
+        if (isCommunityEdition()) {
+            return ""
+        }
+        else if(userInfo.isLogin){
+            return userInfo.companyName||""
+        }
+        else if(isEnpriTrace()){
+            return "EnpriTrace-试用版"
+        }
+        else if(isEnpriTraceAgent()){
+            return "EnpriTraceAgent-试用版"
+        }
+        return ""
+    }
     return (
         <>
-            <Layout className='yakit-main-layout main-content-tabs yakit-layout-tabs' style={controlShow ? {display: "none"} : {}}>
-                <AutoSpin spinning={loading}>
-                    {isShowCustomizeMenu && (
-                        <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />
-                    )}
-
-                    <div
-                        style={{
-                            display: isShowCustomizeMenu ? "none" : "flex",
-                            flexDirection: "column",
-                            height: "100%"
-                        }}
-                    >
-                        {isCommunityEdition() ? (
-                            <PublicMenu
-                                onMenuSelect={openMenu}
-                                setRouteToLabel={(val) => {
-                                    val.forEach((value, key) => {
-                                        routeKeyToLabel.current.set(key, value)
-                                    })
-                                }}
-                            />
-                        ) : (
-                            <HeardMenu
-                                onRouteMenuSelect={openMenu}
-                                setRouteToLabel={(val) => {
-                                    val.forEach((value, key) => {
-                                        routeKeyToLabel.current.set(key, value)
-                                    })
-                                }}
+            <WaterMark content={waterMarkStr()} style={{overflow:"hidden",height:"100%"}}>
+                <Layout
+                    className='yakit-main-layout main-content-tabs yakit-layout-tabs'
+                    style={controlShow ? {display: "none"} : {}}
+                >
+                    <AutoSpin spinning={loading}>
+                        {isShowCustomizeMenu && (
+                            <CustomizeMenu
+                                visible={isShowCustomizeMenu}
+                                onClose={() => setIsShowCustomizeMenu(false)}
                             />
                         )}
-                        <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
-                        {/* <Content
+
+                        <div
+                            style={{
+                                display: isShowCustomizeMenu ? "none" : "flex",
+                                flexDirection: "column",
+                                height: "100%"
+                            }}
+                        >
+                            {isCommunityEdition() ? (
+                                <PublicMenu
+                                    onMenuSelect={openMenu}
+                                    setRouteToLabel={(val) => {
+                                        val.forEach((value, key) => {
+                                            routeKeyToLabel.current.set(key, value)
+                                        })
+                                    }}
+                                />
+                            ) : (
+                                <HeardMenu
+                                    onRouteMenuSelect={openMenu}
+                                    setRouteToLabel={(val) => {
+                                        val.forEach((value, key) => {
+                                            routeKeyToLabel.current.set(key, value)
+                                        })
+                                    }}
+                                />
+                            )}
+                            <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
+                            {/* <Content
                             style={{
                                 margin: 0,
                                 backgroundColor: "#fff",
@@ -718,29 +743,30 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 </Content>
                             </Layout>
                         </Content> */}
-                    </div>
-                </AutoSpin>
+                        </div>
+                    </AutoSpin>
 
-                {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-                <Modal
-                    visible={passwordShow}
-                    title={"修改密码"}
-                    destroyOnClose={true}
-                    maskClosable={false}
-                    bodyStyle={{padding: "10px 24px 24px 24px"}}
-                    width={520}
-                    onCancel={() => setPasswordShow(false)}
-                    footer={null}
-                >
-                    <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-                </Modal>
-                {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
-                {isCommunityEdition() && !chatShow && (
-                    <div className='chat-icon-wrapper' onClick={onChatCS}>
-                        <img src={yakitCattle} />
-                    </div>
-                )}
-            </Layout>
+                    {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
+                    <Modal
+                        visible={passwordShow}
+                        title={"修改密码"}
+                        destroyOnClose={true}
+                        maskClosable={false}
+                        bodyStyle={{padding: "10px 24px 24px 24px"}}
+                        width={520}
+                        onCancel={() => setPasswordShow(false)}
+                        footer={null}
+                    >
+                        <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+                    </Modal>
+                    {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
+                    {isCommunityEdition() && !chatShow && (
+                        <div className='chat-icon-wrapper' onClick={onChatCS}>
+                            <img src={yakitCattle} />
+                        </div>
+                    )}
+                </Layout>
+            </WaterMark>
             {controlShow && <ControlOperation controlName={controlName} />}
             <YakitHintModal
                 visible={false}

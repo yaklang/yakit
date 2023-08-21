@@ -1,0 +1,22 @@
+.pagination {
+    padding-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+}
+.export-select {
+    padding: 10px;
+    text-align: center;
+    .item {
+        margin-bottom: 10px;
+    }
+    .button-box {
+        margin: 0 auto;
+        padding: 10px 0 6px;
+        :global {
+            .button {
+                width: 120px;
+                justify-content: center;
+            }
+        }
+    }
+}

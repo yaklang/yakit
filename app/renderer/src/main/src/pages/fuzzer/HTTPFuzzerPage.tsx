@@ -395,7 +395,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 设置变量
         params: [{Key: "", Value: ""}],
         // 匹配器
-        filterMode: "drop",
+        filterMode: "onlyMatch",
         matchers: [],
         matchersCondition: "and",
         hitColor: "red",
@@ -851,6 +851,9 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             if (data.Ok) {
+                if (r.MatchedByMatcher) {
+                    yakitNotify("success", `匹配成功: ${r.Url}`)
+                }
                 successBuffer.push(r)
             } else {
                 failedBuffer.push(r)
@@ -1192,6 +1195,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
         return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
     }, [successFuzzer])
+
+    const [exportData,setExportData] = useState<FuzzerResponse[]>([])
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1512,7 +1517,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     onSearch={() => {
                                         setDefaultResponseSearch(affixSearch)
                                     }}
-                                    successFuzzer={successFuzzer}
+                                    successFuzzer={exportData}
                                     secondNodeSize={secondNodeSize}
                                     query={query}
                                     setQuery={(q) => setQuery({...q})}
@@ -1643,6 +1648,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     onSendToWebFuzzer={sendToFuzzer}
                                                     success={showSuccess}
                                                     data={successFuzzer}
+                                                    setExportData={setExportData}
                                                     query={query}
                                                     setQuery={setQuery}
                                                     extractedMap={extractedMap}
@@ -1777,7 +1783,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         showResponseViaResponseRaw(rsp.ResponseRaw || "")
                     }}
                 />
-                {rsp.ExtractedResults.length > 0 && (
+                {rsp.ExtractedResults.filter(i => (i.Key !== "" || i.Value !== "")).length > 0 && (
                     <YakitButton type='outline2' size='small' onClick={() => onViewExecResults()}>
                         查看提取结果
                     </YakitButton>

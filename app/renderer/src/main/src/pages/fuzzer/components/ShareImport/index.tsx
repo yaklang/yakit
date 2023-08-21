@@ -121,6 +121,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                         handleWebFuzzerShare(res)
                         break
                     case YakitRoute.HTTPHacker:
+                    case YakitRoute.DB_HTTPHistory:
                         handleHttpHistoryShare(res)
                         break
                     default:
