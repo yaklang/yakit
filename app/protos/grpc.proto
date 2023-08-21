@@ -3035,6 +3035,11 @@ message FuzzerRequest {
   // 如果没有的话，直接把整个 Request 传回去
   string FuzzerIndex = 41;
   string FuzzerTabIndex = 42;
+
+  // BatchTarget
+  // 继承透传给 HTTPPOOL 的参数，可以使用批量目标来发送
+  bool BatchTargetFile = 43;
+  bytes BatchTarget = 44;
 }
 
 message KVPair {
@@ -3207,6 +3212,7 @@ message QueryHTTPFlowRequest {
 
   string RuntimeId = 31;
   string FromPlugin = 32;
+  bool  Full = 33;
 }
 
 message DeleteHTTPFlowRequest {
