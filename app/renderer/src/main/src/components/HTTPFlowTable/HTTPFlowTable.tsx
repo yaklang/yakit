@@ -53,6 +53,10 @@ import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareData"
 import { YakitRoute } from "@/routes/newRoute"
+import {useSize} from "ahooks"
+import { HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts, HTTPFlowTableFromValue } from "./HTTPFlowTableForm"
+import { YakitTag } from "../yakitUI/YakitTag/YakitTag"
+import { CheckedSvgIcon } from "../layout/icons"
 import { ExportSelect } from "../DataExport/DataExport"
 
 const {ipcRenderer} = window.require("electron")
@@ -752,6 +756,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const [exportTitle,setExportTitle] = useState<string[]>([])
 
+    const [drawerFormVisible,setDrawerFormVisible] = useState<boolean>(false)
+
+    // 高级筛选所选项
+    const [searchContentType,setSearchContentType] = useState<string>("")
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -771,6 +779,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     })
 
+    const size = useSize(ref)
+
+    // 初次进入页面 获取默认高级赛选项
+    useEffect(()=>{
+        // Host配置
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
+            if (!!e) {
+                const ContentType:string = e
+                setSearchContentType(ContentType)
+            }
+        })
+    },[])
+
+    useEffect(()=>{
+        setParams({...params, SearchContentType:searchContentType})
+    },[searchContentType])
+
+    const isFilter:boolean = useMemo(() => {
+        return searchContentType?.length>0
+    },[searchContentType])
+    
     // 向主页发送对比数据
     useEffect(() => {
         if (compareLeft.content) {
@@ -907,7 +936,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-
+            // console.log("query-query",query);
+            
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1080,16 +1110,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }, 100)
     })
 
-    const onFilterSure = useMemoizedFn(() => {
-        setParams({
-            ...params,
-            Tags: tagsQuery,
-            SearchContentType: contentTypeQuery
-        })
-        setTimeout(() => {
-            update(1)
-        }, 50)
-    })
     const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
         setIsAllSelect(checked)
         setSelectedRowKeys(newSelectedRowKeys)
@@ -2197,8 +2217,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                 </div>
                                 <div className={style["http-history-table-right"]}>
+                                    <YakitButton type='text' onClick={() => {
+                                        setDrawerFormVisible(true)
+                                    }}>高级筛选</YakitButton>
+                                    {isFilter&&<YakitTag color={"success"}>
+                                        已配置
+                                        <CheckedSvgIcon style={{marginLeft: 8}}/>
+                                    </YakitTag>}
+                                    <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
                                     <div className={classNames(style["http-history-table-right-item"])}>
-                                        <div className={style["http-history-table-right-label"]}>协议类型</div>
+                                        {size?.width&&size?.width>1060&&<div className={style["http-history-table-right-label"]}>协议类型</div>}
                                         <YakitSelect
                                             size='small'
                                             value={params.IsWebsocket || ""}
@@ -2485,6 +2513,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     useUpAndDown={true}
                 />
             </div>
+
+            <HTTPFlowTableFormConfiguration
+                responseType={contentType}
+                visible={drawerFormVisible}
+                setVisible={setDrawerFormVisible}
+                onSave={(val) => {
+                    setSearchContentType(val.searchContentType)
+                    setDrawerFormVisible(false)
+                }}
+            />
+
         </div>
         // </AutoCard>
     )
