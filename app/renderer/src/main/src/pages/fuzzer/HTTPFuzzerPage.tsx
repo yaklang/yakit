@@ -102,7 +102,7 @@ import {
 } from "./HTTPFuzzerEditorMenu"
 import { NewEditorSelectRange } from "../../components/NewEditorSelectRange"
 import { execCodec } from "@/utils/encodec"
-import { WebFuzzerPageInfoProps } from "@/store/pageNodeInfo"
+import { NodeInfoProps, WebFuzzerPageInfoProps, usePageNode } from "@/store/pageNodeInfo"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -546,9 +546,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [fuzzToken, setFuzzToken] = useState("")
 
     const [refreshTrigger, setRefreshTrigger] = useState(false)
-    const refreshRequest = () => {
-        setRefreshTrigger(!refreshTrigger)
-    }
 
     // editor Response
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
@@ -566,6 +563,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const { setSubscribeClose, getSubscribeClose } = useSubscribeClose()
     const fuzzerRef = useRef<any>()
     const [inViewport] = useInViewport(fuzzerRef)
+
+    const {
+        getPageNodeInfoByPageId,
+    } = usePageNode()
+
+    useEffect(() => {
+        if (!inViewport) return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
+        if (!nodeInfo) return
+        const { currentItem } = nodeInfo
+        // console.log('currentItem',currentItem)
+        setRequest(currentItem.pageParamsInfo.webFuzzerPageInfo?.request || '')
+        refreshRequest()
+    }, [inViewport])
+
     useEffect(() => {
         if (getSubscribeClose(YakitRoute.HTTPFuzzer)) return
         setSubscribeClose(YakitRoute.HTTPFuzzer, {
@@ -633,7 +645,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     // 定时器
-    const sendTimer = useRef<any>(null)
     const resetResponse = useMemoizedFn(() => {
         setFirstResponse({ ...emptyFuzzer })
         setSuccessFuzzer([])
@@ -718,6 +729,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             resetResponse()
         }
     }, [props.isHttps, props.isGmTLS, props.request])
+    const refreshRequest = useMemoizedFn(() => {
+        setRefreshTrigger(!refreshTrigger)
+    })
 
     const loadHistory = useMemoizedFn((id: number) => {
         resetResponse()
@@ -989,6 +1003,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 id: props.id
             }
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
+                pageId: props.id,
                 advancedConfigValue,
                 request: getRequest()
             }

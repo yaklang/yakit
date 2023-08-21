@@ -938,6 +938,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ...currentItem,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
+                    pageId: param.pageId,
                     advancedConfigValue: { ...param.advancedConfigValue },
                     request: param.request
                 }
@@ -1046,10 +1047,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             pageName: nodeItem.verbose,
                             pageParamsInfo: {
                                 webFuzzerPageInfo: {
+                                    pageId: tabId,
                                     advancedConfigValue: {
                                         ...defaultAdvancedConfigValue,
                                         ...defaultCache,
-                                        ...nodeItem.params
+                                        ...nodeItem.params,
                                     },
                                     request: nodeItem.params?.request || ""
                                 }
@@ -1080,6 +1082,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         pageName: parentItem.verbose,
                         pageParamsInfo: {
                             webFuzzerPageInfo: {
+                                pageId: parentItem.id,
                                 advancedConfigValue: {
                                     ...defaultAdvancedConfigValue,
                                     ...defaultCache,
@@ -1135,6 +1138,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageName: node.verbose,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
+                    pageId: node.id,
                     advancedConfigValue: {
                         ...defaultAdvancedConfigValue,
                         ...node.params
@@ -2684,6 +2688,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                                 pageName: item.verbose,
                                 pageParamsInfo: {
                                     webFuzzerPageInfo: {
+                                        pageId: item.id,
                                         advancedConfigValue: {
                                             ...defaultAdvancedConfigValue,
                                             ...item.params
@@ -2954,6 +2959,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             pageName: groupItem.verbose,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
+                    pageId: groupItem.id,
                     advancedConfigValue: {
                         ...defaultAdvancedConfigValue
                     },
@@ -2986,6 +2992,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             pageName: item.verbose,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
+                    pageId: item.id,
                     advancedConfigValue: {
                         ...defaultAdvancedConfigValue,
                         ...item.params

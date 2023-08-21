@@ -34,6 +34,7 @@ interface PageParamsInfoProps {
     webFuzzerPageInfo?: WebFuzzerPageInfoProps
 }
 export interface WebFuzzerPageInfoProps {
+    pageId: string
     advancedConfigValue: AdvancedConfigValueProps
     request: string
 }
@@ -99,7 +100,7 @@ interface PageNodeInfoProps {
     pageNode: Map<string, PageInfoProps>
     currentSelectGroup: Map<string, PageNodeItemProps>
 
-    getCurrentSelectGroup: (key, pageGroupId: string) =>  PageNodeItemProps | undefined
+    getCurrentSelectGroup: (key, pageGroupId: string) => PageNodeItemProps | undefined
     setCurrentSelectGroup: (key, pageGroupId: string) => void
 
     getPageNodeInfoByPageId: (key, pageId: string) => NodeInfoProps | undefined
@@ -184,7 +185,9 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         if (subIndex === -1) {
             pageNodeList[index] = { ...val }
         } else {
-            pageNodeList[index].pageChildrenList[subIndex] = { ...val }
+            pageNodeList[index].pageChildrenList[subIndex] = {
+                ...val
+            }
         }
         const newNode = new Map().set(key, {
             ...node,

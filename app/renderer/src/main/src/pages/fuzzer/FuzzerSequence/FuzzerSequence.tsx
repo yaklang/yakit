@@ -67,7 +67,7 @@ import { ResizeCardBox } from "@/components/ResizeCardBox/ResizeCardBox"
 import { NewHTTPPacketEditor } from "@/utils/editors"
 import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import { HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery } from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import { StringToUint8Array } from "@/utils/str"
+import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
 import { MatcherValueProps, ExtractorValueProps } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 import { InheritLineIcon, InheritArrowIcon } from "./icon"
@@ -116,6 +116,7 @@ const reorder = (arr, index1, index2) => {
 }
 
 const defaultPageParams: WebFuzzerPageInfoProps = {
+    pageId: '',
     advancedConfigValue: {
         ...defaultAdvancedConfigValue
     },
@@ -153,7 +154,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const { getPageNodeInfoByPageId, getPageNodeInfoByPageGroupId } = usePageNode()
+    const { getPageNodeInfoByPageGroupId } = usePageNode()
     const [extractedMap, { reset, set }] = useMap<string, Map<string, string>>()
     useEffect(() => {
         ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { pageId: string, type: string, extractedMap: Map<string, string> }) => {
@@ -170,6 +171,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const unSubPageNode = usePageNode.subscribe(
             (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer, props.groupId),
             () => {
+                console.log('FuzzerSequence')
                 onUpdateSequence()
             }
         )
@@ -208,7 +210,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     useEffect(() => {
         if (currentSequenceItem) {
-            setCurrentSelectRequest(currentSequenceItem.pageParams)
+            setCurrentSelectRequest({
+                ...currentSequenceItem.pageParams,
+            })
             const currentResponse = responseMap.get(currentSequenceItem.id)
             if (currentResponse) {
                 setCurrentSelectResponse({ ...currentResponse })
@@ -505,7 +509,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const current: SequenceProps | undefined = sequenceList[result.source.index]
             if (current) {
                 setCurrentSequenceItem(current)
-                setCurrentSelectRequest(current.pageParams)
+                setCurrentSelectRequest({
+                    ...current.pageParams,
+                })
             }
             const newSequenceList: SequenceProps[] = reorder(
                 sequenceList,
@@ -626,9 +632,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const onSetShowAllResponse = useMemoizedFn(() => {
         setShowAllResponse(false)
     })
-    const onSendToWebFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
-        // sendToFuzzer(isHttps, false, request)
-    })
     // console.log('currentSelectResponse', currentSelectResponse)
     return (
         <>
@@ -725,9 +728,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
                         {!loading && (
                             <div className={styles["plus-sm-icon-body"]}>
-                                <div className={classNames(styles['inherit-line-icon'])}>
-                                    <InheritLineIcon />
-                                </div>
+                                {
+                                    sequenceList.length > 0 &&
+                                    <div className={classNames(styles['inherit-line-icon'])}>
+                                        <InheritLineIcon />
+                                    </div>
+                                }
                                 <OutlinePlussmIcon className={styles["plus-sm-icon"]} onClick={() => onAddSequenceNode()} />
                             </div>
                         )}
@@ -735,7 +741,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     </div>
                 </div>
                 <div className={classNames(styles["fuzzer-sequence-content"])}>
-                    {currentSequenceItem && currentSequenceItem.id ? (
+                    {currentSequenceItem && currentSequenceItem.id && currentSelectRequest ? (
                         <>
                             <SequenceResponseHeard
                                 currentSequenceItemName={currentSequenceItem.name}
@@ -766,7 +772,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     showAllResponse={showAllResponse}
                     responseMap={responseMap}
                     setShowAllResponse={onSetShowAllResponse}
-                    sendToFuzzer={onSendToWebFuzzer}
                 />
             </React.Suspense>
         </>
@@ -1071,11 +1076,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         successCount: 0,
         failedCount: 0
     }
-    const { request, advancedConfigValue } = requestInfo || {
+    const { request, advancedConfigValue, pageId } = requestInfo || {
         request: "",
         advancedConfigValue: { ...defaultAdvancedConfigValue }
     }
-
+    const [requestHttp, setRequestHttp] = useState<Uint8Array>(StringToUint8Array(request))
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [affixSearch, setAffixSearch] = useState<string>("")
@@ -1094,6 +1099,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         return cachedTotal === 1
     }, [cachedTotal])
 
+    const {
+        getPageNodeInfoByPageId,
+        updatePageNodeInfoByPageId,
+    } = usePageNode()
+
     useUpdateEffect(() => {
         if (successTableRef.current) {
             successTableRef.current.setCurrentSelectItem(undefined)
@@ -1102,6 +1112,32 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         setIsRefresh(!isRefresh)
         setQuery(undefined)
     }, [responseInfoId])
+
+    const onSetRequestHttp = useMemoizedFn((i: Uint8Array) => {
+        setRequestHttp(i)
+        onUpdatePageInfo(i)
+    })
+    const onUpdatePageInfo = useDebounceFn((i: Uint8Array) => {
+        const value = Uint8ArrayToString(i) || ''
+        if (!pageId) return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pageId)
+        if (!nodeInfo) return
+        const { currentItem } = nodeInfo
+        if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+            const newCurrentItem: PageNodeItemProps = {
+                ...currentItem,
+                pageParamsInfo: {
+                    webFuzzerPageInfo: {
+                        ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                        request: value
+                    }
+                }
+            }
+            updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, currentItem.pageId, { ...newCurrentItem })
+        }
+    }, {
+        wait: 200
+    }).run
     return (
         <>
             <ResizeCardBox
@@ -1161,9 +1197,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         bordered={false}
                         noMinimap={true}
                         utf8={true}
-                        originValue={StringToUint8Array(request)}
-                        readOnly={true}
-                    // onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                        originValue={requestHttp}
+                        onChange={(i) => onSetRequestHttp(i)}
                     />
                 }
                 secondNode={

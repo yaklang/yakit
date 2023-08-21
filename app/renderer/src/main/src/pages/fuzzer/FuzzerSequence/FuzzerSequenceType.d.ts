@@ -127,5 +127,5 @@ export interface ResponseCardProps {
     responseMap: Map<string, ResponseProps>
     // extractedMap: Map<string, string>
     setShowAllResponse: () => void
-    sendToFuzzer: (isHttps: boolean, request: string) => void
+    // sendToFuzzer: (isHttps: boolean, request: string) => void
 }
