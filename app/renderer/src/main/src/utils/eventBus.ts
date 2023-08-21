@@ -1,5 +1,8 @@
-import mitt from "mitt";
+import { mitmEvents } from '@/pages/mitm/emiter'
+import mitt from "mitt"
 
-const emiter = mitt();
+type T = mitmEvents
 
-export default emiter;
+const emiter = mitt<T>()
+
+export default emiter

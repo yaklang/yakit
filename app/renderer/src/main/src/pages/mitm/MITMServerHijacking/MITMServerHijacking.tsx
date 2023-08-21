@@ -62,7 +62,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
 
-    const cleanMitmLogTableData = useMemoizedFn((params: object) => {
+    const cleanMitmLogTableData = useMemoizedFn((params: { DeleteAll: boolean, Filter?: {} }) => {
         ipcRenderer
             .invoke("DeleteHTTPFlows", params)
             .then(() => {
