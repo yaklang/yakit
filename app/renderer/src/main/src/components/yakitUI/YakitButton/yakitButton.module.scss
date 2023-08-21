@@ -33,6 +33,11 @@
         color: var(--ui-text-inverse-color);
         border-color: var(--yakit-disable-text-color);
     }
+    &[disabled]:hover {
+        background: var(--yakit-disable-text-color);
+        color: var(--ui-text-inverse-color);
+        border-color: var(--yakit-disable-text-color);
+    }
 }
 
 @mixin generateSecondary2($type) {
@@ -86,6 +91,14 @@
             color: var(--yakit-disable-text-color);
         }
     }
+    &[disabled]:hover {
+        background: var(--yakit-background-color);
+        color: var(--yakit-disable-text-color);
+        border-color: var(--yakit-background-color);
+        svg {
+            color: var(--yakit-disable-text-color);
+        }
+    }
 }
 
 @mixin generateOutline1($type) {
@@ -117,6 +130,11 @@
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
+        background: var(--yakit-background-color);
+        color: var(--yakit-disable-text-color);
+        border-color: var(--yakit-border-color);
+    }
+    &[disabled]:hover {
         background: var(--yakit-background-color);
         color: var(--yakit-disable-text-color);
         border-color: var(--yakit-border-color);
@@ -174,6 +192,14 @@
             color: var(--yakit-disable-text-color);
         }
     }
+    &[disabled]:hover {
+        background: var(--ui-background-color);
+        color: var(--yakit-disable-text-color);
+        border-color: var(--yakit-border-color);
+        svg {
+            color: var(--yakit-disable-text-color);
+        }
+    }
 }
 
 @mixin generateText($type) {
@@ -205,6 +231,11 @@
         border-color: transparent;
     }
     &[disabled] {
+        background: transparent;
+        color: var(--yakit-disable-text-color);
+        border-color: transparent;
+    }
+    &[disabled]:hover {
         background: transparent;
         color: var(--yakit-disable-text-color);
         border-color: transparent;
@@ -262,6 +293,14 @@
             color: var(--yakit-disable-text-color);
         }
     }
+    &[disabled]:hover {
+        background: transparent;
+        color: var(--yakit-disable-text-color);
+        border-color: transparent;
+        svg {
+            color: var(--yakit-disable-text-color);
+        }
+    }
 }
 
 .yakit-button-small-size {
@@ -269,8 +308,8 @@
     padding: 3px 6px;
     font-weight: 500;
     font-size: 11px;
-    .anticon + span,
-    span + .anticon {
+    & > :global(.anticon + span),
+    & > :global(span + .anticon) {
         margin-left: 2px;
     }
 
@@ -288,8 +327,8 @@
     padding: 4px 8px;
     font-weight: 500;
     font-size: 12px;
-    .anticon + span,
-    span + .anticon {
+    & > :global(.anticon + span),
+    & > :global(span + .anticon) {
         margin-left: 4px;
     }
 
@@ -307,8 +346,8 @@
     padding: 4px 12px;
     font-weight: 600;
     font-size: 14px;
-    .anticon + span,
-    span + .anticon {
+    & > :global(.anticon + span),
+    & > :global(span + .anticon) {
         margin-left: 4px;
     }
 
@@ -326,8 +365,8 @@
     padding: 6px 12px;
     font-weight: 500;
     font-size: 14px;
-    .anticon + span,
-    span + .anticon {
+    & > :global(.anticon + span),
+    & > :global(span + .anticon) {
         margin-left: 4px;
     }
 
@@ -341,7 +380,7 @@
     }
 }
 .yakit-button {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
     box-shadow: none;

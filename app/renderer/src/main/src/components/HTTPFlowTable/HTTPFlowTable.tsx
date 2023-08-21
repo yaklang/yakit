@@ -2261,6 +2261,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                     {(selectedRowKeys.length === 0 && (
                                         <YakitButton
+                                            type="outline2"
                                             disabled={selectedRowKeys.length === 0}
                                             onClick={(e) => {
                                                 e.stopPropagation()

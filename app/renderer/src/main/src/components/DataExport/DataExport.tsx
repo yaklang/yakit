@@ -20,17 +20,7 @@ interface ExportExcelProps {
     text?: string
     openModal?: boolean
     newUI?: boolean
-    newUIType?:
-        | "outline1"
-        | "outline2"
-        | "text"
-        | "primary"
-        | "secondary1"
-        | "secondary2"
-        | "success"
-        | "warning"
-        | "danger"
-        | "serious"
+    newUIType?: YakitButtonProp["type"]
 }
 
 interface resProps {

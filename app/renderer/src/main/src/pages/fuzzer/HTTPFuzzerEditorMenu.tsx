@@ -261,8 +261,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                             <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
                         </div>
                         <div className={styles["menu-header-opt"]}>
-                            <YakitButton type='text' onClick={() => addLabel()}>
-                                添加 <PlusOutlined className={styles["add-icon"]} />
+                            <YakitButton style={{paddingLeft: 2, paddingRight: 2}} type='text' onClick={() => addLabel()}>
+                                添加 <PlusOutlined />
                             </YakitButton>
                             <div className={styles["line"]}></div>
                             <YakitButton
