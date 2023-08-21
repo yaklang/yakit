@@ -41,6 +41,7 @@ import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
+import {CyberChefPage} from "@/pages/cyberChef/CyberChefPage"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
 import {PageLoading} from "./PageLoading"
@@ -196,6 +197,8 @@ export enum YakitRoute {
     Beta_DiagnoseNetwork = "beta-diagnose-network",
     // 配置全局
     Beta_ConfigNetwork = "beta-config-network",
+    // 赛博厨师
+    Beta_CyberChef = "beta-cyber-chef",
 }
 /**
  * @description 页面路由对应的页面信息
@@ -271,6 +274,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-plugin": {label: "插件调试"},
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器",},
+    "beta-cyber-chef": {label: "赛博厨师"},
     "beta-diagnose-network": {label: "网络异常诊断"},
     "beta-config-network": {label: "全局网络配置"},
 }
@@ -513,6 +517,8 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <DiagnoseNetworkPage/>
         case YakitRoute.Beta_ConfigNetwork:
             return <ConfigNetworkPage/>
+        case YakitRoute.Beta_CyberChef:
+            return <CyberChefPage/>
         default:
             return <div />
     }

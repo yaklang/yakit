@@ -355,6 +355,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
+            if (type === "**cyber-chef") openMenuPage({route: YakitRoute.Beta_CyberChef})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
             if (type === "**config-network") openMenuPage({route: YakitRoute.Beta_ConfigNetwork})
             if (type === "open-plugin-store") {

@@ -203,6 +203,9 @@ export enum Route {
 
     Beta_VulinboxManager = "beta-vulinbox-manager",
 
+    //赛博厨师
+    Beta_CyberChef = "beta-cyber-chef",
+
     Beta_DiagnoseNetwork = "beta-diagnose-network",
 
     // 首页

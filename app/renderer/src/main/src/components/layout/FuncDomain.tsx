@@ -813,6 +813,10 @@ const GetUIOpSettingMenu = () => {
                     key: "config-network",
                     label: "全局网络配置"
                 },
+                {
+                    key: "cyber-chef",
+                    label: "赛博厨师"
+                }
             ]
         },
         {
@@ -1001,6 +1005,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "config-network":
                 addToTab("**config-network")
+                return            
+            case "cyber-chef":
+                addToTab("**cyber-chef")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()
@@ -1019,6 +1026,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "plaintextProject":
                 typeCallback(type)
                 return
+
             default:
                 return
         }
