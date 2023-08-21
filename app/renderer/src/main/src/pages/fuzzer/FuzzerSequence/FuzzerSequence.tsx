@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import {
     ExtraSettingProps,
     FuzzerSequenceProps,
@@ -6,11 +6,12 @@ import {
     ResponseProps,
     SequenceItemProps,
     SequenceProps,
+    SequenceResponseHeardProps,
     SequenceResponseProps
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon } from "@/assets/icon/solid"
+import { SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon, SwitchConfigurationIcon } from "@/assets/icon/solid"
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import {
     useCreation,
@@ -25,7 +26,7 @@ import {
     useUpdateEffect,
     useWhyDidYouUpdate
 } from "ahooks"
-import { OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
+import { OutlineArrowcirclerightIcon, OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
 import { Divider, Form, Result } from "antd"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -46,6 +47,7 @@ import {
 } from "@/store/pageNodeInfo"
 import { YakitRoute } from "@/routes/newRoute"
 import {
+    FuzzerExtraShow,
     FuzzerRequestProps,
     FuzzerResponse,
     ResponseViewer,
@@ -56,7 +58,7 @@ import {
     advancedConfigValueToFuzzerRequests,
     defaultAdvancedConfigValue,
     defaultPostTemplate,
-    emptyFuzzer
+    emptyFuzzer,
 } from "../HTTPFuzzerPage"
 import { randomString } from "@/utils/randomUtil"
 import { getLocalValue, getRemoteValue } from "@/utils/kv"
@@ -68,6 +70,14 @@ import { HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery } from "../components/HTT
 import { StringToUint8Array } from "@/utils/str"
 import { MatcherValueProps, ExtractorValueProps } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { InheritLineIcon, InheritArrowIcon } from "./icon"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { PencilAltIcon } from "@/assets/newIcon"
+import { SubPageContext } from "@/pages/layout/MainContext"
+// import { ResponseCard } from "./ResponseCard"
+
+
+const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
 const { ipcRenderer } = window.require("electron")
 
@@ -123,6 +133,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [sequenceList, setSequenceList] = useState<SequenceProps[]>([])
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
+    const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
+
     // Response
     const [currentSequenceItem, setCurrentSequenceItem] = useState<SequenceProps>()
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -142,10 +154,21 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
     const { getPageNodeInfoByPageId, getPageNodeInfoByPageGroupId } = usePageNode()
+    const [extractedMap, { reset, set }] = useMap<string, Map<string, string>>()
+    useEffect(() => {
+        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { pageId: string, type: string, extractedMap: Map<string, string> }) => {
+            if (data.type === 'fuzzerSequence') {
+                setExtractedMap(data.extractedMap)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-extracted-to-table")
+        }
+    }, [])
 
     useEffect(() => {
         const unSubPageNode = usePageNode.subscribe(
-            (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer,props.groupId),
+            (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer, props.groupId),
             () => {
                 onUpdateSequence()
             }
@@ -154,7 +177,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             unSubPageNode()
         }
     }, [])
-    useWhyDidYouUpdate('FuzzerSequence', { ...props,sequenceList,originSequenceListRef });
+    // useWhyDidYouUpdate('FuzzerSequence', { ...props, sequenceList, originSequenceListRef });
     useUpdateEffect(() => {
         if (inViewport) onUpdateSequence()
     }, [inViewport])
@@ -222,7 +245,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             const { Response, Request } = data
             const { FuzzerIndex = "" } = Request
-            console.log("data", FuzzerIndex, Request, Response)
+            // console.log("data", FuzzerIndex, Request, Response)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -292,12 +315,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-
+    const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
+        if (inViewport && currentSequenceItem) set(currentSequenceItem?.id, extractedMap)
+    })
     /**点击开始执行后，如果没有选中项，则设置返回的第一个为选中item */
     const onSetFirstAsSelected = useMemoizedFn((fuzzerIndex: string) => {
         if (!currentSequenceItem) {
             const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === fuzzerIndex)
-            if (current) setCurrentSequenceItem(current)
+            if (current) {
+                setCurrentSequenceItem(current)
+            }
         }
     })
     const updateData = useThrottleFn((fuzzerIndex: string) => {
@@ -392,7 +419,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             })
             if (currentSequenceItem) {
                 const index = newSequenceList.findIndex((ele) => currentSequenceItem.id === ele.id)
-                if (index !== -1) setCurrentSequenceItem({ ...newSequenceList[index] })
+                if (index !== -1) { setCurrentSequenceItem({ ...newSequenceList[index] }); }
             }
             setSequenceList([...newSequenceList])
         }),
@@ -441,43 +468,31 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         onSetOriginSequence(nodeInfo)
         if (sequenceList.length === 0) {
-            const item = {
+            const item: SequenceProps = {
                 id: `${randomString(8)}-1`,
+                name: 'Step [0]',
                 pageId: "",
                 pageGroupId: nodeInfo.pageId,
                 pageName: "",
                 pageParams: defaultPageParams,
-                inheritCookies: false,
-                inheritVariables: false
+                inheritCookies: true,
+                inheritVariables: true
             }
             setSequenceList([item])
         }
-        // const { parentItem, currentItem } = nodeInfo
-        // onSetOriginSequence(parentItem)
-        // if (sequenceList.length === 0) {
-        //     const item = {
-        //         id: `${randomString(8)}-1`,
-        //         pageId: "",
-        //         pageGroupId: currentItem.pageGroupId,
-        //         pageName: "",
-        //         pageParams: defaultPageParams,
-        //         inheritCookies: false,
-        //         inheritVariables: false
-        //     }
-        //     setSequenceList([item])
-        // }
     })
 
     /**设置原始序列 */
     const onSetOriginSequence = useMemoizedFn((parentItem: PageNodeItemProps) => {
         const newSequence: SequenceProps[] = parentItem.pageChildrenList?.map((item, index) => ({
             id: item.id,
+            name: `Step [${index}]`,
             pageId: item.pageId,
             pageGroupId: item.pageGroupId,
             pageName: item.pageName,
             pageParams: item.pageParamsInfo.webFuzzerPageInfo || defaultPageParams,
-            inheritCookies: false,
-            inheritVariables: false
+            inheritCookies: true,
+            inheritVariables: true
         }))
         originSequenceListRef.current = [...newSequence]
     })
@@ -500,13 +515,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setSequenceList(newSequenceList)
         }
     })
-    const onUpdateItem = useMemoizedFn((item: SequenceProps, index: number) => {
+    const onUpdateItemPage = useMemoizedFn((item: SequenceProps, index: number) => {
         if (index === errorIndex && item.pageId) {
             setErrorIndex(-1)
         }
         const originItem = originSequenceListRef.current.find((ele) => ele.pageId === item.pageId)
         if (!originItem) return
         sequenceList[index] = { ...item, pageParams: originItem.pageParams }
+        setSequenceList([...sequenceList])
+    })
+    const onUpdateItem = useMemoizedFn((item: SequenceProps, index: number) => {
+        if (item.id === currentSequenceItem?.id) {
+            setCurrentSequenceItem({ ...item })
+        }
+        sequenceList[index] = { ...item }
         setSequenceList([...sequenceList])
     })
     /**
@@ -551,11 +573,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         const addItem: SequenceProps = {
             id: `${randomString(8)}-${sequenceList.length + 1}`,
+            name: `Step [${sequenceList.length}]`,
             pageId: "",
             pageName: "",
             pageGroupId: "",
-            inheritCookies: false,
-            inheritVariables: false,
+            inheritCookies: true,
+            inheritVariables: true,
             pageParams: defaultPageParams
         }
         setSequenceList([...sequenceList, addItem])
@@ -575,17 +598,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         if (sequenceList.length <= 1) {
             const newItem: SequenceProps = {
                 id: "1",
+                name: `Step [0]`,
                 pageId: "",
                 pageGroupId: "",
                 pageName: "",
-                inheritCookies: false,
-                inheritVariables: false,
+                inheritCookies: true,
+                inheritVariables: true,
                 pageParams: defaultPageParams
             }
             setSequenceList([newItem])
             setCurrentSequenceItem(undefined)
         } else {
-            if (currentSequenceItem?.id === sequenceList[index].id) setCurrentSequenceItem(sequenceList[index - 1])
+            if (currentSequenceItem?.id === sequenceList[index].id) {
+                setCurrentSequenceItem(sequenceList[index - 1]);
+            }
             sequenceList.splice(index, 1)
             setSequenceList([...sequenceList])
         }
@@ -597,115 +623,153 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         setCurrentSequenceItem(val)
     })
+    const onSetShowAllResponse = useMemoizedFn(() => {
+        setShowAllResponse(false)
+    })
+    const onSendToWebFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
+        // sendToFuzzer(isHttps, false, request)
+    })
+    // console.log('currentSelectResponse', currentSelectResponse)
     return (
-        <div className={styles["fuzzer-sequence"]} ref={fuzzerSequenceRef}>
-            <div className={styles["fuzzer-sequence-left"]}>
-                <div className={styles["fuzzer-sequence-left-heard"]}>
-                    <span>序列配置</span>
-                    <div className={styles["fuzzer-sequence-left-heard-extra"]}>
-                        <YakitButton type='text' disabled={loading} onClick={() => onAddSequenceNode()}>
-                            添加节点
-                            <SolidPlusIcon className={styles["plus-icon"]} />
-                        </YakitButton>
-                        {loading ? (
-                            <YakitButton
-                                onClick={() => onForcedStop()}
-                                icon={<SolidStopIcon className={styles["stop-icon"]} />}
-                                className='button-primary-danger'
-                                danger={true}
-                                type={"primary"}
-                            >
-                                强制停止
+        <>
+            <div className={styles["fuzzer-sequence"]} style={{ display: showAllResponse ? 'none' : '' }} ref={fuzzerSequenceRef}>
+                <div className={styles["fuzzer-sequence-left"]}>
+                    <div className={styles["fuzzer-sequence-left-heard"]}>
+                        <span>序列配置</span>
+                        <div className={styles["fuzzer-sequence-left-heard-extra"]}>
+                            <YakitButton type='text' disabled={loading} onClick={() => onAddSequenceNode()}>
+                                添加节点
+                                <SolidPlusIcon className={styles["plus-icon"]} />
                             </YakitButton>
-                        ) : (
-                            <YakitButton
-                                onClick={() => onStartExecution()}
-                                icon={<SolidPlayIcon className={styles["play-icon"]} />}
-                                type={"primary"}
-                            >
-                                开始执行
-                            </YakitButton>
+                            {loading ? (
+                                <YakitButton
+                                    onClick={() => onForcedStop()}
+                                    icon={<SolidStopIcon className={styles["stop-icon"]} />}
+                                    className='button-primary-danger'
+                                    danger={true}
+                                    type={"primary"}
+                                >
+                                    强制停止
+                                </YakitButton>
+                            ) : (
+                                <YakitButton
+                                    onClick={() => onStartExecution()}
+                                    icon={<SolidPlayIcon className={styles["play-icon"]} />}
+                                    type={"primary"}
+                                >
+                                    开始执行
+                                </YakitButton>
+                            )}
+                        </div>
+                    </div>
+                    <div className={styles["fuzzer-sequence-left-body"]}>
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId='droppable1'>
+                                {(provided, snapshot) => {
+                                    return (
+                                        <div
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                            className={styles["fuzzer-sequence-list"]}
+                                        >
+                                            {sequenceList.map((sequenceItem, index) => {
+                                                return (
+                                                    <Draggable
+                                                        key={sequenceItem.id}
+                                                        draggableId={sequenceItem.id}
+                                                        index={index}
+                                                        isDragDisabled={loading}
+                                                    >
+                                                        {(providedItem, snapshotItem) => (
+                                                            <div
+                                                                ref={providedItem.innerRef}
+                                                                {...providedItem.draggableProps}
+                                                                {...providedItem.dragHandleProps}
+                                                                style={getItemStyle(
+                                                                    snapshotItem.isDragging,
+                                                                    providedItem.draggableProps.style
+                                                                )}
+                                                            >
+                                                                <SequenceItem
+                                                                    dropCount={getDroppedCount(sequenceItem.id)}
+                                                                    pageNodeList={originSequenceListRef.current}
+                                                                    item={sequenceItem}
+                                                                    isSelect={currentSequenceItem?.id === sequenceItem.id}
+                                                                    index={index}
+                                                                    errorIndex={errorIndex}
+                                                                    isDragging={snapshotItem.isDragging}
+                                                                    disabled={sequenceItem.disabled}
+                                                                    isShowLine={
+                                                                        loading && index === sequenceList.length - 1
+                                                                    }
+                                                                    onApplyOtherNodes={onApplyOtherNodes}
+                                                                    onUpdateItemPage={(item) => onUpdateItemPage(item, index)}
+                                                                    onUpdateItem={(item) => onUpdateItem(item, index)}
+                                                                    onRemove={() => {
+                                                                        onRemoveNode(index)
+                                                                    }}
+                                                                    onSelect={(val) => onSelect(val)}
+                                                                />
+
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                )
+                                            })}
+                                            {provided.placeholder}
+                                        </div>
+                                    )
+                                }}
+                            </Droppable>
+                        </DragDropContext>
+
+                        {!loading && (
+                            <div className={styles["plus-sm-icon-body"]}>
+                                <div className={classNames(styles['inherit-line-icon'])}>
+                                    <InheritLineIcon />
+                                </div>
+                                <OutlinePlussmIcon className={styles["plus-sm-icon"]} onClick={() => onAddSequenceNode()} />
+                            </div>
                         )}
+                        <div className={styles["to-end"]}>已经到底啦～</div>
                     </div>
                 </div>
-                <div className={styles["fuzzer-sequence-left-body"]}>
-                    <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId='droppable1'>
-                            {(provided, snapshot) => {
-                                return (
-                                    <div
-                                        {...provided.droppableProps}
-                                        ref={provided.innerRef}
-                                        className={styles["fuzzer-sequence-list"]}
-                                    >
-                                        {sequenceList.map((sequenceItem, index) => {
-                                            return (
-                                                <Draggable
-                                                    key={sequenceItem.id}
-                                                    draggableId={sequenceItem.id}
-                                                    index={index}
-                                                    isDragDisabled={loading}
-                                                >
-                                                    {(providedItem, snapshotItem) => (
-                                                        <div
-                                                            ref={providedItem.innerRef}
-                                                            {...providedItem.draggableProps}
-                                                            {...providedItem.dragHandleProps}
-                                                            style={getItemStyle(
-                                                                snapshotItem.isDragging,
-                                                                providedItem.draggableProps.style
-                                                            )}
-                                                        >
-                                                            <SequenceItem
-                                                                dropCount={getDroppedCount(sequenceItem.id)}
-                                                                pageNodeList={originSequenceListRef.current}
-                                                                item={sequenceItem}
-                                                                isSelect={currentSequenceItem?.id === sequenceItem.id}
-                                                                index={index}
-                                                                errorIndex={errorIndex}
-                                                                isDragging={snapshotItem.isDragging}
-                                                                disabled={sequenceItem.disabled}
-                                                                isShowLine={
-                                                                    loading && index === sequenceList.length - 1
-                                                                }
-                                                                onApplyOtherNodes={onApplyOtherNodes}
-                                                                onUpdateItem={(item) => onUpdateItem(item, index)}
-                                                                onRemove={() => {
-                                                                    onRemoveNode(index)
-                                                                }}
-                                                                onSelect={(val) => onSelect(val)}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </Draggable>
-                                            )
-                                        })}
-                                        {provided.placeholder}
-                                    </div>
-                                )
-                            }}
-                        </Droppable>
-                    </DragDropContext>
-                    {!loading && (
-                        <div className={styles["plus-sm-icon-body"]}>
-                            <OutlinePlussmIcon className={styles["plus-sm-icon"]} onClick={() => onAddSequenceNode()} />
-                        </div>
+                <div className={classNames(styles["fuzzer-sequence-content"])}>
+                    {currentSequenceItem && currentSequenceItem.id ? (
+                        <>
+                            <SequenceResponseHeard
+                                currentSequenceItemName={currentSequenceItem.name}
+                                disabled={responseMap.size === 0 || loading}
+                                responseInfo={currentSelectResponse}
+                                advancedConfigValue={currentSelectRequest?.advancedConfigValue}
+                                droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
+                                onShowAll={() => {
+                                    setShowAllResponse(true)
+                                }}
+                            />
+                            <SequenceResponse
+                                requestInfo={currentSelectRequest}
+                                responseInfo={currentSelectResponse}
+                                loading={loading}
+                                extractedMap={extractedMap.get(currentSequenceItem.id) || new Map()}
+                            />
+                        </>
+                    ) : (
+                        <YakitEmpty title='请选择 Web Fuzzer(如需使用序列，请将其他标签页拖入该分组)' />
                     )}
-                    <div className={styles["to-end"]}>已经到底啦～</div>
                 </div>
             </div>
-            <div className={classNames(styles["fuzzer-sequence-content"])}>
-                {currentSequenceItem && currentSequenceItem.id ? (
-                    <SequenceResponse
-                        requestInfo={currentSelectRequest}
-                        responseInfo={currentSelectResponse}
-                        loading={loading}
-                    />
-                ) : (
-                    <YakitEmpty title='请选择 Web Fuzzer(如需使用序列，请将其他标签页拖入该分组)' />
-                )}
-            </div>
-        </div>
+            <React.Suspense fallback={<>loading allFuzzerSequenceList ...</>}>
+                {/* <ResponseCard allFailedResponse={[]} allFailedResponse={[]}/> */}
+
+                <ResponseCard
+                    showAllResponse={showAllResponse}
+                    responseMap={responseMap}
+                    setShowAllResponse={onSetShowAllResponse}
+                    sendToFuzzer={onSendToWebFuzzer}
+                />
+            </React.Suspense>
+        </>
     )
 })
 
@@ -718,16 +782,19 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         index,
         isDragging,
         disabled,
-        isShowLine,
         errorIndex,
         isSelect,
         dropCount,
+        onUpdateItemPage,
         onUpdateItem,
         onApplyOtherNodes,
         onRemove,
         onSelect
     } = props
+    const { onSelectSubMenuById } = useContext(SubPageContext)
     const [visible, setVisible] = useState<boolean>(false)
+    const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
+    const [name, setName] = useState<string>(item.name)
 
     const selectRef = useRef(null)
     const isHovering = useHover(selectRef)
@@ -738,138 +805,257 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
             label: ele.pageName
         }))
     }, [pageNodeList])
+    const tipText = useMemo(() => {
+        const t: string[] = []
+        if (item?.inheritVariables) t.push('变量')
+        if (item?.inheritCookies) t.push('Cookie')
+        return t.join('  ,  ')
+    }, [item?.inheritVariables, item?.inheritCookies])
     return (
-        <div
-            className={styles["fuzzer-sequence-list-item-body"]}
-            onClick={() => {
-                if (disabled) return
-                onSelect(item)
-            }}
-        >
-            <div
-                className={classNames(styles["fuzzer-sequence-list-item"], {
-                    [styles["fuzzer-sequence-list-item-hover"]]: visible,
-                    [styles["fuzzer-sequence-list-item-hover-none"]]: disabled || isHovering,
-                    [styles["fuzzer-sequence-list-item-disabled"]]: disabled,
-                    [styles["fuzzer-sequence-list-item-isDragging"]]: isDragging,
-                    [styles["fuzzer-sequence-list-item-isSelect"]]: isSelect,
-                    [styles["fuzzer-sequence-list-item-errorIndex"]]: errorIndex === index,
-                    [styles["fuzzer-sequence-list-item-no-line"]]: isShowLine
-                })}
-            >
-                <div className={styles["fuzzer-sequence-list-item-heard"]}>
-                    <div className={styles["fuzzer-sequence-list-item-heard-title"]}>
-                        <SolidDragsortIcon
-                            className={classNames(styles["drag-sort-icon"], {
-                                [styles["drag-sort-disabled-icon"]]: disabled
-                            })}
-                        />
-                        Step [{index}]
-                    </div>
-                    <div className={styles["fuzzer-sequence-list-item-heard-extra"]}>
-                        <OutlineTrashIcon
-                            className={classNames(styles["trash-icon"], {
-                                [styles["item-disabled-icon"]]: disabled
-                            })}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onRemove(item)
-                            }}
-                        />
-                        {index > 0 && (
-                            <>
-                                <Divider type='vertical' style={{ margin: 0 }} />
-                                <YakitPopover
-                                    title={
-                                        <div className={styles["cog-popover-heard"]}>
-                                            <span className={styles["cog-popover-heard-title"]}>节点配置</span>
-                                            <span
-                                                className={styles["cog-popover-heard-extra"]}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onApplyOtherNodes({
-                                                        inheritVariables: item.inheritVariables,
-                                                        inheritCookies: item.inheritCookies
-                                                    })
-                                                }}
-                                            >
-                                                应用到其他节点
-                                            </span>
-                                        </div>
-                                    }
-                                    content={
-                                        <div className={styles["cog-popover-content"]}>
-                                            <LabelNodeItem
-                                                label='继承变量'
-                                                labelClassName={styles["cog-popover-content-item"]}
-                                            >
-                                                <YakitSwitch
-                                                    checked={item.inheritVariables}
-                                                    onChange={(checked) =>
-                                                        onUpdateItem({ ...item, inheritVariables: checked })
-                                                    }
-                                                />
-                                            </LabelNodeItem>
-                                            <LabelNodeItem
-                                                label='继承 Cookie'
-                                                labelClassName={styles["cog-popover-content-item"]}
-                                            >
-                                                <YakitSwitch
-                                                    checked={item.inheritCookies}
-                                                    onChange={(checked) =>
-                                                        onUpdateItem({ ...item, inheritCookies: checked })
-                                                    }
-                                                />
-                                            </LabelNodeItem>
-                                        </div>
-                                    }
-                                    visible={visible}
-                                    onVisibleChange={(v) => {
-                                        if (disabled) return
-                                        if (!item.pageId) return
-                                        setVisible(v)
-                                    }}
-                                    overlayClassName={styles["cog-popover"]}
-                                >
-                                    <OutlineCogIcon
-                                        className={classNames(styles["cog-icon"], {
-                                            [styles["cog-icon-hover"]]: visible,
-                                            [styles["item-disabled-icon"]]: disabled
-                                        })}
-                                    />
-                                </YakitPopover>
-                            </>
-                        )}
-                    </div>
-                </div>
+        <>
+            {
+                index > 0 &&
                 <div
-                    ref={selectRef}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                    }}
-                >
-                    <YakitSelect
-                        value={{
-                            value: item.pageId,
-                            label: item.pageName
-                        }}
-                        labelInValue
-                        options={options}
-                        onChange={(v) => {
-                            onUpdateItem({ ...item, pageId: v.value, pageName: v.label })
-                        }}
-                        getPopupContainer={(dom) => dom}
-                        disabled={disabled}
-                    />
+                    className={styles['fuzzer-sequence-list-item-footer']}
+                    style={{
+                        opacity: isDragging ? 0 : 1,
+                    }}>
+                    <div className={classNames(styles['fuzzer-sequence-list-item-footer-line'], {
+                        [styles['fuzzer-sequence-list-item-footer-line-primary']]: item?.inheritVariables || item?.inheritCookies
+                    })}>
+                        <InheritLineIcon />
+                    </div>
+                    {
+                        (item?.inheritVariables || item?.inheritCookies) &&
+                        <>
+                            <div className={styles['fuzzer-sequence-list-item-footer-tag']}>
+                                {tipText}
+                            </div>
+                            <InheritArrowIcon />
+                        </>
+                    }
                 </div>
-                <div>{dropCount ? <YakitTag color='danger'>已丢弃[{dropCount}]个响应</YakitTag> : null}</div>
+            }
+            <div
+                className={styles["fuzzer-sequence-list-item-body"]}
+                onClick={() => {
+                    if (disabled) return
+                    onSelect(item)
+                }}
+            >
+                <div
+                    className={classNames(styles["fuzzer-sequence-list-item"], {
+                        [styles["fuzzer-sequence-list-item-hover"]]: visible,
+                        [styles["fuzzer-sequence-list-item-hover-none"]]: disabled || isHovering,
+                        [styles["fuzzer-sequence-list-item-disabled"]]: disabled,
+                        [styles["fuzzer-sequence-list-item-isDragging"]]: isDragging,
+                        [styles["fuzzer-sequence-list-item-isSelect"]]: isSelect,
+                        [styles["fuzzer-sequence-list-item-errorIndex"]]: errorIndex === index,
+                        // [styles["fuzzer-sequence-list-item-no-line"]]: isShowLine
+                    })}
+                >
+                    <div className={styles["fuzzer-sequence-list-item-heard"]}>
+                        <div className={styles["fuzzer-sequence-list-item-heard-title"]}>
+                            <SolidDragsortIcon
+                                className={classNames(styles["drag-sort-icon"], {
+                                    [styles["drag-sort-disabled-icon"]]: disabled
+                                })}
+                            />
+                            {item.name}
+                            <YakitPopover
+                                overlayClassName={styles["edit-name-popover"]}
+                                content={
+                                    <div
+                                        className={styles["edit-name-popover-content"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        <div className={styles["edit-name-popover-content-title"]}>
+                                            修改名称
+                                        </div>
+                                        <YakitInput
+                                            defaultValue={item.name}
+                                            value={name}
+                                            onChange={(e) => {
+                                                setName(e.target.value)
+                                            }}
+                                            onBlur={(e) => {
+                                                if (!e.target.value) {
+                                                    yakitNotify('error', '名称不能为空');
+                                                    return
+                                                }
+                                                onUpdateItem({ ...item, name: e.target.value })
+                                            }}
+                                            maxLength={20}
+                                        />
+                                    </div>
+                                }
+                                placement='top'
+                                trigger={["click"]}
+                                visible={editNameVisible}
+                                onVisibleChange={setEditNameVisible}
+                            >
+                                <PencilAltIcon
+                                    className={classNames({
+                                        [styles["icon-active"]]: editNameVisible
+                                    })}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                />
+                            </YakitPopover>
+                        </div>
+                        <div className={styles["fuzzer-sequence-list-item-heard-extra"]}>
+                            <OutlineTrashIcon
+                                className={classNames(styles["list-item-icon"], {
+                                    [styles["list-item-disabled-icon"]]: disabled
+                                })}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRemove(item)
+                                }}
+                            />
+                            {index > 0 && (
+                                <>
+                                    <Divider type='vertical' style={{ margin: 0 }} />
+                                    <YakitPopover
+                                        title={
+                                            <div className={styles["cog-popover-heard"]}>
+                                                <span className={styles["cog-popover-heard-title"]}>节点配置</span>
+                                                <span
+                                                    className={styles["cog-popover-heard-extra"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onApplyOtherNodes({
+                                                            inheritVariables: item.inheritVariables,
+                                                            inheritCookies: item.inheritCookies
+                                                        })
+                                                    }}
+                                                >
+                                                    应用到其他节点
+                                                </span>
+                                            </div>
+                                        }
+                                        content={
+                                            <div className={styles["cog-popover-content"]}>
+                                                <LabelNodeItem
+                                                    label='继承变量'
+                                                    labelClassName={styles["cog-popover-content-item"]}
+                                                >
+                                                    <YakitSwitch
+                                                        checked={item.inheritVariables}
+                                                        onChange={(checked) =>
+                                                            onUpdateItem({ ...item, inheritVariables: checked })
+                                                        }
+                                                    />
+                                                </LabelNodeItem>
+                                                <LabelNodeItem
+                                                    label='继承 Cookie'
+                                                    labelClassName={styles["cog-popover-content-item"]}
+                                                >
+                                                    <YakitSwitch
+                                                        checked={item.inheritCookies}
+                                                        onChange={(checked) =>
+                                                            onUpdateItem({ ...item, inheritCookies: checked })
+                                                        }
+                                                    />
+                                                </LabelNodeItem>
+                                            </div>
+                                        }
+                                        visible={visible}
+                                        onVisibleChange={(v) => {
+                                            if (disabled) return
+                                            if (!item.pageId) return
+                                            setVisible(v)
+                                        }}
+                                        overlayClassName={styles["cog-popover"]}
+                                    >
+                                        <SwitchConfigurationIcon
+                                            className={classNames(styles["list-item-icon"], {
+                                                [styles["list-item-icon-hover"]]: visible,
+                                                [styles["list-item-disabled-icon"]]: disabled
+                                            })}
+                                        />
+                                    </YakitPopover>
+                                </>
+                            )}
+                            <Divider type='vertical' style={{ margin: 0 }} />
+                            <OutlineArrowcirclerightIcon
+                                className={classNames(styles["list-item-icon"], {
+                                    [styles["list-item-disabled-icon"]]: disabled
+                                })}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (disabled) return
+                                    if (!item.pageId) {
+                                        yakitNotify('error', '请选择页面')
+                                    } else {
+                                        onSelectSubMenuById(item.pageId)
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div
+                        ref={selectRef}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        <YakitSelect
+                            value={{
+                                value: item.pageId,
+                                label: item.pageName
+                            }}
+                            labelInValue
+                            options={options}
+                            onChange={(v) => {
+                                onUpdateItemPage({ ...item, pageId: v.value, pageName: v.label })
+                            }}
+                            getPopupContainer={(dom) => dom}
+                            disabled={disabled}
+                        />
+                    </div>
+                    <div>{dropCount ? <YakitTag color='danger'>已丢弃[{dropCount}]个响应</YakitTag> : null}</div>
+                </div>
             </div>
-        </div>
+        </>
     )
 })
 
+
+const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((props) => {
+    const { advancedConfigValue, droppedCount, responseInfo, disabled, onShowAll, currentSequenceItemName } = props
+    const {
+        onlyOneResponse: httpResponse,
+        successCount,
+        failedCount
+    } = responseInfo || {
+        id: "0",
+        onlyOneResponse: { ...emptyFuzzer },
+        successFuzzer: [],
+        failedFuzzer: [],
+        successCount: 0,
+        failedCount: 0
+    }
+    const cachedTotal: number = useCreation(() => {
+        return failedCount + successCount
+    }, [failedCount, successCount])
+    const onlyOneResponse: boolean = useCreation(() => {
+        return cachedTotal === 1
+    }, [cachedTotal])
+    return (<div className={styles['sequence-response-heard']}>
+        <div className={styles['sequence-response-heard-left']}>
+            <span>{currentSequenceItemName || ''}</span>
+            <FuzzerExtraShow droppedCount={droppedCount} advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue} onlyOneResponse={onlyOneResponse} httpResponse={httpResponse} />
+        </div>
+        <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>展示全部响应</YakitButton>
+    </div>)
+})
+
 const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => {
-    const { requestInfo, responseInfo, loading } = props
+    const { requestInfo, responseInfo, loading, extractedMap } = props
     const {
         id: responseInfoId,
         onlyOneResponse: httpResponse,
@@ -907,15 +1093,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const onlyOneResponse: boolean = useCreation(() => {
         return cachedTotal === 1
     }, [cachedTotal])
-    const [extractedMap, { setAll, reset }] = useMap<string, string>()
-    useEffect(() => {
-        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { extractedMap: Map<string, string> }) => {
-            setAll(data.extractedMap)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-extracted-to-table")
-        }
-    }, [])
+
     useUpdateEffect(() => {
         if (successTableRef.current) {
             successTableRef.current.setCurrentSelectItem(undefined)
@@ -924,133 +1102,130 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         setIsRefresh(!isRefresh)
         setQuery(undefined)
     }, [responseInfoId])
-    const sendToFuzzer = useMemoizedFn((isHttps: boolean, requestValue: string) => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "fuzzer",
-            data: { isHttps: isHttps, isGmTLS: advancedConfigValue.isGmTLS, request: requestValue }
-        })
-    })
     return (
-        <ResizeCardBox
-            firstMinSize={380}
-            secondMinSize={480}
-            isShowDefaultLineStyle={false}
-            style={{ overflow: "hidden" }}
-            firstNodeProps={{
-                title: "Request"
-            }}
-            secondNodeProps={{
-                title: (
-                    <>
-                        <span style={{ marginRight: 8 }}>Responses</span>
-                        <SecondNodeTitle
-                            cachedTotal={cachedTotal}
-                            onlyOneResponse={onlyOneResponse}
-                            rsp={httpResponse}
-                            successFuzzerLength={(successFuzzer || []).length}
-                            failedFuzzerLength={(failedFuzzer || []).length}
-                            showSuccess={showSuccess}
-                            setShowSuccess={(v) => {
-                                setShowSuccess(v)
-                                setQuery(undefined)
-                            }}
-                        />
-                    </>
-                ),
-                extra: (
-                    <SecondNodeExtra
-                        onlyOneResponse={onlyOneResponse}
-                        cachedTotal={cachedTotal}
-                        rsp={httpResponse}
-                        valueSearch={affixSearch}
-                        onSearchValueChange={(value) => {
-                            setAffixSearch(value)
-                            if (value === "" && defaultResponseSearch !== "") {
-                                setDefaultResponseSearch("")
-                            }
-                        }}
-                        onSearch={() => {
-                            setDefaultResponseSearch(affixSearch)
-                        }}
-                        successFuzzer={successFuzzer}
-                        secondNodeSize={secondNodeSize}
-                        query={query}
-                        setQuery={(q) => setQuery({ ...q })}
-                    />
-                )
-            }}
-            firstNode={
-                <NewHTTPPacketEditor
-                    noHex={true}
-                    noHeader={true}
-                    hideSearch={true}
-                    bordered={false}
-                    noMinimap={true}
-                    utf8={true}
-                    originValue={StringToUint8Array(request)}
-                    readOnly={true}
-                // onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                />
-            }
-            secondNode={
-                <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
-                    {onlyOneResponse ? (
-                        <ResponseViewer
-                            fuzzerResponse={httpResponse}
-                            defaultResponseSearch={defaultResponseSearch}
-                            webFuzzerValue={httpResponse.ResponseRaw}
-                            showMatcherAndExtraction={false}
-                            setShowMatcherAndExtraction={() => { }}
-                            matcherValue={{
-                                filterMode: "matchers",
-                                hitColor: "",
-                                matchersCondition: "and",
-                                matchersList: []
-                            }}
-                            extractorValue={{
-                                extractorList: []
-                            }}
-                            defActiveKey={""}
-                            defActiveType={"matchers"}
-                            onSaveMatcherAndExtraction={() => { }}
-                        />
-                    ) : (
+        <>
+            <ResizeCardBox
+                firstMinSize={380}
+                secondMinSize={480}
+                isShowDefaultLineStyle={false}
+                style={{ overflow: "hidden" }}
+                firstNodeProps={{
+                    title: "Request"
+                }}
+                secondNodeProps={{
+                    title: (
                         <>
-                            {cachedTotal > 1 ? (
-                                <>
-                                    {showSuccess && (
-                                        <HTTPFuzzerPageTable
-                                            ref={successTableRef}
-                                            isRefresh={isRefresh}
-                                            onSendToWebFuzzer={sendToFuzzer}
-                                            success={showSuccess}
-                                            data={successFuzzer}
-                                            query={query}
-                                            setQuery={setQuery}
-                                            extractedMap={extractedMap}
-                                            isEnd={loading}
-                                            isShowDebug={false}
-                                        />
-                                    )}
-                                    {!showSuccess && (
-                                        <HTTPFuzzerPageTable
-                                            isRefresh={isRefresh}
-                                            success={showSuccess}
-                                            data={failedFuzzer}
-                                            query={query}
-                                            setQuery={setQuery}
-                                            isEnd={loading}
-                                            extractedMap={extractedMap}
-                                        />
-                                    )}
-                                </>
-                            ) : (
-                                <Result status={"warning"} title={"请执行序列后进行查看"} />
-                            )}
+                            <span style={{ marginRight: 8 }}>Responses</span>
+                            <SecondNodeTitle
+                                cachedTotal={cachedTotal}
+                                onlyOneResponse={onlyOneResponse}
+                                rsp={httpResponse}
+                                successFuzzerLength={(successFuzzer || []).length}
+                                failedFuzzerLength={(failedFuzzer || []).length}
+                                showSuccess={showSuccess}
+                                setShowSuccess={(v) => {
+                                    setShowSuccess(v)
+                                    setQuery(undefined)
+                                }}
+                            />
                         </>
-                    )}
-                </div>
-            }
-        />
+                    ),
+                    extra: (
+                        <SecondNodeExtra
+                            onlyOneResponse={onlyOneResponse}
+                            cachedTotal={cachedTotal}
+                            rsp={httpResponse}
+                            valueSearch={affixSearch}
+                            onSearchValueChange={(value) => {
+                                setAffixSearch(value)
+                                if (value === "" && defaultResponseSearch !== "") {
+                                    setDefaultResponseSearch("")
+                                }
+                            }}
+                            onSearch={() => {
+                                setDefaultResponseSearch(affixSearch)
+                            }}
+                            successFuzzer={successFuzzer}
+                            secondNodeSize={secondNodeSize}
+                            query={query}
+                            setQuery={(q) => setQuery({ ...q })}
+                            sendPayloadsType='fuzzerSequence'
+                        />
+                    )
+                }}
+                firstNode={
+                    <NewHTTPPacketEditor
+                        noHex={true}
+                        noHeader={true}
+                        hideSearch={true}
+                        bordered={false}
+                        noMinimap={true}
+                        utf8={true}
+                        originValue={StringToUint8Array(request)}
+                        readOnly={true}
+                    // onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                    />
+                }
+                secondNode={
+                    <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
+                        {onlyOneResponse ? (
+                            <ResponseViewer
+                                fuzzerResponse={httpResponse}
+                                defaultResponseSearch={defaultResponseSearch}
+                                webFuzzerValue={httpResponse.ResponseRaw}
+                                showMatcherAndExtraction={false}
+                                setShowMatcherAndExtraction={() => { }}
+                                matcherValue={{
+                                    filterMode: "matchers",
+                                    hitColor: "",
+                                    matchersCondition: "and",
+                                    matchersList: []
+                                }}
+                                extractorValue={{
+                                    extractorList: []
+                                }}
+                                defActiveKey={""}
+                                defActiveType={"matchers"}
+                                onSaveMatcherAndExtraction={() => { }}
+                            />
+                        ) : (
+                            <>
+                                {cachedTotal > 1 ? (
+                                    <>
+                                        {showSuccess && (
+                                            <HTTPFuzzerPageTable
+                                                ref={successTableRef}
+                                                isRefresh={isRefresh}
+                                                success={showSuccess}
+                                                data={successFuzzer}
+                                                query={query}
+                                                setQuery={setQuery}
+                                                extractedMap={extractedMap}
+                                                isEnd={loading}
+                                                isShowDebug={false}
+                                            />
+                                        )}
+                                        {!showSuccess && (
+                                            <HTTPFuzzerPageTable
+                                                isRefresh={isRefresh}
+                                                success={showSuccess}
+                                                data={failedFuzzer}
+                                                query={query}
+                                                setQuery={setQuery}
+                                                isEnd={loading}
+                                                extractedMap={extractedMap}
+                                            />
+                                        )}
+                                    </>
+                                ) : (
+                                    <Result status={"warning"} title={"请执行序列后进行查看"} />
+                                )}
+                            </>
+                        )}
+                    </div>
+                }
+            />
+        </>
     )
 })
+

@@ -114,7 +114,7 @@ interface ShareValueProps {
 
 export const analyzeFuzzerResponse = (
     i: FuzzerResponse,
-    setRequest: (isHttps: boolean, request: string) => any,
+    // setRequest: (isHttps: boolean, request: string) => any,
     index?: number,
     data?: FuzzerResponse[]
 ) => {
@@ -643,12 +643,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFailedCount(0)
     })
 
-    const sendToFuzzer = useMemoizedFn((isHttps: boolean, request: string) => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "fuzzer",
-            data: { isHttps: isHttps, isGmTLS: advancedConfigValue.isGmTLS, request: request }
-        })
-    })
     // 从历史记录中恢复
     useEffect(() => {
         if (!historyTask) {
@@ -885,12 +879,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
+            console.log('data', data)
             if (data.Ok) {
                 successCount++
             } else {
                 failedCount++
             }
-
             if (onIsDropped(data)) return
             const r = {
                 // 6.16
@@ -943,13 +937,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
     const [extractedMap, { setAll, reset }] = useMap<string, string>()
     useEffect(() => {
-        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { extractedMap: Map<string, string> }) => {
-            setAll(data.extractedMap)
+        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { type: string, extractedMap: Map<string, string> }) => {
+            if (data.type === 'fuzzer') {
+                setExtractedMap(data.extractedMap)
+            }
+
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
     }, [])
+
+    const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
+        if (inViewport)
+            setAll(extractedMap)
+    })
     const onlyOneResponse = useMemo(() => {
         return !loading && failedFuzzer.length + successFuzzer.length === 1
     }, [loading, failedFuzzer, successFuzzer])
@@ -1395,32 +1397,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             跟随重定向
                         </YakitButton>
                     )}
-                    <div className={styles["display-flex"]}>
-                        {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
-                        {advancedConfigValue.proxy.length > 0 && (
-                            <Tooltip title={advancedConfigValue.proxy}>
-                                <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
-                                    代理：{advancedConfigValue.proxy.join(",")}
-                                </YakitTag>
-                            </Tooltip>
-                        )}
-                        {advancedConfigValue.actualHost && (
-                            <YakitTag
-                                color='danger'
-                                className={classNames(styles["actualHost-text"], "content-ellipsis")}
-                            >
-                                真实Host:{advancedConfigValue.actualHost}
-                            </YakitTag>
-                        )}
-                        {onlyOneResponse && (
-                            <>
-                                {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
-                                {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers?.length > 0 && (
-                                    <YakitTag color='danger'>匹配失败</YakitTag>
-                                )}
-                            </>
-                        )}
-                    </div>
+                    <FuzzerExtraShow droppedCount={droppedCount} advancedConfigValue={advancedConfigValue} onlyOneResponse={onlyOneResponse} httpResponse={httpResponse} />
                 </div>
                 <ResizeCardBox
                     firstMinSize={380}
@@ -1568,6 +1545,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 secondNodeSize={secondNodeSize}
                                 query={query}
                                 setQuery={(q) => setQuery({ ...q })}
+                                sendPayloadsType='fuzzer'
                             />
                         )
                     }}
@@ -1691,7 +1669,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <>
                                             {showSuccess && (
                                                 <HTTPFuzzerPageTable
-                                                    onSendToWebFuzzer={sendToFuzzer}
+                                                    // onSendToWebFuzzer={onSendToWebFuzzer}
                                                     success={showSuccess}
                                                     data={successFuzzer}
                                                     setExportData={setExportData}
@@ -1731,6 +1709,43 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     )
 }
 export default HTTPFuzzerPage
+
+interface FuzzerExtraShowProps {
+    droppedCount: number
+    advancedConfigValue: AdvancedConfigValueProps
+    onlyOneResponse: boolean
+    httpResponse: FuzzerResponse
+}
+export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
+    const { droppedCount, advancedConfigValue, onlyOneResponse, httpResponse } = props;
+    return (
+        <div className={styles["display-flex"]}>
+            {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
+            {advancedConfigValue.proxy.length > 0 && (
+                <Tooltip title={advancedConfigValue.proxy}>
+                    <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
+                        代理：{advancedConfigValue.proxy.join(",")}
+                    </YakitTag>
+                </Tooltip>
+            )}
+            {advancedConfigValue.actualHost && (
+                <YakitTag
+                    color='danger'
+                    className={classNames(styles["actualHost-text"], "content-ellipsis")}
+                >
+                    真实Host:{advancedConfigValue.actualHost}
+                </YakitTag>
+            )}
+            {onlyOneResponse && (
+                <>
+                    {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
+                    {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers?.length > 0 && (
+                        <YakitTag color='danger'>匹配失败</YakitTag>
+                    )}
+                </>
+            )}
+        </div>)
+})
 interface SecondNodeExtraProps {
     rsp: FuzzerResponse
     onlyOneResponse: boolean
@@ -1742,6 +1757,7 @@ interface SecondNodeExtraProps {
     secondNodeSize?: Size
     query?: HTTPFuzzerPageTableQuery
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
+    sendPayloadsType: string
 }
 
 /**
@@ -1758,7 +1774,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         successFuzzer,
         secondNodeSize,
         query,
-        setQuery
+        setQuery,
+        sendPayloadsType,
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1836,7 +1853,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 <YakitButton
                     type='primary'
                     onClick={() => {
-                        analyzeFuzzerResponse(rsp, () => { })
+                        analyzeFuzzerResponse(rsp)
                     }}
                     size='small'
                 >
@@ -2018,7 +2035,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     footer={null}
                     closable={true}
                 >
-                    <WebFuzzerResponseExtractor responses={successFuzzer} />
+                    <WebFuzzerResponseExtractor responses={successFuzzer} sendPayloadsType={sendPayloadsType} />
                 </YakitModal>
             </div>
         )
@@ -2310,3 +2327,4 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         )
     })
 )
+

@@ -411,9 +411,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         })
     })
     const onDetails = useMemoizedFn((record, index: number) => {
-        if (props.onSendToWebFuzzer) {
-            analyzeFuzzerResponse(record, props.onSendToWebFuzzer, index, data)
-        }
+        analyzeFuzzerResponse(record, index, data)
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
         const l = bodyLengthRef?.current?.getValue() || {}

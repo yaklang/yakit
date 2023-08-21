@@ -33,6 +33,7 @@ import {
     useLongPress,
     useMemoizedFn,
     useThrottleFn,
+    useTrackedEffect,
     useWhyDidYouUpdate,
 } from "ahooks"
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
@@ -1703,7 +1704,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
     })
-    const renderSubPage = useMemo(() => {
+    const flatSubPage = useMemo(() => {
         const newData: MultipleNodeInfo[] = []
         subPage.forEach((ele) => {
             if (ele.groupChildren && ele.groupChildren.length > 0) {
@@ -1716,6 +1717,15 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         return newData
     }, [subPage])
+    const onSelectSubMenuById = useMemoizedFn((id: string) => {
+        const index = flatSubPage.findIndex(ele => ele.id === id)
+        if (index === -1) return
+        const newSubPage: MultipleNodeInfo = { ...flatSubPage[index] };
+        setSelectSubMenu(newSubPage)
+        if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            setType('config')
+        }
+    })
     return (
         <div
             ref={tabsRef}
@@ -1725,7 +1735,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }}
             tabIndex={0}
         >
-            <SubPageContext.Provider value={{ subPage, setSubPage, selectSubMenu, setSelectSubMenu, type, setType, onAddGroup }}>
+            <SubPageContext.Provider value={{ subPage, setSubPage, selectSubMenu, setSelectSubMenu, type, setType, onAddGroup, onSelectSubMenuById }}>
                 <SubTabs
                     ref={subTabsRef}
                     onFocusPage={onFocusPage}
@@ -1734,7 +1744,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 />
                 <div className={styles['render-sub-page']}>
                     <RenderSubPage
-                        renderSubPage={renderSubPage}
+                        renderSubPage={flatSubPage}
                         route={pageItem.route}
                         pluginId={pageItem.pluginId}
                         selectSubMenuId={selectSubMenu.id}
@@ -3194,7 +3204,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const groupChildrenList = useMemo(() => {
         return subItem.groupChildren || []
     }, [subItem.groupChildren])
-    useWhyDidYouUpdate('SubTabGroupItem', { ...props });
+    // useWhyDidYouUpdate('SubTabGroupItem', { ...props });
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {

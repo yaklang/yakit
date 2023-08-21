@@ -1,5 +1,6 @@
 import { WebFuzzerPageInfoProps } from "../../../store/pageNodeInfo";
 import { FuzzerResponse, FuzzerRequestProps } from "../HTTPFuzzerPage";
+import { AdvancedConfigValueProps } from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType";
 import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
 /**
  * @description 序列props
@@ -9,12 +10,13 @@ import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
 export interface FuzzerSequenceProps {
     groupId: string
     pageId?: string
-    setType?:(s:WebFuzzerType)=>void
+    setType?: (s: WebFuzzerType) => void
 }
 
 /**
  *  @description 序列列表props
  *  @property {string} id 序列唯一标识
+ *  @property {string} name 序列名称
  *  @property {string} pageId 页面id
  *  @property {string} pageGroupId 页面所属组id
  *  @property {WebFuzzerPageInfoProps} pageParams 页面缓存参数
@@ -22,6 +24,7 @@ export interface FuzzerSequenceProps {
  */
 export interface SequenceProps extends ExtraSettingProps {
     id: string
+    name: string
     pageId: string
     pageGroupId: string
     pageName: string
@@ -47,6 +50,7 @@ export interface ExtraSettingProps {
  * @property {boolean} isShowLine 是否显示线
  * @property {boolean} disabled 
  * @property {SequenceProps} pageNodeList 原始的页面节点list，用来做下拉选中选择
+ * @function onUpdateItemPage 更新序列item
  * @function onUpdateItem 更新序列item
  * @function onApplyOtherNodes 应用到其他节点事件
  * @function onRemove 删除
@@ -62,6 +66,7 @@ export interface SequenceItemProps {
     isShowLine: boolean
     disabled?: boolean
     pageNodeList: SequenceProps[]
+    onUpdateItemPage: (s: SequenceProps) => void
     onUpdateItem: (s: SequenceProps) => void
     onApplyOtherNodes: (e: ExtraSettingProps) => void
     onRemove: (s: SequenceProps) => void
@@ -103,4 +108,24 @@ export interface SequenceResponseProps {
     loading: boolean
     requestInfo?: WebFuzzerPageInfoProps
     responseInfo?: ResponseProps
+    extractedMap:Map<string, string>
+}
+
+export interface SequenceResponseHeardProps {
+    disabled: boolean
+    droppedCount: number
+    currentSequenceItemName: string
+    advancedConfigValue?: AdvancedConfigValueProps
+    responseInfo?: ResponseProps
+    onShowAll: () => void
+}
+
+export interface ResponseCardProps {
+    // allSuccessResponse:ResponseProps[]
+    // allFailedResponse:ResponseProps[]
+    showAllResponse:boolean
+    responseMap: Map<string, ResponseProps>
+    // extractedMap: Map<string, string>
+    setShowAllResponse: () => void
+    sendToFuzzer: (isHttps: boolean, request: string) => void
 }

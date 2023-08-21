@@ -57,6 +57,7 @@ interface SubPageContextProps {
     setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
     setType: (w: WebFuzzerType) => void
     onAddGroup: (pageId: string) => void
+    onSelectSubMenuById:(s:string)=>void
 }
 export const SubPageContext = createContext<SubPageContextProps>({
     // fuzzerSequenceList:[],
@@ -72,5 +73,6 @@ export const SubPageContext = createContext<SubPageContextProps>({
     setSubPage: () => { },
     setSelectSubMenu: () => { },
     setType: () => { },
-    onAddGroup: () => { }
+    onAddGroup: () => { },
+    onSelectSubMenuById: () => { }
 })
