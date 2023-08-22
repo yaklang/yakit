@@ -43,7 +43,7 @@ module.exports = (win, getClient) => {
   });
 
   ipcMain.handle("created-data-compare", (e) => {
-    type = false;
+    type = true;
   });
 
   // 转发数据
