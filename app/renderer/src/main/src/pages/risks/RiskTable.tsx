@@ -17,7 +17,7 @@ import lowImg from "../../assets/riskDetails/low.png"
 import debugImg from "../../assets/riskDetails/debug.png"
 
 import {ExportExcel} from "../../components/DataExport/DataExport"
-import {HTTPPacketEditor} from "../../utils/editors"
+import {NewHTTPPacketEditor} from "../../utils/editors"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
 
@@ -792,7 +792,13 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
     const {info, isShowTime = true, quotedRequest, quotedResponse} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
     const [shrink, setShrink] = useState(!!props.shrink)
-
+    const [isHttps,setIsHttps] = useState<boolean>(false)
+    useEffect(()=>{
+        if(info.Url&&info.Url?.length>0&&info.Url.includes("https")){
+            setIsHttps(true)
+        }
+    },[])
+    
     return (
         <Descriptions
             className="risk-details-descriptions-box"
@@ -903,7 +909,8 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                 {quotedRequest ? (
                                     <div>{quotedRequest}</div>
                                 ) : (
-                                    <HTTPPacketEditor
+                                    <NewHTTPPacketEditor
+                                        defaultHttps={isHttps}
                                         originValue={info?.Request || new Uint8Array()}
                                         readOnly={true}
                                         noHeader={true}
@@ -918,7 +925,9 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                 {quotedResponse ? (
                                     <div>{quotedResponse}</div>
                                 ) : (
-                                    <HTTPPacketEditor
+                                    <NewHTTPPacketEditor
+                                        defaultHttps={isHttps}
+                                        webFuzzerValue={info?.Request || new Uint8Array()}
                                         originValue={info?.Response || new Uint8Array()}
                                         readOnly={true}
                                         noHeader={true}

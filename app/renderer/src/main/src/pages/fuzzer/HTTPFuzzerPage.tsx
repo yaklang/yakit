@@ -1504,6 +1504,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                             {onlyOneResponse ? (
                                 <ResponseViewer
+                                    isHttps={advancedConfigValue.isHttps}
                                     ref={responseViewerRef}
                                     fuzzerResponse={httpResponse}
                                     defaultResponseSearch={defaultResponseSearch}
@@ -2050,6 +2051,7 @@ interface ResponseViewerProps {
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue?: Uint8Array
+    isHttps?: boolean
 
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
@@ -2071,6 +2073,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             onSaveMatcherAndExtraction,
             showResponseInfoSecondEditor,
             setShowResponseInfoSecondEditor
+            isHttps
         } = props
         const [reason, setReason] = useState<string>("未知原因")
 
@@ -2142,6 +2145,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
                         <NewEditorSelectRange
+                            defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
                             originValue={fuzzerResponse.ResponseRaw}
