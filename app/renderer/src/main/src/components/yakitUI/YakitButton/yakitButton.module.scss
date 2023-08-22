@@ -104,7 +104,7 @@
 @mixin generateOutline1($type) {
     --button-wave-shadow-color: #{fetch-color($type, "color-2")};
 
-    background: fetch-color($type, "color-1");
+    background: transparent;
     color: fetch-color($type, "color-5");
     border-color: fetch-color($type, "color-3");
 
@@ -115,7 +115,7 @@
     }
 
     &:focus {
-        background: fetch-color($type, "color-1");
+        background: transparent;
         color: fetch-color($type, "color-5");
         border-color: fetch-color($type, "color-3");
     }
@@ -144,7 +144,7 @@
 @mixin generateOutline2($type) {
     --button-wave-shadow-color: #{fetch-color($type, "color-2")};
 
-    background: var(--ui-background-color);
+    background: transparent;
     color: var(--ui-text-color);
     border-color: var(--yakit-border-color);
     svg {
@@ -152,7 +152,7 @@
     }
 
     &.yakit-hover-button {
-        background: var(--ui-background-color);
+        background: transparent;
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
         svg {
@@ -161,7 +161,7 @@
     }
 
     &:focus {
-        background: var(--ui-background-color);
+        background: transparent;
         color: var(--ui-text-color);
         border-color: var(--yakit-border-color);
         svg {
@@ -169,7 +169,7 @@
         }
     }
     &:hover {
-        background: var(--ui-background-color);
+        background: transparent;
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
         svg {
@@ -177,7 +177,7 @@
         }
     }
     &:active {
-        background: var(--ui-background-color);
+        background: transparent;
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
         svg {
@@ -185,7 +185,7 @@
         }
     }
     &[disabled] {
-        background: var(--ui-background-color);
+        background: transparent;
         color: var(--yakit-disable-text-color);
         border-color: var(--yakit-border-color);
         svg {
@@ -193,7 +193,7 @@
         }
     }
     &[disabled]:hover {
-        background: var(--ui-background-color);
+        background: transparent;
         color: var(--yakit-disable-text-color);
         border-color: var(--yakit-border-color);
         svg {
