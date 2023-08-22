@@ -1642,11 +1642,22 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const tabsRef = useRef(null)
     const subTabsRef = useRef<any>()
+    const subPageIdRef = useRef<string[]>([])
+
 
     useEffect(() => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
         onUpdateSubPage(pageItem, pageItem.multipleNode || [])
+        pageItem.multipleNode.forEach(ele => {
+            if (ele.groupChildren && ele.groupChildren.length > 0) {
+                ele.groupChildren.forEach((groupItem) => {
+                    subPageIdRef.current.push(groupItem.id)
+                })
+            } else {
+                subPageIdRef.current.push(ele.id)
+            }
+        })
     }, [pageItem.multipleNode])
 
     // 切换一级页面时聚焦
@@ -1720,7 +1731,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         return newData
-    }, [subPage])
+    }, [subPageIdRef.current])
     const onSelectSubMenuById = useMemoizedFn((id: string) => {
         const index = flatSubPage.findIndex(ele => ele.id === id)
         if (index === -1) return
@@ -1753,7 +1764,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                         pluginId={pageItem.pluginId}
                         selectSubMenuId={selectSubMenu.id}
                     />
-                    <RenderFuzzerSequence route={pageItem.route} />
+                    <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
                 </div>
             </SubPageContext.Provider>
         </div>
@@ -1957,14 +1968,14 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             // console.log("onSubMenuDragEnd", result)
             const { droppableId: sourceDroppableId } = result.source
             /**将拖拽item变为选中item ---------start---------  0817,暂时取消拖拽选中*/
-            const { index, subIndex } = getPageItemById(subPage, result.draggableId)
-            if (index === -1) return
-            const groupChildrenList = subPage[index].groupChildren || []
-            if (subIndex === -1) {
-                if (groupChildrenList.length === 0) setSelectSubMenu(subPage[index])
-            } else {
-                setSelectSubMenu(groupChildrenList[subIndex])
-            }
+            // const { index, subIndex } = getPageItemById(subPage, result.draggableId)
+            // if (index === -1) return
+            // const groupChildrenList = subPage[index].groupChildren || []
+            // if (subIndex === -1) {
+            //     if (groupChildrenList.length === 0) setSelectSubMenu(subPage[index])
+            // } else {
+            //     setSelectSubMenu(groupChildrenList[subIndex])
+            // }
             /**将拖拽item变为选中item ---------end---------*/
             /** 合并组   ---------start--------- */
             if (result.combine) {
@@ -2052,7 +2063,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 subPage[combineIndex].expand = true
                 subPage[combineIndex].id = groupId
             }
-            setSelectSubMenu((s) => ({ ...s, groupId }))
+            // setSelectSubMenu((s) => ({ ...s, groupId }))
         }
         const combineItem = subPage[combineIndex]
         subPage.splice(sourceIndex, 1)
@@ -2094,7 +2105,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
 
         const combineItem = subPage[combineIndex]
 
-        setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
+        // setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
 
         // 拖拽后组内item===0,则删除该组
         if (subPage[gIndex].groupChildren?.length === 0) {
@@ -2165,7 +2176,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
 
         // setSelectSubMenu(newSourceItem)
-        setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+        // setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
 
         destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
         subPage[destinationNumber].groupChildren = destinationGroupChildrenList
@@ -2204,7 +2215,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
 
         // setSelectSubMenu(newSourceItem)
-        setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
+        // setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
 
         // 将拖拽的item添加到目的地的组内
         subPage.splice(destinationIndex, 0, newSourceItem)
@@ -2254,7 +2265,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 groupId: destinationGroupId
             }
             // setSelectSubMenu(newSourceItem)
-            setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+            // setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
             destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
             subPage[destinationNumber].groupChildren = destinationGroupChildrenList
         }
@@ -2561,6 +2572,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             const groupChildren = subPage[index].groupChildren || []
             if (groupChildren.length > 0) {
                 groupChildren.splice(subIndex, 1)
+                subPage[index] = {
+                    ...subPage[index],
+                    groupChildren: [...groupChildren]
+                }
             }
 
             if (groupChildren.length === 0) {
@@ -2582,15 +2597,27 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
 
         if (subIndex === -1) {
             //游离页面移动到组内
-            subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
+            // subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
+            subPage[gIndex] = {
+                ...subPage[gIndex],
+                groupChildren: [...(subPage[gIndex].groupChildren || []), { ...item, groupId: subPage[gIndex].id }]
+            }
             subPage.splice(index, 1)
         } else {
             // 组A移动到组B
             const groupChildren = subPage[index].groupChildren || []
             if (groupChildren.length > 0) {
                 groupChildren.splice(subIndex, 1)
+                subPage[index] = {
+                    ...subPage[gIndex],
+                    groupChildren: [...groupChildren]
+                }
             }
-            subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
+            subPage[gIndex] = {
+                ...subPage[gIndex],
+                groupChildren: [...(subPage[gIndex].groupChildren || []), { ...item, groupId: subPage[gIndex].id }]
+            }
+            // subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
             if (groupChildren.length === 0) subPage.splice(index, 1)
         }
         if (selectSubMenu.id === item.id) {
@@ -2609,6 +2636,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         const groupChildren = subPage[index].groupChildren || []
         if (groupChildren.length > 0) {
             groupChildren.splice(subIndex, 1)
+            subPage[index] = {
+                ...subPage[index],
+                groupChildren: [...groupChildren]
+            }
         }
         const newGroup: MultipleNodeInfo = {
             ...item,

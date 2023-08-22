@@ -24,7 +24,6 @@ import {
     useThrottleEffect,
     useThrottleFn,
     useUpdateEffect,
-    useWhyDidYouUpdate
 } from "ahooks"
 import { OutlineArrowcirclerightIcon, OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
 import { Divider, Form, Result } from "antd"
@@ -172,7 +171,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     useEffect(() => {
         const unSubPageNode = usePageNode.subscribe(
-            (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer, props.groupId),
+            (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer, props.groupId)?.pageChildrenList.length,
             () => {
                 onUpdateSequence()
             }
@@ -181,7 +180,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             unSubPageNode()
         }
     }, [])
-    // useWhyDidYouUpdate('FuzzerSequence', { ...props, sequenceList, originSequenceListRef });
+
     useUpdateEffect(() => {
         if (inViewport) onUpdateSequence()
     }, [inViewport])
@@ -424,10 +423,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     })
                 }
             })
-            if (currentSequenceItem) {
-                const index = newSequenceList.findIndex((ele) => currentSequenceItem.id === ele.id)
-                if (index !== -1) { setCurrentSequenceItem({ ...newSequenceList[index] }); }
-            }
+            // if (currentSequenceItem) {
+            //     const index = newSequenceList.findIndex((ele) => currentSequenceItem.id === ele.id)
+            //     if (index !== -1) { setCurrentSequenceItem({ ...newSequenceList[index] }); }
+            // }
             setSequenceList([...newSequenceList])
         }),
         { wait: 200 }
@@ -1094,6 +1093,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
 
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
+    const [inViewport] = useInViewport(secondNodeRef)
 
     const successTableRef = useRef<any>()
 
@@ -1109,23 +1109,15 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         updatePageNodeInfoByPageId,
     } = usePageNode()
 
-    const prePageId = useRef<string>()
-
     useEffect(() => {
-        // 切换选中item后，保存上一次选中的数据
-        // onUpdatePageInfo(requestHttp)
-        if (prePageId.current === pageId) {
-
-        } else {
-            onUpdatePageInfo(requestHttp, prePageId.current)
-            prePageId.current = pageId
-        }
-    }, [pageId])
-
-    useEffect(() => {
+        if (!pageId) return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pageId)
+        if (!nodeInfo) return
+        const { currentItem } = nodeInfo
+        const request = currentItem.pageParamsInfo.webFuzzerPageInfo?.request || defaultPostTemplate
         setRequestHttp(StringToUint8Array(request))
         setRefreshTrigger(!refreshTrigger)
-    }, [request])
+    }, [pageId])
 
     useUpdateEffect(() => {
         if (successTableRef.current) {
@@ -1138,6 +1130,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
 
     const onSetRequestHttp = useMemoizedFn((i: Uint8Array) => {
         setRequestHttp(i)
+        onUpdatePageInfo(i, pageId || '')
     })
     const onUpdatePageInfo = useDebounceFn((i: Uint8Array, pId: string) => {
         const value = Uint8ArrayToString(i) || ''
@@ -1157,9 +1150,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
             }
             updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId, { ...newCurrentItem })
         }
-    }, {
-        wait: 200
-    }).run
+    }, { wait: 200 }).run
     return (
         <>
             <ResizeCardBox

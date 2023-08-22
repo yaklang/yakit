@@ -19,6 +19,8 @@ export interface RenderSubPageProps {
 
 export interface RenderFuzzerSequenceProps{
     route: YakitRoute
+    type:WebFuzzerType
+    setType:(w:WebFuzzerType)=>void
     // fuzzerSequenceList:FuzzerSequenceReducerProps[]
     // selectGroupId:string
 }

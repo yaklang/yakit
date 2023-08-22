@@ -1,6 +1,6 @@
 import { NoPaddingRoute, RouteToPage, YakitRoute } from "@/routes/newRoute"
 import React, { useContext, useEffect, useMemo, useReducer, useRef, useState } from "react"
-import { useMap, useDebounceEffect, useMemoizedFn } from "ahooks"
+import { useMap, useDebounceEffect, useMemoizedFn, useWhyDidYouUpdate } from "ahooks"
 import styles from "./RenderSubPage.module.scss"
 import { PageItemProps, RenderFuzzerSequenceProps, RenderSubPageItemProps, RenderSubPageProps } from "./RenderSubPageType"
 import { SubPageContext } from "../../MainContext"
@@ -25,14 +25,29 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) =>
         [selectSubMenuId],
         { wait: 100, leading: true }
     )
-
+    // useWhyDidYouUpdate('RenderSubPage', { ...props, pageRenderList })
     return (
         <>
             {renderSubPage.map((subItem, numberSub) => {
                 return (
                     getPageRenderList(subItem.id) && (
                         <React.Fragment key={subItem.id}>
-                            <RenderSubPageItem subItem={subItem} selectSubMenuId={selectSubMenuId} route={route} pluginId={pluginId} />
+                            <div
+                                key={subItem.id}
+                                tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
+                                style={{
+                                    display: selectSubMenuId === subItem.id ? "" : "none",
+                                    padding: NoPaddingRoute.includes(route) ? 0 : "8px 16px 13px 16px"
+                                }}
+                                className={styles["page-body"]}
+                            >
+                                <PageItem
+                                    routeKey={route}
+                                    yakScriptId={+(pluginId || 0)}
+                                    params={subItem.params}
+                                />
+                            </div>
+                            {/* <RenderSubPageItem subItem={subItem} selectSubMenuId={selectSubMenuId} route={route} pluginId={pluginId} /> */}
                         </React.Fragment>
 
                     )
@@ -53,8 +68,9 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) =>
 })
 
 
-const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo((props) => {
+export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo((props) => {
     const { subItem, selectSubMenuId, route, pluginId } = props;
+    // useWhyDidYouUpdate('RenderSubPageItem', { ...props, selectSubMenuId })
     return (<div
         key={subItem.id}
         tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
@@ -78,13 +94,15 @@ const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo((props) =
         return false
     }
     return true
-})
+}
+)
+
 
 
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
 
-    const { route } = props
-    const { type, setType } = useContext(SubPageContext)
+    const { route, type, setType } = props
+    // const { type, setType } = useContext(SubPageContext)
     const [fuzzerSequenceList, setFuzzerSequenceList] = useState<FuzzerSequenceListProps[]>([])
     const [selectGroupId, setSelectGroupId] = useState<string>('')
 
@@ -146,15 +164,17 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
 
 const PageItem: React.FC<PageItemProps> = React.memo(
     (props) => {
+        // useWhyDidYouUpdate('PageItem', { ...props, })
         const { routeKey, yakScriptId, params } = props
         return <>{RouteToPage(routeKey, yakScriptId, params)}</>
-    },
-    (preProps, nextProps) => {
+    }, (preProps, nextProps) => {
         if (preProps.routeKey === nextProps.routeKey) {
             return true
         }
         return false
     }
 )
+
+
 
 export default PageItem
