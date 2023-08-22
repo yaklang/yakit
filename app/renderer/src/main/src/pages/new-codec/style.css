@@ -1,0 +1,18 @@
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.left, .center, .right {
+    width: 33.33%;
+    height: 100%;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+
+.right .top, .right .bottom {
+    flex: 1;
+    padding: 1em;
+    box-sizing: border-box;
+}
