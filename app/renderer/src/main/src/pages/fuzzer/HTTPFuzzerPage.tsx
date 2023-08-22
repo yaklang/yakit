@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react"
 import { Form, Modal, notification, Result, Space, Popover, Tooltip, Divider } from "antd"
 import { IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info } from "../../utils/editors"
 import { showDrawer, showModal } from "../../utils/showModal"
@@ -103,6 +103,7 @@ import {
 import { NewEditorSelectRange } from "../../components/NewEditorSelectRange"
 import { execCodec } from "@/utils/encodec"
 import { NodeInfoProps, WebFuzzerPageInfoProps, usePageNode } from "@/store/pageNodeInfo"
+import { SubPageContext } from "../layout/MainContext"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -567,16 +568,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {
         getPageNodeInfoByPageId,
     } = usePageNode()
+    const { type } = useContext(SubPageContext)
 
     useEffect(() => {
-        if (!inViewport) return
+        if (!inViewport || type === 'sequence') return
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
         if (!nodeInfo) return
         const { currentItem } = nodeInfo
-        // console.log('currentItem',currentItem)
         setRequest(currentItem.pageParamsInfo.webFuzzerPageInfo?.request || '')
         refreshRequest()
-    }, [inViewport])
+    }, [inViewport, type])
 
     useEffect(() => {
         if (getSubscribeClose(YakitRoute.HTTPFuzzer)) return
