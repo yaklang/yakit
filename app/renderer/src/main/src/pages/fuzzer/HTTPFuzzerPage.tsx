@@ -570,12 +570,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     } = usePageNode()
     const { type } = useContext(SubPageContext)
 
-    useEffect(() => {
+    useUpdateEffect(() => {
         if (!inViewport || type === 'sequence') return
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
         if (!nodeInfo) return
         const { currentItem } = nodeInfo
-        setRequest(currentItem.pageParamsInfo.webFuzzerPageInfo?.request || '')
+        setRequest(currentItem.pageParamsInfo.webFuzzerPageInfo?.request || defaultPostTemplate)
         refreshRequest()
     }, [inViewport, type])
 
@@ -894,7 +894,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
-            console.log('data', data)
+            // console.log('data', data)
             if (data.Ok) {
                 successCount++
             } else {

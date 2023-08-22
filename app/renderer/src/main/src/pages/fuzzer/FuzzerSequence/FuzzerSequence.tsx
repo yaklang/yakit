@@ -171,7 +171,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const unSubPageNode = usePageNode.subscribe(
             (state) => state.getCurrentSelectGroup(YakitRoute.HTTPFuzzer, props.groupId),
             () => {
-                console.log('FuzzerSequence')
                 onUpdateSequence()
             }
         )
