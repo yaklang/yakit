@@ -319,7 +319,11 @@
     }
 
     &:global(.ant-btn-icon-only) {
-        padding: 4px;
+        padding: 3px;
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 }
 .yakit-button-size {
@@ -357,7 +361,11 @@
     }
 
     &:global(.ant-btn-icon-only) {
-        padding: 6px;
+        padding: 4px;
+        svg {
+            width: 18px;
+            height: 18px;
+        }
     }
 }
 .yakit-button-max-size {

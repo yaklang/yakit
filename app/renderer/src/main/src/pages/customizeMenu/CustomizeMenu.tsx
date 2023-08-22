@@ -955,9 +955,7 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
                         {menuItem.describe || "No Description about it."}
                     </div>
                 </div>
-                <div className={style["close-icon"]} onClick={() => onRemoveSecondMenu(menuItem)}>
-                    <RemoveIcon />
-                </div>
+                <YakitButton size="small" type="text2" icon={<RemoveIcon className={style['close-icon']} />} onClick={() => onRemoveSecondMenu(menuItem)} />
             </div>
         </div>
     )

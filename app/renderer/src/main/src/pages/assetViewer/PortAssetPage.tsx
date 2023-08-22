@@ -678,7 +678,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             placement='bottomRight'
                                         >
                                             <YakitButton
-                                                type='outline2'
+                                                type='outline1'
+                                                colors="danger"
                                                 icon={<TrashIcon />}
                                             >
                                                 {selected.length > 0 ? "删除" : "清空"}

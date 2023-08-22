@@ -436,21 +436,10 @@
             }
         }
 
-        .close-icon {
-            display: flex;
-            align-items: center;
-            color: var(--yakit-body-text-color);
-            cursor: pointer;
-            height: 20px;
-
-            svg {
-                width: 16px;
-                height: 16px;
+        .close-icon{
+            svg{
                 margin-right: 0;
-
-                &:hover {
-                    color: var(--yakit-primary-3);
-                }
+                color: var(--yakit-body-text-color)
             }
         }
     }

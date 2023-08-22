@@ -9,7 +9,7 @@
 -   text按钮：设计稿查看
 -   text2按钮：设计稿查看
 
-三种颜色状态
+三种颜色状态(注: 暂时只适配4种类型[primary、secondary2、outline1、text])
 
 -   primary：主题
 -   success：成功

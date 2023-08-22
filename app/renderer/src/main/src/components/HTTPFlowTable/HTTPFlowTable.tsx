@@ -2443,12 +2443,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     >
                                         <Badge
                                             dot={offsetData.length > 0}
-                                            offset={[1, 2]}
+                                            offset={[-5, 4]}
                                             className={style["http-history-table-badge"]}
                                         >
-                                            <div className={style["refresh-button"]}>
-                                                <RefreshIcon className={style["refresh-icon"]} />
-                                            </div>
+                                            <YakitButton type="text2" icon={<RefreshIcon />} onClick={(e) => e.stopPropagation()} />
                                         </Badge>
                                     </YakitDropdownMenu>
                                     </div>
