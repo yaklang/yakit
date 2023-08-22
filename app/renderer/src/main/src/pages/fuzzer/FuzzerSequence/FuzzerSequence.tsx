@@ -136,9 +136,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
 
+    // Request
+    const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
+
     // Response
     const [currentSequenceItem, setCurrentSequenceItem] = useState<SequenceProps>()
-    const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
+
     const [currentSelectResponse, setCurrentSelectResponse] = useState<ResponseProps>()
     const [responseMap, { set: setResponse, get: getResponse, reset: resetResponse }] = useMap<string, ResponseProps>()
     const [droppedCountMap, { set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount }] = useMap<
@@ -404,6 +407,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 if (setType) setType("config")
                 return
             }
+            console.log('pageChildrenList', pageChildrenList)
             onSetOriginSequence(nodeInfo)
             const newSequenceList: SequenceProps[] = []
             sequenceList.forEach((item) => {
@@ -1086,6 +1090,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>("")
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
+    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
 
@@ -1103,6 +1109,24 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         updatePageNodeInfoByPageId,
     } = usePageNode()
 
+    const prePageId = useRef<string>()
+
+    useEffect(() => {
+        // 切换选中item后，保存上一次选中的数据
+        // onUpdatePageInfo(requestHttp)
+        if (prePageId.current === pageId) {
+
+        } else {
+            onUpdatePageInfo(requestHttp, prePageId.current)
+            prePageId.current = pageId
+        }
+    }, [pageId])
+
+    useEffect(() => {
+        setRequestHttp(StringToUint8Array(request))
+        setRefreshTrigger(!refreshTrigger)
+    }, [request])
+
     useUpdateEffect(() => {
         if (successTableRef.current) {
             successTableRef.current.setCurrentSelectItem(undefined)
@@ -1114,12 +1138,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
 
     const onSetRequestHttp = useMemoizedFn((i: Uint8Array) => {
         setRequestHttp(i)
-        onUpdatePageInfo(i)
     })
-    const onUpdatePageInfo = useDebounceFn((i: Uint8Array) => {
+    const onUpdatePageInfo = useDebounceFn((i: Uint8Array, pId: string) => {
         const value = Uint8ArrayToString(i) || ''
-        if (!pageId) return
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pageId)
+        if (!pId) return
+        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId)
         if (!nodeInfo) return
         const { currentItem } = nodeInfo
         if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
@@ -1132,7 +1155,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                     }
                 }
             }
-            updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, currentItem.pageId, { ...newCurrentItem })
+            updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId, { ...newCurrentItem })
         }
     }, {
         wait: 200
@@ -1196,6 +1219,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         bordered={false}
                         noMinimap={true}
                         utf8={true}
+                        refreshTrigger={refreshTrigger}
                         originValue={requestHttp}
                         onChange={(i) => onSetRequestHttp(i)}
                     />
