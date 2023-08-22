@@ -197,8 +197,6 @@ export enum YakitRoute {
     Beta_VulinboxManager = "beta-vulinbox-manager",
     // 网络调试
     Beta_DiagnoseNetwork = "beta-diagnose-network",
-    // 配置全局
-    Beta_ConfigNetwork = "beta-config-network",
 }
 /**
  * @description 页面路由对应的页面信息
@@ -312,7 +310,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ControlAdminPage,
     YakitRoute.Beta_VulinboxManager,
     YakitRoute.Beta_DiagnoseNetwork,
-    YakitRoute.Beta_ConfigNetwork,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [

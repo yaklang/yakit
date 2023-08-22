@@ -16,6 +16,7 @@ import {showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success, yakitFailed, warn} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
+import {ConfigNetworkPage} from "../configNetwork/ConfigNetworkPage"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitSettingCallbackType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
@@ -1003,8 +1004,18 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 addToTab("**diagnose-network")
                 return
             case "config-network":
-                addToTab("**config-network")
-                return
+                const y = showYakitModal({
+                    title: "全局网络配置",
+                    type: "white",
+                    footer: null,
+                    maskClosable: false,
+                    width:580,
+                    // onCancel: () => y.destroy(),
+                    content: <ConfigNetworkPage onClose={() => m.destroy()} />
+                })
+                return y
+                // addToTab("**config-network")
+                // return
             case "invalidCache":
                 invalidCacheAndUserData()
                 return
