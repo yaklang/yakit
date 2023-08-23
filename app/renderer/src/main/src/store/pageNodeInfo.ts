@@ -100,6 +100,7 @@ interface PageNodeInfoProps {
     pageNode: Map<string, PageInfoProps>
     currentSelectGroup: Map<string, PageNodeItemProps>
 
+    getGroupAllTabName: (key, pageGroupId: string) => string[]
     getCurrentSelectGroup: (key, pageGroupId: string) => PageNodeItemProps | undefined
     setCurrentSelectGroup: (key, pageGroupId: string) => void
 
@@ -137,6 +138,14 @@ interface PageNodeInfoProps {
 export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((set, get) => ({
     pageNode: new Map(),
     currentSelectGroup: new Map(),
+    getGroupAllTabName: (key, groupId) => {
+        const node = get().pageNode.get(key);
+        if (!node) return []
+        const { pageNodeList } = node
+        const item = getPageNodeInfoById(pageNodeList, groupId)
+        // console.log('getGroupAllTabName',item.currentItem)
+        return item.currentItem.pageChildrenList.map(ele=>ele.pageName)||[]
+    },
     getCurrentSelectGroup: (key, groupId) => {
         const node = get().pageNode.get(key);
         if (!node) return

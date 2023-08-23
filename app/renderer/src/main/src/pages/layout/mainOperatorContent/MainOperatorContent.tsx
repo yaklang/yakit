@@ -1642,22 +1642,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const tabsRef = useRef(null)
     const subTabsRef = useRef<any>()
-    const subPageIdRef = useRef<string[]>([])
-
 
     useEffect(() => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
         onUpdateSubPage(pageItem, pageItem.multipleNode || [])
-        pageItem.multipleNode.forEach(ele => {
-            if (ele.groupChildren && ele.groupChildren.length > 0) {
-                ele.groupChildren.forEach((groupItem) => {
-                    subPageIdRef.current.push(groupItem.id)
-                })
-            } else {
-                subPageIdRef.current.push(ele.id)
-            }
-        })
     }, [pageItem.multipleNode])
 
     // 切换一级页面时聚焦
@@ -1731,7 +1720,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         })
         return newData
-    }, [subPageIdRef.current])
+    }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((id: string) => {
         const index = flatSubPage.findIndex(ele => ele.id === id)
         if (index === -1) return
@@ -1761,7 +1750,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     <RenderSubPage
                         renderSubPage={flatSubPage}
                         route={pageItem.route}
-                        pluginId={pageItem.pluginId}
+                        pluginId={pageItem.pluginId||0}
                         selectSubMenuId={selectSubMenu.id}
                     />
                     <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
@@ -1862,7 +1851,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 setType('config')
             } else {
                 setCurrentSelectGroup(YakitRoute.HTTPFuzzer, selectSubMenu.groupId)
-
                 addFuzzerSequenceList({
                     groupId: selectSubMenu.groupId
                 })
@@ -2507,7 +2495,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                             if (index === -1) return
                             if (subIndex === -1) {
                                 // 当前情况说明item是游离的页面,没有在其他组内
-                                subPage[index].verbose = val
+                                // subPage[index].verbose = val
+                                subPage[index] = { ...subPage[index], verbose: val }
                                 afterUpdateSubItem(pageItem, subPage[index])
                                 onUpdatePageCache(subPage)
                             }
@@ -2515,7 +2504,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                                 // 当前情况说明item在subPage[index]的组内
                                 const groupChildrenList = subPage[index].groupChildren || []
                                 if (groupChildrenList.length > 0) {
-                                    groupChildrenList[subIndex].verbose = val
+                                    // groupChildrenList[subIndex].verbose = val
+                                    groupChildrenList[subIndex] = {
+                                        ...groupChildrenList[subIndex],
+                                        verbose: val
+                                    }
+                                    subPage[index] = {
+                                        ...subPage[index],
+                                        groupChildren: [
+                                            ...groupChildrenList
+                                        ]
+                                    }
                                     afterUpdateSubItem(pageItem, subPage[index])
                                     onUpdatePageCache(subPage)
                                     if (currentTabKey === YakitRoute.HTTPFuzzer) {

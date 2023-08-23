@@ -28,7 +28,7 @@ export interface SequenceProps extends ExtraSettingProps {
     pageId: string
     pageGroupId: string
     pageName: string
-    pageParams: WebFuzzerPageInfoProps
+    // pageParams: WebFuzzerPageInfoProps
     disabled?: boolean
 }
 /**
@@ -45,7 +45,6 @@ export interface ExtraSettingProps {
  * @property {SequenceProps} item
  * @property {number} index 下标
  * @property {number} errorIndex 当前错误状态的index
- * @property {number} dropCount 响应丢弃数
  * @property {boolean} isDragging 是否在拖拽中
  * @property {boolean} isShowLine 是否显示线
  * @property {boolean} disabled 
@@ -60,7 +59,6 @@ export interface SequenceItemProps {
     item: SequenceProps
     index: number
     errorIndex: number
-    dropCount?: number
     isSelect: boolean
     isDragging: boolean
     isShowLine: boolean
