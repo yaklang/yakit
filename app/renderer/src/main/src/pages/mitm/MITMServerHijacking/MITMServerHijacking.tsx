@@ -170,8 +170,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             }}
                         >
                             <YakitButton
-                                type='outline2'
-                                className='button-text-danger'
+                                type='outline1'
+                                colors="danger"
                             >
                                 清空
                             </YakitButton>
