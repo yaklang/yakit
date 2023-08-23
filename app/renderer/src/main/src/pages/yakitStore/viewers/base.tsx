@@ -17,7 +17,15 @@ import {failed, yakitFailed, yakitNotify} from "../../../utils/notification"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
-import {useDebounce, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useThrottleEffect, useGetState} from "ahooks"
+import {
+    useDebounce,
+    useDebounceEffect,
+    useDebounceFn,
+    useMemoizedFn,
+    useUpdateEffect,
+    useThrottleEffect,
+    useGetState
+} from "ahooks"
 import {Risk} from "@/pages/risks/schema"
 import {RisksViewer} from "@/pages/risks/RisksViewer"
 import {RiskDetails} from "@/pages/risks/RiskTable"
@@ -29,7 +37,7 @@ import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {EngineLog} from "@/components/layout/EngineLog";
 import {EngineConsole} from "@/components/baseConsole/BaseConsole";
-import { isEnpriTrace } from "@/utils/envfile"
+import {isEnpriTrace} from "@/utils/envfile"
 import {HTTPHistory} from "@/components/HTTPHistory";
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow";
 
@@ -212,13 +220,13 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         })
         .splice(0, 25)
 
-    const newStatusCards = useMemo(()=>{
-        if(isEnpriTrace()){
-            let newStatusCards = statusCards.filter((item)=>["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数","SYN 扫描"].includes(item.tag))
+    const newStatusCards = useMemo(() => {
+        if (isEnpriTrace()) {
+            let newStatusCards = statusCards.filter((item) => ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数", "SYN 扫描"].includes(item.tag))
             return newStatusCards
         }
         return statusCards
-    },[statusCards])
+    }, [statusCards])
     return (
         <div style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
             {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
@@ -278,7 +286,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <div style={{marginTop: 4, marginBottom: 8}}>{progressBars.map((i) => i.node)}</div>
             )}
             <Tabs
-                style={{flex: 1, overflow: "hidden",minHeight:"55%"}}
+                style={{flex: 1, overflow: "hidden", minHeight: "55%"}}
                 className={"main-content-tabs no-theme-tabs"}
                 size={"small"}
                 activeKey={active}
@@ -370,6 +378,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     <div style={{width: "100%", height: "100%"}}>
                         <HTTPFlowTable
                             noHeader={true} inViewport={true}
+                            noDeleteAll={true}
                             params={{
                                 RuntimeId: props.runtimeId,
                                 SourceType: "scan",
@@ -461,7 +470,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
         const [query, setQuery] = useState<any>({}) // 设置表头查询条件
         const [loading, setLoading] = useState<boolean>(false)
 
-        const [_,setTableData,getTableData] = useGetState<any>([])
+        const [_, setTableData, getTableData] = useGetState<any>([])
         const tableDataOriginal = useRef<any>([]) // 原始数据用来做搜索和排序
         const tableDataPreProps = useRef<any>([])
         const tableDataExport = useRef<any>([]) // 导出表格数
@@ -650,7 +659,8 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                                 page: 1,
                                 limit: 1,
                                 total: getTableData().length,
-                                onChange: () => {}
+                                onChange: () => {
+                                }
                             }}
                             onChange={onTableChange}
                         />

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Form, Input, Popconfirm, Space} from "antd";
 import {InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "@/utils/inputUtil";
 import {YakEditor} from "@/utils/editors";
@@ -8,12 +8,13 @@ import {DeleteOutlined} from "@ant-design/icons";
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
-import {failed} from "@/utils/notification";
+import {failed, yakitInfo} from "@/utils/notification";
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 
 export interface HTTPRequestBuilderProp {
     value: HTTPRequestBuilderParams
     setValue: (params: HTTPRequestBuilderParams) => any
+    onTypeChanged: (type: "raw" | "template") => any
 }
 
 export interface KVPair {
@@ -69,6 +70,14 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
     const [params, setParams] = useState(props.value || getDefaultHTTPRequestBuilderParams())
     const [reqType, setReqType] = useState<"raw" | "template">("template");
 
+    useEffect(()=>{
+        props.setValue(params)
+    }, [params])
+
+    useEffect(()=>{
+        props.onTypeChanged(reqType)
+    }, [reqType])
+
     return <Form
         onSubmitCapture={e => {
             e.preventDefault()
@@ -84,7 +93,15 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             oldTheme={false}
             label={"请求类型"}
             value={reqType}
-            setValue={setReqType}
+            setValue={t => {
+                setReqType(t)
+                if (t === "raw") {
+                    yakitInfo("原始请求")
+                    setParams({...params, IsRawHTTPRequest: true})
+                } else {
+                    setParams({...params, IsRawHTTPRequest: false})
+                }
+            }}
         />
         {reqType === "raw" && <>
             <YakEditor

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
-import {Form, Space, Tag} from "antd";
+import {Empty, Form, Space, Tag} from "antd";
 import {YakEditor} from "@/utils/editors";
 import {
     getDefaultHTTPRequestBuilderParams,
@@ -13,7 +13,7 @@ import {debugYakitModal, showYakitModal} from "@/components/yakitUI/YakitModal/Y
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer";
 import {SimplePluginList} from "@/components/SimplePluginList";
 import {YakScript} from "@/pages/invoker/schema";
-import {failed, info} from "@/utils/notification";
+import {failed, info, yakitInfo} from "@/utils/notification";
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec";
 import {execSmokingEvaluateCode} from "@/pages/pluginDebugger/SmokingEvaluate";
@@ -34,8 +34,18 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
     const [pluginType, setPluginType] = useState<"port-scan" | "mitm" | "nuclei">("port-scan");
     const [currentPluginName, setCurrentPluginName] = useState("");
 
+    const [showPluginExec, setShowPluginExec] = useState(false);
     const [operator, setOperator] = useState<{ start: () => any, cancel: () => any }>();
     const [pluginExecuting, setPluginExecuting] = useState(false);
+
+    const [showInput, setShowInput] = useState(false);
+
+    useEffect(() => {
+        if (!operator) {
+            return
+        }
+        operator.start()
+    }, [operator])
 
     useEffect(() => {
         if (!!code) {
@@ -91,10 +101,14 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                             })
                         }} type={"outline1"}>查看发送请求</YakitButton>
                         {!pluginExecuting && <YakitButton onClick={() => {
-                            if (operator?.start) {
-                                operator.start()
+                            if (!showPluginExec) {
+                                setShowPluginExec(true)
                             } else {
-                                failed("初始化调试失败")
+                                setShowPluginExec(false)
+                                yakitInfo("正在启动调试任务")
+                                setTimeout(() => {
+                                    setShowPluginExec(true)
+                                }, 300)
                             }
                         }}>执行插件</YakitButton>}
                         {pluginExecuting && <YakitButton onClick={() => {
@@ -105,14 +119,17 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                     </Space>}
                 >
                     <Space direction={"vertical"} style={{width: "100%"}}>
-                        <YakEditor
+                        {showInput && <YakEditor
                             noLineNumber={true} noMiniMap={true} type={"html"}
                             value={targets} setValue={setTargets}
-                        />
-                        <div>
+                        />}
+                        <div style={{marginTop: 12}}>
                             <HTTPRequestBuilder
                                 value={builder}
                                 setValue={setBuilder}
+                                onTypeChanged={(type) => {
+                                    setShowInput(type !== "raw")
+                                }}
                             />
                         </div>
                     </Space>
@@ -188,7 +205,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                                 value={code} setValue={setCode}
                             />
                         </div>}
-                        secondNode={<PluginDebuggerExec
+                        secondNode={showPluginExec ? <PluginDebuggerExec
                             pluginType={pluginType}
                             pluginName={currentPluginName}
                             builder={builder} code={code} targets={targets}
@@ -199,7 +216,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                             onExecuting={result => {
                                 setPluginExecuting(result)
                             }}
-                        />}
+                        /> : <Empty description={"点击【执行插件】以开始"}/>}
                     />
                 </AutoCard>}
             />
