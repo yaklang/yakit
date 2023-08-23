@@ -100,9 +100,10 @@ interface PageNodeInfoProps {
     pageNode: Map<string, PageInfoProps>
     currentSelectGroup: Map<string, PageNodeItemProps>
 
-    getGroupAllTabName: (key, pageGroupId: string) => string[]
-    getCurrentSelectGroup: (key, pageGroupId: string) => PageNodeItemProps | undefined
+    getCurrentGroupAllTabName: (key) => string[]
+    getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
     setCurrentSelectGroup: (key, pageGroupId: string) => void
+    removeCurrentSelectGroup: (key) => void
 
     getPageNodeInfoByPageId: (key, pageId: string) => NodeInfoProps | undefined
     updatePageNodeInfoByPageId: (key, pageId: string, val: PageNodeItemProps) => void
@@ -138,21 +139,21 @@ interface PageNodeInfoProps {
 export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((set, get) => ({
     pageNode: new Map(),
     currentSelectGroup: new Map(),
-    getGroupAllTabName: (key, groupId) => {
+    getCurrentGroupAllTabName: (key) => {
         const node = get().pageNode.get(key);
         if (!node) return []
         const { pageNodeList } = node
-        const item = getPageNodeInfoById(pageNodeList, groupId)
-        // console.log('getGroupAllTabName',item.currentItem)
-        return item.currentItem.pageChildrenList.map(ele=>ele.pageName)||[]
+        const current: PageNodeItemProps | undefined = get().currentSelectGroup.get(key)
+        if (!current) return []
+        const item = getPageNodeInfoById(pageNodeList, current.pageId)
+        // console.log('getGroupAllTabName',item)
+        return item.currentItem.pageChildrenList.map(ele => ele.pageName) || []
     },
-    getCurrentSelectGroup: (key, groupId) => {
-        const node = get().pageNode.get(key);
+    getCurrentSelectGroup: (key) => {
+        const node: PageNodeItemProps | undefined = get().currentSelectGroup.get(key);
         if (!node) return
-        const { pageNodeList } = node
-        const item = getPageNodeInfoById(pageNodeList, groupId)
         // console.log('getCurrentSelectGroup',item.currentItem)
-        return item.currentItem
+        return node
     },
     setCurrentSelectGroup: (key, groupId) => {
         const node = get().pageNode.get(key);
@@ -161,11 +162,19 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const selectGroup = get().currentSelectGroup
         const item = getPageNodeInfoById(pageNodeList, groupId)
         if (!item) return
-        // console.log('setCurrentSelectGroup', item.currentItem)
+        console.log('setCurrentSelectGroup', item)
         selectGroup.set(key, item.currentItem)
         set({
             ...get(),
             currentSelectGroup: selectGroup
+        })
+    },
+    removeCurrentSelectGroup:(key)=>{
+        const currentSelectGroup= get().currentSelectGroup;
+        currentSelectGroup.delete(key)
+        set({
+            ...get(),
+            currentSelectGroup
         })
     },
     getPageNodeInfoByPageId: (key, pageId) => {

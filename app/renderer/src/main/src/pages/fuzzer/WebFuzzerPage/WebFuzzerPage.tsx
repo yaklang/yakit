@@ -26,18 +26,20 @@ const webFuzzerTabs = [
 export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const { setType, onAddGroup } = useContext(SubPageContext)
 
-    const { getPageNodeInfoByPageId } = usePageNode()
+    const { getCurrentSelectGroup } = usePageNode()
 
     const onSwitchType = useMemoizedFn((key) => {
         if (!props.id) return
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
-        if (!nodeInfo) return
-        const { currentItem, subIndex } = nodeInfo
-        if (subIndex === -1) {
+        // const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
+        const nodeInfo: PageNodeItemProps | undefined = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
+        console.log('nodeInfo', nodeInfo, props.id)
+        if (!nodeInfo) {
             // 新建组
-            onAddGroup(currentItem.pageId)
-        }
-        if (setType) setType(key)
+            onAddGroup(props.id)
+        } else if (nodeInfo.pageChildrenList.length === 0) {
+            // 新建组
+            onAddGroup(props.id)
+        } else if (setType) setType('sequence')
     })
     // useWhyDidYouUpdate('WebFuzzerPage', { ...props, });
     return (

@@ -18,7 +18,7 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) =>
     )
     useDebounceEffect(
         () => {
-            
+
             if (getPageRenderList(selectSubMenuId)) return
             // 控制渲染
             setPageRenderList(selectSubMenuId, true)
@@ -110,6 +110,7 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
     const [pageSequenceRenderList, { set: setPageSequenceRenderList, get: getPageSequenceRenderList }] = useMap<string, boolean>(
         new Map<string, boolean>()
     )
+
     useEffect(() => {
         const unFuzzerSequenceList = useFuzzerSequence.subscribe(
             (state) => state.fuzzerSequenceList,

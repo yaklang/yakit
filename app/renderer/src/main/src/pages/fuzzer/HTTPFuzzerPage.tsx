@@ -104,6 +104,7 @@ import { NewEditorSelectRange } from "../../components/NewEditorSelectRange"
 import { execCodec } from "@/utils/encodec"
 import { NodeInfoProps, WebFuzzerPageInfoProps, usePageNode } from "@/store/pageNodeInfo"
 import { SubPageContext } from "../layout/MainContext"
+import { WebFuzzerNewEditor } from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -290,7 +291,7 @@ interface FuzzResponseFilter {
     StatusCode: string[]
 }
 
-function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
     ipcRenderer
         .invoke("ExtractUrl", f)
         .then((data: { Url: string }) => {
@@ -340,7 +341,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         DNSServers: value.dnsServers,
         EtcHosts: value.etcHosts,
         // 设置变量
-        Params: value.params.filter(ele=>ele.Key||ele.Value),
+        Params: value.params.filter(ele => ele.Key || ele.Value),
         //匹配器
         Matchers: value.matchers,
         MatchersCondition: value.matchersCondition,
@@ -575,7 +576,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
         if (!nodeInfo) return
         const { currentItem } = nodeInfo
-        setRequest(currentItem.pageParamsInfo.webFuzzerPageInfo?.request || defaultPostTemplate)
+        const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
+        if (request === newRequest) return
+        setRequest(newRequest || defaultPostTemplate)
         refreshRequest()
     }, [inViewport, type])
 
@@ -1566,84 +1569,96 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )
                     }}
                     firstNode={
-                        <NewEditorSelectRange
-                            system={props.system}
-                            noHex={true}
-                            noHeader={true}
+                        // <NewEditorSelectRange
+                        //     system={props.system}
+                        //     noHex={true}
+                        //     noHeader={true}
+                        //     refreshTrigger={refreshTrigger}
+                        //     hideSearch={true}
+                        //     bordered={false}
+                        //     noMinimap={true}
+                        //     utf8={true}
+                        //     originValue={StringToUint8Array(request)}
+                        //     contextMenu={editorRightMenu}
+                        //     onEditor={setReqEditor}
+                        //     onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                        //     editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
+                        //     selectId='monaco.fizz.select.widget'
+                        //     selectNode={(close, editorInfo) => (
+                        //         <HTTPFuzzerClickEditorMenu
+                        //             editorInfo={editorInfo}
+                        //             close={() => close()}
+                        //             insert={(v: QueryFuzzerLabelResponseProps) => {
+                        //                 if (v.Label) {
+                        //                     reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
+                        //                 } else if (v.DefaultDescription === "插入本地文件") {
+                        //                     reqEditor &&
+                        //                         insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
+                        //                 }
+                        //                 close()
+                        //             }}
+                        //             addLabel={() => {
+                        //                 close()
+                        //                 onInsertYakFuzzer()
+                        //             }}
+                        //         />
+                        //     )}
+                        //     rangeId='monaco.fizz.range.widget'
+                        //     rangeNode={(closeFizzRangeWidget, editorInfo) => (
+                        //         <HTTPFuzzerRangeEditorMenu
+                        //             editorInfo={editorInfo}
+                        //             insert={(fun: any) => {
+                        //                 if (reqEditor) {
+                        //                     const selectedText =
+                        //                         reqEditor
+                        //                             .getModel()
+                        //                             ?.getValueInRange(reqEditor.getSelection() as any) || ""
+                        //                     if (selectedText.length > 0) {
+                        //                         ipcRenderer
+                        //                             .invoke("QueryFuzzerLabel", {})
+                        //                             .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+                        //                                 const { Data } = data
+                        //                                 let newSelectedText: string = selectedText
+                        //                                 if (Array.isArray(Data) && Data.length > 0) {
+                        //                                     // 选中项是否存在于标签中
+                        //                                     let isHave: boolean = Data.map(
+                        //                                         (item) => item.Label
+                        //                                     ).includes(selectedText)
+                        //                                     if (isHave) {
+                        //                                         newSelectedText = selectedText.replace(/{{|}}/g, "")
+                        //                                     }
+                        //                                 }
+                        //                                 const text: string = fun(newSelectedText)
+                        //                                 reqEditor.trigger("keyboard", "type", { text })
+                        //                             })
+                        //                     }
+                        //                 }
+                        //             }}
+                        //             replace={(text: string) => {
+                        //                 if (reqEditor) {
+                        //                     reqEditor.trigger("keyboard", "type", { text })
+                        //                     closeFizzRangeWidget()
+                        //                 }
+                        //             }}
+                        //             rangeValue={
+                        //                 (reqEditor &&
+                        //                     reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
+                        //                 ""
+                        //             }
+                        //         />
+                        //     )}
+                        // />
+                        <WebFuzzerNewEditor
                             refreshTrigger={refreshTrigger}
-                            hideSearch={true}
-                            bordered={false}
-                            noMinimap={true}
-                            utf8={true}
-                            originValue={StringToUint8Array(request)}
-                            contextMenu={editorRightMenu}
-                            onEditor={setReqEditor}
-                            onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                            editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
-                            selectId='monaco.fizz.select.widget'
-                            selectNode={(close, editorInfo) => (
-                                <HTTPFuzzerClickEditorMenu
-                                    editorInfo={editorInfo}
-                                    close={() => close()}
-                                    insert={(v: QueryFuzzerLabelResponseProps) => {
-                                        if (v.Label) {
-                                            reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
-                                        } else if (v.DefaultDescription === "插入本地文件") {
-                                            reqEditor &&
-                                                insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
-                                        }
-                                        close()
-                                    }}
-                                    addLabel={() => {
-                                        close()
-                                        onInsertYakFuzzer()
-                                    }}
-                                />
-                            )}
-                            rangeId='monaco.fizz.range.widget'
-                            rangeNode={(closeFizzRangeWidget, editorInfo) => (
-                                <HTTPFuzzerRangeEditorMenu
-                                    editorInfo={editorInfo}
-                                    insert={(fun: any) => {
-                                        if (reqEditor) {
-                                            const selectedText =
-                                                reqEditor
-                                                    .getModel()
-                                                    ?.getValueInRange(reqEditor.getSelection() as any) || ""
-                                            if (selectedText.length > 0) {
-                                                ipcRenderer
-                                                    .invoke("QueryFuzzerLabel", {})
-                                                    .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-                                                        const { Data } = data
-                                                        let newSelectedText: string = selectedText
-                                                        if (Array.isArray(Data) && Data.length > 0) {
-                                                            // 选中项是否存在于标签中
-                                                            let isHave: boolean = Data.map(
-                                                                (item) => item.Label
-                                                            ).includes(selectedText)
-                                                            if (isHave) {
-                                                                newSelectedText = selectedText.replace(/{{|}}/g, "")
-                                                            }
-                                                        }
-                                                        const text: string = fun(newSelectedText)
-                                                        reqEditor.trigger("keyboard", "type", { text })
-                                                    })
-                                            }
-                                        }
-                                    }}
-                                    replace={(text: string) => {
-                                        if (reqEditor) {
-                                            reqEditor.trigger("keyboard", "type", { text })
-                                            closeFizzRangeWidget()
-                                        }
-                                    }}
-                                    rangeValue={
-                                        (reqEditor &&
-                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                                        ""
-                                    }
-                                />
-                            )}
+                            request={getRequest()}
+                            setRequest={(i) => setRequest(i)}
+                            isHttps={advancedConfigValue.isHttps}
+                            hotPatchCode={hotPatchCode}
+                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                            setHotPatchCode={setHotPatchCode}
+                            setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                            selectId="sequence"
+                            rangeId="sequence"
                         />
                     }
                     secondNode={

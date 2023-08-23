@@ -18,6 +18,7 @@ import {
     useDebounceFn,
     useHover,
     useInViewport,
+    useLatest,
     useMap,
     useMemoizedFn,
     useSize,
@@ -73,6 +74,7 @@ import { InheritLineIcon, InheritArrowIcon } from "./icon"
 import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 import { PencilAltIcon } from "@/assets/newIcon"
 import { SubPageContext } from "@/pages/layout/MainContext"
+import { WebFuzzerNewEditor } from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 // import { ResponseCard } from "./ResponseCard"
 
 
@@ -150,6 +152,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         number
     >(new Map())
 
+    //    const latestCurrentSequenceItem= useLatest(currentSequenceItem)
+
     const fuzzTokenRef = useRef<string>(randomString(60))
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
@@ -157,7 +161,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const { getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId } = usePageNode()
+    const { getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId,getCurrentSelectGroup } = usePageNode()
     const [extractedMap, { reset, set }] = useMap<string, Map<string, string>>()
     useEffect(() => {
         ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { pageId: string, type: string, extractedMap: Map<string, string> }) => {
@@ -173,10 +177,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     useEffect(() => {
         const unSubPageNode = usePageNode.subscribe(
             (state) => {
-                const names = state.getGroupAllTabName(YakitRoute.HTTPFuzzer, props.groupId)
+                const names = state.getCurrentGroupAllTabName(YakitRoute.HTTPFuzzer)
                 return names
             },
-            () => {
+            (selectedState, previousSelectedState) => {
                 onUpdateSequence()
             }
         )
@@ -185,9 +189,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     }, [])
 
-    useUpdateEffect(() => {
-        if (inViewport) onUpdateSequence()
-    }, [inViewport])
     useUpdateEffect(() => {
         if (!loading) {
             onUpdateSequence()
@@ -203,6 +204,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         getPageNodeInfoByPageIdByRoute()
     }, [])
     useEffect(() => {
+        if (!inViewport) return
+        onUpdateSequence()
         getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
             if (!remoteData) {
                 return
@@ -214,6 +217,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 hotPatchCodeWithParamGetterRef.current = `${remoteData}`
             }
         })
+        setTimeout(() => {
+            if (currentSequenceItem) {
+                const currentSequenceRequest = getCurrentSequenceRequest(currentSequenceItem.pageId)
+                if (currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo) {
+                    setCurrentSelectRequest({
+                        ...(currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo)
+                    })
+                }
+            }
+        }, 200);
     }, [inViewport])
 
     const successCountRef = useRef<Map<string, number>>(new Map())
@@ -342,7 +355,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     })
     const getCurrentGroupSequence = useMemoizedFn(() => {
-        const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
+        // const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
+        const nodeInfo=getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
         if (!nodeInfo) return []
         const { pageChildrenList } = nodeInfo
         return pageChildrenList || []
@@ -427,31 +441,27 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         useMemoizedFn(() => {
             if (loading || !inViewport) return
             const pageChildrenList = getCurrentGroupSequence()
+            console.log('pageChildrenList', pageChildrenList)
             if (pageChildrenList.length === 0) {
                 if (setType) setType("config")
                 return
             }
             onSetOriginSequence(pageChildrenList)
-            // const newSequenceList: SequenceProps[] = []
-            // sequenceList.forEach((item) => {
-            //     const current = pageChildrenList.find((ele) => ele.pageId === item.pageId)
-            //     if (!item.pageId) {
-            //         newSequenceList.push({
-            //             ...item
-            //         })
-            //     }
-            //     if (current) {
-            //         newSequenceList.push({
-            //             ...item,
-            //             // pageParams: current?.pageParamsInfo.webFuzzerPageInfo || defaultPageParams
-            //         })
-            //     }
-            // })
-            // if (currentSequenceItem) {
-            //     const index = newSequenceList.findIndex((ele) => currentSequenceItem.id === ele.id)
-            //     if (index !== -1) { setCurrentSequenceItem({ ...newSequenceList[index] }); }
-            // }
-            // setSequenceList([...newSequenceList])
+            const newSequenceList: SequenceProps[] = []
+            sequenceList.forEach((item) => {
+                const current = pageChildrenList.find((ele) => ele.pageId === item.pageId)
+                if (!item.pageId) {
+                    newSequenceList.push({
+                        ...item
+                    })
+                }
+                if (current) {
+                    newSequenceList.push({
+                        ...item,
+                    })
+                }
+            })
+            setSequenceList([...newSequenceList])
         }),
         { wait: 200 }
     ).run
@@ -1103,7 +1113,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         request: "",
         advancedConfigValue: { ...defaultAdvancedConfigValue }
     }
-    const [requestHttp, setRequestHttp] = useState<Uint8Array>(new Uint8Array())
+    const [requestHttp, setRequestHttp] = useState<string>('')
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [affixSearch, setAffixSearch] = useState<string>("")
@@ -1111,10 +1121,12 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+    const [hotPatchCode, setHotPatchCode] = useState<string>("")
+    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
 
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
-    const [inViewport] = useInViewport(secondNodeRef)
+    // const [inViewport] = useInViewport(secondNodeRef)
 
     const successTableRef = useRef<any>()
 
@@ -1131,14 +1143,10 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     } = usePageNode()
 
     useEffect(() => {
-        if (!pageId || !inViewport) return
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pageId)
-        if (!nodeInfo) return
-        const { currentItem } = nodeInfo
-        const request = currentItem.pageParamsInfo.webFuzzerPageInfo?.request || defaultPostTemplate
-        setRequestHttp(StringToUint8Array(request))
+        if (!pageId) return
+        setRequestHttp(request)
         setRefreshTrigger(!refreshTrigger)
-    }, [pageId, inViewport])
+    }, [pageId, request])
 
     useUpdateEffect(() => {
         if (successTableRef.current) {
@@ -1149,12 +1157,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         setQuery(undefined)
     }, [responseInfoId])
 
-    const onSetRequestHttp = useMemoizedFn((i: Uint8Array) => {
+    const onSetRequestHttp = useMemoizedFn((i: string) => {
         setRequestHttp(i)
         onUpdatePageInfo(i, pageId || '')
     })
-    const onUpdatePageInfo = useDebounceFn((i: Uint8Array, pId: string) => {
-        const value = Uint8ArrayToString(i) || ''
+    const onUpdatePageInfo = useDebounceFn((value: string, pId: string) => {
         if (!pId) return
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId)
         if (!nodeInfo) return
@@ -1225,16 +1232,28 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                     )
                 }}
                 firstNode={
-                    <NewHTTPPacketEditor
-                        noHex={true}
-                        noHeader={true}
-                        hideSearch={true}
-                        bordered={false}
-                        noMinimap={true}
-                        utf8={true}
+                    // <NewHTTPPacketEditor
+                    //     noHex={true}
+                    //     noHeader={true}
+                    //     hideSearch={true}
+                    //     bordered={false}
+                    //     noMinimap={true}
+                    //     utf8={true}
+                    //     refreshTrigger={refreshTrigger}
+                    //     originValue={requestHttp}
+                    //     onChange={(i) => onSetRequestHttp(i)}
+                    // />
+                    <WebFuzzerNewEditor
                         refreshTrigger={refreshTrigger}
-                        originValue={requestHttp}
-                        onChange={(i) => onSetRequestHttp(i)}
+                        request={requestHttp}
+                        setRequest={(i) => onSetRequestHttp(i)}
+                        isHttps={advancedConfigValue.isHttps}
+                        hotPatchCode={hotPatchCode}
+                        hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                        setHotPatchCode={setHotPatchCode}
+                        setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                        selectId="sequence"
+                        rangeId="sequence"
                     />
                 }
                 secondNode={

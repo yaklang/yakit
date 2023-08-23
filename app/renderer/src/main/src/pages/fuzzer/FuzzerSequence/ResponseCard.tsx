@@ -59,7 +59,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                 failedFuzzer.push(...element.failedFuzzer)
             }
         }
-        console.log('responseMap', responseMap)
         return {
             successFuzzerLength: successFuzzer.length,
             failedFuzzerLength: failedFuzzer.length,
@@ -67,7 +66,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             failedFuzzer
         }
     }, [responseMap])
-
     return (isShow ? <div className={styles['all-sequence-response-list']} style={{ display: showAllResponse ? '' : 'none' }}>
         <div className={styles['all-sequence-response-heard']}>
             <div className={styles['display-flex-center']}>

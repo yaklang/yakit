@@ -1750,7 +1750,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     <RenderSubPage
                         renderSubPage={flatSubPage}
                         route={pageItem.route}
-                        pluginId={pageItem.pluginId||0}
+                        pluginId={pageItem.pluginId || 0}
                         selectSubMenuId={selectSubMenu.id}
                     />
                     <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
@@ -1808,7 +1808,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         setPageNode,
         getPageNodeInfoByPageGroupId,
         exchangeOrderPageNodeByPageGroupId,
-        setCurrentSelectGroup
+        setCurrentSelectGroup,
+        removeCurrentSelectGroup,
     } = usePageNode()
 
     const { addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId } = useFuzzerSequence();
@@ -1849,7 +1850,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             if (selectSubMenu.groupId === '0') {
                 setType('config')
+                removeCurrentSelectGroup(YakitRoute.HTTPFuzzer)
+                // setSelectGroupId('')
             } else {
+                console.log('selectSubMenu', selectSubMenu)
                 setCurrentSelectGroup(YakitRoute.HTTPFuzzer, selectSubMenu.groupId)
                 addFuzzerSequenceList({
                     groupId: selectSubMenu.groupId
@@ -1960,9 +1964,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             // if (index === -1) return
             // const groupChildrenList = subPage[index].groupChildren || []
             // if (subIndex === -1) {
-            //     if (groupChildrenList.length === 0) setSelectSubMenu(subPage[index])
+            //     if (groupChildrenList.length === 0) setSelectSubMenu(()=>subPage[index])
             // } else {
-            //     setSelectSubMenu(groupChildrenList[subIndex])
+            //     setSelectSubMenu(()=>groupChildrenList[subIndex])
             // }
             /**将拖拽item变为选中item ---------end---------*/
             /** 合并组   ---------start--------- */
@@ -2051,7 +2055,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 subPage[combineIndex].expand = true
                 subPage[combineIndex].id = groupId
             }
-            // setSelectSubMenu((s) => ({ ...s, groupId }))
+            setSelectSubMenu((s) => ({ ...s, groupId }))
         }
         const combineItem = subPage[combineIndex]
         subPage.splice(sourceIndex, 1)
@@ -2093,7 +2097,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
 
         const combineItem = subPage[combineIndex]
 
-        // setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
+        setSelectSubMenu((s) => ({ ...s, groupId: newGroupId }))
 
         // 拖拽后组内item===0,则删除该组
         if (subPage[gIndex].groupChildren?.length === 0) {
@@ -2105,6 +2109,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             pushSequenceByGroupChildren(combineItem)
             // 删除 source的item所在序列化中的数据，生成新组的时候push新的序列化数据
             removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem[0].id)
+            setCurrentSelectGroup(YakitRoute.HTTPFuzzer, combineItem.id)
+            setSelectGroupId(combineItem.id)
         }
     })
     /** @description 组外之间移动 */
@@ -2164,7 +2170,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
 
         // setSelectSubMenu(newSourceItem)
-        // setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+        setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
 
         destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
         subPage[destinationNumber].groupChildren = destinationGroupChildrenList
@@ -2203,7 +2209,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
 
         // setSelectSubMenu(newSourceItem)
-        // setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
+        setSelectSubMenu((s) => ({ ...s, groupId: "0" }))
 
         // 将拖拽的item添加到目的地的组内
         subPage.splice(destinationIndex, 0, newSourceItem)
@@ -2253,7 +2259,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 groupId: destinationGroupId
             }
             // setSelectSubMenu(newSourceItem)
-            // setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
+            setSelectSubMenu((s) => ({ ...s, groupId: destinationGroupId }))
             destinationGroupChildrenList.splice(destinationIndex, 0, newSourceItem) // 按顺序将拖拽的item放进目的地中并修改组的id
             subPage[destinationNumber].groupChildren = destinationGroupChildrenList
         }
@@ -2585,6 +2591,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
                 pushSequenceByGroupChildren(newGroup) // 新建序列数据
                 removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id) // 删除组A中的序列
+                // 更新选中组内的childrenList
+                setCurrentSelectGroup(YakitRoute.HTTPFuzzer, item.groupId)
             }
         }
         onUpdatePageCache([...subPage])
@@ -2608,7 +2616,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             if (groupChildren.length > 0) {
                 groupChildren.splice(subIndex, 1)
                 subPage[index] = {
-                    ...subPage[gIndex],
+                    ...subPage[index],
                     groupChildren: [...groupChildren]
                 }
             }
@@ -2618,9 +2626,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             }
             // subPage[gIndex].groupChildren?.push({ ...item, groupId: subPage[gIndex].id })
             if (groupChildren.length === 0) subPage.splice(index, 1)
+
         }
         if (selectSubMenu.id === item.id) {
-            setSelectSubMenu({ ...item, groupId: subPage[gIndex].id })
+            setSelectSubMenu({ ...item, groupId: currentGroup.id })
         }
 
         onUpdatePageCache([...subPage])
@@ -3003,11 +3012,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
     /** 删除组A中的序列化数据,向组B新增序列化数据 */
     const addSequenceByPageGroupId = useMemoizedFn((sourceItem: MultipleNodeInfo, destinationGroupId: string, destinationIndex?: number) => {
         const removePageNode = removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, sourceItem.id)
-        if (removePageNode)
+        if (removePageNode) {
+            setCurrentSelectGroup(YakitRoute.HTTPFuzzer, destinationGroupId)
+            setSelectGroupId(destinationGroupId)
             addPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, destinationGroupId, {
                 ...removePageNode,
                 pageGroupId: destinationGroupId
             }, destinationIndex)
+        }
+
     })
     /**
      * @description 从组内移除序列数据，并将移除的item变为游离的
