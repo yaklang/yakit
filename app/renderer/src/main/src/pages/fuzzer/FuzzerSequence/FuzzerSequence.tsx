@@ -18,7 +18,6 @@ import {
     useDebounceFn,
     useHover,
     useInViewport,
-    useLatest,
     useMap,
     useMemoizedFn,
     useSize,
@@ -151,8 +150,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         string,
         number
     >(new Map())
-
-    //    const latestCurrentSequenceItem= useLatest(currentSequenceItem)
 
     const fuzzTokenRef = useRef<string>(randomString(60))
     const hotPatchCodeRef = useRef<string>("")
