@@ -1,3 +1,3 @@
-export type mitmEvents = {
-  "cleanMitmLogEvent": any,
+export type MitmEventProps = {
+    cleanMitmLogEvent?: string
 }
