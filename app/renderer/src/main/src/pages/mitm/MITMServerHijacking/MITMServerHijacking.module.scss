@@ -59,6 +59,9 @@
                 display: flex;
                 align-items: center;
             }
+            .empty-button {
+                margin-left: 8px;
+            }
             .mitm-server-quit-icon {
                 margin-left: 16px;
                 color: var(--yakit-danger-5);
