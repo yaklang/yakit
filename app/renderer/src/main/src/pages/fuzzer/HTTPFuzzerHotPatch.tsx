@@ -45,6 +45,12 @@ beforeRequest = func(req) {
     */ 
     return []byte(req)
 }
+
+// afterRequest 允许对每一个请求的响应做处理，定义为 func(origin []byte) []byte
+afterRequest = func(rsp) {
+    return []byte(rsp)
+}
+
 `
 
 const HotPatchParamsGetterDefault = `__getParams__ = func() {
@@ -76,20 +82,11 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
         TimeoutSeconds: 20,
         Limit: 300
     })
-    const [dynamicParam, setDynamicParam, getDynamicParam] = useGetState(false)
     const [loading, setLoading] = useState(false)
     const [hotPatchEditorHeight, setHotPatchEditorHeight] = useState(400)
     const [paramEditorHeight, setParamEditorHeight] = useState(250)
 
     useEffect(() => {
-        getRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG).then((e) => {
-            if (e === "1") {
-                setDynamicParam(true)
-            } else {
-                setDynamicParam(false)
-            }
-        })
-
         getRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
             if (!!e) {
                 setParams({...params, Template: e})
@@ -97,7 +94,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
         })
         return () => {
             setRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {})
-            setRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG, getDynamicParam() ? "1" : "0").then(() => {})
         }
     }, [])
 
@@ -178,16 +174,16 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 插入编辑器位置
                             </YakitButton>
                         )}
-                        <Tooltip title={<>{`支持：{{params(...)}} 标签`}</>}>
-                            <YakitCheckbox
-                                checked={dynamicParam}
-                                onChange={(e) => {
-                                    setDynamicParam(e.target.checked)
-                                }}
-                            >
-                                预加载参数展开
-                            </YakitCheckbox>
-                        </Tooltip>
+                        {/*<Tooltip title={<>{`支持：{{params(...)}} 标签`}</>}>*/}
+                        {/*    <YakitCheckbox*/}
+                        {/*        checked={dynamicParam}*/}
+                        {/*        onChange={(e) => {*/}
+                        {/*            setDynamicParam(e.target.checked)*/}
+                        {/*        }}*/}
+                        {/*    >*/}
+                        {/*        预加载参数展开*/}
+                        {/*    </YakitCheckbox>*/}
+                        {/*</Tooltip>*/}
                     </Space>
                 }
             >
@@ -199,85 +195,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     />
                 </div>
             </Form.Item>
-            {dynamicParam && (
-                <Form.Item
-                    label={
-                        <Space style={{lineHeight: "16px"}}>
-                            <div>{"预加载参数生成器"}</div>
-                            {props.onSaveHotPatchCodeWithParamGetterCode && (
-                                <YakitButton
-                                    type={"primary"}
-                                    onClick={() => {
-                                        if (props.onSaveHotPatchCodeWithParamGetterCode)
-                                            props.onSaveHotPatchCodeWithParamGetterCode(
-                                                params.HotPatchCodeWithParamGetter
-                                            )
-                                    }}
-                                >
-                                    保存
-                                </YakitButton>
-                            )}
-                            <div>
-                                <YakitPopconfirm
-                                    title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
-                                    onConfirm={() => {
-                                        if (props.onSaveHotPatchCodeWithParamGetterCode) {
-                                            props.onSaveHotPatchCodeWithParamGetterCode(
-                                                params.HotPatchCodeWithParamGetter
-                                            )
-                                        }
-
-                                        setParams({...params, HotPatchCodeWithParamGetter: HotPatchParamsGetterDefault})
-                                    }}
-                                >
-                                    <YakitButton icon={<RefreshIcon />} type='text' />
-                                </YakitPopconfirm>
-                                <YakitPopover
-                                    title={"扩大编辑器"}
-                                    content={
-                                        <>
-                                            <YakitRadioButtons
-                                                value={paramEditorHeight}
-                                                onChange={(e) => {
-                                                    setParamEditorHeight(e.target.value)
-                                                }}
-                                                buttonStyle='solid'
-                                                options={[
-                                                    {
-                                                        value: 250,
-                                                        label: "小"
-                                                    },
-                                                    {
-                                                        value: 400,
-                                                        label: "中"
-                                                    },
-                                                    {
-                                                        value: 600,
-                                                        label: "大"
-                                                    }
-                                                ]}
-                                            />
-                                        </>
-                                    }
-                                >
-                                    <YakitButton
-                                        icon={<FullscreenOutlined />}
-                                        type='text'
-                                    />
-                                </YakitPopover>
-                            </div>
-                        </Space>
-                    }
-                >
-                    <div style={{height: paramEditorHeight}}>
-                        <YakEditor
-                            type={"yak"}
-                            value={params.HotPatchCodeWithParamGetter}
-                            setValue={(code) => setParams({...params, HotPatchCodeWithParamGetter: code})}
-                        />
-                    </div>
-                </Form.Item>
-            )}
             <Form.Item
                 label={
                     <Space style={{lineHeight: "16px"}}>
