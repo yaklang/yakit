@@ -1902,7 +1902,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     if (!onlyOneResponse && cachedTotal > 1) {
         const searchNode = (
             <YakitInput.Search
-                size={size}
+                size={size==='small'?'small':'middle'}
                 placeholder='请输入关键词搜索'
                 value={keyWord}
                 onChange={(e) => {
