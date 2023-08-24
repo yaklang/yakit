@@ -758,7 +758,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     <div className={styles["header-extra"]}>
                         {history.length !== 0 && (
                             <YakitButton
-                                className={styles["new-chat-btn"]}
                                 disabled={loading}
                                 icon={<PlusIcon />}
                                 onClick={onAddChat}
@@ -1182,7 +1181,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                 </div>
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                     {showLoading ? (
-                        <YakitButton className={styles["btn-style"]} type='danger' icon={<StopIcon />} onClick={onStop}>
+                        <YakitButton type="primary" colors="danger" icon={<StopIcon />} onClick={onStop}>
                             停止
                         </YakitButton>
                     ) : (

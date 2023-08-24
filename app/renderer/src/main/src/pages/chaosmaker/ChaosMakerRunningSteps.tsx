@@ -69,7 +69,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                                 ipcRenderer.invoke("cancel-ExecuteChaosMakerRule", token)
                             }}
                         >
-                            <YakitButton type={"danger"} onClick={() => {
+                            <YakitButton type="primary" colors="danger" onClick={() => {
 
                             }}>
                                 停止模拟

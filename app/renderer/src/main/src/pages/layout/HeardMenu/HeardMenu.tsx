@@ -820,7 +820,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         [style["margin-right-0"]]: isExpand,
                                         [style["heard-menu-customize-menu"]]: customizeVisible
                                     })}
-                                    icon={<CursorClickIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    icon={<CursorClickIcon />}
                                 >
                                     <div className={style["heard-menu-customize-content"]}>
                                         自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}

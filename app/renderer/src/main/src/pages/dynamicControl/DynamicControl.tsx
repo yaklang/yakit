@@ -53,7 +53,8 @@ export const ControlOperation: React.FC<ControlOperationProps> = (props) => {
                 <YakitButton
                     onClick={closeControl}
                     size='max'
-                    type='danger'
+                    type="primary"
+                    colors="danger"
                     className={styles["control-operation-btn"]}
                 >
                     退出远程

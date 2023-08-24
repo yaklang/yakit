@@ -359,7 +359,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
+                                colors="danger"
+                                className={styles["btn-padding-right-0"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -382,7 +383,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 size='small'
                                 type='outline1'
                                 onClick={() => onInsertYakFuzzer()}
-                                icon={<PlusSmIcon className={styles["plus-sm-icon"]}/>}
+                                icon={<PlusSmIcon />}
                             >
                                 插入 yak.fuzz 语法
                             </YakitButton>
@@ -416,7 +417,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
+                                colors="danger"
+                                className={styles["btn-padding-right-0"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -481,7 +483,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
+                                colors="danger"
+                                className={styles["btn-padding-right-0"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -553,7 +556,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
+                                colors="danger"
+                                className={styles["btn-padding-right-0"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -591,7 +595,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         extra={
                             <YakitButton
                                 type='text'
-                                className={classNames("button-text-danger", styles["btn-padding-right-0"])}
+                                colors="danger"
+                                className={styles["btn-padding-right-0"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
@@ -664,7 +669,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <>
                                 <YakitButton
                                     type='text'
-                                    className='button-text-danger'
+                                    colors="danger"
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         const restValue = {
@@ -693,7 +698,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     className={styles["btn-padding-right-0"]}
                                 >
                                     添加/调试
-                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]}/>
+                                    <HollowLightningBoltIcon />
                                 </YakitButton>
                             </>
                         }
@@ -736,7 +741,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <>
                                 <YakitButton
                                     type='text'
-                                    className='button-text-danger'
+                                    colors="danger"
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         const restValue = {
@@ -762,7 +767,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     className={styles["btn-padding-right-0"]}
                                 >
                                     添加/调试
-                                    <HollowLightningBoltIcon className={styles["plus-sm-icon"]}/>
+                                    <HollowLightningBoltIcon />
                                 </YakitButton>
                             </>
                         }
@@ -781,7 +786,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <>
                                 <YakitButton
                                     type='text'
-                                    className='button-text-danger'
+                                    colors="danger"
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         const restValue = {
@@ -836,7 +841,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     size='small'
                                 >
                                     添加
-                                    <PlusIcon className={styles["plus-sm-icon"]}/>
+                                    <PlusIcon />
                                 </YakitButton>
                             </>
                         }
@@ -900,10 +905,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                             `${variableActiveKey?.length}`
                                                         ])
                                                     }}
-                                                    icon={<PlusIcon className={styles["plus-sm-icon"]}/>}
-                                                    themeClass={styles["plus-button-bolck"]}
+                                                    icon={<PlusIcon />}
+                                                    className={styles["plus-button-bolck"]}
                                                     block
-                                                    style={{justifyContent: "center"}}
                                                 >
                                                     添加
                                                 </YakitButton>
@@ -1015,10 +1019,9 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                     <YakitButton
                         type='outline2'
                         onClick={() => onAdd()}
-                        icon={<PlusIcon className={styles["plus-sm-icon"]}/>}
-                        themeClass={styles["plus-button-bolck"]}
+                        icon={<PlusIcon />}
+                        className={styles["plus-button-bolck"]}
                         block
-                        style={{justifyContent: "center"}}
                     >
                         添加
                     </YakitButton>
@@ -1069,10 +1072,9 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                     <YakitButton
                         type='outline2'
                         onClick={() => onAdd()}
-                        icon={<PlusIcon className={styles["plus-sm-icon"]}/>}
-                        themeClass={styles["plus-button-bolck"]}
+                        icon={<PlusIcon />}
+                        className={styles["plus-button-bolck"]}
                         block
-                        style={{justifyContent: "center"}}
                     >
                         添加
                     </YakitButton>

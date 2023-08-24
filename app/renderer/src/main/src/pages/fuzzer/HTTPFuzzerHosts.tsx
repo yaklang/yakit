@@ -72,7 +72,8 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
                 <Space>
                     <YakitButton htmlType={"submit"}>添加</YakitButton>
                     <YakitButton
-                        type={"danger"}
+                        type="primary"
+                        colors="danger"
                         onClick={() => {
                             props.onClose()
                         }}

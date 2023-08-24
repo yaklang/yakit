@@ -3754,7 +3754,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
                         />
                     )}
                     {isShowDelBtn && (
-                        <YakitButton type='danger' disabled={delDisabled} onClick={() => setBatchDelShow(true)}>
+                        <YakitButton colors="danger" disabled={delDisabled} onClick={() => setBatchDelShow(true)}>
                             删除
                         </YakitButton>
                     )}

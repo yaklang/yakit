@@ -101,7 +101,7 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
             网络诊断
             {loading && <AutoSpin size={"small"}/>}
             <YakitButton
-                type={"text"} danger={true} icon={<CloseCircleIcon/>}
+                type={"text"} colors="danger" icon={<CloseCircleIcon/>}
                 onClick={() => {
                     xtermClear(xtermRef)
                 }}

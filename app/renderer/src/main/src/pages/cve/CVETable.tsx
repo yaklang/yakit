@@ -439,7 +439,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                         })
                                     }}
                                 >
-                                    <RefreshIcon className={styles["refresh-icon"]} />
+                                    <RefreshIcon />
                                     数据库更新
                                 </YakitButton>
                             </div>

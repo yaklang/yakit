@@ -313,17 +313,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 placement='bottomLeft'
                             >
                                 <YakitButton
-                                    className={classNames({
-                                        "button-text-primary": visiblePluginSearch
-                                    })}
                                     type='outline2'
+                                    isHover={visiblePluginSearch}
                                     style={{padding: 4}}
                                 >
-                                    <SearchIcon
-                                        className={classNames(styles["filter-small-icon"], {
-                                            [styles["filter-small-icon-primary"]]: visiblePluginSearch
-                                        })}
-                                    />
+                                    <SearchIcon />
                                 </YakitButton>
                             </YakitPopover>
                         )}
@@ -363,17 +357,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 placement='bottomLeft'
                             >
                                 <YakitButton
-                                    className={classNames({
-                                        "button-text-primary": visiblePluginSearch
-                                    })}
                                     type='outline2'
+                                    isHover={visiblePluginSearch}
                                     style={{padding: 4}}
                                 >
-                                    <SearchIcon
-                                        className={classNames(styles["filter-small-icon"], {
-                                            [styles["filter-small-icon-primary"]]: visiblePluginSearch
-                                        })}
-                                    />
+                                    <SearchIcon />
                                 </YakitButton>
                             </YakitPopover>
                         )}
@@ -569,10 +557,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             }
                         >
                             <YakitButton type='primary'>
-                                <MenuIcon
-                                    className={classNames(styles["filter-small-icon"])}
-                                    style={{color: "#fff", height: 16}}
-                                />
+                                <MenuIcon />
                                 {mode === "all" && "全部"}
                                 {mode === "loaded" && "已启用"}
                                 {mode === "hot-patch" && "热加载"}

@@ -1,0 +1,29 @@
+$color-list: (
+    primary: (
+        color-1: var(--yakit-primary-1),
+        color-2: var(--yakit-primary-2),
+        color-3: var(--yakit-primary-3),
+        color-4: var(--yakit-primary-4),
+        color-5: var(--yakit-primary-5),
+        color-6: var(--yakit-primary-6)
+    ),
+    success: (
+        color-1: var(--yakit-success-1),
+        color-2: var(--yakit-success-2),
+        color-3: var(--yakit-success-3),
+        color-4: var(--yakit-success-4),
+        color-5: var(--yakit-success-5),
+        color-6: var(--yakit-success-6)
+    ),
+    danger: (
+        color-1: var(--yakit-danger-1),
+        color-2: var(--yakit-danger-2),
+        color-3: var(--yakit-danger-3),
+        color-4: var(--yakit-danger-4),
+        color-5: var(--yakit-danger-5),
+        color-6: var(--yakit-danger-6)
+    )
+);
+@function fetch-color($type, $color) {
+    @return map-get(map-get($color-list, $type), $color);
+}

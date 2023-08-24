@@ -312,7 +312,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                                 setExtracted([])
                                             }}
                                         >
-                                            <YakitButton size={"small"} type='outline2' className='button-text-danger'>
+                                            <YakitButton size={"small"} type='outline1' colors="danger">
                                                 清空
                                             </YakitButton>
                                         </YakitPopconfirm>

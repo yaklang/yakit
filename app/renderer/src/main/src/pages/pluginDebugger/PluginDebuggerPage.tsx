@@ -101,7 +101,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = (props) => {
                             if (operator?.cancel) {
                                 operator.cancel()
                             }
-                        }} danger={true} type={"danger"}>停止执行</YakitButton>}
+                        }} colors="danger">停止执行</YakitButton>}
                     </Space>}
                 >
                     <Space direction={"vertical"} style={{width: "100%"}}>

@@ -946,8 +946,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                         }}
                         type='primary'
-                        className='button-primary-danger'
-                        themeClass={styles["stop-screen-recorder"]}
+                        colors="danger"
+                        className={styles["stop-screen-recorder"]}
                         size='large'
                     >
                         <div className={styles["stop-icon"]}>

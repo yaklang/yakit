@@ -424,8 +424,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             <div className={styles["drawer-TLS-btns"]}>
                                 <YakitButton
                                     type='text'
+                                    colors={certs.length > 0 ? "danger" : undefined}
                                     disabled={certs.length === 0}
-                                    style={{color: certs.length > 0 ? "var(--yakit-danger-5)" : ""}}
                                     onClick={() => setCerts([])}
                                 >
                                     清除
