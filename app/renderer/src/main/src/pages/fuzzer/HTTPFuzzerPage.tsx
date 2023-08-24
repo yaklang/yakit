@@ -52,7 +52,7 @@ import { ResizeCardBox } from "@/components/ResizeCardBox/ResizeCardBox"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitButton, YakitButtonProp } from "@/components/yakitUI/YakitButton/YakitButton"
 import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -1793,6 +1793,7 @@ interface SecondNodeExtraProps {
     query?: HTTPFuzzerPageTableQuery
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
     sendPayloadsType: string
+    size?: YakitButtonProp['size']
 }
 
 /**
@@ -1811,6 +1812,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         query,
         setQuery,
         sendPayloadsType,
+        size = 'small'
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1868,7 +1870,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     <YakitPopover content={searchNode}>
                         <YakitButton
                             icon={<SearchIcon />}
-                            size='small'
+                            size={size}
                             type='outline2'
                         />
                     </YakitPopover>
@@ -1881,7 +1883,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     }}
                 />
                 {rsp.ExtractedResults.filter(i => (i.Key !== "" || i.Value !== "")).length > 0 && (
-                    <YakitButton type='outline2' size='small' onClick={() => onViewExecResults()}>
+                    <YakitButton type='outline2' size={size} onClick={() => onViewExecResults()}>
                         查看提取结果
                     </YakitButton>
                 )}
@@ -1890,7 +1892,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     onClick={() => {
                         analyzeFuzzerResponse(rsp)
                     }}
-                    size='small'
+                    size={size}
                 >
                     详情
                 </YakitButton>
@@ -1900,7 +1902,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     if (!onlyOneResponse && cachedTotal > 1) {
         const searchNode = (
             <YakitInput.Search
-                size='small'
+                size={size}
                 placeholder='请输入关键词搜索'
                 value={keyWord}
                 onChange={(e) => {
@@ -1940,7 +1942,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     >
                         <YakitButton
                             icon={<SearchIcon />}
-                            size='small'
+                            size={size}
                             type='outline2'
                             isHover={!!query?.keyWord}
                         />
@@ -2005,7 +2007,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 >
                     <YakitButton
                         icon={<FilterIcon />}
-                        size='small'
+                        size={size}
                         type='outline2'
                         isHover={
                             !!((query?.StatusCode?.length || 0) > 0 ||
@@ -2018,7 +2020,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 <Divider type='vertical' style={{ margin: 0, top: 1 }} />
                 <YakitButton
                     type='outline2'
-                    size='small'
+                    size={size}
                     onClick={() => {
                         if (successFuzzer.length === 0) {
                             showYakitModal({ title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null })
@@ -2036,7 +2038,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         <>
                             <Space>
                                 <YakitButton
-                                    size={"small"}
+                                    size={size}
                                     type={"primary"}
                                     onClick={() => {
                                         exportHTTPFuzzerResponse(successFuzzer)
@@ -2045,7 +2047,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     导出所有请求
                                 </YakitButton>
                                 <YakitButton
-                                    size={"small"}
+                                    size={size}
                                     type={"primary"}
                                     onClick={() => {
                                         exportPayloadResponse(successFuzzer)
@@ -2057,7 +2059,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         </>
                     }
                 >
-                    <YakitButton type='outline2' size='small'>
+                    <YakitButton type='outline2' size={size}>
                         导出数据
                     </YakitButton>
                 </YakitPopover>

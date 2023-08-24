@@ -7,7 +7,7 @@ import classNames from "classnames"
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
     type?: "primary" | "secondary2" | "outline1" | "outline2" | "text" | "text2"
     colors?: "success" | "danger" | "primary"
-    size?: "large" | "small" | "max"
+    size?: "small" | "middle" | "large" | "maxLarge" | undefined
     isHover?: boolean
 }
 
@@ -32,7 +32,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
     const sizeClass = useMemo(() => {
         if (size === "small") return "yakit-button-small-size"
         if (size === "large") return "yakit-button-large-size"
-        if (size === "max") return "yakit-button-max-size"
+        if (size === "maxLarge") return "yakit-button-max-size"
         return "yakit-button-size"
     }, [size])
 

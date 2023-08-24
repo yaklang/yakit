@@ -103,13 +103,10 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                     query={query}
                     setQuery={(q) => setQuery({ ...q })}
                     sendPayloadsType='allSequenceList'
+                    size='middle'
                 />
-                <Divider type='vertical' />
-                <div className={styles['return-button']} onClick={() => setShowAllResponse()}>
-                    <OutlineReplyIcon className={styles['reply-icon']} />
-                    <span>返回</span>
-                </div>
-                {/* <YakitButton onClick={() => setShowAllResponse()} size='small' type='text' icon={<OutlineReplyIcon className={styles['reply-icon']}/>}>返回</YakitButton> */}
+                <Divider type='vertical' style={{marginRight:0}}/>
+                <YakitButton onClick={() => setShowAllResponse()} type='text2' icon={<OutlineReplyIcon />}>返回</YakitButton>
             </div>
         </div>
         <div ref={secondNodeRef} className={styles['all-sequence-response-table']}>
