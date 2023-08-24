@@ -112,8 +112,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const [editor, setEditor] = useState<IMonacoEditor>()
     const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
-    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-
     const bodyLengthRef = useRef<any>()
     const tableRef = useRef<any>(null)
 
@@ -641,7 +639,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         bordered={false}
                         bodyStyle={{ padding: 0 }}
                     >
-                        <NewEditorSelectRange
+                        <NewHTTPPacketEditor
                             isResponse={true}
                             readOnly={true}
                             hideSearch={true}
@@ -657,19 +655,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
-                            rangeId='monaco.fizz.range.read.only.widget'
-                            rangeNode={(close, editorInfo) => (
-                                <HTTPFuzzerRangeReadOnlyEditorMenu
-                                    editorInfo={editorInfo}
-                                    rangeValue={
-                                        (reqEditor &&
-                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                                        ""
-                                    }
-                                />
-                            )}
-                            onEditor={setReqEditor}
                             webFuzzerValue={currentSelectItem?.RequestRaw || new Buffer([])}
+                            extraEditorProps={{
+                                isShowSelectRangeMenu:true
+                            }}
                         />
                     </YakitCard>
                 }

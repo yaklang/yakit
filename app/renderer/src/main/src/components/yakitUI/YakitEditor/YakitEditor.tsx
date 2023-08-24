@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
+import ReactDOM from "react-dom"
 import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, { monaco } from "react-monaco-editor"
@@ -37,6 +38,19 @@ import {YakScript} from "@/pages/invoker/schema"
 import {CodecType} from "@/pages/codec/CodecPage"
 import {failed} from "@/utils/notification"
 import { randomString } from "@/utils/randomUtil"
+import {v4 as uuidv4} from "uuid"
+import {editor as newEditor} from "monaco-editor"
+import IModelDecoration = newEditor.IModelDecoration
+import {
+    CountDirectionProps,
+    HTTPFuzzerClickEditorMenu,
+    HTTPFuzzerRangeEditorMenu,
+    HTTPFuzzerRangeReadOnlyEditorMenu
+} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
+import {QueryFuzzerLabelResponseProps} from "@/pages/fuzzer/StringFuzzer"
+import {insertFileFuzzTag} from "@/pages/fuzzer/InsertFileFuzzTag"
+import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
+import {onInsertYakFuzzer} from "@/pages/fuzzer/HTTPFuzzerPage"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -57,7 +71,7 @@ const DefaultMenuTop: EditorMenuItemType[] = [
             { key: "font-size-middle", label: "中" },
             { key: "font-size-large", label: "大" }
         ]
-    },
+    }
 ]
 
 /** 编辑器右键默认菜单 - 底部 */
@@ -87,7 +101,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         lineNumbersMinChars = 5,
         fontSize = 12,
         showLineBreaks = false,
-        editorOperationRecord
+        editorOperationRecord,
+        isShowSelectRangeMenu = false,
+        selectNode,
+        rangeNode,
+        overLine = 3
     } = props
 
     const systemRef = useRef<YakitSystem>("Darwin")
@@ -108,7 +126,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [fontsize, setFontsize] = useState<number>(fontSize)
 
-    // 读取上次选择的字体大小/换行符 
+    // 读取上次选择的字体大小/换行符
     useEffect(() => {
         if (editorOperationRecord) {
             getRemoteValue(editorOperationRecord).then((data) => {
@@ -133,13 +151,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 if (!total || total == 0) {
                     return
                 }
-                setCodecPlugin(i.map((script) => {
-                    return {
-                        key: script.ScriptName,
-                        verbose: "CODEC 社区插件: " + script.ScriptName,
-                        isYakScript: true,
-                    } as CodecType
-                }))
+                setCodecPlugin(
+                    i.map((script) => {
+                        return {
+                            key: script.ScriptName,
+                            verbose: "CODEC 社区插件: " + script.ScriptName,
+                            isYakScript: true
+                        } as CodecType
+                    })
+                )
             },
             undefined,
             10,
@@ -147,7 +167,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             undefined,
             undefined,
             undefined,
-            ["allow-custom-http-packet-mutate"],
+            ["allow-custom-http-packet-mutate"]
         )
     })
     useEffect(() => {
@@ -161,20 +181,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useEffect(() => {
         // 往customhttp菜单组中注入codec插件
         try {
-            (extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = codecPlugin.map((item) => {
+            ;(extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = codecPlugin.map((item) => {
                 return {
                     key: item.key,
-                    label: item.key,
+                    label: item.key
                 } as EditorMenuItemProps
             })
         } catch (e) {
             failed(`get custom mutate request failed: ${e}`)
         }
 
-
         const keyToRun: Record<string, string[]> = {}
         const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
-
 
         for (let key in allMenu) {
             const keys: string[] = []
@@ -356,14 +374,17 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
 
     const sortMenuFun = useMemoizedFn((dataSource, sortData) => {
-        const result = sortData.reduce((acc, item) => {
-            if (item.order >= 0) {
-                acc.splice(item.order, 0, ...item.menu)
-            } else {
-                acc.push(...item.menu)
-            }
-            return acc;
-        }, [...dataSource]);
+        const result = sortData.reduce(
+            (acc, item) => {
+                if (item.order >= 0) {
+                    acc.splice(item.order, 0, ...item.menu)
+                } else {
+                    acc.push(...item.menu)
+                }
+                return acc
+            },
+            [...dataSource]
+        )
         return result
     })
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
@@ -668,6 +689,350 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         { wait: 300 }
     )
 
+    const downPosY = useRef<number>()
+    const upPosY = useRef<number>()
+    // 编辑器信息(长宽等)
+    const editorInfo = useRef<any>()
+    useEffect(() => {
+        if (editor && isShowSelectRangeMenu) {
+            editerMenuFun(editor)
+        }
+    }, [editor, isShowSelectRangeMenu])
+    // 编辑器菜单
+    const editerMenuFun = (editor: YakitIMonacoEditor) => {
+        // 编辑器点击弹窗的唯一Id
+        const selectId: string = `monaco.fizz.select.widget-${uuidv4()}`
+        // 编辑器选中弹窗的唯一Id
+        const rangeId: string = `monaco.fizz.range.widget-${uuidv4()}`
+        // 编辑器点击显示的菜单
+        const fizzSelectWidget = {
+            isOpen: false,
+            getId: function () {
+                return selectId
+            },
+            getDomNode: function () {
+                // 将TSX转换为DOM节点
+                const domNode = document.createElement("div")
+                // 解决弹窗内鼠标滑轮无法滚动的问题
+                domNode.onwheel = (e) => e.stopPropagation()
+                if (selectNode) {
+                    ReactDOM.render(selectNode(closeFizzSelectWidget, editorInfo.current), domNode)
+                } else {
+                    ReactDOM.render(
+                        <HTTPFuzzerClickEditorMenu
+                            editorInfo={editorInfo.current}
+                            close={() => closeFizzSelectWidget()}
+                            insert={(v: QueryFuzzerLabelResponseProps) => {
+                                if (v.Label) {
+                                    editor && editor.trigger("keyboard", "type", {text: v.Label})
+                                } else if (v.DefaultDescription === "插入本地文件") {
+                                    editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
+                                }
+                                closeFizzSelectWidget()
+                            }}
+                            addLabel={() => {
+                                closeFizzSelectWidget()
+                                onInsertYakFuzzer(editor)
+                            }}
+                        />,
+                        domNode
+                    )
+                }
+                return domNode
+            },
+            getPosition: function () {
+                const currentPos = editor.getPosition()
+                return {
+                    position: {
+                        lineNumber: currentPos?.lineNumber || 0,
+                        column: currentPos?.column || 0
+                    },
+                    preference: [1, 2]
+                }
+            },
+            update: function () {
+                // 更新小部件的位置
+                this.getPosition()
+                editor.layoutContentWidget(this)
+            }
+        }
+        // 编辑器选中显示的菜单
+        const fizzRangeWidget = {
+            isOpen: false,
+            getId: function () {
+                return rangeId
+            },
+            getDomNode: function () {
+                // 将TSX转换为DOM节点
+                const domNode = document.createElement("div")
+                // 解决弹窗内鼠标滑轮无法滚动的问题
+                domNode.onwheel = (e) => e.stopPropagation()
+                if (rangeNode) {
+                    ReactDOM.render(rangeNode(closeFizzRangeWidget, editorInfo.current), domNode)
+                } else {
+                    readOnly
+                        ? ReactDOM.render(
+                              <HTTPFuzzerRangeReadOnlyEditorMenu
+                                  editorInfo={editorInfo.current}
+                                  rangeValue={
+                                      (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
+                                  }
+                              />,
+                              domNode
+                          )
+                        : ReactDOM.render(
+                              <HTTPFuzzerRangeEditorMenu
+                                  editorInfo={editorInfo.current}
+                                  insert={(fun: any) => {
+                                      if (editor) {
+                                          const selectedText =
+                                              editor.getModel()?.getValueInRange(editor.getSelection() as any) || ""
+                                          if (selectedText.length > 0) {
+                                              ipcRenderer
+                                                  .invoke("QueryFuzzerLabel", {})
+                                                  .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+                                                      const {Data} = data
+                                                      let newSelectedText: string = selectedText
+                                                      if (Array.isArray(Data) && Data.length > 0) {
+                                                          // 选中项是否存在于标签中
+                                                          let isHave: boolean = Data.map((item) => item.Label).includes(
+                                                              selectedText
+                                                          )
+                                                          if (isHave) {
+                                                              newSelectedText = selectedText.replace(/{{|}}/g, "")
+                                                          }
+                                                      }
+                                                      const text: string = fun(newSelectedText)
+                                                      editor.trigger("keyboard", "type", {text})
+                                                  })
+                                          }
+                                      }
+                                  }}
+                                  replace={(text: string) => {
+                                      if (editor) {
+                                          editor.trigger("keyboard", "type", {text})
+                                          closeFizzRangeWidget()
+                                      }
+                                  }}
+                                  rangeValue={
+                                      (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
+                                  }
+                              />,
+                              domNode
+                          )
+                }
+                return domNode
+            },
+            getPosition: function () {
+                const currentPos = editor.getPosition()
+
+                return {
+                    position: {
+                        lineNumber: currentPos?.lineNumber || 0,
+                        column: currentPos?.column || 0
+                    },
+                    preference: [1, 2]
+                }
+            },
+            update: function () {
+                // 更新小部件的位置
+                this.getPosition()
+                editor.layoutContentWidget(this)
+            }
+        }
+        // 是否展示菜单
+        // if (false) {
+        //     closeFizzSelectWidget()
+        //     return
+        // }
+
+        // 关闭点击的菜单
+        const closeFizzSelectWidget = () => {
+            fizzSelectWidget.isOpen = false
+            editor.removeContentWidget(fizzSelectWidget)
+        }
+        // 关闭选中的菜单
+        const closeFizzRangeWidget = () => {
+            fizzRangeWidget.isOpen = false
+            editor.removeContentWidget(fizzRangeWidget)
+        }
+
+        // 编辑器更新 关闭之前展示
+        closeFizzSelectWidget()
+        closeFizzRangeWidget()
+
+        editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
+        editor.onMouseMove((e) => {
+            try {
+                // const pos = e.target.position
+                // if (pos?.lineNumber) {
+                //     const lineOffset = pos.lineNumber - (editor.getPosition()?.lineNumber || 0)
+                //     // 超出范围移除菜单
+                //     if (lineOffset > 2 || lineOffset < -2) {
+                //         // console.log("移出两行内");
+                //         closeFizzSelectWidget()
+                //         closeFizzRangeWidget()
+                //     }
+                // }
+
+                const {target, event} = e
+                const {posy} = event
+                const detail =
+                    target.type === newEditor.MouseTargetType.CONTENT_WIDGET ||
+                    target.type === newEditor.MouseTargetType.OVERLAY_WIDGET
+                        ? target.detail
+                        : undefined
+                const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
+                if (detail !== selectId && detail !== rangeId && downPosY.current && upPosY.current) {
+                    const overHeight = overLine * lineHeight
+                    if (fizzSelectWidget.isOpen) {
+                        if (posy < upPosY.current - overHeight || posy > upPosY.current + overHeight) {
+                            closeFizzSelectWidget()
+                        }
+                    } else if (fizzRangeWidget.isOpen) {
+                        // 从上到下的选择范围
+                        if (
+                            downPosY.current < upPosY.current &&
+                            (posy < downPosY.current - overHeight || posy > upPosY.current + overHeight)
+                        ) {
+                            closeFizzRangeWidget()
+                        }
+                        // 从下到上的选择范围
+                        else if (
+                            downPosY.current > upPosY.current &&
+                            (posy < upPosY.current - overHeight || posy > downPosY.current + overHeight)
+                        ) {
+                            closeFizzRangeWidget()
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        })
+
+        // 移出编辑器时触发
+        // editor.onMouseLeave(() => {
+        //     closeFizzSelectWidget()
+        //     closeFizzRangeWidget()
+        // })
+
+        editor.onMouseDown((e) => {
+            const {leftButton, posy} = e.event
+            // 当两者都没有打开时
+            if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
+                // 记录posy位置
+                downPosY.current = posy
+            }
+        })
+
+        editor.onMouseUp((e) => {
+            // @ts-ignore
+            const {leftButton, rightButton, posx, posy, editorPos} = e.event
+            // 获取编辑器所处x，y轴,并获取其长宽
+            const {x, y} = editorPos
+            const editorHeight = editorPos.height
+            const editorWidth = editorPos.width
+
+            // 计算焦点的坐标位置
+            let a: any = editor.getPosition()
+            const position = editor.getScrolledVisiblePosition(a)
+            if (position) {
+                // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
+                const {top, left, height} = position
+
+                // 解决方法1
+                // 获取焦点位置判断焦点所处于编辑器的位置（上下左右）从而决定弹出层显示方向
+                // 问题  需要焦点位置进行计算 如何获取焦点位置？  目前仅找到行列号 无法定位到其具体坐标位置
+                // console.log("焦点位置：", e, x, left, y, top, x + left, y + top)
+                const focusX = x + left
+                const focusY = y + top
+
+                // 焦点与抬起坐标是否超出限制
+                const isOver: boolean = overLine * height < Math.abs(focusY - posy)
+                if (leftButton && !isOver) {
+                    // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
+                    const editorContainer = editor.getDomNode()
+                    if (editorContainer) {
+                        const editorContainerInfo = editorContainer.getBoundingClientRect()
+                        const {top, bottom, left, right} = editorContainerInfo
+                        // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
+                        const isShowByLimit = right - left > 250 && bottom - top > 200
+                        // 判断焦点位置
+                        const isTopHalf = focusY < (top + bottom) / 2
+                        const isLeftHalf = focusX < (left + right) / 2
+                        // 行高
+                        // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
+
+                        let countDirection: CountDirectionProps = {}
+                        if (isTopHalf) {
+                            // 鼠标位于编辑器上半部分
+                            countDirection.y = "top"
+                        } else {
+                            // 鼠标位于编辑器下半部分
+                            countDirection.y = "bottom"
+                        }
+                        if (Math.abs(focusX - (left + right) / 2) < 50) {
+                            // 鼠标位于编辑器中间部分
+                            countDirection.x = "middle"
+                        } else if (isLeftHalf) {
+                            // 鼠标位于编辑器左半部分
+                            countDirection.x = "left"
+                        } else {
+                            // 鼠标位于编辑器右半部分
+                            countDirection.x = "right"
+                        }
+                        editorInfo.current = {
+                            direction: countDirection,
+                            top,
+                            bottom,
+                            left,
+                            right,
+                            focusX,
+                            focusY,
+                            lineHeight: height
+                        }
+
+                        upPosY.current = posy
+                        const selection = editor.getSelection()
+                        if (selection && isShowByLimit) {
+                            const selectedText = editor.getModel()?.getValueInRange(selection) || ""
+                            if (fizzSelectWidget.isOpen && selectedText.length === 0) {
+                                // 更新点击菜单小部件的位置
+                                fizzSelectWidget.update()
+                            } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
+                                fizzRangeWidget.update()
+                            } else if (selectedText.length === 0 && !readOnly) {
+                                closeFizzRangeWidget()
+                                // 展示点击的菜单
+                                selectId && editor.addContentWidget(fizzSelectWidget)
+                                fizzSelectWidget.isOpen = true
+                            } else {
+                                closeFizzSelectWidget()
+                                // 展示选中的菜单
+                                rangeId && editor.addContentWidget(fizzRangeWidget)
+                                fizzRangeWidget.isOpen = true
+                            }
+                        } else {
+                            closeFizzRangeWidget()
+                            closeFizzSelectWidget()
+                        }
+                    }
+                }
+                if (rightButton) {
+                    closeFizzRangeWidget()
+                    closeFizzSelectWidget()
+                }
+            }
+        })
+        // 监听光标移动
+        editor.onDidChangeCursorPosition((e) => {
+            closeFizzRangeWidget()
+            closeFizzSelectWidget()
+            // const { position } = e;
+            // console.log('当前光标位置：', position);
+        })
+    }
     return (
         <div
             className={classNames("yakit-editor-code", styles["yakit-editor-wrapper"], {
@@ -739,7 +1104,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         bracketPairColorization: {
                             enabled: true,
                             independentColorPoolPerBracketType: true
-                        },
+                        }
                     }}
                 />
             </div>
