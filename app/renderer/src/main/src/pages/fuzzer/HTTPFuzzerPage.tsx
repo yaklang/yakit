@@ -340,7 +340,11 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         DNSServers: value.dnsServers,
         EtcHosts: value.etcHosts,
         // 设置变量
-        Params: value.params.filter(ele => ele.Key || ele.Value),
+        Params: value.params.filter(ele => ele.Key || ele.Value).map(ele => ({
+            Key: ele.Key,
+            Value: ele.Value,
+            Type: ele.typeChecked ? 'fuzztag' : ''
+        })),
         //匹配器
         Matchers: value.matchers,
         MatchersCondition: value.matchersCondition,
@@ -442,7 +446,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     dnsServers: [],
     etcHosts: [],
     // 设置变量
-    params: [{ Key: "", Value: "" }],
+    params: [{ Key: "", Value: "", Type: "", typeChecked: false, }],
     // 匹配器
     filterMode: "drop",
     matchers: [],
@@ -498,7 +502,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         dnsServers: [],
         etcHosts: [],
         // 设置变量
-        params: [{ Key: "", Value: "" }],
+        params: [{ Key: "", Value: "", Type: "", typeChecked: false, }],
         // 匹配器
         filterMode: "onlyMatch",
         matchers: [],
@@ -797,6 +801,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({ label: ele, value: ele }))
             getProxyList(proxyToArr)
         }
+        console.log('httpParams', httpParams)
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
