@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form,Modal} from "antd"
+import {Form, Modal} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -12,39 +12,61 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {FiltersItemProps} from "../TableVirtualResize/TableVirtualResizeType"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import { RemoveIcon } from "@/assets/newIcon"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoveIcon} from "@/assets/newIcon"
 const {ipcRenderer} = window.require("electron")
 export interface HTTPFlowTableFormConfigurationProps {
     visible: boolean
     setVisible: (b: boolean) => void
     responseType: FiltersItemProps[]
     onSave: (v: HTTPFlowTableFromValue) => void
+    filterMode: "shield" | "show"
+    hostName: string[]
+    urlPath: string[]
+    fileSuffix:string[]
+    searchContentType: string
 }
 
 export interface HTTPFlowTableFromValue {
+    filterMode: "shield" | "show"
+    urlPath:string[]
+    hostName:string[]
+    fileSuffix:string[]
     searchContentType: string
 }
 
 export enum HTTPFlowTableFormConsts {
-    HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType"
+    HTTPFlowTableFilterMode = 'YAKIT_HTTPFlowTableFilterMode',
+    HTTPFlowTableHostName = 'YAKIT_HTTPFlowTableHostName',
+    HTTPFlowTableUrlPath = 'YAKIT_HTTPFlowTableUrlPath',
+    HTTPFlowTableFileSuffix = 'YAKIT_HTTPFlowTableFileSuffix',
+    HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType",
 }
 
 export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigurationProps> = (props) => {
-    const {visible, setVisible, responseType,onSave} = props
-    const [searchContentTypeDef,setSearchContentTypeDef] = useState<string[]>()
-
-
+    const {visible, setVisible, responseType, onSave, filterMode,hostName,urlPath, fileSuffix,searchContentType} = props
+    const [filterModeDef, setFilterModeDef] = useState<"shield" | "show">("shield")
+    const [hostNameDef,setHostNameDef] = useState<string[]>([])
+    const [urlPathDef,setUrlPathDef] = useState<string[]>([])
+    const [fileSuffixDef,setFileSuffixDef] = useState<string[]>([])
+    const [searchContentTypeDef, setSearchContentTypeDef] = useState<string[]>()
     const [form] = Form.useForm()
     // 获取默认值
     useEffect(() => {
-        // Host配置
-        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
-                const contentType:string = e
-                const searchContentType:string[] = contentType.length===0?[]:contentType.split(",")
-                setSearchContentTypeDef(searchContentType)
-                form.setFieldsValue({searchContentType})
-        })
+        // 筛选模式
+        setFilterModeDef(filterMode)
+        // HostName
+        setHostNameDef(hostName)
+        // URL路径
+        setUrlPathDef(urlPath)
+        // 文件后缀
+        setFileSuffixDef(fileSuffix)
+        // 响应类型
+        const contentType: string = searchContentType
+        const searchType: string[] = contentType.length === 0 ? [] : contentType.split(",")
+        setSearchContentTypeDef(searchType)
+
+        form.setFieldsValue({filterMode, hostName,urlPath,fileSuffix,searchContentType: searchType})
     }, [visible])
 
     /**
@@ -52,10 +74,18 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
      */
     const onSaveSetting = useMemoizedFn(() => {
         form.validateFields().then((formValue) => {
-            console.log("onSaveSetting",formValue);
-            let searchContentType:string = (formValue.searchContentType||[]).join(",")
-            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType,searchContentType)
+            const {filterMode,urlPath=[],hostName=[],fileSuffix=[]} = formValue
+            let searchContentType: string = (formValue.searchContentType || []).join(",")
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode,filterMode)
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName,JSON.stringify(hostName))
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath,JSON.stringify(urlPath))
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix,JSON.stringify(fileSuffix))
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType, searchContentType)
             onSave({
+                filterMode: filterMode,
+                hostName,
+                urlPath,
+                fileSuffix,
                 searchContentType
             })
         })
@@ -63,13 +93,17 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
 
     const onClose = useMemoizedFn(() => {
         const formValue = form.getFieldsValue()
-        const oldValue:any = {
-            searchContentType:searchContentTypeDef
+        const oldValue: any = {
+            filterMode: filterModeDef,
+            hostName: hostNameDef,
+            urlPath: urlPathDef,
+            fileSuffix: fileSuffixDef,
+            searchContentType: searchContentTypeDef,
         }
         const newValue = {
-            ...formValue,
+            ...formValue
         }
-        console.log("ppoo",JSON.stringify(oldValue),JSON.stringify(newValue));
+        console.log("ppoo", JSON.stringify(oldValue), JSON.stringify(newValue))
         if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
             Modal.confirm({
                 title: "温馨提示",
@@ -110,7 +144,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             onClose={() => onClose()}
             title={
                 <div className={styles["advanced-configuration-drawer-title"]}>
-                    <div className={styles["advanced-configuration-drawer-title-text"]}>高级配置</div>
+                    <div className={styles["advanced-configuration-drawer-title-text"]}>高级筛选</div>
                     <div className={styles["advanced-configuration-drawer-title-btns"]}>
                         <YakitButton
                             type='outline2'
@@ -129,13 +163,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             maskClosable={false}
         >
             <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 16}} className={styles["mitm-filters-form"]}>
-                <Form.Item label='筛选模式'>
+                <Form.Item label='筛选模式' name='filterMode' initialValue={"shield"}>
                     <YakitRadioButtons
-                        // value={"system"}
-                        defaultValue={"shield"}
-                        onChange={(e) => {
-                            // setType(e.target.value)
-                        }}
                         buttonStyle='solid'
                         options={[
                             {
@@ -149,31 +178,28 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                         ]}
                     />
                 </Form.Item>
-                <Form.Item label='Hostname'>
+                <Form.Item label='Hostname' name='hostName'>
                     <YakitSelect
                         mode='tags'
-                        // value={params?.includeHostname}
                     ></YakitSelect>
                 </Form.Item>
                 <Form.Item
                     label='URL路径'
+                    name='urlPath'
                     help={"可理解为 URI 匹配，例如 /main/index.php?a=123 或者 /*/index 或 /admin* "}
                 >
                     <YakitSelect
                         mode='tags'
-                        // value={params?.includeUri || undefined}
                     ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={"文件后缀"}>
+                <Form.Item label={"文件后缀"} name='fileSuffix'>
                     <YakitSelect
                         mode='tags'
-                        // value={params?.includeSuffix || undefined}
                     ></YakitSelect>
                 </Form.Item>
                 <Form.Item label={"响应类型"} name='searchContentType'>
                     <YakitSelect
                         mode='tags'
-                        // value={params?.contentType || undefined}
                         options={responseType}
                     ></YakitSelect>
                 </Form.Item>

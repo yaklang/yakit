@@ -598,6 +598,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 />
                             )}
                             <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
+                            {isShowBaseConsole && (
+                                <BaseConsole
+                                    setIsShowBaseConsole={setIsShowBaseConsole}
+                                    directionBaseConsole={directionBaseConsole}
+                                />
+                            )}
                             {/* <Content
                             style={{
                                 margin: 0,
@@ -743,6 +749,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 </Content>
                             </Layout>
                         </Content> */}
+                        
                         </div>
                     </AutoSpin>
 

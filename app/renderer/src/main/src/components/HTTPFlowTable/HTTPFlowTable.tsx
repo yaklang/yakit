@@ -759,6 +759,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [drawerFormVisible,setDrawerFormVisible] = useState<boolean>(false)
 
     // 高级筛选所选项
+    const [filterMode,setFilterMode] = useState<"shield"|"show">("shield")
+    const [hostName,setHostName] = useState<string[]>([])
+    const [urlPath,setUrlPath] = useState<string[]>([])
+    const [fileSuffix,setFileSuffix] = useState<string[]>([])
     const [searchContentType,setSearchContentType] = useState<string>("")
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
@@ -781,9 +785,36 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const size = useSize(ref)
 
-    // 初次进入页面 获取默认高级赛选项
+    // 初次进入页面 获取默认高级筛选项
     useEffect(()=>{
-        // Host配置
+        // 筛选模式
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
+            if (!!e) {
+                setFilterMode(e)
+            }
+        })
+        // HostName
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName).then((e) => {
+            if (!!e) {
+                let hostName = JSON.parse(e)
+                setHostName(hostName)
+            }
+        })
+        // URL路径
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath).then((e) => {
+            if (!!e) {
+                let pathArr = JSON.parse(e)
+                setUrlPath(pathArr)
+            }
+        })
+        // 文件后缀
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix).then((e) => {
+            if (!!e) {
+                let fileSuffix = JSON.parse(e)
+                setFileSuffix(fileSuffix)
+            }
+        })
+        // 响应类型
         getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
             if (!!e) {
                 const ContentType:string = e
@@ -792,13 +823,37 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     },[])
 
-    useEffect(()=>{
-        setParams({...params, SearchContentType:searchContentType})
-    },[searchContentType])
+    useDebounceEffect(()=>{
+        let newParams = {...params}
+        // 屏蔽
+        if(filterMode==="shield"){
+            newParams = {
+                ...newParams,
+                SearchContentType:"",
+                ExcludeInUrl:hostName,
+                IncludeInUrl:[]
+            }
+        }
+        // 展示
+        else{
+            newParams = {
+                ...newParams,
+                SearchContentType:searchContentType,
+                ExcludeInUrl:[],
+                IncludeInUrl:hostName
+            }
+        }
+        console.log("请求参数：",newParams);
+        
+        setParams(newParams)
+        setTimeout(() => {
+            update(1)
+        }, 10)
+    },[filterMode,hostName,urlPath,fileSuffix,searchContentType],{wait: 500})
 
     const isFilter:boolean = useMemo(() => {
-        return searchContentType?.length>0
-    },[searchContentType])
+        return hostName.length>0||urlPath.length>0||fileSuffix.length>0||searchContentType?.length>0
+    },[hostName,urlPath,fileSuffix,searchContentType])
     
     // 向主页发送对比数据
     useEffect(() => {
@@ -936,7 +991,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-            // console.log("query-query",query);
             
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
@@ -2519,9 +2573,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 visible={drawerFormVisible}
                 setVisible={setDrawerFormVisible}
                 onSave={(val) => {
-                    setSearchContentType(val.searchContentType)
+                    const {filterMode,hostName,urlPath,fileSuffix,searchContentType} = val
+                    setFilterMode(filterMode)
+                    setHostName(hostName)
+                    setUrlPath(urlPath)
+                    setFileSuffix(fileSuffix)
+                    setSearchContentType(searchContentType)
                     setDrawerFormVisible(false)
                 }}
+                filterMode={filterMode}
+                hostName={hostName}
+                urlPath={urlPath}
+                fileSuffix={fileSuffix}
+                searchContentType={searchContentType}
             />
 
         </div>
