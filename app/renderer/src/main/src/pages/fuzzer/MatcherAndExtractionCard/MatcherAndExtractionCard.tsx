@@ -121,7 +121,7 @@ export const matcherTypeList = [
     {label: "正则表达式", value: "regex"},
     {label: "状态码", value: "status_code"},
     {label: "十六进制", value: "binary"},
-    {label: "表达式", value: "nuclei-dsl"}
+    {label: "表达式", value: "expr"}
 ]
 
 export const extractorTypeList = [
