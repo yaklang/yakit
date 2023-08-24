@@ -7,9 +7,9 @@ import { useCreation, useInViewport, useMemoizedFn, useWhyDidYouUpdate } from "a
 import { NodeInfoProps, PageNodeItemProps, usePageNode } from "@/store/pageNodeInfo"
 import { YakitRoute } from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
-import { SubPageContext } from "@/pages/layout/MainContext"
 import { yakitNotify } from "@/utils/notification"
 
+const { ipcRenderer } = window.require("electron")
 
 const webFuzzerTabs = [
     {
@@ -24,7 +24,6 @@ const webFuzzerTabs = [
     }
 ]
 export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
-    const { setType, onAddGroup } = useContext(SubPageContext)
 
     const { getCurrentSelectGroup } = usePageNode()
 
@@ -39,7 +38,15 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
         } else if (nodeInfo.pageChildrenList.length === 0) {
             // 新建组
             onAddGroup(props.id)
-        } else if (setType) setType('sequence')
+        } else {
+            onSetType('sequence')
+        }
+    })
+    const onAddGroup = useMemoizedFn((id: string) => {
+        ipcRenderer.invoke("send-add-group", { pageId: id })
+    })
+    const onSetType = useMemoizedFn((key: WebFuzzerType) => {
+        ipcRenderer.invoke("send-webFuzzer-setType", { type: key })
     })
     // useWhyDidYouUpdate('WebFuzzerPage', { ...props, });
     return (
@@ -55,7 +62,7 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
                             if (item.key === "sequence") {
                                 onSwitchType(item.key)
                             } else {
-                                if (setType) setType(item.key as WebFuzzerType)
+                                onSetType(item.key as WebFuzzerType)
                             }
                         }}
                     >

@@ -46,33 +46,3 @@ export const MainOperatorContext = createContext<MainOperatorContextProps>({
     afterUpdateSubItem: () => { },
     onUpdateSubPage: () => { }
 })
-
-interface SubPageContextProps {
-    // fuzzerSequenceList:FuzzerSequenceReducerProps[]
-    // dispatch: React.Dispatch<FuzzerSequenceReducerAction>
-    subPage: MultipleNodeInfo[]
-    selectSubMenu: MultipleNodeInfo
-    type: WebFuzzerType
-    setSubPage: (m: MultipleNodeInfo[]) => void
-    setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
-    setType: (w: WebFuzzerType) => void
-    onAddGroup: (pageId: string) => void
-    onSelectSubMenuById:(s:string)=>void
-}
-export const SubPageContext = createContext<SubPageContextProps>({
-    // fuzzerSequenceList:[],
-    // dispatch: () => { },
-    subPage: [],
-    selectSubMenu:{
-        id: "0",
-        verbose: "",
-        sortFieId: 1,
-        groupId: "0"
-    },
-    type: 'config',
-    setSubPage: () => { },
-    setSelectSubMenu: () => { },
-    setType: () => { },
-    onAddGroup: () => { },
-    onSelectSubMenuById: () => { }
-})

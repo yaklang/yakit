@@ -72,7 +72,6 @@ import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 import { InheritLineIcon, InheritArrowIcon } from "./icon"
 import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 import { PencilAltIcon } from "@/assets/newIcon"
-import { SubPageContext } from "@/pages/layout/MainContext"
 import { WebFuzzerNewEditor } from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 // import { ResponseCard } from "./ResponseCard"
 
@@ -158,7 +157,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const { getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId,getCurrentSelectGroup } = usePageNode()
+    const { getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup } = usePageNode()
     const [extractedMap, { reset, set }] = useMap<string, Map<string, string>>()
     useEffect(() => {
         ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { pageId: string, type: string, extractedMap: Map<string, string> }) => {
@@ -353,7 +352,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
     const getCurrentGroupSequence = useMemoizedFn(() => {
         // const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
-        const nodeInfo=getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
+        const nodeInfo = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
         if (!nodeInfo) return []
         const { pageChildrenList } = nodeInfo
         return pageChildrenList || []
@@ -827,7 +826,6 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         onRemove,
         onSelect
     } = props
-    const { onSelectSubMenuById } = useContext(SubPageContext)
     const [visible, setVisible] = useState<boolean>(false)
     const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
     const [name, setName] = useState<string>(item.name)
@@ -847,6 +845,9 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         if (item?.inheritCookies) t.push('Cookie')
         return t.join('  ,  ')
     }, [item?.inheritVariables, item?.inheritCookies])
+    const onSelectSubMenuById = useMemoizedFn((pageId: string) => {
+        ipcRenderer.invoke("send-open-subMenu-item", { pageId })
+    })
     return (
         <>
             {

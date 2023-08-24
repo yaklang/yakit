@@ -142,7 +142,13 @@ export interface SubTabsProps {
     // selectSubMenu: MultipleNodeInfo
     // setSubPage: (m: MultipleNodeInfo[]) => void
     // setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
-    onFocusPage:()=>void
+    onFocusPage: () => void
+
+    subPage: MultipleNodeInfo[]
+    selectSubMenu: MultipleNodeInfo
+    setSubPage: (m: MultipleNodeInfo[]) => void
+    setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
+    setType: (w: WebFuzzerType) => void
 }
 /**
  * @description 二级tab item
@@ -173,9 +179,9 @@ export interface SubTabItemProps {
  */
 export interface SubTabGroupItemProps extends SubTabItemProps {
     onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
-    onGroupContextMenu: (e: React.MouseEvent,index:number) => void
-    selectMenuGroupId:string
-    // subPage: MultipleNodeInfo[]
+    onGroupContextMenu: (e: React.MouseEvent, index: number) => void
+    selectMenuGroupId: string
+    subPage: MultipleNodeInfo[]
 }
 
 
@@ -199,6 +205,6 @@ export interface GroupRightClickShowContentProps {
  */
 export interface DroppableCloneProps {
     draggableId: string
-    // subPage: MultipleNodeInfo[]
-    // selectSubMenu: MultipleNodeInfo
+    subPage: MultipleNodeInfo[]
+    selectSubMenu: MultipleNodeInfo
 }

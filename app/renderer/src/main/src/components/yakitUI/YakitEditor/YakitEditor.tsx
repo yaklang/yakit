@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import MonacoEditor, {monaco} from "react-monaco-editor"
+import MonacoEditor, { monaco } from "react-monaco-editor"
 // 编辑器 注册
 import "@/utils/monacoSpec/theme"
 import "@/utils/monacoSpec/fuzzHTTP"
@@ -19,12 +19,12 @@ import {
     OperationRecordRes,
     OtherMenuListProps
 } from "./YakitEditorType"
-import {showByRightContext} from "../YakitMenu/showByRightContext"
-import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
-import {StringToUint8Array} from "@/utils/str"
-import {baseMenuLists, extraMenuLists} from "./contextMenus"
-import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
-import {YakitSystem} from "@/yakitGVDefine"
+import { showByRightContext } from "../YakitMenu/showByRightContext"
+import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from "@/utils/editorMarkers"
+import { StringToUint8Array } from "@/utils/str"
+import { baseMenuLists, extraMenuLists } from "./contextMenus"
+import { EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from "./EditorMenu"
+import { YakitSystem } from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
 import {convertKeyboard, keySortHandle} from "./editorUtils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -37,7 +37,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {CodecType} from "@/pages/codec/CodecPage"
 import {failed} from "@/utils/notification"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 /** @name 字体key值对应字体大小 */
 const keyToFontSize: Record<string, number> = {
@@ -52,18 +52,18 @@ const DefaultMenuTop: EditorMenuItemType[] = [
         key: "font-size",
         label: "字体大小",
         children: [
-            {key: "font-size-small", label: "小"},
-            {key: "font-size-middle", label: "中"},
-            {key: "font-size-large", label: "大"}
+            { key: "font-size-small", label: "小" },
+            { key: "font-size-middle", label: "中" },
+            { key: "font-size-large", label: "大" }
         ]
     },
 ]
 
 /** 编辑器右键默认菜单 - 底部 */
 const DefaultMenuBottom: EditorMenuItemType[] = [
-    {key: "cut", label: "剪切"},
-    {key: "copy", label: "复制"},
-    {key: "paste", label: "粘贴"}
+    { key: "cut", label: "剪切" },
+    { key: "copy", label: "复制" },
+    { key: "paste", label: "粘贴" }
 ]
 
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
@@ -172,7 +172,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
 
         const keyToRun: Record<string, string[]> = {}
-        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
 
 
         for (let key in allMenu) {
@@ -183,11 +183,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             keyToRun[key] = keys
         }
 
-        keyToOnRunRef.current = {...keyToRun}
+        keyToOnRunRef.current = { ...keyToRun }
     }, [contextMenu])
 
     /** 菜单功能点击处理事件 */
-    const {run: menuItemHandle} = useDebounceFn(
+    const { run: menuItemHandle } = useDebounceFn(
         useMemoizedFn((key: string, keyPath: string[]) => {
             if (!editor) return
             /** 是否执行过方法(onRightContextMenu) */
@@ -198,7 +198,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuItemName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
                         allMenu[name].onRun(editor, menuItemName)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
@@ -210,7 +210,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
                         allMenu[name].onRun(editor, menuName)
                         executeFunc = true
                         onRightContextMenu(menuName)
@@ -222,7 +222,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (!executeFunc) onRightContextMenu(key)
             return
         }),
-        {wait: 300}
+        { wait: 300 }
     )
     /** 操作记录存储 */
     const onOperationRecord = (type: "fontSize" | "showBreak", value: number | boolean) => {
@@ -277,7 +277,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         for (let item of data) {
             /** 屏蔽菜单分割线选项 */
             if (typeof (data as any as EditorMenuItemDividerProps)["type"] !== "undefined") {
-                const info: EditorMenuItemDividerProps = {type: "divider"}
+                const info: EditorMenuItemDividerProps = { type: "divider" }
                 menus.push(info)
             } else {
                 /** 处理带快捷键的菜单项 */
@@ -380,20 +380,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
             if (type === "http") {
                 rightContextMenu.current = rightContextMenu.current.concat([
-                    {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
+                    { key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符" }
                 ])
             }
             if (type === "yak") {
                 rightContextMenu.current = rightContextMenu.current.concat([
-                    {type: "divider"},
-                    {key: "yak-formatter", label: "Yak 代码格式化"}
+                    { type: "divider" },
+                    { key: "yak-formatter", label: "Yak 代码格式化" }
                 ])
             }
             if (menuType.length > 0) {
                 const types = Array.from(new Set(menuType))
                 for (let key of types)
                     rightContextMenu.current = rightContextMenu.current.concat([
-                        {type: "divider"},
+                        { type: "divider" },
                         cloneDeep(extraMenuLists[key].menu[0])
                     ])
             }
@@ -557,7 +557,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             <EditorMenu
                 size='rightMenu'
                 data={[...rightContextMenu.current]}
-                onClick={({key, keyPath}) => menuItemHandle(key, keyPath)}
+                onClick={({ key, keyPath }) => menuItemHandle(key, keyPath)}
             />
         )
     })
@@ -583,7 +583,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
             menuItemHandle(keyToMenu[0], keyToMenu)
         },
-        {target: wrapperRef}
+        { target: wrapperRef }
     )
 
     /** 计算编辑器的高度 有点问题，为什么用state记录而不是ref记录，测试过后删除该问题 */
@@ -623,7 +623,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
             const allContent = model.getValue()
             ipcRenderer
-                .invoke("YaklangCompileAndFormat", {Code: allContent})
+                .invoke("YaklangCompileAndFormat", { Code: allContent })
                 .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
                     if (e.Code !== "") {
                         model.setValue(e.Code)
@@ -641,14 +641,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     console.info(e)
                 })
         }),
-        {wait: 500, leading: true, trailing: false}
+        { wait: 500, leading: true, trailing: false }
     )
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakSyntaxChecking = useDebounceFn(
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
             const allContent = model.getValue()
             ipcRenderer
-                .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
+                .invoke("StaticAnalyzeError", { Code: StringToUint8Array(allContent) })
                 .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
                     if (e && e.Result.length > 0) {
                         const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
@@ -658,7 +658,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
                 })
         }),
-        {wait: 300}
+        { wait: 300 }
     )
 
     return (
@@ -671,7 +671,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 onResize={(width, height) => {
                     if (!width || !height) return
                     /** 重绘编辑器尺寸 */
-                    if (editor) editor.layout({height, width})
+                    if (editor) editor.layout({ height, width })
                     /** 记录当前编辑器外边框尺寸 */
                     preWidthRef.current = width
                     preHeightRef.current = height
@@ -725,7 +725,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         wordWrap: noWordWrap ? "off" : "on",
                         renderLineHighlight: "line",
                         lineNumbers: noLineNumber ? "off" : "on",
-                        minimap: noMiniMap ? {enabled: false} : undefined,
+                        minimap: noMiniMap ? { enabled: false } : undefined,
                         lineNumbersMinChars: lineNumbersMinChars || 5,
                         contextmenu: false,
                         renderWhitespace: "all",

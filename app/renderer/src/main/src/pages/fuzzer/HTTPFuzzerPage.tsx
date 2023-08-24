@@ -103,7 +103,6 @@ import {
 import { NewEditorSelectRange } from "../../components/NewEditorSelectRange"
 import { execCodec } from "@/utils/encodec"
 import { NodeInfoProps, WebFuzzerPageInfoProps, usePageNode } from "@/store/pageNodeInfo"
-import { SubPageContext } from "../layout/MainContext"
 import { WebFuzzerNewEditor } from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 
 const { ipcRenderer } = window.require("electron")
@@ -569,10 +568,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {
         getPageNodeInfoByPageId,
     } = usePageNode()
-    const { type } = useContext(SubPageContext)
 
     useUpdateEffect(() => {
-        if (!inViewport || type === 'sequence') return
+        // || type === 'sequence'
+        if (!inViewport) return
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
         if (!nodeInfo) return
         const { currentItem } = nodeInfo
@@ -580,7 +579,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (request === newRequest) return
         setRequest(newRequest || defaultPostTemplate)
         refreshRequest()
-    }, [inViewport, type])
+    }, [inViewport])
 
     useEffect(() => {
         if (getSubscribeClose(YakitRoute.HTTPFuzzer)) return

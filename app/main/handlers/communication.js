@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 const isDev = require("electron-is-dev")
 const exec = require("child_process").exec
 module.exports = (win, getClient) => {
@@ -121,5 +121,20 @@ module.exports = (win, getClient) => {
     // webfuzzer 打开提取器和匹配器Modal
     ipcMain.handle("send-open-matcher-and-extraction", (e, params) => {
         win.webContents.send("fetch-open-matcher-and-extraction", params)
+    })
+
+    // 设置webFuzzer type ,
+    ipcMain.handle("send-webFuzzer-setType", (e, params) => {
+        win.webContents.send("fetch-webFuzzer-setType", params)
+    })
+
+    // 新建组 onAddGroup
+    ipcMain.handle("send-add-group", (e, params) => {
+        win.webContents.send("fetch-add-group", params)
+    })
+
+    // 新建组 onAddGroup
+    ipcMain.handle("send-open-subMenu-item", (e, params) => {
+        win.webContents.send("fetch-open-subMenu-item", params)
     })
 }

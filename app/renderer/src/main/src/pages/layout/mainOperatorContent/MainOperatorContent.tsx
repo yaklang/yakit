@@ -80,7 +80,7 @@ import HTTPFuzzerPage, {
     defaultAdvancedConfigValue
 } from "@/pages/fuzzer/HTTPFuzzerPage"
 import { KVPair } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { MainOperatorContext, SubPageContext } from "../MainContext"
+import { MainOperatorContext } from "../MainContext"
 import { RenderFuzzerSequence, RenderSubPage } from "./renderSubPage/RenderSubPage"
 import { WebFuzzerType } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import { useFuzzerSequence } from "@/store/fuzzerSequence"
@@ -1644,6 +1644,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const subTabsRef = useRef<any>()
 
     useEffect(() => {
+        ipcRenderer.on("fetch-webFuzzer-setType", onSetType)
+        ipcRenderer.on("fetch-add-group", onAddGroup)
+        ipcRenderer.on("fetch-open-subMenu-item", onSelectSubMenuById)
+        return () => {
+            ipcRenderer.removeListener("fetch-webFuzzer-setType", onSetType)
+            ipcRenderer.removeListener("fetch-add-group", onAddGroup)
+            ipcRenderer.removeListener("fetch-open-subMenu-item", onSelectSubMenuById)
+        }
+    }, [])
+
+    useEffect(() => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
         onUpdateSubPage(pageItem, pageItem.multipleNode || [])
@@ -1673,6 +1684,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSelectSubMenu(currentNode)
         }
     }, [pageItem.multipleLength])
+    const onSetType = useMemoizedFn((e, res: { type: WebFuzzerType }) => {
+        setType(res.type)
+    })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {
         setTimeout(() => {
@@ -1681,8 +1695,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             ref.focus()
         }, 100)
     })
-    const onAddGroup = useMemoizedFn((pageId: string) => {
-        const { index } = getPageItemById(subPage, pageId)
+    const onAddGroup = useMemoizedFn((e, res: { pageId: string }) => {
+        const { index } = getPageItemById(subPage, res.pageId)
         if (index === -1) return
         subTabsRef.current?.onNewGroup(subPage[index])
         setTimeout(() => {
@@ -1721,8 +1735,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         return newData
     }, [subPage])
-    const onSelectSubMenuById = useMemoizedFn((id: string) => {
-        const index = flatSubPage.findIndex(ele => ele.id === id)
+    const onSelectSubMenuById = useMemoizedFn((e, res: { pageId: string }) => {
+        const index = flatSubPage.findIndex(ele => ele.id === res.pageId)
         if (index === -1) return
         const newSubPage: MultipleNodeInfo = { ...flatSubPage[index] };
         setSelectSubMenu(newSubPage)
@@ -1739,23 +1753,27 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }}
             tabIndex={0}
         >
-            <SubPageContext.Provider value={{ subPage, setSubPage, selectSubMenu, setSelectSubMenu, type, setType, onAddGroup, onSelectSubMenuById }}>
-                <SubTabs
-                    ref={subTabsRef}
-                    onFocusPage={onFocusPage}
-                    pageItem={pageItem}
-                    index={index}
+            <SubTabs
+                ref={subTabsRef}
+                onFocusPage={onFocusPage}
+                pageItem={pageItem}
+                index={index}
+
+                subPage={subPage}
+                setSubPage={setSubPage}
+                selectSubMenu={selectSubMenu}
+                setSelectSubMenu={setSelectSubMenu}
+                setType={setType}
+            />
+            <div className={styles['render-sub-page']}>
+                <RenderSubPage
+                    renderSubPage={flatSubPage}
+                    route={pageItem.route}
+                    pluginId={pageItem.pluginId || 0}
+                    selectSubMenuId={selectSubMenu.id}
                 />
-                <div className={styles['render-sub-page']}>
-                    <RenderSubPage
-                        renderSubPage={flatSubPage}
-                        route={pageItem.route}
-                        pluginId={pageItem.pluginId || 0}
-                        selectSubMenuId={selectSubMenu.id}
-                    />
-                    <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
-                </div>
-            </SubPageContext.Provider>
+                <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
+            </div>
         </div>
     )
 })
@@ -1769,11 +1787,11 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         setCurrentTabKey,
         afterDeleteSubPage,
         afterUpdateSubItem,
-        onUpdateSubPage
+        onUpdateSubPage,
     } = useContext(MainOperatorContext)
-    const { subPage, setSubPage, setType, selectSubMenu, setSelectSubMenu } = useContext(SubPageContext)
     const {
         pageItem, index, onFocusPage,
+        subPage, setSubPage, setType, selectSubMenu, setSelectSubMenu
     } = props
 
 
@@ -1899,6 +1917,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             }
         }
     )
+
     /**滚动到最后边 */
     const scrollToRightMost = useMemoizedFn(() => {
         if (!tabMenuSubRef.current) {
@@ -3087,6 +3106,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                                     return (
                                         <React.Fragment key={item.id}>
                                             <SubTabGroupItem
+                                                subPage={subPage}
                                                 subItem={item}
                                                 index={indexSub}
                                                 selectMenuGroupId={selectMenuGroupId}
@@ -3227,6 +3247,7 @@ const cloneItemStyle = (draggableStyle) => {
 }
 const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const {
+        subPage,
         subItem,
         index,
         selectSubMenu,
@@ -3322,8 +3343,8 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                         style={{ ...cloneStyle }}
                                     >
                                         <DroppableClone
-                                            // subPage={subPage}
-                                            // selectSubMenu={selectSubMenu}
+                                            subPage={subPage}
+                                            selectSubMenu={selectSubMenu}
                                             draggableId={rubric.draggableId}
                                         />
                                     </div>
@@ -3478,9 +3499,7 @@ const CloseGroupContent: React.FC = React.memo(() => {
 })
 
 const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
-    const { subPage, selectSubMenu } = useContext(SubPageContext)
-    // const { subPage, selectSubMenu, draggableId } = props
-    const { draggableId } = props
+    const { subPage, selectSubMenu, draggableId } = props
     const [groupItem, setGroupItem] = useState<MultipleNodeInfo>({
         id: "0",
         verbose: "",

@@ -162,7 +162,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         const selectGroup = get().currentSelectGroup
         const item = getPageNodeInfoById(pageNodeList, groupId)
         if (!item) return
-        console.log('setCurrentSelectGroup', item)
+        // console.log('setCurrentSelectGroup', item)
         selectGroup.set(key, item.currentItem)
         set({
             ...get(),

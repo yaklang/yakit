@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useMemo, useReducer, useRef, useState } f
 import { useMap, useDebounceEffect, useMemoizedFn, useWhyDidYouUpdate } from "ahooks"
 import styles from "./RenderSubPage.module.scss"
 import { PageItemProps, RenderFuzzerSequenceProps, RenderSubPageItemProps, RenderSubPageProps } from "./RenderSubPageType"
-import { SubPageContext } from "../../MainContext"
 import { MultipleNodeInfo } from "../MainOperatorContentType"
 import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
 import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
@@ -101,9 +100,7 @@ export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo((p
 
 
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
-
     const { route, type, setType } = props
-    // const { type, setType } = useContext(SubPageContext)
     const [fuzzerSequenceList, setFuzzerSequenceList] = useState<FuzzerSequenceListProps[]>([])
     const [selectGroupId, setSelectGroupId] = useState<string>('')
 
