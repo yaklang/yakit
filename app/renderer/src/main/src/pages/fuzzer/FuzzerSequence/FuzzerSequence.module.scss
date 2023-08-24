@@ -152,6 +152,9 @@
                 .list-item-icon {
                     @include HTTPFuzzerPageShare.base-icon-card;
                     color: var(--yakit-body-text-color);
+                    path{
+                        stroke-width: 1px
+                    }
                 }
 
                 // .cog-icon {
