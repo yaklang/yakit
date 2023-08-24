@@ -968,21 +968,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
     })
 
-    // handle runtime id
-    useEffect(()=>{
-        if (!params) {
-            return
-        }
-        if (!params.RuntimeId) {
-            return
-        }
-        const currentParams = getParams();
-        if (currentParams.RuntimeId === params.RuntimeId) {
-            return
-        }
-        setParams({...currentParams, RuntimeId: params.RuntimeId})
-    }, [props.params])
-
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn((RefreshRequest: boolean) => {
         ipcRenderer
